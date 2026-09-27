@@ -283,6 +283,9 @@ export const messages: Catalogue = {
   },
 
   pane: {
+    blocked: "{host}은(는) 사설 네트워크에 있어 Vunemi의 브라우저가 열지 않았습니다. 이 사이트를 잘 알고 신뢰한다면 설정에서 추가하세요.",
+    blockedOwn: "{host}은(는) 이 Mac 자체의 주소입니다. Vunemi의 브라우저는 이 주소를 절대 열지 않습니다.",
+    openSettings: "설정 열기",
     newTab: "새 탭",
     close: "패널 닫기",
     closeLabel: "브라우저 패널 닫기",
@@ -470,6 +473,20 @@ export const messages: Catalogue = {
       intro: "기본값은 꺼짐입니다. 켜면 Vunemi를 열 때와 Mac이 잠긴 후에 확인합니다. 확인은 macOS가 자체 창에서 하며, Vunemi는 암호를 절대 보지 않습니다.",
       note: "비밀 정보는 어느 경우든 암호화되어 있습니다. 잠금은 창을 보호합니다. 실행 중인 작업은 Vunemi가 잠겨 있어도 언제든 중지할 수 있습니다.",
       asking: "Touch ID 또는 암호를 기다리는 중…",
+    },
+    trusted: {
+      title: "신뢰하는 사이트",
+      intro: "Vunemi의 브라우저는 대학이나 회사 인트라넷, 공유기, 프린터처럼 사설 네트워크에 있는 사이트를 열지 않습니다. 그렇지 않으면 웹 페이지가 에이전트를 이용해 내 네트워크에 접근할 수 있습니다. 잘 알고 신뢰하는 사이트만 여기에 추가하세요. 추가하면 다른 페이지처럼 열립니다.",
+      placeholder: "intranet.example.ac.uk",
+      add: "추가",
+      empty: "아직 신뢰하는 사이트가 없습니다.",
+      remove: "{host} 삭제",
+      note: "사이트는 사용자만 여기에서 추가할 수 있으며 에이전트는 추가할 수 없습니다. 이 Mac 자체의 주소(localhost, 127.0.0.1)는 절대 열지 않습니다.",
+      error: {
+        invalid: "웹 주소가 아닙니다. intranet.example.ac.uk 같은 호스트를 * 이나 공백 없이 입력하세요.",
+        thisComputer: "이 Mac 자체의 주소는 신뢰할 수 없습니다. Vunemi 자체의 제어 기능이 그곳에 있습니다.",
+        full: "목록이 가득 찼습니다. 더 이상 필요 없는 사이트를 먼저 삭제하세요.",
+      },
     },
     language: {
       intro: "Vunemi의 화면, 메시지, 에이전트의 답변이 이 언어로 표시됩니다. 음성 인식도 이 언어를 기준으로 합니다.",

@@ -212,12 +212,21 @@ export interface EmbeddedTab {
   canGoForward: boolean;
   /** The agent is attached to this tab. */
   agent: boolean;
+  /**
+   * The page was refused as a private-network address. `trustable` is false
+   * for this Mac's own addresses, which can't be trusted.
+   */
+  blocked: { host: string; trustable: boolean } | null;
 }
 
 export interface EmbeddedState {
   tabs: EmbeddedTab[];
   activeId: string | null;
 }
+
+export type TrustedSiteResult =
+  | { ok: true; sites: string[]; host: string }
+  | { ok: false; reason: "invalid" | "this-computer" | "full" };
 
 /** The browser pane's rectangle in window coordinates (CSS px). */
 export interface PaneBounds {
@@ -360,6 +369,13 @@ export interface VunemiApi {
   getLock(): Promise<LockState>;
   unlock(): Promise<LockAttempt>;
   setAppLock(on: boolean): Promise<LockAttempt>;
+  /**
+   * Private-network sites the browser may open, added only here by the
+   * user. Adding says why a host was refused rather than throwing.
+   */
+  getTrustedSites(): Promise<string[]>;
+  addTrustedSite(raw: string): Promise<TrustedSiteResult>;
+  removeTrustedSite(host: string): Promise<string[]>;
   onLock(listener: (state: LockState) => void): () => void;
   getPolicy(): Promise<PermissionSettings>;
   setPolicy(settings: PermissionSettings): Promise<PermissionSettings>;
@@ -503,6 +519,9 @@ export const CH = {
   lockUnlock: "lock:unlock",
   lockSet: "lock:set",
   lockChanged: "lock:changed",
+  trustedSitesGet: "trusted-sites:get",
+  trustedSitesAdd: "trusted-sites:add",
+  trustedSitesRemove: "trusted-sites:remove",
   policyGet: "policy:get",
   policySet: "policy:set",
   event: "agent:event",

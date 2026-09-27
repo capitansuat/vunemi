@@ -283,6 +283,9 @@ export const messages: Catalogue = {
   },
 
   pane: {
+    blocked: "{host} is on a private network, so Vunemi's browser didn't open it. If you know and trust this site, add it in Settings.",
+    blockedOwn: "{host} is this Mac's own address. Vunemi's browser never opens it.",
+    openSettings: "Open Settings",
     newTab: "New tab",
     close: "Close the panel",
     closeLabel: "Close the browser panel",
@@ -470,6 +473,20 @@ export const messages: Catalogue = {
       intro: "Off by default. When it's on, Vunemi asks when it opens and again after your Mac locks. macOS asks, in its own window; Vunemi never sees your password.",
       note: "Your secrets are encrypted either way; the lock guards the window. Stopping a running task always works, even while Vunemi is locked.",
       asking: "Waiting for Touch ID or your password…",
+    },
+    trusted: {
+      title: "Trusted sites",
+      intro: "Vunemi's browser doesn't open sites on a private network, such as a campus or company intranet, a router or a printer. A web page could otherwise use the agent to reach into your network. Add a site here only if you know it and trust it; then it opens like any other page.",
+      placeholder: "intranet.example.ac.uk",
+      add: "Add",
+      empty: "No trusted sites yet.",
+      remove: "Remove {host}",
+      note: "Only you can add sites, here. The agent can't. This Mac's own addresses (localhost, 127.0.0.1) are never opened.",
+      error: {
+        invalid: "That isn't a web address. Write a host such as intranet.example.ac.uk, without * or spaces.",
+        thisComputer: "This Mac's own addresses can't be trusted: Vunemi's own controls live there.",
+        full: "The list is full. Remove a site you no longer need first.",
+      },
     },
     language: {
       intro: "Vunemi's interface, its messages and the agent's replies will be in this language. Speech recognition expects it too.",

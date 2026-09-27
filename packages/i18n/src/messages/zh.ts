@@ -283,6 +283,9 @@ export const messages: Catalogue = {
   },
 
   pane: {
+    blocked: "{host} 位于私有网络中，所以 Vunemi 的浏览器没有打开它。如果你了解并信任这个网站，请在设置中添加。",
+    blockedOwn: "{host} 是这台 Mac 自己的地址。Vunemi 的浏览器永远不会打开它。",
+    openSettings: "打开设置",
     newTab: "新标签页",
     close: "关闭面板",
     closeLabel: "关闭浏览器面板",
@@ -470,6 +473,20 @@ export const messages: Catalogue = {
       intro: "默认关闭。开启后，Vunemi 会在打开时以及 Mac 锁定之后询问。由 macOS 在它自己的窗口中询问；Vunemi 永远看不到你的密码。",
       note: "无论是否开启，你的机密都已加密；锁保护的是窗口。即使 Vunemi 已锁定，也始终可以停止正在运行的任务。",
       asking: "正在等待触控 ID 或密码…",
+    },
+    trusted: {
+      title: "受信任的网站",
+      intro: "Vunemi 的浏览器不会打开私有网络中的网站，例如校园或公司内网、路由器或打印机。否则网页可能借助智能体进入你的网络。只有在你了解并信任某个网站时才在这里添加它，之后它会像其他网页一样打开。",
+      placeholder: "intranet.example.ac.uk",
+      add: "添加",
+      empty: "还没有受信任的网站。",
+      remove: "移除 {host}",
+      note: "只有你能在这里添加网站，智能体不能。这台 Mac 自己的地址（localhost、127.0.0.1）永远不会打开。",
+      error: {
+        invalid: "这不是网址。请输入类似 intranet.example.ac.uk 的主机名，不要带 * 或空格。",
+        thisComputer: "这台 Mac 自己的地址不能设为受信任：Vunemi 自己的控制接口就在那里。",
+        full: "列表已满。请先移除一个不再需要的网站。",
+      },
     },
     language: {
       intro: "Vunemi 的界面、消息和代理的回复都会使用这种语言。语音识别也会按这种语言识别。",

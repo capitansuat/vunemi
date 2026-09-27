@@ -8,7 +8,8 @@
  * Pages here are untrusted web content: their own persistent session
  * (separate from the app UI), sandboxed, no preload, no Node, every
  * permission request denied, and no request to this Mac or the local
- * network, whatever asks for it. Downloads are allowed, but only into the user's
+ * network, whatever asks for it, except the private-network sites the user
+ * trusted in Settings. Downloads are allowed, but only into the user's
  * Downloads folder, only a few per session and only up to a size — a page
  * that starts downloading on its own shouldn't be able to fill a disk, and
  * whatever does arrive is recorded where the user can undo it.
@@ -18,7 +19,7 @@ import { app, session, WebContentsView, type BrowserWindow, type Session } from 
 import { lookup } from "node:dns/promises";
 import { existsSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
-import { requestGuard, type BrowserBackend, type CdpSession, type PointerEvent, type TabInfo } from "@vunemi/browser";
+import { requestGuard, trustableHost, trustWouldOpen, type BrowserBackend, type CdpSession, type PointerEvent, type TabInfo, type TrustedSites } from "@vunemi/browser";
 import { CURSOR_WORLD_ID, cursorScript } from "./agent-cursor.js";
 import type { EmbeddedState, PaneBounds } from "../shared/ipc.js";
 
@@ -54,6 +55,8 @@ interface Tab {
   id: string;
   view: WebContentsView;
   session: CdpSession | null;
+  /** The page the guard last refused in this tab, until it navigates again. */
+  blocked: { host: string; trustable: boolean; reason: string } | null;
 }
 
 function webUrl(raw: string): string | null {
@@ -82,6 +85,9 @@ export class EmbeddedBrowser {
   private readonly downloadListeners = new Set<(d: Downloaded) => void>();
   private downloads = 0;
   private ses: Session | null = null;
+
+  /** `trusted` is the user's list of private-network sites pages may open. */
+  constructor(private readonly trusted: () => TrustedSites = () => new Set()) {}
 
   /** Call once the window exists; tabs live in it. */
   setHost(win: BrowserWindow): void {
@@ -119,6 +125,7 @@ export class EmbeddedBrowser {
           canGoBack: wc.navigationHistory.canGoBack(),
           canGoForward: wc.navigationHistory.canGoForward(),
           agent: t.session !== null,
+          blocked: t.blocked ? { host: t.blocked.host, trustable: t.blocked.trustable } : null,
         };
       }),
       activeId: this.active,
@@ -163,7 +170,7 @@ export class EmbeddedBrowser {
     view.setBackgroundColor("#ffffff");
     // A real size even while the pane is closed, so layout and hit-testing work.
     view.setBounds(this.bounds ?? this.parked());
-    const tab: Tab = { id: String(view.webContents.id), view, session: null };
+    const tab: Tab = { id: String(view.webContents.id), view, session: null, blocked: null };
     this.tabs.push(tab);
     this.wire(tab);
     win.contentView.addChildView(view);
@@ -224,6 +231,11 @@ export class EmbeddedBrowser {
     const image = await this.get(id).view.webContents.capturePage(undefined, { stayHidden: true, stayAwake: false });
     if (image.isEmpty()) throw new Error("The page produced an empty picture.");
     return image.toJPEG(70);
+  }
+
+  /** Why the tab's last page was refused, for the agent; null if it wasn't. */
+  blockReason(id: string): string | null {
+    return this.tabs.find((t) => t.id === id)?.blocked?.reason ?? null;
   }
 
   // -- agent side ----------------------------------------------------------
@@ -349,6 +361,11 @@ export class EmbeddedBrowser {
     wc.on("did-navigate-in-page", update);
     wc.on("page-title-updated", update);
     wc.on("render-process-gone", update);
+    wc.on("did-start-navigation", (details) => {
+      if (!details.isMainFrame || details.isSameDocument || !tab.blocked) return;
+      tab.blocked = null;
+      this.changed();
+    });
     this.wireDetach(tab);
 
     // Only web pages; a page can't steer the view to file:, chrome: etc.
@@ -374,6 +391,16 @@ export class EmbeddedBrowser {
     });
   }
 
+  /** Remembers a refused page so the pane can say why and where to trust it. */
+  private refused(webContentsId: number | undefined, url: string, reason: string): void {
+    const tab = this.tabs.find((t) => t.id === String(webContentsId));
+    if (!tab) return;
+    const site = trustableHost(url);
+    const host = "host" in site ? site.host : hostName(url);
+    tab.blocked = { host, trustable: "host" in site && trustWouldOpen(reason), reason };
+    this.changed();
+  }
+
   private secureSession(ses: Session): void {
     if (this.ses === ses) return;
     this.ses = ses;
@@ -384,10 +411,16 @@ export class EmbeddedBrowser {
     ses.setPermissionCheckHandler(() => false);
     // Every request, not only the address the agent opened: a page redirects,
     // opens a window, frames or fetches 127.0.0.1 or the user's router itself.
-    const guard = requestGuard(async (host) => (await lookup(host, { all: true })).map((a) => a.address));
+    // A page's own requests are judged by the page it is on, so a public page
+    // can't reach into a trusted intranet site behind the user's back.
+    const guard = requestGuard(async (host) => (await lookup(host, { all: true })).map((a) => a.address), undefined, this.trusted);
     ses.webRequest.onBeforeRequest((details, callback) => {
-      guard(details.url).then(
-        (refused) => callback({ cancel: refused !== null }),
+      const page = details.resourceType === "mainFrame" ? undefined : details.webContents?.getURL() || details.referrer;
+      guard(details.url, page).then(
+        (refused) => {
+          if (refused && details.resourceType === "mainFrame") this.refused(details.webContentsId, details.url, refused);
+          callback({ cancel: refused !== null });
+        },
         () => callback({ cancel: true }),
       );
     });
@@ -411,6 +444,14 @@ export class EmbeddedBrowser {
         for (const l of this.downloadListeners) l(info);
       });
     });
+  }
+}
+
+function hostName(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url.slice(0, 100);
   }
 }
 
@@ -460,6 +501,10 @@ export class EmbeddedBackend implements BrowserBackend {
 
   async attach(targetId: string): Promise<CdpSession> {
     return this.browser.attach(targetId);
+  }
+
+  blockReason(targetId: string): string | null {
+    return this.browser.blockReason(targetId);
   }
 
   /**

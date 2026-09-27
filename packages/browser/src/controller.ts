@@ -11,6 +11,7 @@ import { find, outline } from "@vunemi/perception";
 import type { BrowserBackend } from "./backend.js";
 import { detectChallenge } from "./challenge.js";
 import { PageActionError, PageDriver, type PointerEvent } from "./page.js";
+import type { TrustedSites } from "./url-policy.js";
 
 export interface TabView {
   id: number;
@@ -42,7 +43,14 @@ export class BrowserController {
 
   private pointerListener: ((target: string, p: PointerEvent) => Promise<void> | void) | null = null;
 
-  constructor(private readonly connect: () => Promise<BrowserBackend>) {}
+  /**
+   * `trusted` is the user's list of private-network sites the browser may
+   * open; see url-policy.
+   */
+  constructor(
+    private readonly connect: () => Promise<BrowserBackend>,
+    readonly trusted: () => TrustedSites = () => new Set(),
+  ) {}
 
   /** Lets a UI draw the agent's cursor; see PageDriver.pointer. */
   onPointer(listener: (target: string, p: PointerEvent) => Promise<void> | void): void {
@@ -96,7 +104,13 @@ export class BrowserController {
       this.current = target;
     }
     const { driver, target } = await this.page();
-    await driver.navigate(url);
+    try {
+      await driver.navigate(url);
+    } catch (err) {
+      // The network guard refused it; say why rather than Chromium's error code.
+      const why = err instanceof PageActionError && err.message.includes("ERR_BLOCKED_BY_CLIENT") ? b.blockReason?.(target) : null;
+      throw why ? new PageActionError(why) : err;
+    }
     await driver.settle();
     return this.landing(driver, target);
   }

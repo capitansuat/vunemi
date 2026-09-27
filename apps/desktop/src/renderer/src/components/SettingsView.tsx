@@ -1,9 +1,9 @@
 import { useEffect, useState, type ComponentType } from "react";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import type { Autonomy, AutonomyPolicy } from "@vunemi/agent-core";
 import { ACTION_CLASSES } from "@vunemi/agent-core";
-import { LOCALES, t } from "@vunemi/i18n";
-import type { LockState, PermissionSettings, PreferenceView } from "../../../shared/ipc.js";
+import { LOCALES, t, type MessageKey } from "@vunemi/i18n";
+import type { LockState, PermissionSettings, PreferenceView, TrustedSiteResult } from "../../../shared/ipc.js";
 import { ConnectionsView, Switch } from "./ConnectionsView.js";
 import { ModelPicker } from "./ModelPicker.js";
 import { ModelSources } from "./ModelSources.js";
@@ -256,7 +256,102 @@ function SecuritySection() {
       {asking && <p className="mt-3 text-[12px] text-muted">{t("settings.lock.asking")}</p>}
       <p className="mt-3 text-[11.5px] text-faint">{t("settings.lock.note")}</p>
       {error && <p role="alert" className="mt-3 text-[12px] text-danger">{error}</p>}
+      <TrustedSites />
     </div>
+  );
+}
+
+const TRUST_ERRORS: Record<Extract<TrustedSiteResult, { ok: false }>["reason"], MessageKey> = {
+  invalid: "settings.trusted.error.invalid",
+  "this-computer": "settings.trusted.error.thisComputer",
+  full: "settings.trusted.error.full",
+};
+
+/**
+ * Private-network sites the browser may open. Only here, only by the user:
+ * nothing in a chat can add one.
+ */
+function TrustedSites() {
+  const [sites, setSites] = useState<string[] | null>(null);
+  const [draft, setDraft] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void window.vunemi.getTrustedSites().then(setSites).catch(() => setSites([]));
+  }, []);
+
+  async function add() {
+    setError(null);
+    try {
+      const result = await window.vunemi.addTrustedSite(draft);
+      if (!result.ok) return setError(t(TRUST_ERRORS[result.reason]));
+      setSites(result.sites);
+      setDraft("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function remove(host: string) {
+    setError(null);
+    try {
+      setSites(await window.vunemi.removeTrustedSite(host));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  return (
+    <section className="mt-9" aria-labelledby="trusted-sites">
+      <h3 id="trusted-sites" className="text-[14px] font-semibold text-fg">{t("settings.trusted.title")}</h3>
+      <p className="mt-1 text-[13px] text-muted">{t("settings.trusted.intro")}</p>
+      <form
+        className="mt-4 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void add();
+        }}
+      >
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={t("settings.trusted.placeholder")}
+          aria-label={t("settings.trusted.title")}
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] text-fg placeholder:text-faint focus:border-line-strong focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={!draft.trim()}
+          className="shrink-0 rounded-lg bg-fg px-3 py-1.5 text-[12.5px] font-medium text-bg hover:opacity-90 disabled:opacity-40"
+        >
+          {t("settings.trusted.add")}
+        </button>
+      </form>
+      {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
+      {sites && sites.length === 0 && <p className="mt-3 text-[12px] text-faint">{t("settings.trusted.empty")}</p>}
+      {sites && sites.length > 0 && (
+        <ul className="mt-3 divide-y divide-line rounded-xl border border-line bg-surface">
+          {sites.map((host) => (
+            <li key={host} className="flex items-center justify-between gap-3 px-3.5 py-2">
+              <span className="min-w-0 truncate font-mono text-[12.5px] text-fg">{host}</span>
+              <button
+                type="button"
+                onClick={() => void remove(host)}
+                aria-label={t("settings.trusted.remove", { host })}
+                title={t("settings.trusted.remove", { host })}
+                className="grid size-6 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-fg"
+              >
+                <X size={13} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-3 text-[11.5px] text-faint">{t("settings.trusted.note")}</p>
+    </section>
   );
 }
 

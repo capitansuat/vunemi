@@ -16,7 +16,7 @@ import type { ToolDef, ToolRegistry } from "@vunemi/agent-core";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { APP_GUIDE_INDEX, createEverydayTools, createWhatsAppTool, createShortcutTools, SHORTCUTS_INSTRUCTIONS, createFinderTools, createGuideTool, createNotesTools, createOfficeTools, createRunner, createGeneralTools, onDemand, ScriptableCatalog, FINDER_INSTRUCTIONS, NOTES_INSTRUCTIONS } from "@vunemi/apps";
-import { BROWSER_INSTRUCTIONS, type BrowserController, createBrowserTools } from "@vunemi/browser";
+import { BROWSER_INSTRUCTIONS, type BrowserController, createBrowserTools, type TrustedSites } from "@vunemi/browser";
 import { Connectors, type Capability, type Connector, type ConnectorStatus } from "@vunemi/connectors";
 import { createFileTools, FILE_INSTRUCTIONS, type Roots } from "@vunemi/files";
 import { CALENDAR_INSTRUCTIONS, createCalendarTools, createDesktopTools, DESKTOP_INSTRUCTIONS, type Helper } from "@vunemi/mac";
@@ -104,7 +104,7 @@ ${APP_GUIDE_INDEX}`;
  * the user once per app; a refusal is remembered here until a call to that
  * app works again, so the connection can say which app needs the switch.
  */
-export function appsConnector(opts: { roots: Roots; catalog: ScriptableCatalog; osascript?: string; shotDir?: string }): Connector {
+export function appsConnector(opts: { roots: Roots; catalog: ScriptableCatalog; osascript?: string; shotDir?: string; trusted?: () => TrustedSites }): Connector {
   const denied = new Set<string>();
   const run = createRunner({
     ...(opts.osascript && { osascript: opts.osascript }),
@@ -134,7 +134,7 @@ export function appsConnector(opts: { roots: Roots; catalog: ScriptableCatalog; 
         : { state: "blocked", settings: "automation", reason: t("connectors.apps.denied", { apps: [...denied].join(", ") }) },
     tools: () => {
       // Inside the screenshots folder: the window may show pictures from there, and nothing else.
-      const everyday = createEverydayTools(run, opts.roots, opts.shotDir ? { thumbDir: join(opts.shotDir, "photos") } : {});
+      const everyday = createEverydayTools(run, opts.roots, { ...(opts.shotDir ? { thumbDir: join(opts.shotDir, "photos") } : {}), ...(opts.trusted && { trusted: opts.trusted }) });
       const pick = (...names: string[]) => everyday.filter((tool) => names.includes(tool.name));
       return [
         ...createNotesTools(run),
@@ -304,7 +304,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       },
     },
 
-    appsConnector({ roots: opts.roots, catalog: opts.appCatalog, shotDir: opts.shotDir }),
+    appsConnector({ roots: opts.roots, catalog: opts.appCatalog, shotDir: opts.shotDir, trusted: opts.browser.trusted }),
 
     shortcutsConnector(),
 

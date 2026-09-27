@@ -11,7 +11,7 @@ import { mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import type { Artifact, ToolContext, ToolDef } from "@vunemi/agent-core";
-import { checkNavigation } from "@vunemi/browser";
+import { checkNavigation, type TrustedSites } from "@vunemi/browser";
 import type { Roots } from "@vunemi/files";
 import { t } from "@vunemi/i18n";
 import type { ScriptRunner } from "./runner.js";
@@ -278,6 +278,8 @@ const MAX_CONTACTS = 10;
 export interface EverydayOptions {
   /** Vunemi's own folder for small pictures of found photos; none, none shown. */
   thumbDir?: string;
+  /** Private-network sites the user trusts; see checkNavigation. */
+  trusted?: () => TrustedSites;
 }
 
 interface FoundPhoto { id: string; filename: string; date: string | null }
@@ -446,8 +448,8 @@ export function createEverydayTools(run: ScriptRunner, roots: Roots, opts: Every
       async run(a) {
         const name = browser(a.browser);
         const url = String(a.url ?? "").trim();
-        // The same rule as Vunemi's own browser: public http(s) pages only.
-        const refused = url === "about:blank" ? "Give a full http(s) address." : checkNavigation(url);
+        // The same rule as Vunemi's own browser: public http(s) pages, and the sites the user trusts.
+        const refused = url === "about:blank" ? "Give a full http(s) address." : checkNavigation(url, opts.trusted?.());
         if (refused) throw new Error(refused);
         await run(BROWSER_OPEN, { app: name, bundle: BROWSERS[name], url: new URL(url).href });
         return `Opened ${new URL(url).href} in ${name}.`;

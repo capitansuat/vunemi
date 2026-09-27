@@ -283,6 +283,9 @@ export const messages: Catalogue = {
   },
 
   pane: {
+    blocked: "{host} si trova in una rete privata, quindi il browser di Vunemi non l'ha aperto. Se conosci questo sito e ti fidi, aggiungilo nelle Impostazioni.",
+    blockedOwn: "{host} è l'indirizzo proprio di questo Mac. Il browser di Vunemi non lo apre mai.",
+    openSettings: "Apri Impostazioni",
     newTab: "Nuovo pannello",
     close: "Chiudi il pannello",
     closeLabel: "Chiudi il pannello del browser",
@@ -470,6 +473,20 @@ export const messages: Catalogue = {
       intro: "Disattivato per impostazione predefinita. Se lo attivi, Vunemi lo chiede all’apertura e dopo che il Mac si è bloccato. Lo chiede macOS, nella sua finestra; Vunemi non vede mai la tua password.",
       note: "I tuoi segreti sono cifrati in ogni caso; il blocco protegge la finestra. Fermare un’attività in corso funziona sempre, anche con Vunemi bloccato.",
       asking: "In attesa di Touch ID o della password…",
+    },
+    trusted: {
+      title: "Siti attendibili",
+      intro: "Il browser di Vunemi non apre siti di una rete privata, come l'intranet di un'università o di un'azienda, un router o una stampante. Altrimenti una pagina web potrebbe usare l'agente per raggiungere la tua rete. Aggiungi un sito qui solo se lo conosci e ti fidi; allora si aprirà come qualsiasi altra pagina.",
+      placeholder: "intranet.example.ac.uk",
+      add: "Aggiungi",
+      empty: "Ancora nessun sito attendibile.",
+      remove: "Rimuovi {host}",
+      note: "Solo tu puoi aggiungere siti, qui. L'agente non può. Gli indirizzi propri di questo Mac (localhost, 127.0.0.1) non vengono mai aperti.",
+      error: {
+        invalid: "Questo non è un indirizzo web. Scrivi un host come intranet.example.ac.uk, senza * né spazi.",
+        thisComputer: "Gli indirizzi propri di questo Mac non possono essere attendibili: lì si trovano i controlli di Vunemi.",
+        full: "L'elenco è pieno. Rimuovi prima un sito che non ti serve più.",
+      },
     },
     language: {
       intro: "L’interfaccia di Vunemi, i suoi messaggi e le risposte dell’agente saranno in questa lingua. Anche il riconoscimento vocale se la aspetta.",

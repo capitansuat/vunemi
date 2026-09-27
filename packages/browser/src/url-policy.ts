@@ -1,5 +1,6 @@
 /**
- * Where the agent may navigate. Deliberately narrow: public http(s) only.
+ * Where the agent may navigate. Deliberately narrow: public http(s), plus the
+ * private-network sites the user has trusted in Settings.
  *
  * Blocking loopback and private ranges keeps the agent away from this app's
  * own control surfaces (the dev server, the browser's DevTools port, the
@@ -7,12 +8,78 @@
  * injection. `new URL()` does the canonicalising (tabs/newlines stripped,
  * `127.1` and `0x7f000001` → `127.0.0.1`), so checks run on the real host.
  *
+ * A campus or company intranet is private too, and the user may know it well.
+ * Such a host opens once the user adds it to the trusted list; only the user
+ * can, from Settings. This computer's own addresses can never be trusted:
+ * Vunemi's own controls live there.
+ *
  * That checks the first address the agent asks for. Everything a page asks
  * for afterwards (redirects, new windows, frames, fetches) goes through
  * `requestGuard`, which also resolves host names.
  */
 
-export function checkNavigation(raw: string): string | null {
+/** The hosts the user trusts, lower-case and without a trailing dot. */
+export type TrustedSites = ReadonlySet<string>;
+const NONE: TrustedSites = new Set();
+
+const TRUST_HINT = "If the user knows and trusts this site, they can add it under Settings › Security › Trusted sites, and it will open. Tell the user this; don't retry it or look for another way in.";
+
+function privateNetwork(host: string, address?: string): string {
+  const where = address ? `${host} points to a private network address (${address})` : `${host} is on a private network`;
+  return `${where}, such as a campus or company intranet, a router or another device, so Vunemi's browser won't open it. ${TRUST_HINT}`;
+}
+
+/** Whether a refusal is one the user can lift by trusting the site. */
+export function trustWouldOpen(reason: string): boolean {
+  return reason.endsWith(TRUST_HINT);
+}
+
+function thisComputer(host: string): string {
+  return `${host} is this computer's own address. Vunemi's browser never opens it, because Vunemi's own controls live there.`;
+}
+
+function hostOf(url: URL): string {
+  return url.hostname.replace(/\.$/, "").toLowerCase();
+}
+
+/** localhost and loopback, plus link-local (cloud metadata lives there): never trusted. */
+function isThisComputer(host: string): boolean {
+  if (host === "localhost" || host.endsWith(".localhost") || host === "0.0.0.0" || host === "[::]" || host === "[::1]") return true;
+  const v4 = host.match(/^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+  if (v4) return v4[1] === "127" || v4[1] === "0" || (v4[1] === "169" && v4[2] === "254");
+  const mapped = host.match(/^\[::ffff:(\d{1,3}(?:\.\d{1,3}){3})\]$/);
+  if (mapped) return isThisComputer(mapped[1]!);
+  const hex = host.match(/^\[::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})\]$/);
+  if (hex) {
+    const hi = parseInt(hex[1]!, 16);
+    const lo = parseInt(hex[2]!, 16);
+    return isThisComputer(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+  }
+  return /^\[fe[89ab]/.test(host);
+}
+
+/**
+ * Turns what the user typed into a host that can be trusted: a bare host or a
+ * full address, with or without a path. Refused when it is not a web host,
+ * or is this computer's own address.
+ */
+export function trustableHost(raw: string): { host: string } | { refused: "invalid" | "this-computer" } {
+  const text = raw.trim();
+  if (!text || /[\s*]/.test(text)) return { refused: "invalid" };
+  let url: URL;
+  try {
+    url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`);
+  } catch {
+    return { refused: "invalid" };
+  }
+  if ((url.protocol !== "https:" && url.protocol !== "http:") || url.username || url.password) return { refused: "invalid" };
+  const host = hostOf(url);
+  if (isThisComputer(host)) return { refused: "this-computer" };
+  if (!host.includes(".") && !host.startsWith("[")) return { refused: "invalid" };
+  return { host };
+}
+
+export function checkNavigation(raw: string, trusted: TrustedSites = NONE): string | null {
   let url: URL;
   try {
     url = new URL(raw.trim());
@@ -28,12 +95,11 @@ export function checkNavigation(raw: string): string | null {
     return "URLs with embedded credentials are not allowed.";
   }
 
-  const host = url.hostname.replace(/\.$/, "").toLowerCase();
-  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal")) {
-    return `Local network address ${host} is blocked.`;
-  }
-  if (isPrivateIPv4(host) || isPrivateIPv6(host)) {
-    return `Private or loopback address ${host} is blocked.`;
+  const host = hostOf(url);
+  if (isThisComputer(host)) return thisComputer(host);
+  if (trusted.has(host)) return null;
+  if (host.endsWith(".local") || host.endsWith(".internal") || isPrivateIPv4(host) || isPrivateIPv6(host)) {
+    return privateNetwork(host);
   }
   return null;
 }
@@ -51,11 +117,29 @@ const GUARD_MAX_HOSTS = 500;
  * that doesn't resolve is left to fail on its own. Chromium resolves again
  * after this, so a name that changes its answer in between (DNS rebinding)
  * can still get through; this closes the plain cases.
+ *
+ * A trusted host opens as a page, and pages of trusted hosts may use each
+ * other. A public page may not reach a trusted private host in the background
+ * (the router attack Chrome's Local Network Access guards against), so `from`
+ * is the address of the page making the request, absent for the page itself.
  * Returns why a request is refused, or null.
  */
-export function requestGuard(lookup: Lookup, ttlMs = GUARD_TTL_MS): (raw: string) => Promise<string | null> {
-  const known = new Map<string, { at: number; verdict: Promise<string | null> }>();
-  return async (raw) => {
+export function requestGuard(
+  lookup: Lookup,
+  ttlMs = GUARD_TTL_MS,
+  trusted: () => TrustedSites = () => NONE,
+): (raw: string, from?: string) => Promise<string | null> {
+  const known = new Map<string, { at: number; addresses: Promise<string[]> }>();
+  const resolve = (host: string): Promise<string[]> => {
+    const now = Date.now();
+    const cached = known.get(host);
+    if (cached && now - cached.at < ttlMs) return cached.addresses;
+    if (known.size >= GUARD_MAX_HOSTS) known.clear();
+    const addresses = lookup(host).catch(() => []);
+    known.set(host, { at: now, addresses });
+    return addresses;
+  };
+  return async (raw, from) => {
     let url: URL;
     try {
       url = new URL(raw);
@@ -65,24 +149,37 @@ export function requestGuard(lookup: Lookup, ttlMs = GUARD_TTL_MS): (raw: string
     // data:, blob: and the like are the page's own; only the network is judged.
     const web = url.protocol === "ws:" ? "http:" : url.protocol === "wss:" ? "https:" : url.protocol;
     if (web !== "http:" && web !== "https:") return null;
-    const fixed = checkNavigation(`${web}//${url.host}/`);
-    if (fixed) return fixed;
-    const host = url.hostname.replace(/\.$/, "").toLowerCase();
+    const host = hostOf(url);
+    const trust = trusted();
+    const isTrusted = trust.has(host) && !isThisComputer(host);
+    if (isTrusted && from !== undefined) {
+      // A page that can't be told is treated as a stranger.
+      const page = safeHost(from);
+      if (page === null || !trust.has(page)) {
+        return `A page on ${page ?? "an unknown site"} tried to reach ${host}, a trusted private-network site, in the background. Only pages of trusted sites may do that.`;
+      }
+    }
+    if (!isTrusted) {
+      const fixed = checkNavigation(`${web}//${url.host}/`);
+      if (fixed) return fixed;
+    }
     if (host.startsWith("[") || /^[\d.]+$/.test(host)) return null; // an address, judged above
-    const now = Date.now();
-    const cached = known.get(host);
-    if (cached && now - cached.at < ttlMs) return cached.verdict;
-    if (known.size >= GUARD_MAX_HOSTS) known.clear();
-    const verdict = lookup(host).then(
-      (addresses) => {
-        const inside = addresses.find(isPrivateAddress);
-        return inside ? `${host} points to a private or loopback address (${inside}) and is blocked.` : null;
-      },
-      () => null,
-    );
-    known.set(host, { at: now, verdict });
-    return verdict;
+    // A name is judged by what it resolves to; one that doesn't resolve is left to fail on its own.
+    const addresses = await resolve(host);
+    const own = addresses.find((ip) => isThisComputer(ip.includes(":") ? `[${ip.replace(/%.*$/, "")}]` : ip));
+    if (own) return thisComputer(`${host} (${own})`);
+    const inside = isTrusted ? undefined : addresses.find(isPrivateAddress);
+    return inside ? privateNetwork(host, inside) : null;
   };
+}
+
+function safeHost(raw: string): string | null {
+  try {
+    const url = new URL(raw);
+    return url.protocol === "http:" || url.protocol === "https:" ? hostOf(url) : null;
+  } catch {
+    return null;
+  }
 }
 
 /** A bare IPv4 or IPv6 address (no brackets) that is loopback, private, link-local or reserved. */

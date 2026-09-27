@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Bot, Globe, Hand, Play, Plus, RotateCw, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, Globe, Hand, Play, Plus, RotateCw, ShieldAlert, X } from "lucide-react";
 import { callDetail, toolLabel } from "../lib/labels.js";
 import type { EmbeddedTab } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
@@ -71,6 +71,7 @@ export function BrowserPane() {
 
       <Toolbar tab={active} />
       <AgentBar />
+      {active?.blocked && <BlockedBar blocked={active.blocked} />}
 
       <div ref={stage} className="relative min-h-0 flex-1 bg-bg">
         {!active && (
@@ -88,6 +89,29 @@ export function BrowserPane() {
         )}
       </div>
     </aside>
+  );
+}
+
+/**
+ * Why the page is Chromium's error page: it is on a private network. Above
+ * the page, since the page is a native view the HTML can't cover.
+ */
+function BlockedBar({ blocked }: { blocked: NonNullable<EmbeddedTab["blocked"]> }) {
+  const openSettings = useStore((s) => s.openSettings);
+  return (
+    <div className="flex shrink-0 items-start gap-2 border-b border-line bg-surface-2 px-3 py-2 text-[12px] text-fg" role="status">
+      <ShieldAlert size={14} className="mt-px shrink-0 text-muted" />
+      <span className="min-w-0 flex-1">{t(blocked.trustable ? "pane.blocked" : "pane.blockedOwn", { host: blocked.host })}</span>
+      {blocked.trustable && (
+        <button
+          type="button"
+          onClick={() => openSettings("security")}
+          className="shrink-0 rounded-md border border-line-strong bg-surface px-2.5 py-0.5 text-[12px] font-medium hover:bg-bg"
+        >
+          {t("pane.openSettings")}
+        </button>
+      )}
+    </div>
   );
 }
 

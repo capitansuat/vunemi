@@ -283,6 +283,9 @@ export const messages: Catalogue = {
   },
 
   pane: {
+    blocked: "{host} se trouve sur un réseau privé, le navigateur de Vunemi ne l'a donc pas ouvert. Si vous connaissez ce site et lui faites confiance, ajoutez-le dans les Réglages.",
+    blockedOwn: "{host} est l'adresse propre à ce Mac. Le navigateur de Vunemi ne l'ouvre jamais.",
+    openSettings: "Ouvrir les Réglages",
     newTab: "Nouvel onglet",
     close: "Fermer le panneau",
     closeLabel: "Fermer le panneau du navigateur",
@@ -470,6 +473,20 @@ export const messages: Catalogue = {
       intro: "Désactivé par défaut. Une fois activé, Vunemi le demande à l’ouverture et après le verrouillage de votre Mac. C’est macOS qui le demande, dans sa propre fenêtre ; Vunemi ne voit jamais votre mot de passe.",
       note: "Vos secrets sont chiffrés dans tous les cas ; le verrou protège la fenêtre. Arrêter une tâche en cours reste toujours possible, même quand Vunemi est verrouillé.",
       asking: "En attente de Touch ID ou de votre mot de passe…",
+    },
+    trusted: {
+      title: "Sites de confiance",
+      intro: "Le navigateur de Vunemi n'ouvre pas les sites d'un réseau privé : l'intranet d'une université ou d'une entreprise, un routeur, une imprimante. Sinon, une page web pourrait se servir de l'agent pour atteindre votre réseau. N'ajoutez un site ici que si vous le connaissez et lui faites confiance ; il s'ouvrira alors comme n'importe quelle page.",
+      placeholder: "intranet.example.ac.uk",
+      add: "Ajouter",
+      empty: "Aucun site de confiance pour l'instant.",
+      remove: "Retirer {host}",
+      note: "Vous seul pouvez ajouter des sites, ici. L'agent ne le peut pas. Les adresses propres à ce Mac (localhost, 127.0.0.1) ne sont jamais ouvertes.",
+      error: {
+        invalid: "Ce n'est pas une adresse web. Saisissez un hôte comme intranet.example.ac.uk, sans * ni espace.",
+        thisComputer: "Les adresses propres à ce Mac ne peuvent pas être de confiance : les commandes de Vunemi s'y trouvent.",
+        full: "La liste est pleine. Retirez d'abord un site dont vous n'avez plus besoin.",
+      },
     },
     language: {
       intro: "L’interface de Vunemi, ses messages et les réponses de l’agent seront dans cette langue. La reconnaissance vocale l’attend aussi.",

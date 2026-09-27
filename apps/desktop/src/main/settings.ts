@@ -13,6 +13,7 @@ import { DEFAULT_POLICY, type Autonomy, type AutonomyPolicy } from "@vunemi/agen
 import type { McpServerConfig } from "@vunemi/mcp";
 import { validateMailConfig, type ImapSmtpConfig } from "@vunemi/mail";
 import { isLocale, type Locale } from "@vunemi/i18n";
+import { trustableHost } from "@vunemi/browser";
 import type { LocalModelSettings } from "../shared/ipc.js";
 import { DEFAULT_MODEL_SETTINGS, validateModelSettings } from "./providers.js";
 import { t } from "@vunemi/i18n";
@@ -68,9 +69,28 @@ export interface Settings {
   language: Locale | null;
   /** Touch ID or the Mac password before the window answers. Off unless the user turns it on. */
   appLock: boolean;
+  /**
+   * Private-network hosts (a campus or company intranet) the browser may
+   * open. Only the user adds them, here in Settings; never the agent.
+   */
+  trustedSites: string[];
 }
 
-const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false };
+/** Enough for anyone's intranet; a list longer than this is no longer a choice. */
+export const MAX_TRUSTED_SITES = 100;
+
+/** Only hosts that can be trusted, once each, however they got into the file. */
+function cleanSites(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const hosts = value.flatMap((raw) => {
+    if (typeof raw !== "string") return [];
+    const site = trustableHost(raw);
+    return "host" in site ? [site.host] : [];
+  });
+  return [...new Set(hosts)].slice(0, MAX_TRUSTED_SITES);
+}
+
+const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false, trustedSites: [] };
 
 /**
  * Settings that exist but can't be read. Everything falls back to its
@@ -102,10 +122,12 @@ export function validPolicy(value: unknown): value is AutonomyPolicy {
 export class SettingsStore {
   private readonly file: string;
   private current: Settings;
+  private trusted: ReadonlySet<string>;
 
   constructor(dir: string) {
     this.file = join(dir, "settings.json");
     this.current = this.read();
+    this.trusted = new Set(this.current.trustedSites);
   }
 
   get all(): Settings {
@@ -176,12 +198,25 @@ export class SettingsStore {
     this.replace({ ...this.current, appLock: on === true });
   }
 
+  /** The trusted private-network hosts, as a set the browser can ask. */
+  get trustedSites(): ReadonlySet<string> {
+    return this.trusted;
+  }
+
+  get trustedSiteList(): string[] {
+    return [...this.current.trustedSites];
+  }
+
+  setTrustedSites(sites: string[]): void {
+    this.replace({ ...this.current, trustedSites: cleanSites(sites) });
+  }
+
   /**
    * Forgets everything but the language and the lock: a person who forgets
    * their data has not forgotten how to read, nor stopped wanting the door shut.
    */
   reset(): void {
-    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock });
+    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock, trustedSites: [] });
   }
 
   private replace(next: Settings): void {
@@ -193,6 +228,7 @@ export class SettingsStore {
       this.current = previous;
       throw err;
     }
+    this.trusted = new Set(next.trustedSites);
   }
 
   private read(): Settings {
@@ -233,7 +269,7 @@ export class SettingsStore {
       // Vunemi in Turkish, the only language it had; keep them there.
       const stored = (parsed as Settings).language;
       const language = stored === undefined ? "tr" : isLocale(stored) ? stored : null;
-      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true };
+      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites) };
     } catch (err) {
       // No file yet is a first launch. A file that can't be read is not.
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { ...EMPTY };

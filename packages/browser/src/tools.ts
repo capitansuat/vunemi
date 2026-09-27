@@ -96,7 +96,7 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       untrustedOutput: true,
       async run(a, ctx) {
         const url = String(a.url);
-        const blocked = checkNavigation(url);
+        const blocked = checkNavigation(url, browser.trusted());
         if (blocked) throw new PageActionError(blocked);
         return guarded(browser, ctx, () => browser.goto(url, a.new_tab === true));
       },

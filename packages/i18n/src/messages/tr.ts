@@ -287,6 +287,9 @@ export const messages = {
   },
 
   pane: {
+    blocked: "{host} özel bir ağda olduğu için Vunemi'nin tarayıcısı açmadı. Siteyi tanıyor ve güveniyorsan Ayarlar'dan ekle.",
+    blockedOwn: "{host} bu Mac'in kendi adresi. Vunemi'nin tarayıcısı onu hiçbir zaman açmaz.",
+    openSettings: "Ayarları aç",
     newTab: "Yeni sekme",
     close: "Paneli kapat",
     closeLabel: "Tarayıcı panelini kapat",
@@ -474,6 +477,20 @@ export const messages = {
       intro: "Varsayılan olarak kapalı. Açıkken Vunemi açılışta ve Mac'in kilitlendikten sonra sorar. Soruyu macOS kendi penceresinde sorar; Vunemi parolanı hiç görmez.",
       note: "Sırların her durumda şifreli; kilit pencereyi korur. Çalışan bir görevi durdurmak, Vunemi kilitliyken bile her zaman mümkün.",
       asking: "Touch ID ya da parolan bekleniyor…",
+    },
+    trusted: {
+      title: "Güvenli siteler",
+      intro: "Vunemi'nin tarayıcısı özel ağdaki siteleri açmaz: kampüs ya da şirket iç ağı, modem, yazıcı gibi. Yoksa bir web sayfası ajanı kullanarak ağına uzanabilirdi. Bir siteyi yalnız tanıyor ve güveniyorsan buraya ekle; o zaman her sayfa gibi açılır.",
+      placeholder: "intranet.example.ac.uk",
+      add: "Ekle",
+      empty: "Henüz güvenli site yok.",
+      remove: "{host} sitesini kaldır",
+      note: "Siteyi yalnız sen, buradan ekleyebilirsin; ajan ekleyemez. Bu Mac'in kendi adresleri (localhost, 127.0.0.1) hiçbir zaman açılmaz.",
+      error: {
+        invalid: "Bu bir web adresi değil. intranet.example.ac.uk gibi bir adres yaz; * ya da boşluk olmasın.",
+        thisComputer: "Bu Mac'in kendi adresleri güvenli listeye eklenemez: Vunemi'nin kendi denetimleri orada.",
+        full: "Liste dolu. Önce artık gerekmeyen bir siteyi kaldır.",
+      },
     },
     language: {
       intro: "Vunemi'nin arayüzü, mesajları ve ajanın yanıtları bu dilde olur. Ses tanıma da bu dili bekler.",

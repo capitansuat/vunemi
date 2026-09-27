@@ -54,6 +54,9 @@ const api: VunemiApi = {
   getLock: () => ipcRenderer.invoke(CH.lockGet),
   unlock: () => ipcRenderer.invoke(CH.lockUnlock),
   setAppLock: (on) => ipcRenderer.invoke(CH.lockSet, on),
+  getTrustedSites: () => ipcRenderer.invoke(CH.trustedSitesGet),
+  addTrustedSite: (raw) => ipcRenderer.invoke(CH.trustedSitesAdd, raw),
+  removeTrustedSite: (host) => ipcRenderer.invoke(CH.trustedSitesRemove, host),
   onLock: (listener) => {
     const handler = (_e: unknown, state: LockState) => listener(state);
     ipcRenderer.on(CH.lockChanged, handler);

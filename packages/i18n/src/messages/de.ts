@@ -283,6 +283,9 @@ export const messages: Catalogue = {
   },
 
   pane: {
+    blocked: "{host} liegt in einem privaten Netzwerk, daher hat der Browser von Vunemi die Seite nicht geöffnet. Wenn du die Website kennst und ihr vertraust, füge sie in den Einstellungen hinzu.",
+    blockedOwn: "{host} ist die eigene Adresse dieses Macs. Der Browser von Vunemi öffnet sie nie.",
+    openSettings: "Einstellungen öffnen",
     newTab: "Neuer Tab",
     close: "Bereich schließen",
     closeLabel: "Browserbereich schließen",
@@ -470,6 +473,20 @@ export const messages: Catalogue = {
       intro: "Standardmäßig aus. Wenn aktiv, fragt Vunemi beim Öffnen und nachdem dein Mac gesperrt wurde. macOS fragt in seinem eigenen Fenster; Vunemi sieht dein Passwort nie.",
       note: "Deine Geheimnisse sind so oder so verschlüsselt; die Sperre schützt das Fenster. Eine laufende Aufgabe lässt sich immer stoppen, auch wenn Vunemi gesperrt ist.",
       asking: "Warte auf Touch ID oder dein Passwort …",
+    },
+    trusted: {
+      title: "Vertrauenswürdige Websites",
+      intro: "Der Browser von Vunemi öffnet keine Websites in einem privaten Netzwerk, etwa im Intranet einer Hochschule oder Firma, auf einem Router oder Drucker. Sonst könnte eine Webseite den Agenten nutzen, um in dein Netzwerk zu greifen. Füge eine Website nur hinzu, wenn du sie kennst und ihr vertraust; dann öffnet sie sich wie jede andere Seite.",
+      placeholder: "intranet.example.ac.uk",
+      add: "Hinzufügen",
+      empty: "Noch keine vertrauenswürdigen Websites.",
+      remove: "{host} entfernen",
+      note: "Nur du kannst hier Websites hinzufügen, der Agent nicht. Die eigenen Adressen dieses Macs (localhost, 127.0.0.1) werden nie geöffnet.",
+      error: {
+        invalid: "Das ist keine Webadresse. Gib einen Host wie intranet.example.ac.uk ein, ohne * oder Leerzeichen.",
+        thisComputer: "Die eigenen Adressen dieses Macs können nicht vertrauenswürdig sein: Dort liegen Vunemis eigene Steuerungen.",
+        full: "Die Liste ist voll. Entferne zuerst eine Website, die du nicht mehr brauchst.",
+      },
     },
     language: {
       intro: "Oberfläche, Meldungen und die Antworten des Agenten sind in dieser Sprache. Auch die Spracherkennung erwartet sie.",

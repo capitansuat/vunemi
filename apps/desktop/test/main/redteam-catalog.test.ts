@@ -24,8 +24,10 @@ describe("threat-model attack classes", () => {
   });
 
   it("blocks URL and control-plane routes to local services", () => {
-    expect(checkNavigation("http://127.0.0.1:9222/json")).toMatch(/blocked/);
-    expect(checkNavigation("http://192.168.1.1/settings")).toMatch(/blocked/);
+    expect(checkNavigation("http://127.0.0.1:9222/json")).toMatch(/never opens it/);
+    expect(checkNavigation("http://192.168.1.1/settings")).toMatch(/won't open it/);
+    // Trusting a site can't open this Mac's own control surfaces.
+    expect(checkNavigation("http://127.0.0.1:9222/json", new Set(["127.0.0.1"]))).toMatch(/never opens it/);
   });
 
   it("blocks a scam purchase under the default financial policy", () => {

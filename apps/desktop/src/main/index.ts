@@ -5,11 +5,11 @@ import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
 import { type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
-import { BrowserController } from "@vunemi/browser";
+import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type VaultStatus } from "../shared/ipc.js";
+import { CH, EMERGENCY_STOP_ACCELERATOR, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type VaultStatus } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -28,7 +28,7 @@ import { DownloadError } from "./engine/download.js";
 import { buildConnectors } from "./connectors.js";
 import { ScriptableCatalog, shortcutName } from "@vunemi/apps";
 import { createDemoTools } from "./demo-tools.js";
-import { SettingsStore, validPolicy } from "./settings.js";
+import { MAX_TRUSTED_SITES, SettingsStore, validPolicy } from "./settings.js";
 import { migrateMcpSecrets, removeMcpSecrets, sealMcpServer, unsealed } from "./mcp-secrets.js";
 import { vaultMcpIO } from "./remote-mcp.js";
 import { checkAgentModel, modelConfig, probeProviders } from "./providers.js";
@@ -99,11 +99,14 @@ function send(channel: string, payload: unknown): void {
 
 // The agent browses inside the Vunemi window, where the user can watch and
 // step in. Nothing to install.
-const embedded = new EmbeddedBrowser();
+// Private-network sites open only once the user trusts them in Settings;
+// asked on every request, so a change applies at once.
+const trustedSites = () => settings.trustedSites;
+const embedded = new EmbeddedBrowser(trustedSites);
 const browser = new BrowserController(async () => {
   if (!embedded.available) throw new Error("The Vunemi window is closed, so its browser is unavailable.");
   return new EmbeddedBackend(embedded);
-});
+}, trustedSites);
 
 browser.onPointer((target, p) => embedded.showPointer(target, p));
 
@@ -934,6 +937,22 @@ appLock.onChange((locked) => {
   send(CH.lockChanged, lockState());
 });
 embedded.setCovered(appLock.isLocked);
+
+handle(CH.trustedSitesGet, (): string[] => settings.trustedSiteList);
+handle(CH.trustedSitesAdd, (_e, raw: unknown): TrustedSiteResult => {
+  const site = trustableHost(typeof raw === "string" ? raw.slice(0, 2048) : "");
+  if ("refused" in site) return { ok: false, reason: site.refused };
+  const sites = settings.trustedSiteList;
+  if (!sites.includes(site.host)) {
+    if (sites.length >= MAX_TRUSTED_SITES) return { ok: false, reason: "full" };
+    settings.setTrustedSites([...sites, site.host]);
+  }
+  return { ok: true, sites: settings.trustedSiteList, host: site.host };
+});
+handle(CH.trustedSitesRemove, (_e, host: unknown): string[] => {
+  settings.setTrustedSites(settings.trustedSiteList.filter((h) => h !== host));
+  return settings.trustedSiteList;
+});
 
 handle(CH.languageGet, (): Locale => getLocale());
 handle(CH.languageSet, (_e, next: unknown): Locale => {

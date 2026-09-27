@@ -29,6 +29,8 @@ export interface BrowserBackend {
    * stale — a page in a hidden window stops drawing. Optional.
    */
   capture?(targetId: string): Promise<Buffer>;
+  /** Why the tab's last page was refused, if it was; see url-policy. */
+  blockReason?(targetId: string): string | null;
 }
 
 /** Drives a Chrome we launched ourselves, over its browser-level CDP endpoint. */

@@ -283,6 +283,9 @@ export const messages: Catalogue = {
   },
 
   pane: {
+    blocked: "{host} está en una red privada, así que el navegador de Vunemi no lo abrió. Si conoces este sitio y confías en él, añádelo en Ajustes.",
+    blockedOwn: "{host} es la dirección propia de este Mac. El navegador de Vunemi nunca la abre.",
+    openSettings: "Abrir Ajustes",
     newTab: "Nueva pestaña",
     close: "Cerrar el panel",
     closeLabel: "Cerrar el panel del navegador",
@@ -470,6 +473,20 @@ export const messages: Catalogue = {
       intro: "Desactivado por defecto. Si lo activas, Vunemi lo pide al abrirse y después de que tu Mac se bloquee. Lo pide macOS, en su propia ventana; Vunemi nunca ve tu contraseña.",
       note: "Tus secretos están cifrados en cualquier caso; el bloqueo protege la ventana. Detener una tarea en curso siempre funciona, incluso con Vunemi bloqueado.",
       asking: "Esperando Touch ID o tu contraseña…",
+    },
+    trusted: {
+      title: "Sitios de confianza",
+      intro: "El navegador de Vunemi no abre sitios de una red privada, como la intranet de una universidad o empresa, un router o una impresora. De lo contrario, una página web podría usar al agente para llegar a tu red. Añade un sitio aquí solo si lo conoces y confías en él; entonces se abrirá como cualquier otra página.",
+      placeholder: "intranet.example.ac.uk",
+      add: "Añadir",
+      empty: "Aún no hay sitios de confianza.",
+      remove: "Quitar {host}",
+      note: "Solo tú puedes añadir sitios, aquí. El agente no puede. Las direcciones propias de este Mac (localhost, 127.0.0.1) nunca se abren.",
+      error: {
+        invalid: "Eso no es una dirección web. Escribe un host como intranet.example.ac.uk, sin * ni espacios.",
+        thisComputer: "Las direcciones propias de este Mac no pueden ser de confianza: ahí están los controles de Vunemi.",
+        full: "La lista está llena. Quita primero un sitio que ya no necesites.",
+      },
     },
     language: {
       intro: "La interfaz de Vunemi, sus mensajes y las respuestas del agente estarán en este idioma. El reconocimiento de voz también lo espera.",

@@ -283,6 +283,9 @@ export const messages: Catalogue = {
   },
 
   pane: {
+    blocked: "{host} está em uma rede privada, por isso o navegador do Vunemi não o abriu. Se você conhece e confia neste site, adicione-o em Ajustes.",
+    blockedOwn: "{host} é o endereço do próprio Mac. O navegador do Vunemi nunca o abre.",
+    openSettings: "Abrir Ajustes",
     newTab: "Nova aba",
     close: "Fechar o painel",
     closeLabel: "Fechar o painel do navegador",
@@ -470,6 +473,20 @@ export const messages: Catalogue = {
       intro: "Desativado por padrão. Quando ativado, o Vunemi pede ao abrir e depois que o Mac é bloqueado. Quem pede é o macOS, na própria janela; o Vunemi nunca vê sua senha.",
       note: "Seus segredos são criptografados de qualquer forma; o bloqueio protege a janela. Parar uma tarefa em andamento sempre funciona, mesmo com o Vunemi bloqueado.",
       asking: "Aguardando o Touch ID ou sua senha…",
+    },
+    trusted: {
+      title: "Sites confiáveis",
+      intro: "O navegador do Vunemi não abre sites de uma rede privada, como a intranet de uma universidade ou empresa, um roteador ou uma impressora. Caso contrário, uma página da web poderia usar o agente para alcançar sua rede. Adicione um site aqui só se você o conhece e confia nele; então ele abre como qualquer outra página.",
+      placeholder: "intranet.example.ac.uk",
+      add: "Adicionar",
+      empty: "Nenhum site confiável ainda.",
+      remove: "Remover {host}",
+      note: "Só você pode adicionar sites, aqui. O agente não pode. Os endereços do próprio Mac (localhost, 127.0.0.1) nunca são abertos.",
+      error: {
+        invalid: "Isso não é um endereço da web. Escreva um host como intranet.example.ac.uk, sem * nem espaços.",
+        thisComputer: "Os endereços do próprio Mac não podem ser confiáveis: os controles do Vunemi ficam ali.",
+        full: "A lista está cheia. Remova antes um site de que não precisa mais.",
+      },
     },
     language: {
       intro: "A interface do Vunemi, as mensagens e as respostas do agente ficarão neste idioma. O reconhecimento de voz também espera por ele.",

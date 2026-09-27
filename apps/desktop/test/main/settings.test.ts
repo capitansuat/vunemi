@@ -29,6 +29,19 @@ describe("security settings", () => {
     expect(new SettingsStore(dir).appLock).toBe(false);
   });
 
+  it("keeps trusted sites clean, and forgets them on a reset", () => {
+    const { dir, settings } = store();
+    expect(settings.trustedSites.size).toBe(0);
+    settings.setTrustedSites(["intranet.example.ac.uk", "INTRANET.example.ac.uk.", "10.0.0.5"]);
+    expect(new SettingsStore(dir).trustedSiteList).toEqual(["intranet.example.ac.uk", "10.0.0.5"]);
+    expect(settings.trustedSites.has("10.0.0.5")).toBe(true);
+    // Whatever else got into the file never becomes trusted.
+    writeFileSync(join(dir, "settings.json"), JSON.stringify({ trustedSites: ["localhost", "127.0.0.1", 42, "*.corp.example", "wiki.corp.example"] }));
+    expect(new SettingsStore(dir).trustedSiteList).toEqual(["wiki.corp.example"]);
+    settings.reset();
+    expect(new SettingsStore(dir).trustedSiteList).toEqual([]);
+  });
+
   it("keeps the lock on when the settings file is there but can't be read", () => {
     const { dir } = store();
     writeFileSync(join(dir, "settings.json"), '{"appLock": tru');
