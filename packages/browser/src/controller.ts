@@ -257,6 +257,17 @@ export class BrowserController {
 
   private async page(): Promise<{ driver: PageDriver; target: string }> {
     const b = await this.ensure();
+    // The tab this run was working in can close underneath it (the user
+    // closed it, or the page went away). Its element numbers mean nothing in
+    // another tab, so say so instead of acting anywhere else.
+    if (this.current && !(await b.listTabs()).some((t) => t.targetId === this.current)) {
+      const gone = this.shortIds.get(this.current);
+      this.forget(this.current);
+      this.current = null;
+      throw new PageActionError(
+        `The tab you were working in${gone ? ` (tab ${gone})` : ""} has been closed, so nothing was done. Call tabs_list, or open the page again.`,
+      );
+    }
     if (!this.current) await this.tabs();
     if (!this.current) {
       const target = await b.openTab("about:blank");
