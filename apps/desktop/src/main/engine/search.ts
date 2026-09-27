@@ -155,7 +155,7 @@ const QUANTIZERS = ["unsloth", "lmstudio-community", "ggml-org", "google"];
  * largely fine-tunes with their safety training removed, image models and
  * embeddings. None of those belong in "a model for this Mac".
  */
-const NOT_FOR_TENAMI = /uncensor|abliterat|heretic|obliterat|crack|image|embed|rerank|asr|tts|diariz|whisper|parakeet|flux|-vl\b|\bvl-|mtp|distill|coder/i;
+const NOT_FOR_VUNEMI = /uncensor|abliterat|heretic|obliterat|crack|image|embed|rerank|asr|tts|diariz|whisper|parakeet|flux|-vl\b|\bvl-|mtp|distill|coder/i;
 const CHAT_TAGS = new Set(["text-generation", "image-text-to-text", "any-to-any"]);
 /** Each candidate that survives the list costs one request; this is where it stops asking. */
 const MAX_DETAILS = 12;
@@ -194,7 +194,7 @@ export async function popularModels(budget: number, opts: HubOptions & { limit?:
   }));
 
   const candidates = lists.flat().flatMap((m) => {
-    if (typeof m.id !== "string" || !REPO.test(m.id) || NOT_FOR_TENAMI.test(m.id)) return [];
+    if (typeof m.id !== "string" || !REPO.test(m.id) || NOT_FOR_VUNEMI.test(m.id)) return [];
     if (m.pipeline_tag !== undefined && !CHAT_TAGS.has(String(m.pipeline_tag))) return [];
     if (m.gated !== undefined && m.gated !== false) return [];
     const template = m.gguf?.chat_template;

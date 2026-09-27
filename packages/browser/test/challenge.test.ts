@@ -1,4 +1,4 @@
-import type { AXNode } from "@ocak/perception";
+import type { AXNode } from "@vunemi/perception";
 import { describe, expect, it } from "vitest";
 import { detectChallenge } from "../src/challenge.js";
 

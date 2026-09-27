@@ -1,5 +1,5 @@
 {
-  "name": "@ocak/browser",
+  "name": "@vunemi/browser",
   "version": "0.0.0",
   "private": true,
   "license": "GPL-3.0-only",
@@ -12,9 +12,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@ocak/agent-core": "workspace:*",
-    "@ocak/i18n": "workspace:*",
-    "@ocak/perception": "workspace:*"
+    "@vunemi/agent-core": "workspace:*",
+    "@vunemi/i18n": "workspace:*",
+    "@vunemi/perception": "workspace:*"
   },
   "devDependencies": {
     "vitest": "5.0.1"

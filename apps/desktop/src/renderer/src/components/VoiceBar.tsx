@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AudioLines, Hand, ListChecks, Loader, Mic, ShieldQuestion, Volume2, X } from "lucide-react";
 import { pendingApprovals, pendingHandoff, planAwaiting } from "../lib/fold.js";
 import { useStore, type VoiceState } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 /** How many bars the waveform keeps; at ~55 ms a frame this is ~1.5 seconds. */
 const BARS = 28;

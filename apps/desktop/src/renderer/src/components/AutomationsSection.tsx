@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Play, Trash2 } from "lucide-react";
-import { formatDate, t } from "@ocak/i18n";
+import { formatDate, t } from "@vunemi/i18n";
 import type { AutomationView } from "../../../shared/ipc.js";
 import { Switch } from "./ConnectionsView.js";
 
@@ -19,8 +19,8 @@ export function AutomationsSection() {
 
   useEffect(() => {
     let live = true;
-    void window.ocak.listAutomations().then((list) => live && setRows(list));
-    const off = window.ocak.onAutomations(setRows);
+    void window.vunemi.listAutomations().then((list) => live && setRows(list));
+    const off = window.vunemi.onAutomations(setRows);
     return () => {
       live = false;
       off();
@@ -59,13 +59,13 @@ export function AutomationsSection() {
                   )}
                 </div>
               </div>
-              <Switch on={row.enabled} label={row.title} disabled={false} onChange={(next) => act(() => window.ocak.setAutomationEnabled(row.id, next))} />
+              <Switch on={row.enabled} label={row.title} disabled={false} onChange={(next) => act(() => window.vunemi.setAutomationEnabled(row.id, next))} />
             </div>
             <div className="mt-2 flex justify-end gap-1">
-              <button type="button" onClick={() => act(() => window.ocak.runAutomation(row.id))} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-muted hover:bg-surface-2 hover:text-fg">
+              <button type="button" onClick={() => act(() => window.vunemi.runAutomation(row.id))} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-muted hover:bg-surface-2 hover:text-fg">
                 <Play size={12} /> {t("automations.runNow")}
               </button>
-              <button type="button" onClick={() => act(() => window.ocak.deleteAutomation(row.id))} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-muted hover:bg-surface-2 hover:text-danger">
+              <button type="button" onClick={() => act(() => window.vunemi.deleteAutomation(row.id))} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-muted hover:bg-surface-2 hover:text-danger">
                 <Trash2 size={12} /> {t("common.delete")}
               </button>
             </div>
@@ -81,7 +81,7 @@ export function AutomationsSection() {
                 <div className="text-[13px] text-fg">{t(`automations.suggest.${s.key}.title`)}</div>
                 <p className="mt-0.5 text-[12px] text-muted">{t(`automations.suggest.${s.key}.body`)}</p>
               </div>
-              <button type="button" onClick={() => act(() => window.ocak.addSuggestedAutomation(s.id))}
+              <button type="button" onClick={() => act(() => window.vunemi.addSuggestedAutomation(s.id))}
                 className="shrink-0 rounded-md border border-line px-2.5 py-1 text-[12px] text-fg hover:bg-surface-2">
                 {t("automations.suggest.add")}
               </button>

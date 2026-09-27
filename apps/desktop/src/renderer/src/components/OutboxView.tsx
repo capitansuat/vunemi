@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { OutboxEvent, Pending, UncertainSend } from "@ocak/mail";
-import { formatDate, t } from "@ocak/i18n";
+import type { OutboxEvent, Pending, UncertainSend } from "@vunemi/mail";
+import { formatDate, t } from "@vunemi/i18n";
 
 export function OutboxView() {
   const [pending, setPending] = useState<Pending[]>([]);
@@ -9,19 +9,19 @@ export function OutboxView() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const refresh = () => void window.ocak.listOutbox().then((value) => {
+    const refresh = () => void window.vunemi.listOutbox().then((value) => {
       setPending(value.pending);
       setUncertain(value.uncertain);
       setEvents(value.events);
     }).catch((err: unknown) => setError(String(err)));
     refresh();
-    return window.ocak.onOutbox(refresh);
+    return window.vunemi.onOutbox(refresh);
   }, []);
 
   async function cancel(id: string) {
     setError(null);
     try {
-      if (!await window.ocak.cancelOutbox(id)) setError(t("outbox.tooLate"));
+      if (!await window.vunemi.cancelOutbox(id)) setError(t("outbox.tooLate"));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -30,7 +30,7 @@ export function OutboxView() {
   async function dismiss(id: string) {
     setError(null);
     try {
-      await window.ocak.dismissOutbox(id);
+      await window.vunemi.dismissOutbox(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }

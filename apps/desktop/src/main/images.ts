@@ -11,7 +11,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import type { ImageData } from "@ocak/agent-core";
+import type { ImageData } from "@vunemi/agent-core";
 
 const run = promisify(execFile);
 
@@ -26,7 +26,7 @@ export async function loadImage(path: string, opts: { sips?: string } = {}): Pro
   } catch {
     return null;
   }
-  const dir = mkdtempSync(join(tmpdir(), "tenami-image-"));
+  const dir = mkdtempSync(join(tmpdir(), "vunemi-image-"));
   const out = join(dir, "image.jpg");
   try {
     await run(opts.sips ?? "/usr/bin/sips", ["-Z", String(MAX_SIDE), "-s", "format", "jpeg", path, "--out", out], { timeout: 20_000 });

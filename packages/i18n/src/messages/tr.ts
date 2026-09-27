@@ -520,7 +520,7 @@ export const messages = {
     },
     mail: {
       gmailHint: "Gmail adresini ve Google Hesabı › Güvenlik › Uygulama Parolaları bölümünde oluşturduğun uygulama parolasını gir. Normal hesap parolanı girme. İki adımlı doğrulama açık olmalı.",
-      outlookHint: "Microsoft Entra'da kendi uygulama kaydının istemci kimliğini gir. Mobil ve masaüstü platformuna http://localhost/ocak dönüş adresini, Mail.ReadWrite, Mail.Send ve User.Read yetkilerini ekle. Giriş sistem tarayıcısında açılır; parolan Vunemi'ye verilmez.",
+      outlookHint: "Microsoft Entra'da kendi uygulama kaydının istemci kimliğini gir. Mobil ve masaüstü platformuna http://localhost/vunemi dönüş adresini, Mail.ReadWrite, Mail.Send ve User.Read yetkilerini ekle. Giriş sistem tarayıcısında açılır; parolan Vunemi'ye verilmez.",
       imapHint: "IMAP ve SMTP sunucularını ve uygulama parolanı gir.",
       passwordNote: "Parola Kasada şifreli saklanır, modele verilmez.",
       clientId: "Microsoft uygulama kimliği",
@@ -562,7 +562,6 @@ export const messages = {
   /** Messages from the app itself, outside the window. */
   main: {
     debugPort: { refused: "Vunemi uzaktan hata ayıklama açıkken başlatıldı. Bu Mac'teki herhangi bir program onu yönetip onay kartlarını yanıtlayabilirdi; bu sürüm böyle açılmaz. Vunemi'yi normal biçimde aç." },
-    dataFolder: { busy: "Tenami hâlâ açık ve verileri onun klasöründe. Vunemi bu verileri kendi klasörüne taşıyacak. Önce Tenami'den çık, sonra Vunemi'yi yeniden aç." },
     outbox: {
       unreadable: "Şifreli posta kuyruğu okunamadı.",
       undecryptable: "Şifreli posta kuyruğu çözülemedi; kayıt korunuyor, yeni gönderim durduruldu.",

@@ -9,7 +9,7 @@
  * Vault process, by handlers registered there.
  */
 
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 import type { SecretInfo, Vault, VaultState } from "./vault.js";
 
 /** One end of a message channel: a MessagePort, a utilityProcess, or a test pair. */

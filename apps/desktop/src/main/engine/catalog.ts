@@ -5,7 +5,7 @@
  * and the search box covers the rest.
  */
 
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export const GiB = 1024 ** 3;
 
@@ -115,7 +115,7 @@ export function displayName(file: string, stored: string): string {
   return entry.variant ? t("engine.variant.compact", { name: entry.name }) : entry.name;
 }
 
-/** A model's id in `tenami:<id>`: its file name, lower-case, without `.gguf`. */
+/** A model's id in `vunemi:<id>`: its file name, lower-case, without `.gguf`. */
 export function modelId(file: string): string {
   return file.replace(/\.gguf$/i, "").toLowerCase();
 }

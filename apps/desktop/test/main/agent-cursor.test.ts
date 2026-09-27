@@ -1,16 +1,16 @@
 /**
  * The agent cursor overlay in a real headless Chrome: it must be invisible to
  * everything the agent reads and never get in the way of a click.
- * Skipped unless OCAK_LIVE_BROWSER=1.
+ * Skipped unless VUNEMI_LIVE_BROWSER=1.
  */
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BrowserController, launchIsolatedChrome, PageDriver, type CdpSession } from "@ocak/browser";
+import { BrowserController, launchIsolatedChrome, PageDriver, type CdpSession } from "@vunemi/browser";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { cursorScript } from "../../src/main/agent-cursor.js";
 
-const live = process.env.OCAK_LIVE_BROWSER === "1";
+const live = process.env.VUNEMI_LIVE_BROWSER === "1";
 const PAGE = `data:text/html,${encodeURIComponent(
   "<title>T</title><button id=b onclick=\"this.textContent='clicked'\" style='position:fixed;left:100px;top:100px;width:120px;height:40px'>Press</button><p>Body text</p>",
 )}`;
@@ -22,11 +22,11 @@ describe.skipIf(!live)("agent cursor overlay", () => {
   let world = 0;
 
   beforeAll(async () => {
-    profile = mkdtempSync(join(tmpdir(), "ocak-cursor-"));
+    profile = mkdtempSync(join(tmpdir(), "vunemi-cursor-"));
     browser = new BrowserController(() => launchIsolatedChrome({ userDataDir: profile, headless: true }));
     await browser.tabs(); // launch
     // Reach under the controller for a raw session on a fresh tab.
-    const backend = await (browser as unknown as { ensure(): Promise<import("@ocak/browser").BrowserBackend> }).ensure();
+    const backend = await (browser as unknown as { ensure(): Promise<import("@vunemi/browser").BrowserBackend> }).ensure();
     const target = await backend.openTab("about:blank");
     session = await backend.attach(target);
     await session.send("Page.enable");
@@ -35,7 +35,7 @@ describe.skipIf(!live)("agent cursor overlay", () => {
     const { frameTree } = await session.send<{ frameTree: { frame: { id: string } } }>("Page.getFrameTree");
     ({ executionContextId: world } = await session.send<{ executionContextId: number }>("Page.createIsolatedWorld", {
       frameId: frameTree.frame.id,
-      worldName: "ocak-cursor",
+      worldName: "vunemi-cursor",
     }));
   }, 60_000);
 
@@ -61,7 +61,7 @@ describe.skipIf(!live)("agent cursor overlay", () => {
     // It's there: one more element under <html>, outside <body>.
     expect(await inPage("document.documentElement.children.length")).toBe(3);
     // The page's own scripts can't see our state.
-    expect(await inPage("typeof window.__ocakCursor")).toBe("undefined");
+    expect(await inPage("typeof window.__vunemiCursor")).toBe("undefined");
     // page_read's text is unchanged.
     expect(await inPage("document.body.innerText.includes('Vunemi')")).toBe(false);
     // Hit-testing goes straight through it.

@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "Gib deine Gmail-Adresse und ein App-Passwort ein, das du unter Google-Konto › Sicherheit › App-Passwörter erstellt hast. Nicht dein normales Kontopasswort. Die Bestätigung in zwei Schritten muss aktiviert sein.",
-      outlookHint: "Gib die Client-ID deiner eigenen App-Registrierung in Microsoft Entra ein. Füge der Plattform „Mobil und Desktop“ die Umleitungs-URI http://localhost/ocak sowie die Berechtigungen Mail.ReadWrite, Mail.Send und User.Read hinzu. Die Anmeldung öffnet sich im Systembrowser; dein Passwort bekommt Vunemi nie.",
+      outlookHint: "Gib die Client-ID deiner eigenen App-Registrierung in Microsoft Entra ein. Füge der Plattform „Mobil und Desktop“ die Umleitungs-URI http://localhost/vunemi sowie die Berechtigungen Mail.ReadWrite, Mail.Send und User.Read hinzu. Die Anmeldung öffnet sich im Systembrowser; dein Passwort bekommt Vunemi nie.",
       imapHint: "Gib IMAP- und SMTP-Server und dein App-Passwort ein.",
       passwordNote: "Das Passwort wird verschlüsselt im Tresor gespeichert und nie an das Modell gegeben.",
       clientId: "Microsoft-Anwendungs-ID",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "Vunemi wurde mit offenem Remote-Debugging gestartet. Jedes Programm auf diesem Mac könnte es dann steuern und seine Freigabekarten beantworten, daher startet dieser Build so nicht. Öffne Vunemi normal." },
-    dataFolder: { busy: "Tenami ist noch geöffnet, und deine Daten liegen in seinem Ordner. Vunemi verschiebt diese Daten in seinen eigenen Ordner. Beende zuerst Tenami und öffne Vunemi dann erneut." },
     outbox: {
       unreadable: "Die verschlüsselte Mail-Warteschlange konnte nicht gelesen werden.",
       undecryptable: "Die verschlüsselte Mail-Warteschlange konnte nicht entschlüsselt werden; der Eintrag bleibt erhalten, neue Sendungen sind gestoppt.",

@@ -33,7 +33,7 @@ export interface Received {
 
 /** A throwaway certificate for "localhost", made with the system's openssl. */
 export function makeCertificate(): { key: string; cert: string } {
-  const dir = mkdtempSync(join(tmpdir(), "tenami-smtp-cert-"));
+  const dir = mkdtempSync(join(tmpdir(), "vunemi-smtp-cert-"));
   try {
     execFileSync("/usr/bin/openssl", [
       "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",

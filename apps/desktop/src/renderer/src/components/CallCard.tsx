@@ -18,11 +18,11 @@ import {
   TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
-import type { ActionClass } from "@ocak/agent-core";
+import type { ActionClass } from "@vunemi/agent-core";
 import type { CallView } from "../lib/fold.js";
 import { actionClassLabel, callDetail, callStatusLabel, formatMs, toolLabel } from "../lib/labels.js";
 import { useStore } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 const CLASS_ICON: Record<ActionClass, LucideIcon> = {
   read: Eye,
@@ -175,7 +175,7 @@ function ShowShortcut({ args }: { args: unknown }) {
   if (!name) return null;
   const show = () => {
     setError(null);
-    window.ocak.showShortcut(name).catch((e: unknown) => setError(e instanceof Error ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(e)));
+    window.vunemi.showShortcut(name).catch((e: unknown) => setError(e instanceof Error ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(e)));
   };
   return (
     <div className="mt-2">
@@ -200,10 +200,10 @@ function Files({ files }: { files: { id: string; name: string }[] }) {
         <div key={file.id} className="flex items-center gap-2 py-0.5 text-[12.5px]">
           <FileText size={13} className="shrink-0 text-faint" />
           <span className="min-w-0 flex-1 truncate text-fg">{file.name}</span>
-          <button type="button" onClick={() => act(() => window.ocak.openArtefact(file.id))} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted hover:bg-surface-2 hover:text-fg">
+          <button type="button" onClick={() => act(() => window.vunemi.openArtefact(file.id))} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted hover:bg-surface-2 hover:text-fg">
             <ExternalLink size={12} /> {t("common.open")}
           </button>
-          <button type="button" onClick={() => act(() => window.ocak.revealArtefact(file.id))} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted hover:bg-surface-2 hover:text-fg">
+          <button type="button" onClick={() => act(() => window.vunemi.revealArtefact(file.id))} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted hover:bg-surface-2 hover:text-fg">
             <FolderOpen size={12} /> {t("artefacts.reveal")}
           </button>
         </div>
@@ -219,7 +219,7 @@ function usePicture(path: string): { src: string | null; failed: boolean } {
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     let live = true;
-    void window.ocak
+    void window.vunemi
       .readImage(path)
       .then((url) => live && setSrc(url))
       .catch(() => live && setFailed(true));
@@ -262,7 +262,7 @@ function Shot({ artifact }: { artifact: { path: string; label?: string } }) {
 
   useEffect(() => {
     let live = true;
-    void window.ocak
+    void window.vunemi
       .readImage(artifact.path)
       .then((url) => live && setSrc(url))
       .catch(() => live && setFailed(true));

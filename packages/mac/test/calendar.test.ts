@@ -4,7 +4,7 @@
  * is reported instead of looking like an empty calendar, that every write can
  * be undone, and that a date the model wrote turns into the hour a person meant.
  */
-import type { Produced, ToolContext, ToolDef } from "@ocak/agent-core";
+import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createCalendarTools, Helper } from "../src/index.js";
 

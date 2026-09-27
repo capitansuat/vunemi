@@ -1,8 +1,8 @@
 import { useEffect, useState, type ComponentType } from "react";
 import { Check } from "lucide-react";
-import type { Autonomy, AutonomyPolicy } from "@ocak/agent-core";
-import { ACTION_CLASSES } from "@ocak/agent-core";
-import { LOCALES, t } from "@ocak/i18n";
+import type { Autonomy, AutonomyPolicy } from "@vunemi/agent-core";
+import { ACTION_CLASSES } from "@vunemi/agent-core";
+import { LOCALES, t } from "@vunemi/i18n";
 import type { LockState, PermissionSettings, PreferenceView } from "../../../shared/ipc.js";
 import { ConnectionsView, Switch } from "./ConnectionsView.js";
 import { ModelPicker } from "./ModelPicker.js";
@@ -60,14 +60,14 @@ export function SettingsView() {
   const [confirmForget, setConfirmForget] = useState(false);
 
   useEffect(() => {
-    void window.ocak.getPolicy().then(setPermission).catch((err: unknown) => setError(String(err)));
+    void window.vunemi.getPolicy().then(setPermission).catch((err: unknown) => setError(String(err)));
   }, []);
 
   async function save(next: PermissionSettings) {
     setSaving(true);
     setError(null);
     try {
-      setPermission(await window.ocak.setPolicy(next));
+      setPermission(await window.vunemi.setPolicy(next));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -160,7 +160,7 @@ export function SettingsView() {
                 <div className="mt-3 flex gap-2">
                   <button type="button" onClick={() => {
                     setError(null);
-                    void window.ocak.forgetEverything().catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+                    void window.vunemi.forgetEverything().catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
                   }} className="rounded-lg bg-danger px-3 py-2 text-[12px] text-white">{t("settings.data.forgetConfirm")}</button>
                   <button type="button" onClick={() => setConfirmForget(false)} className="px-2 text-[12px] text-muted">{t("common.cancel")}</button>
                 </div>
@@ -183,14 +183,14 @@ function PreferencesSection() {
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
-    void window.ocak.listPreferences().then(setItems).catch((err: unknown) => setError(String(err)));
+    void window.vunemi.listPreferences().then(setItems).catch((err: unknown) => setError(String(err)));
   }, []);
 
   async function remove(id: string) {
     setBusy(id);
     setError(null);
     try {
-      setItems(await window.ocak.deletePreference(id));
+      setItems(await window.vunemi.deletePreference(id));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -227,15 +227,15 @@ function SecuritySection() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void window.ocak.getLock().then(setLock).catch(() => undefined);
-    return window.ocak.onLock(setLock);
+    void window.vunemi.getLock().then(setLock).catch(() => undefined);
+    return window.vunemi.onLock(setLock);
   }, []);
 
   async function change(on: boolean) {
     setAsking(true);
     setError(null);
     try {
-      const attempt = await window.ocak.setAppLock(on);
+      const attempt = await window.vunemi.setAppLock(on);
       setLock(attempt.state);
       if (!attempt.ok && attempt.message) setError(attempt.message);
     } catch (err) {

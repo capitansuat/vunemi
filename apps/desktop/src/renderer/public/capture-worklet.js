@@ -5,7 +5,7 @@
  * let this page run a generated script is not one worth relaxing for a
  * microphone.
  */
-class OcakCapture extends AudioWorkletProcessor {
+class VunemiCapture extends AudioWorkletProcessor {
   process(inputs) {
     const channel = inputs[0] && inputs[0][0];
     if (channel && channel.length) this.port.postMessage(new Float32Array(channel));
@@ -13,4 +13,4 @@ class OcakCapture extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor("ocak-capture", OcakCapture);
+registerProcessor("vunemi-capture", VunemiCapture);

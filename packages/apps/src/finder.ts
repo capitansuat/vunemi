@@ -4,9 +4,9 @@
  * shown, so pointing at a file does not open the rest of the disk.
  */
 
-import type { ToolDef } from "@ocak/agent-core";
-import type { Roots } from "@ocak/files";
-import { t } from "@ocak/i18n";
+import type { ToolDef } from "@vunemi/agent-core";
+import type { Roots } from "@vunemi/files";
+import { t } from "@vunemi/i18n";
 import type { ScriptRunner } from "./runner.js";
 
 const APP = "Finder";

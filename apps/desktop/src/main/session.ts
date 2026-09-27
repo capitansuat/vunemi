@@ -34,8 +34,8 @@ import {
   type RunOptions,
   type ToolRegistry,
   type ProviderConfig,
-} from "@ocak/agent-core";
-import { t } from "@ocak/i18n";
+} from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 
 export interface SessionOptions {
   tools: ToolRegistry;
@@ -156,7 +156,7 @@ export class AgentSession {
     const goal = text.trim();
     if (!goal) return null;
     if (!this.active) {
-      void this.start(goal, model, attachments).catch((err: unknown) => console.error("[ocak] run failed to start:", err));
+      void this.start(goal, model, attachments).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
       return null;
     }
     const message: QueuedMessage = { id: `q${this.nextQueueId++}`, text: goal, attachments, model, at: Date.now() };
@@ -173,7 +173,7 @@ export class AgentSession {
     const goal = text.trim();
     if (!goal) return;
     if (!this.active) {
-      void this.start(goal, model, attachments).catch((err: unknown) => console.error("[ocak] run failed to start:", err));
+      void this.start(goal, model, attachments).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
       return;
     }
     this.queue.unshift({ id: `q${this.nextQueueId++}`, text: goal, attachments, model, at: Date.now() });
@@ -221,7 +221,7 @@ export class AgentSession {
     if (!next) return;
     this.announce();
     void this.start(next.text, next.model, next.attachments).catch((err: unknown) => {
-      console.error("[ocak] queued run failed to start:", err);
+      console.error("[vunemi] queued run failed to start:", err);
     });
   }
 
@@ -416,7 +416,7 @@ export class AgentSession {
           this.opts.emit({ type: "context.compacting", runId, at: Date.now() });
         },
       });
-      if (result.error) console.error("[ocak] compaction:", result.error);
+      if (result.error) console.error("[vunemi] compaction:", result.error);
       if (result.kind === "none" && !announced && !opts.force) return;
       this.history = result.history;
       const redact = this.opts.redact ?? ((text: string) => text);

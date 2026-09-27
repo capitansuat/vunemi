@@ -3,7 +3,7 @@ import { ArrowUp, AudioLines, Download, FileText, ListPlus, Mic, Paperclip, Paus
 import { useStore } from "../store.js";
 import { Queue } from "./Queue.js";
 import { VoiceBar } from "./VoiceBar.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export function Composer() {
   const [text, setText] = useState("");
@@ -22,7 +22,7 @@ export function Composer() {
 
   useEffect(() => {
     void refreshVoice();
-    return window.ocak.onVoiceStatus(setVoiceStatus);
+    return window.vunemi.onVoiceStatus(setVoiceStatus);
   }, [refreshVoice, setVoiceStatus]);
 
   // A transcript joins whatever is already typed, rather than replacing it.
@@ -74,7 +74,7 @@ export function Composer() {
       if (!carriesFiles(e)) return;
       e.preventDefault();
       setDragging(false);
-      addFiles([...(e.dataTransfer?.files ?? [])].map((f) => window.ocak.pathForFile(f)));
+      addFiles([...(e.dataTransfer?.files ?? [])].map((f) => window.vunemi.pathForFile(f)));
     };
     window.addEventListener("dragover", over);
     window.addEventListener("dragleave", leave);
@@ -184,7 +184,7 @@ export function Composer() {
           <div className="flex min-w-0 items-center gap-1.5">
           <button
             type="button"
-            onClick={() => void window.ocak.pickFiles().then(addFiles)}
+            onClick={() => void window.vunemi.pickFiles().then(addFiles)}
             disabled={!model}
             aria-label={t("composer.attach")}
             title={t("composer.attachHint")}

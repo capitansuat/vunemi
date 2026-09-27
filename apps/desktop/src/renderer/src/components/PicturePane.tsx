@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useStore } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 /** A picture from a call card, large, beside the chat. Esc or the cross closes it. */
 export function PicturePane() {
@@ -15,7 +15,7 @@ export function PicturePane() {
     let live = true;
     setSrc(null);
     setFailed(false);
-    void window.ocak
+    void window.vunemi
       .readImage(viewer.path)
       .then((url) => live && setSrc(url))
       .catch(() => live && setFailed(true));

@@ -24,7 +24,7 @@ export async function renderOfficePdf(html: string, signal: AbortSignal): Promis
       contextIsolation: true,
       sandbox: true,
       webSecurity: true,
-      partition: `tenami-office-pdf-${randomUUID()}`,
+      partition: `vunemi-office-pdf-${randomUUID()}`,
     },
   });
   const contents = window.webContents;

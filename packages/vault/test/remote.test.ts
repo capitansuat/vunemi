@@ -22,7 +22,7 @@ const fake: SecretCrypto = {
 describe("Vault over a channel", () => {
   let dir = "";
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "ocak-vault-remote-"));
+    dir = mkdtempSync(join(tmpdir(), "vunemi-vault-remote-"));
   });
   afterEach(() => {
     rmSync(dir, { recursive: true, force: true });

@@ -10,9 +10,9 @@
 
 import { appendFile, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { ActionClass, AgentEvent } from "@ocak/agent-core";
+import type { ActionClass, AgentEvent } from "@vunemi/agent-core";
 import type { ActivityEntry } from "../shared/ipc.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 const MAX_IN_MEMORY = 500;
 const FILE = "activity.jsonl";
@@ -192,7 +192,7 @@ export class ActivityLog {
     const line = `${JSON.stringify({ ...entry, undo: undefined })}\n`;
     this.writing = this.writing
       .then(() => appendFile(join(this.dir, FILE), line, "utf8"))
-      .catch((err: unknown) => console.error("[ocak] activity log:", err));
+      .catch((err: unknown) => console.error("[vunemi] activity log:", err));
   }
 
   private async read(): Promise<ActivityEntry[]> {

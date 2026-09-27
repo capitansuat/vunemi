@@ -1,5 +1,5 @@
 {
-  "name": "@ocak/sentinel",
+  "name": "@vunemi/sentinel",
   "version": "0.0.0",
   "private": true,
   "license": "GPL-3.0-only",
@@ -12,8 +12,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@ocak/agent-core": "workspace:*",
-    "@ocak/i18n": "workspace:*"
+    "@vunemi/agent-core": "workspace:*",
+    "@vunemi/i18n": "workspace:*"
   },
   "devDependencies": {
     "vitest": "5.0.1"

@@ -29,17 +29,17 @@ export function scrubEnv(env: NodeJS.ProcessEnv): string[] {
  * Whether Vunemi was started with Chromium's remote debugging open. Any
  * program on the Mac could then drive the window, and with it the approval
  * cards, which are the user's to answer. Live tests use it; a build for other
- * people must not start with it (see package.sh, OCAK_DISTRIBUTION).
+ * people must not start with it (see package.sh, VUNEMI_DISTRIBUTION).
  */
 export function remoteDebugging(argv: readonly string[]): boolean {
   return argv.some((arg) => /^--remote-debugging-(port|pipe)(=|$)/.test(arg));
 }
 
-/** A local test build says so in its package.json (package.sh adds it unless OCAK_DISTRIBUTION=1). */
+/** A local test build says so in its package.json (package.sh adds it unless VUNEMI_DISTRIBUTION=1). */
 export function isLocalTestBuild(packageJson: string): boolean {
   try {
     // The builder's command line may hand the value over as text.
-    const mark = (JSON.parse(packageJson) as { tenamiLocalTestBuild?: unknown }).tenamiLocalTestBuild;
+    const mark = (JSON.parse(packageJson) as { vunemiLocalTestBuild?: unknown }).vunemiLocalTestBuild;
     return mark === true || mark === "true";
   } catch {
     return false;

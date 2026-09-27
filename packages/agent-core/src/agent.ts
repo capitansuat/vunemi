@@ -10,7 +10,7 @@ import { planNote, proposePlan, worthPlanning } from "./plan.js";
 import { maskSecrets } from "./secrets.js";
 import type { ChatMessage, ChatModel, ChatResult, ImageData, ToolCall, ToolSpec } from "./provider.js";
 import type { ActionClass, ToolDef, ToolRegistry } from "./tools.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export type Autonomy = "auto" | "ask" | "deny";
 export type AutonomyPolicy = Record<ActionClass, Autonomy>;
@@ -99,7 +99,7 @@ export interface RunOptions {
   authorize?: (req: AuthorizeRequest) => Authorization | Promise<Authorization>;
   /**
    * Masks anything secret before the model can read it — tool output, error
-   * messages, previews. The Vault provides this; see @ocak/vault.
+   * messages, previews. The Vault provides this; see @vunemi/vault.
    */
   redact?: (text: string) => string | Promise<string>;
   /** Called with output that came from outside the machine, for taint tracking. */

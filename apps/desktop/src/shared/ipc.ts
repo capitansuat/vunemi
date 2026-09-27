@@ -3,10 +3,10 @@
  * imports these so a channel can't drift out of sync with its handler.
  */
 
-import type { ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, HandoffOutcome, PlanDecision, Produced, ProviderKind } from "@ocak/agent-core";
-import type { ConnectorView, PrivacyPane } from "@ocak/connectors";
-import type { OutboxEvent, Pending, UncertainSend } from "@ocak/mail";
-import type { Locale } from "@ocak/i18n";
+import type { ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, HandoffOutcome, PlanDecision, Produced, ProviderKind } from "@vunemi/agent-core";
+import type { ConnectorView, PrivacyPane } from "@vunemi/connectors";
+import type { OutboxEvent, Pending, UncertainSend } from "@vunemi/mail";
+import type { Locale } from "@vunemi/i18n";
 
 export type { ConnectorView, PrivacyPane };
 
@@ -87,7 +87,7 @@ export interface PermissionSettings {
 
 /**
  * A secret as the rest of the app may see it: a name, and what it's for.
- * Declared here rather than imported from @ocak/vault so the renderer never
+ * Declared here rather than imported from @vunemi/vault so the renderer never
  * pulls in the module that can actually decrypt anything.
  */
 export interface SecretInfo {
@@ -290,8 +290,8 @@ export type DownloadRequest = { catalog: string } | { repo: string } | { resume:
 
 export interface PreferenceView { id: string; text: string; createdAt: number }
 
-/** Exposed on `window.ocak` by the preload script. */
-export interface OcakApi {
+/** Exposed on `window.vunemi` by the preload script. */
+export interface VunemiApi {
   listProviders(): Promise<ProviderStatus[]>;
   getModelSettings(): Promise<LocalModelSettings>;
   setModelSettings(settings: LocalModelSettings): Promise<LocalModelSettings>;
@@ -459,7 +459,7 @@ export interface OcakApi {
   debugPortOpen(): Promise<boolean>;
   /** Asks for a GGUF file on this Mac and adds it; null when the user cancelled. */
   engineAddLocal(): Promise<string | null>;
-  /** Loads a `tenami:` model in the background; other specs are ignored. */
+  /** Loads a `vunemi:` model in the background; other specs are ignored. */
   engineWarm(spec: string): Promise<void>;
   engineSetContext(id: string, context: number): Promise<void>;
 }

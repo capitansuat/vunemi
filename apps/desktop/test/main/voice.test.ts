@@ -3,7 +3,7 @@
  * picked. The end-to-end test is real — macOS speaks a sentence and whisper
  * has to read it back — but it loads a 1.5 GB model, so it only runs with
  *
- *   OCAK_LIVE_VOICE=1 pnpm --filter @ocak/desktop test voice
+ *   VUNEMI_LIVE_VOICE=1 pnpm --filter @vunemi/desktop test voice
  */
 import { execFile } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setLocale } from "@ocak/i18n";
+import { setLocale } from "@vunemi/i18n";
 import { clean, findModel, Voice } from "../../src/main/voice.js";
 
 const run = promisify(execFile);
@@ -39,8 +39,8 @@ describe("clean", () => {
 describe("findModel", () => {
   let dir = "";
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "ocak-voice-"));
-    delete process.env.OCAK_WHISPER_MODEL;
+    dir = mkdtempSync(join(tmpdir(), "vunemi-voice-"));
+    delete process.env.VUNEMI_WHISPER_MODEL;
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
@@ -72,19 +72,19 @@ describe("findModel", () => {
   it("lets the user name one outright", () => {
     const file = join(dir, "elsewhere.bin");
     writeFileSync(file, "");
-    process.env.OCAK_WHISPER_MODEL = file;
+    process.env.VUNEMI_WHISPER_MODEL = file;
     expect(findModel(dir)).toBe(file);
   });
 });
 
-const live = process.env.OCAK_LIVE_VOICE === "1";
+const live = process.env.VUNEMI_LIVE_VOICE === "1";
 
 describe.skipIf(!live)("Voice, for real", () => {
   let dir = "";
   let voice: Voice;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "ocak-voice-live-"));
+    dir = mkdtempSync(join(tmpdir(), "vunemi-voice-live-"));
     voice = new Voice(dir);
   });
   afterEach(() => {

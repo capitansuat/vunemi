@@ -14,7 +14,7 @@ function session(capture: () => Promise<{ data: string }>) {
     send: vi.fn(async (method: string, params?: { expression?: string }) => {
       if (method === "Runtime.evaluate") {
         const expr = params?.expression ?? "";
-        sent.push(expr.includes("data-tenami-mask") && expr.includes("remove") ? "unmask" : expr.includes("data-tenami-mask") ? "mask" : "eval");
+        sent.push(expr.includes("data-vunemi-mask") && expr.includes("remove") ? "unmask" : expr.includes("data-vunemi-mask") ? "mask" : "eval");
         return { result: { value: expr.includes("location.href") ? { url: "https://example.com/", title: "Example" } : true } };
       }
       sent.push(method);
@@ -78,7 +78,7 @@ describe("page_screenshot", () => {
   });
 
   it("attaches the picture for the model and the user", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "tenami-shot-"));
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-shot-"));
     dirs.push(dir);
     const path = join(dir, "page.jpg");
     const attached: unknown[] = [];

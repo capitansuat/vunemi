@@ -2,16 +2,16 @@ import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Roots } from "@ocak/files";
-import { Connectors } from "@ocak/connectors";
-import { overheadChars, ToolRegistry } from "@ocak/agent-core";
-import { ScriptableCatalog } from "@ocak/apps";
+import { Roots } from "@vunemi/files";
+import { Connectors } from "@vunemi/connectors";
+import { overheadChars, ToolRegistry } from "@vunemi/agent-core";
+import { ScriptableCatalog } from "@vunemi/apps";
 import { appsConnector } from "../../src/main/connectors.js";
 
 let dir: string;
 let fake: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "tenami-apps-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-apps-"));
   fake = join(dir, "osascript");
   // Refuses Automation for Notes, answers an empty list otherwise.
   writeFileSync(fake, `#!/usr/bin/env node

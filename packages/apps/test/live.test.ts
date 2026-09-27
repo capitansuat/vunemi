@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createNotesTools, createRunner, RECENTLY_DELETED } from "../src/index.js";
 
-const live = process.env.TENAMI_LIVE_APPS === "1";
+const live = process.env.VUNEMI_LIVE_APPS === "1";
 
 // Leaves notes titled "Vunemi test …" behind.
 describe.skipIf(!live)("Notes, for real", () => {

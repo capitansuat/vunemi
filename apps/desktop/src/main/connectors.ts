@@ -12,18 +12,18 @@
  * deliberately. The switch is remembered, so this costs a click once.
  */
 
-import type { ToolDef, ToolRegistry } from "@ocak/agent-core";
+import type { ToolDef, ToolRegistry } from "@vunemi/agent-core";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import { APP_GUIDE_INDEX, createEverydayTools, createWhatsAppTool, createShortcutTools, SHORTCUTS_INSTRUCTIONS, createFinderTools, createGuideTool, createNotesTools, createOfficeTools, createRunner, createGeneralTools, onDemand, ScriptableCatalog, FINDER_INSTRUCTIONS, NOTES_INSTRUCTIONS } from "@ocak/apps";
-import { BROWSER_INSTRUCTIONS, type BrowserController, createBrowserTools } from "@ocak/browser";
-import { Connectors, type Capability, type Connector, type ConnectorStatus } from "@ocak/connectors";
-import { createFileTools, FILE_INSTRUCTIONS, type Roots } from "@ocak/files";
-import { CALENDAR_INSTRUCTIONS, createCalendarTools, createDesktopTools, DESKTOP_INSTRUCTIONS, type Helper } from "@ocak/mac";
-import { createMailTools, MAIL_INSTRUCTIONS, MailAccounts, Outbox, gmailAppPassword, gmailConfig, mailTargets, validateMailConfig } from "@ocak/mail";
-import { createMcpConnector, type McpServerConfig, type McpTool } from "@ocak/mcp";
+import { APP_GUIDE_INDEX, createEverydayTools, createWhatsAppTool, createShortcutTools, SHORTCUTS_INSTRUCTIONS, createFinderTools, createGuideTool, createNotesTools, createOfficeTools, createRunner, createGeneralTools, onDemand, ScriptableCatalog, FINDER_INSTRUCTIONS, NOTES_INSTRUCTIONS } from "@vunemi/apps";
+import { BROWSER_INSTRUCTIONS, type BrowserController, createBrowserTools } from "@vunemi/browser";
+import { Connectors, type Capability, type Connector, type ConnectorStatus } from "@vunemi/connectors";
+import { createFileTools, FILE_INSTRUCTIONS, type Roots } from "@vunemi/files";
+import { CALENDAR_INSTRUCTIONS, createCalendarTools, createDesktopTools, DESKTOP_INSTRUCTIONS, type Helper } from "@vunemi/mac";
+import { createMailTools, MAIL_INSTRUCTIONS, MailAccounts, Outbox, gmailAppPassword, gmailConfig, mailTargets, validateMailConfig } from "@vunemi/mail";
+import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { unsealed } from "./mcp-secrets.js";
-import type { VaultClient } from "@ocak/vault";
+import type { VaultClient } from "@vunemi/vault";
 import { mailAddressOf, type StoredMailAccount } from "./settings.js";
 import { vaultMcpIO } from "./remote-mcp.js";
 import { renderOfficePdf } from "./office-pdf.js";
@@ -32,7 +32,7 @@ import { authorizeOutlook, OUTLOOK_TOKEN_TARGET, outlookAddress } from "./outloo
 import { authorizeGoogle, GOOGLE_TOKEN_TARGET, googleAddress } from "./google-oauth.js";
 import { OAUTH_CLIENTS, type OAuthClients } from "./oauth-clients.js";
 import { RemoteMailAccount } from "./remote-mail.js";
-import { t, type MessageKey } from "@ocak/i18n";
+import { t, type MessageKey } from "@vunemi/i18n";
 
 export interface CatalogueOptions {
   tools: ToolRegistry;
@@ -492,7 +492,7 @@ function mailConnector(opts: CatalogueOptions): Connector {
       await outbox.restore((id) => accounts.all().find((entry) => entry.id === id)?.account);
     } catch (err) {
       outboxError = err instanceof Error ? err.message : String(err);
-      console.error("[ocak] mail outbox restore failed:", outboxError);
+      console.error("[vunemi] mail outbox restore failed:", outboxError);
     }
   });
 

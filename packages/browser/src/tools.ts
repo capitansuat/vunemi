@@ -7,11 +7,11 @@
  * fences it before the model reads it.
  */
 
-import type { ToolContext, ToolDef } from "@ocak/agent-core";
+import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import type { BrowserController } from "./controller.js";
 import { PageActionError } from "./page.js";
 import { checkNavigation } from "./url-policy.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 const REF = { type: "integer", description: "The number in [brackets] from page_describe, e.g. 42." } as const;
 

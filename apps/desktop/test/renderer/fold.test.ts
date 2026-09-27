@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AgentEvent } from "@ocak/agent-core";
+import type { AgentEvent } from "@vunemi/agent-core";
 import {
   foldEvent,
   pendingApprovals,

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PreferenceStore, rememberPreferenceTool } from "../../src/main/preferences.js";
 
 let dir = "";
-beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "tenami-preferences-")); });
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "vunemi-preferences-")); });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("PreferenceStore", () => {

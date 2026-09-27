@@ -3,7 +3,7 @@ import { Check, Download, Eye, Heart, Loader2, Search, ShieldCheck, Trash2, X } 
 import type { InspectView, PopularView, SearchHitView } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
 import { contextChoices, contextMemory, etaMinutes, formatGB, tooLarge } from "../lib/format.js";
-import { getLocale, t } from "@ocak/i18n";
+import { getLocale, t } from "@vunemi/i18n";
 
 /**
  * How someone with no model gets one: every suggested model that fits this
@@ -28,7 +28,7 @@ export function EngineSetup({ showInstalled = false, intro = true }: { showInsta
   useEffect(() => {
     if (!available) return;
     let live = true;
-    window.ocak.enginePopular().then(
+    window.vunemi.enginePopular().then(
       (items) => live && setPopular(items),
       () => live && setPopular([]),
     );
@@ -42,10 +42,10 @@ export function EngineSetup({ showInstalled = false, intro = true }: { showInsta
     return <p className="max-w-md text-center text-[13px] text-muted">{t("engine.setup.unavailable")}</p>;
   }
 
-  async function start(req: Parameters<typeof window.ocak.engineDownload>[0]) {
+  async function start(req: Parameters<typeof window.vunemi.engineDownload>[0]) {
     setError(null);
     try {
-      const spec = await window.ocak.engineDownload(req);
+      const spec = await window.vunemi.engineDownload(req);
       if (!spec) return;
       await refreshProviders();
       setModel(spec);
@@ -58,7 +58,7 @@ export function EngineSetup({ showInstalled = false, intro = true }: { showInsta
   async function addLocal() {
     setError(null);
     try {
-      const spec = await window.ocak.engineAddLocal();
+      const spec = await window.vunemi.engineAddLocal();
       if (!spec) return;
       await refreshProviders();
       setModel(spec);
@@ -89,7 +89,7 @@ export function EngineSetup({ showInstalled = false, intro = true }: { showInsta
           </div>
           <div className="mt-3 flex justify-end">
             {dl.state === "downloading" && (
-              <button type="button" onClick={() => void window.ocak.engineCancel()} className="rounded-lg px-2.5 py-1 text-[12.5px] text-muted hover:bg-surface-2">
+              <button type="button" onClick={() => void window.vunemi.engineCancel()} className="rounded-lg px-2.5 py-1 text-[12.5px] text-muted hover:bg-surface-2">
                 {t("engine.download.cancel")}
               </button>
             )}
@@ -223,14 +223,14 @@ function ModelSearch({ onPick }: { onPick: (view: InspectView) => void }) {
     const timer = setTimeout(() => {
       setBusy(true);
       setFailed(false);
-      window.ocak.engineSearch(query).then(setHits, () => setFailed(true)).finally(() => setBusy(false));
+      window.vunemi.engineSearch(query).then(setHits, () => setFailed(true)).finally(() => setBusy(false));
     }, 400);
     return () => clearTimeout(timer);
   }, [text]);
 
   async function inspect(repo: string) {
     setRefused(null);
-    const view = await window.ocak.engineInspect(repo).catch(() => null);
+    const view = await window.vunemi.engineInspect(repo).catch(() => null);
     if (!view) return setFailed(true);
     if (view.ok) {
       onPick(view);
@@ -276,24 +276,24 @@ function Installed() {
   const [error, setError] = useState<string | null>(null);
   async function remove(id: string, name: string, size: number) {
     if (!window.confirm(t("engine.installed.confirmRemove", { name, size: formatGB(size, locale) }))) return;
-    await window.ocak.engineRemove(id);
+    await window.vunemi.engineRemove(id);
     await refreshProviders();
   }
   async function setContext(id: string, context: number) {
     setError(null);
-    await window.ocak.engineSetContext(id, context).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+    await window.vunemi.engineSetContext(id, context).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
   }
   async function addVision(id: string) {
     setError(null);
     // Progress shows in the download bar; the list updates when it is done.
-    await window.ocak.engineDownload({ vision: id }).catch((e: unknown) =>
+    await window.vunemi.engineDownload({ vision: id }).catch((e: unknown) =>
       setError(e instanceof Error ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(e)));
   }
   async function testAgain(id: string) {
     setError(null);
     setTesting(id);
     // Main records the answer, and the list updates from it.
-    await window.ocak.checkModel(`tenami:${id}`).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+    await window.vunemi.checkModel(`vunemi:${id}`).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
     setTesting(null);
   }
   return (
@@ -365,7 +365,7 @@ function Installed() {
 export function EngineBanner() {
   const engine = useStore((s) => s.engine);
   const model = useStore((s) => s.model);
-  if (!engine || !model?.startsWith("tenami:") || engine.engine.model !== model.slice("tenami:".length)) return null;
+  if (!engine || !model?.startsWith("vunemi:") || engine.engine.model !== model.slice("vunemi:".length)) return null;
   if (engine.engine.state === "starting") {
     return (
       <div className="mx-auto mb-2 flex w-full max-w-3xl items-center gap-2 px-4 text-[12.5px] text-muted">

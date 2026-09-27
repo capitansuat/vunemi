@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ToolContext } from "@ocak/agent-core";
+import type { ToolContext } from "@vunemi/agent-core";
 import type { BrowserController } from "../src/index.js";
 import { createBrowserTools, NOTHING_TO_TAKE_OVER } from "../src/tools.js";
 

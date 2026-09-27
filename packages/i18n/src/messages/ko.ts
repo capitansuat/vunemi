@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "Gmail 주소와 'Google 계정 › 보안 › 앱 비밀번호'에서 만든 앱 비밀번호를 입력하십시오. 계정의 일반 비밀번호는 입력하지 마십시오. 2단계 인증이 켜져 있어야 합니다.",
-      outlookHint: "Microsoft Entra에 직접 등록한 앱의 클라이언트 ID를 입력하십시오. '모바일 및 데스크톱 애플리케이션' 플랫폼에 리디렉션 URI http://localhost/ocak을 추가하고 Mail.ReadWrite, Mail.Send, User.Read 권한을 추가하십시오. 로그인은 시스템 브라우저에서 열리며 비밀번호는 Vunemi에 전달되지 않습니다.",
+      outlookHint: "Microsoft Entra에 직접 등록한 앱의 클라이언트 ID를 입력하십시오. '모바일 및 데스크톱 애플리케이션' 플랫폼에 리디렉션 URI http://localhost/vunemi를 추가하고 Mail.ReadWrite, Mail.Send, User.Read 권한을 추가하십시오. 로그인은 시스템 브라우저에서 열리며 비밀번호는 Vunemi에 전달되지 않습니다.",
       imapHint: "IMAP 및 SMTP 서버와 앱 비밀번호를 입력하십시오.",
       passwordNote: "비밀번호는 금고에 암호화되어 저장되며 모델에게 전달되지 않습니다.",
       clientId: "Microsoft 애플리케이션 ID",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "Vunemi가 원격 디버깅이 열린 채로 시작되었습니다. 이 Mac의 어떤 프로그램이든 이를 조종하고 승인 카드에 답할 수 있으므로 이 빌드는 그렇게 시작되지 않습니다. Vunemi를 평소대로 여세요." },
-    dataFolder: { busy: "Tenami가 아직 열려 있고 데이터가 그 폴더에 있습니다. Vunemi는 이 데이터를 자체 폴더로 옮깁니다. 먼저 Tenami를 종료한 다음 Vunemi를 다시 여세요." },
     outbox: {
       unreadable: "암호화된 메일 대기열을 읽을 수 없습니다.",
       undecryptable: "암호화된 메일 대기열을 복호화할 수 없습니다. 기록은 보존되고 새 전송은 중단되었습니다.",

@@ -17,7 +17,7 @@
 
 import { appendFile, readFile, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
-import type { AgentEvent, Produced } from "@ocak/agent-core";
+import type { AgentEvent, Produced } from "@vunemi/agent-core";
 
 const FILE = "artefacts.jsonl";
 const MAX_KEPT = 2_000;
@@ -151,7 +151,7 @@ export class ArtefactStore {
     const line = `${JSON.stringify(record)}\n`;
     this.writing = this.writing
       .then(() => appendFile(join(this.dir, FILE), line, { encoding: "utf8", mode: 0o600 }))
-      .catch((err: unknown) => console.error("[ocak] artefacts:", err));
+      .catch((err: unknown) => console.error("[vunemi] artefacts:", err));
   }
 
   private load(): Promise<void> {

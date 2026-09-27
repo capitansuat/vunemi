@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setLocale } from "@ocak/i18n";
+import { setLocale } from "@vunemi/i18n";
 import { AutomationStore, CATCH_UP_MS, createAutomationTools, describeSchedule, latestSlot, nextSlot, scheduledGoal, Scheduler, suggestion, summaryLine, validSchedule, validScope, AUTOMATION_INSTRUCTIONS, type AutomationStatus } from "../../src/main/automations.js";
 
 const at = (y: number, mo: number, d: number, h = 0, mi = 0) => new Date(y, mo - 1, d, h, mi).getTime();
@@ -44,7 +44,7 @@ describe("schedules", () => {
 
 describe("the scheduler", () => {
   let dir: string;
-  beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "tenami-auto-")); });
+  beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "vunemi-auto-")); });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
   const setup = (now: { t: number }, canStart = () => true) => {
@@ -134,7 +134,7 @@ describe("describing schedules", () => {
 
 describe("the automation tools", () => {
   let dir: string;
-  beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "tenami-auto-tools-")); });
+  beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "vunemi-auto-tools-")); });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
   const tools = (t = at(2026, 9, 25, 8)) => {
@@ -220,7 +220,7 @@ describe("inside a scheduled run", () => {
   it("offers none of the scheduling tools, so the task is done rather than scheduled again", () => {
     // Gemma 4 E2B, live: running "summarise my calendar", it scheduled it again.
     const goal = scheduledGoal({ title: "Günlük Takvim Özeti", task: "Takvimimi özetle.", createdAt: 0 });
-    const tools = createAutomationTools(new AutomationStore(join(mkdtempSync(join(tmpdir(), "ocak-auto-")), "a.json")));
+    const tools = createAutomationTools(new AutomationStore(join(mkdtempSync(join(tmpdir(), "vunemi-auto-")), "a.json")));
     expect(tools.length).toBe(4);
     for (const tool of tools) expect(tool.avoidFor?.test(goal)).toBe(true);
     // Asked by the user in chat: offered as usual.

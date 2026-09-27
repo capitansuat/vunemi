@@ -6,7 +6,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, realpath, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, join, sep } from "node:path";
-import { blockedReason } from "@ocak/mac";
+import { blockedReason } from "@vunemi/mac";
 import { promisify } from "node:util";
 import { blockedCommand, parseDictionary, type ScriptDictionary } from "./dictionary.js";
 
@@ -27,10 +27,10 @@ export interface ScriptableApp {
 const BLOCKED_IDS = new Set([
   "com.apple.terminal", "com.googlecode.iterm2", "com.apple.systemevents",
   "com.apple.scripteditor2", "com.apple.keychainaccess", "com.apple.systempreferences",
-  "com.apple.shortcuts", "com.apple.automator", "com.vunemi.app", "one.ocak.desktop",
+  "com.apple.shortcuts", "com.apple.automator", "com.vunemi.app",
   "com.apple.databaseevents", "com.apple.folderactionssetup", "com.apple.folderactionsdispatcher",
 ]);
-const BLOCKED_NAMES = /^(terminal|iterm2?|system events|script editor|keychain access|system settings|shortcuts(?: events)?|automator|vunemi|tenami|database events|folder actions setup|folderactionsdispatcher|folder actions dispatcher)$/i;
+const BLOCKED_NAMES = /^(terminal|iterm2?|system events|script editor|keychain access|system settings|shortcuts(?: events)?|automator|vunemi|database events|folder actions setup|folderactionsdispatcher|folder actions dispatcher)$/i;
 
 export function blockedApp(app: Pick<ScriptableApp, "name" | "bundleId">): boolean {
   return BLOCKED_IDS.has(app.bundleId.toLowerCase()) || app.bundleId.toLowerCase().startsWith("com.apple.shortcuts.")

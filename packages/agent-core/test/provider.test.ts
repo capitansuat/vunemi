@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createModel,
+  normalizeModelSpec,
   parseModelSpec,
   ProviderError,
   ThinkSplitter,
@@ -178,13 +179,19 @@ describe("Vunemi's own engine", () => {
       seen.push({ url: String(url), auth: new Headers(init?.headers).get("authorization") });
       return Response.json({ default_generation_settings: { n_ctx: 65_536 } });
     }));
-    const model = createModel("tenami:qwen3.5-4b-ud-q4_k_xl", { baseUrl: "http://127.0.0.1:5555/v1", apiKey: "k" });
+    const model = createModel("vunemi:qwen3.5-4b-ud-q4_k_xl", { baseUrl: "http://127.0.0.1:5555/v1", apiKey: "k" });
     expect(await model.contextWindow!()).toBe(65_536);
     expect(seen).toEqual([{ url: "http://127.0.0.1:5555/props", auth: "Bearer k" }]);
   });
 
   it("is a known provider", () => {
-    expect(parseModelSpec("tenami:qwen3.5-4b-ud-q4_k_xl")).toEqual({ kind: "tenami", model: "qwen3.5-4b-ud-q4_k_xl" });
+    expect(parseModelSpec("vunemi:qwen3.5-4b-ud-q4_k_xl")).toEqual({ kind: "vunemi", model: "qwen3.5-4b-ud-q4_k_xl" });
+  });
+
+  it("still reads a spec saved under the engine's earlier name", () => {
+    expect(parseModelSpec("tenami:qwen3.5-4b-ud-q4_k_xl")).toEqual({ kind: "vunemi", model: "qwen3.5-4b-ud-q4_k_xl" });
+    expect(normalizeModelSpec("tenami:m")).toBe("vunemi:m");
+    expect(normalizeModelSpec("ollama:tenami:m")).toBe("ollama:tenami:m");
   });
 });
 
@@ -233,7 +240,7 @@ describe("vision", () => {
       seen.push(new Headers(init?.headers).get("authorization"));
       return Response.json({ modalities: { vision: true } });
     }));
-    expect(await createModel("tenami:m", { baseUrl: "http://127.0.0.1:5555/v1", apiKey: "k" }).vision!()).toBe(true);
+    expect(await createModel("vunemi:m", { baseUrl: "http://127.0.0.1:5555/v1", apiKey: "k" }).vision!()).toBe(true);
     expect(seen).toEqual(["Bearer k"]);
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({ modalities: { vision: false } })));
     expect(await createModel("llamacpp:m").vision!()).toBe(false);

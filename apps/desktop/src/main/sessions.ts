@@ -25,9 +25,9 @@
 
 import { chmodSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { sealInterrupted, type AgentEvent, type ChatMessage } from "@ocak/agent-core";
+import { sealInterrupted, type AgentEvent, type ChatMessage } from "@vunemi/agent-core";
 import type { SessionSummary } from "../shared/ipc.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 interface StoredSession {
   version: 1;

@@ -18,10 +18,10 @@
  * is a silent wrong-tool call.
  */
 
-import type { ToolContext, ToolDef } from "@ocak/agent-core";
-import type { Connector, ConnectorStatus } from "@ocak/connectors";
+import type { ToolContext, ToolDef } from "@vunemi/agent-core";
+import type { Connector, ConnectorStatus } from "@vunemi/connectors";
 import { McpClient, type McpIO, type McpTool, type McpTransport } from "./client.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export interface McpServerConfig {
   id: string;

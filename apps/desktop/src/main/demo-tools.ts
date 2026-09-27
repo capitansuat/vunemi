@@ -3,8 +3,8 @@
  * can be exercised end to end before the browser node (M1) exists.
  */
 
-import { ToolRegistry } from "@ocak/agent-core";
-import { t } from "@ocak/i18n";
+import { ToolRegistry } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 
 export function createDemoTools(): ToolRegistry {
   let scratchpad = "";

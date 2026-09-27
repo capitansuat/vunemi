@@ -3,7 +3,7 @@
  * user switched off does not merely disappear from a menu — the model
  * cannot call its tools by name either.
  */
-import { ToolRegistry, type ToolDef } from "@ocak/agent-core";
+import { ToolRegistry, type ToolDef } from "@vunemi/agent-core";
 import { describe, expect, it } from "vitest";
 import { Connectors, type Connector, type ConnectorStatus } from "../src/index.js";
 

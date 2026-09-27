@@ -7,7 +7,7 @@
  * an unknown outcome by the outbox, never retried) and a new one is started,
  * at most a few times a minute.
  */
-import { VaultClient, type Port, type VaultState } from "@ocak/vault";
+import { VaultClient, type Port, type VaultState } from "@vunemi/vault";
 
 /** The part of Electron's UtilityProcess this needs; a fake in tests. */
 export interface ChildProcessLike {
@@ -59,7 +59,7 @@ export class VaultHost {
       this.child = null;
       this.client.detach(`Vault process exited (${code})`);
       if (this.stopping) return;
-      this.opts.log?.(`[ocak] vault process exited (${code})`);
+      this.opts.log?.(`[vunemi] vault process exited (${code})`);
       this.restartLater();
     });
     child.postMessage({ kind: "init", ...this.opts.init() });
@@ -68,7 +68,7 @@ export class VaultHost {
     clearTimeout(timeout);
     if (this.child !== child) return;
     if (!state) {
-      this.opts.log?.("[ocak] vault process did not start");
+      this.opts.log?.("[vunemi] vault process did not start");
       child.kill();
       return;
     }
@@ -89,7 +89,7 @@ export class VaultHost {
     const now = Date.now();
     this.restarts = this.restarts.filter((at) => now - at < 60_000);
     if (this.restarts.length >= (this.opts.maxRestartsPerMinute ?? 3)) {
-      this.opts.log?.("[ocak] vault process keeps exiting; not restarting it again");
+      this.opts.log?.("[vunemi] vault process keeps exiting; not restarting it again");
       this.firstReady();
       return;
     }

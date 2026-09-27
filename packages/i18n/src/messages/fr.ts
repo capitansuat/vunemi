@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "Saisissez votre adresse Gmail et un mot de passe d’application créé dans Compte Google › Sécurité › Mots de passe des applications. Pas le mot de passe habituel du compte. La validation en deux étapes doit être activée.",
-      outlookHint: "Saisissez l’ID client de votre propre inscription d’application dans Microsoft Entra. Ajoutez l’URI de redirection http://localhost/ocak à la plateforme mobile et bureau, ainsi que les autorisations Mail.ReadWrite, Mail.Send et User.Read. La connexion s’ouvre dans le navigateur du système ; votre mot de passe n’est jamais transmis à Vunemi.",
+      outlookHint: "Saisissez l’ID client de votre propre inscription d’application dans Microsoft Entra. Ajoutez l’URI de redirection http://localhost/vunemi à la plateforme mobile et bureau, ainsi que les autorisations Mail.ReadWrite, Mail.Send et User.Read. La connexion s’ouvre dans le navigateur du système ; votre mot de passe n’est jamais transmis à Vunemi.",
       imapHint: "Saisissez les serveurs IMAP et SMTP et votre mot de passe d’application.",
       passwordNote: "Le mot de passe est stocké chiffré dans le coffre et jamais transmis au modèle.",
       clientId: "ID d’application Microsoft",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "Vunemi a été lancé avec le débogage à distance ouvert. N'importe quel programme de ce Mac pourrait alors le piloter et répondre à ses cartes d'approbation ; cette version ne démarre donc pas ainsi. Ouvrez Vunemi normalement." },
-    dataFolder: { busy: "Tenami est encore ouvert, et vos données sont dans son dossier. Vunemi déplace ces données dans son propre dossier. Quittez d'abord Tenami, puis rouvrez Vunemi." },
     outbox: {
       unreadable: "La file d’envoi chiffrée n’a pas pu être lue.",
       undecryptable: "La file d’envoi chiffrée n’a pas pu être déchiffrée ; l’entrée est conservée et les nouveaux envois sont arrêtés.",

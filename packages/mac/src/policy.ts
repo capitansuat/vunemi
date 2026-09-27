@@ -20,7 +20,7 @@
  * every action still goes through the Sentinel.
  */
 
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export interface AppRef {
   name: string;
@@ -47,8 +47,6 @@ const BLOCKED_BUNDLES: readonly string[] = [
   // Vunemi's own control plane, and the settings that govern it
   "com.github.Electron",
   "com.vunemi",
-  // Earlier names of the same app, which may still be installed.
-  "one.ocak",
   "com.apple.systempreferences",
   "com.apple.SystemSettings",
   // Anything that can run code on this Mac as the user
@@ -62,7 +60,6 @@ const BLOCKED_NAMES: readonly string[] = [
   // Vunemi itself, by name too: the bundle id above changes when the app is
   // published under its own domain, and the block must not lapse with it.
   "vunemi",
-  "tenami",
   "terminal",
   "iterm",
   "warp",
@@ -113,7 +110,6 @@ const BLOCKED_NAMES: readonly string[] = [
   "system preferences",
   "script editor",
   "automator",
-  "ocak",
   "electron",
 ];
 

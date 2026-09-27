@@ -13,12 +13,12 @@
  * is a card, and every one leaves an undo in the activity log.
  */
 
-import type { ToolContext, ToolDef } from "@ocak/agent-core";
+import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { MailAccounts } from "./accounts.js";
 import type { Outbox } from "./outbox.js";
 import { redactionNote, stripSecrets } from "./secrets.js";
 import type { MessageSummary, MoveTarget } from "./types.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export const MAIL_INSTRUCTIONS = `Mail:
 - mail_awaiting_reply lists recent messages people wrote to the user that haven't been answered; it only reads.

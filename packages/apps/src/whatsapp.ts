@@ -6,8 +6,8 @@
  */
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
-import type { ToolDef } from "@ocak/agent-core";
-import { t } from "@ocak/i18n";
+import type { ToolDef } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 
 export const WHATSAPP_GUIDE = `WhatsApp:
 - whatsapp_compose opens a WhatsApp chat with one phone number and the text already typed in. It does not send: the user reads it and presses Send themselves. Say exactly that; never say the message was sent.

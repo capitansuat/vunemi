@@ -17,9 +17,9 @@
  * has to change with it.
  */
 
-import type { ToolContext, ToolDef } from "@ocak/agent-core";
+import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import type { Helper } from "./helper.js";
-import { formatDate, t } from "@ocak/i18n";
+import { formatDate, t } from "@vunemi/i18n";
 
 export const CALENDAR_INSTRUCTIONS = `Calendar and reminders (this Mac's own, through macOS):
 - calendar_events reads a date range. calendar_create adds an event. calendar_delete deletes one event by the id calendar_events shows; the user can put it back. All work in the user's local time.

@@ -19,7 +19,7 @@ let honourRange: boolean;
 let slow: boolean;
 
 beforeEach(async () => {
-  dir = mkdtempSync(join(tmpdir(), "tenami-dl-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-dl-"));
   ranges = [];
   honourRange = true;
   slow = false;

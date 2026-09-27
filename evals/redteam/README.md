@@ -17,4 +17,4 @@ dosyasında çalışır. Gerçek sayfa ve dosya zincirleri sırasıyla
 
 Bu set, bütün prompt injection yöntemlerini durdurduğuna dair uçtan uca bir
 sertifika değildir. Gerçek OCR, gerçek model ve canlı site varyantları ayrıca
-ölçülmelidir. `OCAK_LIVE_BROWSER=1` ile canlı tarayıcı vakaları açılır.
+ölçülmelidir. `VUNEMI_LIVE_BROWSER=1` ile canlı tarayıcı vakaları açılır.

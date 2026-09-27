@@ -1,4 +1,4 @@
-import type { MessageKey } from "@ocak/i18n";
+import type { MessageKey } from "@vunemi/i18n";
 
 /**
  * What the empty chat offers. Goals are tasks with details the user will want

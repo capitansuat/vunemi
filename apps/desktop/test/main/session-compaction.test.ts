@@ -4,15 +4,15 @@
  * for it when they ask it to stop.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AgentEvent, ChatMessage, RunResult } from "@ocak/agent-core";
+import type { AgentEvent, ChatMessage, RunResult } from "@vunemi/agent-core";
 
 const summary = ["## User's goals", "## Facts learned", "## Done so far", "## Errors and fixes", "## Still pending"].map((s) => `${s}\n- x`).join("\n\n");
 const runs: { history: ChatMessage[]; finish: (r: Partial<RunResult>) => void }[] = [];
 let summaryGate: Promise<void> = Promise.resolve();
 let summaryCalls = 0;
 
-vi.mock("@ocak/agent-core", async (importOriginal) => {
-  const real = await importOriginal<typeof import("@ocak/agent-core")>();
+vi.mock("@vunemi/agent-core", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@vunemi/agent-core")>();
   return {
     ...real,
     createModel: (spec: string) => ({

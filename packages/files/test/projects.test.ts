@@ -6,7 +6,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ToolContext, ToolDef } from "@ocak/agent-core";
+import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createFileTools, PathRefused, projectFolderProblem, Roots } from "../src/index.js";
 

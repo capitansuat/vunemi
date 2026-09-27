@@ -10,10 +10,10 @@ import { execFile } from "node:child_process";
 import { mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import type { Artifact, ToolContext, ToolDef } from "@ocak/agent-core";
-import { checkNavigation } from "@ocak/browser";
-import type { Roots } from "@ocak/files";
-import { t } from "@ocak/i18n";
+import type { Artifact, ToolContext, ToolDef } from "@vunemi/agent-core";
+import { checkNavigation } from "@vunemi/browser";
+import type { Roots } from "@vunemi/files";
+import { t } from "@vunemi/i18n";
 import type { ScriptRunner } from "./runner.js";
 
 const MUSIC = "Music";

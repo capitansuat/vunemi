@@ -1,7 +1,7 @@
 /** Generic, dictionary-validated Apple Events tools. No model-authored script text. */
 
-import type { ToolDef } from "@ocak/agent-core";
-import { t } from "@ocak/i18n";
+import type { ToolDef } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 import { blockedCommand, classifyCommand, type DictionaryClass, type DictionaryMember, type ScriptDictionary } from "./dictionary.js";
 import { ScriptableCatalog, type ScriptableApp } from "./catalog.js";
 import type { ScriptRunner } from "./runner.js";

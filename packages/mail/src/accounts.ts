@@ -14,7 +14,7 @@
  */
 
 import type { MailAccount } from "./types.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export interface MailAccountEntry {
   id: string;

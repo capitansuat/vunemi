@@ -5,8 +5,8 @@
  * output goes back. A saved command or address that no longer matches what
  * the secret was bound to gets nothing (see mcpTarget).
  */
-import { localIO, type McpProcess, type McpServerConfig } from "@ocak/mcp";
-import type { VaultServer } from "@ocak/vault";
+import { localIO, type McpProcess, type McpServerConfig } from "@vunemi/mcp";
+import type { VaultServer } from "@vunemi/vault";
 import { openMcpServer } from "../main/mcp-secrets.js";
 
 const HANDLE = /^[A-Za-z0-9-]{8,64}$/;

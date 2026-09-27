@@ -11,9 +11,9 @@
 #    HTTP on 127.0.0.1, and the one model file Vunemi downloaded and checked.
 set -euo pipefail
 
-tag="${OCAK_WHISPER_TAG:-v1.9.4}"
-commit="${OCAK_WHISPER_COMMIT:-927cfce34f31707e17f2bff35c349632fb9e2c3a}"
-out="${OCAK_BUILD_DIR:-$HOME/.ocak-build}"
+tag="${VUNEMI_WHISPER_TAG:-v1.9.4}"
+commit="${VUNEMI_WHISPER_COMMIT:-927cfce34f31707e17f2bff35c349632fb9e2c3a}"
+out="${VUNEMI_BUILD_DIR:-$HOME/.vunemi-build}"
 cache="$out/whisper-cache/$tag"
 src="$out/whisper-src/$tag"
 

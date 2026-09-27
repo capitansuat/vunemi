@@ -6,8 +6,8 @@
  * thousand tokens a request (measured 25 Sep 2026).
  */
 
-import type { ToolDef } from "@ocak/agent-core";
-import { t } from "@ocak/i18n";
+import type { ToolDef } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 import { BROWSERS_GUIDE, CONTACTS_GUIDE, MESSAGES_GUIDE, MUSIC_GUIDE, PHOTOS_GUIDE } from "./everyday.js";
 import { WHATSAPP_GUIDE } from "./whatsapp.js";
 import { GENERAL_INSTRUCTIONS } from "./general.js";

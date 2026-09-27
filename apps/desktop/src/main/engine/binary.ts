@@ -13,6 +13,6 @@ export const ENGINE_TAG = "v0.5.0";
 export function engineBinary(opts: { packaged: boolean; resourcesPath: string; home: string }): string | null {
   const path = opts.packaged
     ? join(opts.resourcesPath, "llama-server")
-    : join(opts.home, ".ocak-build", "engine-cache", ENGINE_TAG, "llama-server");
+    : join(opts.home, ".vunemi-build", "engine-cache", ENGINE_TAG, "llama-server");
   return existsSync(path) ? path : null;
 }

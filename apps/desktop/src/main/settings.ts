@@ -9,13 +9,13 @@
 
 import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { DEFAULT_POLICY, type Autonomy, type AutonomyPolicy } from "@ocak/agent-core";
-import type { McpServerConfig } from "@ocak/mcp";
-import { validateMailConfig, type ImapSmtpConfig } from "@ocak/mail";
-import { isLocale, type Locale } from "@ocak/i18n";
+import { DEFAULT_POLICY, type Autonomy, type AutonomyPolicy } from "@vunemi/agent-core";
+import type { McpServerConfig } from "@vunemi/mcp";
+import { validateMailConfig, type ImapSmtpConfig } from "@vunemi/mail";
+import { isLocale, type Locale } from "@vunemi/i18n";
 import type { LocalModelSettings } from "../shared/ipc.js";
 import { DEFAULT_MODEL_SETTINGS, validateModelSettings } from "./providers.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export interface StoredImapMailAccount {
   id: string;
@@ -79,7 +79,7 @@ const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLIC
  * the owner turns it off.
  */
 function unreadable(err?: unknown): Settings {
-  console.error("[ocak] settings unreadable; starting from defaults, locked:", err ?? "not an object");
+  console.error("[vunemi] settings unreadable; starting from defaults, locked:", err ?? "not an object");
   return { ...EMPTY, appLock: true };
 }
 const CLASSES = ["read", "write-local", "destructive", "outbound", "financial"] as const;
@@ -248,7 +248,7 @@ export class SettingsStore {
       writeFileSync(temp, JSON.stringify(this.current, null, 2), "utf8");
       renameSync(temp, this.file);
     } catch (err) {
-      console.error("[ocak] could not save settings:", err);
+      console.error("[vunemi] could not save settings:", err);
       throw err;
     }
   }

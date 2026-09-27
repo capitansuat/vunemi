@@ -48,7 +48,7 @@ function findElectronApp() {
 const app = findElectronApp();
 if (!app) {
   // Not an error: someone may be running this outside a dev install.
-  console.log("[ocak] Electron.app bulunamadı, izin anahtarları atlandı.");
+  console.log("[vunemi] Electron.app bulunamadı, izin anahtarları atlandı.");
   process.exit(0);
 }
 
@@ -81,8 +81,8 @@ if (!changed) process.exit(0);
 // its own silent failure — macOS refuses to launch it.
 try {
   execFileSync("/usr/bin/codesign", ["--force", "--sign", "-", "--deep", app], { stdio: "pipe" });
-  console.log("[ocak] Electron.app'e izin metinleri yazıldı ve yeniden imzalandı.");
+  console.log("[vunemi] Electron.app'e izin metinleri yazıldı ve yeniden imzalandı.");
 } catch (err) {
-  console.error("[ocak] Electron.app yeniden imzalanamadı:", err instanceof Error ? err.message : err);
+  console.error("[vunemi] Electron.app yeniden imzalanamadı:", err instanceof Error ? err.message : err);
   process.exit(1);
 }

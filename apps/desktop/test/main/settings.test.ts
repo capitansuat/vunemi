@@ -1,4 +1,4 @@
-import type { AutonomyPolicy } from "@ocak/agent-core";
+import type { AutonomyPolicy } from "@vunemi/agent-core";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,7 +7,7 @@ import { mailAddressOf, SettingsStore } from "../../src/main/settings.js";
 
 const dirs: string[] = [];
 function store() {
-  const dir = mkdtempSync(join(tmpdir(), "ocak-settings-"));
+  const dir = mkdtempSync(join(tmpdir(), "vunemi-settings-"));
   dirs.push(dir);
   return { dir, settings: new SettingsStore(dir) };
 }

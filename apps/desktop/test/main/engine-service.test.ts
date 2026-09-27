@@ -25,7 +25,7 @@ let service: EngineService;
 
 beforeEach(async () => {
   chmodSync(FAKE, 0o755);
-  dir = mkdtempSync(join(tmpdir(), "tenami-svc-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-svc-"));
   hub = { projector: false, badProjector: false, revisions: 0 };
   server = createServer((req, res) => {
     const siblings = () => [
@@ -86,13 +86,13 @@ describe("the engine service", () => {
   it("downloads a searched model, re-reading it from the hub, then tries its tools", async () => {
     const { service, testModel } = make();
     const spec = await service.download({ repo: "org/tiny-GGUF" });
-    expect(spec).toBe("tenami:tiny-q4_k_m");
-    expect(testModel).toHaveBeenCalledWith("tenami:tiny-q4_k_m", expect.objectContaining({ apiKey: expect.any(String) }));
+    expect(spec).toBe("vunemi:tiny-q4_k_m");
+    expect(testModel).toHaveBeenCalledWith("vunemi:tiny-q4_k_m", expect.objectContaining({ apiKey: expect.any(String) }));
     expect(service.view().installed).toEqual([
       { id: "tiny-q4_k_m", name: "tiny-Q4_K_M", size: BYTES.length, license: "mit", context: 65_536, maxContext: 65_536, vision: "no", weights: BYTES.length, toolTest: "ok" },
     ]);
     expect(service.view().download).toBeNull();
-    expect(service.specs()).toEqual(["tenami:tiny-q4_k_m"]);
+    expect(service.specs()).toEqual(["vunemi:tiny-q4_k_m"]);
   });
 
   it("tries the tools again when the first answer misses, and fails only after that", async () => {
@@ -113,10 +113,10 @@ describe("the engine service", () => {
   it("keeps the answer of a test run later from Settings", async () => {
     const { service } = make(vi.fn(async () => false));
     await service.download({ repo: "org/tiny-GGUF" });
-    service.recordToolTest("tenami:tiny-q4_k_m", true);
+    service.recordToolTest("vunemi:tiny-q4_k_m", true);
     expect(service.view().installed[0]?.toolTest).toBe("ok");
     service.recordToolTest("lmstudio:x", false); // not ours
-    service.recordToolTest("tenami:gone", false);
+    service.recordToolTest("vunemi:gone", false);
     expect(service.view().installed[0]?.toolTest).toBe("ok");
   });
 
@@ -168,7 +168,7 @@ describe("the engine service", () => {
     hub.projector = true;
     const { service } = make();
     expect(service.view().installed[0]).toMatchObject({ vision: "add" });
-    const spec = "tenami:tiny-q4_k_m";
+    const spec = "vunemi:tiny-q4_k_m";
     await service.prepare(spec);
     const before = service.endpoint(spec)!;
     await service.download({ vision: "tiny-q4_k_m" });
@@ -261,7 +261,7 @@ describe("the engine service", () => {
 
 describe("a GGUF file from this Mac", () => {
   function local(name: string, body: Buffer = Buffer.concat([Buffer.from("GGUF"), randomBytes(1_000)])): string {
-    const elsewhere = mkdtempSync(join(tmpdir(), "tenami-local-"));
+    const elsewhere = mkdtempSync(join(tmpdir(), "vunemi-local-"));
     const path = join(elsewhere, name);
     writeFileSync(path, body);
     return path;
@@ -271,8 +271,8 @@ describe("a GGUF file from this Mac", () => {
     const { service, testModel } = make();
     const original = local("my-model-Q4.gguf");
     const spec = await service.addLocal(original);
-    expect(spec).toBe("tenami:my-model-q4");
-    expect(testModel).toHaveBeenCalledWith("tenami:my-model-q4", expect.anything());
+    expect(spec).toBe("vunemi:my-model-q4");
+    expect(testModel).toHaveBeenCalledWith("vunemi:my-model-q4", expect.anything());
     expect(existsSync(join(dir, "my-model-Q4.gguf"))).toBe(true);
     expect(service.view().installed).toMatchObject([{ id: "my-model-q4", vision: "no", toolTest: "ok" }]);
     await service.remove("my-model-q4");

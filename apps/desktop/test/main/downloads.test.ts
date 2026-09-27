@@ -31,7 +31,7 @@ describe("download names", () => {
   });
 
   it("does not overwrite a file already in Downloads", () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocak-dl-"));
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-dl-"));
     try {
       writeFileSync(join(dir, "rapor.pdf"), "ilk");
       expect(uniqueIn(dir, "rapor.pdf")).toBe("rapor 2.pdf");

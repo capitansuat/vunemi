@@ -1,13 +1,13 @@
 /**
  * Runs the real loop against a real local model. Skipped unless a model is named:
  *
- *   OCAK_LIVE_MODEL=lmstudio:qwen/qwen3.6-35b-a3b pnpm test live
- *   OCAK_LIVE_MODEL=ollama:qwen3:32b pnpm test live
+ *   VUNEMI_LIVE_MODEL=lmstudio:qwen/qwen3.6-35b-a3b pnpm test live
+ *   VUNEMI_LIVE_MODEL=ollama:qwen3:32b pnpm test live
  */
 import { describe, expect, it } from "vitest";
 import { createModel, runAgent, ToolRegistry, type AgentEvent } from "../src/index.js";
 
-const spec = process.env.OCAK_LIVE_MODEL;
+const spec = process.env.VUNEMI_LIVE_MODEL;
 
 describe.skipIf(!spec)(`live: ${spec}`, () => {
   it("calls a tool, respects approval, and answers using the result", { timeout: 300_000 }, async () => {

@@ -9,7 +9,7 @@
  * to detect automation, and `Runtime.evaluate` works without it.
  */
 
-import type { AXNode } from "@ocak/perception";
+import type { AXNode } from "@vunemi/perception";
 import type { CdpSession } from "./cdp.js";
 
 /** Thrown for failures the model should read and route around. */
@@ -30,13 +30,13 @@ const MASK_SENSITIVE = `(() => {
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
     const box = document.createElement("div");
-    box.setAttribute("data-tenami-mask", "");
+    box.setAttribute("data-vunemi-mask", "");
     box.style.cssText = "position:fixed;z-index:2147483647;pointer-events:none;background:#000;left:" + r.left + "px;top:" + r.top + "px;width:" + r.width + "px;height:" + r.height + "px";
     document.documentElement.appendChild(box);
   }
   return true;
 })()`;
-const UNMASK_SENSITIVE = `(() => { for (const el of document.querySelectorAll("[data-tenami-mask]")) el.remove(); return true; })()`;
+const UNMASK_SENSITIVE = `(() => { for (const el of document.querySelectorAll("[data-vunemi-mask]")) el.remove(); return true; })()`;
 
 export class PageDriver {
   /**

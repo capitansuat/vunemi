@@ -6,14 +6,14 @@
 import { mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentEvent, ChatMessage } from "@ocak/agent-core";
+import type { AgentEvent, ChatMessage } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { foldEvent } from "../../src/renderer/src/lib/fold.js";
 import { appendCompacted, CLOSED_MID_CALL, CLOSED_MID_TASK, SessionStore } from "../../src/main/sessions.js";
 
 let dir = "";
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "ocak-sessions-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-sessions-"));
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

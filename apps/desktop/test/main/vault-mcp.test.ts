@@ -8,9 +8,9 @@ import { createServer, type Server } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { ToolContext } from "@ocak/agent-core";
-import { createMcpConnector, type McpServerConfig } from "@ocak/mcp";
-import { connectLocal, Vault, type SecretCrypto } from "@ocak/vault";
+import type { ToolContext } from "@vunemi/agent-core";
+import { createMcpConnector, type McpServerConfig } from "@vunemi/mcp";
+import { connectLocal, Vault, type SecretCrypto } from "@vunemi/vault";
 import { sealMcpServer } from "../../src/main/mcp-secrets.js";
 import { vaultMcpIO } from "../../src/main/remote-mcp.js";
 import { mayRelease } from "../../src/vault-process/mail.js";
@@ -26,7 +26,7 @@ const ctx = (): ToolContext => ({ signal: new AbortController().signal, handoff:
 
 let dir = "";
 let http: Server | null = null;
-beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "ocak-vault-mcp-")); });
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "vunemi-vault-mcp-")); });
 afterEach(async () => {
   await new Promise<void>((resolve) => (http ? http.close(() => resolve()) : resolve()));
   http = null;

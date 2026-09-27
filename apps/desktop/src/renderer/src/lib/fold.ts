@@ -3,8 +3,8 @@
  * same view out, so the timeline can be rebuilt from a recorded log.
  */
 
-import type { ActionClass, AgentEvent, ApprovalDecision, Artifact, Produced, RunStatus } from "@ocak/agent-core";
-import { t } from "@ocak/i18n";
+import type { ActionClass, AgentEvent, ApprovalDecision, Artifact, Produced, RunStatus } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 
 export type CallStatus = "proposed" | "awaiting" | "running" | "ok" | "error" | "rejected";
 

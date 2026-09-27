@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_POLICY } from "@ocak/agent-core";
-import { checkNavigation } from "@ocak/browser";
-import { Sentinel } from "@ocak/sentinel";
+import { DEFAULT_POLICY } from "@vunemi/agent-core";
+import { checkNavigation } from "@vunemi/browser";
+import { Sentinel } from "@vunemi/sentinel";
 
 describe("threat-model attack classes", () => {
   it.each([

@@ -18,8 +18,8 @@
  *     user's blocklist is enforced here rather than trusted to the model.
  */
 
-import type { ActionClass, AutonomyPolicy } from "@ocak/agent-core";
-import { t } from "@ocak/i18n";
+import type { ActionClass, AutonomyPolicy } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 
 export type Verdict =
   | { kind: "allow" }

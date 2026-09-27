@@ -4,7 +4,7 @@
  * would happily repeat, and a send that must not have happened yet when the
  * tool says it did.
  */
-import type { Produced, ToolContext, ToolDef } from "@ocak/agent-core";
+import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMailTools, MailAccounts, Outbox, type Draft, type MailAccount, type MessageBody } from "../src/index.js";
 

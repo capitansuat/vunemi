@@ -1,4 +1,4 @@
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 /**
  * The file tools, read as a list of ways out of the sandbox — because that is
  * what they are. Each test is one escape that has to fail, or one change that
@@ -8,7 +8,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Produced, ToolContext, ToolDef } from "@ocak/agent-core";
+import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createFileTools, PathRefused, Roots } from "../src/index.js";
 import { similarNames, spotlightQuery } from "../src/tools.js";
@@ -55,7 +55,7 @@ describe("file tools", () => {
     tools.get(name)!.run(args as never, ctx());
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "ocak-files-"));
+    home = mkdtempSync(join(tmpdir(), "vunemi-files-"));
     root = join(home, "Belgeler");
     mkdirSync(root, { recursive: true });
     undos = [];
@@ -243,16 +243,16 @@ describe("file tools", () => {
 
   it("refuses to attach a folder, a hidden file, or a file inside a hidden folder", () => {
     const roots = new Roots([root]);
-    mkdirSync(join(homedir(), ".ocak-test-hidden"), { recursive: true });
+    mkdirSync(join(homedir(), ".vunemi-test-hidden"), { recursive: true });
     try {
-      writeFileSync(join(homedir(), ".ocak-test-hidden", "anahtar.txt"), "x");
+      writeFileSync(join(homedir(), ".vunemi-test-hidden", "anahtar.txt"), "x");
       writeFileSync(join(root, ".env"), "x");
       expect(() => roots.grant(root)).toThrow(/klasör/);
       expect(() => roots.grant(join(root, ".env"))).toThrow(/gizli/);
-      expect(() => roots.grant(join(homedir(), ".ocak-test-hidden", "anahtar.txt"))).toThrow(/gizli/);
+      expect(() => roots.grant(join(homedir(), ".vunemi-test-hidden", "anahtar.txt"))).toThrow(/gizli/);
       expect(() => roots.grant(join(root, "yok.txt"))).toThrow(/bulunamadı/);
     } finally {
-      rmSync(join(homedir(), ".ocak-test-hidden"), { recursive: true, force: true });
+      rmSync(join(homedir(), ".vunemi-test-hidden"), { recursive: true, force: true });
     }
   });
 
@@ -433,7 +433,7 @@ describe("similarNames", () => {
 
 describe("files_search", () => {
   it("asks Spotlight with fixed arguments and shows only what is inside the open folders", async () => {
-    const home = realpathSync(mkdtempSync(join(tmpdir(), "tenami-search-")));
+    const home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-search-")));
     const root = join(home, "Belgeler");
     mkdirSync(root);
     const inside = join(root, "fatura.pdf");
@@ -454,7 +454,7 @@ console.log([${JSON.stringify(inside)}, "/etc/passwd", ${JSON.stringify(join(roo
     rmSync(home, { recursive: true, force: true });
   });
   it("puts the newest first, with its day", async () => {
-    const home = realpathSync(mkdtempSync(join(tmpdir(), "tenami-search-")));
+    const home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-search-")));
     const root = join(home, "Belgeler");
     mkdirSync(root);
     const old = join(root, "eski.pdf");

@@ -9,7 +9,7 @@ const client = { clientId: "1234-abcdef.apps.googleusercontent.com", clientSecre
 const idToken = (claims: Record<string, unknown>) => `x.${Buffer.from(JSON.stringify(claims)).toString("base64url")}.y`;
 
 describe("Gmail sign-in with Google", () => {
-  it.skipIf(!process.env.OCAK_LIVE_LOOPBACK_TEST)("asks for offline access on 127.0.0.1 and sends the desktop client secret with the PKCE code", async () => {
+  it.skipIf(!process.env.VUNEMI_LIVE_LOOPBACK_TEST)("asks for offline access on 127.0.0.1 and sends the desktop client secret with the PKCE code", async () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string, options: RequestInit) => {
       expect(url).toBe("https://oauth2.googleapis.com/token");
       const body = options.body as URLSearchParams;

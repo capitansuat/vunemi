@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { setLocale } from "@ocak/i18n";
+import { setLocale } from "@vunemi/i18n";
 import { nativeErrorText } from "../src/native-errors.js";
 
 afterEach(() => setLocale("tr"));

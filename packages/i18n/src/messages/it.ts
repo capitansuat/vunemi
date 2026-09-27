@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "Inserisci il tuo indirizzo Gmail e una password per le app creata in Account Google › Sicurezza › Password per le app. Non la normale password dell’account. La verifica in due passaggi deve essere attiva.",
-      outlookHint: "Inserisci l’ID client della tua registrazione di app in Microsoft Entra. Aggiungi l’URI di reindirizzamento http://localhost/ocak alla piattaforma mobile e desktop e le autorizzazioni Mail.ReadWrite, Mail.Send e User.Read. L’accesso si apre nel browser di sistema; la tua password non viene mai data a Vunemi.",
+      outlookHint: "Inserisci l’ID client della tua registrazione di app in Microsoft Entra. Aggiungi l’URI di reindirizzamento http://localhost/vunemi alla piattaforma mobile e desktop e le autorizzazioni Mail.ReadWrite, Mail.Send e User.Read. L’accesso si apre nel browser di sistema; la tua password non viene mai data a Vunemi.",
       imapHint: "Inserisci i server IMAP e SMTP e la tua password per le app.",
       passwordNote: "La password è salvata cifrata nella cassaforte e non viene mai data al modello.",
       clientId: "ID applicazione Microsoft",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "Vunemi è stato avviato con il debug remoto aperto. Qualsiasi programma su questo Mac potrebbe controllarlo e rispondere alle sue schede di approvazione, quindi questa versione non si avvia così. Apri Vunemi normalmente." },
-    dataFolder: { busy: "Tenami è ancora aperto e i tuoi dati sono nella sua cartella. Vunemi sposta questi dati nella propria cartella. Esci prima da Tenami, poi riapri Vunemi." },
     outbox: {
       unreadable: "Impossibile leggere la coda di posta cifrata.",
       undecryptable: "Impossibile decifrare la coda di posta cifrata; la voce viene conservata e i nuovi invii sono fermi.",

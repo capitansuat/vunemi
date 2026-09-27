@@ -1,6 +1,6 @@
 /**
  * Drives a real headless Chrome against a local fixture page. Skipped unless
- * OCAK_LIVE_BROWSER=1, since it launches a browser.
+ * VUNEMI_LIVE_BROWSER=1, since it launches a browser.
  */
 import { createServer, type Server } from "node:http";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -39,7 +39,7 @@ const FIXTURE = `<!doctype html>
   </script>
 </body></html>`;
 
-const live = process.env.OCAK_LIVE_BROWSER === "1";
+const live = process.env.VUNEMI_LIVE_BROWSER === "1";
 
 describe.skipIf(!live)("live Chrome", () => {
   let server: Server;
@@ -58,7 +58,7 @@ describe.skipIf(!live)("live Chrome", () => {
     });
     await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
     base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
-    profile = mkdtempSync(join(tmpdir(), "ocak-chrome-"));
+    profile = mkdtempSync(join(tmpdir(), "vunemi-chrome-"));
     browser = new BrowserController(() => launchIsolatedChrome({ userDataDir: profile, headless: true }));
   }, 60_000);
 

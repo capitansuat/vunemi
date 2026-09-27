@@ -7,7 +7,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { find, outline } from "@ocak/perception";
+import { find, outline } from "@vunemi/perception";
 import type { BrowserBackend } from "./backend.js";
 import { detectChallenge } from "./challenge.js";
 import { PageActionError, PageDriver, type PointerEvent } from "./page.js";

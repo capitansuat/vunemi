@@ -31,7 +31,7 @@ function Root({ initialLock }: { initialLock: LockState }) {
       voice.cancelListening();
     }
   };
-  useEffect(() => window.ocak.onLock(apply), []);
+  useEffect(() => window.vunemi.onLock(apply), []);
 
   return (
     <>
@@ -46,13 +46,13 @@ function Root({ initialLock }: { initialLock: LockState }) {
 // never flashes the conversation.
 const unknownLock: LockState = { enabled: true, locked: true, away: false };
 void Promise.all([
-  window.ocak
+  window.vunemi
     .getLanguage()
     .then((locale) => useStore.getState().applyLocale(locale))
     .catch(() => undefined),
-  window.ocak.getLock().catch(() => unknownLock),
+  window.vunemi.getLock().catch(() => unknownLock),
 ]).then(([, lock]) => {
-  window.ocak.onLanguage((locale) => useStore.getState().applyLocale(locale));
+  window.vunemi.onLanguage((locale) => useStore.getState().applyLocale(locale));
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <Root initialLock={lock} />

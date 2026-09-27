@@ -37,7 +37,7 @@ if [ -z "$dmgbuild" ] || [ ! -x "$dmgbuild" ]; then
 fi
 
 echo "› DMG: $name"
-stage="$(mktemp -d -t tenami-dmg)"
+stage="$(mktemp -d -t vunemi-dmg)"
 trap 'rm -rf "$stage"' EXIT
 swift "$here/scripts/dmg-background.swift" "$stage"
 "$dmgbuild" -s "$here/scripts/dmg-settings.py" -D app="$app" -D background="$stage/background.png" \
@@ -46,7 +46,7 @@ codesign --force --timestamp=none --sign "$identity" "$dmg"
 hdiutil verify -quiet "$dmg"
 
 # What the user will run is the copy inside the image: check that one.
-mount="$(mktemp -d -t tenami-dmg-mount)"
+mount="$(mktemp -d -t vunemi-dmg-mount)"
 hdiutil attach -quiet -nobrowse -readonly -mountpoint "$mount" "$dmg"
 if ! codesign --verify --deep --strict "$mount/Vunemi.app"; then
   hdiutil detach -quiet "$mount"

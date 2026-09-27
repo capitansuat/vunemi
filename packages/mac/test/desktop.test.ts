@@ -6,7 +6,7 @@
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ToolContext, ToolDef } from "@ocak/agent-core";
+import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { afterAction, blockedReason, createDesktopTools, Helper } from "../src/index.js";
 
@@ -29,8 +29,6 @@ describe("which apps are off limits", () => {
     { name: "1Password", bundleId: "com.1password.1password" },
     { name: "System Settings", bundleId: "com.apple.systempreferences" },
     { name: "Vunemi", bundleId: "com.vunemi.app" },
-    // The same app under its earlier name, if an old copy is still installed.
-    { name: "Tenami", bundleId: "one.ocak.desktop" },
     // After the bundle id moves to the new name's domain, the name still holds.
     { name: "Vunemi", bundleId: "app.example.somethingelse" },
     { name: "Electron", bundleId: "com.github.Electron" },
@@ -151,7 +149,7 @@ describe("desktop tools", () => {
   it("hands the screenshot to the user, and says plainly that it can't see it", async () => {
     attached.length = 0;
     const withShots = new Map(
-      createDesktopTools({ helper, shotDir: "/tmp/ocak-test-shots" }).map((t) => [t.name, t]),
+      createDesktopTools({ helper, shotDir: "/tmp/vunemi-test-shots" }).map((t) => [t.name, t]),
     );
     const out = await withShots.get("desktop_screenshot")!.run({ app: "Notes" } as never, ctx());
     expect(attached).toEqual([expect.objectContaining({ kind: "image" })]);
@@ -197,7 +195,7 @@ describe("the line protocol", () => {
   let helper: Helper;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "ocak-helper-"));
+    dir = mkdtempSync(join(tmpdir(), "vunemi-helper-"));
   });
   afterEach(() => {
     helper?.dispose();

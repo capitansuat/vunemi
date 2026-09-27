@@ -11,9 +11,9 @@
  * this module's.
  */
 
-import type { ToolRegistry } from "@ocak/agent-core";
+import type { ToolRegistry } from "@vunemi/agent-core";
 import type { AccountStatus, Connector, ConnectorStatus, ConnectorView } from "./types.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export interface ConnectorsOptions {
   tools: ToolRegistry;

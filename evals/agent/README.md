@@ -1,6 +1,6 @@
 # Sentetik ajan değerlendirmesi
 
-Sahte araçlar ve sahte kayıtlarla, Tenami'nin dayandığı altı davranışı ölçer.
+Sahte araçlar ve sahte kayıtlarla, Vunemi'nin dayandığı altı davranışı ölçer.
 Her davranış için biri İngilizce, biri Türkçe olmak üzere iki vaka var, toplam
 12:
 

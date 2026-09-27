@@ -12,9 +12,9 @@
 #    Mac does not have.)
 set -euo pipefail
 
-tag="${OCAK_ENGINE_TAG:-v0.5.0}"
-commit="${OCAK_ENGINE_COMMIT:-7fe450e19305b828c199d602c23a8337aaa1f03b}"
-out="${OCAK_BUILD_DIR:-$HOME/.ocak-build}"
+tag="${VUNEMI_ENGINE_TAG:-v0.5.0}"
+commit="${VUNEMI_ENGINE_COMMIT:-7fe450e19305b828c199d602c23a8337aaa1f03b}"
+out="${VUNEMI_BUILD_DIR:-$HOME/.vunemi-build}"
 cache="$out/engine-cache/$tag"
 src="$out/engine-src/$tag"
 

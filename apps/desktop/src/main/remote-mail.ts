@@ -3,8 +3,8 @@
  * the account's description, so a Vault process that restarted picks the
  * account up again without being told; the password never comes here.
  */
-import type { Draft, MailAccount, MessageBody, MessageSummary, Moved, MoveTarget, SearchQuery } from "@ocak/mail";
-import type { VaultClient } from "@ocak/vault";
+import type { Draft, MailAccount, MessageBody, MessageSummary, Moved, MoveTarget, SearchQuery } from "@vunemi/mail";
+import type { VaultClient } from "@vunemi/vault";
 import { mailAddressOf, type StoredMailAccount } from "./settings.js";
 
 /** Long enough for a slow SMTP server; the mail library has its own, shorter, timeouts. */

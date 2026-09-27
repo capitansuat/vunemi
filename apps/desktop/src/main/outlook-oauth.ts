@@ -1,5 +1,5 @@
 /** Microsoft public-client sign-in. Credentials stay in the system browser. */
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 import { authorize, tokenSource, type OAuthProvider, type OAuthTokens } from "./oauth.js";
 
 const AUTH = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";

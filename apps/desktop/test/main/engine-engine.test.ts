@@ -121,7 +121,7 @@ describe("a server left behind", () => {
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { spawn } = await import("node:child_process");
-    const dir = mkdtempSync(join(tmpdir(), "tenami-pid-"));
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-pid-"));
     const pidFile = join(dir, "engine.pid");
     // A previous Vunemi's server, still running after Vunemi itself died.
     const orphan = spawn(FAKE, ["--port", "0", "--api-key", "k"], { stdio: "ignore" });
@@ -144,7 +144,7 @@ describe("a server left behind", () => {
     const { mkdtempSync, writeFileSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
-    const dir = mkdtempSync(join(tmpdir(), "tenami-pid-"));
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-pid-"));
     const pidFile = join(dir, "engine.pid");
     writeFileSync(pidFile, String(process.pid)); // the test runner, not an engine
     make({ pidFile });

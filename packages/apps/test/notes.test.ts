@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ToolContext } from "@ocak/agent-core";
+import type { ToolContext } from "@vunemi/agent-core";
 import { createNotesTools, NOTES_APPEND, NOTES_CREATE, NOTES_DELETE, NOTES_EDIT, NOTES_INFO, NOTES_READ, NOTES_RESTORE, NOTES_SEARCH, NOTES_SET_BODY } from "../src/notes.js";
 
 const ctx = {} as ToolContext;

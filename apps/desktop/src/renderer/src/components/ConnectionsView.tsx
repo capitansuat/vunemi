@@ -34,7 +34,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ConnectorView, MailAccountInput, NewMcpServer } from "../../../shared/ipc.js";
-import { lower, t } from "@ocak/i18n";
+import { lower, t } from "@vunemi/i18n";
 import { useStore } from "../store.js";
 
 export const ICONS: Record<string, LucideIcon> = {
@@ -58,7 +58,7 @@ export function ConnectionsView() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    void window.ocak.listConnections().then(setRows);
+    void window.vunemi.listConnections().then(setRows);
   }, []);
 
   useEffect(load, [load]);
@@ -278,7 +278,7 @@ function Row({
               disabled={disabled}
               onClick={() =>
                 void act(row.id, () =>
-                  row.connectable && !row.permitted ? window.ocak.connectConnection(row.id) : window.ocak.setConnection(row.id, true),
+                  row.connectable && !row.permitted ? window.vunemi.connectConnection(row.id) : window.vunemi.setConnection(row.id, true),
                 )
               }
               title={row.permitted ? t("connections.permitted") : undefined}
@@ -291,7 +291,7 @@ function Row({
               on={on}
               label={t("connections.switchLabel", { name: row.label })}
               disabled={disabled}
-              onChange={(next) => void act(row.id, () => window.ocak.setConnection(row.id, next))}
+              onChange={(next) => void act(row.id, () => window.vunemi.setConnection(row.id, next))}
             />
           )}
         </div>
@@ -310,7 +310,7 @@ function Row({
             <button
               type="button"
               disabled={disabled}
-              onClick={() => void act(row.id, () => window.ocak.connectConnection(row.id))}
+              onClick={() => void act(row.id, () => window.vunemi.connectConnection(row.id))}
               className="rounded-md bg-ember px-2.5 py-1 text-[12px] font-medium text-white transition-opacity hover:opacity-85 disabled:opacity-40"
             >
               {t("connections.requestPermission")}
@@ -319,7 +319,7 @@ function Row({
           {blocked.settings && (
             <button
               type="button"
-              onClick={() => void window.ocak.openPrivacySettings(blocked.settings!)}
+              onClick={() => void window.vunemi.openPrivacySettings(blocked.settings!)}
               className="text-[12px] font-medium text-ember transition-opacity hover:opacity-75"
             >
               {t("connections.openSettings")}
@@ -360,7 +360,7 @@ function Details({
                 on={part.on}
                 label={`${row.label} — ${part.label}`}
                 disabled={disabled || row.status.state !== "ready"}
-                onChange={(next) => void act(row.id, () => window.ocak.setConnectionPart(row.id, part.id, next))}
+                onChange={(next) => void act(row.id, () => window.vunemi.setConnectionPart(row.id, part.id, next))}
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
@@ -395,7 +395,7 @@ function Details({
               <button
                 type="button"
                 disabled={disabled}
-                onClick={() => void act(row.id, () => window.ocak.removeAccount(row.id, account.id))}
+                onClick={() => void act(row.id, () => window.vunemi.removeAccount(row.id, account.id))}
                 className="text-[11.5px] text-faint transition-colors hover:text-danger disabled:opacity-40"
               >
                 {t("connections.remove")}
@@ -419,7 +419,7 @@ function Details({
               onClick={() => row.id === "mail" && (provider.id === "imap" || provider.id === "gmail" || provider.id === "outlook")
                 ? (setMailProvider(provider.id), setMailForm(true))
                 // Google and Microsoft sign-in needs no form: their own page opens in the browser.
-                : void act(row.id, () => window.ocak.addAccount(row.id, provider.id))}
+                : void act(row.id, () => window.vunemi.addAccount(row.id, provider.id))}
               className="rounded-full border border-line px-2 py-0.5 text-[11.5px] text-muted transition-colors hover:border-line-strong hover:text-fg disabled:opacity-40"
             >
               {provider.label}
@@ -433,7 +433,7 @@ function Details({
       {row.id === "mail" && mailForm && (
         <form className="mt-3 grid gap-2 rounded-lg border border-line bg-surface-2 p-3" onSubmit={(event) => {
           event.preventDefault();
-          void act(row.id, () => window.ocak.addAccount(row.id, mailProvider, mail)).then((ok) => {
+          void act(row.id, () => window.vunemi.addAccount(row.id, mailProvider, mail)).then((ok) => {
             if (ok) {
               setMailForm(false);
               setMail((current) => ({ ...current, password: "" }));
@@ -485,7 +485,7 @@ function Details({
         <button
           type="button"
           disabled={disabled}
-          onClick={() => void act(row.id, () => window.ocak.removeConnection(row.id))}
+          onClick={() => void act(row.id, () => window.vunemi.removeConnection(row.id))}
           className="mt-3 flex items-center gap-1.5 text-[12px] text-faint transition-colors hover:text-danger disabled:opacity-40"
         >
           <Trash2 size={12} />
@@ -522,7 +522,7 @@ function AddServer({ onCancel, onAdded }: { onCancel: () => void; onAdded: (rows
     const env = Object.fromEntries(filled.map((item) => [item.key.trim(), item.value]));
     const server: NewMcpServer = { label, kind, ...(kind === "stdio" ? { command: value } : { url: value }), ...(filled.length ? { env } : {}) };
     try {
-      const result = await window.ocak.addMcpServer(server);
+      const result = await window.vunemi.addMcpServer(server);
       if (result.ok) onAdded(result.rows);
       else setError(result.error);
     } catch (err) {

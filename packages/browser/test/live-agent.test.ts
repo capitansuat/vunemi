@@ -1,18 +1,18 @@
 /**
  * The whole stack: a real local model driving a real Chrome on the real web.
  *
- *   OCAK_LIVE_MODEL=lmstudio:qwen/qwen3.6-35b-a3b pnpm vitest run live-agent
+ *   VUNEMI_LIVE_MODEL=lmstudio:qwen/qwen3.6-35b-a3b pnpm vitest run live-agent
  */
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createModel, runAgent, ToolRegistry, type AgentEvent } from "@ocak/agent-core";
+import { createModel, runAgent, ToolRegistry, type AgentEvent } from "@vunemi/agent-core";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { launchIsolatedChrome } from "../src/chrome.js";
 import { BrowserController } from "../src/controller.js";
 import { BROWSER_INSTRUCTIONS, createBrowserTools } from "../src/tools.js";
 
-const spec = process.env.OCAK_LIVE_MODEL;
+const spec = process.env.VUNEMI_LIVE_MODEL;
 
 describe.skipIf(!spec)(`live agent: ${spec}`, () => {
   let profile = "";
@@ -20,7 +20,7 @@ describe.skipIf(!spec)(`live agent: ${spec}`, () => {
   let tools: ToolRegistry;
 
   beforeAll(() => {
-    profile = mkdtempSync(join(tmpdir(), "ocak-agent-"));
+    profile = mkdtempSync(join(tmpdir(), "vunemi-agent-"));
     browser = new BrowserController(() => launchIsolatedChrome({ userDataDir: profile, headless: true }));
     tools = new ToolRegistry();
     for (const t of createBrowserTools(browser)) tools.register(t);

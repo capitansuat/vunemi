@@ -18,10 +18,10 @@ import { closeSync, mkdirSync, openSync, readdirSync, rmdirSync, readFileSync, r
 import { homedir } from "node:os";
 import { basename, dirname, extname, join, relative } from "node:path";
 import { promisify } from "node:util";
-import type { ToolDef } from "@ocak/agent-core";
+import type { ToolDef } from "@vunemi/agent-core";
 import { localName, PathRefused, Roots } from "./roots.js";
 import { Shadow } from "./shadow.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 const exec = promisify(execFile);
 

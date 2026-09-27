@@ -16,11 +16,11 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-out="${OCAK_BUILD_DIR:-$HOME/.ocak-build}"
+out="${VUNEMI_BUILD_DIR:-$HOME/.vunemi-build}"
 entitlements="$here/apps/desktop/build/entitlements.mac.plist"
 # The helper's own, narrower list: see the file for why it is kept apart.
 helper_entitlements="$here/native/VunemiHelper/VunemiHelper.entitlements"
-distribution="${OCAK_DISTRIBUTION:-0}"
+distribution="${VUNEMI_DISTRIBUTION:-0}"
 
 # A stable identity, when there is one (scripts/signing-identity.sh). Ad hoc
 # works, but an ad-hoc app is identified by the hash of its code, so every
@@ -28,17 +28,8 @@ distribution="${OCAK_DISTRIBUTION:-0}"
 # previous one. (The vault's key does not depend on this: the helper holds
 # it.) A self-signed build waits a few seconds at launch (~6 s measured) while
 # taskgated checks it; that is all it costs.
-# "Ocak Local Signing" is the identity's earlier name, used until the new one
-# exists. Moving to the new one is a change of identity to macOS: permissions
-# are asked again.
 find_identity() { security find-identity -p codesigning | grep "\"$1\"" | head -1 | awk '{print $2}' || true; }
-identity="${OCAK_SIGN_IDENTITY:-$(find_identity "Vunemi Signing")}"
-if [ -z "$identity" ]; then
-  identity="$(find_identity "Ocak Local Signing")"
-  if [ -n "$identity" ]; then
-    echo "! eski imza kimliği (Ocak Local Signing) kullanılıyor; yenisi için: pnpm signing-identity"
-  fi
-fi
+identity="${VUNEMI_SIGN_IDENTITY:-$(find_identity "Vunemi Signing")}"
 if [ -z "$identity" ]; then
   identity="-"
   echo "! UYARI: kalıcı imza kimliği yok, ad-hoc imzalanıyor."
@@ -77,7 +68,7 @@ fi
 app="$out_app/mac-arm64/Vunemi.app"
 if [ "$developer_id" = "1" ]; then
   timestamp=(--timestamp)
-  dist_entitlements="$(mktemp -t tenami-entitlements).plist"
+  dist_entitlements="$(mktemp -t vunemi-entitlements).plist"
   cp "$entitlements" "$dist_entitlements"
   /usr/libexec/PlistBuddy -c "Delete :com.apple.security.cs.disable-library-validation" "$dist_entitlements"
   entitlements="$dist_entitlements"
@@ -121,17 +112,17 @@ else
 fi
 
 echo "› uygulama paketleniyor → $out"
-pnpm --filter @ocak/desktop exec electron-vite build
+pnpm --filter @vunemi/desktop exec electron-vite build
 # A local test build may be opened with --remote-debugging-port (live tests
 # drive it over CDP) and shows a warning while it is. A build for other
-# people (OCAK_DISTRIBUTION=1) refuses to start that way.
+# people (VUNEMI_DISTRIBUTION=1) refuses to start that way.
 test_build=()
 if [ "$distribution" != "1" ]; then
-  test_build=(--config.extraMetadata.tenamiLocalTestBuild=true)
+  test_build=(--config.extraMetadata.vunemiLocalTestBuild=true)
 else
   echo "› dağıtım derlemesi: uzaktan hata ayıklama ile açılmaz"
 fi
-pnpm --filter @ocak/desktop exec electron-builder --dir --publish never --config.directories.output="$out_app" ${test_build[@]+"${test_build[@]}"}
+pnpm --filter @vunemi/desktop exec electron-builder --dir --publish never --config.directories.output="$out_app" ${test_build[@]+"${test_build[@]}"}
 
 echo "› motor"
 bash "$here/scripts/build-engine.sh"

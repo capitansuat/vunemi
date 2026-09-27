@@ -17,37 +17,37 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../../packages/agent-core
-      '@ocak/apps':
+      '@vunemi/apps':
         specifier: workspace:*
         version: link:../../packages/apps
-      '@ocak/browser':
+      '@vunemi/browser':
         specifier: workspace:*
         version: link:../../packages/browser
-      '@ocak/connectors':
+      '@vunemi/connectors':
         specifier: workspace:*
         version: link:../../packages/connectors
-      '@ocak/files':
+      '@vunemi/files':
         specifier: workspace:*
         version: link:../../packages/files
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
-      '@ocak/mac':
+      '@vunemi/mac':
         specifier: workspace:*
         version: link:../../packages/mac
-      '@ocak/mail':
+      '@vunemi/mail':
         specifier: workspace:*
         version: link:../../packages/mail
-      '@ocak/mcp':
+      '@vunemi/mcp':
         specifier: workspace:*
         version: link:../../packages/mcp
-      '@ocak/sentinel':
+      '@vunemi/sentinel':
         specifier: workspace:*
         version: link:../../packages/sentinel
-      '@ocak/vault':
+      '@vunemi/vault':
         specifier: workspace:*
         version: link:../../packages/vault
       '@radix-ui/react-dropdown-menu':
@@ -102,7 +102,7 @@ importers:
 
   packages/agent-core:
     dependencies:
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
     devDependencies:
@@ -112,19 +112,19 @@ importers:
 
   packages/apps:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../agent-core
-      '@ocak/browser':
+      '@vunemi/browser':
         specifier: workspace:*
         version: link:../browser
-      '@ocak/files':
+      '@vunemi/files':
         specifier: workspace:*
         version: link:../files
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
-      '@ocak/mac':
+      '@vunemi/mac':
         specifier: workspace:*
         version: link:../mac
     devDependencies:
@@ -134,13 +134,13 @@ importers:
 
   packages/browser:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../agent-core
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
-      '@ocak/perception':
+      '@vunemi/perception':
         specifier: workspace:*
         version: link:../perception
     devDependencies:
@@ -150,10 +150,10 @@ importers:
 
   packages/connectors:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../agent-core
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
     devDependencies:
@@ -163,10 +163,10 @@ importers:
 
   packages/files:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../agent-core
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
     devDependencies:
@@ -182,10 +182,10 @@ importers:
 
   packages/mac:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../agent-core
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
     devDependencies:
@@ -195,10 +195,10 @@ importers:
 
   packages/mail:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../agent-core
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
       imapflow:
@@ -223,13 +223,13 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../agent-core
-      '@ocak/connectors':
+      '@vunemi/connectors':
         specifier: workspace:*
         version: link:../connectors
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
     devDependencies:
@@ -245,10 +245,10 @@ importers:
 
   packages/sentinel:
     dependencies:
-      '@ocak/agent-core':
+      '@vunemi/agent-core':
         specifier: workspace:*
         version: link:../agent-core
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
     devDependencies:
@@ -258,7 +258,7 @@ importers:
 
   packages/vault:
     dependencies:
-      '@ocak/i18n':
+      '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
     devDependencies:

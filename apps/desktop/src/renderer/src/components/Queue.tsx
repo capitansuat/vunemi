@@ -10,7 +10,7 @@
 
 import { Zap, X } from "lucide-react";
 import { useStore } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export function Queue() {
   const queue = useStore((s) => s.queue);

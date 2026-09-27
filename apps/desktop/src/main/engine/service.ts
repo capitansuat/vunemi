@@ -1,7 +1,7 @@
 import { constants, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { basename, join } from "node:path";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 import type { CatalogView, DownloadRequest, DownloadView, EngineView, InspectView, PopularView, SearchHitView } from "../../shared/ipc.js";
 import { CATALOG, contextFor, displayName, memoryBudget, modelId, recommend, smaller, type CatalogEntry, type ModelSource, type ProjectorSource } from "./catalog.js";
 import { download, DownloadError, freeBytesOf, partPath } from "./download.js";
@@ -30,7 +30,7 @@ export interface EngineServiceOptions {
   idleMs?: number;
 }
 
-const PREFIX = "tenami:";
+const PREFIX = "vunemi:";
 /** A first answer from a freshly loaded model can miss; the test is tried this many times. */
 const TOOL_TEST_TRIES = 3;
 /** The shortest context length the setting accepts. */

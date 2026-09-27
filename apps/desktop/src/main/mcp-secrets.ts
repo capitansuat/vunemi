@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import type { McpServerConfig } from "@ocak/mcp";
-import type { VaultClient } from "@ocak/vault";
+import type { McpServerConfig } from "@vunemi/mcp";
+import type { VaultClient } from "@vunemi/vault";
 import type { SettingsStore } from "./settings.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 function values(config: McpServerConfig): Record<string, string> {
   return config.transport.kind === "stdio" ? config.transport.env ?? {} : config.transport.headers ?? {};

@@ -23,7 +23,7 @@ import { accessSync, constants, existsSync, readdirSync } from "node:fs";
 import { createServer } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { getLocale, t, type Locale } from "@ocak/i18n";
+import { getLocale, t, type Locale } from "@vunemi/i18n";
 
 import type { VoiceStatus } from "../shared/ipc.js";
 import { download, type DownloadProgress } from "./engine/download.js";
@@ -52,7 +52,7 @@ export const VOICE_MODEL: ModelSource = {
 export function whisperBinary(opts: { packaged: boolean; resourcesPath: string; home: string }): string | null {
   const path = opts.packaged
     ? join(opts.resourcesPath, "whisper-server")
-    : join(opts.home, ".ocak-build", "whisper-cache", WHISPER_TAG, "whisper-server");
+    : join(opts.home, ".vunemi-build", "whisper-cache", WHISPER_TAG, "whisper-server");
   return existsSync(path) ? path : null;
 }
 
@@ -340,16 +340,13 @@ function megabytes(bytes: number): number {
 function modelDirs(userData: string): string[] {
   return [
     join(userData, "models"),
-    // Where models went under earlier names; still read, never moved.
-    join(homedir(), "Library", "Application Support", "Tenami", "models"),
-    join(homedir(), "Library", "Application Support", "Ocak", "models"),
     join(homedir(), ".cache", "whisper"),
   ];
 }
 
 /** The most capable ggml model we can find: bigger is better at Turkish. */
 export function findModel(userData: string, shared = true): string | null {
-  const fromEnv = process.env.OCAK_WHISPER_MODEL;
+  const fromEnv = process.env.VUNEMI_WHISPER_MODEL;
   if (fromEnv && exists(fromEnv)) return fromEnv;
   for (const dir of shared ? modelDirs(userData) : [join(userData, "models")]) {
     let names: string[];

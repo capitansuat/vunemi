@@ -4,22 +4,21 @@ import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, 
 import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
-import { type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@ocak/agent-core";
-import { BrowserController } from "@ocak/browser";
-import { projectFolderProblem, Roots } from "@ocak/files";
-import { Helper } from "@ocak/mac";
-import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@ocak/mail";
+import { type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import { BrowserController } from "@vunemi/browser";
+import { projectFolderProblem, Roots } from "@vunemi/files";
+import { Helper } from "@vunemi/mac";
+import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
 import { CH, EMERGENCY_STOP_ACCELERATOR, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type VaultStatus } from "../shared/ipc.js";
-import { createMcpConnector, type McpServerConfig, type McpTool } from "@ocak/mcp";
-import { Sentinel } from "@ocak/sentinel";
-import { isLegacyCipher } from "@ocak/vault";
+import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
+import { Sentinel } from "@vunemi/sentinel";
+import { isLegacyCipher } from "@vunemi/vault";
 import { VaultHost } from "./vault-host.js";
-import { DATA_FOLDER, legacyDataFolder, moveLegacyData } from "./data-folder.js";
 import { projectInstructions, ProjectStore } from "./projects.js";
 import { ActivityLog } from "./activity.js";
 import { AppLock, type AuthResult } from "./app-lock.js";
 import { ArtefactStore, openable } from "./artefacts.js";
-import { EmbeddedBackend, EmbeddedBrowser } from "./embedded-browser.js";
+import { carryOverBrowserData, EmbeddedBackend, EmbeddedBrowser } from "./embedded-browser.js";
 import { Presence } from "./presence.js";
 import { isLocalTestBuild, remoteDebugging, scrubEnv, shouldOfferMove } from "./hardening.js";
 import { engineBinary } from "./engine/binary.js";
@@ -27,7 +26,7 @@ import { EngineService } from "./engine/service.js";
 import { Voice, whisperBinary } from "./voice.js";
 import { DownloadError } from "./engine/download.js";
 import { buildConnectors } from "./connectors.js";
-import { ScriptableCatalog, shortcutName } from "@ocak/apps";
+import { ScriptableCatalog, shortcutName } from "@vunemi/apps";
 import { createDemoTools } from "./demo-tools.js";
 import { SettingsStore, validPolicy } from "./settings.js";
 import { migrateMcpSecrets, removeMcpSecrets, sealMcpServer, unsealed } from "./mcp-secrets.js";
@@ -38,7 +37,7 @@ import { AgentSession } from "./session.js";
 import { SessionStore } from "./sessions.js";
 import { PreferenceStore, rememberPreferenceTool } from "./preferences.js";
 import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, suggestion, summaryLine, type AutomationStatus } from "./automations.js";
-import { getLocale, isLocale, localeInfo, matchLocale, setLocale, t, type Locale } from "@ocak/i18n";
+import { getLocale, isLocale, localeInfo, matchLocale, setLocale, t, type Locale } from "@vunemi/i18n";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 
@@ -50,9 +49,9 @@ const here = fileURLToPath(new URL(".", import.meta.url));
 // "<name> Safe Storage" keychain entry, so it is set before either is used.
 if (!app.isPackaged) {
   app.setName(`${app.getName()}-dev`);
-  // OCAK_DEV_USER_DATA gives a development run a clean profile, to see what a
+  // VUNEMI_DEV_USER_DATA gives a development run a clean profile, to see what a
   // first launch looks like. Development only: a packaged app ignores it.
-  app.setPath("userData", process.env.OCAK_DEV_USER_DATA || join(app.getPath("appData"), app.getName()));
+  app.setPath("userData", process.env.VUNEMI_DEV_USER_DATA || join(app.getPath("appData"), app.getName()));
 }
 
 // Before anything is started: nothing Vunemi launches inherits a loader or
@@ -63,19 +62,10 @@ if (app.isPackaged) {
   if (removed.length > 0) console.warn(`[hardening] ignored launch environment: ${removed.join(", ")}`);
 }
 
-// The data folder is named after the app, not the package, and an earlier
-// build's folder is moved to it once. Before anything reads or writes it.
-if (app.isPackaged) {
-  const appData = app.getPath("appData");
-  const target = join(appData, DATA_FOLDER);
-  if (moveLegacyData(legacyDataFolder(appData), target) === "busy") {
-    dialog.showErrorBox("Vunemi", t("main.dataFolder.busy"));
-    // Now, not after this module has run: anything below would create the
-    // new folder empty, and the move would then never happen.
-    process.exit(1);
-  }
-  app.setPath("userData", target);
-}
+// The data folder is named after the app, not the package. Before anything
+// reads or writes it.
+if (app.isPackaged) app.setPath("userData", join(app.getPath("appData"), "Vunemi"));
+carryOverBrowserData(app.getPath("userData"));
 
 // Remote debugging lets any program on this Mac drive the window. A local
 // test build allows it with a warning on screen; any other build won't start.
@@ -127,7 +117,7 @@ const roots = new Roots();
 // the Accessibility permission — these tools simply say so and the rest of
 // Vunemi carries on.
 const helperPath =
-  process.env.OCAK_HELPER ??
+  process.env.VUNEMI_HELPER ??
   (app.isPackaged
     ? join(process.resourcesPath, "VunemiHelper")
     : join(here, "../../../../native/VunemiHelper/.build/release/VunemiHelper"));
@@ -222,7 +212,7 @@ const vault = vaultHost.client;
 const vaultReady = vaultHost.ready;
 void vaultReady.then(() => {
   // Names and errors only: diagnosable from the log, which never holds a value.
-  for (const { name, reason } of vault.unreadable()) console.error(`[ocak] vault: "${name}" unreadable: ${reason}`);
+  for (const { name, reason } of vault.unreadable()) console.error(`[vunemi] vault: "${name}" unreadable: ${reason}`);
 });
 
 /**
@@ -261,16 +251,18 @@ async function migrateLegacySecrets(): Promise<boolean> {
       const { result } = await Promise.race([safeStorage.decryptStringAsync(entry.cipher), timeout]);
       await vault.set(entry.name, result, entry.note);
       moved = true;
-      console.error(`[ocak] vault: "${entry.name}" moved to the new key`);
+      console.error(`[vunemi] vault: "${entry.name}" moved to the new key`);
     } catch (err) {
-      console.error(`[ocak] vault: "${entry.name}" not moved, kept as it is: ${err instanceof Error ? err.message : String(err)}`);
+      console.error(`[vunemi] vault: "${entry.name}" not moved, kept as it is: ${err instanceof Error ? err.message : String(err)}`);
     }
   }));
   return moved;
 }
 const OUTBOX_KEY = "outbox.queue";
 /** The queue's key is only ever read back by the outbox itself. */
-const OUTBOX_TARGET = "tenami:outbox";
+const OUTBOX_TARGET = "vunemi:outbox";
+/** Where a queue saved before the rename is bound; read once, then saved under the new target. */
+const LEGACY_OUTBOX_TARGET = "tenami:outbox";
 const mailOutbox = new Outbox(HOLD_MS, {
   load: async () => {
     // A queue that can't be read yet must not be taken for an empty one:
@@ -278,7 +270,8 @@ const mailOutbox = new Outbox(HOLD_MS, {
     if (!vault.available) throw new Error(t("vaultStore.locked"));
     if (vault.has(OUTBOX_KEY)) {
       await vault.adopt(OUTBOX_KEY, [OUTBOX_TARGET]);
-      const value: unknown = JSON.parse(await vault.use(OUTBOX_KEY, OUTBOX_TARGET));
+      const target = vault.targets(OUTBOX_KEY).includes(LEGACY_OUTBOX_TARGET) ? LEGACY_OUTBOX_TARGET : OUTBOX_TARGET;
+      const value: unknown = JSON.parse(await vault.use(OUTBOX_KEY, target));
       if (!Array.isArray(value)) throw new Error(t("main.outbox.unreadable"));
       return value as StoredSend[];
     }
@@ -342,7 +335,7 @@ void vaultReady
     }
   })
   .catch((err: unknown) => {
-    console.error("[ocak] MCP secrets migration failed:", err instanceof Error ? err.message : String(err));
+    console.error("[vunemi] MCP secrets migration failed:", err instanceof Error ? err.message : String(err));
   });
 
 function rememberTools(id: string, discovered: McpTool[]): void {
@@ -659,9 +652,9 @@ handle(CH.engineWarm, (_e, spec: string) => engine.warm(String(spec)));
 handle(CH.engineSetContext, async (_e, id: string, context: number) => {
   // The window the session remembered for this model is wrong now; forgotten
   // again once reloaded, in case it was asked in between.
-  session.forgetWindow(`tenami:${String(id)}`);
+  session.forgetWindow(`vunemi:${String(id)}`);
   await engine.setContext(String(id), Number(context));
-  session.forgetWindow(`tenami:${String(id)}`);
+  session.forgetWindow(`vunemi:${String(id)}`);
 });
 
 /** Only the three shapes, with string fields: the window is not trusted to send more. */
@@ -885,7 +878,7 @@ handle(CH.sessionsDelete, (_e, id: string) => forgetConversation(String(id)));
 handle(CH.sessionsResume, (_e, model: string) => {
   if (session.running) throw new Error(t("main.stopFirst"));
   if (!conversations.interrupted.includes(conversations.currentId)) return;
-  void session.start(t("app.recovery.goal"), String(model), [], { askBeyondRead: true }).catch((err: unknown) => console.error("[ocak] resume failed:", err));
+  void session.start(t("app.recovery.goal"), String(model), [], { askBeyondRead: true }).catch((err: unknown) => console.error("[vunemi] resume failed:", err));
 });
 handle(CH.sessionsDismiss, () => {
   conversations.dismissInterrupted();
@@ -1225,7 +1218,7 @@ void app.whenReady().then(async () => {
     send(CH.lockChanged, lockState());
   });
   if (!globalShortcut.register(EMERGENCY_STOP_ACCELERATOR, emergencyStop)) {
-    console.error(`[ocak] could not register the emergency stop shortcut ${EMERGENCY_STOP_ACCELERATOR}`);
+    console.error(`[vunemi] could not register the emergency stop shortcut ${EMERGENCY_STOP_ACCELERATOR}`);
   }
   // The menu bar keeps Vunemi alive with no window, so runs continue.
   app.on("activate", () => showWindow());

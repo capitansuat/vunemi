@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, KeyRound, Plus, ShieldCheck, Trash2, TriangleAlert } from "lucide-react";
 import type { VaultStatus } from "../../../shared/ipc.js";
-import { formatDate, t } from "@ocak/i18n";
+import { formatDate, t } from "@vunemi/i18n";
 
 const EMPTY: VaultStatus = { available: true, secrets: [] };
 
@@ -15,7 +15,7 @@ export function VaultView() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void window.ocak.vaultStatus().then(setStatus);
+    void window.vunemi.vaultStatus().then(setStatus);
   }, []);
 
   const run = async (fn: () => Promise<VaultStatus>) => {
@@ -74,7 +74,7 @@ export function VaultView() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void run(() => window.ocak.vaultDelete(s.name))}
+                  onClick={() => void run(() => window.vunemi.vaultDelete(s.name))}
                   title={t("vault.deleteLabel", { name: s.name })}
                   aria-label={t("vault.deleteLabel", { name: s.name })}
                   className="shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-danger"
@@ -90,7 +90,7 @@ export function VaultView() {
           <AddForm
             onCancel={() => setAdding(false)}
             onSave={async (name, value, note) => {
-              const ok = await run(() => window.ocak.vaultSet(name, value, note));
+              const ok = await run(() => window.vunemi.vaultSet(name, value, note));
               if (ok) setAdding(false);
             }}
           />

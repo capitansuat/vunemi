@@ -6,12 +6,12 @@ tarafından erişim koşullu yayımlanıyor. Koşullar kabul edilip
 tekrarlanabilir bir aday listesi çıkarır:
 
 ```bash
-node evals/online-mind2web/select.mjs /path/to/Online_Mind2Web.json > /tmp/ocak-om2w-candidates.json
+node evals/online-mind2web/select.mjs /path/to/Online_Mind2Web.json > /tmp/vunemi-om2w-candidates.json
 ```
 
 Çıktı **değerlendirme sonucu değildir**. Görevler, site erişilebilirliği ve
 hesap/ödeme/CAPTCHA gereksinimleri açısından elle incelenmeli. Ardından
-görev kimlikleri dondurulup Tenami tarayıcı ajanıyla üçer kez çalıştırılmalı.
+görev kimlikleri dondurulup Vunemi tarayıcı ajanıyla üçer kez çalıştırılmalı.
 Her koşuda başarı (0/1/çalıştırılamadı), adım sayısı, adım başına prompt ve
 çıktı token sayısı, toplam süre ve başarısızlık nedeni kaydedilmeli. Herhangi
 bir adımda 16.000 token üstü kullanımı regresyondur. Başarı etiketi yalnız
@@ -20,12 +20,12 @@ görevin son durumunu inceleyen bağımsız değerlendirmeyle verilir; modelin
 
 ## Kaydedilmiş koşunun token ölçümü
 
-Tenami oturumundaki `usage` olayları her model adımının prompt ve çıktı token
+Vunemi oturumundaki `usage` olayları her model adımının prompt ve çıktı token
 sayısını taşır. Oturum dosyasındaki sohbet, araç argümanları ve sayfa içeriği
 çıktıya kopyalanmadan ölçülebilir:
 
 ```bash
-node evals/online-mind2web/score.mjs /path/to/session.json > /tmp/tenami-metrics.json
+node evals/online-mind2web/score.mjs /path/to/session.json > /tmp/vunemi-metrics.json
 node --test evals/online-mind2web/score.test.mjs
 ```
 

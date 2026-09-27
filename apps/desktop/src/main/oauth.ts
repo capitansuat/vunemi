@@ -7,7 +7,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { createServer } from "node:http";
 import { once } from "node:events";
-import { getLocale, t, type MessageKey } from "@ocak/i18n";
+import { getLocale, t, type MessageKey } from "@vunemi/i18n";
 
 export interface OAuthTokens {
   accessToken: string;
@@ -67,7 +67,7 @@ export async function authorize(provider: OAuthProvider, openBrowser: (url: stri
   const code = new Promise<string>((resolve, reject) => { resolveCode = resolve; rejectCode = reject; });
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
-    if (url.pathname !== "/ocak") { res.writeHead(404).end(); return; }
+    if (url.pathname !== "/vunemi") { res.writeHead(404).end(); return; }
     if (url.searchParams.get("state") !== state) { res.writeHead(400).end(t("main.outlook.badState")); return; }
     const error = url.searchParams.get("error");
     const returned = url.searchParams.get("code");
@@ -86,7 +86,7 @@ export async function authorize(provider: OAuthProvider, openBrowser: (url: stri
     await once(server, "listening");
     const address = server.address();
     if (!address || typeof address === "string") throw new Error(t("main.outlook.noListener"));
-    const redirect = `http://${provider.redirectHost}:${address.port}/ocak`;
+    const redirect = `http://${provider.redirectHost}:${address.port}/vunemi`;
     const url = new URL(provider.authUrl);
     for (const [key, value] of Object.entries({
       client_id: provider.clientId, response_type: "code", redirect_uri: redirect,

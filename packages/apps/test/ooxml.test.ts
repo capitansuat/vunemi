@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { pptxOutline, xlsxCells } from "../src/ooxml.js";
 import { writePptx, writeXlsx } from "./zip.js";
 
-const dir = mkdtempSync(join(tmpdir(), "tenami-ooxml-"));
+const dir = mkdtempSync(join(tmpdir(), "vunemi-ooxml-"));
 
 describe("reading Office files from disk", () => {
   it("lists slide text in presentation order, not file order, with entities decoded", () => {

@@ -20,7 +20,7 @@
  * and never its key.
  */
 
-import type { ToolDef } from "@ocak/agent-core";
+import type { ToolDef } from "@vunemi/agent-core";
 
 /** What a connection needs before it will work. */
 export type ConnectorNeed =

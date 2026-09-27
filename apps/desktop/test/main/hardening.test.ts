@@ -34,10 +34,10 @@ describe("remote debugging", () => {
   });
 
   it("is allowed only by a build that says it is a local test build", () => {
-    expect(isLocalTestBuild(JSON.stringify({ name: "@ocak/desktop", tenamiLocalTestBuild: true }))).toBe(true);
-    expect(isLocalTestBuild(JSON.stringify({ name: "@ocak/desktop" }))).toBe(false);
-    expect(isLocalTestBuild(JSON.stringify({ tenamiLocalTestBuild: "true" }))).toBe(true);
-    expect(isLocalTestBuild(JSON.stringify({ tenamiLocalTestBuild: "yes" }))).toBe(false);
+    expect(isLocalTestBuild(JSON.stringify({ name: "@vunemi/desktop", vunemiLocalTestBuild: true }))).toBe(true);
+    expect(isLocalTestBuild(JSON.stringify({ name: "@vunemi/desktop" }))).toBe(false);
+    expect(isLocalTestBuild(JSON.stringify({ vunemiLocalTestBuild: "true" }))).toBe(true);
+    expect(isLocalTestBuild(JSON.stringify({ vunemiLocalTestBuild: "yes" }))).toBe(false);
     expect(isLocalTestBuild("not json")).toBe(false);
   });
 });

@@ -9,7 +9,7 @@
  * intercepts a click or the hit-test before one).
  */
 
-import type { PointerEvent } from "@ocak/browser";
+import type { PointerEvent } from "@vunemi/browser";
 
 export const CURSOR_WORLD_ID = 1917;
 
@@ -33,7 +33,7 @@ export function cursorScript(p: PointerEvent, name = "Vunemi"): string {
   return `(() => {
   const p = ${JSON.stringify(p)};
   const name = ${JSON.stringify(name)};
-  let st = window.__ocakCursor;
+  let st = window.__vunemiCursor;
   if (!st || !st.host.isConnected) {
     const host = document.createElement("div");
     host.setAttribute("aria-hidden", "true");
@@ -44,7 +44,7 @@ export function cursorScript(p: PointerEvent, name = "Vunemi"): string {
     const c = root.querySelector(".c");
     const x = innerWidth / 2, y = innerHeight / 2;
     c.style.transform = "translate(" + x + "px," + y + "px)";
-    st = window.__ocakCursor = { host, root, c, tag: root.querySelector(".tag"), timer: 0 };
+    st = window.__vunemiCursor = { host, root, c, tag: root.querySelector(".tag"), timer: 0 };
   }
   const short = (s) => (s.length > 28 ? s.slice(0, 27) + "…" : s);
   st.c.style.opacity = "1";

@@ -35,9 +35,9 @@ function oauthClients(): Record<string, unknown> {
   } catch {
     // No file: only the environment counts.
   }
-  const googleId = process.env.OCAK_GOOGLE_CLIENT_ID ?? local.google?.clientId;
-  const googleSecret = process.env.OCAK_GOOGLE_CLIENT_SECRET ?? local.google?.clientSecret;
-  const microsoftId = process.env.OCAK_MICROSOFT_CLIENT_ID ?? local.microsoft?.clientId;
+  const googleId = process.env.VUNEMI_GOOGLE_CLIENT_ID ?? local.google?.clientId;
+  const googleSecret = process.env.VUNEMI_GOOGLE_CLIENT_SECRET ?? local.google?.clientSecret;
+  const microsoftId = process.env.VUNEMI_MICROSOFT_CLIENT_ID ?? local.microsoft?.clientId;
   return {
     ...(googleId && googleSecret && { google: { clientId: googleId, clientSecret: googleSecret } }),
     ...(microsoftId && { microsoft: { clientId: microsoftId } }),
@@ -50,7 +50,7 @@ const bundleWorkspace = {
 
 export default defineConfig({
   main: {
-    define: { __OCAK_OAUTH__: JSON.stringify(oauthClients()) },
+    define: { __VUNEMI_OAUTH__: JSON.stringify(oauthClients()) },
     build: {
       ...bundleWorkspace,
       // The Vault process is a second entry: out/main/vault.js, forked by main.

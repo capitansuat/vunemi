@@ -39,7 +39,7 @@ window:
 
 ```bash
 bash scripts/package.sh
-open ~/.ocak-build/mac-arm64/Vunemi.app
+open ~/.vunemi-build/mac-arm64/Vunemi.app
 ```
 
 ## Contributing

@@ -7,7 +7,7 @@ import { loadImage, MAX_IMAGE_BYTES, readImageText } from "../../src/main/images
 
 let dir: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "tenami-img-test-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-img-test-"));
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

@@ -16,7 +16,7 @@
 
 import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export interface SecretCrypto {
   readonly available: boolean;
@@ -42,7 +42,9 @@ const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
  * a secret to another server; only a secret written before binding existed
  * lacks it.
  */
-const BOUND = "\u0000tenami-bound\u0000";
+const BOUND = "\u0000vunemi-bound\u0000";
+/** The same marker under the app's earlier name; read, never written. */
+const LEGACY_BOUND = "\u0000tenami-bound\u0000";
 const TARGET = /^[a-z][a-z0-9+.-]*:[^\s\0]{1,300}$/i;
 const FILE = "vault.json";
 
@@ -311,8 +313,9 @@ export class Vault {
   private open(e: StoredEntry): boolean {
     try {
       const plain = this.crypto.decrypt(Buffer.from(e.cipher, "base64"));
-      if (plain.startsWith(BOUND)) {
-        const { value, bind } = JSON.parse(plain.slice(BOUND.length)) as { value: string; bind: string[] };
+      const marker = plain.startsWith(BOUND) ? BOUND : plain.startsWith(LEGACY_BOUND) ? LEGACY_BOUND : null;
+      if (marker) {
+        const { value, bind } = JSON.parse(plain.slice(marker.length)) as { value: string; bind: string[] };
         this.values.set(e.name, value);
         this.binds.set(e.name, bind);
       } else {

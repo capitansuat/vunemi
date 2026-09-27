@@ -2,14 +2,14 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import type { McpServerConfig } from "@ocak/mcp";
-import { connectLocal, Vault } from "@ocak/vault";
+import type { McpServerConfig } from "@vunemi/mcp";
+import { connectLocal, Vault } from "@vunemi/vault";
 import { migrateMcpSecrets, openMcpServer, removeMcpSecrets, sealMcpServer, unsealed } from "../../src/main/mcp-secrets.js";
 import { SettingsStore } from "../../src/main/settings.js";
 
 const dirs: string[] = [];
 async function fixture() {
-  const dir = mkdtempSync(join(tmpdir(), "ocak-mcp-secret-"));
+  const dir = mkdtempSync(join(tmpdir(), "vunemi-mcp-secret-"));
   dirs.push(dir);
   const local = new Vault(dir, {
     available: true,

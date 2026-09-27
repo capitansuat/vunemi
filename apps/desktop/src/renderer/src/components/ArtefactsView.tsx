@@ -10,10 +10,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Bell, CalendarDays, CornerUpLeft, Download, ExternalLink, FileText, FolderOpen, Mail, Package } from "lucide-react";
-import type { Produced } from "@ocak/agent-core";
+import type { Produced } from "@vunemi/agent-core";
 import type { ArtefactView } from "../../../shared/ipc.js";
 import { clock, groupByDay } from "../lib/time.js";
-import { formatDate, t } from "@ocak/i18n";
+import { formatDate, t } from "@vunemi/i18n";
 
 type Filter = "all" | "files" | "drafts" | "calendar" | "downloads";
 
@@ -32,8 +32,8 @@ export function ArtefactsView() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void window.ocak.listArtefacts().then(setRows);
-    return window.ocak.onArtefacts(setRows);
+    void window.vunemi.listArtefacts().then(setRows);
+    return window.vunemi.onArtefacts(setRows);
   }, []);
 
   const shown = useMemo(() => {
@@ -105,9 +105,9 @@ export function ArtefactsView() {
                     key={row.id}
                     row={row}
                     busy={busy === row.id}
-                    onOpen={() => void act(row.id, () => window.ocak.openArtefact(row.id))}
-                    onReveal={() => void act(row.id, () => window.ocak.revealArtefact(row.id))}
-                    onUndo={() => void act(row.id, () => window.ocak.undoArtefact(row.id))}
+                    onOpen={() => void act(row.id, () => window.vunemi.openArtefact(row.id))}
+                    onReveal={() => void act(row.id, () => window.vunemi.revealArtefact(row.id))}
+                    onUndo={() => void act(row.id, () => window.vunemi.undoArtefact(row.id))}
                   />
                 ))}
               </ul>

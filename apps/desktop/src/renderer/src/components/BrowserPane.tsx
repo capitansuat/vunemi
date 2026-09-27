@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Bot, Globe, Hand, Play, Plus, RotateCw, X } from
 import { callDetail, toolLabel } from "../lib/labels.js";
 import type { EmbeddedTab } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 /**
  * The browser inside the Vunemi window. The page itself is a native view the
@@ -19,12 +19,12 @@ export function BrowserPane() {
   useLayoutEffect(() => {
     const el = stage.current;
     if (!el || !active) {
-      window.ocak.embeddedBounds(null);
+      window.vunemi.embeddedBounds(null);
       return;
     }
     const report = () => {
       const r = el.getBoundingClientRect();
-      window.ocak.embeddedBounds({ x: r.left, y: r.top, width: r.width, height: r.height });
+      window.vunemi.embeddedBounds({ x: r.left, y: r.top, width: r.width, height: r.height });
     };
     report();
     const ro = new ResizeObserver(report);
@@ -36,7 +36,7 @@ export function BrowserPane() {
     };
   }, [active?.id]);
 
-  useEffect(() => () => window.ocak.embeddedBounds(null), []);
+  useEffect(() => () => window.vunemi.embeddedBounds(null), []);
 
   return (
     <aside className="flex w-[46%] min-w-[420px] max-w-[820px] shrink-0 flex-col border-l border-line bg-surface">
@@ -50,7 +50,7 @@ export function BrowserPane() {
             aria-label={t("pane.newTab")}
             title={t("pane.newTab")}
             onClick={() =>
-              void window.ocak.embeddedOpen("about:blank").then(() => document.getElementById("ocak-address")?.focus())
+              void window.vunemi.embeddedOpen("about:blank").then(() => document.getElementById("vunemi-address")?.focus())
             }
             className="no-drag mb-1 grid size-7 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-fg"
           >
@@ -187,7 +187,7 @@ function TabChip({ tab, active }: { tab: EmbeddedTab; active: boolean }) {
     >
       <button
         type="button"
-        onClick={() => void window.ocak.embeddedActivate(tab.id)}
+        onClick={() => void window.vunemi.embeddedActivate(tab.id)}
         className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
         title={tab.title}
       >
@@ -203,7 +203,7 @@ function TabChip({ tab, active }: { tab: EmbeddedTab; active: boolean }) {
       <button
         type="button"
         aria-label={t("pane.closeTab", { title: tab.title })}
-        onClick={() => void window.ocak.embeddedClose(tab.id)}
+        onClick={() => void window.vunemi.embeddedClose(tab.id)}
         className="grid size-5 shrink-0 place-items-center rounded text-faint opacity-0 hover:bg-surface-3 hover:text-fg group-hover:opacity-100 focus-visible:opacity-100"
       >
         <X size={11} />
@@ -225,8 +225,8 @@ function Toolbar({ tab }: { tab: EmbeddedTab | null }) {
     const url = draft.trim();
     if (!url) return;
     try {
-      if (tab) await window.ocak.embeddedNavigate(tab.id, url);
-      else await window.ocak.embeddedOpen(url);
+      if (tab) await window.vunemi.embeddedNavigate(tab.id, url);
+      else await window.vunemi.embeddedOpen(url);
       setError(null);
       setEditing(false);
       (document.activeElement as HTMLElement | null)?.blur();
@@ -235,7 +235,7 @@ function Toolbar({ tab }: { tab: EmbeddedTab | null }) {
     }
   };
 
-  const nav = (action: "back" | "forward" | "reload" | "stop") => tab && void window.ocak.embeddedHistory(tab.id, action);
+  const nav = (action: "back" | "forward" | "reload" | "stop") => tab && void window.vunemi.embeddedHistory(tab.id, action);
   const iconBtn = "grid size-7 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-fg disabled:opacity-35 disabled:hover:bg-transparent";
 
   return (
@@ -264,7 +264,7 @@ function Toolbar({ tab }: { tab: EmbeddedTab | null }) {
         }}
       >
         <input
-          id="ocak-address"
+          id="vunemi-address"
           value={draft}
           onChange={(e) => {
             setDraft(e.target.value);

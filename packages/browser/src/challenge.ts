@@ -8,7 +8,7 @@
  * Only a challenge the user actually has to answer does.
  */
 
-import type { AXNode } from "@ocak/perception";
+import type { AXNode } from "@vunemi/perception";
 
 const URL_SIGNS: [RegExp, string][] = [
   [/^https?:\/\/(www\.)?google\.[a-z.]+\/sorry\//i, "Google unusual-traffic check"],

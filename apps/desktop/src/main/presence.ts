@@ -10,8 +10,8 @@
 import { app, Menu, Notification, Tray, type BrowserWindow, type NativeImage } from "electron";
 import { nativeImage } from "electron";
 import { join } from "node:path";
-import type { AgentEvent } from "@ocak/agent-core";
-import { onLocaleChange, t } from "@ocak/i18n";
+import type { AgentEvent } from "@vunemi/agent-core";
+import { onLocaleChange, t } from "@vunemi/i18n";
 
 export interface RunControls {
   show(): void;

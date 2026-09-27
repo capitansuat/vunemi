@@ -4,9 +4,9 @@
  * account and a method; the connection is made here, with the secret read
  * here, and only the result goes back.
  */
-import { GraphMailAccount, gmailConfig, ImapSmtpAccount, mailTargets, validateMailConfig, type MailAccount } from "@ocak/mail";
-import { t } from "@ocak/i18n";
-import type { VaultServer } from "@ocak/vault";
+import { GraphMailAccount, gmailConfig, ImapSmtpAccount, mailTargets, validateMailConfig, type MailAccount } from "@vunemi/mail";
+import { t } from "@vunemi/i18n";
+import type { VaultServer } from "@vunemi/vault";
 import { GOOGLE_TOKEN_TARGET, googleTokenSource } from "../main/google-oauth.js";
 import { OAUTH_CLIENTS, type OAuthClients } from "../main/oauth-clients.js";
 import { OUTLOOK_TOKEN_TARGET, outlookTokenSource } from "../main/outlook-oauth.js";

@@ -2,7 +2,7 @@ import { ImapFlow, type FetchMessageObject } from "imapflow";
 import { simpleParser } from "mailparser";
 import nodemailer from "nodemailer";
 import { MailNotSent, NO_REPLY_SENDER, type Draft, type MailAccount, type MailAddress, type MessageBody, type MessageSummary, type Moved, type MoveTarget, type SearchQuery } from "./types.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export interface ImapSmtpConfig {
   email: string;

@@ -1,11 +1,11 @@
 /**
  * Measures how much the outline shrinks real pages. Not a pass/fail test —
- * it prints a table. Run with OCAK_MEASURE=1 (needs network and Chrome).
+ * it prints a table. Run with VUNEMI_MEASURE=1 (needs network and Chrome).
  */
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { outline } from "@ocak/perception";
+import { outline } from "@vunemi/perception";
 import { describe, it } from "vitest";
 import { launchIsolatedChrome } from "../src/chrome.js";
 import { PageDriver } from "../src/page.js";
@@ -19,9 +19,9 @@ const SITES = [
   "https://www.hepsiburada.com/ara?q=kulaklik",
 ];
 
-describe.skipIf(process.env.OCAK_MEASURE !== "1")("outline size on real pages", () => {
+describe.skipIf(process.env.VUNEMI_MEASURE !== "1")("outline size on real pages", () => {
   it("prints raw vs pruned sizes", { timeout: 300_000 }, async () => {
-    const profile = mkdtempSync(join(tmpdir(), "ocak-measure-"));
+    const profile = mkdtempSync(join(tmpdir(), "vunemi-measure-"));
     // Headful, like the app itself: some sites (hepsiburada) detect headless
     // Chrome and answer with a wall, which would make this table a lie.
     const backend = await launchIsolatedChrome({ userDataDir: profile, headless: false });

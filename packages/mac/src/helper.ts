@@ -10,7 +10,7 @@
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { existsSync } from "node:fs";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 import { nativeErrorText } from "./native-errors.js";
 
 export interface Permissions {
@@ -112,7 +112,7 @@ export class Helper {
     this.buffer = "";
 
     child.stdout.on("data", (chunk: Buffer) => this.read(chunk.toString()));
-    child.stderr.on("data", (chunk: Buffer) => console.error("[ocak helper]", chunk.toString().trim()));
+    child.stderr.on("data", (chunk: Buffer) => console.error("[vunemi helper]", chunk.toString().trim()));
     child.on("exit", (code) => {
       if (this.child === child) this.child = null;
       // Whoever was waiting will never hear back; say so rather than hang.
@@ -147,7 +147,7 @@ export class Helper {
     try {
       message = JSON.parse(line) as typeof message;
     } catch {
-      console.error("[ocak helper] unreadable reply:", line.slice(0, 200));
+      console.error("[vunemi helper] unreadable reply:", line.slice(0, 200));
       return;
     }
     const pending = typeof message.id === "number" ? this.waiting.get(message.id) : undefined;

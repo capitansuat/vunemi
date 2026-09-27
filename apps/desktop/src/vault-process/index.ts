@@ -4,12 +4,12 @@
  *
  * It asks the signed Swift helper for the key itself — the key never passes
  * through main — opens vault.json, and then answers requests from main
- * (see @ocak/vault remote.ts and ./mail.ts). Logs carry names and errors,
+ * (see @vunemi/vault remote.ts and ./mail.ts). Logs carry names and errors,
  * never a value.
  */
-import { Helper } from "@ocak/mac";
-import { isLocale, setLocale } from "@ocak/i18n";
-import { KeyCrypto, Vault, VaultServer, type Port } from "@ocak/vault";
+import { Helper } from "@vunemi/mac";
+import { isLocale, setLocale } from "@vunemi/i18n";
+import { KeyCrypto, Vault, VaultServer, type Port } from "@vunemi/vault";
 import { mayRelease, serveMail } from "./mail.js";
 import { serveMcp } from "./mcp.js";
 
@@ -37,7 +37,7 @@ async function unlock(helperPath: string): Promise<KeyCrypto> {
     if (typeof key !== "string") throw new Error("no key came back");
     crypto.unlock(Buffer.from(key, "base64"));
   } catch (err) {
-    console.error(`[ocak vault] no key, the vault stays locked: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(`[vunemi vault] no key, the vault stays locked: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
     helper.dispose();
   }
@@ -58,7 +58,7 @@ parent.on("message", (event) => {
   if (typeof init.locale === "string" && isLocale(init.locale)) setLocale(init.locale);
   void (async () => {
     const vault = new Vault(init.userData!, await unlock(init.helperPath!));
-    for (const { name, reason } of vault.unreadable()) console.error(`[ocak vault] "${name}" unreadable: ${reason}`);
+    for (const { name, reason } of vault.unreadable()) console.error(`[vunemi vault] "${name}" unreadable: ${reason}`);
     const server = new VaultServer(vault, { mayRelease });
     server.register("locale", (locale: unknown) => {
       if (typeof locale === "string" && isLocale(locale)) setLocale(locale);
@@ -70,7 +70,7 @@ parent.on("message", (event) => {
     server.attach(port);
     parent.postMessage({ kind: "ready", state: vault.state() });
   })().catch((err: unknown) => {
-    console.error(`[ocak vault] failed to start: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(`[vunemi vault] failed to start: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
   });
 });

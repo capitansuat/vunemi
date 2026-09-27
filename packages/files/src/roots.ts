@@ -16,7 +16,7 @@
 import { realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, normalize, parse, relative, resolve, sep } from "node:path";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 /**
  * Finder shows these folders with Turkish names while the disk keeps the

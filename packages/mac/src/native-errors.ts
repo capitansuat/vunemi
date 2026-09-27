@@ -2,7 +2,7 @@
  * Keep this in the main process: changing the signed Swift helper would
  * change its Keychain identity and could strand an existing vault key.
  */
-import { getLocale, t } from "@ocak/i18n";
+import { getLocale, t } from "@vunemi/i18n";
 
 const exact: Record<string, string> = {
   "yanıt veren uygulama yok": "No app responded to the Accessibility check.",

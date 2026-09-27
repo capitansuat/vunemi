@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "输入你的 Gmail 地址，以及在“Google 账号 › 安全性 › 应用专用密码”中创建的应用专用密码。不要输入账号的普通密码。必须开启两步验证。",
-      outlookHint: "输入你在 Microsoft Entra 中自己注册的应用的客户端 ID。为“移动和桌面应用程序”平台添加重定向 URI http://localhost/ocak，并添加 Mail.ReadWrite、Mail.Send 和 User.Read 权限。登录会在系统浏览器中打开；你的密码不会交给 Vunemi。",
+      outlookHint: "输入你在 Microsoft Entra 中自己注册的应用的客户端 ID。为“移动和桌面应用程序”平台添加重定向 URI http://localhost/vunemi，并添加 Mail.ReadWrite、Mail.Send 和 User.Read 权限。登录会在系统浏览器中打开；你的密码不会交给 Vunemi。",
       imapHint: "输入 IMAP 和 SMTP 服务器以及你的应用专用密码。",
       passwordNote: "密码加密存放在保险箱中，绝不会交给模型。",
       clientId: "Microsoft 应用程序 ID",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "Vunemi 在远程调试打开的状态下启动。这台 Mac 上的任何程序都可能控制它并回答其批准卡片，因此此版本不会以这种方式启动。请正常打开 Vunemi。" },
-    dataFolder: { busy: "Tenami 仍在运行，你的数据在它的文件夹中。Vunemi 会把这些数据移到自己的文件夹。请先退出 Tenami，然后重新打开 Vunemi。" },
     outbox: {
       unreadable: "无法读取加密的邮件队列。",
       undecryptable: "无法解密邮件队列；记录已保留，新的发送已停止。",

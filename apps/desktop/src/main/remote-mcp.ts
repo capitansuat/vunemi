@@ -4,8 +4,8 @@
  * saved, sealed config and sees only what the server says.
  */
 import { randomUUID } from "node:crypto";
-import type { McpIO, McpServerConfig } from "@ocak/mcp";
-import type { VaultClient } from "@ocak/vault";
+import type { McpIO, McpServerConfig } from "@vunemi/mcp";
+import type { VaultClient } from "@vunemi/vault";
 
 interface Reply {
   ok: boolean;

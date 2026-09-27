@@ -4,7 +4,7 @@
  * a scripted model standing in for the agent's judgement. A model can be
  * fooled; these check that being fooled is not enough.
  *
- *   OCAK_LIVE_BROWSER=1 pnpm --filter @ocak/desktop test redteam
+ *   VUNEMI_LIVE_BROWSER=1 pnpm --filter @vunemi/desktop test redteam
  */
 import { mkdtempSync, rmSync } from "node:fs";
 import { createServer, type Server } from "node:http";
@@ -20,10 +20,10 @@ import {
   type ChatRequest,
   type ChatResult,
   type ToolCall,
-} from "@ocak/agent-core";
-import { BrowserController, createBrowserTools, launchIsolatedChrome } from "@ocak/browser";
-import { Sentinel } from "@ocak/sentinel";
-import { Vault, type SecretCrypto } from "@ocak/vault";
+} from "@vunemi/agent-core";
+import { BrowserController, createBrowserTools, launchIsolatedChrome } from "@vunemi/browser";
+import { Sentinel } from "@vunemi/sentinel";
+import { Vault, type SecretCrypto } from "@vunemi/vault";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /** A page that hides an instruction for the agent, the way a comment or a spoiler tag would. */
@@ -59,7 +59,7 @@ function scripted(turns: { text?: string; calls?: Omit<ToolCall, "id">[] }[]) {
   return { model, seen };
 }
 
-const live = process.env.OCAK_LIVE_BROWSER === "1";
+const live = process.env.VUNEMI_LIVE_BROWSER === "1";
 
 describe.skipIf(!live)("red team", () => {
   let server: Server;
@@ -75,7 +75,7 @@ describe.skipIf(!live)("red team", () => {
     });
     await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
     base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
-    profile = mkdtempSync(join(tmpdir(), "ocak-redteam-"));
+    profile = mkdtempSync(join(tmpdir(), "vunemi-redteam-"));
     browser = new BrowserController(() => launchIsolatedChrome({ userDataDir: profile, headless: true }));
     tools = new ToolRegistry();
     for (const t of createBrowserTools(browser)) tools.register(t);
@@ -206,7 +206,7 @@ describe.skipIf(!live)("red team", () => {
   it("masks a vaulted secret before the page's text ever reaches the model", async () => {
     // Structural, not probabilistic: the value the Vault holds cannot appear
     // in the context, so no amount of persuasion can make the agent repeat it.
-    const dir = mkdtempSync(join(tmpdir(), "ocak-redteam-vault-"));
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-redteam-vault-"));
     const crypto: SecretCrypto = {
       available: true,
       encrypt: (plain) => Buffer.from(`enc:${plain}`, "utf8"),

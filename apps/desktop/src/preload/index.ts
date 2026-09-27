@@ -1,10 +1,10 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from "electron";
-import type { AgentEvent } from "@ocak/agent-core";
-import type { OutboxEvent } from "@ocak/mail";
-import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type OcakApi, type QueuedMessage, type SessionList, type VoiceStatus } from "../shared/ipc.js";
-import type { Locale } from "@ocak/i18n";
+import type { AgentEvent } from "@vunemi/agent-core";
+import type { OutboxEvent } from "@vunemi/mail";
+import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type VunemiApi, type QueuedMessage, type SessionList, type VoiceStatus } from "../shared/ipc.js";
+import type { Locale } from "@vunemi/i18n";
 
-const api: OcakApi = {
+const api: VunemiApi = {
   listProviders: () => ipcRenderer.invoke(CH.listProviders),
   getModelSettings: () => ipcRenderer.invoke(CH.modelSettingsGet),
   setModelSettings: (settings) => ipcRenderer.invoke(CH.modelSettingsSet, settings),
@@ -163,4 +163,4 @@ const api: OcakApi = {
   engineSetContext: (id, context) => ipcRenderer.invoke(CH.engineSetContext, id, context),
 };
 
-contextBridge.exposeInMainWorld("ocak", api);
+contextBridge.exposeInMainWorld("vunemi", api);

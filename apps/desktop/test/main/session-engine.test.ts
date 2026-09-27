@@ -4,13 +4,13 @@
  * again rather than remembered.
  */
 import { describe, expect, it, vi } from "vitest";
-import type { AgentEvent, RunResult } from "@ocak/agent-core";
+import type { AgentEvent, RunResult } from "@vunemi/agent-core";
 
 const order: string[] = [];
 let windowAnswers: (number | null)[] = [];
 
-vi.mock("@ocak/agent-core", async (importOriginal) => {
-  const real = await importOriginal<typeof import("@ocak/agent-core")>();
+vi.mock("@vunemi/agent-core", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@vunemi/agent-core")>();
   return {
     ...real,
     createModel: (spec: string) => ({
@@ -48,8 +48,8 @@ describe("getting the model ready", () => {
     const session = makeSession(async (spec) => {
       order.push(`prepare ${spec}`);
     });
-    await session.start("hi", "tenami:m");
-    expect(order).toEqual(["prepare tenami:m", "run"]);
+    await session.start("hi", "vunemi:m");
+    expect(order).toEqual(["prepare vunemi:m", "run"]);
   });
 
   it("still runs, and fails as unreachable, when the model could not be loaded", async () => {
@@ -57,14 +57,14 @@ describe("getting the model ready", () => {
     const session = makeSession(async () => {
       throw new Error("no memory");
     });
-    await session.start("hi", "tenami:m");
+    await session.start("hi", "vunemi:m");
     expect(order).toEqual(["run"]);
   });
 
   it("can be stopped while the model loads", async () => {
     order.length = 0;
     const session = makeSession(() => new Promise<void>(() => {}));
-    const running = session.start("hi", "tenami:m");
+    const running = session.start("hi", "vunemi:m");
     await new Promise((r) => setTimeout(r, 5));
     session.stop();
     await running;
@@ -74,7 +74,7 @@ describe("getting the model ready", () => {
   it("asks again for a window it could not read", async () => {
     windowAnswers = [null, 65_536];
     const session = makeSession();
-    expect(await session.contextInfo("tenami:m")).toMatchObject({ known: false });
-    expect(await session.contextInfo("tenami:m")).toMatchObject({ window: 65_536, known: true });
+    expect(await session.contextInfo("vunemi:m")).toMatchObject({ known: false });
+    expect(await session.contextInfo("vunemi:m")).toMatchObject({ window: 65_536, known: true });
   });
 });

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Ban, ListChecks, Pencil, Play } from "lucide-react";
 import type { PlanView } from "../lib/fold.js";
 import { useStore } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 /** Intent preview: what the agent means to do, before it starts. */
 export function PlanCard({ plan }: { plan: PlanView }) {

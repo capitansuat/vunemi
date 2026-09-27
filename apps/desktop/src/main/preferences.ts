@@ -1,8 +1,8 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
-import { t } from "@ocak/i18n";
-import { maskSecrets, type ToolDef } from "@ocak/agent-core";
+import { t } from "@vunemi/i18n";
+import { maskSecrets, type ToolDef } from "@vunemi/agent-core";
 
 export interface Preference {
   id: string;

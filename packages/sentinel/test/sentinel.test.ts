@@ -1,4 +1,4 @@
-import { DEFAULT_POLICY } from "@ocak/agent-core";
+import { DEFAULT_POLICY } from "@vunemi/agent-core";
 import { beforeEach, describe, expect, it } from "vitest";
 import { Sentinel } from "../src/sentinel.js";
 

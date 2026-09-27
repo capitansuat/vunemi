@@ -3,7 +3,7 @@ import { Check, ChevronDown, ChevronRight, HardDrive, RefreshCw } from "lucide-r
 import { useStore } from "../store.js";
 import { PROVIDER_LABEL, shortModelName } from "../lib/labels.js";
 import { contextChoices } from "../lib/format.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export function ModelPicker() {
   const { providers, model, running, setModel, refreshProviders, engine } = useStore();
@@ -11,7 +11,7 @@ export function ModelPicker() {
   const noneReachable = providers !== null && providers.every((p) => !p.reachable);
   const selectedAvailable = !!model && providers?.some((p) => p.reachable && p.models.includes(model));
   // The built-in engine's context length can be changed here as well as in Settings.
-  const installed = engine?.installed.find((m) => `tenami:${m.id}` === model);
+  const installed = engine?.installed.find((m) => `vunemi:${m.id}` === model);
 
   return (
     <Menu.Root onOpenChange={(open) => open && void refreshProviders()}>
@@ -44,7 +44,7 @@ export function ModelPicker() {
               <Menu.Label className="flex items-center justify-between px-2.5 pt-1 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">
                 {PROVIDER_LABEL[p.kind] ?? p.kind}
                 <span className={`normal-case tracking-normal ${p.reachable ? "text-ok" : "text-faint"}`}>
-                  {p.kind === "tenami" && engine
+                  {p.kind === "vunemi" && engine
                     ? t(`engine.state.${engine.engine.state}`)
                     : p.reachable ? t("model.count", { count: p.models.length }) : t("model.notRunning")}
                 </span>
@@ -89,7 +89,7 @@ export function ModelPicker() {
                 <Menu.SubContent sideOffset={6} className="z-50 w-[220px] rounded-xl border border-line bg-surface p-1.5 shadow-2xl">
                   <Menu.RadioGroup
                     value={String(installed.context)}
-                    onValueChange={(v) => void window.ocak.engineSetContext(installed.id, Number(v)).catch((e: unknown) => console.error(e))}
+                    onValueChange={(v) => void window.vunemi.engineSetContext(installed.id, Number(v)).catch((e: unknown) => console.error(e))}
                   >
                     {contextChoices(installed.context, installed.maxContext).map((n) => (
                       <Menu.RadioItem

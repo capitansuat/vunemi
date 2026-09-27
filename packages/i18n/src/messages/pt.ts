@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "Digite seu endereço do Gmail e uma senha de app criada em Conta do Google › Segurança › Senhas de app. Não a senha normal da conta. A verificação em duas etapas precisa estar ativada.",
-      outlookHint: "Digite o ID do cliente do seu próprio registro de app no Microsoft Entra. Adicione o URI de redirecionamento http://localhost/ocak à plataforma móvel e desktop, e as permissões Mail.ReadWrite, Mail.Send e User.Read. O login abre no navegador do sistema; sua senha nunca é dada ao Vunemi.",
+      outlookHint: "Digite o ID do cliente do seu próprio registro de app no Microsoft Entra. Adicione o URI de redirecionamento http://localhost/vunemi à plataforma móvel e desktop, e as permissões Mail.ReadWrite, Mail.Send e User.Read. O login abre no navegador do sistema; sua senha nunca é dada ao Vunemi.",
       imapHint: "Digite os servidores IMAP e SMTP e sua senha de app.",
       passwordNote: "A senha fica guardada criptografada no cofre e nunca é dada ao modelo.",
       clientId: "ID do aplicativo Microsoft",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "O Vunemi foi iniciado com a depuração remota aberta. Qualquer programa deste Mac poderia controlá-lo e responder aos cartões de aprovação, então esta versão não abre assim. Abra o Vunemi normalmente." },
-    dataFolder: { busy: "O Tenami ainda está aberto e seus dados estão na pasta dele. O Vunemi move esses dados para a própria pasta. Feche o Tenami primeiro e abra o Vunemi de novo." },
     outbox: {
       unreadable: "Não foi possível ler a fila de e-mails criptografada.",
       undecryptable: "Não foi possível descriptografar a fila de e-mails; o registro é mantido e novos envios estão parados.",

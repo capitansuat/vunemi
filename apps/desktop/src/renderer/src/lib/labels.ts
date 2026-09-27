@@ -1,7 +1,7 @@
 /** Words about tools and statuses, looked up in the current language when shown. */
 
-import type { ActionClass, RunStatus } from "@ocak/agent-core";
-import { has, t } from "@ocak/i18n";
+import type { ActionClass, RunStatus } from "@vunemi/agent-core";
+import { has, t } from "@vunemi/i18n";
 import type { CallStatus, CallView } from "./fold.js";
 
 export function actionClassLabel(actionClass: ActionClass): string {
@@ -43,7 +43,7 @@ export const PROVIDER_LABEL: Record<string, string> = {
   lmstudio: "LM Studio",
   ollama: "Ollama",
   llamacpp: "llama.cpp",
-  tenami: "Vunemi",
+  vunemi: "Vunemi",
   openai: "OpenAI",
 };
 

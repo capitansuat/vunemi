@@ -6,7 +6,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export type ScriptLanguage = "JavaScript" | "AppleScript";
 

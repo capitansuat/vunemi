@@ -1,19 +1,19 @@
 import { create } from "zustand";
-import type { AgentEvent, ApprovalDecision, HandoffOutcome, PlanDecision } from "@ocak/agent-core";
-import type { ActivityEntry, ContextInfo, EmbeddedState, EngineView, OcakApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
+import type { AgentEvent, ApprovalDecision, HandoffOutcome, PlanDecision } from "@vunemi/agent-core";
+import type { ActivityEntry, ContextInfo, EmbeddedState, EngineView, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
 import { earcon, record, type Recorder } from "./lib/audio.js";
 import { foldEvent, replyText, type RunView } from "./lib/fold.js";
-import { getLocale, setLocale as setI18nLocale, t, type Locale } from "@ocak/i18n";
+import { getLocale, setLocale as setI18nLocale, t, type Locale } from "@vunemi/i18n";
 
 declare global {
   interface Window {
-    ocak: OcakApi;
+    vunemi: VunemiApi;
   }
 }
 
-const MODEL_KEY = "ocak.model";
-const AUTO_OPEN_KEY = "ocak.browserAutoOpen";
-const FOLDED_KEY = "ocak.navFolded";
+const MODEL_KEY = "vunemi.model";
+const AUTO_OPEN_KEY = "vunemi.browserAutoOpen";
+const FOLDED_KEY = "vunemi.navFolded";
 
 /** Whether the sidebar is folded to a strip of icons; remembered per Mac. */
 function readFolded(): boolean {
@@ -49,9 +49,27 @@ function storeAutoOpen(on: boolean): void {
   }
 }
 
+/** Moves what an earlier build saved under the app's earlier name, once. */
+function carryOverStorage(): void {
+  try {
+    for (const key of [MODEL_KEY, AUTO_OPEN_KEY, FOLDED_KEY]) {
+      const old = `ocak.${key.slice("vunemi.".length)}`;
+      const value = localStorage.getItem(old);
+      if (value === null) continue;
+      if (localStorage.getItem(key) === null) localStorage.setItem(key, value);
+      localStorage.removeItem(old);
+    }
+  } catch {
+    // Storage unavailable; nothing to carry over.
+  }
+}
+carryOverStorage();
+
 function readStoredModel(): string | null {
   try {
-    return localStorage.getItem(MODEL_KEY);
+    const spec = localStorage.getItem(MODEL_KEY);
+    // The built-in engine's models were saved as "tenami:<id>" before the rename.
+    return spec?.startsWith("tenami:") ? `vunemi:${spec.slice("tenami:".length)}` : spec;
   } catch {
     return null;
   }
@@ -226,7 +244,7 @@ export const useStore = create<State>((set, get) => ({
   context: null,
 
   async refreshProviders() {
-    const providers = await window.ocak.listProviders();
+    const providers = await window.vunemi.listProviders();
     const all = providers.flatMap((p) => p.models);
     const current = get().model;
     // Keep the user's choice if it's still served; otherwise fall back.
@@ -234,14 +252,14 @@ export const useStore = create<State>((set, get) => ({
     storeModel(model);
     set({ providers, model });
     // A built-in model loads in the background, so the first message waits less.
-    if (model?.startsWith("tenami:")) void window.ocak.engineWarm(model);
+    if (model?.startsWith("vunemi:")) void window.vunemi.engineWarm(model);
     void get().refreshContext();
   },
 
   setModel(spec) {
     storeModel(spec);
     set({ model: spec });
-    if (spec?.startsWith("tenami:")) void window.ocak.engineWarm(spec);
+    if (spec?.startsWith("vunemi:")) void window.vunemi.engineWarm(spec);
     void get().refreshContext();
   },
 
@@ -251,20 +269,20 @@ export const useStore = create<State>((set, get) => ({
     // The built-in engine tells its window only once loaded (a new context
     // length reloads it too): ask again when the chosen model becomes ready.
     const model = get().model;
-    const id = model?.startsWith("tenami:") ? model.slice("tenami:".length) : null;
+    const id = model?.startsWith("vunemi:") ? model.slice("vunemi:".length) : null;
     const ready = (v: EngineView | null) => v?.engine.state === "ready" && v.engine.model === id;
     if (id && ready(view) && !ready(before)) void get().refreshContext();
   },
 
   async refreshEngine() {
-    set({ engine: await window.ocak.getEngine() });
+    set({ engine: await window.vunemi.getEngine() });
   },
 
   async refreshContext() {
     const model = get().model;
     if (!model) return;
     try {
-      const context = await window.ocak.getContext(model);
+      const context = await window.vunemi.getContext(model);
       set({ context });
     } catch {
       // Locked, or no model yet: the meter keeps its last reading.
@@ -275,7 +293,7 @@ export const useStore = create<State>((set, get) => ({
     const { model, runs, running } = get();
     const last = runs.at(-1);
     if (!model || !last || running) return;
-    await window.ocak.compactNow(model, last.runId);
+    await window.vunemi.compactNow(model, last.runId);
     await get().refreshContext();
   },
 
@@ -285,22 +303,22 @@ export const useStore = create<State>((set, get) => ({
     // Never refused for being busy: main decides whether this starts now or
     // waits, and says so by way of the queue.
     set({ view: "chat" });
-    await window.ocak.startRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }) });
+    await window.vunemi.startRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }) });
   },
 
   async steer(goal, attachments = []) {
     const { model } = get();
     if (!model || !goal.trim()) return;
     set({ view: "chat" });
-    await window.ocak.steerRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }) });
+    await window.vunemi.steerRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }) });
   },
 
   async dropQueued(id) {
-    await window.ocak.dropQueued(id);
+    await window.vunemi.dropQueued(id);
   },
 
   async interruptQueued(id) {
-    await window.ocak.interruptQueued(id);
+    await window.vunemi.interruptQueued(id);
   },
 
   setQueue(queue) {
@@ -308,53 +326,53 @@ export const useStore = create<State>((set, get) => ({
   },
 
   async stop() {
-    await window.ocak.stopRun();
+    await window.vunemi.stopRun();
   },
 
   async pause() {
-    await window.ocak.pauseRun();
+    await window.vunemi.pauseRun();
   },
 
   async resume() {
-    await window.ocak.resumeRun();
+    await window.vunemi.resumeRun();
   },
 
   async decide(callId, decision) {
-    await window.ocak.resolveApproval(callId, decision);
+    await window.vunemi.resolveApproval(callId, decision);
   },
 
   async resolveHandoff(callId, outcome) {
-    await window.ocak.resolveHandoff(callId, outcome);
+    await window.vunemi.resolveHandoff(callId, outcome);
   },
 
   async resolvePlan(decision) {
-    await window.ocak.resolvePlan(decision);
+    await window.vunemi.resolvePlan(decision);
   },
 
   async newSession(projectId) {
-    const sessions = await window.ocak.newSession(projectId);
+    const sessions = await window.vunemi.newSession(projectId);
     set({ sessions, runs: [], queue: [], viewer: null, view: "chat" });
     void get().refreshContext();
   },
 
   async addProject() {
-    const sessions = await window.ocak.addProject();
+    const sessions = await window.vunemi.addProject();
     if (!sessions) return;
     set({ sessions, runs: [], queue: [], viewer: null, view: "chat" });
     void get().refreshContext();
   },
 
   async removeProject(id) {
-    set({ sessions: await window.ocak.removeProject(id) });
+    set({ sessions: await window.vunemi.removeProject(id) });
   },
 
   async revealProject(id) {
-    await window.ocak.revealProject(id);
+    await window.vunemi.revealProject(id);
   },
 
   async openSession(id) {
     if (id === get().sessions.current) return set({ view: "chat" });
-    const { events, ...sessions } = await window.ocak.openSession(id);
+    const { events, ...sessions } = await window.vunemi.openSession(id);
     // The timeline is a fold of its events, so a kept one rebuilds exactly.
     set({ sessions, runs: events.reduce(foldEvent, []), queue: [], view: "chat" });
     void get().refreshContext();
@@ -362,12 +380,12 @@ export const useStore = create<State>((set, get) => ({
 
   async deleteSession(id) {
     const wasCurrent = id === get().sessions.current;
-    const sessions = await window.ocak.deleteSession(id);
+    const sessions = await window.vunemi.deleteSession(id);
     set({ sessions, ...(wasCurrent && { runs: [], queue: [], viewer: null }) });
   },
 
   async forgetSession() {
-    const sessions = await window.ocak.resetSession();
+    const sessions = await window.vunemi.resetSession();
     set({ sessions, runs: [], queue: [], viewer: null });
     void get().refreshContext();
   },
@@ -379,7 +397,7 @@ export const useStore = create<State>((set, get) => ({
   },
 
   async setLocale(locale) {
-    get().applyLocale(await window.ocak.setLanguage(locale));
+    get().applyLocale(await window.vunemi.setLanguage(locale));
   },
 
   applyLocale(locale) {
@@ -389,7 +407,7 @@ export const useStore = create<State>((set, get) => ({
   },
 
   async refreshVoice() {
-    const status = await window.ocak.voiceStatus();
+    const status = await window.vunemi.voiceStatus();
     set((s) => ({ voice: { ...s.voice, status } }));
   },
 
@@ -400,7 +418,7 @@ export const useStore = create<State>((set, get) => ({
   async downloadVoice() {
     set((s) => ({ voice: { ...s.voice, error: null } }));
     try {
-      const status = await window.ocak.voiceDownload();
+      const status = await window.vunemi.voiceDownload();
       set((s) => ({ voice: { ...s.voice, status } }));
     } catch (err) {
       const message = err instanceof Error ? err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(err);
@@ -410,7 +428,7 @@ export const useStore = create<State>((set, get) => ({
   },
 
   async cancelVoiceDownload() {
-    await window.ocak.voiceDownloadCancel();
+    await window.vunemi.voiceDownloadCancel();
   },
 
   async listen() {
@@ -418,7 +436,7 @@ export const useStore = create<State>((set, get) => ({
     if (voice.state !== "off") return;
     // macOS puts up its own dialog the first time; do it before the earcon,
     // so the sound doesn't promise a microphone the user hasn't allowed yet.
-    if (!(await window.ocak.requestMic())) {
+    if (!(await window.vunemi.requestMic())) {
       set((s) => ({
         voice: { ...s.voice, error: t("mic.notGranted") },
       }));
@@ -465,7 +483,7 @@ export const useStore = create<State>((set, get) => ({
     set((s) => ({ voice: { ...s.voice, state: "thinking", level: 0 } }));
     try {
       const wav = await current.stop();
-      const text = wav ? (await window.ocak.transcribe(wav)).trim() : "";
+      const text = wav ? (await window.vunemi.transcribe(wav)).trim() : "";
       if (mine !== turn) return; // the user gave up while we were transcribing
       set((s) => ({
         voice: { ...s.voice, state: "off", partial: "", error: text ? null : t("mic.nothingHeard") },
@@ -493,13 +511,13 @@ export const useStore = create<State>((set, get) => ({
     // A transcription still in flight is abandoned rather than awaited: its
     // result is ignored because the turn it belonged to is over.
     turn += 1;
-    void window.ocak.stopSpeaking();
+    void window.vunemi.stopSpeaking();
     set((s) => ({ voice: { ...s.voice, state: "off", partial: "", level: 0 } }));
   },
 
   setHandsFree(on) {
     set((s) => ({ voice: { ...s.voice, handsFree: on } }));
-    if (!on) void window.ocak.stopSpeaking();
+    if (!on) void window.vunemi.stopSpeaking();
   },
 
   suggest(text) {
@@ -592,7 +610,7 @@ function followAlong(set: Set): void {
     const clip = !busy ? recorder?.snapshot() : null;
     if (!clip) return;
     busy = true;
-    void window.ocak
+    void window.vunemi
       .transcribe(clip)
       .then((text) => {
         if (text.trim() && recorder) set((s) => (s.voice.state === "listening" ? { voice: { ...s.voice, partial: text.trim() } } : s));
@@ -617,7 +635,7 @@ async function speakThenListen(text: string, set: Set, get: () => State): Promis
   if (!said) return;
   set((s) => ({ voice: { ...s.voice, state: "speaking" } }));
   try {
-    await window.ocak.speak(said);
+    await window.vunemi.speak(said);
   } finally {
     set((s) => (s.voice.state === "speaking" ? { voice: { ...s.voice, state: "off" } } : s));
   }

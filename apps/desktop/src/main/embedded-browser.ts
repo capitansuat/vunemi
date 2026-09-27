@@ -16,13 +16,28 @@
 
 import { app, session, WebContentsView, type BrowserWindow, type Session } from "electron";
 import { lookup } from "node:dns/promises";
-import { existsSync } from "node:fs";
+import { existsSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
-import { requestGuard, type BrowserBackend, type CdpSession, type PointerEvent, type TabInfo } from "@ocak/browser";
+import { requestGuard, type BrowserBackend, type CdpSession, type PointerEvent, type TabInfo } from "@vunemi/browser";
 import { CURSOR_WORLD_ID, cursorScript } from "./agent-cursor.js";
 import type { EmbeddedState, PaneBounds } from "../shared/ipc.js";
 
-const PARTITION = "persist:ocak-browser";
+const PARTITION = "persist:vunemi-browser";
+
+/**
+ * The embedded browser's cookies and sign-ins were kept under the app's
+ * earlier name. Moved once, before the session is first opened; a rename on
+ * the same disk, so nothing is copied or lost.
+ */
+export function carryOverBrowserData(userData: string): void {
+  const old = join(userData, "Partitions", "ocak-browser");
+  const now = join(userData, "Partitions", "vunemi-browser");
+  try {
+    if (existsSync(old) && !existsSync(now)) renameSync(old, now);
+  } catch (err) {
+    console.error("[vunemi] browser data not carried over:", err instanceof Error ? err.message : String(err));
+  }
+}
 
 /** Downloads: what a page may leave behind without being asked. */
 const MAX_DOWNLOAD_BYTES = 512 * 1024 * 1024;
@@ -362,9 +377,9 @@ export class EmbeddedBrowser {
   private secureSession(ses: Session): void {
     if (this.ses === ses) return;
     this.ses = ses;
-    // Look like the Chrome this is, not "Electron"/"ocak", which some sites
+    // Look like the Chrome this is, not "Electron"/"vunemi", which some sites
     // block or serve a degraded page to.
-    ses.setUserAgent(app.userAgentFallback.replace(/\s(Electron|ocak|@ocak\/desktop)\/\S+/gi, ""));
+    ses.setUserAgent(app.userAgentFallback.replace(/\s(Electron|vunemi|@vunemi\/desktop)\/\S+/gi, ""));
     ses.setPermissionRequestHandler((_wc, _perm, cb) => cb(false));
     ses.setPermissionCheckHandler(() => false);
     // Every request, not only the address the agent opened: a page redirects,

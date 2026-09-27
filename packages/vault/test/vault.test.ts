@@ -34,7 +34,7 @@ const unavailable: SecretCrypto = {
 describe("Vault", () => {
   let dir = "";
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "ocak-vault-"));
+    dir = mkdtempSync(join(tmpdir(), "vunemi-vault-"));
   });
   afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
@@ -237,7 +237,7 @@ describe("Vault", () => {
 describe("secrets bound to where they are used", () => {
   let dir = "";
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "ocak-vault-bind-"));
+    dir = mkdtempSync(join(tmpdir(), "vunemi-vault-bind-"));
   });
   afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
@@ -257,6 +257,20 @@ describe("secrets bound to where they are used", () => {
     const again = new Vault(dir, crypto());
     expect(again.targets("mail.a")).toEqual(["imap:imap.example.com", "smtp:smtp.example.com"]);
     expect(() => again.use("mail.a", "smtp:evil.example")).toThrow();
+  });
+
+  it("still reads a secret bound under the app's earlier name", () => {
+    const vault = new Vault(dir, fake);
+    vault.set("mail.a", "app-password-1", "a@example.com", ["smtp:smtp.example.com"]);
+    const file = join(dir, "vault.json");
+    const stored = JSON.parse(readFileSync(file, "utf8")) as { entries: { cipher: string }[] };
+    const plain = Buffer.from(stored.entries[0]!.cipher, "base64").toString("utf8");
+    expect(plain).toContain("\u0000vunemi-bound\u0000");
+    stored.entries[0]!.cipher = Buffer.from(plain.replace("\u0000vunemi-bound\u0000", "\u0000tenami-bound\u0000"), "utf8").toString("base64");
+    writeFileSync(file, JSON.stringify(stored));
+    const again = new Vault(dir, fake);
+    expect(again.use("mail.a", "smtp:smtp.example.com")).toBe("app-password-1");
+    expect(again.targets("mail.a")).toEqual(["smtp:smtp.example.com"]);
   });
 
   it("can't be moved to another server by editing the file", () => {
@@ -296,7 +310,7 @@ describe("secrets bound to where they are used", () => {
   it("refuses a malformed place and forgets the binding with the secret", () => {
     const vault = new Vault(dir, crypto());
     expect(() => vault.set("x.y", "value-123", undefined, ["no colon"])).toThrow();
-    vault.set("x.y", "value-123", undefined, ["tenami:outbox"]);
+    vault.set("x.y", "value-123", undefined, ["vunemi:outbox"]);
     vault.delete("x.y");
     vault.set("x.y", "value-456");
     expect(vault.targets("x.y")).toEqual([]);

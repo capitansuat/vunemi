@@ -18,9 +18,9 @@ import {
   type ChatRequest,
   type ChatResult,
   type ToolCall,
-} from "@ocak/agent-core";
-import { createFileTools, Roots } from "@ocak/files";
-import { Sentinel } from "@ocak/sentinel";
+} from "@vunemi/agent-core";
+import { createFileTools, Roots } from "@vunemi/files";
+import { Sentinel } from "@vunemi/sentinel";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 /** A file that reads like a note and ends like a prompt. */
@@ -56,7 +56,7 @@ describe("red team · files", () => {
   let tools: ToolRegistry;
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "ocak-redteam-files-"));
+    home = mkdtempSync(join(tmpdir(), "vunemi-redteam-files-"));
     root = join(home, "Belgeler");
     mkdirSync(root, { recursive: true });
     writeFileSync(join(root, "notlar.txt"), PLANTED);

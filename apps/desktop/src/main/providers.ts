@@ -1,9 +1,9 @@
-import { createModel, DEFAULT_BASE_URLS, listModels, parseModelSpec, ProviderError } from "@ocak/agent-core";
+import { createModel, DEFAULT_BASE_URLS, listModels, parseModelSpec, ProviderError } from "@vunemi/agent-core";
 import type { LocalModelSettings, ModelCheckResult, ProviderStatus } from "../shared/ipc.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 import type { Endpoint } from "./engine/engine.js";
 
-/** Finds the built-in engine's address for a `tenami:` model, when it is running. */
+/** Finds the built-in engine's address for a `vunemi:` model, when it is running. */
 export type VunemiEndpoint = (spec: string) => Endpoint | null;
 
 export const DEFAULT_MODEL_SETTINGS: LocalModelSettings = {
@@ -48,14 +48,14 @@ export function validateModelSettings(input: unknown): LocalModelSettings {
 export function modelConfig(
   spec: string,
   settings: LocalModelSettings,
-  tenami?: VunemiEndpoint,
+  vunemi?: VunemiEndpoint,
 ): { baseUrl: string; contextLength: number; apiKey?: string } {
   const { kind } = parseModelSpec(spec);
-  if (kind === "tenami") {
+  if (kind === "vunemi") {
     // Not running: the default address refuses, and the task fails as unreachable.
-    const endpoint = tenami?.(spec) ?? null;
+    const endpoint = vunemi?.(spec) ?? null;
     return {
-      baseUrl: endpoint?.baseUrl ?? DEFAULT_BASE_URLS.tenami,
+      baseUrl: endpoint?.baseUrl ?? DEFAULT_BASE_URLS.vunemi,
       contextLength: settings.ollamaContextLength,
       ...(endpoint && { apiKey: endpoint.apiKey }),
     };
@@ -64,19 +64,19 @@ export function modelConfig(
   return { baseUrl: settings.endpoints[kind as LocalKind], contextLength: settings.ollamaContextLength };
 }
 
-export async function checkAgentModel(spec: string, settings: LocalModelSettings, tenami?: VunemiEndpoint): Promise<ModelCheckResult> {
-  const config = modelConfig(spec, settings, tenami);
+export async function checkAgentModel(spec: string, settings: LocalModelSettings, vunemi?: VunemiEndpoint): Promise<ModelCheckResult> {
+  const config = modelConfig(spec, settings, vunemi);
   const model = createModel(spec, config);
   const started = performance.now();
   let result: Awaited<ReturnType<typeof model.chat>>;
   try {
     result = await model.chat({
       messages: [
-        { role: "system", content: "This is a tool-calling test. Do nothing else. Only call the ocak_probe tool with token='hazir'." },
+        { role: "system", content: "This is a tool-calling test. Do nothing else. Only call the vunemi_probe tool with token='hazir'." },
         { role: "user", content: "Start the tool-calling test." },
       ],
       tools: [{
-        name: "ocak_probe",
+        name: "vunemi_probe",
         description: "Vunemi's tool-calling test. It has no side effects.",
         parameters: { type: "object", properties: { token: { type: "string" } }, required: ["token"] },
       }],
@@ -90,7 +90,7 @@ export async function checkAgentModel(spec: string, settings: LocalModelSettings
   }
   return {
     toolCalled: result.toolCalls.some((call) => {
-      if (call.name !== "ocak_probe") return false;
+      if (call.name !== "vunemi_probe") return false;
       try { return (JSON.parse(call.argumentsText) as { token?: unknown }).token === "hazir"; }
       catch { return false; }
     }),
@@ -102,7 +102,7 @@ export async function checkAgentModel(spec: string, settings: LocalModelSettings
 
 export async function probeProviders(
   settings: LocalModelSettings = DEFAULT_MODEL_SETTINGS,
-  tenamiSpecs: string[] = [],
+  vunemiSpecs: string[] = [],
 ): Promise<ProviderStatus[]> {
   const local = await Promise.all(
     LOCAL.map(async (kind): Promise<ProviderStatus> => {
@@ -116,7 +116,7 @@ export async function probeProviders(
     }),
   );
   // The built-in engine's models are files on this Mac: listed whether or not it is running.
-  return tenamiSpecs.length > 0
-    ? [{ kind: "tenami", baseUrl: "", reachable: true, models: tenamiSpecs }, ...local]
+  return vunemiSpecs.length > 0
+    ? [{ kind: "vunemi", baseUrl: "", reachable: true, models: vunemiSpecs }, ...local]
     : local;
 }

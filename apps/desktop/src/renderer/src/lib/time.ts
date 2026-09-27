@@ -1,6 +1,6 @@
 /** Dates the way the lists show them: today, yesterday, then the date — in the current language. */
 
-import { formatDate, t } from "@ocak/i18n";
+import { formatDate, t } from "@vunemi/i18n";
 
 export function dayLabel(at: number): string {
   const d = new Date(at);

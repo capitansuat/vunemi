@@ -17,7 +17,7 @@
 
 import { randomUUID } from "node:crypto";
 import { MailNotSent, type Draft, type MailAccount } from "./types.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 /** Long enough to catch a mistake, short enough not to feel broken. */
 export const HOLD_MS = 45_000;

@@ -13,10 +13,10 @@
  */
 
 import { join } from "node:path";
-import type { ToolContext, ToolDef } from "@ocak/agent-core";
+import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { Helper, type MacApp } from "./helper.js";
 import { blockedExamples, blockedReason } from "./policy.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 export const DESKTOP_INSTRUCTIONS = `Using the Mac itself:
 - desktop_apps lists the open apps. desktop_describe reads one app's window as numbered [ref] lines.

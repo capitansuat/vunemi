@@ -22,7 +22,7 @@ const MAC_CANDIDATES = [
 ];
 
 export function findChrome(): string | null {
-  const override = process.env.OCAK_CHROME;
+  const override = process.env.VUNEMI_CHROME;
   if (override && existsSync(override)) return override;
   for (const base of ["/Applications", join(homedir(), "Applications")]) {
     for (const rel of MAC_CANDIDATES) {
@@ -53,7 +53,7 @@ export async function launchIsolatedChrome(opts: LaunchOptions): Promise<CdpBrow
 
   const exe = opts.executablePath ?? findChrome();
   if (!exe) {
-    throw new Error("No Chrome-family browser found. Install Google Chrome, or set OCAK_CHROME to a Chromium executable.");
+    throw new Error("No Chrome-family browser found. Install Google Chrome, or set VUNEMI_CHROME to a Chromium executable.");
   }
 
   rmSync(portFile, { force: true });

@@ -1,7 +1,7 @@
 import { runInNewContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ToolContext } from "@ocak/agent-core";
-import { setLocale } from "@ocak/i18n";
+import type { ToolContext } from "@vunemi/agent-core";
+import { setLocale } from "@vunemi/i18n";
 import { createShortcutTools, SHORTCUT_RUN, shortcutName, SHORTCUTS_LIST } from "../src/shortcuts.js";
 
 const script = (template: string, input: unknown, app: unknown) =>
@@ -39,7 +39,7 @@ describe("shortcut scripts", () => {
     const ran: unknown[] = [];
     expect(script(SHORTCUT_RUN, { name: "Vunemi Test", input: "hi" }, library(ran))).toEqual({ found: true, result: ["got hi"] });
     expect(script(SHORTCUT_RUN, { name: "Vunemi Test" }, library(ran))).toEqual({ found: true, result: null });
-    expect(script(SHORTCUT_RUN, { name: "tenami test" }, library(ran))).toEqual({ found: false });
+    expect(script(SHORTCUT_RUN, { name: "vunemi test" }, library(ran))).toEqual({ found: false });
     expect(ran).toEqual(["hi", null]);
   });
 });

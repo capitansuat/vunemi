@@ -110,7 +110,7 @@ describe("sign-in links", () => {
     for (const url of [
       "https://example.com/siparis/20260923",
       "https://news.ycombinator.com/item?id=12345678",
-      "https://github.com/ocak/ocak/pull/42",
+      "https://github.com/example/project/pull/42",
       "https://example.com/blog/2026/09/yeni-surum",
     ]) {
       const out = strip(`Ayrıntılar burada: ${url}`);

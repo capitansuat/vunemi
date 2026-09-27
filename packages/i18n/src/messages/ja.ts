@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "Gmail のアドレスと、「Google アカウント › セキュリティ › アプリ パスワード」で作成したアプリパスワードを入力してください。通常のアカウントのパスワードは入力しないでください。2 段階認証プロセスがオンになっている必要があります。",
-      outlookHint: "Microsoft Entra で自分で登録したアプリのクライアント ID を入力してください。「モバイル アプリケーションとデスクトップ アプリケーション」プラットフォームにリダイレクト URI http://localhost/ocak を追加し、Mail.ReadWrite、Mail.Send、User.Read の権限を追加します。ログインはシステムのブラウザで開き、パスワードが Vunemi に渡されることはありません。",
+      outlookHint: "Microsoft Entra で自分で登録したアプリのクライアント ID を入力してください。「モバイル アプリケーションとデスクトップ アプリケーション」プラットフォームにリダイレクト URI http://localhost/vunemi を追加し、Mail.ReadWrite、Mail.Send、User.Read の権限を追加します。ログインはシステムのブラウザで開き、パスワードが Vunemi に渡されることはありません。",
       imapHint: "IMAP と SMTP のサーバ、アプリパスワードを入力してください。",
       passwordNote: "パスワードは金庫に暗号化して保存され、モデルに渡されることはありません。",
       clientId: "Microsoft アプリケーション ID",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "Vunemi がリモートデバッグを開いた状態で起動されました。この Mac の任意のプログラムが操作して承認カードに答えられるため、このビルドはその方法では起動しません。通常の方法で開いてください。" },
-    dataFolder: { busy: "Tenami がまだ開いていて、データはそのフォルダにあります。Vunemi はこのデータを自分のフォルダに移します。先に Tenami を終了してから、Vunemi をもう一度開いてください。" },
     outbox: {
       unreadable: "暗号化されたメールの待ち行列を読み取れませんでした。",
       undecryptable: "暗号化されたメールの待ち行列を復号できませんでした。記録は保持され、新しい送信は停止しています。",

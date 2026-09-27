@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { ENGINE_TAG, engineBinary } from "../../src/main/engine/binary.js";
 
-const tmp = mkdtempSync(join(tmpdir(), "tenami-bin-"));
+const tmp = mkdtempSync(join(tmpdir(), "vunemi-bin-"));
 afterEach(() => rmSync(tmp, { recursive: true, force: true }));
 
 describe("where the engine lives", () => {
@@ -15,7 +15,7 @@ describe("where the engine lives", () => {
   });
 
   it("is in the build cache during development", () => {
-    const cache = join(tmp, ".ocak-build", "engine-cache", ENGINE_TAG);
+    const cache = join(tmp, ".vunemi-build", "engine-cache", ENGINE_TAG);
     mkdirSync(cache, { recursive: true });
     writeFileSync(join(cache, "llama-server"), "");
     expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp })).toBe(join(cache, "llama-server"));
@@ -27,6 +27,6 @@ describe("where the engine lives", () => {
 
   it("is built from the tag the app expects", () => {
     const script = readFileSync(fileURLToPath(new URL("../../../../scripts/build-engine.sh", import.meta.url)), "utf8");
-    expect(script).toContain(`tag="\${OCAK_ENGINE_TAG:-${ENGINE_TAG}}"`);
+    expect(script).toContain(`tag="\${VUNEMI_ENGINE_TAG:-${ENGINE_TAG}}"`);
   });
 });

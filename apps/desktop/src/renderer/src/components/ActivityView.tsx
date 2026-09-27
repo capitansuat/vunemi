@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Ban, Check, CornerUpLeft, Hand, History, LoaderCircle, TriangleAlert } from "lucide-react";
-import type { ActionClass } from "@ocak/agent-core";
+import type { ActionClass } from "@vunemi/agent-core";
 import type { ActivityEntry } from "../../../shared/ipc.js";
 import { actionClassLabel, formatMs, toolLabel } from "../lib/labels.js";
 import { clock, groupByDay } from "../lib/time.js";
 import { useStore } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 type Filter = "all" | "changes" | "page" | "refused";
 
@@ -26,8 +26,8 @@ export function ActivityView() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void window.ocak.listActivity().then(setActivity);
-    return window.ocak.onActivity(setActivity);
+    void window.vunemi.listActivity().then(setActivity);
+    return window.vunemi.onActivity(setActivity);
   }, [setActivity]);
 
   const shown = useMemo(() => {
@@ -41,7 +41,7 @@ export function ActivityView() {
     setBusy(id);
     setError(null);
     try {
-      await window.ocak.undoActivity(id);
+      await window.vunemi.undoActivity(id);
     } catch (err) {
       setError(String((err as Error).message ?? err).replace(/^.*Error: /, ""));
     } finally {

@@ -5,7 +5,7 @@ import { authorizeOutlook, outlookTokenSource } from "../../src/main/outlook-oau
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Outlook refresh tokens", () => {
-  it.skipIf(!process.env.OCAK_LIVE_LOOPBACK_TEST)("accepts only the matching loopback state and exchanges a PKCE code", async () => {
+  it.skipIf(!process.env.VUNEMI_LIVE_LOOPBACK_TEST)("accepts only the matching loopback state and exchanges a PKCE code", async () => {
     vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
       const body = options.body as URLSearchParams;
       expect(body.get("code")).toBe("auth-code");

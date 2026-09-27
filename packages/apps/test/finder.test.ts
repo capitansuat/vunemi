@@ -2,15 +2,15 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ToolContext } from "@ocak/agent-core";
-import { Roots } from "@ocak/files";
+import type { ToolContext } from "@vunemi/agent-core";
+import { Roots } from "@vunemi/files";
 import { createFinderTools, FINDER_REVEAL, FINDER_SELECTION } from "../src/finder.js";
 
 const ctx = {} as ToolContext;
 let dir: string;
 let roots: Roots;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "tenami-finder-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-finder-"));
   mkdirSync(join(dir, "open"));
   writeFileSync(join(dir, "open", "report.pdf"), "x");
   roots = new Roots([join(dir, "open")]);

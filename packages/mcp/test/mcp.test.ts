@@ -8,7 +8,7 @@
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ToolContext } from "@ocak/agent-core";
+import type { ToolContext } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createServer } from "node:http";
 import { cappedText, createMcpConnector, localIO, MAX_REPLY_BYTES, McpClient, type McpIO, type McpTool } from "../src/index.js";
@@ -65,7 +65,7 @@ const READ_TOOL: McpTool = {
 const WRITE_TOOL: McpTool = { name: "send-message", description: "Mesaj gönderir" };
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "ocak-mcp-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-mcp-"));
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

@@ -3,13 +3,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
-import type { Produced, ToolContext } from "@ocak/agent-core";
-import { Roots } from "@ocak/files";
+import type { Produced, ToolContext } from "@vunemi/agent-core";
+import { Roots } from "@vunemi/files";
 import {
   BROWSER_OPEN, BROWSER_TABS, CONTACTS_SEARCH, createEverydayTools, MESSAGES_SEND, MUSIC_CONTROL, MUSIC_NOW, PHOTOS_SEARCH, PHOTOS_THUMBS, recipient,
 } from "../src/everyday.js";
 
-const base = realpathSync(mkdtempSync(join(tmpdir(), "tenami-everyday-")));
+const base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-everyday-")));
 const allowed = join(base, "allowed");
 mkdirSync(allowed);
 const ctx = (produced: Produced[] = []) => ({ signal: new AbortController().signal, produced: (p: Produced) => produced.push(p) }) as unknown as ToolContext;

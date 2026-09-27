@@ -18,7 +18,7 @@
 
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import type { SecretCrypto } from "./vault.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 const MAGIC = Buffer.from("OCK1", "ascii");
 const IV = 12;

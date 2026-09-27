@@ -14,7 +14,7 @@ const candidates = rows.filter((row) =>
   row && typeof row.task_id === "string" && typeof row.website === "string" &&
   typeof row.task_description === "string" && Number.isInteger(row.reference_length),
 );
-const score = (id) => createHash("sha256").update(`ocak-om2w-v1:${id}`).digest("hex");
+const score = (id) => createHash("sha256").update(`vunemi-om2w-v1:${id}`).digest("hex");
 candidates.sort((a, b) => score(a.task_id).localeCompare(score(b.task_id)));
 
 const seen = new Set();
@@ -32,4 +32,4 @@ for (const row of candidates) {
   if (selected.length === 20) break;
 }
 if (selected.length !== 20) throw new Error(`20 farklı site bulunamadı (${selected.length}).`);
-process.stdout.write(`${JSON.stringify({ source: "osunlp/Online-Mind2Web", selection: "sha256 ocak-om2w-v1, unique host", tasks: selected }, null, 2)}\n`);
+process.stdout.write(`${JSON.stringify({ source: "osunlp/Online-Mind2Web", selection: "sha256 vunemi-om2w-v1, unique host", tasks: selected }, null, 2)}\n`);

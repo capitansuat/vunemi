@@ -6,7 +6,7 @@ import { modelShape, trainedContext } from "../../src/main/engine/gguf.js";
 
 let dir: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "tenami-gguf-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-gguf-"));
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

@@ -7,8 +7,8 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { Outbox, type Draft } from "@ocak/mail";
-import { connectLocal, Vault, type SecretCrypto } from "@ocak/vault";
+import { Outbox, type Draft } from "@vunemi/mail";
+import { connectLocal, Vault, type SecretCrypto } from "@vunemi/vault";
 import { FakeSmtp, makeCertificate } from "../../../../packages/mail/test/fake-smtp.js";
 import { RemoteMailAccount } from "../../src/main/remote-mail.js";
 import type { StoredMailAccount } from "../../src/main/settings.js";
@@ -36,7 +36,7 @@ afterEach(async () => {
 async function setup(password = PASSWORD) {
   smtp = new FakeSmtp({ tls: true, password: PASSWORD }, certificate);
   await smtp.start();
-  const dir = mkdtempSync(join(tmpdir(), "ocak-vault-process-"));
+  const dir = mkdtempSync(join(tmpdir(), "vunemi-vault-process-"));
   dirs.push(dir);
   const vault = new Vault(dir, fake);
   const entry: StoredMailAccount = {
@@ -127,7 +127,7 @@ describe("Gmail signed in with Google, from the Vault process", () => {
   it("sends with an access token it refreshed itself; the refresh token never leaves", async () => {
     smtp = new FakeSmtp({ tls: true, accessToken: "ya29.fresh" }, certificate);
     await smtp.start();
-    const dir = mkdtempSync(join(tmpdir(), "ocak-vault-google-"));
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-vault-google-"));
     dirs.push(dir);
     const vault = new Vault(dir, fake);
     const client = { clientId: "1234-abc.apps.googleusercontent.com", clientSecret: "GOCSPX-synthetic" };
@@ -159,7 +159,7 @@ describe("Gmail signed in with Google, from the Vault process", () => {
   });
 
   it("asks for a new sign-in when the build's Google registration changed", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocak-vault-google-"));
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-vault-google-"));
     dirs.push(dir);
     const vault = new Vault(dir, fake);
     vault.set(mailSecretName("0b7a6c1e-3333-4222-8333-444455556666"), "1//r");
@@ -173,7 +173,7 @@ describe("Gmail signed in with Google, from the Vault process", () => {
 describe("what may leave the Vault process", () => {
   it("keeps mail and MCP secrets and their targets inside, releases the rest", () => {
     expect(mayRelease("mail.abc", undefined)).toBe(false);
-    expect(mayRelease("mail.abc", "tenami:outbox")).toBe(false);
+    expect(mayRelease("mail.abc", "vunemi:outbox")).toBe(false);
     expect(mayRelease("mcp.x", "smtp:smtp.example.com")).toBe(false);
     expect(mayRelease("mcp.x", "imap:imap.example.com")).toBe(false);
     expect(mayRelease("mcp.x", "https:login.microsoftonline.com")).toBe(false);
@@ -181,7 +181,7 @@ describe("what may leave the Vault process", () => {
     expect(mayRelease("mcp.x", "mcp:/usr/bin/tool")).toBe(false);
     expect(mayRelease("my.token", "mcp:/usr/bin/tool")).toBe(false);
     expect(mayRelease("mcp.x", undefined)).toBe(false);
-    expect(mayRelease("outbox.queue", "tenami:outbox")).toBe(true);
+    expect(mayRelease("outbox.queue", "vunemi:outbox")).toBe(true);
     expect(mayRelease("my.token", undefined)).toBe(true);
   });
 });

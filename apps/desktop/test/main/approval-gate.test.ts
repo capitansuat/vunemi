@@ -1,5 +1,5 @@
 /** The app's own tools must not act before the user says yes. */
-import { runAgent, type AgentEvent, type ChatModel, type ChatResult } from "@ocak/agent-core";
+import { runAgent, type AgentEvent, type ChatModel, type ChatResult } from "@vunemi/agent-core";
 import { describe, expect, it } from "vitest";
 import { createDemoTools } from "../../src/main/demo-tools.js";
 

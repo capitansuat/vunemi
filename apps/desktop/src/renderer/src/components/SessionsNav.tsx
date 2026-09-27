@@ -3,7 +3,7 @@ import { FolderOpen, FolderPlus, Folder, Plus, Trash2 } from "lucide-react";
 import type { ProjectView, SessionSummary } from "../../../shared/ipc.js";
 import { clock, dayLabel } from "../lib/time.js";
 import { useStore } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 const errorText = (e: unknown) =>
   e instanceof Error ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(e);

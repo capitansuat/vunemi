@@ -1,5 +1,5 @@
 {
-  "name": "@ocak/agent-core",
+  "name": "@vunemi/agent-core",
   "version": "0.0.0",
   "private": true,
   "license": "GPL-3.0-only",
@@ -15,6 +15,6 @@
     "vitest": "5.0.1"
   },
   "dependencies": {
-    "@ocak/i18n": "workspace:*"
+    "@vunemi/i18n": "workspace:*"
   }
 }

@@ -5,7 +5,7 @@
  * and an emergency stop leaves nothing behind that could start on its own.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AgentEvent, ChatMessage, RunResult } from "@ocak/agent-core";
+import type { AgentEvent, ChatMessage, RunResult } from "@vunemi/agent-core";
 
 /** One fake run per start; the test decides when and how each one ends. */
 const runs: {
@@ -17,8 +17,8 @@ const runs: {
   finish: (result: Partial<RunResult>) => void;
 }[] = [];
 
-vi.mock("@ocak/agent-core", async (importOriginal) => {
-  const real = await importOriginal<typeof import("@ocak/agent-core")>();
+vi.mock("@vunemi/agent-core", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@vunemi/agent-core")>();
   return {
     ...real,
     createModel: (spec: string) => ({ id: spec }),

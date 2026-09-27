@@ -15,7 +15,7 @@ beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "vunemi-voice-"));
   server = join(dir, "whisper-server");
   writeFileSync(server, "#!/bin/sh\n");
-  delete process.env.OCAK_WHISPER_MODEL;
+  delete process.env.VUNEMI_WHISPER_MODEL;
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
@@ -26,7 +26,7 @@ describe("the built-in speech engine", () => {
     writeFileSync(join(resources, "whisper-server"), "");
     expect(whisperBinary({ packaged: true, resourcesPath: resources, home: dir })).toBe(join(resources, "whisper-server"));
     expect(whisperBinary({ packaged: false, resourcesPath: resources, home: dir })).toBeNull();
-    const cache = join(dir, ".ocak-build", "whisper-cache", WHISPER_TAG);
+    const cache = join(dir, ".vunemi-build", "whisper-cache", WHISPER_TAG);
     mkdirSync(cache, { recursive: true });
     writeFileSync(join(cache, "whisper-server"), "");
     expect(whisperBinary({ packaged: false, resourcesPath: resources, home: dir })).toBe(join(cache, "whisper-server"));

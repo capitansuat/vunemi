@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { setLocale } from "@ocak/i18n";
+import { setLocale } from "@vunemi/i18n";
 import { CATALOG, contextFor, displayName, GiB, memoryBudget, modelId, recommend, smaller } from "../../src/main/engine/catalog.js";
 
 describe("the recommended models", () => {

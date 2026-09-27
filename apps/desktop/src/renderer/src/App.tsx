@@ -16,7 +16,7 @@ import { ICONS } from "./components/ConnectionsView.js";
 import { formatTokens } from "./lib/labels.js";
 import { clock, dayLabel } from "./lib/time.js";
 import { useStore, type View } from "./store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 
 export function App() {
@@ -29,22 +29,22 @@ export function App() {
     void refreshProviders();
     // Subscribed here, not in the pane, so a tab the agent opens can bring
     // the closed pane up.
-    void window.ocak.getEmbedded().then(setEmbedded);
-    const offEmbedded = window.ocak.onEmbeddedState(setEmbedded);
-    const offEvents = window.ocak.onEvent(ingest);
+    void window.vunemi.getEmbedded().then(setEmbedded);
+    const offEmbedded = window.vunemi.onEmbeddedState(setEmbedded);
+    const offEvents = window.vunemi.onEvent(ingest);
     // The queue lives in main, so a window reload finds it still there.
-    void window.ocak.listQueued().then(setQueue);
-    const offQueue = window.ocak.onQueue(setQueue);
-    void window.ocak.listSessions().then((list) => {
+    void window.vunemi.listQueued().then(setQueue);
+    const offQueue = window.vunemi.onQueue(setQueue);
+    void window.vunemi.listSessions().then((list) => {
       setSessions(list);
       // After a crash, come back to the task it cut short, unless a conversation is already open.
       const cut = list.sessions.find((s) => s.interrupted);
       const fresh = !list.sessions.some((s) => s.id === list.current);
       if (cut && fresh) void useStore.getState().openSession(cut.id).catch(() => {});
     });
-    const offSessions = window.ocak.onSessions(setSessions);
+    const offSessions = window.vunemi.onSessions(setSessions);
     void refreshEngine();
-    const offEngine = window.ocak.onEngine(setEngine);
+    const offEngine = window.vunemi.onEngine(setEngine);
     return () => {
       offEngine();
       offEmbedded();
@@ -86,7 +86,7 @@ export function App() {
 function DebugPortWarning() {
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    void window.ocak.debugPortOpen().then(setOpen, () => setOpen(false));
+    void window.vunemi.debugPortOpen().then(setOpen, () => setOpen(false));
   }, []);
   if (!open) return null;
   return (
@@ -376,7 +376,7 @@ function Interrupted() {
         <button
           type="button"
           disabled={busy || !model}
-          onClick={() => act(() => window.ocak.resumeInterrupted(model!))}
+          onClick={() => act(() => window.vunemi.resumeInterrupted(model!))}
           className="rounded-lg bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {t("app.recovery.resume")}
@@ -384,7 +384,7 @@ function Interrupted() {
         <button
           type="button"
           disabled={busy}
-          onClick={() => act(async () => { setSessions(await window.ocak.dismissInterrupted()); setBusy(false); })}
+          onClick={() => act(async () => { setSessions(await window.vunemi.dismissInterrupted()); setBusy(false); })}
           className="rounded-lg px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:bg-surface hover:text-fg disabled:opacity-50"
         >
           {t("app.recovery.dismiss")}
@@ -404,7 +404,7 @@ function Empty() {
   const [sent, setSent] = useState(false);
   useEffect(() => {
     let live = true;
-    void window.ocak.connectionsOn().then(
+    void window.vunemi.connectionsOn().then(
       (ids) => { if (live) setReady(new Set(ids)); },
       () => { if (live) setReady(new Set()); },
     );

@@ -6,7 +6,7 @@ import { formatMs, formatTokens, runStatusLabel, shortModelName } from "../lib/l
 import { CallCard } from "./CallCard.js";
 import { PlanCard } from "./PlanCard.js";
 import { Markdown } from "./Markdown.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 /** One exchange: what the user asked, and everything the agent did about it. */
 export function Turn({ run }: { run: RunView }) {

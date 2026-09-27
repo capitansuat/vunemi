@@ -6,8 +6,8 @@
  * offers to show the shortcut in the Shortcuts app first.
  */
 
-import type { ToolDef } from "@ocak/agent-core";
-import { t } from "@ocak/i18n";
+import type { ToolDef } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 import type { ScriptRunner } from "./runner.js";
 
 const APP = "Shortcuts";

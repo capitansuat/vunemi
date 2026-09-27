@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { describe, expect, it, vi } from "vitest";
-import { Roots } from "@ocak/files";
+import { Roots } from "@vunemi/files";
 import { createOfficeTools, FIND_WORKBOOK, EXCEL_LIVE as EXCEL_LIVE_FOR_TEST } from "../src/office.js";
 import { AppScriptError } from "../src/runner.js";
 import { writePptx, writeXlsx, writeZip } from "./zip.js";
@@ -11,7 +11,7 @@ import { xlsxCells } from "../src/ooxml.js";
 
 const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
-const base = mkdtempSync(join(tmpdir(), "tenami-office-test-"));
+const base = mkdtempSync(join(tmpdir(), "vunemi-office-test-"));
 const allowed = join(base, "allowed");
 const outside = join(base, "outside");
 mkdirSync(allowed); mkdirSync(outside);

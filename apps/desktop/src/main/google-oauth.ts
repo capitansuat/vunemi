@@ -3,7 +3,7 @@
  * with the access token in place of a password (XOAUTH2); the refresh token
  * lives in the Vault and is used only by the Vault process.
  */
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 import { authorize, idTokenClaims, tokenSource, type OAuthProvider, type OAuthTokens } from "./oauth.js";
 
 const AUTH = "https://accounts.google.com/o/oauth2/v2/auth";

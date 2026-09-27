@@ -75,7 +75,7 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
   let noiseMs = 0;
 
   const source = context.createMediaStreamSource(stream);
-  const node = new AudioWorkletNode(context, "ocak-capture");
+  const node = new AudioWorkletNode(context, "vunemi-capture");
   node.port.onmessage = (e: MessageEvent<Float32Array>) => {
     if (done) return;
     const frame = e.data;

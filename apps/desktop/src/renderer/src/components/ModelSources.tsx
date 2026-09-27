@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { LocalModelSettings, ModelCheckResult } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 
 const SOURCES = [
   { id: "lmstudio", label: "LM Studio", hint: "http://127.0.0.1:1234/v1" },
@@ -21,7 +21,7 @@ export function ModelSources() {
   const refreshProviders = useStore((state) => state.refreshProviders);
 
   useEffect(() => {
-    void window.ocak.getModelSettings().then(setSettings).catch((err: unknown) => setError(String(err)));
+    void window.vunemi.getModelSettings().then(setSettings).catch((err: unknown) => setError(String(err)));
   }, []);
 
   useEffect(() => setCheck(null), [model]);
@@ -32,7 +32,7 @@ export function ModelSources() {
     setError(null);
     setSaved(false);
     try {
-      setSettings(await window.ocak.setModelSettings(settings));
+      setSettings(await window.vunemi.setModelSettings(settings));
       await refreshProviders();
       setSaved(true);
     } catch (err) {
@@ -49,7 +49,7 @@ export function ModelSources() {
     setCheck(null);
     setError(null);
     try {
-      const result = await window.ocak.checkModel(selected);
+      const result = await window.vunemi.checkModel(selected);
       if (useStore.getState().model === selected) setCheck(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

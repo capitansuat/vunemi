@@ -66,7 +66,7 @@ export interface ChatModel {
   vision?(): Promise<boolean>;
 }
 
-export type ProviderKind = "lmstudio" | "ollama" | "llamacpp" | "tenami" | "openai";
+export type ProviderKind = "lmstudio" | "ollama" | "llamacpp" | "vunemi" | "openai";
 
 export class ProviderError extends Error {
   constructor(
@@ -93,12 +93,21 @@ export const DEFAULT_BASE_URLS: Record<ProviderKind, string> = {
   llamacpp: "http://127.0.0.1:8080/v1",
   // Vunemi's own engine picks a free port each time it starts, so there is no
   // usual address; callers always pass the real one. This one refuses.
-  tenami: "http://127.0.0.1:1/v1",
+  vunemi: "http://127.0.0.1:1/v1",
   openai: "https://api.openai.com/v1",
 };
 
+/** The built-in engine's provider name before the app was renamed. */
+const LEGACY_ENGINE_PREFIX = "tenami:";
+
+/** A spec saved under the engine's earlier provider name, under the current one. */
+export function normalizeModelSpec(spec: string): string {
+  return spec.startsWith(LEGACY_ENGINE_PREFIX) ? `vunemi:${spec.slice(LEGACY_ENGINE_PREFIX.length)}` : spec;
+}
+
 /** Parses `provider:model`. The model part may itself contain colons (`qwen3:32b`). */
-export function parseModelSpec(spec: string): { kind: ProviderKind; model: string } {
+export function parseModelSpec(saved: string): { kind: ProviderKind; model: string } {
+  const spec = normalizeModelSpec(saved);
   const sep = spec.indexOf(":");
   if (sep <= 0 || sep === spec.length - 1) {
     throw new Error(`Model spec must look like "provider:model", got "${spec}"`);

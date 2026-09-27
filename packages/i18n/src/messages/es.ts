@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "Introduce tu dirección de Gmail y una contraseña de aplicación creada en Cuenta de Google › Seguridad › Contraseñas de aplicaciones. No la contraseña normal de la cuenta. La verificación en dos pasos debe estar activada.",
-      outlookHint: "Introduce el ID de cliente de tu propio registro de aplicación en Microsoft Entra. Añade la URI de redirección http://localhost/ocak a la plataforma móvil y de escritorio, y los permisos Mail.ReadWrite, Mail.Send y User.Read. El inicio de sesión se abre en el navegador del sistema; tu contraseña nunca se da a Vunemi.",
+      outlookHint: "Introduce el ID de cliente de tu propio registro de aplicación en Microsoft Entra. Añade la URI de redirección http://localhost/vunemi a la plataforma móvil y de escritorio, y los permisos Mail.ReadWrite, Mail.Send y User.Read. El inicio de sesión se abre en el navegador del sistema; tu contraseña nunca se da a Vunemi.",
       imapHint: "Introduce los servidores IMAP y SMTP y tu contraseña de aplicación.",
       passwordNote: "La contraseña se guarda cifrada en la caja fuerte y nunca se da al modelo.",
       clientId: "ID de aplicación de Microsoft",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "Vunemi se inició con la depuración remota abierta. Cualquier programa de este Mac podría controlarlo y responder sus tarjetas de aprobación, así que esta versión no arranca así. Abre Vunemi de la forma normal." },
-    dataFolder: { busy: "Tenami sigue abierto y tus datos están en su carpeta. Vunemi traslada esos datos a su propia carpeta. Cierra Tenami primero y vuelve a abrir Vunemi." },
     outbox: {
       unreadable: "No se pudo leer la cola cifrada de correo.",
       undecryptable: "No se pudo descifrar la cola cifrada de correo; el registro se conserva y los nuevos envíos se detienen.",

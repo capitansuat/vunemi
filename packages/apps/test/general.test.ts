@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
-import type { ToolContext } from "@ocak/agent-core";
+import type { ToolContext } from "@vunemi/agent-core";
 import { blockedApp, type ScriptableCatalog } from "../src/catalog.js";
 import { blockedCommand, classifyCommand, parseDictionary } from "../src/dictionary.js";
 import { createGeneralTools, GENERAL_GET, GENERAL_COMMAND } from "../src/general.js";
@@ -46,7 +46,7 @@ describe("Mac app scripting dictionary", () => {
   });
 
   it("keeps terminal, permissions and Vunemi apps outside discovery", () => {
-    for (const name of ["Terminal", "System Events", "Script Editor", "Keychain Access", "System Settings", "Shortcuts", "Vunemi", "Tenami", "Database Events", "Folder Actions Setup", "FolderActionsDispatcher"]) {
+    for (const name of ["Terminal", "System Events", "Script Editor", "Keychain Access", "System Settings", "Shortcuts", "Vunemi", "Database Events", "Folder Actions Setup", "FolderActionsDispatcher"]) {
       expect(blockedApp({ name, bundleId: `example.${name}` })).toBe(true);
     }
     expect(blockedApp({ name: "Safe", bundleId: "com.apple.Terminal" })).toBe(true);

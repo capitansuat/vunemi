@@ -1,13 +1,13 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentEvent } from "@ocak/agent-core";
+import type { AgentEvent } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ActivityLog } from "../../src/main/activity.js";
 
 let dir = "";
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "ocak-activity-"));
+  dir = mkdtempSync(join(tmpdir(), "vunemi-activity-"));
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

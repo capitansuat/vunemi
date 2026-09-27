@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Lock } from "lucide-react";
-import { t } from "@ocak/i18n";
+import { t } from "@vunemi/i18n";
 import type { LockState } from "../../../shared/ipc.js";
 
 /**
@@ -17,7 +17,7 @@ export function LockScreen({ away, onState }: { away: boolean; onState: (state: 
     setAsking(true);
     setMessage(null);
     try {
-      const attempt = await window.ocak.unlock();
+      const attempt = await window.vunemi.unlock();
       if (!attempt.ok) setMessage(attempt.message);
       onState(attempt.state);
     } catch (err) {

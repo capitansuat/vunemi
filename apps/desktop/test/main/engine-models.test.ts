@@ -7,7 +7,7 @@ import { ModelStore, projectorFile } from "../../src/main/engine/models.js";
 const src = { repo: "org/m", commit: "c".repeat(40), file: "M-Q4_K_M.gguf", size: 4, sha256: "a".repeat(64), name: "M", license: "mit" };
 let dir: string;
 
-beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "tenami-models-")); });
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "vunemi-models-")); });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("the installed models", () => {

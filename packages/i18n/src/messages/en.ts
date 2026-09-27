@@ -516,7 +516,7 @@ export const messages: Catalogue = {
     },
     mail: {
       gmailHint: "Enter your Gmail address and an app password created under Google Account › Security › App passwords. Don't enter your normal account password. 2-Step Verification must be on.",
-      outlookHint: "Enter the client ID of your own app registration in Microsoft Entra. Add the redirect URI http://localhost/ocak to the mobile and desktop platform, and the Mail.ReadWrite, Mail.Send and User.Read permissions. Sign-in opens in the system browser; your password is never given to Vunemi.",
+      outlookHint: "Enter the client ID of your own app registration in Microsoft Entra. Add the redirect URI http://localhost/vunemi to the mobile and desktop platform, and the Mail.ReadWrite, Mail.Send and User.Read permissions. Sign-in opens in the system browser; your password is never given to Vunemi.",
       imapHint: "Enter the IMAP and SMTP servers and your app password.",
       passwordNote: "The password is stored encrypted in the vault and never given to the model.",
       clientId: "Microsoft application ID",
@@ -558,7 +558,6 @@ export const messages: Catalogue = {
   main: {
 
     debugPort: { refused: "Vunemi was started with remote debugging open. Any program on this Mac could then control it and answer its approval cards, so this build won't start that way. Open Vunemi normally." },
-    dataFolder: { busy: "Tenami is still open, and your data is in its folder. Vunemi moves that data to its own folder. Quit Tenami first, then open Vunemi again." },
     outbox: {
       unreadable: "The encrypted mail queue couldn't be read.",
       undecryptable: "The encrypted mail queue couldn't be decrypted; the record is kept and new sends are stopped.",

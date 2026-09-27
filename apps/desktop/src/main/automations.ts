@@ -13,8 +13,8 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
-import type { ToolDef } from "@ocak/agent-core";
-import { formatDate, t } from "@ocak/i18n";
+import { normalizeModelSpec, type ToolDef } from "@vunemi/agent-core";
+import { formatDate, t } from "@vunemi/i18n";
 
 export type Schedule =
   /** Once, at a local date and time "YYYY-MM-DDTHH:MM". */
@@ -150,7 +150,7 @@ export class AutomationStore {
   constructor(private readonly file: string) {
     const stored = existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as { items?: Automation[]; model?: string }) : {};
     this.items = Array.isArray(stored.items) ? stored.items : [];
-    this.lastModel = typeof stored.model === "string" ? stored.model : null;
+    this.lastModel = typeof stored.model === "string" ? normalizeModelSpec(stored.model) : null;
   }
 
   get model(): string | null {

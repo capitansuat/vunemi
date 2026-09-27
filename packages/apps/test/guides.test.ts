@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ToolContext, ToolDef } from "@ocak/agent-core";
+import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { APP_GROUPS, APP_GUIDE_INDEX, createGuideTool, onDemand } from "../src/guides.js";
 
 describe("app guides", () => {
