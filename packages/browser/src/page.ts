@@ -24,16 +24,34 @@ export type PointerEvent =
   | { kind: "key"; key: string };
 
 /** Covers password, card and one-time-code fields with black boxes that nothing can click. */
+/** How deep frames inside frames are followed. */
+const MAX_FRAME_DEPTH = 4;
+
+// The page and every frame of it the page can reach (same origin): a sign-in
+// form often lives in an iframe. Boxes go on the top page, over where the
+// field is drawn, so the frame's own scripts never see them.
 const MASK_SENSITIVE = `(() => {
   const sensitive = 'input[type=password], [autocomplete^="cc-"], [autocomplete="one-time-code"], [autocomplete="current-password"], [autocomplete="new-password"]';
-  for (const el of document.querySelectorAll(sensitive)) {
-    const r = el.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) continue;
-    const box = document.createElement("div");
-    box.setAttribute("data-vunemi-mask", "");
-    box.style.cssText = "position:fixed;z-index:2147483647;pointer-events:none;background:#000;left:" + r.left + "px;top:" + r.top + "px;width:" + r.width + "px;height:" + r.height + "px";
-    document.documentElement.appendChild(box);
-  }
+  const visit = (doc, dx, dy, depth) => {
+    for (const el of doc.querySelectorAll(sensitive)) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      const box = document.createElement("div");
+      box.setAttribute("data-vunemi-mask", "");
+      box.style.cssText = "position:fixed;z-index:2147483647;pointer-events:none;background:#000;left:" + (dx + r.left) + "px;top:" + (dy + r.top) + "px;width:" + r.width + "px;height:" + r.height + "px";
+      document.documentElement.appendChild(box);
+    }
+    if (depth >= ${MAX_FRAME_DEPTH}) return;
+    for (const f of doc.querySelectorAll("iframe, frame")) {
+      let inner = null;
+      try { inner = f.contentDocument; } catch (e) {}
+      if (!inner) continue;
+      const r = f.getBoundingClientRect();
+      const cs = getComputedStyle(f);
+      visit(inner, dx + r.left + f.clientLeft + parseFloat(cs.paddingLeft), dy + r.top + f.clientTop + parseFloat(cs.paddingTop), depth + 1);
+    }
+  };
+  visit(document, 0, 0, 0);
   return true;
 })()`;
 const UNMASK_SENSITIVE = `(() => { for (const el of document.querySelectorAll("[data-vunemi-mask]")) el.remove(); return true; })()`;
@@ -72,15 +90,58 @@ export class PageDriver {
     return this.evaluate<{ url: string; title: string }>("({ url: location.href, title: document.title })");
   }
 
+  /**
+   * The page's accessibility tree, with the tree of each frame in it hung
+   * under its <iframe>. Chromium hands out one frame's tree at a time, and
+   * many sites keep what matters in a frame: PeopleSoft draws its menu and
+   * every classic page in one. A frame the page doesn't show has no place in
+   * the tree and is left out. So is a frame from another site (it runs in
+   * its own process and would need a session of its own).
+   */
   async axNodes(): Promise<AXNode[]> {
     const { nodes } = await this.s.send<{ nodes: AXNode[] }>("Accessibility.getFullAXTree");
+    const { frameTree } = await this.s.send<{ frameTree: FrameTree }>("Page.getFrameTree");
+    const byRef = new Map<number, AXNode>();
+    for (const n of nodes) if (n.backendDOMNodeId !== undefined) byRef.set(n.backendDOMNodeId, n);
+    let budget = MAX_FRAMES;
+    const visit = async (tree: FrameTree, depth: number): Promise<void> => {
+      if (depth > MAX_FRAME_DEPTH) return;
+      for (const child of tree.childFrames ?? []) {
+        if (budget-- <= 0) return;
+        const frameId = child.frame.id;
+        const host = await this.s
+          .send<{ backendNodeId: number }>("DOM.getFrameOwner", { frameId })
+          .then((r) => byRef.get(r.backendNodeId), () => undefined);
+        if (!host) continue;
+        const sub = await this.s
+          .send<{ nodes: AXNode[] }>("Accessibility.getFullAXTree", { frameId })
+          .then((r) => r.nodes, () => null);
+        if (!sub?.length) continue;
+        // Node ids restart in every frame; refs (backend node ids) don't.
+        const id = (x: string) => `${frameId}:${x}`;
+        const own = new Set(sub.map((n) => n.nodeId));
+        const root = sub.find((n) => n.parentId === undefined || !own.has(n.parentId));
+        if (!root) continue;
+        for (const n of sub) {
+          const copy: AXNode = { ...n, nodeId: id(n.nodeId) };
+          if (n.childIds) copy.childIds = n.childIds.map(id);
+          if (n === root) copy.parentId = host.nodeId;
+          else if (n.parentId !== undefined) copy.parentId = id(n.parentId);
+          nodes.push(copy);
+          if (copy.backendDOMNodeId !== undefined) byRef.set(copy.backendDOMNodeId, copy);
+        }
+        host.childIds = [...(host.childIds ?? []), id(root.nodeId)];
+        await visit(child, depth + 1);
+      }
+    };
+    await visit(frameTree, 1);
     return nodes;
   }
 
-  /** Visible text of the page (hidden elements excluded by innerText). */
+  /** Visible text of the page and of the frames it shows (hidden elements excluded by innerText). */
   async readText(maxChars: number): Promise<{ url: string; title: string; text: string; truncated: number }> {
     const r = await this.evaluate<{ url: string; title: string; text: string }>(
-      "({ url: location.href, title: document.title, text: document.body ? document.body.innerText : '' })",
+      `({ url: location.href, title: document.title, text: (${FRAMES_TEXT})(document, 0) })`,
     );
     const text = r.text.replace(/\n{3,}/g, "\n\n").trim();
     return {
@@ -288,9 +349,21 @@ export class PageDriver {
    * A label drawn over its own field counts as the field.
    */
   private async uncovered(ref: number, x: number, y: number): Promise<void> {
+    // x and y are on the top page; inside a frame, the frame's own document
+    // is asked, at the same point in its coordinates.
     const hit = await this.callOn<boolean>(
       ref,
-      "function(x, y) { const h = document.elementFromPoint(x, y); return !!h && (h === this || this.contains(h) || h.contains(this) || (h.closest && h.closest('label') && h.closest('label').control === this)); }",
+      `function(x, y) {
+        let w = window;
+        while (w.frameElement) {
+          const f = w.frameElement, r = f.getBoundingClientRect(), cs = getComputedStyle(f);
+          x -= r.left + f.clientLeft + parseFloat(cs.paddingLeft);
+          y -= r.top + f.clientTop + parseFloat(cs.paddingTop);
+          w = w.parent;
+        }
+        const h = document.elementFromPoint(x, y);
+        return !!h && (h === this || this.contains(h) || h.contains(this) || (h.closest && h.closest('label') && h.closest('label').control === this));
+      }`,
       [x, y],
     );
     if (!hit) {
@@ -357,6 +430,29 @@ export class PageDriver {
     }
   }
 }
+
+interface FrameTree {
+  frame: { id: string };
+  childFrames?: FrameTree[];
+}
+
+/** Frames read into one page: enough for framesets and portals, bounded for pages that nest ads. */
+const MAX_FRAMES = 20;
+
+/** innerText of a document and, after it, of each same-origin frame it shows. */
+const FRAMES_TEXT = `function text(doc, depth) {
+  let out = doc.body ? doc.body.innerText : '';
+  if (depth >= ${MAX_FRAME_DEPTH}) return out;
+  for (const f of doc.querySelectorAll('iframe, frame')) {
+    let inner = null;
+    try { inner = f.contentDocument; } catch (e) {}
+    const r = f.getBoundingClientRect();
+    if (!inner || r.width === 0 || r.height === 0) continue;
+    const t = text(inner, depth + 1).trim();
+    if (t) out += '\\n\\n' + t;
+  }
+  return out;
+}`;
 
 /** Longer text is inserted whole rather than typed key by key. */
 const MAX_KEYED = 256;
