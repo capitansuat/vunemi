@@ -165,16 +165,7 @@ export class PageDriver {
 
   async click(ref: number): Promise<void> {
     const { x, y } = await this.centre(ref);
-    const hit = await this.callOn<boolean>(
-      ref,
-      "function(x, y) { const h = document.elementFromPoint(x, y); return !!h && (h === this || this.contains(h) || h.contains(this)); }",
-      [x, y],
-    );
-    if (!hit) {
-      throw new PageActionError(
-        `Element [${ref}] is covered by something else (often a cookie banner, popup or overlay). Deal with that first, then try again.`,
-      );
-    }
+    await this.uncovered(ref, x, y);
     await this.point({ kind: "click", x, y });
     await this.s.send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
     await this.s.send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
@@ -190,8 +181,13 @@ export class PageDriver {
     }
     if (info.inputType === "hidden") throw new PageActionError(`Element [${ref}] is a hidden input and cannot be typed into.`);
 
+    // A field with no box of its own (some editors keep one off-screen) is
+    // still typed into; one with a box must be the one the user can see.
     const at = await this.centre(ref).catch(() => null);
-    if (at) await this.point({ kind: "type", ...at, text });
+    if (at) {
+      await this.uncovered(ref, at.x, at.y);
+      await this.point({ kind: "type", ...at, text });
+    }
     try {
       await this.s.send("DOM.focus", { backendNodeId: ref });
     } catch {
@@ -203,8 +199,32 @@ export class PageDriver {
         "function() { if (typeof this.select === 'function') { this.select(); } else if (this.isContentEditable) { const r = document.createRange(); r.selectNodeContents(this); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } }",
       );
     }
-    await this.s.send("Input.insertText", { text });
+    await this.keyIn(text);
     if (opts.submit) await this.press("Enter");
+  }
+
+  /**
+   * Key by key, as a person types: keydown, the character, keyup. Many
+   * sites only react to key events — a menu search that filters on keyup,
+   * an autocomplete on keydown — and inserted text fires neither. Long or
+   * multi-line text is inserted whole: pressing Enter for a newline could
+   * submit a form, and a message body needs no keystrokes.
+   */
+  private async keyIn(text: string): Promise<void> {
+    if (text.length > MAX_KEYED || /[\r\n]/.test(text)) {
+      await this.s.send("Input.insertText", { text });
+      return;
+    }
+    for (const ch of text) {
+      if (ch.length > 1) {
+        await this.s.send("Input.insertText", { text: ch }); // outside the BMP, e.g. an emoji
+        continue;
+      }
+      const code = /[a-z0-9 ]/i.test(ch) ? ch.toUpperCase().charCodeAt(0) : 0;
+      const base = { key: ch, windowsVirtualKeyCode: code, nativeVirtualKeyCode: code };
+      await this.s.send("Input.dispatchKeyEvent", { type: "keyDown", ...base, text: ch, unmodifiedText: ch });
+      await this.s.send("Input.dispatchKeyEvent", { type: "keyUp", ...base });
+    }
   }
 
   async press(key: string): Promise<void> {
@@ -258,6 +278,25 @@ export class PageDriver {
       await this.pointer?.(p);
     } catch {
       // Cosmetic; never let the cursor break an action.
+    }
+  }
+
+  /**
+   * Refuses an element something else is drawn over at its centre: the user
+   * can't reach it there, and acting on it anyway goes somewhere they can't
+   * see — text typed into a search box hidden behind a menu, for instance.
+   * A label drawn over its own field counts as the field.
+   */
+  private async uncovered(ref: number, x: number, y: number): Promise<void> {
+    const hit = await this.callOn<boolean>(
+      ref,
+      "function(x, y) { const h = document.elementFromPoint(x, y); return !!h && (h === this || this.contains(h) || h.contains(this) || (h.closest && h.closest('label') && h.closest('label').control === this)); }",
+      [x, y],
+    );
+    if (!hit) {
+      throw new PageActionError(
+        `Element [${ref}] is covered by something else (often a cookie banner, popup, menu or overlay). If what covers it has a field or button of its own for this, use that one; otherwise deal with it first, then try again.`,
+      );
     }
   }
 
@@ -318,6 +357,9 @@ export class PageDriver {
     }
   }
 }
+
+/** Longer text is inserted whole rather than typed key by key. */
+const MAX_KEYED = 256;
 
 const KEYS: Record<string, { key: string; code: string; keyCode: number; text?: string }> = {
   Enter: { key: "Enter", code: "Enter", keyCode: 13, text: "\r" },
