@@ -1,0 +1,437 @@
+/**
+ * Voice, and it stays on this Mac: whisper.cpp with Metal for hearing,
+ * macOS's own speech synthesiser for talking. No audio leaves the machine,
+ * and nothing here is required — if whisper isn't installed Vunemi says so and
+ * the keyboard keeps working.
+ *
+ * Both come with Vunemi: the whisper server is built into the app
+ * (scripts/build-whisper.sh), and the model is downloaded from inside the app
+ * the first time, pinned and checked. A Homebrew whisper is still used when
+ * there is no built-in one (a development run without the build cache).
+ *
+ * The model takes memory, so it is not loaded until someone actually speaks, and
+ * it is let go after a few idle minutes: Vunemi shares this memory with the
+ * language model. Between those two points whisper stays resident as a local
+ * sidecar, which is the difference between ~3 s and ~200 ms an utterance.
+ *
+ * The renderer captures the microphone (only it can) and hands over finished
+ * 16 kHz mono WAV bytes; everything that spawns a process lives here.
+ */
+
+import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { accessSync, constants, existsSync, readdirSync } from "node:fs";
+import { createServer } from "node:net";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { getLocale, t, type Locale } from "@ocak/i18n";
+
+import type { VoiceStatus } from "../shared/ipc.js";
+import { download, type DownloadProgress } from "./engine/download.js";
+import type { ModelSource } from "./engine/catalog.js";
+
+export type { VoiceStatus };
+
+/** The whisper.cpp release built into the app; scripts/build-whisper.sh must agree. */
+export const WHISPER_TAG = "v1.9.4";
+
+/**
+ * The speech model Vunemi downloads: large-v3-turbo, quantised to 5 bits.
+ * On the local 11-language set it made the same mistakes as the full 1.6 GB
+ * model (4 in 86 Turkish words, none elsewhere) in a third of the download
+ * and half the memory.
+ */
+export const VOICE_MODEL: ModelSource = {
+  repo: "ggerganov/whisper.cpp",
+  commit: "5359861c739e955e79d9a303bcbc70fb988958b1",
+  file: "ggml-large-v3-turbo-q5_0.bin",
+  size: 574_041_195,
+  sha256: "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2",
+};
+
+/** The built-in whisper server: in the app's resources, or a development run's build cache. */
+export function whisperBinary(opts: { packaged: boolean; resourcesPath: string; home: string }): string | null {
+  const path = opts.packaged
+    ? join(opts.resourcesPath, "whisper-server")
+    : join(opts.home, ".ocak-build", "whisper-cache", WHISPER_TAG, "whisper-server");
+  return existsSync(path) ? path : null;
+}
+
+/**
+ * The voice macOS speaks each language with; `say -v '?'` lists them. One
+ * that is not installed is left out, and the system's own voice speaks.
+ */
+const VOICES: Record<Locale, string> = {
+  tr: "Yelda", en: "Samantha", de: "Anna", fr: "Thomas", es: "Mónica", it: "Alice",
+  pt: "Luciana", ru: "Milena", zh: "Tingting", ja: "Kyoko", ko: "Yuna",
+};
+
+let installedVoices: Set<string> | null = null;
+
+function voiceFor(locale: Locale): string | null {
+  if (installedVoices === null) {
+    try {
+      const listing = execFileSync("/usr/bin/say", ["-v", "?"], { encoding: "utf8", timeout: 5_000 });
+      installedVoices = new Set(listing.split("\n").map((line) => line.split(/\s{2,}|\s\(/)[0]!.trim()).filter(Boolean));
+    } catch {
+      installedVoices = new Set();
+    }
+  }
+  const name = VOICES[locale];
+  return installedVoices.has(name) ? name : null;
+}
+
+const SERVER_PATHS = ["/opt/homebrew/bin/whisper-server", "/usr/local/bin/whisper-server"];
+
+/** Long enough to survive a pause in dictation, short enough to give the RAM back. */
+const IDLE_MS = 5 * 60_000;
+/** Loading a large model into Metal takes a couple of seconds, cold. */
+const READY_TIMEOUT_MS = 60_000;
+/** A minute of speech transcribes in seconds; longer than this is a fault. */
+const TRANSCRIBE_TIMEOUT_MS = 60_000;
+
+export class Voice {
+  private server: ChildProcess | null = null;
+  private port = 0;
+  private ready: Promise<void> | null = null;
+  private idleTimer: NodeJS.Timeout | null = null;
+  private speaking: ChildProcess | null = null;
+  private binary: string | null;
+  private model: string | null;
+  private downloading: { controller: AbortController; progress: DownloadProgress | null; done: Promise<string> } | null = null;
+
+  private readonly builtIn: string | null;
+  private readonly onChange: (status: VoiceStatus) => void;
+  private readonly downloadModel: typeof download;
+  private readonly shared: boolean;
+
+  constructor(
+    private readonly userData: string,
+    opts: {
+      /** The whisper server that came with the app (whisperBinary), if any. */
+      builtIn?: string | null;
+      /** Told how a model download is going. */
+      onChange?: (status: VoiceStatus) => void;
+      /** Replaced in tests. */
+      download?: typeof download;
+      /** Also look in the folders earlier builds and other tools used. */
+      shared?: boolean;
+    } = {},
+  ) {
+    this.builtIn = opts.builtIn ?? null;
+    this.onChange = opts.onChange ?? (() => {});
+    this.downloadModel = opts.download ?? download;
+    this.shared = opts.shared ?? true;
+    this.binary = findBinary(this.builtIn);
+    this.model = findModel(userData, this.shared);
+  }
+
+  /** Cheap enough to call whenever the composer appears. */
+  status(): VoiceStatus {
+    // Re-probe: the user may have installed whisper while Vunemi was running.
+    this.binary ??= findBinary(this.builtIn);
+    this.model ??= findModel(this.userData, this.shared);
+    if (this.binary && this.model) {
+      return { canHear: true, canSpeak: true, engine: `whisper.cpp · ${modelLabel(this.model)}` };
+    }
+    if (!this.binary) return { canHear: false, canSpeak: true, engine: "", hint: t("voiceEngine.noWhisper") };
+    const progress = this.downloading?.progress;
+    return {
+      canHear: false,
+      canSpeak: true,
+      engine: "",
+      hint: t("voiceEngine.noModel", { size: megabytes(VOICE_MODEL.size) }),
+      download: { bytes: VOICE_MODEL.size },
+      ...(this.downloading && { downloading: { received: progress?.received ?? 0, total: progress?.total ?? VOICE_MODEL.size } }),
+    };
+  }
+
+  /**
+   * Downloads the speech model into Vunemi's own models folder: a pinned file,
+   * checked against its SHA-256 before it is used, carried on from where it
+   * stopped if the connection drops. The user asked for it by pressing the
+   * button; nothing downloads by itself.
+   */
+  async download(): Promise<VoiceStatus> {
+    if (!this.downloading) {
+      const controller = new AbortController();
+      // Kept before the download starts: progress may be reported at once.
+      const state: NonNullable<Voice["downloading"]> = { controller, progress: null, done: Promise.resolve("") };
+      this.downloading = state;
+      state.done = this.downloadModel(VOICE_MODEL, join(this.userData, "models"), {
+        signal: controller.signal,
+        onProgress: (p) => {
+          state.progress = p;
+          this.onChange(this.status());
+        },
+      });
+      this.onChange(this.status());
+    }
+    const running = this.downloading;
+    try {
+      this.model = await running.done;
+    } finally {
+      if (this.downloading === running) this.downloading = null;
+      this.onChange(this.status());
+    }
+    return this.status();
+  }
+
+  cancelDownload(): void {
+    this.downloading?.controller.abort();
+  }
+
+  /**
+   * 16 kHz mono WAV in, text out, in whatever language was spoken. Not the
+   * language Vunemi is set to: live, with Vunemi in English, Turkish speech
+   * came back as broken English.
+   */
+  async transcribe(wav: Buffer, language = "auto"): Promise<string> {
+    await this.start(language);
+    this.touch();
+
+    const body = new FormData();
+    body.append("file", new Blob([new Uint8Array(wav)], { type: "audio/wav" }), "clip.wav");
+    body.append("response_format", "json");
+    body.append("language", language);
+    body.append("temperature", "0");
+
+    // Never open-ended: a request that hangs would leave the UI saying it
+    // is working with nothing behind it.
+    const res = await fetch(`http://127.0.0.1:${this.port}/inference`, {
+      method: "POST",
+      body,
+      signal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(t("voiceEngine.failed", { status: res.status }));
+    const payload = (await res.json()) as { text?: string; error?: string };
+    if (payload.error) throw new Error(payload.error);
+    return clean(payload.text ?? "");
+  }
+
+  /**
+   * Says it out loud, cutting off whatever it was saying before. Resolves
+   * when the voice stops — including when the user interrupts it — so the UI
+   * knows whose turn it is.
+   */
+  speak(text: string): Promise<void> {
+    this.stopSpeaking();
+    const said = text.trim().slice(0, 1200);
+    if (!said) return Promise.resolve();
+    // Arguments, never a shell: this is model output and may contain anything.
+    const voice = voiceFor(getLocale());
+    const child = spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "--", said], { stdio: "ignore" });
+    this.speaking = child;
+    return new Promise<void>((resolve) => {
+      const done = () => {
+        if (this.speaking === child) this.speaking = null;
+        resolve();
+      };
+      child.on("exit", done);
+      child.on("error", done);
+    });
+  }
+
+  stopSpeaking(): void {
+    this.speaking?.kill();
+    this.speaking = null;
+  }
+
+  dispose(): void {
+    this.cancelDownload();
+    this.stopSpeaking();
+    this.shutdown();
+  }
+
+  // -- the sidecar -----------------------------------------------------------
+
+  /** Starts whisper-server if it isn't up; concurrent callers share one start. */
+  private start(language: string): Promise<void> {
+    if (this.ready) return this.ready;
+    const { binary, model } = this;
+    if (!binary || !model) return Promise.reject(new Error(this.status().hint ?? t("composer.voice.unavailable")));
+
+    this.ready = (async () => {
+      const port = await freePort();
+      const child = spawn(
+        binary,
+        [
+          "-m", model,
+          "--host", "127.0.0.1", // never reachable from outside this Mac
+          "--port", String(port),
+          "-l", language,
+          "--no-timestamps",
+          // Silence invites invention; these two make whisper likelier to
+          // return nothing at all, which is the honest answer.
+          "--suppress-nst",
+          // Lower than the default 0.6: a segment whisper half-suspects is
+          // silence should be dropped, not guessed at.
+          "-nth", "0.3",
+          "-t", "4",
+        ],
+        { stdio: ["ignore", "ignore", "pipe"] },
+      );
+      this.server = child;
+      this.port = port;
+
+      let stderr = "";
+      child.stderr?.on("data", (d: Buffer) => {
+        stderr = `${stderr}${d.toString()}`.slice(-2000);
+      });
+      child.on("exit", () => {
+        if (this.server === child) this.reset();
+      });
+
+      try {
+        await waitForPort(port, child, READY_TIMEOUT_MS);
+      } catch (err) {
+        child.kill();
+        this.reset();
+        throw new Error(t("voiceEngine.startFailed", { why: `${(err as Error).message}${stderr ? `\n${stderr.trim().split("\n").at(-1)}` : ""}` }));
+      }
+      this.touch();
+    })();
+
+    return this.ready;
+  }
+
+  /** The model is big; hand the memory back once the user stops dictating. */
+  private touch(): void {
+    if (this.idleTimer) clearTimeout(this.idleTimer);
+    this.idleTimer = setTimeout(() => this.shutdown(), IDLE_MS);
+    this.idleTimer.unref?.();
+  }
+
+  private shutdown(): void {
+    this.server?.kill();
+    this.reset();
+  }
+
+  private reset(): void {
+    if (this.idleTimer) clearTimeout(this.idleTimer);
+    this.idleTimer = null;
+    this.server = null;
+    this.ready = null;
+    this.port = 0;
+  }
+}
+
+// -- finding what's installed -------------------------------------------------
+
+function exists(path: string): boolean {
+  try {
+    accessSync(path, constants.R_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The built-in server first; Homebrew's only when the app has none. */
+function findBinary(builtIn: string | null): string | null {
+  if (builtIn && exists(builtIn)) return builtIn;
+  return SERVER_PATHS.find(exists) ?? null;
+}
+
+function megabytes(bytes: number): number {
+  return Math.round(bytes / 1_000_000);
+}
+
+/** Where a model may live, most specific first. */
+function modelDirs(userData: string): string[] {
+  return [
+    join(userData, "models"),
+    // Where models went under earlier names; still read, never moved.
+    join(homedir(), "Library", "Application Support", "Tenami", "models"),
+    join(homedir(), "Library", "Application Support", "Ocak", "models"),
+    join(homedir(), ".cache", "whisper"),
+  ];
+}
+
+/** The most capable ggml model we can find: bigger is better at Turkish. */
+export function findModel(userData: string, shared = true): string | null {
+  const fromEnv = process.env.OCAK_WHISPER_MODEL;
+  if (fromEnv && exists(fromEnv)) return fromEnv;
+  for (const dir of shared ? modelDirs(userData) : [join(userData, "models")]) {
+    let names: string[];
+    try {
+      names = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    const models = names.filter((n) => n.startsWith("ggml-") && n.endsWith(".bin")).sort();
+    const best =
+      models.find((n) => n.includes("large")) ??
+      models.find((n) => n.includes("medium")) ??
+      models.find((n) => n.includes("small")) ??
+      models[0];
+    if (best) return join(dir, best);
+  }
+  return null;
+}
+
+function modelLabel(path: string): string {
+  return path.replace(/^.*ggml-/, "").replace(/\.bin$/, "");
+}
+
+// -- process plumbing ---------------------------------------------------------
+
+/** Asks the OS for a port nobody is using, then gives it straight back. */
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.unref();
+    probe.on("error", reject);
+    probe.listen(0, "127.0.0.1", () => {
+      const address = probe.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+      probe.close(() => (port ? resolve(port) : reject(new Error("no free port"))));
+    });
+  });
+}
+
+/** Waits for the sidecar to answer, and gives up early if it died instead. */
+async function waitForPort(port: number, child: ChildProcess, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    if (child.exitCode !== null || child.signalCode) throw new Error("the process exited unexpectedly");
+    try {
+      await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(1000) });
+      return;
+    } catch {
+      if (Date.now() > deadline) throw new Error("the model did not load");
+      await new Promise((r) => setTimeout(r, 150));
+    }
+  }
+}
+
+/**
+ * What whisper says when it heard nothing: sentences from the subtitle files
+ * it was trained on. They are not transcription, they are the model filling a
+ * gap, and passing them on as a task would be worse than silence. Matched
+ * whole, so someone who genuinely says one can still type it.
+ */
+const FILLER = new Set(
+  [
+    "izlediğiniz için teşekkür ederim.",
+    "izlediğiniz için teşekkürler.",
+    "abone olmayı unutmayın.",
+    "altyazı m.k.",
+    "altyazı m.k",
+    "thank you for watching.",
+    "thanks for watching!",
+    "you",
+  ].map((t) => t.toLocaleLowerCase("tr")),
+);
+
+/**
+ * whisper prints bracketed noises for silence ("[BLANK_AUDIO]", "(müzik)")
+ * and pads with newlines. None of that belongs in a prompt.
+ */
+export function clean(text: string): string {
+  const said = text
+    .replace(/\[[^\]\n]{0,40}\]/g, " ")
+    .replace(/\((?:müzik|music|sessizlik|silence)[^)\n]{0,20}\)/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return FILLER.has(said.toLocaleLowerCase("tr")) ? "" : said;
+}

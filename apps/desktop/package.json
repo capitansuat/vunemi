@@ -1,0 +1,103 @@
+{
+  "name": "@ocak/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
+    "package": "electron-vite build && electron-builder --dir",
+    "dist": "electron-vite build && electron-builder"
+  },
+  "dependencies": {
+    "@ocak/agent-core": "workspace:*",
+    "@ocak/apps": "workspace:*",
+    "@ocak/browser": "workspace:*",
+    "@ocak/connectors": "workspace:*",
+    "@ocak/files": "workspace:*",
+    "@ocak/i18n": "workspace:*",
+    "@ocak/mac": "workspace:*",
+    "@ocak/mail": "workspace:*",
+    "@ocak/mcp": "workspace:*",
+    "@ocak/sentinel": "workspace:*",
+    "@ocak/vault": "workspace:*",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-tooltip": "^1.2.16",
+    "lucide-react": "^1.47.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "electron": "44.4.3",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "5.0.0",
+    "tailwindcss": "4.3.3",
+    "vite": "7.3.6",
+    "vitest": "5.0.1"
+  },
+  "build": {
+    "appId": "com.vunemi.app",
+    "productName": "Vunemi",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../../native/VunemiHelper/.build/release/VunemiHelper",
+        "to": "VunemiHelper"
+      }
+    ],
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "identity": null,
+      "extendInfo": {
+        "NSCalendarsFullAccessUsageDescription": "Vunemi reads your calendar and adds events when you ask it to. Your calendar stays on this Mac.",
+        "NSRemindersFullAccessUsageDescription": "Vunemi reads your reminders and adds new ones when you ask it to. Your reminders stay on this Mac.",
+        "NSCalendarsUsageDescription": "Vunemi reads your calendar and adds events when you ask it to.",
+        "NSRemindersUsageDescription": "Vunemi reads your reminders and adds new ones when you ask it to.",
+        "NSMicrophoneUsageDescription": "Vunemi turns what you say into text. Your voice stays on this Mac.",
+        "NSAppleEventsUsageDescription": "Vunemi asks for this to use the apps you allow it to.",
+        "NSDesktopFolderUsageDescription": "Vunemi only looks in the folders you open to it.",
+        "NSDocumentsFolderUsageDescription": "Vunemi only looks in the folders you open to it.",
+        "NSDownloadsFolderUsageDescription": "Vunemi puts what it downloads here and reads it from here.",
+        "LSMinimumSystemVersion": "14.0"
+      }
+    },
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true
+    },
+    "npmRebuild": false
+  }
+}

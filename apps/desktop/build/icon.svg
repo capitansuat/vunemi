@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Vunemi: a mochi with a spark on top, the old hearth's ember kept small. -->
+  <rect x="62" y="62" width="900" height="900" rx="218" fill="#fbefe2"/>
+  <path d="M512 346C528 296 572 268 610 258C602 300 580 330 512 346Z" fill="#ffc24d"/>
+  <path d="M226 700C226 474 356 340 512 340C668 340 798 474 798 700C798 768 748 806 684 806H340C276 806 226 768 226 700Z" fill="#ff7a45"/>
+  <ellipse cx="376" cy="652" rx="40" ry="24" fill="#ffb28f"/>
+  <ellipse cx="648" cy="652" rx="40" ry="24" fill="#ffb28f"/>
+  <circle cx="430" cy="592" r="36" fill="#2a1d16"/>
+  <circle cx="594" cy="592" r="36" fill="#2a1d16"/>
+  <circle cx="442" cy="580" r="11" fill="#ffffff"/>
+  <circle cx="606" cy="580" r="11" fill="#ffffff"/>
+  <path d="M486 646Q512 672 538 646" fill="none" stroke="#2a1d16" stroke-width="16" stroke-linecap="round"/>
+</svg>

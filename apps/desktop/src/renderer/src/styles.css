@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+/*
+ * Semantic tokens. Components use only these names, never raw colours, so
+ * light/dark and any future re-theme happen in this one file.
+ */
+:root {
+  --bg: #faf7f3;
+  --surface: #ffffff;
+  --surface-2: #f3eee8;
+  --surface-3: #ebe4dc;
+  --border: #e6ded4;
+  --border-strong: #d6ccc0;
+  --text: #1f1a15;
+  --muted: #6b6157;
+  --faint: #9b9085;
+  --ember: #e0582a;
+  --ember-soft: color-mix(in oklab, var(--ember) 10%, transparent);
+  --ember-line: color-mix(in oklab, var(--ember) 35%, transparent);
+  --ok: #2f9e5f;
+  --warn: #c98a12;
+  --warn-soft: color-mix(in oklab, var(--warn) 10%, transparent);
+  --warn-line: color-mix(in oklab, var(--warn) 45%, transparent);
+  --danger: #d0482f;
+  --info: #3b6fd8;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15120f;
+    --surface: #1c1814;
+    --surface-2: #25201b;
+    --surface-3: #2e2822;
+    --border: #312a23;
+    --border-strong: #433a31;
+    --text: #efe8e0;
+    --muted: #a69b8f;
+    --faint: #6f655b;
+    --ember: #ff7a45;
+    --ok: #62c98b;
+    --warn: #f0b44c;
+    --danger: #f0715f;
+    --info: #86a9ff;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
+  --color-ember-line: var(--ember-line);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-line: var(--warn-line);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+/*
+ * Base rules live in the base layer so Tailwind utilities (in the later
+ * utilities layer) can override them — unlayered CSS would win over every
+ * utility regardless of specificity.
+ */
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  /* Conversation content is selectable; chrome is not. */
+  .selectable {
+    user-select: text;
+  }
+
+  .drag {
+    -webkit-app-region: drag;
+  }
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+
+  ::selection {
+    background: var(--ember-line);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ember);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* Streaming thought shimmer. */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--faint) 0%, var(--text) 50%, var(--faint) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 2.2s linear infinite;
+}
+
+@keyframes ember-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--ember-line);
+  }
+  50% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+.ember-pulse {
+  animation: ember-pulse 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    color: var(--muted);
+    background: none;
+  }
+  .ember-pulse {
+    animation: none;
+  }
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 10px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border: 3px solid var(--bg);
+  border-radius: 999px;
+}

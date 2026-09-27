@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  What the hardened runtime has to be told to allow.
+
+  The calendar and reminder entitlements are not optional decoration: under
+  the hardened runtime TCC refuses those services outright, with no dialog at
+  all, when the responsible process lacks them. That is the failure that made
+  the connections screen look like it was ignoring the button.
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.personal-information.calendars</key>
+  <true/>
+  <key>com.apple.security.personal-information.reminders</key>
+  <true/>
+  <key>com.apple.security.device.audio-input</key>
+  <true/>
+  <key>com.apple.security.automation.apple-events</key>
+  <true/>
+  <!-- V8 needs it; without it the renderer will not start. (Measured 26 Sep:
+       allow-unsigned-executable-memory is not needed and was dropped.) -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <!-- Only for the local build: a self-signed identity has no Team ID, and
+       without this dyld refuses Electron Framework ("different Team IDs",
+       measured 26 Sep). scripts/package.sh leaves it out of a distribution
+       build, which is signed with a Developer ID and passes validation. -->
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+</dict>
+</plist>

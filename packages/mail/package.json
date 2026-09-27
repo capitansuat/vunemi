@@ -1,0 +1,26 @@
+{
+  "name": "@ocak/mail",
+  "version": "0.0.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ocak/agent-core": "workspace:*",
+    "@ocak/i18n": "workspace:*",
+    "imapflow": "^2.0.5",
+    "mailparser": "^3.9.28",
+    "nodemailer": "^10.0.10"
+  },
+  "devDependencies": {
+    "@types/mailparser": "^3.4.6",
+    "@types/nodemailer": "^8.0.2",
+    "vitest": "5.0.1"
+  }
+}

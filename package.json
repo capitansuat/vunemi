@@ -1,0 +1,21 @@
+{
+  "name": "vunemi",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "packageManager": "pnpm@11.0.9",
+  "scripts": {
+    "dev": "pnpm --filter @ocak/desktop dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "build:helper": "cd native/VunemiHelper && swift build -c release && codesign --force --sign - --identifier com.vunemi.helper .build/release/VunemiHelper",
+    "predev": "node scripts/dev-permissions.mjs || true",
+    "package": "bash scripts/package.sh",
+    "signing-identity": "bash scripts/signing-identity.sh"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "@types/node": "^26.6.2"
+  }
+}

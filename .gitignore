@@ -1,0 +1,16 @@
+node_modules/
+dist/
+out/
+.vite/
+*.log
+.DS_Store
+coverage/
+native/VunemiHelper/.build/
+apps/desktop/release/
+
+# Conflict copies a sync service leaves next to files ("name 2.ts").
+* 2.*
+* 3.*
+
+# Vunemi's own Google/Microsoft app registrations (see src/main/oauth-clients.ts).
+apps/desktop/oauth-clients.local.json

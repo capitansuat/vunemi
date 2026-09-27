@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Embedded into the binary's __TEXT,__info_plist section. macOS kills any
+  process that touches calendars or reminders without these strings, and the
+  text is what the user reads in the permission dialog, so it says plainly
+  what Vunemi does with the access. English, because a command-line tool has
+  no localised bundle to choose from, and English is what most people read.
+-->
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>com.vunemi.helper</string>
+  <key>CFBundleName</key>
+  <string>Vunemi</string>
+  <key>NSCalendarsFullAccessUsageDescription</key>
+  <string>Vunemi reads your calendar and adds events when you ask it to. Your calendar stays on this Mac.</string>
+  <key>NSRemindersFullAccessUsageDescription</key>
+  <string>Vunemi reads your reminders and adds new ones when you ask it to. Your reminders stay on this Mac.</string>
+  <key>NSCalendarsUsageDescription</key>
+  <string>Vunemi reads your calendar and adds events when you ask it to. Your calendar stays on this Mac.</string>
+  <key>NSRemindersUsageDescription</key>
+  <string>Vunemi reads your reminders and adds new ones when you ask it to. Your reminders stay on this Mac.</string>
+</dict>
+</plist>

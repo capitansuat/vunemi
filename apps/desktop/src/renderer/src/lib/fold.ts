@@ -1,0 +1,296 @@
+/**
+ * Folds the agent's event stream into what the UI draws. Pure: same events in,
+ * same view out, so the timeline can be rebuilt from a recorded log.
+ */
+
+import type { ActionClass, AgentEvent, ApprovalDecision, Artifact, Produced, RunStatus } from "@ocak/agent-core";
+import { t } from "@ocak/i18n";
+
+export type CallStatus = "proposed" | "awaiting" | "running" | "ok" | "error" | "rejected";
+
+export interface CallView {
+  callId: string;
+  tool: string;
+  args: unknown;
+  actionClass: ActionClass;
+  status: CallStatus;
+  /** What exactly the call targets, e.g. `button "Search"`. */
+  preview?: string;
+  output?: string;
+  durationMs?: number;
+  reason?: string;
+  /** The reason is a warning to read, not routine policy. */
+  alert?: boolean;
+  /** "Always allow" does not apply to this call. */
+  alwaysAsk?: boolean;
+  /** The tool is switched off; this is its connection and part, and the card offers to switch it on. */
+  switchedOff?: string;
+  /** Set while the call waits for the user to do something themselves (a CAPTCHA, a login). */
+  handoff?: string;
+  /** Something the call produced for the user to look at, e.g. a screenshot. */
+  artifact?: Artifact;
+  /** Pictures for the person, shown as tiles (found photos, say). */
+  gallery?: Artifact[];
+  /** Files the call wrote, by their id in the Artefacts list, so the card can open them. */
+  files?: { id: string; name: string }[];
+}
+
+export interface UsageView {
+  promptTokens: number | null;
+  completionTokens: number | null;
+  ttftMs: number | null;
+  tokensPerSec: number | null;
+}
+
+export interface StepView {
+  stepId: string;
+  index: number;
+  startedAt: number;
+  thought: string;
+  text: string;
+  calls: CallView[];
+  usage?: UsageView;
+}
+
+export interface PlanView {
+  steps: string[];
+  status: "awaiting" | "accepted" | "cancelled";
+}
+
+export type CompactionView =
+  | { status: "running" }
+  | { status: "done"; kind: "pruned" | "summarized"; before: number; after: number; summary?: string };
+
+export interface RunView {
+  runId: string;
+  goal: string;
+  /** Files the user attached to the message. */
+  attachments?: string[];
+  model: string;
+  status: "running" | RunStatus;
+  detail?: string;
+  startedAt: number;
+  finishedAt?: number;
+  /** Intent preview, when the task warranted one. */
+  plan?: PlanView;
+  /** Older turns condensed or trimmed after (or during) this run. */
+  compaction?: CompactionView;
+  steps: StepView[];
+}
+
+export function foldEvent(runs: RunView[], e: AgentEvent): RunView[] {
+  if (e.type === "run.started") {
+    return [
+      ...runs,
+      {
+        runId: e.runId,
+        goal: e.goal,
+        ...(e.attachments?.length && { attachments: e.attachments }),
+        model: e.model,
+        status: "running",
+        startedAt: e.at,
+        steps: [],
+      },
+    ];
+  }
+  return runs.map((run) => (run.runId === e.runId ? foldIntoRun(run, e) : run));
+}
+
+function foldIntoRun(run: RunView, e: AgentEvent): RunView {
+  switch (e.type) {
+    case "plan.proposed":
+      return { ...run, plan: { steps: e.steps, status: "awaiting" } };
+    case "plan.resolved":
+      return {
+        ...run,
+        plan:
+          e.decision.kind === "go"
+            ? { steps: e.decision.steps, status: "accepted" }
+            : { steps: run.plan?.steps ?? [], status: "cancelled" },
+      };
+    case "step.started":
+      return {
+        ...run,
+        steps: [...run.steps, { stepId: e.stepId, index: e.index, startedAt: e.at, thought: "", text: "", calls: [] }],
+      };
+    case "thought.delta":
+      return updateStep(run, e.stepId, (s) => ({ ...s, thought: s.thought + e.text }));
+    case "message.delta":
+      return updateStep(run, e.stepId, (s) => ({ ...s, text: s.text + e.text }));
+    case "usage":
+      return updateStep(run, e.stepId, (s) => ({
+        ...s,
+        usage: {
+          promptTokens: e.promptTokens,
+          completionTokens: e.completionTokens,
+          ttftMs: e.ttftMs,
+          tokensPerSec: e.tokensPerSec,
+        },
+      }));
+    case "tool.proposed":
+      return updateStep(run, e.stepId, (s) => ({
+        ...s,
+        calls: [
+          ...s.calls,
+          {
+            callId: e.callId,
+            tool: e.tool,
+            args: e.args,
+            actionClass: e.actionClass,
+            status: "proposed",
+            ...(e.preview !== undefined && { preview: e.preview }),
+          },
+        ],
+      }));
+    case "approval.required":
+      return updateCall(run, e.callId, (c) => ({
+        ...c,
+        status: "awaiting",
+        reason: e.reason,
+        ...(e.alert === true && { alert: true }),
+        ...(e.alwaysAsk === true && { alwaysAsk: true }),
+        ...(e.switchedOff !== undefined && { switchedOff: e.switchedOff }),
+      }));
+    case "approval.resolved":
+      return updateCall(run, e.callId, (c) => ({ ...c, status: decisionStatus(e.decision) }));
+    case "handoff.required":
+      return updateCall(run, e.callId, (c) => ({ ...c, handoff: e.reason }));
+    case "handoff.resolved":
+      return updateCall(run, e.callId, ({ handoff: _, ...c }) => c);
+    case "tool.started":
+      return updateCall(run, e.callId, (c) => ({ ...c, status: "running" }));
+    case "tool.finished":
+      return updateCall(run, e.callId, (c) => ({
+        ...c,
+        // A refusal is reported through tool.finished too; keep it as "rejected".
+        status: c.status === "rejected" ? "rejected" : e.ok ? "ok" : "error",
+        output: e.output,
+        ...(e.artifact && { artifact: e.artifact }),
+        ...(e.gallery?.length && { gallery: e.gallery }),
+        ...(e.ok && e.produced && { files: producedFiles(e.callId, e.produced) }),
+        durationMs: e.durationMs,
+      }));
+    case "run.finished":
+      return {
+        ...run,
+        status: e.status,
+        detail: e.detail,
+        finishedAt: e.at,
+        // A plan still on screen will never be answered now.
+        ...(run.plan?.status === "awaiting" && { plan: { ...run.plan, status: "cancelled" as const } }),
+        // Anything still waiting will never be answered now.
+        steps: run.steps.map((s) => ({
+          ...s,
+          calls: s.calls.map((c) =>
+            c.status === "awaiting" || c.status === "running" || c.status === "proposed"
+              ? { ...withoutHandoff(c), status: e.status === "stopped" ? "rejected" : "error" }
+              : c,
+          ),
+        })),
+      };
+    case "context.compacting":
+      return { ...run, compaction: { status: "running" } };
+    case "context.compacted": {
+      if (e.kind === "unchanged") {
+        const { compaction: _, ...rest } = run;
+        return rest;
+      }
+      return {
+        ...run,
+        compaction: { status: "done", kind: e.kind, before: e.before, after: e.after, ...(e.summary && { summary: e.summary }) },
+      };
+    }
+    default:
+      return run;
+  }
+}
+
+function withoutHandoff({ handoff: _, ...c }: CallView): CallView {
+  return c;
+}
+
+function decisionStatus(d: ApprovalDecision): CallStatus {
+  return d.kind === "reject" ? "rejected" : "proposed";
+}
+
+function updateStep(run: RunView, stepId: string, f: (s: StepView) => StepView): RunView {
+  return { ...run, steps: run.steps.map((s) => (s.stepId === stepId ? f(s) : s)) };
+}
+
+function updateCall(run: RunView, callId: string, f: (c: CallView) => CallView): RunView {
+  return {
+    ...run,
+    steps: run.steps.map((s) =>
+      s.calls.some((c) => c.callId === callId)
+        ? { ...s, calls: s.calls.map((c) => (c.callId === callId ? f(c) : c)) }
+        : s,
+    ),
+  };
+}
+
+/** Aggregates for the run footer. */
+export function runStats(run: RunView): { steps: number; tools: number; tokensPerSec: number | null; ttftMs: number | null; lastPromptTokens: number | null } {
+  const usages = run.steps.flatMap((s) => (s.usage ? [s.usage] : []));
+  const tps = usages.flatMap((u) => (u.tokensPerSec !== null ? [u.tokensPerSec] : []));
+  return {
+    steps: run.steps.length,
+    tools: run.steps.reduce((n, s) => n + s.calls.length, 0),
+    tokensPerSec: tps.length ? Math.round((tps.reduce((a, b) => a + b, 0) / tps.length) * 10) / 10 : null,
+    ttftMs: usages[0]?.ttftMs ?? null,
+    lastPromptTokens: usages.at(-1)?.promptTokens ?? null,
+  };
+}
+
+/**
+ * What Vunemi would say out loud at the end of a run: the last thing it wrote
+ * to the user, with markdown scaffolding stripped so it isn't read aloud.
+ */
+export function replyText(run: RunView | undefined): string {
+  const last = [...(run?.steps ?? [])].reverse().find((s) => s.text.trim() !== "");
+  return speakable(last?.text ?? "");
+}
+
+function speakable(markdown: string): string {
+  return markdown
+    .replace(/```[\s\S]*?```/g, ` ${t("voice.codeBlock")} `)
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^\s*[-*]\s+/gm, "")
+    .replace(/\*\*([^*]*)\*\*/g, "$1")
+    .replace(/\*([^*]*)\*/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** The one thing Vunemi is waiting for the user to do, if any. */
+export function pendingHandoff(runs: readonly RunView[]): { callId: string; reason: string } | null {
+  for (const run of [...runs].reverse()) {
+    for (const step of [...run.steps].reverse()) {
+      const call = step.calls.find((c) => c.handoff);
+      if (call?.handoff) return { callId: call.callId, reason: call.handoff };
+    }
+  }
+  return null;
+}
+
+/** True while an intent preview is waiting for a yes. */
+export function planAwaiting(runs: readonly RunView[]): boolean {
+  return runs.some((r) => r.plan?.status === "awaiting");
+}
+
+/** Approval cards still unanswered. */
+export function pendingApprovals(runs: readonly RunView[]): number {
+  return runs.reduce(
+    (n, run) => n + run.steps.reduce((m, s) => m + s.calls.filter((c) => c.status === "awaiting" && !c.handoff).length, 0),
+    0,
+  );
+}
+
+/** Ids match the Artefacts store: `<callId>:<index in produced>`. */
+function producedFiles(callId: string, produced: Produced[]): { id: string; name: string }[] {
+  return produced.flatMap((item, n) =>
+    item.kind === "file" || item.kind === "download" ? [{ id: `${callId}:${n}`, name: item.path.split("/").pop() || item.path }] : [],
+  );
+}

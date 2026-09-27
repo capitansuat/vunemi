@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["bench-task-routing.ts", "task-routing-fixtures.ts", "eval-agent.ts", "eval-agent-fixtures.ts"]
+}
