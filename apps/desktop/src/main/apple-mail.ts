@@ -1,6 +1,11 @@
 /**
  * Mailboxes the Mac's Mail app already has, reached over Apple Events.
  *
+ * Never ask Mail for a message's `content`: it renders the HTML through
+ * WebKit to answer, and on macOS 27 that crashed Mail outright. A message is
+ * read from its raw source and parsed here, as IMAP messages are; a search
+ * matches only what Mail keeps as plain fields (sender, subject, date, flags).
+ *
  * No password comes near Vunemi: Mail signs in, and its scripting won't
  * even hand an account's password out. Every script is a fixed template
  * that takes the picked account's name and touches only that account; what
@@ -10,13 +15,12 @@
  */
 
 import { AppScriptError, type ScriptRunner } from "@vunemi/apps";
-import { MailNotSent, NO_REPLY_SENDER, type Draft, type MailAccount, type MessageBody, type MessageSummary, type Moved, type MoveTarget, type SearchQuery } from "@vunemi/mail";
+import { MailNotSent, NO_REPLY_SENDER, parseMessageSource, type Draft, type MailAccount, type MessageBody, type MessageSummary, type Moved, type MoveTarget, type SearchQuery } from "@vunemi/mail";
 import { t } from "@vunemi/i18n";
 
 const APP = "Mail";
-/** Messages whose text a free-text search also reads; Mail's body search is slow. */
-const BODY_SCAN = 150;
-const SNIPPET = 160;
+/** Larger than this is refused rather than read, as it is over IMAP. */
+const MAX_SOURCE = 2_000_000;
 const LONG_MS = 60_000;
 const SHORT_MS = 30_000;
 const DENIED = -1743;
@@ -59,13 +63,10 @@ function who(s) {
   var m = /^(.*?)\\s*<([^>]+)>\\s*$/.exec(String(s || ""));
   return m ? { name: m[1].replace(/^"|"$/g, ""), address: m[2] } : { address: String(s || "") };
 }
-function summary(msg, path, snippet) {
+// Plain fields only: content() makes Mail render the HTML, which crashed it.
+function summary(msg, path) {
   var d = msg.dateReceived();
-  var text = "";
-  if (snippet > 0) { try { text = String(msg.content()).replace(/\\s+/g, " ").slice(0, snippet); } catch (_) {} }
-  var atts = 0;
-  try { atts = msg.mailAttachments().length; } catch (_) {}
-  return { id: msg.id(), path: path, from: who(msg.sender()), subject: msg.subject() || "", date: d ? d.toISOString() : "", unread: !msg.readStatus(), hasAttachments: atts > 0, snippet: text };
+  return { id: msg.id(), path: path, from: who(msg.sender()), subject: msg.subject() || "", date: d ? d.toISOString() : "", unread: !msg.readStatus() };
 }
 function newestFirst(spec, limit) {
   var ids = spec.id(), dates = spec.dateReceived(), order = [];
@@ -99,36 +100,17 @@ export const MAIL_SEARCH = script("MAIL_SEARCH", `
   if (a.unreadOnly) and.push({ readStatus: false });
   if (a.from) and.push({ sender: { _contains: a.from } });
   var base = and.length ? box.messages.whose(and.length === 1 ? and[0] : { _and: and }) : box.messages;
-  var ids = [];
-  if (a.text) {
-    var hit = base.whose({ _or: [{ subject: { _contains: a.text } }, { sender: { _contains: a.text } }] });
-    ids = newestFirst(hit, a.limit);
-    if (ids.length < a.limit) {
-      var needle = String(a.text).toLowerCase();
-      var recent = newestFirst(base, a.scan);
-      for (var i = 0; i < recent.length && ids.length < a.limit; i++) {
-        if (ids.indexOf(recent[i]) !== -1) continue;
-        try { if (String(box.messages.byId(recent[i]).content()).toLowerCase().indexOf(needle) !== -1) ids.push(recent[i]); } catch (e) { if (fatal(e)) throw e; }
-      }
-    }
-  } else {
-    ids = newestFirst(base, a.limit);
-  }
-  var out = [];
-  for (var j = 0; j < ids.length; j++) out.push(summary(box.messages.byId(ids[j]), a.path, a.snippet));
+  var spec = a.text ? base.whose({ _or: [{ subject: { _contains: a.text } }, { sender: { _contains: a.text } }] }) : base;
+  var ids = newestFirst(spec, a.limit), out = [];
+  for (var j = 0; j < ids.length; j++) out.push(summary(box.messages.byId(ids[j]), a.path));
   return JSON.stringify({ messages: out });`);
 
 export const MAIL_READ = script("MAIL_READ", `
   var acc = acct(app, a.account);
   var msg = boxAt(app, acc, a.account, a.path).messages.byId(a.id);
-  var out = summary(msg, a.path, 0);
-  function people(list) { var r = []; for (var i = 0; i < list.length; i++) r.push({ name: list[i].name() || undefined, address: list[i].address() }); return r; }
-  out.to = people(msg.toRecipients());
-  out.cc = people(msg.ccRecipients());
-  out.text = String(msg.content() || "");
-  var atts = msg.mailAttachments(), files = [];
-  for (var i = 0; i < atts.length; i++) { var size = 0; try { size = atts[i].fileSize(); } catch (_) {} files.push({ name: atts[i].name(), bytes: size }); }
-  out.attachments = files;
+  var out = summary(msg, a.path);
+  if (msg.messageSize() > a.max) { out.tooLarge = true; return JSON.stringify(out); }
+  out.source = String(msg.source() || "");
   return JSON.stringify(out);`);
 
 export const MAIL_AWAITING = script("MAIL_AWAITING", `
@@ -136,7 +118,7 @@ export const MAIL_AWAITING = script("MAIL_AWAITING", `
   var box = special(app.inbox, a.account);
   var spec = box.messages.whose({ _and: [{ dateReceived: { _greaterThan: new Date(Date.now() - a.days * 86400000) } }, { wasRepliedTo: false }] });
   var ids = newestFirst(spec, a.limit), out = [];
-  for (var i = 0; i < ids.length; i++) out.push(summary(box.messages.byId(ids[i]), ["${INBOX}"], a.snippet));
+  for (var i = 0; i < ids.length; i++) out.push(summary(box.messages.byId(ids[i]), ["${INBOX}"]));
   return JSON.stringify({ messages: out });`);
 
 // Says which step failed, as Messages does: before "send" nothing left; at "send" it is unknown.
@@ -233,8 +215,6 @@ interface Found {
   subject: string;
   date: string;
   unread: boolean;
-  hasAttachments: boolean;
-  snippet: string;
 }
 
 function toSummary(found: Found): MessageSummary {
@@ -245,8 +225,9 @@ function toSummary(found: Found): MessageSummary {
     date: found.date,
     mailbox: boxName(found.path),
     unread: found.unread,
-    hasAttachments: found.hasAttachments,
-    snippet: found.snippet,
+    // Neither is asked of Mail in a list: both would make it open every message.
+    hasAttachments: false,
+    snippet: "",
   };
 }
 
@@ -294,20 +275,20 @@ export class AppleMailAccount implements MailAccount {
       ...(query.unreadOnly && { unreadOnly: true }),
       ...(query.days && { days: query.days }),
       limit,
-      scan: BODY_SCAN,
-      snippet: SNIPPET,
     }, LONG_MS);
     return messages.map(toSummary);
   }
 
   async read(id: string): Promise<MessageBody> {
     const { path, id: messageId } = parseRef(id);
-    const found = await this.call<Found & { to: MessageBody["to"]; cc: MessageBody["cc"]; text: string; attachments: MessageBody["attachments"] }>(MAIL_READ, { path, id: messageId });
-    return { ...toSummary(found), to: found.to, cc: found.cc, text: found.text, attachments: found.attachments };
+    const found = await this.call<Found & { source?: string; tooLarge?: boolean }>(MAIL_READ, { path, id: messageId, max: MAX_SOURCE });
+    if (found.tooLarge || (found.source?.length ?? 0) > MAX_SOURCE) throw new Error(t("mail.tooLarge"));
+    const parsed = await parseMessageSource(found.source ?? "");
+    return { ...toSummary(found), ...parsed, hasAttachments: parsed.attachments.length > 0 };
   }
 
   async awaitingReply(days: number, limit: number): Promise<MessageSummary[]> {
-    const { messages } = await this.call<{ messages: Found[] }>(MAIL_AWAITING, { days, limit: limit * 3, snippet: SNIPPET }, LONG_MS);
+    const { messages } = await this.call<{ messages: Found[] }>(MAIL_AWAITING, { days, limit: limit * 3 }, LONG_MS);
     const own = this.entry.email.toLowerCase();
     return messages
       .filter((m) => !NO_REPLY_SENDER.test(m.from.address) && m.from.address.toLowerCase() !== own)

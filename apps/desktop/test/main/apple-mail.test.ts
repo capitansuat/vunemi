@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MailNotSent } from "@vunemi/mail";
-import { AppleMailAccount, listMailAppAccounts, messageRef, parseRef, MAIL_COMPOSE, MAIL_MARK, MAIL_MOVE, MAIL_SEARCH } from "../../src/main/apple-mail.js";
+import { AppleMailAccount, listMailAppAccounts, messageRef, parseRef, MAIL_AWAITING, MAIL_COMPOSE, MAIL_MARK, MAIL_MOVE, MAIL_READ, MAIL_SEARCH } from "../../src/main/apple-mail.js";
 
 const INBOX = "␀inbox";
 const TRASH = "␀trash";
@@ -115,6 +115,28 @@ describe("Mail app accounts", () => {
     expect(calls[0]!.input).toMatchObject({ read: true });
   });
 
+  it("reads a message from its raw source, parsed here", async () => {
+    const source = [
+      "From: A <a@example.com>", "To: Test <test@example.com>", "Cc: c@example.com", "Subject: Hi",
+      "MIME-Version: 1.0", 'Content-Type: multipart/mixed; boundary="b"', "",
+      "--b", "Content-Type: text/html; charset=utf-8", "", "<p>Hello <b>there</b></p>",
+      "--b", 'Content-Type: text/plain; name="notes.txt"', 'Content-Disposition: attachment; filename="notes.txt"', "", "attached", "--b--", "",
+    ].join("\r\n");
+    const { run, calls } = fake({ MAIL_READ: { ...FOUND, source } });
+    const body = await new AppleMailAccount(run, ENTRY).read(messageRef([INBOX], 7));
+    expect(calls[0]!.template).toBe(MAIL_READ);
+    expect(body.text).toContain("Hello there");
+    expect(body.to).toEqual([{ name: "Test", address: "test@example.com" }]);
+    expect(body.cc).toEqual([{ address: "c@example.com" }]);
+    expect(body.attachments).toEqual([{ name: "notes.txt", bytes: 8 }]);
+    expect(body.hasAttachments).toBe(true);
+  });
+
+  it("refuses a message too large to read", async () => {
+    const { run } = fake({ MAIL_READ: { ...FOUND, tooLarge: true } });
+    await expect(new AppleMailAccount(run, ENTRY).read(messageRef([INBOX], 7))).rejects.toThrow();
+  });
+
   it("is not ready when Mail no longer has the account", async () => {
     const { run } = fake({ MAIL_READY: { ready: false } });
     expect(await new AppleMailAccount(run, ENTRY).ready()).toBe(false);
@@ -129,9 +151,11 @@ describe("the Mail scripts", () => {
     }
   });
 
-  it("never read a password or delete a message", () => {
-    for (const template of [MAIL_SEARCH, MAIL_COMPOSE, MAIL_MOVE, MAIL_MARK]) {
+  it("never read a password, delete a message, or ask Mail to render one", () => {
+    for (const template of [MAIL_SEARCH, MAIL_READ, MAIL_AWAITING, MAIL_COMPOSE, MAIL_MOVE, MAIL_MARK]) {
       expect(template).not.toMatch(/password|\.delete\(|app\.delete/);
+      // content() makes Mail turn the HTML into text through WebKit, which crashed Mail on macOS 27.
+      expect(template).not.toMatch(/\.content\(\)|mailAttachments\(/);
     }
   });
 });
