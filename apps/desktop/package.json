@@ -60,6 +60,10 @@
       {
         "from": "../../native/VunemiHelper/.build/release/VunemiHelper",
         "to": "VunemiHelper"
+      },
+      {
+        "from": "../../native/VunemiRecorder/.build/release/VunemiRecorder",
+        "to": "VunemiRecorder"
       }
     ],
     "mac": {
@@ -84,6 +88,7 @@
         "NSCalendarsUsageDescription": "Vunemi reads your calendar and adds events when you ask it to.",
         "NSRemindersUsageDescription": "Vunemi reads your reminders and adds new ones when you ask it to.",
         "NSMicrophoneUsageDescription": "Vunemi turns what you say into text. Your voice stays on this Mac.",
+        "NSAudioCaptureUsageDescription": "Vunemi records the meeting you start, to write it down on this Mac. The recording stays on this Mac.",
         "NSAppleEventsUsageDescription": "Vunemi asks for this to use the apps you allow it to.",
         "NSDesktopFolderUsageDescription": "Vunemi only looks in the folders you open to it.",
         "NSDocumentsFolderUsageDescription": "Vunemi only looks in the folders you open to it.",

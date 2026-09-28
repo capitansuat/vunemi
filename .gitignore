@@ -6,6 +6,7 @@ out/
 .DS_Store
 coverage/
 native/VunemiHelper/.build/
+native/VunemiRecorder/.build/
 apps/desktop/release/
 
 # Conflict copies a sync service leaves next to files ("name 2.ts").

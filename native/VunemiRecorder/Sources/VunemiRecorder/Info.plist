@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Embedded into the binary's __TEXT,__info_plist section: the text macOS
+  shows when it asks whether Vunemi may record. English, as for the helper.
+-->
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>com.vunemi.recorder</string>
+  <key>CFBundleName</key>
+  <string>Vunemi</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Vunemi records the meeting you start, to write it down on this Mac.</string>
+  <key>NSAudioCaptureUsageDescription</key>
+  <string>Vunemi records the meeting you start, to write it down on this Mac.</string>
+</dict>
+</plist>

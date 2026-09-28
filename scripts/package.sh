@@ -111,6 +111,19 @@ else
   fi
 fi
 
+# The meeting recorder. It holds no key, so nothing asks again when its
+# signature changes, and it is simply built each time.
+recorder_src="$here/native/VunemiRecorder"
+recorder_entitlements="$recorder_src/VunemiRecorder.entitlements"
+recorder_build="$recorder_src/.build/release/VunemiRecorder"
+echo "› kaydedici derleniyor"
+(cd "$recorder_src" && swift build -c release -Xswiftc -file-prefix-map -Xswiftc "$recorder_src=." -Xswiftc -debug-prefix-map -Xswiftc "$recorder_src=.")
+strip -S "$recorder_build"
+if grep -q -a -F "$HOME/" "$recorder_build"; then
+  echo "! kaydedici derleme yolunu (kullanıcı klasörü) içeriyor"
+  exit 1
+fi
+
 echo "› uygulama paketleniyor → $out"
 pnpm --filter @vunemi/desktop exec electron-vite build
 # A local test build may be opened with --remote-debugging-port (live tests
@@ -157,6 +170,9 @@ else
   fi
 fi
 codesign -dvvv "$app/Contents/Resources/VunemiHelper" 2>&1 | grep '^CDHash=' | sed 's/^/› yardımcı /'
+# Only the microphone; system audio is asked for by Vunemi, which starts it.
+codesign --force --options runtime "${timestamp[@]}" --entitlements "$recorder_entitlements" \
+  --identifier com.vunemi.recorder --sign "$identity" "$app/Contents/Resources/VunemiRecorder"
 codesign --force --deep --options runtime "${timestamp[@]}" --entitlements "$entitlements" --sign "$identity" "$app"
 codesign --verify --deep --strict "$app"
 codesign -d -r- "$app" 2>&1 | grep designated
