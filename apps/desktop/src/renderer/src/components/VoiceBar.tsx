@@ -209,7 +209,7 @@ function Trailer({ phase, handoffId }: { phase: Phase; handoffId: string | null 
         onClick={() => cancelListening()}
         className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-[11.5px] text-fg transition-colors hover:bg-surface-2"
       >
-        Sustur
+        {t("voice.stopTalking")}
       </button>
     );
   }

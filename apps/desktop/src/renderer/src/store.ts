@@ -487,7 +487,9 @@ export const useStore = create<State>((set, get) => ({
       if (mine !== turn) return; // the user gave up while we were transcribing
       set((s) => ({
         voice: { ...s.voice, state: "off", partial: "", error: text ? null : t("mic.nothingHeard") },
-        ...(text && { dictated: text }),
+        // Voice chat is a conversation: what was said goes straight out,
+        // not into the text box as well.
+        ...(text && !send && { dictated: text }),
       }));
       if (text && send) {
         set((s) => ({ voice: { ...s.voice, turn: true } }));

@@ -267,6 +267,7 @@ export const messages: Catalogue = {
   },
 
   voice: {
+    stopTalking: "그만 말하기",
     endsOnSilence: "말을 멈추면 끝납니다",
     tapWhenDone: "다 말하면 누르세요",
     done: "완료",

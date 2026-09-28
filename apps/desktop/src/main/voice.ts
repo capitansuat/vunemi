@@ -67,6 +67,40 @@ const VOICES: Record<Locale, string> = {
 
 let installedVoices: Set<string> | null = null;
 
+/**
+ * The language a reply is written in, when the writing itself says so: its
+ * script, or letters only one of Vunemi's languages uses. Null when it
+ * doesn't ("Dört" could be German), and the speaker's language decides.
+ */
+export function writtenIn(text: string): Locale | null {
+  if (/[\uac00-\ud7af\u1100-\u11ff]/.test(text)) return "ko";
+  if (/[\u3040-\u30ff]/.test(text)) return "ja";
+  if (/[\u4e00-\u9fff]/.test(text)) return "zh";
+  if (/[\u0400-\u04ff]/.test(text)) return "ru";
+  if (/[ğşıİĞŞ]/.test(text)) return "tr";
+  if (/[ß]/.test(text)) return "de";
+  if (/[ñ¿¡]/.test(text)) return "es";
+  if (/[ãõ]/.test(text)) return "pt";
+  return null;
+}
+
+/**
+ * Which of Vunemi's languages was spoken. Whisper can pick any of its
+ * hundred: a short Turkish "selam" came back as Persian, in Persian
+ * letters. Its own guess stands when it is one of ours; otherwise the most
+ * likely of ours, which the clip is then transcribed in.
+ */
+export function spokenIn(probabilities: Record<string, number> | undefined, detected: string | undefined): Locale | null {
+  const ours = Object.keys(VOICES) as Locale[];
+  if (detected && (ours as string[]).includes(detected)) return detected as Locale;
+  let best: Locale | null = null;
+  for (const code of ours) {
+    const p = probabilities?.[code] ?? 0;
+    if (p > 0 && (best === null || p > (probabilities?.[best] ?? 0))) best = code;
+  }
+  return best;
+}
+
 function voiceFor(locale: Locale): string | null {
   if (installedVoices === null) {
     try {
@@ -90,6 +124,8 @@ const READY_TIMEOUT_MS = 60_000;
 const TRANSCRIBE_TIMEOUT_MS = 60_000;
 
 export class Voice {
+  /** The language of the user's last spoken turn. */
+  private heardLanguage: Locale | null = null;
   private server: ChildProcess | null = null;
   private port = 0;
   private ready: Promise<void> | null = null;
@@ -185,13 +221,24 @@ export class Voice {
    * language Vunemi is set to: live, with Vunemi in English, Turkish speech
    * came back as broken English.
    */
-  async transcribe(wav: Buffer, language = "auto"): Promise<string> {
-    await this.start(language);
+  async transcribe(wav: Buffer): Promise<string> {
+    await this.start("auto");
     this.touch();
 
+    const heard = await this.inference(wav, "auto");
+    // Whisper's code for what it heard, e.g. "tr"; the name ("turkish") is in `language`.
+    const code = Object.entries(heard.language_probabilities ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const ours = spokenIn(heard.language_probabilities, code);
+    if (ours) this.heardLanguage = ours;
+    // Heard as a language Vunemi doesn't speak: say it again, in the likeliest one it does.
+    if (ours && code && code !== ours) return clean((await this.inference(wav, ours)).text ?? "");
+    return clean(heard.text ?? "");
+  }
+
+  private async inference(wav: Buffer, language: string): Promise<{ text?: string; language_probabilities?: Record<string, number> }> {
     const body = new FormData();
     body.append("file", new Blob([new Uint8Array(wav)], { type: "audio/wav" }), "clip.wav");
-    body.append("response_format", "json");
+    body.append("response_format", "verbose_json");
     body.append("language", language);
     body.append("temperature", "0");
 
@@ -203,9 +250,9 @@ export class Voice {
       signal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(t("voiceEngine.failed", { status: res.status }));
-    const payload = (await res.json()) as { text?: string; error?: string };
+    const payload = (await res.json()) as { text?: string; error?: string; language_probabilities?: Record<string, number> };
     if (payload.error) throw new Error(payload.error);
-    return clean(payload.text ?? "");
+    return payload;
   }
 
   /**
@@ -217,8 +264,11 @@ export class Voice {
     this.stopSpeaking();
     const said = text.trim().slice(0, 1200);
     if (!said) return Promise.resolve();
+    // In the reply's own language, not the app's: an English Vunemi read
+    // "Dört" with an English voice. The writing decides when it can; else
+    // the language the user just spoke, which the reply answers in.
+    const voice = voiceFor(writtenIn(said) ?? this.heardLanguage ?? getLocale());
     // Arguments, never a shell: this is model output and may contain anything.
-    const voice = voiceFor(getLocale());
     const child = spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "--", said], { stdio: "ignore" });
     this.speaking = child;
     return new Promise<void>((resolve) => {

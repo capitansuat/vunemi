@@ -271,6 +271,7 @@ export const messages = {
   },
 
   voice: {
+    stopTalking: "Sustur",
     endsOnSilence: "Susunca biter",
     tapWhenDone: "Bitince dokun",
     done: "Bitti",
