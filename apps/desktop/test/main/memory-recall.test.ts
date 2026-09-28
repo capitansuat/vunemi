@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MemoryStore, type NoteKind } from "../../src/main/memory/store.js";
-import { fuse, generalInstructions, MEMORY_RULE, recall, standOut, type Meaning } from "../../src/main/memory/recall.js";
+import { fuse, generalInstructions, MEMORY_HINT, MEMORY_RULE, recall, standOut, type Meaning } from "../../src/main/memory/recall.js";
 
 let dir = "";
 let store: MemoryStore;
@@ -67,7 +67,7 @@ describe("standOut", () => {
 describe("recall", () => {
   it("gives nothing when memory is empty", async () => {
     expect(await recall(store, null, "anything")).toEqual({ notes: [], topic: [] });
-    expect(generalInstructions(store)).toBe("");
+    expect(generalInstructions(store)).toBe(MEMORY_HINT);
   });
 
   it("gives general notes always and topic notes only when they fit", async () => {
@@ -77,7 +77,7 @@ describe("recall", () => {
     const got = await recall(store, null, "Ayşe'ye bir mail yaz");
     expect(got.notes.map((n) => n.id).sort()).toEqual([brief.id, ayse.id].sort());
     expect(got.topic).toEqual(["My manager is Ayşe"]);
-    expect(generalInstructions(store)).toBe(`${MEMORY_RULE}\n- Reply briefly`);
+    expect(generalInstructions(store)).toBe(`${MEMORY_HINT}\n\n${MEMORY_RULE}\n- Reply briefly`);
     expect(store.get(ayse.id)!.givenAt).not.toBeNull();
   });
 

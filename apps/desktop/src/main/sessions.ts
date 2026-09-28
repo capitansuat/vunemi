@@ -125,6 +125,8 @@ export class SessionStore {
       this.save();
       rmSync(this.checkpointFile(s.id), { force: true });
     }
+    // Notes proposed after the answer, and the user's yes or no, come once the task is over.
+    if (event.type === "memory.proposed" || event.type === "memory.resolved") this.save();
   }
 
   /** Keeps the run in progress, as of this step. */

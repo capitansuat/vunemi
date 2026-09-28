@@ -67,13 +67,20 @@ export async function related(store: MemoryStore, meaning: Meaning | null, text:
 }
 
 /**
+ * Live, 28 Sep: told "by the way, I always want reports as PDF; add 17 and
+ * 25", a local model went searching notes, files and mail for the reports.
+ */
+export const MEMORY_HINT =
+  "When the user mentions in passing how they like things done, or a lasting fact about themselves, do not look into it or search for it: take it into account and do what they asked. Vunemi offers to remember it after the task. Use memory_remember only when they ask you to remember something.";
+
+/**
  * How the user works with Vunemi, for the system prompt: at most five notes,
  * in the order they were made, so the prompt a local server has cached only
  * changes when these notes do.
  */
 export function generalInstructions(store: MemoryStore): string {
   const notes = store.general(GENERAL).sort((a, b) => a.createdAt - b.createdAt);
-  return notes.length ? `${MEMORY_RULE}\n${notes.map((note) => `- ${note.text}`).join("\n")}` : "";
+  return notes.length ? `${MEMORY_HINT}\n\n${MEMORY_RULE}\n${notes.map((note) => `- ${note.text}`).join("\n")}` : MEMORY_HINT;
 }
 
 /**

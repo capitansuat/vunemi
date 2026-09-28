@@ -51,6 +51,15 @@ describe("SessionStore", () => {
     expect(store.open(first).history).toEqual(history("takvimde bugün ne var", "3 toplantı"));
   });
 
+  it("keeps notes proposed after the task, and the user's answer", () => {
+    const store = new SessionStore(dir);
+    run(store, "r1", "17 ile 25'i topla, cevapları kısa yaz", "42");
+    store.record({ type: "memory.proposed", runId: "r1", proposals: [{ id: "p1", text: "Kısa cevap ister", kind: "general", quote: "cevapları kısa yaz" }], at: 4 });
+    store.record({ type: "memory.resolved", runId: "r1", proposalId: "p1", decision: "saved", at: 5 });
+    const events = new SessionStore(dir).open(store.currentId).events;
+    expect(events.map((e) => e.type).slice(-2)).toEqual(["memory.proposed", "memory.resolved"]);
+  });
+
   it("does not write, or list, a conversation with nothing in it", () => {
     const store = new SessionStore(dir);
     const id = store.create();
