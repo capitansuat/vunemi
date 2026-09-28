@@ -28,6 +28,7 @@ import {
   type ApprovalDecision,
   type ChatModel,
   type HandoffOutcome,
+  type MemoryNote,
   type RunStatus,
   type PlanDecision,
   type ChatMessage,
@@ -73,6 +74,13 @@ export interface SessionOptions {
   onHistory?: (history: ChatMessage[]) => void;
   /** Told the conversation so far after every step of a run, so a crash can't take it. */
   onCheckpoint?: RunOptions["onCheckpoint"];
+  /** The notes from memory a request is given; an error only means none. */
+  recall?: (goal: string) => Promise<{ notes: MemoryNote[]; topic: string[] }>;
+  /**
+   * After a finished task the user watched: what they wrote lately, and the
+   * model that did it, so memory can propose notes from their own words.
+   */
+  afterRun?: (run: { runId: string; model: ChatModel; words: string[] }) => void;
 }
 
 /** A message waiting its turn. */
@@ -87,6 +95,9 @@ export interface QueuedMessage {
 
 /** What the model is told when the user's interruption cut a tool short. */
 const INTERRUPTED = "[The user interrupted; this tool did not finish.]";
+
+/** What the user wrote in the last few turns: what memory proposals may quote. */
+const WORDS_KEPT = 3;
 
 /** After a task, past this share of the window, make room for the next. */
 const AFTER_RUN_LIMIT = 0.6;
@@ -113,6 +124,12 @@ export class AgentSession {
   private charsPerToken = DEFAULT_CHARS_PER_TOKEN;
   /** Each model's window, asked once per session. */
   private readonly windows = new Map<string, { window: number; known: boolean }>();
+  /** The user's last few messages in this conversation, as they wrote them. */
+  private words: string[] = [];
+  /** Notes from memory already in the history; not sent again. */
+  private readonly remembered = new Set<string>();
+  /** Notes to announce once the run has its id. */
+  private given: MemoryNote[] | null = null;
 
   constructor(private readonly opts: SessionOptions) {}
 
@@ -125,7 +142,16 @@ export class AgentSession {
   private readonly emit = (event: AgentEvent): void => {
     if (event.type === "run.started") this.runId = event.runId;
     this.opts.emit(event);
+    if (event.type === "run.started" && this.given) {
+      this.opts.emit({ type: "memory.given", runId: event.runId, notes: this.given, at: Date.now() });
+      this.given = null;
+    }
   };
+
+  /** What the user wrote in the last few turns, for the memory tool's check. */
+  userWords(): string[] {
+    return [...this.words];
+  }
 
   get running(): boolean {
     return this.active !== null;
@@ -260,9 +286,14 @@ export class AgentSession {
       const model = this.model(modelSpec);
       const { window } = await this.windowOf(modelSpec, model);
       const undone = this.undone.splice(0);
+      this.words = [...this.words, goal].slice(-WORDS_KEPT);
+      const recalled = await this.opts.recall?.(goal).catch(() => null);
+      const memory = recalled?.topic.filter((text) => !this.remembered.has(text)) ?? [];
+      this.given = recalled?.notes.length ? recalled.notes : null;
       const result = await runAgent({
         goal,
         ...(undone.length > 0 && { undone }),
+        ...(memory.length > 0 && { memory }),
         ...(attachments.length > 0 && { attachments }),
         model,
         contextWindow: window,
@@ -308,6 +339,7 @@ export class AgentSession {
       this.charsPerToken = result.charsPerToken ?? this.charsPerToken;
       if (result.status === "done") this.history = result.messages;
       else if (result.status === "stopped" || result.status === "max_steps") this.history = sealInterrupted(result.messages, INTERRUPTED);
+      if (result.status !== "failed") for (const text of memory) this.remembered.add(text);
       this.opts.onHistory?.(this.history);
       if (result.status !== "failed") {
         // The run is over: nothing may pause it now, and the queue waits on compaction instead.
@@ -315,7 +347,10 @@ export class AgentSession {
         // A stopped task usually has a correction queued behind it; don't make it wait for a summary.
         await this.compactHistory(result.runId, model, window, { allowSummary: result.status !== "stopped", force: false });
       }
+      // Nobody watches a scheduled task to answer a card under it.
+      if (result.status === "done" && !run.unattended) this.opts.afterRun?.({ runId: result.runId, model, words: [...this.words] });
     } finally {
+      this.given = null;
       this.pending.clear();
       this.handoffs.clear();
       this.pendingPlan = null;
@@ -419,6 +454,8 @@ export class AgentSession {
       if (result.error) console.error("[vunemi] compaction:", result.error);
       if (result.kind === "none" && !announced && !opts.force) return;
       this.history = result.history;
+      // A summary may have left out the notes it was given: they may be sent again.
+      if (result.kind === "summarized") this.remembered.clear();
       const redact = this.opts.redact ?? ((text: string) => text);
       this.opts.emit({
         type: "context.compacted",
@@ -489,6 +526,8 @@ export class AgentSession {
     this.history = [...history];
     this.undone = [];
     this.openedTools.clear();
+    this.words = [];
+    this.remembered.clear();
   }
 
   /** The user undid something this conversation did; the model hears it next time. */

@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "Quiere añadir a una nota", doing: "Añadiendo a una nota", done: "Añadió a una nota" },
     get_current_time: { ask: "Quiere mirar la hora", doing: "Mirando la hora", done: "Miró la hora" },
     scratchpad_read: { ask: "Quiere leer el bloc de notas", doing: "Leyendo el bloc de notas", done: "Leyó el bloc de notas" },
-    remember_preference: { ask: "Quiere recordar una preferencia", doing: "Guardando la preferencia", done: "Preferencia guardada" },
     memory_remember: { ask: "Quiere recordar una nota", doing: "Recordando la nota", done: "Nota recordada" },
     scratchpad_write: { ask: "Quiere escribir en el bloc de notas", doing: "Escribiendo en el bloc de notas", done: "Escribió en el bloc de notas" },
     page_goto: { ask: "Quiere abrir una página", doing: "Abriendo una página", done: "Abrió la página" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "Escribe una nota breve (hasta 300 caracteres, una línea).",
     secret: "Un secreto de tu bóveda no se puede guardar en la memoria.",
     full: "La memoria está llena (500 notas). Elimina algunas para añadir más.",
+    expired: "Esta sugerencia ya no está abierta. Dilo de nuevo en la conversación si aún quieres que se recuerde.",
     quoteMissing: "Estas palabras no están en lo que escribiste en esta tarea.",
     preview: "Recordar: {text}",
     previewKind: "Tipo: {kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "No se puede leer el archivo de preferencias. No se usarán ni sobrescribirán preferencias hasta que lo repares o elimines.",
-    title: "Preferencias guardadas",
-    description: "Aquí solo aparecen las preferencias que pides expresamente a Vunemi que recuerde. Cada guardado requiere tu aprobación.",
-    empty: "No hay preferencias guardadas.",
-    removeLabel: "Eliminar preferencia: {text}",
-    preview: "Recordar esta preferencia: {text}",
-    undo: "Preferencia eliminada",
-    invalid: "Introduce una preferencia breve (máximo 300 caracteres).",
-    limit: "La lista de preferencias está llena (30 elementos).",
-    secret: "Un secreto de tu bóveda no puede guardarse como preferencia.",
-  },
-
   settings: {
     sectionsLabel: "Secciones de ajustes",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "Conexiones",
       model: "Modelo",
       language: "Idioma",
+      memory: "Memoria",
       data: "Control de datos",
       vault: "Caja fuerte",
       outbox: "Bandeja de salida",

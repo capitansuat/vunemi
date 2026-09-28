@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "想追加到备忘录", doing: "正在追加到备忘录", done: "已追加到备忘录" },
     get_current_time: { ask: "想要查看时间", doing: "正在查看时间", done: "已查看时间" },
     scratchpad_read: { ask: "想要读取记事本", doing: "正在读取记事本", done: "已读取记事本" },
-    remember_preference: { ask: "想记住一项偏好", doing: "正在保存偏好", done: "已保存偏好" },
     memory_remember: { ask: "想要记住一条笔记", doing: "正在记住笔记", done: "已记住笔记" },
     scratchpad_write: { ask: "想要写入记事本", doing: "正在写入记事本", done: "已写入记事本" },
     page_goto: { ask: "想要打开页面", doing: "正在打开页面", done: "已打开页面" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "请输入一条简短笔记（最多 300 个字符，一行）。",
     secret: "保险库中的机密不能保存到记忆中。",
     full: "记忆已满（500 条笔记）。删除一些后才能添加。",
+    expired: "此建议已失效。如果仍想记住，请在对话中再说一次。",
     quoteMissing: "这些话不在你本次任务中写的内容里。",
     preview: "记住：{text}",
     previewKind: "类型：{kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "无法读取偏好文件。修复或移除该文件之前，不会使用或覆盖任何偏好。",
-    title: "已保存的偏好",
-    description: "这里只显示你明确要求 Vunemi 记住的偏好。每次保存都需要你批准，也可随时删除。",
-    empty: "暂无已保存的偏好。",
-    removeLabel: "删除偏好：{text}",
-    preview: "记住这项偏好：{text}",
-    undo: "偏好已删除",
-    invalid: "请输入不超过 300 个字符的简短偏好。",
-    limit: "偏好列表已满（30 项）。",
-    secret: "保险库中的秘密不能保存为偏好。",
-  },
-
   settings: {
     sectionsLabel: "设置分区",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "连接",
       model: "模型",
       language: "语言",
+      memory: "记忆",
       data: "数据控制",
       vault: "保险箱",
       outbox: "发件箱",

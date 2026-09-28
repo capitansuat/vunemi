@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from "electron";
 import type { AgentEvent } from "@vunemi/agent-core";
 import type { OutboxEvent } from "@vunemi/mail";
-import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type VunemiApi, type QueuedMessage, type SessionList, type VoiceStatus } from "../shared/ipc.js";
+import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MemorySearchStatus, type VunemiApi, type QueuedMessage, type SessionList, type VoiceStatus } from "../shared/ipc.js";
 import type { Locale } from "@vunemi/i18n";
 
 const api: VunemiApi = {
@@ -46,8 +46,19 @@ const api: VunemiApi = {
     ipcRenderer.on(CH.sessionsChanged, handler);
     return () => ipcRenderer.removeListener(CH.sessionsChanged, handler);
   },
-  listPreferences: () => ipcRenderer.invoke(CH.preferencesList),
-  deletePreference: (id) => ipcRenderer.invoke(CH.preferencesDelete, id),
+  listMemory: () => ipcRenderer.invoke(CH.memoryList),
+  updateMemory: (id, text) => ipcRenderer.invoke(CH.memoryUpdate, id, text),
+  deleteMemory: (id) => ipcRenderer.invoke(CH.memoryDelete, id),
+  forgetMemory: () => ipcRenderer.invoke(CH.memoryForget),
+  resolveMemory: (runId, proposalId, decision, text) => ipcRenderer.invoke(CH.memoryResolve, runId, proposalId, decision, text),
+  memorySearch: () => ipcRenderer.invoke(CH.memorySearch),
+  memorySearchDownload: () => ipcRenderer.invoke(CH.memorySearchDownload),
+  memorySearchCancel: () => ipcRenderer.invoke(CH.memorySearchCancel),
+  onMemorySearch: (listener) => {
+    const handler = (_e: IpcRendererEvent, status: MemorySearchStatus) => listener(status);
+    ipcRenderer.on(CH.memorySearchChanged, handler);
+    return () => ipcRenderer.removeListener(CH.memorySearchChanged, handler);
+  },
   forgetEverything: () => ipcRenderer.invoke(CH.forgetEverything),
   getLanguage: () => ipcRenderer.invoke(CH.languageGet),
   setLanguage: (locale) => ipcRenderer.invoke(CH.languageSet, locale),

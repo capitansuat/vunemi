@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "Vuole aggiungere a una nota", doing: "Aggiunge a una nota", done: "Ha aggiunto a una nota" },
     get_current_time: { ask: "Vuole controllare l’ora", doing: "Controlla l’ora", done: "Ha controllato l’ora" },
     scratchpad_read: { ask: "Vuole leggere il blocco note", doing: "Legge il blocco note", done: "Ha letto il blocco note" },
-    remember_preference: { ask: "Vuole ricordare una preferenza", doing: "Salvataggio della preferenza", done: "Preferenza salvata" },
     memory_remember: { ask: "Vuole ricordare una nota", doing: "Memorizzazione della nota", done: "Nota ricordata" },
     scratchpad_write: { ask: "Vuole scrivere nel blocco note", doing: "Scrive nel blocco note", done: "Ha scritto nel blocco note" },
     page_goto: { ask: "Vuole aprire una pagina", doing: "Apre una pagina", done: "Ha aperto la pagina" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "Scrivi una nota breve (fino a 300 caratteri, una riga).",
     secret: "Un segreto della tua cassaforte non può essere salvato in memoria.",
     full: "La memoria è piena (500 note). Eliminane alcune per aggiungerne altre.",
+    expired: "Questo suggerimento non è più aperto. Ripetilo nella conversazione se vuoi ancora che venga ricordato.",
     quoteMissing: "Queste parole non sono in ciò che hai scritto in questa attività.",
     preview: "Ricorda: {text}",
     previewKind: "Tipo: {kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "Il file delle preferenze non può essere letto. Nessuna preferenza verrà usata o sovrascritta finché non verrà riparato o rimosso.",
-    title: "Preferenze salvate",
-    description: "Qui compaiono solo le preferenze che chiedi esplicitamente a Vunemi di ricordare. Ogni salvataggio richiede la tua approvazione.",
-    empty: "Nessuna preferenza salvata.",
-    removeLabel: "Elimina preferenza: {text}",
-    preview: "Ricorda questa preferenza: {text}",
-    undo: "Preferenza rimossa",
-    invalid: "Inserisci una preferenza breve (massimo 300 caratteri).",
-    limit: "La lista delle preferenze è piena (30 elementi).",
-    secret: "Un segreto della cassaforte non può essere salvato come preferenza.",
-  },
-
   settings: {
     sectionsLabel: "Sezioni delle impostazioni",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "Connessioni",
       model: "Modello",
       language: "Lingua",
+      memory: "Memoria",
       data: "Controllo dei dati",
       vault: "Cassaforte",
       outbox: "Posta in uscita",

@@ -3,7 +3,7 @@ import { Check, X } from "lucide-react";
 import type { Autonomy, AutonomyPolicy } from "@vunemi/agent-core";
 import { ACTION_CLASSES } from "@vunemi/agent-core";
 import { LOCALES, t, type MessageKey } from "@vunemi/i18n";
-import type { LockState, PermissionSettings, PreferenceView, TrustedSiteResult } from "../../../shared/ipc.js";
+import type { LockState, PermissionSettings, TrustedSiteResult } from "../../../shared/ipc.js";
 import { ConnectionsView, Switch } from "./ConnectionsView.js";
 import { ModelPicker } from "./ModelPicker.js";
 import { ModelSources } from "./ModelSources.js";
@@ -12,9 +12,10 @@ import { AutomationsSection } from "./AutomationsSection.js";
 import { ActivityView } from "./ActivityView.js";
 import { OutboxView } from "./OutboxView.js";
 import { VaultView } from "./VaultView.js";
+import { MemorySection } from "./MemorySection.js";
 import { useStore, type SettingsSection as Section } from "../store.js";
 
-const SECTIONS: Section[] = ["permissions", "security", "connections", "vault", "outbox", "automations", "activity", "model", "language", "data"];
+const SECTIONS: Section[] = ["permissions", "security", "connections", "vault", "outbox", "automations", "activity", "model", "language", "memory", "data"];
 
 /** Sections that are whole views of their own, with their own scrolling. */
 const WHOLE: Partial<Record<Section, ComponentType>> = { connections: ConnectionsView, vault: VaultView, outbox: OutboxView, activity: ActivityView };
@@ -143,6 +144,7 @@ export function SettingsView() {
           </div>
         )}
         {section === "language" && <LanguageSection />}
+        {section === "memory" && <MemorySection />}
         {section === "data" && (
           <div className="mx-auto max-w-[620px]">
             <h2 className="text-[17px] font-semibold text-fg">{t("settings.sections.data")}</h2>
@@ -151,8 +153,8 @@ export function SettingsView() {
               <button type="button" onClick={() => void useStore.getState().forgetSession()} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("settings.data.forgetSession")}</button>
               <button type="button" onClick={() => setSection("activity")} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("app.nav.activity")}</button>
               <button type="button" onClick={() => setSection("vault")} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("settings.data.openVault")}</button>
+              <button type="button" onClick={() => setSection("memory")} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("memory.title")}</button>
             </div>
-            <PreferencesSection />
             <div className="mt-8 rounded-xl border border-danger/40 bg-danger/5 p-4">
               <h3 className="text-[13px] font-medium text-fg">{t("settings.data.forgetAll")}</h3>
               <p className="mt-1 text-[12px] text-muted">{t("settings.data.forgetAllBody")}</p>
@@ -174,46 +176,6 @@ export function SettingsView() {
       </div>
       )}
     </div>
-  );
-}
-
-function PreferencesSection() {
-  const [items, setItems] = useState<PreferenceView[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-
-  useEffect(() => {
-    void window.vunemi.listPreferences().then(setItems).catch((err: unknown) => setError(String(err)));
-  }, []);
-
-  async function remove(id: string) {
-    setBusy(id);
-    setError(null);
-    try {
-      setItems(await window.vunemi.deletePreference(id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  return (
-    <section className="mt-8 rounded-xl border border-line bg-surface p-4">
-      <h3 className="text-[13px] font-medium text-fg">{t("preferences.title")}</h3>
-      <p className="mt-1 text-[12px] text-muted">{t("preferences.description")}</p>
-      {items.length === 0 ? <p className="mt-3 text-[12px] text-muted">{t("preferences.empty")}</p> : (
-        <ul className="mt-3 divide-y divide-line">
-          {items.map((item) => <li key={item.id} className="flex items-start justify-between gap-3 py-2 text-[12px]">
-            <span className="min-w-0 break-words text-fg">{item.text}</span>
-            <button type="button" disabled={busy !== null} onClick={() => void remove(item.id)}
-              aria-label={t("preferences.removeLabel", { text: item.text })}
-              className="shrink-0 text-danger disabled:opacity-50">{t("common.delete")}</button>
-          </li>)}
-        </ul>
-      )}
-      {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
-    </section>
   );
 }
 

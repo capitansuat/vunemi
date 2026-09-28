@@ -5,6 +5,7 @@ import { runStats, type CompactionView, type RunView, type StepView } from "../l
 import { formatMs, formatTokens, runStatusLabel, shortModelName } from "../lib/labels.js";
 import { CallCard } from "./CallCard.js";
 import { PlanCard } from "./PlanCard.js";
+import { MemoryNotice, MemoryProposals } from "./MemoryNotes.js";
 import { Markdown } from "./Markdown.js";
 import { t } from "@vunemi/i18n";
 
@@ -59,6 +60,8 @@ export function Turn({ run }: { run: RunView }) {
       </div>
 
       {!live && <Footer run={run} />}
+      {!live && run.memory && run.memory.given.length > 0 && <MemoryNotice notes={run.memory.given} />}
+      {run.memory && run.memory.proposals.length > 0 && <MemoryProposals runId={run.runId} proposals={run.memory.proposals} />}
       {run.compaction && <Compaction c={run.compaction} />}
     </section>
   );

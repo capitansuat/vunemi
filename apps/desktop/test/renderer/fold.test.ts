@@ -34,6 +34,24 @@ describe("foldEvent", () => {
     expect(unchanged.compaction).toBeUndefined();
   });
 
+  it("shows the notes a run was given and what it proposes, as the user answers", () => {
+    const run = fold([
+      ...start,
+      { type: "memory.given", runId: "r", notes: [{ id: "n1", text: "Reply briefly", kind: "general" }], at: 1 },
+      { type: "run.finished", runId: "r", status: "done", detail: "ok", at: 2 },
+      {
+        type: "memory.proposed", runId: "r", at: 3, proposals: [
+          { id: "p1", text: "Wants PDF", kind: "general", quote: "as PDF please" },
+          { id: "p2", text: "Manager is Deniz", kind: "topic", quote: "my manager is Deniz", updates: { id: "n2", text: "Manager is Ayşe" } },
+        ],
+      },
+      { type: "memory.resolved", runId: "r", proposalId: "p1", decision: "saved", text: "Wants reports as PDF", at: 4 },
+      { type: "memory.resolved", runId: "r", proposalId: "p2", decision: "skipped", at: 5 },
+    ])[0]!;
+    expect(run.memory!.given).toEqual([{ id: "n1", text: "Reply briefly", kind: "general" }]);
+    expect(run.memory!.proposals.map((p) => [p.text, p.state])).toEqual([["Wants reports as PDF", "saved"], ["Manager is Deniz", "skipped"]]);
+  });
+
   it("builds a step with streamed thought and text", () => {
     const [run] = fold([
       ...start,

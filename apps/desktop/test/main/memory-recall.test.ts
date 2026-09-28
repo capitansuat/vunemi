@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MemoryStore, type NoteKind } from "../../src/main/memory/store.js";
-import { fuse, MEMORY_RULE, recall, type Meaning } from "../../src/main/memory/recall.js";
+import { fuse, generalInstructions, MEMORY_RULE, recall, type Meaning } from "../../src/main/memory/recall.js";
 
 let dir = "";
 let store: MemoryStore;
@@ -48,7 +48,8 @@ describe("fuse", () => {
 
 describe("recall", () => {
   it("gives nothing when memory is empty", async () => {
-    expect(await recall(store, null, "anything")).toEqual({ notes: [], instructions: "" });
+    expect(await recall(store, null, "anything")).toEqual({ notes: [], topic: [] });
+    expect(generalInstructions(store)).toBe("");
   });
 
   it("gives general notes always and topic notes only when they fit", async () => {
@@ -57,9 +58,8 @@ describe("recall", () => {
     await add("The flat in Kadıköy has a leak");
     const got = await recall(store, null, "Ayşe'ye bir mail yaz");
     expect(got.notes.map((n) => n.id).sort()).toEqual([brief.id, ayse.id].sort());
-    expect(got.instructions.startsWith(MEMORY_RULE)).toBe(true);
-    expect(got.instructions).toContain("- My manager is Ayşe");
-    expect(got.instructions).not.toContain("Kadıköy");
+    expect(got.topic).toEqual(["My manager is Ayşe"]);
+    expect(generalInstructions(store)).toBe(`${MEMORY_RULE}\n- Reply briefly`);
     expect(store.get(ayse.id)!.givenAt).not.toBeNull();
   });
 

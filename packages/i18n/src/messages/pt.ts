@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "Quer adicionar a uma nota", doing: "Adicionando a uma nota", done: "Adicionou a uma nota" },
     get_current_time: { ask: "Quer ver a hora", doing: "Vendo a hora", done: "Viu a hora" },
     scratchpad_read: { ask: "Quer ler o bloco de notas", doing: "Lendo o bloco de notas", done: "Leu o bloco de notas" },
-    remember_preference: { ask: "Quer memorizar uma preferência", doing: "A guardar a preferência", done: "Preferência guardada" },
     memory_remember: { ask: "Quer lembrar uma nota", doing: "Lembrando a nota", done: "Nota lembrada" },
     scratchpad_write: { ask: "Quer escrever no bloco de notas", doing: "Escrevendo no bloco de notas", done: "Escreveu no bloco de notas" },
     page_goto: { ask: "Quer abrir uma página", doing: "Abrindo uma página", done: "Abriu a página" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "Escreva uma nota curta (até 300 caracteres, uma linha).",
     secret: "Um segredo do seu cofre não pode ser salvo na memória.",
     full: "A memória está cheia (500 notas). Exclua algumas para adicionar mais.",
+    expired: "Esta sugestão não está mais aberta. Diga de novo na conversa se ainda quiser que seja lembrado.",
     quoteMissing: "Estas palavras não estão no que você escreveu nesta tarefa.",
     preview: "Lembrar: {text}",
     previewKind: "Tipo: {kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "O ficheiro de preferências não pode ser lido. Nenhuma preferência será usada ou substituída até ser corrigido ou removido.",
-    title: "Preferências guardadas",
-    description: "Aqui aparecem apenas as preferências que pedes explicitamente ao Vunemi para memorizar. Cada registo requer a tua aprovação.",
-    empty: "Nenhuma preferência guardada.",
-    removeLabel: "Eliminar preferência: {text}",
-    preview: "Memorizar esta preferência: {text}",
-    undo: "Preferência eliminada",
-    invalid: "Introduz uma preferência curta (até 300 caracteres).",
-    limit: "A lista de preferências está cheia (30 itens).",
-    secret: "Um segredo do cofre não pode ser guardado como preferência.",
-  },
-
   settings: {
     sectionsLabel: "Seções dos ajustes",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "Conexões",
       model: "Modelo",
       language: "Idioma",
+      memory: "Memória",
       data: "Controle de dados",
       vault: "Cofre",
       outbox: "Caixa de saída",

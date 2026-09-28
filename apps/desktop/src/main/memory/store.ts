@@ -96,7 +96,8 @@ export class MemoryStore {
     const fresh = !existsSync(file);
     this.db = new DatabaseSync(file);
     chmodSync(file, 0o600);
-    this.db.exec("PRAGMA foreign_keys = ON;");
+    // A forgotten note is overwritten on disk, not just unlinked.
+    this.db.exec("PRAGMA foreign_keys = ON; PRAGMA secure_delete = ON;");
     this.db.exec(SCHEMA);
     if (fresh) this.moveInPreferences();
   }
@@ -123,8 +124,13 @@ export class MemoryStore {
     if (typeof input !== "string") throw new Error(t("memory.invalid"));
     const text = input.trim();
     if (!text || text.length > MAX_CHARS || /[\r\n\u0000-\u001f]/u.test(text)) throw new Error(t("memory.invalid"));
-    if (maskSecrets(text) !== text || (await this.redact(text)) !== text) throw new Error(t("memory.secret"));
+    if (await this.holdsSecret(text)) throw new Error(t("memory.secret"));
     return text;
+  }
+
+  /** A password-like pattern, or something stored in the Vault. */
+  async holdsSecret(text: string): Promise<boolean> {
+    return maskSecrets(text) !== text || (await this.redact(text)) !== text;
   }
 
   async add(input: { text: string; kind: NoteKind; evidence: Evidence }): Promise<Note> {
@@ -172,6 +178,7 @@ export class MemoryStore {
       this.db.exec("DELETE FROM notes;");
       this.db.exec("INSERT INTO notes_fts(notes_fts) VALUES ('rebuild');");
     });
+    this.db.exec("VACUUM;");
     this.withheld.clear();
   }
 

@@ -102,7 +102,7 @@ export async function propose(opts: {
 
   const out: Proposal[] = [];
   for (const raw of parseProposals(result.text)) {
-    if (!quoted(raw.quote, messages)) continue;
+    if (!quoted(raw.quote, messages) || (await opts.store.holdsSecret(raw.quote))) continue;
     let text: string;
     try {
       text = await opts.store.validText(raw.text);
@@ -126,6 +126,7 @@ export async function propose(opts: {
   return out;
 }
 
-function squash(text: string): string {
+/** Text compared as the same words: case and spacing aside. */
+export function squash(text: string): string {
   return text.normalize("NFC").toLowerCase().replace(/\s+/gu, " ").trim();
 }

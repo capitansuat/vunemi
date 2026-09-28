@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "메모에 추가하려고 합니다", doing: "메모에 추가 중", done: "메모에 추가했습니다" },
     get_current_time: { ask: "시간을 확인하려고 합니다", doing: "시간을 확인하는 중", done: "시간을 확인했습니다" },
     scratchpad_read: { ask: "메모장을 읽으려고 합니다", doing: "메모장을 읽는 중", done: "메모장을 읽었습니다" },
-    remember_preference: { ask: "선호 사항을 기억하려고 합니다", doing: "선호 사항 저장 중", done: "선호 사항을 저장했습니다" },
     memory_remember: { ask: "메모를 기억하려고 합니다", doing: "메모를 기억하는 중", done: "메모를 기억했습니다" },
     scratchpad_write: { ask: "메모장에 쓰려고 합니다", doing: "메모장에 쓰는 중", done: "메모장에 썼습니다" },
     page_goto: { ask: "페이지를 열려고 합니다", doing: "페이지를 여는 중", done: "페이지를 열었습니다" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "짧은 메모를 입력하세요(최대 300자, 한 줄).",
     secret: "보관함의 비밀 정보는 메모리에 저장할 수 없습니다.",
     full: "메모리가 가득 찼습니다(500개). 추가하려면 일부를 삭제하세요.",
+    expired: "이 제안은 더 이상 유효하지 않습니다. 여전히 기억하길 원하면 대화에서 다시 말해 주세요.",
     quoteMissing: "이 말은 이번 작업에서 당신이 쓴 내용에 없습니다.",
     preview: "기억: {text}",
     previewKind: "종류: {kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "저장된 선호 사항 파일을 읽을 수 없습니다. 파일을 수정하거나 제거하기 전까지 선호 사항을 사용하거나 덮어쓰지 않습니다.",
-    title: "저장된 선호 사항",
-    description: "Vunemi에 명시적으로 기억해 달라고 요청한 선호 사항만 표시됩니다. 저장할 때마다 승인이 필요하며 언제든 삭제할 수 있습니다.",
-    empty: "저장된 선호 사항이 없습니다.",
-    removeLabel: "선호 사항 삭제: {text}",
-    preview: "이 선호 사항 기억: {text}",
-    undo: "선호 사항을 삭제했습니다",
-    invalid: "300자 이내의 짧은 선호 사항을 입력하세요.",
-    limit: "선호 사항 목록이 가득 찼습니다(30개).",
-    secret: "보관함의 비밀은 선호 사항으로 저장할 수 없습니다.",
-  },
-
   settings: {
     sectionsLabel: "설정 섹션",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "연결",
       model: "모델",
       language: "언어",
+      memory: "메모리",
       data: "데이터 관리",
       vault: "금고",
       outbox: "보낼 편지함",

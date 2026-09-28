@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "メモに追記しようとしています", doing: "メモに追記中", done: "メモに追記しました" },
     get_current_time: { ask: "時刻を確認しようとしています", doing: "時刻を確認中", done: "時刻を確認しました" },
     scratchpad_read: { ask: "メモ帳を読もうとしています", doing: "メモ帳を読んでいます", done: "メモ帳を読みました" },
-    remember_preference: { ask: "好みを記憶しようとしています", doing: "好みを保存中", done: "好みを保存しました" },
     memory_remember: { ask: "メモを覚えようとしています", doing: "メモを覚えています", done: "メモを覚えました" },
     scratchpad_write: { ask: "メモ帳に書こうとしています", doing: "メモ帳に書いています", done: "メモ帳に書きました" },
     page_goto: { ask: "ページを開こうとしています", doing: "ページを開いています", done: "ページを開きました" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "短いメモを入力してください（300 文字以内、1 行）。",
     secret: "保管庫の秘密情報はメモリに保存できません。",
     full: "メモリがいっぱいです（500 件）。追加するには一部を削除してください。",
+    expired: "この提案はもう有効ではありません。まだ覚えてほしい場合は、会話でもう一度伝えてください。",
     quoteMissing: "この言葉はこのタスクであなたが書いた内容にありません。",
     preview: "覚える：{text}",
     previewKind: "種類：{kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "保存した好みのファイルを読み取れません。修復または削除するまで、好みの使用や上書きは行いません。",
-    title: "保存した好み",
-    description: "Vunemi に明示的に記憶を頼んだ好みだけを表示します。保存のたびに承認が必要で、いつでも削除できます。",
-    empty: "保存した好みはありません。",
-    removeLabel: "好みを削除: {text}",
-    preview: "この好みを記憶: {text}",
-    undo: "好みを削除しました",
-    invalid: "300 文字以内の短い好みを入力してください。",
-    limit: "好みの一覧は満杯です（30 件）。",
-    secret: "保管庫の秘密を好みとして保存することはできません。",
-  },
-
   settings: {
     sectionsLabel: "設定のセクション",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "接続",
       model: "モデル",
       language: "言語",
+      memory: "メモリ",
       data: "データの管理",
       vault: "金庫",
       outbox: "送信トレイ",

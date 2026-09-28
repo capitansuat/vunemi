@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { Engine } from "../engine/engine.js";
 import type { ModelSource } from "../engine/catalog.js";
 import { download, type DownloadProgress } from "../engine/download.js";
+import type { MemorySearchStatus } from "../../shared/ipc.js";
 
 /**
  * The model that finds notes by meaning: multilingual-e5-small (MIT, 94
@@ -19,11 +20,7 @@ export const EMBED_MODEL: ModelSource = {
 
 export const EMBED_MODEL_ID = "multilingual-e5-small-q8_0";
 
-export type EmbedderStatus =
-  | { state: "unavailable" }
-  | { state: "absent"; bytes: number }
-  | { state: "downloading"; bytes: number; received: number }
-  | { state: "ready" };
+export type EmbedderStatus = MemorySearchStatus;
 
 export interface EmbedderOptions {
   /** The llama-server binary; null when this build has none. */
@@ -66,7 +63,7 @@ export class Embedder {
 
   status(): EmbedderStatus {
     if (!this.opts.binary) return { state: "unavailable" };
-    if (existsSync(this.path)) return { state: "ready" };
+    if (existsSync(this.path)) return { state: "ready", bytes: EMBED_MODEL.size };
     if (this.downloading) return { state: "downloading", bytes: EMBED_MODEL.size, received: this.downloading.progress?.received ?? 0 };
     return { state: "absent", bytes: EMBED_MODEL.size };
   }

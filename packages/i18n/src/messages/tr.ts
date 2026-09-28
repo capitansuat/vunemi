@@ -46,7 +46,6 @@ export const messages = {
     notes_append: { ask: "Bir nota eklemek istiyor", doing: "Nota ekliyor", done: "Nota ekledi" },
     get_current_time: { ask: "Saate bakmak istiyor", doing: "Saate bakıyor", done: "Saate baktı" },
     scratchpad_read: { ask: "Not defterini okumak istiyor", doing: "Not defterini okuyor", done: "Not defterini okudu" },
-    remember_preference: { ask: "Bir tercihi hatırlamak istiyor", doing: "Tercih kaydediliyor", done: "Tercih kaydedildi" },
     memory_remember: { ask: "Bir not hatırlamak istiyor", doing: "Not hatırlanıyor", done: "Not hatırlandı" },
     scratchpad_write: { ask: "Not defterine yazmak istiyor", doing: "Not defterine yazıyor", done: "Not defterine yazdı" },
     page_goto: { ask: "Sayfa açmak istiyor", doing: "Sayfa açıyor", done: "Sayfayı açtı" },
@@ -450,6 +449,7 @@ export const messages = {
     invalid: "Kısa bir not yaz (en fazla 300 karakter, tek satır).",
     secret: "Kasandaki bir sır hafızaya kaydedilemez.",
     full: "Hafıza dolu (500 not). Yenisi için bazılarını sil.",
+    expired: "Bu öneri artık açık değil. Hâlâ hatırlanmasını istiyorsan sohbette yeniden söyle.",
     quoteMissing: "Bu sözler bu görevde yazdıklarında yok.",
     preview: "Hatırla: {text}",
     previewKind: "Tür: {kind}",
@@ -467,19 +467,6 @@ export const messages = {
     },
   },
 
-  preferences: {
-    corrupt: "Kaydedilen tercihler dosyası okunamıyor. Düzeltilene veya kaldırılana kadar hiçbir tercih kullanılmayacak ya da üzerine yazılmayacak.",
-    title: "Kaydedilen tercihler",
-    description: "Yalnızca Vunemi’den açıkça hatırlamasını istediğin tercihler burada görünür. Her kayıt için onay istenir. Dilediğini silebilirsin.",
-    empty: "Kaydedilmiş tercih yok.",
-    removeLabel: "Tercihi sil: {text}",
-    preview: "Bu tercihi hatırla: {text}",
-    undo: "Tercih kaldırıldı",
-    invalid: "En fazla 300 karakterlik kısa bir tercih gir.",
-    limit: "Tercih listesi dolu (30 kayıt).",
-    secret: "Kasandaki bir sır tercih olarak kaydedilemez.",
-  },
-
   settings: {
     sectionsLabel: "Ayar bölümleri",
     sections: {
@@ -489,6 +476,7 @@ export const messages = {
       connections: "Bağlantılar",
       model: "Model",
       language: "Dil",
+      memory: "Hafıza",
       data: "Veri denetimleri",
       vault: "Kasa",
       outbox: "Gönderim kutusu",

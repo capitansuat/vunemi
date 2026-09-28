@@ -91,6 +91,11 @@ export type AgentEvent =
       ttftMs: number | null;
       tokensPerSec: number | null;
     }
+  /** The notes from memory this run was given; shown under its answer. */
+  | { type: "memory.given"; runId: string; notes: MemoryNote[]; at: number }
+  /** What Vunemi would like to remember from the run, waiting for the user's yes. */
+  | { type: "memory.proposed"; runId: string; proposals: MemoryProposal[]; at: number }
+  | { type: "memory.resolved"; runId: string; proposalId: string; decision: "saved" | "skipped"; text?: string; at: number }
   /** Older turns are being condensed; the UI shows it under the run it follows. */
   | { type: "context.compacting"; runId: string; at: number }
   | {
@@ -161,3 +166,19 @@ export type ApprovalDecision =
   | { kind: "reject"; note?: string };
 
 export type EmitFn = (event: AgentEvent) => void;
+
+export interface MemoryNote {
+  id: string;
+  text: string;
+  kind: "general" | "topic";
+}
+
+export interface MemoryProposal {
+  id: string;
+  text: string;
+  kind: "general" | "topic";
+  /** The user's own words it came from. */
+  quote: string;
+  /** The note it would replace. */
+  updates?: { id: string; text: string };
+}

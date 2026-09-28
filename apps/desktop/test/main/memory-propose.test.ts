@@ -76,8 +76,8 @@ describe("propose", () => {
   });
 
   it("drops secrets and invalid notes", async () => {
-    const m = model('[{"text":"password=hunter2secret","kind":"general","quote":"my password=hunter2secret ok"}]');
-    expect(await run(m, ["my password=hunter2secret ok"])).toEqual([]);
+    const m = model('[{"text":"password=hunter2secret","kind":"general","quote":"my password=hunter2secret ok"},{"text":"Likes PDF","kind":"general","quote":"password=hunter2secret and I like PDF"}]');
+    expect(await run(m, ["my password=hunter2secret ok", "password=hunter2secret and I like PDF"])).toEqual([]);
   });
 
   it("offers an update when a note changes, and confirms one said again", async () => {

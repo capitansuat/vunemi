@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "Wants to add to a note", doing: "Adding to a note", done: "Added to a note" },
     get_current_time: { ask: "Wants to check the time", doing: "Checking the time", done: "Checked the time" },
     scratchpad_read: { ask: "Wants to read the notepad", doing: "Reading the notepad", done: "Read the notepad" },
-    remember_preference: { ask: "Wants to remember a preference", doing: "Remembering the preference", done: "Remembered the preference" },
     memory_remember: { ask: "Wants to remember a note", doing: "Remembering the note", done: "Remembered the note" },
     scratchpad_write: { ask: "Wants to write to the notepad", doing: "Writing to the notepad", done: "Wrote to the notepad" },
     page_goto: { ask: "Wants to open a page", doing: "Opening a page", done: "Opened the page" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "Enter one short note (up to 300 characters, one line).",
     secret: "A secret from your vault can't be saved in memory.",
     full: "Memory is full (500 notes). Delete some to add more.",
+    expired: "This suggestion is no longer open. Ask again in the conversation if you still want it remembered.",
     quoteMissing: "These words aren't in what you wrote in this task.",
     preview: "Remember: {text}",
     previewKind: "Kind: {kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "The saved preferences file cannot be read. No preferences will be used or overwritten until you fix or remove it.",
-    title: "Saved preferences",
-    description: "Only preferences you explicitly ask Vunemi to remember appear here. Each save asks for your approval. Delete any item at any time.",
-    empty: "No saved preferences.",
-    removeLabel: "Delete preference: {text}",
-    preview: "Remember this preference: {text}",
-    undo: "Preference removed",
-    invalid: "Enter one short preference (up to 300 characters).",
-    limit: "The preference list is full (30 items).",
-    secret: "A secret from your vault cannot be saved as a preference.",
-  },
-
   settings: {
     sectionsLabel: "Settings sections",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "Connections",
       model: "Model",
       language: "Language",
+      memory: "Memory",
       data: "Data controls",
       vault: "Vault",
       outbox: "Outbox",

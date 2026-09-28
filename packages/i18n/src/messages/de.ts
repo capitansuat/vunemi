@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "Möchte etwas zu einer Notiz hinzufügen", doing: "Ergänzt eine Notiz", done: "Hat eine Notiz ergänzt" },
     get_current_time: { ask: "Möchte die Uhrzeit abfragen", doing: "Fragt die Uhrzeit ab", done: "Hat die Uhrzeit abgefragt" },
     scratchpad_read: { ask: "Möchte den Notizblock lesen", doing: "Liest den Notizblock", done: "Hat den Notizblock gelesen" },
-    remember_preference: { ask: "Möchte sich eine Präferenz merken", doing: "Präferenz wird gespeichert", done: "Präferenz gespeichert" },
     memory_remember: { ask: "Möchte sich eine Notiz merken", doing: "Merkt sich die Notiz", done: "Notiz gemerkt" },
     scratchpad_write: { ask: "Möchte in den Notizblock schreiben", doing: "Schreibt in den Notizblock", done: "Hat in den Notizblock geschrieben" },
     page_goto: { ask: "Möchte eine Seite öffnen", doing: "Öffnet eine Seite", done: "Hat die Seite geöffnet" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "Gib eine kurze Notiz ein (bis 300 Zeichen, eine Zeile).",
     secret: "Ein Geheimnis aus deinem Tresor kann nicht im Gedächtnis gespeichert werden.",
     full: "Das Gedächtnis ist voll (500 Notizen). Lösche einige, um neue hinzuzufügen.",
+    expired: "Dieser Vorschlag ist nicht mehr offen. Sag es im Gespräch noch einmal, wenn es gemerkt werden soll.",
     quoteMissing: "Diese Worte stehen nicht in dem, was du in dieser Aufgabe geschrieben hast.",
     preview: "Merken: {text}",
     previewKind: "Art: {kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "Die Datei mit gespeicherten Präferenzen kann nicht gelesen werden. Bis sie repariert oder entfernt ist, werden keine Präferenzen verwendet oder überschrieben.",
-    title: "Gespeicherte Präferenzen",
-    description: "Hier erscheinen nur Präferenzen, um deren Speicherung du Vunemi ausdrücklich bittest. Jede Speicherung benötigt deine Zustimmung.",
-    empty: "Keine gespeicherten Präferenzen.",
-    removeLabel: "Präferenz löschen: {text}",
-    preview: "Diese Präferenz merken: {text}",
-    undo: "Präferenz entfernt",
-    invalid: "Gib eine kurze Präferenz mit höchstens 300 Zeichen ein.",
-    limit: "Die Präferenzliste ist voll (30 Einträge).",
-    secret: "Ein Geheimnis aus deinem Tresor kann nicht als Präferenz gespeichert werden.",
-  },
-
   settings: {
     sectionsLabel: "Einstellungsbereiche",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "Verbindungen",
       model: "Modell",
       language: "Sprache",
+      memory: "Gedächtnis",
       data: "Datenkontrolle",
       vault: "Tresor",
       outbox: "Postausgang",

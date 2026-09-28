@@ -36,7 +36,11 @@ import { checkAgentModel, modelConfig, probeProviders } from "./providers.js";
 import { forgetOldPictures, loadImage, readImageText } from "./images.js";
 import { AgentSession } from "./session.js";
 import { SessionStore } from "./sessions.js";
-import { PreferenceStore, rememberPreferenceTool } from "./preferences.js";
+import { MemoryStore } from "./memory/store.js";
+import { Embedder } from "./memory/embedder.js";
+import { generalInstructions, recall } from "./memory/recall.js";
+import { propose, type Proposal } from "./memory/propose.js";
+import { memoryRememberTool } from "./memory/tool.js";
 import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, suggestion, summaryLine, type AutomationStatus } from "./automations.js";
 import { getLocale, isLocale, localeInfo, matchLocale, setLocale, t, type Locale } from "@vunemi/i18n";
 
@@ -206,7 +210,7 @@ function languageInstructions(): string {
 // for "ready" at the top level (an ESM main module delays "ready" until it
 // has finished evaluating; awaiting it here deadlocks, measured 23 Sep). So
 // the client reads as locked until then, and what needs a secret waits for
-// `vaultReady`: the outbox, the MCP migration, the preference check.
+// `vaultReady`: the outbox, the MCP migration, the memory check.
 const vaultHost = new VaultHost({
   spawn: () => utilityProcess.fork(join(here, "vault.js"), [], { serviceName: "Vunemi Vault", stdio: "inherit" }),
   init: () => ({ userData: app.getPath("userData"), helperPath, locale: getLocale() }),
@@ -232,9 +236,21 @@ async function redact(text: string): Promise<string> {
     return "[Withheld: the Vault couldn't check this text for stored secrets. Try again in a moment.]";
   }
 }
-const preferences = new PreferenceStore(app.getPath("userData"), redact);
-tools.register(rememberPreferenceTool(preferences));
-void vaultReady.then(() => preferences.check());
+// Built-in llama.cpp: the engine for chat, and search by meaning in memory.
+const llamaServer = engineBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir() });
+// What Vunemi remembers about the user; Preferences move in on first start.
+const memory = new MemoryStore(app.getPath("userData"), redact);
+void vaultReady.then(() => memory.check());
+const meaning = new Embedder({
+  binary: llamaServer,
+  // With the speech model: "Forget everything" empties this folder.
+  dir: join(app.getPath("userData"), "models"),
+  pidFile: join(app.getPath("userData"), "embedder.pid"),
+  onChange: (status) => send(CH.memorySearchChanged, status),
+});
+tools.register(memoryRememberTool(memory, () => session.userWords()));
+/** Notes proposed under an answer, until the user says yes or no. Not kept past a restart. */
+const proposals = new Map<string, { runId: string; conversation: string; proposal: Proposal }>();
 
 /**
  * Secrets written by safeStorage, re-encrypted under the helper's key. Runs
@@ -498,24 +514,27 @@ const sessionList = (): SessionList => {
 // Vunemi's own model server, for people with no model server of their own.
 const engine: EngineService = new EngineService({
   dir: join(app.getPath("userData"), "engine"),
-  binary: engineBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir() }),
+  binary: llamaServer,
   totalMemory: totalmem(),
   isBusy: () => session.running || session.queued.length > 0,
   testModel: async (spec, endpoint) => (await checkAgentModel(spec, settings.modelSettings, () => endpoint)).toolCalled,
   onChange: (view) => send(CH.engineChanged, view),
 });
 
+/** Everything a run says, kept with its conversation and shown. */
+function record(event: AgentEvent): void {
+  // Work keeps the engine loaded; the idle clock starts from the last of it.
+  if (event.type === "run.started" || event.type === "run.finished") engine.touch();
+  activity.record(event);
+  artefacts.record(event);
+  presence.record(event);
+  conversations.record(event);
+  send(CH.event, event);
+}
+
 const session: AgentSession = new AgentSession({
   tools,
-  emit: (event: AgentEvent) => {
-    // Work keeps the engine loaded; the idle clock starts from the last of it.
-    if (event.type === "run.started" || event.type === "run.finished") engine.touch();
-    activity.record(event);
-    artefacts.record(event);
-    presence.record(event);
-    conversations.record(event);
-    send(CH.event, event);
-  },
+  emit: record,
   onHistory: (history) => {
     conversations.setHistory(history);
     send(CH.sessionsChanged, sessionList());
@@ -524,7 +543,7 @@ const session: AgentSession = new AgentSession({
   // Read per run: a connection switched off mid-session stops being
   // described as well as stopping working.
   instructions: () =>
-    [languageInstructions(), preferences.instructions(), connectors.instructions(), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write"))]
+    [languageInstructions(), generalInstructions(memory), connectors.instructions(), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write"))]
       .filter(Boolean)
       .join("\n\n"),
   planBeforeRun: () => settings.planBeforeRun,
@@ -544,6 +563,18 @@ const session: AgentSession = new AgentSession({
   readImageText: (path) => readImageText(path),
   grants,
   onUndoOffered: (u) => activity.offerUndo(u.callId, u.label, u.undo),
+  recall: (goal) => recall(memory, meaning, goal),
+  afterRun: ({ runId, model, words }) => {
+    const conversation = conversations.currentId;
+    void propose({ model, messages: words, store: memory, meaning, signal: AbortSignal.timeout(120_000), sessionId: conversation })
+      .then((found) => {
+        // The user has moved to another conversation: the card would land in the wrong one.
+        if (found.length === 0 || conversations.currentId !== conversation) return;
+        for (const proposal of found) proposals.set(proposal.id, { runId, conversation, proposal });
+        record({ type: "memory.proposed", runId, proposals: found, at: Date.now() });
+      })
+      .catch((err: unknown) => console.error("[vunemi] memory proposals:", err instanceof Error ? err.message : String(err)));
+  },
 });
 
 /** Where a tool's untrusted output came from, in words a card can show. */
@@ -890,8 +921,50 @@ handle(CH.sessionsDismiss, () => {
 });
 // "Bu oturumu unut": the current conversation, gone.
 handle(CH.resetSession, () => forgetConversation(conversations.currentId));
-handle(CH.preferencesList, () => preferences.list());
-handle(CH.preferencesDelete, (_e, id: string) => { preferences.remove(id); return preferences.list(); });
+handle(CH.memoryList, () => memory.list());
+handle(CH.memoryUpdate, async (_e, id: unknown, text: unknown) => {
+  if (typeof id !== "string") throw new Error(t("memory.invalid"));
+  await memory.update(id, String(text));
+  return memory.list();
+});
+handle(CH.memoryDelete, (_e, id: unknown) => {
+  if (typeof id === "string") memory.remove(id);
+  return memory.list();
+});
+handle(CH.memoryForget, () => {
+  memory.clear();
+  proposals.clear();
+  return memory.list();
+});
+handle(CH.memoryResolve, async (_e, runId: unknown, proposalId: unknown, decision: unknown, edited: unknown) => {
+  const held = typeof proposalId === "string" ? proposals.get(proposalId) : undefined;
+  if (!held || held.runId !== runId || held.conversation !== conversations.currentId) throw new Error(t("memory.expired"));
+  if (decision !== "saved" && decision !== "skipped") throw new Error(t("memory.invalid"));
+  const { proposal } = held;
+  let text: string | undefined;
+  if (decision === "saved") {
+    // The user may have edited it on the card: their words now, checked like any note.
+    text = await memory.validText(typeof edited === "string" && edited.trim() ? edited : proposal.text);
+    const evidence = { quote: proposal.quote, sessionId: held.conversation, at: Date.now() };
+    if (proposal.updates && memory.get(proposal.updates.id)) await memory.update(proposal.updates.id, text, evidence);
+    else await memory.add({ text, kind: proposal.kind, evidence });
+  }
+  proposals.delete(proposal.id);
+  record({ type: "memory.resolved", runId: held.runId, proposalId: proposal.id, decision, ...(text && { text }), at: Date.now() });
+});
+handle(CH.memorySearch, () => meaning.status());
+handle(CH.memorySearchDownload, async () => {
+  try {
+    return await meaning.download();
+  } catch (err) {
+    if (err instanceof DownloadError) {
+      if (err.code === "cancelled") return meaning.status();
+      throw new Error(t(`engine.error.${err.code}`, { size: `${((err.needed ?? 0) / 1e9).toFixed(1)} GB` }));
+    }
+    throw err;
+  }
+});
+handle(CH.memorySearchCancel, () => meaning.cancelDownload());
 handle(CH.forgetEverything, async () => {
   if (session.running || mailOutbox.busy) {
     throw new Error(t("main.stopAndSettleFirst"));
@@ -900,14 +973,16 @@ handle(CH.forgetEverything, async () => {
   await activity.clear();
   await artefacts.clear();
   await vault.clear();
-  preferences.clear();
+  memory.clear();
+  proposals.clear();
   settings.reset();
   session.reset();
   sentinel.reset();
   conversations.clear();
   // Nothing may hold a model file open while it is deleted.
   await engine.dispose();
-  for (const name of ["shots", "shadow", "models", "engine", "projects.json"]) {
+  await meaning.stop();
+  for (const name of ["shots", "shadow", "models", "engine", "projects.json", "preferences.json", "preferences.json.bak"]) {
     rmSync(join(app.getPath("userData"), name), { recursive: true, force: true });
   }
   mkdirSync(shotDir, { recursive: true });
@@ -1261,7 +1336,10 @@ app.on("before-quit", (e) => {
   quitting = true;
   e.preventDefault();
   session.stop();
-  void Promise.allSettled([browser.dispose(), mailOutbox.settle(), engine.dispose()]).finally(() => app.quit());
+  void Promise.allSettled([browser.dispose(), mailOutbox.settle(), engine.dispose(), meaning.stop()]).finally(() => {
+    memory.close();
+    app.quit();
+  });
 });
 
 app.on("will-quit", () => {

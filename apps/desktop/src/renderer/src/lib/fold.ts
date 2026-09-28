@@ -3,7 +3,7 @@
  * same view out, so the timeline can be rebuilt from a recorded log.
  */
 
-import type { ActionClass, AgentEvent, ApprovalDecision, Artifact, Produced, RunStatus } from "@vunemi/agent-core";
+import type { ActionClass, AgentEvent, ApprovalDecision, Artifact, MemoryNote, MemoryProposal, Produced, RunStatus } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 
 export type CallStatus = "proposed" | "awaiting" | "running" | "ok" | "error" | "rejected";
@@ -75,7 +75,14 @@ export interface RunView {
   plan?: PlanView;
   /** Older turns condensed or trimmed after (or during) this run. */
   compaction?: CompactionView;
+  /** Notes from memory the run was given, and notes it proposes to remember. */
+  memory?: MemoryView;
   steps: StepView[];
+}
+
+export interface MemoryView {
+  given: MemoryNote[];
+  proposals: (MemoryProposal & { state: "open" | "saved" | "skipped" })[];
 }
 
 export function foldEvent(runs: RunView[], e: AgentEvent): RunView[] {
@@ -190,6 +197,24 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
       };
     case "context.compacting":
       return { ...run, compaction: { status: "running" } };
+    case "memory.given":
+      return { ...run, memory: { given: e.notes, proposals: run.memory?.proposals ?? [] } };
+    case "memory.proposed":
+      return {
+        ...run,
+        memory: { given: run.memory?.given ?? [], proposals: e.proposals.map((p) => ({ ...p, state: "open" as const })) },
+      };
+    case "memory.resolved":
+      if (!run.memory) return run;
+      return {
+        ...run,
+        memory: {
+          ...run.memory,
+          proposals: run.memory.proposals.map((p) =>
+            p.id === e.proposalId ? { ...p, state: e.decision, ...(e.text && { text: e.text }) } : p,
+          ),
+        },
+      };
     case "context.compacted": {
       if (e.kind === "unchanged") {
         const { compaction: _, ...rest } = run;

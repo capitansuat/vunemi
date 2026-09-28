@@ -42,7 +42,6 @@ export const messages: Catalogue = {
     notes_append: { ask: "Veut compléter une note", doing: "Complète une note", done: "A complété une note" },
     get_current_time: { ask: "Veut regarder l’heure", doing: "Regarde l’heure", done: "A regardé l’heure" },
     scratchpad_read: { ask: "Veut lire le bloc-notes", doing: "Lit le bloc-notes", done: "A lu le bloc-notes" },
-    remember_preference: { ask: "Souhaite mémoriser une préférence", doing: "Enregistrement de la préférence", done: "Préférence enregistrée" },
     memory_remember: { ask: "Veut mémoriser une note", doing: "Mémorisation de la note", done: "Note mémorisée" },
     scratchpad_write: { ask: "Veut écrire dans le bloc-notes", doing: "Écrit dans le bloc-notes", done: "A écrit dans le bloc-notes" },
     page_goto: { ask: "Veut ouvrir une page", doing: "Ouvre une page", done: "A ouvert la page" },
@@ -446,6 +445,7 @@ export const messages: Catalogue = {
     invalid: "Saisissez une note courte (300 caractères max., une ligne).",
     secret: "Un secret de votre coffre ne peut pas être enregistré en mémoire.",
     full: "La mémoire est pleine (500 notes). Supprimez-en pour en ajouter.",
+    expired: "Cette suggestion n'est plus ouverte. Redites-le dans la conversation si vous voulez toujours qu'il soit mémorisé.",
     quoteMissing: "Ces mots ne figurent pas dans ce que vous avez écrit pour cette tâche.",
     preview: "Mémoriser : {text}",
     previewKind: "Type : {kind}",
@@ -463,19 +463,6 @@ export const messages: Catalogue = {
     },
   },
 
-  preferences: {
-    corrupt: "Le fichier des préférences est illisible. Aucune préférence ne sera utilisée ni écrasée avant sa réparation ou sa suppression.",
-    title: "Préférences enregistrées",
-    description: "Seules les préférences que vous demandez explicitement à Vunemi de mémoriser apparaissent ici. Chaque enregistrement nécessite votre accord.",
-    empty: "Aucune préférence enregistrée.",
-    removeLabel: "Supprimer la préférence : {text}",
-    preview: "Mémoriser cette préférence : {text}",
-    undo: "Préférence supprimée",
-    invalid: "Saisissez une préférence courte (300 caractères maximum).",
-    limit: "La liste des préférences est pleine (30 éléments).",
-    secret: "Un secret de votre coffre ne peut pas être enregistré comme préférence.",
-  },
-
   settings: {
     sectionsLabel: "Sections des réglages",
     sections: {
@@ -485,6 +472,7 @@ export const messages: Catalogue = {
       connections: "Connexions",
       model: "Modèle",
       language: "Langue",
+      memory: "Mémoire",
       data: "Contrôle des données",
       vault: "Coffre",
       outbox: "Boîte d’envoi",

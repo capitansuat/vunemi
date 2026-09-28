@@ -84,7 +84,7 @@ export interface ToolDef<Args = Record<string, unknown>> {
   /**
    * Checked before any card: a reason here refuses the call outright, so
    * the user is never asked to approve something that can't be done (a
-   * preference holding a secret, say). Null lets it through.
+   * note holding a secret, say). Null lets it through.
    */
   check?(args: Args): string | null | Promise<string | null>;
   /**

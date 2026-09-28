@@ -92,7 +92,7 @@ function storeModel(spec: string | null): void {
 export type View = "chat" | "artefacts" | "settings";
 
 /** Settings keeps everything besides the conversation and what it made, so the sidebar stays short. */
-export type SettingsSection = "permissions" | "security" | "connections" | "vault" | "outbox" | "automations" | "activity" | "model" | "language" | "data";
+export type SettingsSection = "permissions" | "security" | "connections" | "vault" | "outbox" | "automations" | "activity" | "model" | "language" | "memory" | "data";
 
 export type VoiceState = "off" | "listening" | "thinking" | "speaking";
 

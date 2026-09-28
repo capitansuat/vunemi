@@ -303,7 +303,25 @@ export type InspectView =
   | { ok: false; repo: string; reason: "gated" | "license" | "tooBig" | "noFile" | "notFound" };
 export type DownloadRequest = { catalog: string } | { repo: string } | { resume: true } | { vision: string };
 
-export interface PreferenceView { id: string; text: string; createdAt: number }
+/** A note in memory, with the user's own words it came from. */
+export interface MemoryNoteView {
+  id: string;
+  text: string;
+  kind: "general" | "topic";
+  createdAt: number;
+  updatedAt: number;
+  givenAt: number | null;
+  confirmed: number;
+  /** `sessionId` is null for a note moved from the old Preferences list. */
+  evidence: { quote: string; sessionId: string | null; at: number }[];
+}
+
+/** Search by meaning: its model, and whether it is here. */
+export type MemorySearchStatus =
+  | { state: "unavailable" }
+  | { state: "absent"; bytes: number }
+  | { state: "downloading"; bytes: number; received: number }
+  | { state: "ready"; bytes: number };
 
 /** Exposed on `window.vunemi` by the preload script. */
 export interface VunemiApi {
@@ -360,8 +378,16 @@ export interface VunemiApi {
   /** Lets the cut-short task go; the conversation stays. */
   dismissInterrupted(): Promise<SessionList>;
   onSessions(listener: (list: SessionList) => void): () => void;
-  listPreferences(): Promise<PreferenceView[]>;
-  deletePreference(id: string): Promise<PreferenceView[]>;
+  listMemory(): Promise<MemoryNoteView[]>;
+  updateMemory(id: string, text: string): Promise<MemoryNoteView[]>;
+  deleteMemory(id: string): Promise<MemoryNoteView[]>;
+  forgetMemory(): Promise<MemoryNoteView[]>;
+  /** The user's answer to a note proposed under a reply; `text` when they edited it. */
+  resolveMemory(runId: string, proposalId: string, decision: "saved" | "skipped", text?: string): Promise<void>;
+  memorySearch(): Promise<MemorySearchStatus>;
+  memorySearchDownload(): Promise<MemorySearchStatus>;
+  memorySearchCancel(): Promise<void>;
+  onMemorySearch(listener: (status: MemorySearchStatus) => void): () => void;
   forgetEverything(): Promise<void>;
   /** The language Vunemi speaks; main keeps it, the window follows. */
   getLanguage(): Promise<Locale>;
@@ -517,8 +543,15 @@ export const CH = {
   sessionsOpen: "sessions:open",
   sessionsDelete: "sessions:delete",
   sessionsChanged: "sessions:changed",
-  preferencesList: "preferences:list",
-  preferencesDelete: "preferences:delete",
+  memoryList: "memory:list",
+  memoryUpdate: "memory:update",
+  memoryDelete: "memory:delete",
+  memoryForget: "memory:forget",
+  memoryResolve: "memory:resolve",
+  memorySearch: "memory:search",
+  memorySearchDownload: "memory:search-download",
+  memorySearchCancel: "memory:search-cancel",
+  memorySearchChanged: "memory:search-changed",
   forgetEverything: "data:forget-everything",
   languageGet: "language:get",
   languageSet: "language:set",
