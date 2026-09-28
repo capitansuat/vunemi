@@ -64,6 +64,11 @@
       {
         "from": "../../native/VunemiRecorder/.build/release/VunemiRecorder",
         "to": "VunemiRecorder"
+      },
+      {
+        "from": "resources",
+        "to": ".",
+        "filter": ["tray*.png"]
       }
     ],
     "mac": {
