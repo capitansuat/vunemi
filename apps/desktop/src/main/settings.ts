@@ -42,15 +42,25 @@ export interface StoredGoogleMailAccount {
   addedAt: number;
 }
 
-export type StoredMailAccount = StoredImapMailAccount | StoredOutlookMailAccount | StoredGoogleMailAccount;
+/** An account the Mac's Mail app already has; Mail signs in, so nothing secret is kept. */
+export interface StoredAppleMailAccount {
+  id: string;
+  provider: "applemail";
+  /** Mail's name for the account. */
+  account: string;
+  email: string;
+  addedAt: number;
+}
+
+export type StoredMailAccount = StoredImapMailAccount | StoredOutlookMailAccount | StoredGoogleMailAccount | StoredAppleMailAccount;
 
 /** The address an account sends from, whichever way it signs in. */
 export function mailAddressOf(entry: StoredMailAccount): string {
-  return entry.provider === "outlook" || entry.provider === "google" ? entry.email : entry.config.email;
+  return entry.provider === "outlook" || entry.provider === "google" || entry.provider === "applemail" ? entry.email : entry.config.email;
 }
 
 function copyMailAccount(entry: StoredMailAccount): StoredMailAccount {
-  return entry.provider === "outlook" || entry.provider === "google" ? { ...entry } : { ...entry, config: { ...entry.config } };
+  return entry.provider === "outlook" || entry.provider === "google" || entry.provider === "applemail" ? { ...entry } : { ...entry, config: { ...entry.config } };
 }
 
 export interface Settings {
@@ -251,6 +261,11 @@ export class SettingsStore {
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(entry.email) ||
                 !/^[0-9a-f-]{36}$/i.test(entry.clientId)) return [];
             return [{ id: entry.id, provider: "outlook" as const, email: entry.email, clientId: entry.clientId, addedAt: entry.addedAt }];
+          }
+          if (entry.provider === "applemail") {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(entry.email) || typeof entry.account !== "string" ||
+                !entry.account.trim() || entry.account.length > 200 || /[\u0000-\u001f]/u.test(entry.account)) return [];
+            return [{ id: entry.id, provider: "applemail" as const, account: entry.account, email: entry.email, addedAt: entry.addedAt }];
           }
           if (entry.provider === "google") {
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(entry.email) ||

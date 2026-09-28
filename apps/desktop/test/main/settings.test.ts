@@ -74,6 +74,19 @@ describe("security settings", () => {
     expect(mailAddressOf(again.mailAccounts[0]!)).toBe("me@gmail.com");
   });
 
+  it("keeps a Mail app account and drops one with a bad name or address", () => {
+    const { dir, settings } = store();
+    settings.setMailAccounts([
+      { id: "a-1", provider: "applemail", account: "iCloud", email: "test@example.com", addedAt: 1 },
+      { id: "a-2", provider: "applemail", account: "", email: "test2@example.com", addedAt: 2 },
+      { id: "a-3", provider: "applemail", account: "Work\nx", email: "test3@example.com", addedAt: 3 },
+      { id: "a-4", provider: "applemail", account: "Home", email: "not an address", addedAt: 4 },
+    ]);
+    const again = new SettingsStore(dir);
+    expect(again.mailAccounts).toEqual([{ id: "a-1", provider: "applemail", account: "iCloud", email: "test@example.com", addedAt: 1 }]);
+    expect(mailAddressOf(again.mailAccounts[0]!)).toBe("test@example.com");
+  });
+
   it("refuses an invalid persisted policy", () => {
     const { dir } = store();
     writeFileSync(join(dir, "settings.json"), JSON.stringify({ connections: {}, mcpServers: [], policy: { read: "auto", outbound: "auto" } }));

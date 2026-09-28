@@ -66,6 +66,8 @@ export function serveMail(server: VaultServer, opts: ServeMailOptions = {}): voi
     const key = JSON.stringify(entry);
     const cached = open.get(entry.id);
     if (cached?.key === key) return cached.account;
+    // Mail app accounts hold no secret and run in the main process, never here.
+    if (entry.provider === "applemail") throw new TypeError("A Mail app account is not opened in the Vault process.");
     const name = mailSecretName(entry.id);
     if (!vault.has(name)) throw new Error(t("connectors.mail.passwordUnreadable"));
     // Saved before binding existed: bound to this account's servers now.
