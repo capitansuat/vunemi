@@ -47,6 +47,11 @@ export function MeetingsView() {
     return () => clearTimeout(timer);
   }, [query]);
 
+  // Back from a meeting's page: it may have been renamed or deleted there.
+  useEffect(() => {
+    if (open === null) void window.vunemi.meetingsList(queryRef.current).then(setList);
+  }, [open]);
+
   const record = async () => {
     setError(null);
     setStarting(true);

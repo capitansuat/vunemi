@@ -1064,12 +1064,17 @@ handle(CH.meetingsGet, (_e, id: unknown) => {
   return m ? meetingView(m) : null;
 });
 handle(CH.meetingsStatus, () => meetingStatusView(meetings.status()));
-handle(CH.meetingsStart, (_e, microphone: unknown) =>
-  meetingCall(async () => {
+handle(CH.meetingsStart, async (_e, microphone: unknown) => {
+  try {
     await meetings.start(typeof microphone === "string" && microphone ? microphone : undefined);
-    return meetingStatusView(meetings.status());
-  }),
-);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const text = meetingErrorText(message);
+    // Known reasons say what to do; anything else says at least what failed.
+    throw new Error(text === message ? t("meetings.error.unknown", { why: message }) : text);
+  }
+  return meetingStatusView(meetings.status());
+});
 handle(CH.meetingsStop, (_e, model: unknown) => {
   meetingModel = modelSpec(model) ?? meetingModel;
   return meetingCall(() => meetings.stop(meetingModel));
