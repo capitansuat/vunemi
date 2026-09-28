@@ -85,20 +85,23 @@ export function writtenIn(text: string): Locale | null {
 }
 
 /**
- * Which of Vunemi's languages was spoken. Whisper can pick any of its
- * hundred: a short Turkish "selam" came back as Persian, in Persian
- * letters. Its own guess stands when it is one of ours; otherwise the most
- * likely of ours, which the clip is then transcribed in.
+ * How much likelier another language must be before Vunemi stops hearing the
+ * app's own: a full sentence clears it easily, a single word never does.
  */
-export function spokenIn(probabilities: Record<string, number> | undefined, detected: string | undefined): Locale | null {
-  const ours = Object.keys(VOICES) as Locale[];
-  if (detected && (ours as string[]).includes(detected)) return detected as Locale;
-  let best: Locale | null = null;
-  for (const code of ours) {
-    const p = probabilities?.[code] ?? 0;
-    if (p > 0 && (best === null || p > (probabilities?.[best] ?? 0))) best = code;
-  }
-  return best;
+const CONFIDENT = 0.5;
+const CLEARLY_LIKELIER = 2;
+
+/**
+ * Which of Vunemi's languages was spoken. The app's language unless whisper
+ * is sure of another: on one word it is not, and a Turkish "selam" came back
+ * as Persian letters, then as English "Salam" and "Salaam". Whisper's own
+ * guess among its hundred languages counts only when it is one of ours.
+ */
+export function spokenIn(probabilities: Record<string, number> | undefined, expected: Locale): Locale {
+  const p = (code: string) => probabilities?.[code] ?? 0;
+  let best: Locale = expected;
+  for (const code of Object.keys(VOICES) as Locale[]) if (p(code) > p(best)) best = code;
+  return best !== expected && p(best) >= CONFIDENT && p(best) >= CLEARLY_LIKELIER * p(expected) ? best : expected;
 }
 
 function voiceFor(locale: Locale): string | null {
@@ -217,9 +220,10 @@ export class Voice {
   }
 
   /**
-   * 16 kHz mono WAV in, text out, in whatever language was spoken. Not the
-   * language Vunemi is set to: live, with Vunemi in English, Turkish speech
-   * came back as broken English.
+   * 16 kHz mono WAV in, text out. Heard in the app's language unless the
+   * speech is clearly in another of Vunemi's: forced into one language,
+   * Turkish speech in an English Vunemi came back as broken English; left to
+   * guess, a Turkish "selam" came back as Persian.
    */
   async transcribe(wav: Buffer): Promise<string> {
     await this.start("auto");
@@ -228,10 +232,10 @@ export class Voice {
     const heard = await this.inference(wav, "auto");
     // Whisper's code for what it heard, e.g. "tr"; the name ("turkish") is in `language`.
     const code = Object.entries(heard.language_probabilities ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0];
-    const ours = spokenIn(heard.language_probabilities, code);
-    if (ours) this.heardLanguage = ours;
-    // Heard as a language Vunemi doesn't speak: say it again, in the likeliest one it does.
-    if (ours && code && code !== ours) return clean((await this.inference(wav, ours)).text ?? "");
+    const ours = spokenIn(heard.language_probabilities, getLocale());
+    this.heardLanguage = ours;
+    // Whisper wrote it down in another language than the one decided on: again, in that one.
+    if (code !== ours) return clean((await this.inference(wav, ours)).text ?? "");
     return clean(heard.text ?? "");
   }
 

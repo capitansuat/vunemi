@@ -18,16 +18,18 @@ describe("the language a reply is read in", () => {
 });
 
 describe("the language that was spoken", () => {
-  it("keeps whisper's guess when Vunemi speaks it", () => {
-    expect(spokenIn({ tr: 0.82, en: 0.08 }, "tr")).toBe("tr");
+  it("is the app's language when whisper is unsure, as it is on one word", () => {
+    expect(spokenIn({ ar: 0.45, en: 0.2, tr: 0.15, fa: 0.1 }, "tr")).toBe("tr");
+    expect(spokenIn({ en: 0.4, tr: 0.35 }, "tr")).toBe("tr");
   });
 
-  it("falls back to the likeliest of Vunemi's languages when whisper hears another", () => {
-    expect(spokenIn({ fa: 0.6, tr: 0.3, ar: 0.05, en: 0.02 }, "fa")).toBe("tr");
+  it("is another of Vunemi's languages when whisper is sure of it", () => {
+    expect(spokenIn({ en: 0.93, tr: 0.02 }, "tr")).toBe("en");
+    expect(spokenIn({ tr: 0.82, az: 0.1, en: 0.03 }, "en")).toBe("tr");
   });
 
-  it("says nothing when none of Vunemi's languages is in the running", () => {
-    expect(spokenIn({ fa: 0.9 }, "fa")).toBeNull();
-    expect(spokenIn(undefined, undefined)).toBeNull();
+  it("never picks a language Vunemi doesn't speak", () => {
+    expect(spokenIn({ fa: 0.9, tr: 0.05 }, "en")).toBe("en");
+    expect(spokenIn(undefined, "de")).toBe("de");
   });
 });
