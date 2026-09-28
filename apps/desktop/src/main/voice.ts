@@ -126,6 +126,25 @@ const READY_TIMEOUT_MS = 60_000;
 /** A minute of speech transcribes in seconds; longer than this is a fault. */
 const TRANSCRIBE_TIMEOUT_MS = 60_000;
 
+interface Heard {
+  text?: string;
+  language_probabilities?: Record<string, number>;
+  segments?: { no_speech_prob?: number; t0?: number; t1?: number; start?: number; end?: number }[];
+}
+
+/** Whisper's no-speech belief over a clip, each part weighed by its length. */
+export function noSpeech(segments: Heard["segments"]): number {
+  let weight = 0;
+  let sum = 0;
+  for (const s of segments ?? []) {
+    if (typeof s.no_speech_prob !== "number") continue;
+    const length = Math.max((s.end ?? s.t1 ?? 1) - (s.start ?? s.t0 ?? 0), 0.01);
+    weight += length;
+    sum += s.no_speech_prob * length;
+  }
+  return weight ? sum / weight : 0;
+}
+
 export class Voice {
   /** The language of the user's last spoken turn. */
   private heardLanguage: Locale | null = null;
@@ -239,7 +258,23 @@ export class Voice {
     return clean(heard.text ?? "");
   }
 
-  private async inference(wav: Buffer, language: string): Promise<{ text?: string; language_probabilities?: Record<string, number> }> {
+  /**
+   * One stretch of a meeting. Unlike dictation it may be in a language fixed
+   * for the whole meeting; "auto" lets whisper judge, within Vunemi's
+   * languages. `noSpeech` is whisper's own belief that nothing was said.
+   */
+  async clip(wav: Buffer, language: Locale | "auto"): Promise<{ text: string; language: Locale; noSpeech: number }> {
+    await this.start("auto");
+    this.touch();
+    let heard = await this.inference(wav, language);
+    const spoken: Locale = language === "auto" ? spokenIn(heard.language_probabilities, getLocale()) : language;
+    const code = Object.entries(heard.language_probabilities ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (language === "auto" && code !== spoken) heard = await this.inference(wav, spoken);
+    this.touch();
+    return { text: clean(heard.text ?? ""), language: spoken, noSpeech: noSpeech(heard.segments) };
+  }
+
+  private async inference(wav: Buffer, language: string): Promise<Heard> {
     const body = new FormData();
     body.append("file", new Blob([new Uint8Array(wav)], { type: "audio/wav" }), "clip.wav");
     body.append("response_format", "verbose_json");
@@ -254,7 +289,7 @@ export class Voice {
       signal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(t("voiceEngine.failed", { status: res.status }));
-    const payload = (await res.json()) as { text?: string; error?: string; language_probabilities?: Record<string, number> };
+    const payload = (await res.json()) as Heard & { error?: string };
     if (payload.error) throw new Error(payload.error);
     return payload;
   }

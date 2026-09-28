@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setLocale } from "@vunemi/i18n";
-import { clean, findModel, Voice } from "../../src/main/voice.js";
+import { clean, findModel, noSpeech, Voice } from "../../src/main/voice.js";
 
 const run = promisify(execFile);
 
@@ -109,4 +109,12 @@ describe.skipIf(!live)("Voice, for real", () => {
     await voice.transcribe(readFileSync(wav));
     expect(Date.now() - started).toBeLessThan(2_000);
   }, 120_000);
+});
+
+describe("noSpeech", () => {
+  it("weighs whisper's belief by how long each part is", () => {
+    expect(noSpeech(undefined)).toBe(0);
+    expect(noSpeech([{ start: 0, end: 3, no_speech_prob: 0.1 }, { start: 3, end: 4, no_speech_prob: 0.9 }])).toBeCloseTo(0.3);
+    expect(noSpeech([{ t0: 0, t1: 100, no_speech_prob: 0.8 }, { text: "x" } as never])).toBeCloseTo(0.8);
+  });
 });
