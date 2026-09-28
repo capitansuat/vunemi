@@ -24,6 +24,17 @@ createServer((req, res) => {
     return;
   }
   if (req.url === "/args") return res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(args));
+  if (req.url === "/v1/embeddings" && req.method === "POST") {
+    let body = "";
+    req.on("data", (d) => { body += d; });
+    req.on("end", () => {
+      const { input } = JSON.parse(body);
+      // A made-up vector that shows which prefix and text came in.
+      const data = input.map((text, index) => ({ index, embedding: [text.startsWith("query: ") ? 3 : 0, text.startsWith("passage: ") ? 3 : 0, 4] }));
+      res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ data: data.reverse() }));
+    });
+    return;
+  }
   res.writeHead(404).end();
 }).listen(port, "127.0.0.1");
 
