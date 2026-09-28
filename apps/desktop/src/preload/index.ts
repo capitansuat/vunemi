@@ -68,6 +68,7 @@ const api: VunemiApi = {
     ipcRenderer.on(CH.meetingsLine, handler);
     return () => ipcRenderer.removeListener(CH.meetingsLine, handler);
   },
+  appVersion: () => ipcRenderer.invoke(CH.appVersion),
   listMemory: () => ipcRenderer.invoke(CH.memoryList),
   updateMemory: (id, text) => ipcRenderer.invoke(CH.memoryUpdate, id, text),
   deleteMemory: (id) => ipcRenderer.invoke(CH.memoryDelete, id),

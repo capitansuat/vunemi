@@ -174,7 +174,7 @@ const appLock = new AppLock(() => settings.appLock, async (reason, signal): Prom
  * unlocked, which language to say so in — and to stop a run or stop talking.
  * The lock never stands between the user and silencing the agent.
  */
-const OPEN_WHILE_LOCKED = new Set<string>([CH.lockGet, CH.lockUnlock, CH.languageGet, CH.stopRun, CH.pauseRun, CH.stopSpeaking, CH.meetingsStop]);
+const OPEN_WHILE_LOCKED = new Set<string>([CH.appVersion, CH.lockGet, CH.lockUnlock, CH.languageGet, CH.stopRun, CH.pauseRun, CH.stopSpeaking, CH.meetingsStop]);
 
 /** ipcMain.handle, behind the lock. Every channel goes through here. */
 function handle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => unknown): void {
@@ -1109,6 +1109,7 @@ handle(CH.meetingsExport, async (_e, id: unknown) => {
 handle(CH.meetingsLevels, () => meetings.levels());
 handle(CH.meetingsDevices, () => meetingCall(() => recorder.devices()));
 
+handle(CH.appVersion, () => app.getVersion());
 handle(CH.forgetEverything, async () => {
   if (session.running || mailOutbox.busy || meetings.status().recording) {
     throw new Error(t("main.stopAndSettleFirst"));

@@ -448,6 +448,8 @@ export interface VunemiApi {
   onMeetings(listener: (status: MeetingStatusView) => void): () => void;
   onMeetingLine(listener: (id: string, line: MeetingLine) => void): () => void;
   forgetEverything(): Promise<void>;
+  /** This copy's version, shown so the user knows which one runs. */
+  appVersion(): Promise<string>;
   /** The language Vunemi speaks; main keeps it, the window follows. */
   getLanguage(): Promise<Locale>;
   setLanguage(locale: Locale): Promise<Locale>;
@@ -626,6 +628,7 @@ export const CH = {
   meetingsChanged: "meetings:changed",
   meetingsLine: "meetings:line",
   forgetEverything: "data:forget-everything",
+  appVersion: "app:version",
   languageGet: "language:get",
   languageSet: "language:set",
   languageChanged: "language:changed",

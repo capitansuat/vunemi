@@ -162,12 +162,22 @@ function Sidebar() {
       <div className="no-drag border-t border-line px-2.5 pt-2">
         <ViewButton view="settings" label={t("app.nav.settings")} icon={Settings2} />
       </div>
-      <div className="flex items-start gap-2 px-4 pb-4 pt-2 text-[11.5px] leading-snug text-faint">
+      <div className="flex items-start gap-2 px-4 pt-2 text-[11.5px] leading-snug text-faint">
         <Lock size={12} className="mt-0.5 shrink-0" />
         <span>{t("app.local")}</span>
       </div>
+      <AppVersion />
     </aside>
   );
+}
+
+/** Which Vunemi this is, so nobody has to guess after an update. */
+function AppVersion() {
+  const [version, setVersion] = useState<string | null>(null);
+  useEffect(() => {
+    void window.vunemi.appVersion().then(setVersion, () => setVersion(null));
+  }, []);
+  return <div className="selectable px-4 pb-4 pt-1 pl-[36px] text-[11px] tabular-nums text-faint">{version ? `Vunemi ${version}` : "\u00a0"}</div>;
 }
 
 function IconButton({ label, icon: Icon, onClick, disabled }: { label: string; icon: typeof Package; onClick: () => void; disabled?: boolean }) {
