@@ -181,13 +181,13 @@ function Trailer({ phase, handoffId }: { phase: Phase; handoffId: string | null 
   if (phase === "listening") {
     return (
       <div className="flex shrink-0 items-center gap-1.5">
-        <span className="text-[11px] text-faint">{handsFree ? "susunca biter" : "bitince dokun"}</span>
+        <span className="text-[11px] text-faint">{t(handsFree ? "voice.endsOnSilence" : "voice.tapWhenDone")}</span>
         <button
           type="button"
           onClick={() => void finishListening(handsFree)}
           className="rounded-md border border-line-strong px-2 py-1 text-[11.5px] text-fg transition-colors hover:bg-surface-2"
         >
-          Bitti
+          {t("voice.done")}
         </button>
         <button
           type="button"

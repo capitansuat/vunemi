@@ -271,6 +271,9 @@ export const messages = {
   },
 
   voice: {
+    endsOnSilence: "Susunca biter",
+    tapWhenDone: "Bitince dokun",
+    done: "Bitti",
     phase: {
       listening: "Dinliyor",
       thinking: "İşliyor",

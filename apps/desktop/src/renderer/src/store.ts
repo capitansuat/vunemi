@@ -518,6 +518,9 @@ export const useStore = create<State>((set, get) => ({
   setHandsFree(on) {
     set((s) => ({ voice: { ...s.voice, handsFree: on } }));
     if (!on) void window.vunemi.stopSpeaking();
+    // Turning voice chat on starts the conversation; a mode that waits for
+    // a second button looks like a button that doesn't work.
+    else if (get().voice.status?.canHear && get().voice.state === "off") void get().listen();
   },
 
   suggest(text) {

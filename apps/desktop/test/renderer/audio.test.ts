@@ -3,7 +3,7 @@
  * sample, so a wrong byte here is silence that looks like a model problem.
  */
 import { describe, expect, it } from "vitest";
-import { encodeWav, SAMPLE_RATE } from "../../src/renderer/src/lib/audio.js";
+import { encodeWav, SAMPLE_RATE, SpeechGate } from "../../src/renderer/src/lib/audio.js";
 
 const text = (view: DataView, at: number, length: number): string =>
   String.fromCharCode(...Array.from({ length }, (_, i) => view.getUint8(at + i)));
@@ -45,5 +45,56 @@ describe("encodeWav", () => {
     const view = new DataView(encodeWav(new Float32Array(8), 48_000));
     expect(view.getUint32(24, true)).toBe(48_000);
     expect(view.getUint32(28, true)).toBe(96_000);
+  });
+});
+
+describe("SpeechGate", () => {
+  const FRAME_MS = 8;
+  const feed = (gate: SpeechGate, level: number, ms: number) => {
+    let ended = false;
+    for (let t = 0; t < ms; t += FRAME_MS) ended = gate.feed(level, FRAME_MS) || ended;
+    return ended;
+  };
+  const ROOM = 0.004;
+  const VOICE = 0.08;
+
+  it("hears someone who starts talking the moment the mic opens", () => {
+    const gate = new SpeechGate();
+    feed(gate, VOICE, 900); // "Hello, please…" straight away
+    feed(gate, ROOM, 150); // a breath
+    feed(gate, VOICE, 700);
+    expect(gate.spoke()).toBe(true);
+  });
+
+  it("hears someone who waits a moment first", () => {
+    const gate = new SpeechGate();
+    feed(gate, ROOM, 600);
+    feed(gate, VOICE, 800);
+    expect(gate.spoke()).toBe(true);
+  });
+
+  it("hears nothing in a quiet room, or in a steady noisy one", () => {
+    const quiet = new SpeechGate();
+    feed(quiet, ROOM, 3_000);
+    expect(quiet.spoke()).toBe(false);
+    const fan = new SpeechGate();
+    feed(fan, 0.03, 3_000);
+    expect(fan.spoke()).toBe(false);
+  });
+
+  it("doesn't count a cough", () => {
+    const gate = new SpeechGate();
+    feed(gate, ROOM, 500);
+    feed(gate, VOICE, 150);
+    feed(gate, ROOM, 500);
+    expect(gate.spoke()).toBe(false);
+  });
+
+  it("ends a hands-free turn once the speaker has been quiet a while", () => {
+    const gate = new SpeechGate();
+    expect(feed(gate, VOICE, 1_000)).toBe(false);
+    expect(feed(gate, ROOM, 300)).toBe(false);
+    expect(feed(gate, VOICE, 600)).toBe(false);
+    expect(feed(gate, ROOM, 1_300)).toBe(true);
   });
 });

@@ -267,6 +267,9 @@ export const messages: Catalogue = {
   },
 
   voice: {
+    endsOnSilence: "말을 멈추면 끝납니다",
+    tapWhenDone: "다 말하면 누르세요",
+    done: "완료",
     phase: {
       listening: "듣는 중",
       thinking: "처리 중",

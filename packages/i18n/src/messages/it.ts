@@ -267,6 +267,9 @@ export const messages: Catalogue = {
   },
 
   voice: {
+    endsOnSilence: "Termina quando smetti di parlare",
+    tapWhenDone: "Tocca quando hai finito",
+    done: "Fatto",
     phase: {
       listening: "In ascolto",
       thinking: "Elabora",

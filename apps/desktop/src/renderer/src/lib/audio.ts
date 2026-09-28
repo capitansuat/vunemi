@@ -14,12 +14,94 @@ export const SAMPLE_RATE = 16_000;
 const FLOOR = 0.015;
 /** Speech has to stand this far above the room's own noise to count. */
 const OVER_NOISE = 3.5;
-/** The opening moments of a clip, used to learn what this room sounds like. */
-const NOISE_SAMPLE_MS = 400;
 /** How long the room has to stay quiet before a hands-free turn ends. */
 const SILENCE_MS = 1_100;
 /** Don't end a turn on the pause before someone starts talking. */
 const MIN_SPEECH_MS = 400;
+/** The room is as loud as the quietest tenth of the clip. */
+const ROOM_PERCENTILE = 0.1;
+/** The first moments of a stream can be digital silence; they say nothing about the room. */
+const WARM_UP_MS = 100;
+/** Loudness buckets, on a log scale from 1e-5 to 1, for the room estimate. */
+const BUCKETS = 100;
+
+/**
+ * Tells speech from the room it is spoken in. While listening, the room's
+ * noise is the level of the quietest tenth of the clip so far: the pauses
+ * between words, the moment before speaking. It used to be learnt from the first 0.4 s only, so
+ * someone who started talking the moment they pressed the mic taught it
+ * that their voice was the room, and nothing they said stood out from it:
+ * "Nothing was heard".
+ */
+export class SpeechGate {
+  private readonly counts = new Array<number>(BUCKETS).fill(0);
+  private counted = 0;
+  private elapsedMs = 0;
+  private smooth = -1;
+  private quietest = Infinity;
+  private readonly heard: { level: number; ms: number }[] = [];
+  private speechMs = 0;
+  private quietMs = 0;
+  private ended = false;
+
+  /** One frame's loudness (RMS) and length. True once a hands-free turn has ended in silence. */
+  feed(level: number, ms: number): boolean {
+    // A little smoothing, so one quiet sample between syllables isn't taken for the room.
+    this.smooth = this.smooth < 0 ? level : this.smooth * 0.6 + level * 0.4;
+    this.heard.push({ level: this.smooth, ms });
+    this.elapsedMs += ms;
+    if (this.elapsedMs > WARM_UP_MS) {
+      this.counts[bucket(this.smooth)]! += 1;
+      this.counted += 1;
+      this.quietest = Math.min(this.quietest, this.smooth);
+    }
+
+    if (this.counted > 0 && this.smooth > this.threshold()) {
+      this.speechMs += ms;
+      this.quietMs = 0;
+    } else if (this.speechMs > MIN_SPEECH_MS) {
+      this.quietMs += ms;
+      if (this.quietMs >= SILENCE_MS) this.ended = true;
+    }
+    return this.ended;
+  }
+
+  /**
+   * Whether the clip held a sentence: long enough, and loud enough, against
+   * the quietest moment in it — judged over the whole clip at the end, so
+   * words said before the room was known count too, and one breath between
+   * sentences is enough to know it.
+   */
+  spoke(): boolean {
+    const threshold = Math.max(FLOOR, (Number.isFinite(this.quietest) ? this.quietest : 0) * OVER_NOISE);
+    let speech = 0;
+    let loudest = 0;
+    for (const f of this.heard) {
+      if (f.level > threshold) speech += f.ms;
+      loudest = Math.max(loudest, f.level);
+    }
+    return speech >= MIN_SPEECH_MS && loudest >= threshold * 1.5;
+  }
+
+  private threshold(): number {
+    return Math.max(FLOOR, this.room() * OVER_NOISE);
+  }
+
+  private room(): number {
+    const want = Math.max(1, Math.ceil(this.counted * ROOM_PERCENTILE));
+    let seen = 0;
+    for (let i = 0; i < BUCKETS; i++) {
+      seen += this.counts[i]!;
+      if (seen >= want) return 10 ** (-5 + ((i + 1) * 5) / BUCKETS);
+    }
+    return 0;
+  }
+}
+
+function bucket(level: number): number {
+  const at = Math.floor(((Math.log10(Math.max(level, 1e-5)) + 5) / 5) * BUCKETS);
+  return Math.min(BUCKETS - 1, Math.max(0, at));
+}
 
 /** Served from the renderer's own origin; see public/capture-worklet.js. */
 const WORKLET_URL = "capture-worklet.js";
@@ -65,14 +147,10 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
 
   const chunks: Float32Array[] = [];
   let frames = 0;
-  let speechMs = 0;
-  let quietMs = 0;
   let done = false;
   let lastLevelAt = 0;
   let peak = 0;
-  let loudest = 0;
-  let noise = 0;
-  let noiseMs = 0;
+  const gate = new SpeechGate();
 
   const source = context.createMediaStreamSource(stream);
   const node = new AudioWorkletNode(context, "vunemi-capture");
@@ -92,26 +170,9 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
       peak = 0;
     }
 
-    const ms = (frame.length / SAMPLE_RATE) * 1000;
-    loudest = Math.max(loudest, level);
-
-    // Learn the room first, then judge against it.
-    if (noiseMs < NOISE_SAMPLE_MS) {
-      noise = noise === 0 ? level : noise * 0.8 + level * 0.2;
-      noiseMs += ms;
-      return;
-    }
-    const threshold = Math.max(FLOOR, noise * OVER_NOISE);
-
-    if (level > threshold) {
-      speechMs += ms;
-      quietMs = 0;
-    } else if (speechMs > MIN_SPEECH_MS) {
-      quietMs += ms;
-      if (quietMs >= SILENCE_MS) {
-        done = true;
-        opts.onSilence?.();
-      }
+    if (gate.feed(level, (frame.length / SAMPLE_RATE) * 1000)) {
+      done = true;
+      opts.onSilence?.();
     }
   };
   source.connect(node);
@@ -122,7 +183,7 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
   node.connect(mute).connect(context.destination);
 
   /** Long enough, and loud enough against this room, to be a sentence. */
-  const spoke = (): boolean => speechMs >= MIN_SPEECH_MS && loudest >= Math.max(FLOOR, noise * OVER_NOISE) * 1.5;
+  const spoke = (): boolean => gate.spoke();
 
   const release = () => {
     done = true;
