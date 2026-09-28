@@ -6,19 +6,24 @@ import { download, type DownloadProgress } from "../engine/download.js";
 import type { MemorySearchStatus } from "../../shared/ipc.js";
 
 /**
- * The model that finds notes by meaning: multilingual-e5-small (MIT, 94
- * languages including Turkish), 8-bit, 384 numbers per text. It is small
- * enough to load in a second, and the built-in llama.cpp serves it.
+ * The model that finds notes by meaning: Qwen3-Embedding-0.6B (Apache-2.0,
+ * over 100 languages), 8-bit, in Qwen's own conversion; the built-in
+ * llama.cpp serves it. Measured on 20 notes and 24 indirect Turkish and
+ * English requests (28 Sep), it found three times as many of the right
+ * notes as multilingual-e5-small.
  */
 export const EMBED_MODEL: ModelSource = {
-  repo: "cstr/multilingual-e5-small-GGUF",
-  commit: "178420da727e544c2689e89b6648b205ad176eda",
-  file: "multilingual-e5-small-q8_0.gguf",
-  size: 131_624_960,
-  sha256: "0a34067a40f25d3149b36885faa62bee0e5284d0f9edc102acfc00e115d953e8",
+  repo: "Qwen/Qwen3-Embedding-0.6B-GGUF",
+  commit: "370f27d7550e0def9b39c1f16d3fbaa13aa67728",
+  file: "Qwen3-Embedding-0.6B-Q8_0.gguf",
+  size: 639_150_592,
+  sha256: "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
 };
 
-export const EMBED_MODEL_ID = "multilingual-e5-small-q8_0";
+export const EMBED_MODEL_ID = "qwen3-embedding-0.6b-q8_0";
+
+/** Qwen3-Embedding is told what a query is for; notes go in as they are. */
+const QUERY_TASK = "Given a request to an assistant, retrieve notes about the user that help with it";
 
 export type EmbedderStatus = MemorySearchStatus;
 
@@ -34,7 +39,7 @@ export interface EmbedderOptions {
   download?: typeof download;
 }
 
-/** e5 reads 512 tokens; a sequence must fit in one batch. */
+/** Notes and cut requests fit easily; a sequence must fit in one batch. */
 const CONTEXT = 512;
 /** Long requests are cut: the start says what they are about, and it must fit. */
 const MAX_QUERY_CHARS = 400;
@@ -98,12 +103,13 @@ export class Embedder {
     this.downloading?.controller.abort();
   }
 
-  /** One unit-length vector per text; e5 wants to know which side of a search each is. */
+  /** One unit-length vector per text; a query carries its task, as the model was trained. */
   async embed(texts: string[], as: "query" | "passage"): Promise<Float32Array[]> {
     if (!this.available()) throw new Error("The meaning model is not downloaded.");
     if (texts.length === 0) return [];
-    const endpoint = await this.engine.ensure({ id: EMBED_MODEL_ID, path: this.path, context: CONTEXT, embedding: true });
-    const input = texts.map((text) => `${as}: ${as === "query" ? text.slice(0, MAX_QUERY_CHARS) : text}`);
+    // The last token (llama.cpp appends <|endoftext|>) stands for the text.
+    const endpoint = await this.engine.ensure({ id: EMBED_MODEL_ID, path: this.path, context: CONTEXT, pooling: "last" });
+    const input = texts.map((text) => (as === "query" ? `Instruct: ${QUERY_TASK}\nQuery: ${text.slice(0, MAX_QUERY_CHARS)}` : text));
     const res = await fetch(`${endpoint.baseUrl}/embeddings`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${endpoint.apiKey}` },

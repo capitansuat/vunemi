@@ -27,20 +27,20 @@ function make(opts: Partial<ConstructorParameters<typeof Embedder>[0]> = {}): Em
 const withModel = () => writeFileSync(join(dir, EMBED_MODEL.file), "gguf");
 
 describe("the meaning model", () => {
-  it("is pinned: multilingual-e5-small, 131.6 MB, by commit and SHA-256", () => {
+  it("is pinned: Qwen3-Embedding-0.6B, 639 MB, by commit and SHA-256", () => {
     expect(EMBED_MODEL).toEqual({
-      repo: "cstr/multilingual-e5-small-GGUF",
-      commit: "178420da727e544c2689e89b6648b205ad176eda",
-      file: "multilingual-e5-small-q8_0.gguf",
-      size: 131_624_960,
-      sha256: "0a34067a40f25d3149b36885faa62bee0e5284d0f9edc102acfc00e115d953e8",
+      repo: "Qwen/Qwen3-Embedding-0.6B-GGUF",
+      commit: "370f27d7550e0def9b39c1f16d3fbaa13aa67728",
+      file: "Qwen3-Embedding-0.6B-Q8_0.gguf",
+      size: 639_150_592,
+      sha256: "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
     });
   });
 
   it("runs llama-server as an embedding server on this Mac only", () => {
-    expect(serverArgs({ id: "e", path: "/m/e.gguf", context: 512, embedding: true }, 5555, "k")).toEqual([
+    expect(serverArgs({ id: "e", path: "/m/e.gguf", context: 512, pooling: "last" }, 5555, "k")).toEqual([
       "-m", "/m/e.gguf", "--host", "127.0.0.1", "--port", "5555", "--api-key", "k",
-      "--embedding", "--pooling", "mean", "-c", "512", "-b", "512", "-ub", "512", "-np", "1", "-ngl", "999", "--no-webui",
+      "--embedding", "--pooling", "last", "-c", "512", "-b", "512", "-ub", "512", "-np", "1", "-ngl", "999", "--no-webui",
     ]);
   });
 
@@ -50,11 +50,11 @@ describe("the meaning model", () => {
     expect(embedder.status()).toEqual({ state: "absent", bytes: EMBED_MODEL.size });
     expect(embedder.available()).toBe(false);
     withModel();
-    expect(embedder.status()).toMatchObject({ state: "ready" });
+    expect(embedder.status()).toEqual({ state: "ready", bytes: EMBED_MODEL.size });
     expect(embedder.available()).toBe(true);
   });
 
-  it("embeds queries and notes with the prefixes e5 expects, normalised, in order", async () => {
+  it("embeds a query with its task and notes as they are, normalised, in order", async () => {
     withModel();
     const [query] = await make().embed(["rapor"], "query");
     expect([...query!].map((x) => +x.toFixed(3))).toEqual([0.6, 0, 0.8]);

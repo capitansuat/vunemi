@@ -30,8 +30,8 @@ export interface LaunchSpec {
   context: number;
   /** The vision part, when the model has one on disk. */
   projector?: string;
-  /** Serves embeddings instead of chat: one sequence at a time, mean pooling. */
-  embedding?: boolean;
+  /** Serves embeddings instead of chat, one sequence at a time, pooled this way. */
+  pooling?: "mean" | "last";
 }
 
 export interface EngineOptions {
@@ -56,12 +56,12 @@ const READY_MS = 3 * 60_000;
 const STOP_GRACE_MS = 3_000;
 
 export function serverArgs(spec: LaunchSpec, port: number, apiKey: string): string[] {
-  if (spec.embedding) {
+  if (spec.pooling) {
     // The whole context goes to one sequence, and a sequence must fit one batch.
     const n = String(spec.context);
     return [
       "-m", spec.path, "--host", "127.0.0.1", "--port", String(port), "--api-key", apiKey,
-      "--embedding", "--pooling", "mean", "-c", n, "-b", n, "-ub", n, "-np", "1", "-ngl", "999", "--no-webui",
+      "--embedding", "--pooling", spec.pooling, "-c", n, "-b", n, "-ub", n, "-np", "1", "-ngl", "999", "--no-webui",
     ];
   }
   return [
@@ -72,7 +72,7 @@ export function serverArgs(spec: LaunchSpec, port: number, apiKey: string): stri
 }
 
 function sameLaunch(a: LaunchSpec, b: LaunchSpec): boolean {
-  return a.id === b.id && a.path === b.path && a.context === b.context && a.projector === b.projector && a.embedding === b.embedding;
+  return a.id === b.id && a.path === b.path && a.context === b.context && a.projector === b.projector && a.pooling === b.pooling;
 }
 
 export class Engine {

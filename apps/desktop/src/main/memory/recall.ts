@@ -17,12 +17,32 @@ export const MEMORY_RULE =
 const GENERAL = 5;
 const TOPIC = 5;
 const CANDIDATES = 20;
-/**
- * e5 scores even unrelated texts around 0.7; below this a note is not
- * about the request.
- */
-export const MEANING_THRESHOLD = 0.82;
 const EMBED_BATCH = 16;
+
+/*
+ * Which notes are about a request by meaning. Scores shift from request to
+ * request, so a note must stand out from the rest of memory rather than
+ * pass a fixed line. Chosen on 20 notes and 24 indirect requests (28 Sep):
+ * about half the right notes, under one stray short note per task.
+ */
+/** At most this many notes by meaning. */
+const MEANING_MAX = 2;
+/** Above the median score of all notes by at least this much… */
+const MEANING_MARGIN = 0.1;
+/** …and close to the best one. */
+const MEANING_NEAR = 0.02;
+/** With fewer notes than this a median says nothing: a fixed line instead. */
+const MEANING_FEW = 5;
+const MEANING_FEW_MIN = 0.45;
+
+/** The notes that stand out for a request, best first. */
+export function standOut(hits: { id: string; score: number }[]): { id: string; score: number }[] {
+  const sorted = [...hits].sort((a, b) => b.score - a.score);
+  const best = sorted[0]?.score ?? 0;
+  if (sorted.length < MEANING_FEW) return sorted.filter((hit) => hit.score >= MEANING_FEW_MIN).slice(0, MEANING_MAX);
+  const median = sorted[Math.floor(sorted.length / 2)]!.score;
+  return sorted.filter((hit) => hit.score - median >= MEANING_MARGIN && best - hit.score <= MEANING_NEAR).slice(0, MEANING_MAX);
+}
 
 /** Reciprocal rank fusion: a note high in either list, or fair in both, comes first. */
 export function fuse(lists: { id: string }[][], k = 60): { id: string; score: number }[] {
@@ -81,9 +101,5 @@ async function byMeaning(store: MemoryStore, meaning: Meaning, text: string): Pr
     batch.forEach((note, j) => store.setVector(note.id, EMBED_MODEL_ID, vectors[j]!));
   }
   const [query] = await meaning.embed([text], "query");
-  return store.vectors(EMBED_MODEL_ID)
-    .map((note) => ({ id: note.id, score: cosine(query!, note.vector) }))
-    .filter((hit) => hit.score >= MEANING_THRESHOLD)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, CANDIDATES);
+  return standOut(store.vectors(EMBED_MODEL_ID).map((note) => ({ id: note.id, score: cosine(query!, note.vector) })));
 }

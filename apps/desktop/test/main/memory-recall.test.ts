@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MemoryStore, type NoteKind } from "../../src/main/memory/store.js";
-import { fuse, generalInstructions, MEMORY_RULE, recall, type Meaning } from "../../src/main/memory/recall.js";
+import { fuse, generalInstructions, MEMORY_RULE, recall, standOut, type Meaning } from "../../src/main/memory/recall.js";
 
 let dir = "";
 let store: MemoryStore;
@@ -43,6 +43,24 @@ describe("fuse", () => {
   it("ranks what both lists agree on first", () => {
     const fused = fuse([[{ id: "a" }, { id: "b" }, { id: "c" }], [{ id: "b" }, { id: "d" }]]);
     expect(fused.map((f) => f.id)).toEqual(["b", "a", "d", "c"]);
+  });
+});
+
+describe("standOut", () => {
+  const hits = (...scores: number[]) => scores.map((score, i) => ({ id: `n${i}`, score }));
+
+  it("keeps at most two notes well above the rest and near the best", () => {
+    expect(standOut(hits(0.62, 0.3, 0.31, 0.29, 0.61, 0.33, 0.28)).map((h) => h.id)).toEqual(["n0", "n4"]);
+    expect(standOut(hits(0.62, 0.3, 0.31, 0.29, 0.55, 0.33, 0.28)).map((h) => h.id)).toEqual(["n0"]);
+  });
+
+  it("gives nothing when no note stands out", () => {
+    expect(standOut(hits(0.36, 0.3, 0.31, 0.29, 0.33, 0.28))).toEqual([]);
+  });
+
+  it("uses a fixed line while memory is small", () => {
+    expect(standOut(hits(0.5, 0.2)).map((h) => h.id)).toEqual(["n0"]);
+    expect(standOut(hits(0.4, 0.2))).toEqual([]);
   });
 });
 
