@@ -52,6 +52,8 @@ final class Sink {
     private var converting: AVAudioFormat?
     private var level: Float = 0
     private var written = 0
+    /** Any sample that is not exactly zero. A live microphone never gives pure zeros; a muted one does. */
+    private var heard = false
     private let timer: DispatchSourceTimer
 
     init(path: String, label: String) throws {
@@ -109,6 +111,7 @@ final class Sink {
             sum += x * x
         }
         level = (sum / Float(count)).squareRoot()
+        if !heard { heard = sum > 0 }
         written += count
     }
 
@@ -118,8 +121,8 @@ final class Sink {
         pending.removeAll(keepingCapacity: true)
     }
 
-    var state: (level: Float, seconds: Double) {
-        queue.sync { (level, Double(written) / target.sampleRate) }
+    var state: (level: Float, seconds: Double, heard: Bool) {
+        queue.sync { (level, Double(written) / target.sampleRate, heard) }
     }
 
     func close() {
@@ -200,20 +203,46 @@ final class SystemCapture {
 
 /// The user's voice, with echo cancellation and the other audio left at full volume.
 final class MicCapture {
-    private let engine = AVAudioEngine()
+    private var engine = AVAudioEngine()
+    private let sink: Sink
+    private let uid: String?
+    private(set) var voiceProcessing: Bool
 
     init(sink: Sink, device uid: String?) throws {
+        self.sink = sink
+        self.uid = uid
+        voiceProcessing = true
+        try run()
+    }
+
+    private func run() throws {
         let input = engine.inputNode
         if let uid, var id = inputDevices().first(where: { $0.uid == uid })?.id, let unit = input.audioUnit {
             try check(AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size)), "Microphone choice")
         }
-        try input.setVoiceProcessingEnabled(true)
-        // Voice processing turns other audio down by default; the meeting must stay audible.
-        input.voiceProcessingOtherAudioDuckingConfiguration = AVAudioVoiceProcessingOtherAudioDuckingConfiguration(enableAdvancedDucking: false, duckingLevel: .min)
+        if voiceProcessing {
+            try input.setVoiceProcessingEnabled(true)
+            // Voice processing turns other audio down by default; the meeting must stay audible.
+            input.voiceProcessingOtherAudioDuckingConfiguration = AVAudioVoiceProcessingOtherAudioDuckingConfiguration(enableAdvancedDucking: false, duckingLevel: .min)
+            // It is one unit for input and output: with no output running the
+            // input stayed silent. The mixer has nothing to play; it only runs it.
+            engine.connect(engine.mainMixerNode, to: engine.outputNode, format: nil)
+            engine.mainMixerNode.outputVolume = 0
+        }
         let format = input.outputFormat(forBus: 0)
+        let sink = self.sink
         input.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, _ in sink.append(buffer) }
         engine.prepare()
         try engine.start()
+    }
+
+    /** Voice processing gave only silence: the plain microphone, without echo cancellation. */
+    func withoutVoiceProcessing() throws {
+        guard voiceProcessing else { return }
+        stop()
+        voiceProcessing = false
+        engine = AVAudioEngine()
+        try run()
     }
 
     func stop() {
@@ -270,6 +299,9 @@ final class Recording {
     private let me: Sink
     private let system: AnyObject
     private let mic: MicCapture
+    /** Microphone changes happen here, one at a time. */
+    private let control = DispatchQueue(label: "control")
+    private var stopped = false
 
     init(dir: String, microphone: String?) throws {
         guard #available(macOS 14.2, *) else { throw Failure("macos") }
@@ -296,14 +328,31 @@ final class Recording {
             throw error
         }
         self.system = system
+        watch()
     }
 
     var levels: JSON {
-        ["me": Double(me.state.level), "others": Double(others.state.level)]
+        control.sync { ["me": Double(me.state.level), "others": Double(others.state.level), "echoCancellation": mic.voiceProcessing] }
+    }
+
+    /** After a moment: a microphone that has given only exact zeros is tried again without voice processing. */
+    private func watch() {
+        control.asyncAfter(deadline: .now() + 2) { [weak self] in
+            guard let self, !self.stopped, !self.me.state.heard else { return }
+            do {
+                try self.mic.withoutVoiceProcessing()
+                FileHandle.standardError.write(Data("microphone silent with voice processing; recording without it\n".utf8))
+            } catch {
+                FileHandle.standardError.write(Data("microphone restart failed: \(error)\n".utf8))
+            }
+        }
     }
 
     func stop() -> Double {
-        mic.stop()
+        control.sync {
+            stopped = true
+            mic.stop()
+        }
         if #available(macOS 14.2, *) { (system as? SystemCapture)?.stop() }
         me.close()
         others.close()
