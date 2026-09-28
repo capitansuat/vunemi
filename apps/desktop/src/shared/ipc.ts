@@ -323,6 +323,46 @@ export type MemorySearchStatus =
   | { state: "downloading"; bytes: number; received: number }
   | { state: "ready"; bytes: number };
 
+/** One stretch of a meeting, written down. Seconds from the start of the recording. */
+export interface MeetingLine {
+  source: "me" | "others";
+  start: number;
+  end: number;
+  text: string;
+}
+
+export type MeetingState = "recording" | "transcribing" | "summarising" | "done" | "failed";
+
+export interface MeetingSummaryView {
+  id: string;
+  /** Empty until named; the window shows the date instead. */
+  title: string;
+  startedAt: number;
+  endedAt: number | null;
+  language: string | null;
+  /** Markdown in the fixed template; null for a meeting nobody spoke in. */
+  summary: string | null;
+  state: MeetingState;
+  /** Already in words, for a failed meeting. */
+  error?: string;
+}
+
+export interface MeetingView extends MeetingSummaryView {
+  lines: MeetingLine[];
+}
+
+export interface MeetingStatusView {
+  recording: { id: string; startedAt: number; lines: MeetingLine[]; pending: number } | null;
+  /** Why the Record button cannot record, in words; null when it can. */
+  blocked: string | null;
+}
+
+export interface MicrophoneView {
+  id: string;
+  name: string;
+  default: boolean;
+}
+
 /** Exposed on `window.vunemi` by the preload script. */
 export interface VunemiApi {
   listProviders(): Promise<ProviderStatus[]>;
@@ -388,6 +428,25 @@ export interface VunemiApi {
   memorySearchDownload(): Promise<MemorySearchStatus>;
   memorySearchCancel(): Promise<void>;
   onMemorySearch(listener: (status: MemorySearchStatus) => void): () => void;
+  /** Newest first; with a query, only the meetings whose title, summary or words match. */
+  meetingsList(query?: string): Promise<MeetingSummaryView[]>;
+  meetingsGet(id: string): Promise<MeetingView | null>;
+  meetingsStatus(): Promise<MeetingStatusView>;
+  /** Only ever from the user's button. */
+  meetingsStart(microphone?: string): Promise<MeetingStatusView>;
+  /** Stops recording; `model` writes the summary. Resolves when the meeting is finished. */
+  meetingsStop(model: string | null): Promise<void>;
+  meetingsRetry(id: string, model: string | null): Promise<void>;
+  /** Finishes meetings Vunemi quit during; the window calls it once it knows the model. */
+  meetingsRecover(model: string | null): Promise<void>;
+  meetingsRename(id: string, title: string): Promise<MeetingSummaryView[]>;
+  /** To the Trash. */
+  meetingsDelete(id: string): Promise<MeetingSummaryView[]>;
+  meetingsExport(id: string): Promise<boolean>;
+  meetingsLevels(): Promise<{ me: number; others: number }>;
+  meetingsDevices(): Promise<MicrophoneView[]>;
+  onMeetings(listener: (status: MeetingStatusView) => void): () => void;
+  onMeetingLine(listener: (id: string, line: MeetingLine) => void): () => void;
   forgetEverything(): Promise<void>;
   /** The language Vunemi speaks; main keeps it, the window follows. */
   getLanguage(): Promise<Locale>;
@@ -552,6 +611,20 @@ export const CH = {
   memorySearchDownload: "memory:search-download",
   memorySearchCancel: "memory:search-cancel",
   memorySearchChanged: "memory:search-changed",
+  meetingsList: "meetings:list",
+  meetingsGet: "meetings:get",
+  meetingsStatus: "meetings:status",
+  meetingsStart: "meetings:start",
+  meetingsStop: "meetings:stop",
+  meetingsRetry: "meetings:retry",
+  meetingsRecover: "meetings:recover",
+  meetingsRename: "meetings:rename",
+  meetingsDelete: "meetings:delete",
+  meetingsExport: "meetings:export",
+  meetingsLevels: "meetings:levels",
+  meetingsDevices: "meetings:devices",
+  meetingsChanged: "meetings:changed",
+  meetingsLine: "meetings:line",
   forgetEverything: "data:forget-everything",
   languageGet: "language:get",
   languageSet: "language:set",

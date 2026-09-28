@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from "electron";
 import type { AgentEvent } from "@vunemi/agent-core";
 import type { OutboxEvent } from "@vunemi/mail";
-import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MemorySearchStatus, type VunemiApi, type QueuedMessage, type SessionList, type VoiceStatus } from "../shared/ipc.js";
+import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MeetingLine, type MeetingStatusView, type MemorySearchStatus, type VunemiApi, type QueuedMessage, type SessionList, type VoiceStatus } from "../shared/ipc.js";
 import type { Locale } from "@vunemi/i18n";
 
 const api: VunemiApi = {
@@ -45,6 +45,28 @@ const api: VunemiApi = {
     const handler = (_e: IpcRendererEvent, list: SessionList) => listener(list);
     ipcRenderer.on(CH.sessionsChanged, handler);
     return () => ipcRenderer.removeListener(CH.sessionsChanged, handler);
+  },
+  meetingsList: (query) => ipcRenderer.invoke(CH.meetingsList, query),
+  meetingsGet: (id) => ipcRenderer.invoke(CH.meetingsGet, id),
+  meetingsStatus: () => ipcRenderer.invoke(CH.meetingsStatus),
+  meetingsStart: (microphone) => ipcRenderer.invoke(CH.meetingsStart, microphone),
+  meetingsStop: (model) => ipcRenderer.invoke(CH.meetingsStop, model),
+  meetingsRetry: (id, model) => ipcRenderer.invoke(CH.meetingsRetry, id, model),
+  meetingsRecover: (model) => ipcRenderer.invoke(CH.meetingsRecover, model),
+  meetingsRename: (id, title) => ipcRenderer.invoke(CH.meetingsRename, id, title),
+  meetingsDelete: (id) => ipcRenderer.invoke(CH.meetingsDelete, id),
+  meetingsExport: (id) => ipcRenderer.invoke(CH.meetingsExport, id),
+  meetingsLevels: () => ipcRenderer.invoke(CH.meetingsLevels),
+  meetingsDevices: () => ipcRenderer.invoke(CH.meetingsDevices),
+  onMeetings: (listener) => {
+    const handler = (_e: IpcRendererEvent, status: MeetingStatusView) => listener(status);
+    ipcRenderer.on(CH.meetingsChanged, handler);
+    return () => ipcRenderer.removeListener(CH.meetingsChanged, handler);
+  },
+  onMeetingLine: (listener) => {
+    const handler = (_e: IpcRendererEvent, event: { id: string; line: MeetingLine }) => listener(event.id, event.line);
+    ipcRenderer.on(CH.meetingsLine, handler);
+    return () => ipcRenderer.removeListener(CH.meetingsLine, handler);
   },
   listMemory: () => ipcRenderer.invoke(CH.memoryList),
   updateMemory: (id, text) => ipcRenderer.invoke(CH.memoryUpdate, id, text),

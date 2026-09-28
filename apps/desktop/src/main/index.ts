@@ -1,10 +1,10 @@
 import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
 import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
-import { type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import { createModel, type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
 import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
@@ -42,7 +42,11 @@ import { generalInstructions, recall } from "./memory/recall.js";
 import { propose, type Proposal } from "./memory/propose.js";
 import { memoryRememberTool } from "./memory/tool.js";
 import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, suggestion, summaryLine, type AutomationStatus } from "./automations.js";
-import { getLocale, isLocale, localeInfo, matchLocale, setLocale, t, type Locale } from "@vunemi/i18n";
+import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t, tIn, type Locale } from "@vunemi/i18n";
+import { Recorder, recorderBinary } from "./meetings/recorder.js";
+import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
+import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
+import { transcriptText } from "./meetings/summary.js";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 
@@ -170,7 +174,7 @@ const appLock = new AppLock(() => settings.appLock, async (reason, signal): Prom
  * unlocked, which language to say so in — and to stop a run or stop talking.
  * The lock never stands between the user and silencing the agent.
  */
-const OPEN_WHILE_LOCKED = new Set<string>([CH.lockGet, CH.lockUnlock, CH.languageGet, CH.stopRun, CH.pauseRun, CH.stopSpeaking]);
+const OPEN_WHILE_LOCKED = new Set<string>([CH.lockGet, CH.lockUnlock, CH.languageGet, CH.stopRun, CH.pauseRun, CH.stopSpeaking, CH.meetingsStop]);
 
 /** ipcMain.handle, behind the lock. Every channel goes through here. */
 function handle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => unknown): void {
@@ -965,8 +969,148 @@ handle(CH.memorySearchDownload, async () => {
   }
 });
 handle(CH.memorySearchCancel, () => meaning.cancelDownload());
+// Meetings: recorded only from the user's button, written down by the same
+// whisper as dictation, summarised by the model the window has chosen. No
+// tool reaches any of this, and transcripts never become memory evidence.
+const meetingStore = new MeetingStore(join(app.getPath("userData"), "meetings"), (path) => shell.trashItem(path));
+/** The model the window last named, for a meeting that must finish on its own. */
+let meetingModel: string | null = null;
+const recorder = new Recorder(
+  recorderBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, repo: join(here, "../../../..") }),
+  () => meetings.recorderExited(meetingModel),
+);
+/** Process taps arrived in macOS 14.2. */
+function tapsSupported(): boolean {
+  const [major = 0, minor = 0] = process.getSystemVersion().split(".").map(Number);
+  return major > 14 || (major === 14 && minor >= 2);
+}
+const MEETING_ERRORS = {
+  already: "meetings.error.already",
+  macos: "meetings.error.macos",
+  recorder: "meetings.error.recorder",
+  voice: "meetings.error.voice",
+  microphone: "meetings.error.microphone",
+  model: "meetings.error.model",
+} as const;
+function meetingErrorText(message: string): string {
+  if (Object.hasOwn(MEETING_ERRORS, message)) return t(MEETING_ERRORS[message as keyof typeof MEETING_ERRORS]);
+  if (message.startsWith("System audio")) return t("meetings.error.systemAudio", { why: message });
+  return message;
+}
+const meetingStatusView = (status: MeetingStatus) => ({ ...status, blocked: status.blocked && meetingErrorText(status.blocked) });
+const meetingView = <T extends MeetingSummary>(m: T): T => (m.error ? { ...m, error: meetingErrorText(m.error) } : m);
+function meetingWords(language: Locale | null) {
+  const l = language ?? getLocale();
+  return {
+    names: { me: tIn(l, "meetings.me"), others: tIn(l, "meetings.others") },
+    headings: {
+      summary: tIn(l, "meetings.sections.summary"),
+      decisions: tIn(l, "meetings.sections.decisions"),
+      actions: tIn(l, "meetings.sections.actions"),
+      questions: tIn(l, "meetings.sections.questions"),
+    },
+    language: localeInfo(l).english,
+  };
+}
+const meetings: MeetingService = new MeetingService({
+  store: meetingStore,
+  recorder,
+  transcribe: (wav, language) => voice.clip(wav, language),
+  model: async (spec) => {
+    await engine.prepare(spec).catch(() => {});
+    const model = createModel(spec, modelConfig(spec, settings.modelSettings, (s) => engine.endpoint(s)));
+    const window = (await model.contextWindow?.().catch(() => null)) ?? 8_192;
+    return { model, window };
+  },
+  words: meetingWords,
+  blocked: (): MeetingBlock | null => (!tapsSupported() ? "macos" : !recorder.available() ? "recorder" : !voice.status().canHear ? "voice" : null),
+  onChange: (status) => {
+    presence.setRecording(status.recording ? () => void meetings.stop(meetingModel) : null);
+    send(CH.meetingsChanged, meetingStatusView(status));
+  },
+  onLine: (id, line) => send(CH.meetingsLine, { id, line }),
+});
+const modelSpec = (value: unknown): string | null => (typeof value === "string" && value.trim() ? value : null);
+const meetingList = (query?: unknown) => {
+  const list = meetingStore.list().map(meetingView);
+  if (typeof query !== "string" || !query.trim()) return list;
+  const found = new Set(meetingStore.search(query));
+  return list.filter((m) => found.has(m.id));
+};
+/** Markdown for export: the summary, then the transcript, in the meeting's language. */
+function meetingMarkdown(m: Meeting): string {
+  const words = meetingWords((m.language as Locale | null) ?? null);
+  const l = (m.language as Locale | null) ?? getLocale();
+  const title = m.title || tIn(l, "meetings.untitled", { date: formatDate(m.startedAt, { dateStyle: "medium", timeStyle: "short" }) });
+  return [
+    `# ${title}`,
+    formatDate(m.startedAt, { dateStyle: "full", timeStyle: "short" }),
+    m.summary ?? tIn(l, "meetings.nothingSaid"),
+    `## ${tIn(l, "meetings.transcript")}`,
+    transcriptText(m.lines, words.names),
+  ].join("\n\n") + "\n";
+}
+const meetingCall = async <T>(work: () => Promise<T>): Promise<T> => {
+  try {
+    return await work();
+  } catch (err) {
+    throw new Error(meetingErrorText(err instanceof Error ? err.message : String(err)));
+  }
+};
+handle(CH.meetingsList, (_e, query: unknown) => meetingList(query));
+handle(CH.meetingsGet, (_e, id: unknown) => {
+  if (typeof id !== "string") return null;
+  const m = meetingStore.get(id);
+  return m ? meetingView(m) : null;
+});
+handle(CH.meetingsStatus, () => meetingStatusView(meetings.status()));
+handle(CH.meetingsStart, (_e, microphone: unknown) =>
+  meetingCall(async () => {
+    await meetings.start(typeof microphone === "string" && microphone ? microphone : undefined);
+    return meetingStatusView(meetings.status());
+  }),
+);
+handle(CH.meetingsStop, (_e, model: unknown) => {
+  meetingModel = modelSpec(model) ?? meetingModel;
+  return meetingCall(() => meetings.stop(meetingModel));
+});
+handle(CH.meetingsRetry, (_e, id: unknown, model: unknown) => {
+  meetingModel = modelSpec(model) ?? meetingModel;
+  if (typeof id !== "string") return;
+  return meetingCall(() => meetings.retry(id, meetingModel));
+});
+handle(CH.meetingsRecover, (_e, model: unknown) => {
+  meetingModel = modelSpec(model) ?? meetingModel;
+  void meetings.recover(meetingModel).catch((err: unknown) => console.error("[vunemi] meetings recovery:", err instanceof Error ? err.message : String(err)));
+});
+handle(CH.meetingsRename, (_e, id: unknown, title: unknown) => {
+  if (typeof id !== "string" || typeof title !== "string") return meetingList();
+  const m = meetingStore.get(id);
+  if (m) {
+    m.title = title.trim().slice(0, 200);
+    meetingStore.save(m);
+  }
+  return meetingList();
+});
+handle(CH.meetingsDelete, async (_e, id: unknown) => {
+  if (typeof id === "string" && meetings.status().recording?.id !== id) await meetingStore.remove(id);
+  return meetingList();
+});
+handle(CH.meetingsExport, async (_e, id: unknown) => {
+  const m = typeof id === "string" ? meetingStore.get(id) : null;
+  if (!m) return false;
+  const name = (m.title || formatDate(m.startedAt, { dateStyle: "medium" })).replace(/[/\\:]/g, "-").slice(0, 80);
+  const options = { defaultPath: join(app.getPath("documents"), `${name}.md`), filters: [{ name: "Markdown", extensions: ["md"] }] };
+  const picked = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);
+  if (picked.canceled || !picked.filePath) return false;
+  writeFileSync(picked.filePath, meetingMarkdown(m), { mode: 0o600 });
+  return true;
+});
+handle(CH.meetingsLevels, () => meetings.levels());
+handle(CH.meetingsDevices, () => meetingCall(() => recorder.devices()));
+
 handle(CH.forgetEverything, async () => {
-  if (session.running || mailOutbox.busy) {
+  if (session.running || mailOutbox.busy || meetings.status().recording) {
     throw new Error(t("main.stopAndSettleFirst"));
   }
   await embedded.clearData();
@@ -982,7 +1126,7 @@ handle(CH.forgetEverything, async () => {
   // Nothing may hold a model file open while it is deleted.
   await engine.dispose();
   await meaning.stop();
-  for (const name of ["shots", "shadow", "models", "engine", "projects.json", "preferences.json", "preferences.json.bak"]) {
+  for (const name of ["shots", "shadow", "models", "engine", "meetings", "projects.json", "preferences.json", "preferences.json.bak"]) {
     rmSync(join(app.getPath("userData"), name), { recursive: true, force: true });
   }
   mkdirSync(shotDir, { recursive: true });
@@ -1336,6 +1480,8 @@ app.on("before-quit", (e) => {
   quitting = true;
   e.preventDefault();
   session.stop();
+  // The recorder keeps what it wrote; the next launch finishes the meeting.
+  meetings.dispose();
   void Promise.allSettled([browser.dispose(), mailOutbox.settle(), engine.dispose(), meaning.stop()]).finally(() => {
     memory.close();
     app.quit();
