@@ -12,7 +12,7 @@ describe("maskSecrets", () => {
       "ghp_0123456789abcdefghijklmnopqrstuvwxyz",
       "github_pat_11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyz",
       "xox" + "b-123456789012-1234567890123-AbCdEfGhIjKlMnOpQrStUvWx",
-      "AIzaSyA-1234567890abcdefghijklmnopqrstu",
+      "AIza" + "SyA-1234567890abcdefghijklmnopqrstu",
       "sk_" + "live_51H8abcdefghijklmnopqrstuv",
     ];
     for (const key of cases) {
