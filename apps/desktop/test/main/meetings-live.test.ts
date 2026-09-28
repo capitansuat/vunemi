@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Locale } from "@vunemi/i18n";
-import { LiveTranscript, type Line } from "../../src/main/meetings/live.js";
+import { echoes, LiveTranscript, type Line } from "../../src/main/meetings/live.js";
 import { RATE } from "../../src/main/meetings/segmenter.js";
 
 const pcm = (seconds: number, amplitude: number) => {
@@ -47,20 +47,25 @@ function make(answer: (w: Buffer, language: Locale | "auto") => { text: string; 
 describe("LiveTranscript", () => {
   it("writes lines from both sources as they are recorded, and the rest on finish", async () => {
     writeFileSync(join(dir, "mic.pcm"), Buffer.concat([silence(1), speech(1), silence(1)]));
-    const { live, lines } = make((w) => ({ text: `${seconds(w).toFixed(1)} s` }));
+    // The recorder writes the system's silence as it goes; "Me" waits for it.
+    writeFileSync(join(dir, "system.pcm"), silence(5));
+    let n = 0;
+    const { live, lines } = make(() => ({ text: ["Birinci cümle.", "İkinci konu.", "Üçüncü başlık."][n++]! }));
     live.start();
     for (let i = 0; i < 100 && lines.length === 0; i++) await new Promise((r) => setTimeout(r, 10));
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toMatchObject({ source: "me", text: expect.stringMatching(/ s$/) });
+    expect(lines[0]).toMatchObject({ source: "me", text: "Birinci cümle." });
     expect(lines[0]!.start).toBeCloseTo(0.85, 1);
 
-    // The system file appears later, and ends mid-speech: finish closes it.
-    writeFileSync(join(dir, "system.pcm"), Buffer.concat([silence(3.5), speech(1)]));
+    // The system audio goes on, and ends mid-speech: finish closes it.
+    appendFileSync(join(dir, "system.pcm"), speech(1));
     appendFileSync(join(dir, "mic.pcm"), Buffer.concat([speech(0.5), silence(1)]).subarray(1)); // odd byte boundary
     await live.finish();
     expect(live.pending).toBe(0);
-    expect(lines.map((l) => l.source)).toEqual(["me", "me", "others"]);
-    expect(lines[2]!.start).toBeCloseTo(3.35, 1);
+    // A "Me" line may come after an "others" one it overlaps; the meeting keeps them in time order.
+    const inOrder = [...lines].sort((a, b) => a.start - b.start);
+    expect(inOrder.map((l) => l.source)).toEqual(["me", "me", "others"]);
+    expect(inOrder[2]!.start).toBeCloseTo(4.85, 1);
   });
 
   it("drops what whisper believes is silence, and subtitle credits", async () => {
@@ -92,5 +97,23 @@ describe("LiveTranscript", () => {
     });
     await live.finish();
     expect(lines.map((l) => l.text)).toEqual(["ikinci"]);
+  });
+});
+
+describe("echo from the speakers", () => {
+  it("drops a line the microphone only heard from the speakers, and keeps the user's own", async () => {
+    // The others say something at 1 s; the microphone hears it too. At 4 s the user speaks.
+    writeFileSync(join(dir, "system.pcm"), Buffer.concat([silence(1), speech(1), silence(4)]));
+    writeFileSync(join(dir, "mic.pcm"), Buffer.concat([silence(1), speech(1), silence(2), speech(1.5), silence(1)]));
+    const { live, lines } = make((w) => ({ text: seconds(w) < 2 ? "Bütçeyi cuma günü bitirelim." : "Bence perşembe daha iyi." }));
+    live.start();
+    await live.finish();
+    expect(lines.map((l) => `${l.source}: ${l.text}`)).toEqual(["others: Bütçeyi cuma günü bitirelim.", "me: Bence perşembe daha iyi."]);
+  });
+
+  it("tells an echo by the words it shares", () => {
+    expect(echoes("bütçeyi cuma bitirelim", "Bütçeyi cuma günü bitirelim.")).toBe(true);
+    expect(echoes("Tamam, katılıyorum.", "Bütçeyi cuma günü bitirelim.")).toBe(false);
+    expect(echoes("", "x")).toBe(false);
   });
 });

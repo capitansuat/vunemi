@@ -51,6 +51,16 @@ export class Segmenter {
     this.minVoicedFrames = Math.ceil((opts.minVoicedMs ?? 300) / frameMs);
   }
 
+  /** Seconds up to which every stretch is closed: nothing later can start before this. */
+  get settled(): number {
+    return (this.open ? this.open.start : this.position) / RATE;
+  }
+
+  /** Seconds of audio read so far. */
+  get heard(): number {
+    return this.position / RATE;
+  }
+
   /** Feeds samples in; returns the stretches that ended. */
   push(chunk: Int16Array): Segment[] {
     const all = new Int16Array(this.carry.length + chunk.length);
