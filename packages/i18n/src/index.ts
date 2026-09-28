@@ -98,9 +98,14 @@ export type Vars = Record<string, string | number>;
  * filled from `vars`. A plural entry is chosen by `vars.count`.
  */
 export function t(key: MessageKey, vars?: Vars): string {
-  const entry = lookup(CATALOGUES[current], key) ?? lookup(CATALOGUES.en, key) ?? lookup(CATALOGUES.tr, key);
+  return tIn(current, key, vars);
+}
+
+/** The same in a given language, for text that follows its content (a meeting's), not the app. */
+export function tIn(locale: Locale, key: MessageKey, vars?: Vars): string {
+  const entry = lookup(CATALOGUES[locale], key) ?? lookup(CATALOGUES.en, key) ?? lookup(CATALOGUES.tr, key);
   if (entry === undefined) return key;
-  const text = typeof entry === "string" ? entry : pluralOf(entry, Number(vars?.count ?? 0));
+  const text = typeof entry === "string" ? entry : pluralOf(entry, Number(vars?.count ?? 0), locale);
   return vars ? fill(text, vars) : text;
 }
 
@@ -118,8 +123,8 @@ function lookup(catalogue: Catalogue, key: string): string | PluralForms | undef
   return typeof at === "string" || (at !== null && typeof at === "object" && "other" in at) ? (at as string | PluralForms) : undefined;
 }
 
-function pluralOf(forms: PluralForms, count: number): string {
-  const rule = new Intl.PluralRules(localeInfo().tag).select(count) as keyof PluralForms;
+function pluralOf(forms: PluralForms, count: number, locale: Locale): string {
+  const rule = new Intl.PluralRules(localeInfo(locale).tag).select(count) as keyof PluralForms;
   return forms[rule] ?? forms.other;
 }
 
