@@ -246,8 +246,10 @@ export function Composer() {
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setHandsFree(!voice.handsFree)}
-                disabled={!canHear}
+                // Without a speech model it offers the download, like the mic;
+                // a button that looks usable and does nothing reads as broken.
+                onClick={() => (offerable ? setOffer(true) : setHandsFree(!voice.handsFree))}
+                disabled={!canHear && !offerable}
                 aria-pressed={voice.handsFree}
                 aria-label={t("composer.voice.handsFree")}
                 title={canHear ? t("composer.voice.handsFreeHint") : micTitle}
