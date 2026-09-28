@@ -5,6 +5,13 @@ import { Queue } from "./Queue.js";
 import { VoiceBar } from "./VoiceBar.js";
 import { t } from "@vunemi/i18n";
 
+/**
+ * Voice chat (Vunemi answering out loud, then listening again) stays off
+ * until replies are read sentence by sentence and can be interrupted by
+ * speaking. Dictation into the text box is unaffected.
+ */
+const VOICE_CHAT = false;
+
 export function Composer() {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<string[]>([]);
@@ -244,7 +251,7 @@ export function Composer() {
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
-              <button
+              {VOICE_CHAT && <button
                 type="button"
                 // Without a speech model it offers the download, like the mic;
                 // a button that looks usable and does nothing reads as broken.
@@ -258,7 +265,7 @@ export function Composer() {
                 }`}
               >
                 <AudioLines size={14} />
-              </button>
+              </button>}
               <button
                 type="button"
                 onClick={() => (offerable ? setOffer(true) : void (listening ? finishListening(voice.handsFree) : listen()))}
