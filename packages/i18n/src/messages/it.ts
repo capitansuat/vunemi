@@ -467,6 +467,7 @@ export const messages: Catalogue = {
       microphone: "Vunemi non può usare il microfono. Consentilo in Impostazioni di Sistema › Privacy e sicurezza › Microfono.",
       systemAudio: "Vunemi non è riuscito a registrare l'audio del Mac ({why}). Consentilo in Impostazioni di Sistema › Privacy e sicurezza › Registrazione schermo e audio di sistema.",
       model: "Scegli un modello per il riassunto, poi riprova.",
+      transcription: "Non è stato possibile trascrivere parte dell’audio. La registrazione è conservata; riprova.",
       unknown: "La registrazione non è partita: {why}",
     },
     tray: {

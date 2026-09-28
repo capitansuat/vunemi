@@ -467,6 +467,7 @@ export const messages: Catalogue = {
       microphone: "Vunemi가 마이크를 사용할 수 없습니다. 시스템 설정 › 개인정보 보호 및 보안 › 마이크에서 허용하세요.",
       systemAudio: "Vunemi가 Mac의 소리를 녹음하지 못했습니다({why}). 시스템 설정 › 개인정보 보호 및 보안 › 화면 및 시스템 오디오 녹음에서 허용하세요.",
       model: "요약에 쓸 모델을 고른 뒤 다시 시도하세요.",
+      transcription: "일부 음성을 받아쓰지 못했습니다. 녹음은 보관됩니다. 다시 시도하세요.",
       unknown: "녹음이 시작되지 않았습니다: {why}",
     },
     tray: {

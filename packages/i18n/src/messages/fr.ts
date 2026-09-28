@@ -467,6 +467,7 @@ export const messages: Catalogue = {
       microphone: "Vunemi n'a pas accès au micro. Autorisez-le dans Réglages Système › Confidentialité et sécurité › Micro.",
       systemAudio: "Vunemi n'a pas pu enregistrer le son du Mac ({why}). Autorisez-le dans Réglages Système › Confidentialité et sécurité › Enregistrement de l'écran et de l'audio du système.",
       model: "Choisissez un modèle pour le résumé, puis réessayez.",
+      transcription: "Une partie de l’audio n’a pas pu être transcrite. L’enregistrement est conservé ; réessayez.",
       unknown: "L'enregistrement n'a pas démarré : {why}",
     },
     tray: {

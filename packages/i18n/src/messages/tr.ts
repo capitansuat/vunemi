@@ -471,6 +471,7 @@ export const messages = {
       microphone: "Vunemi mikrofonu kullanamıyor. Sistem Ayarları › Gizlilik ve Güvenlik › Mikrofon'dan izin ver.",
       systemAudio: "Vunemi Mac'in sesini kaydedemedi ({why}). Sistem Ayarları › Gizlilik ve Güvenlik › Ekran ve Sistem Sesi Kaydı'ndan izin ver.",
       model: "Özet için bir model seç, sonra yeniden dene.",
+      transcription: "Sesin bir bölümü yazıya dökülemedi. Kayıt saklandı; yeniden dene.",
       unknown: "Kayıt başlamadı: {why}",
     },
     tray: {

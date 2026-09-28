@@ -75,6 +75,7 @@ export class LiveTranscript {
   private working: Promise<void> | null = null;
   private busy = false;
   private finishing = false;
+  private transcriptionFailures = 0;
   /** The others' recent lines, to tell an echo from the user. */
   private others: Line[] = [];
 
@@ -106,6 +107,10 @@ export class LiveTranscript {
   /** Stretches waiting for whisper, the one it is on included. */
   get pending(): number {
     return this.queue.length + (this.busy ? 1 : 0);
+  }
+
+  get failedSegments(): number {
+    return this.transcriptionFailures;
   }
 
   start(): void {
@@ -182,6 +187,7 @@ export class LiveTranscript {
           await this.transcribe(next.source, next.segment);
         } catch (err) {
           // One stretch lost is better than a meeting stuck; the rest go on.
+          this.transcriptionFailures++;
           console.error("[vunemi meetings] transcribing", (err as Error).message);
         } finally {
           this.busy = false;

@@ -116,6 +116,13 @@ export class MeetingService {
       meeting.language = live.language;
       this.opts.store.save(meeting);
       this.changed();
+      if (live.failedSegments > 0) {
+        meeting.state = "failed";
+        meeting.error = "transcription";
+        this.opts.store.save(meeting);
+        this.changed();
+        return;
+      }
       await this.finish(meeting, spec);
     })();
     return this.stopping;
@@ -131,7 +138,10 @@ export class MeetingService {
     if (this.working.has(id) || this.recording?.meeting.id === id) return;
     const meeting = this.opts.store.get(id);
     if (!meeting || meeting.state !== "failed") return;
-    if (meeting.lines.length === 0) await this.transcribeAgain(meeting);
+    if (meeting.lines.length === 0 || meeting.error === "transcription") {
+      await this.transcribeAgain(meeting);
+      if (meeting.state === "failed") return;
+    }
     await this.finish(meeting, spec);
   }
 
@@ -142,7 +152,7 @@ export class MeetingService {
       meeting.endedAt ??= Date.now();
       // Lines written before the quit are written again, all in order.
       await this.transcribeAgain(meeting);
-      await this.finish(meeting, spec);
+      if (meeting.state !== "failed") await this.finish(meeting, spec);
     }
   }
 
@@ -178,6 +188,12 @@ export class MeetingService {
     });
     await live.finish();
     meeting.language = live.language;
+    if (live.failedSegments > 0) {
+      meeting.state = "failed";
+      meeting.error = "transcription";
+    } else {
+      delete meeting.error;
+    }
     this.opts.store.save(meeting);
   }
 

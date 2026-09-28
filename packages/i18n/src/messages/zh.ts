@@ -467,6 +467,7 @@ export const messages: Catalogue = {
       microphone: "Vunemi 无法使用麦克风。请在“系统设置 › 隐私与安全性 › 麦克风”中允许。",
       systemAudio: "Vunemi 无法录制 Mac 的声音（{why}）。请在“系统设置 › 隐私与安全性 › 录屏与系统录音”中允许。",
       model: "请选择用于摘要的模型，然后重试。",
+      transcription: "部分音频无法转写。录音已保留，请重试。",
       unknown: "录制未开始：{why}",
     },
     tray: {

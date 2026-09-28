@@ -991,6 +991,7 @@ const MEETING_ERRORS = {
   voice: "meetings.error.voice",
   microphone: "meetings.error.microphone",
   model: "meetings.error.model",
+  transcription: "meetings.error.transcription",
 } as const;
 function meetingErrorText(message: string): string {
   if (Object.hasOwn(MEETING_ERRORS, message)) return t(MEETING_ERRORS[message as keyof typeof MEETING_ERRORS]);

@@ -29,6 +29,7 @@ let store: MeetingStore;
 let recorder: Recorder;
 let statuses: MeetingStatus[];
 let modelAnswer: () => string;
+let transcriptionFails: boolean;
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), "vunemi-service-"));
@@ -36,6 +37,7 @@ beforeEach(() => {
   recorder = new Recorder(FAKE);
   statuses = [];
   modelAnswer = () => SUMMARY;
+  transcriptionFails = false;
   delete process.env.FAKE_RECORDER_MODE;
 });
 afterEach(() => {
@@ -54,7 +56,10 @@ function service(blocked: () => "macos" | null = () => null) {
   return new MeetingService({
     store,
     recorder,
-    transcribe: async () => ({ text: "Bütçeyi konuştuk.", language: "tr", noSpeech: 0 }),
+    transcribe: async () => {
+      if (transcriptionFails) throw new Error("whisper unavailable");
+      return { text: "Bütçeyi konuştuk.", language: "tr", noSpeech: 0 };
+    },
     model: async () => ({ model, window: 8_000 }),
     words: () => ({ names: { me: "Ben", others: "Diğerleri" }, headings: { summary: "Özet", decisions: "Kararlar", actions: "Yapılacaklar", questions: "Sorular" }, language: "Turkish" }),
     blocked,
@@ -137,5 +142,21 @@ describe("MeetingService", () => {
     const meeting = await s.start();
     await s.stop("lmstudio:m");
     expect(store.get(meeting.id)).toMatchObject({ state: "done", summary: null });
+  });
+
+  it("keeps audio when transcription fails and retries it", async () => {
+    const s = service();
+    const meeting = await s.start();
+    writeFileSync(join(store.folder(meeting.id), "mic.pcm"), speech(1));
+    transcriptionFails = true;
+    await s.stop("lmstudio:m");
+    expect(store.get(meeting.id)).toMatchObject({ state: "failed", error: "transcription" });
+    expect(existsSync(join(store.folder(meeting.id), "mic.pcm"))).toBe(true);
+    await s.retry(meeting.id, "lmstudio:m");
+    expect(store.get(meeting.id)).toMatchObject({ state: "failed", error: "transcription" });
+    transcriptionFails = false;
+    await s.retry(meeting.id, "lmstudio:m");
+    expect(store.get(meeting.id)).toMatchObject({ state: "done" });
+    expect(existsSync(join(store.folder(meeting.id), "mic.pcm"))).toBe(false);
   });
 });
