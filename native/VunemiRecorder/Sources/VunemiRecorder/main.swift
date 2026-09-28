@@ -212,7 +212,15 @@ final class MicCapture {
         self.sink = sink
         self.uid = uid
         voiceProcessing = true
-        try run()
+        do {
+            try run()
+        } catch {
+            // Voice processing would not start on this Mac's devices: the plain microphone.
+            stop()
+            voiceProcessing = false
+            engine = AVAudioEngine()
+            try run()
+        }
     }
 
     private func run() throws {
@@ -224,10 +232,6 @@ final class MicCapture {
             try input.setVoiceProcessingEnabled(true)
             // Voice processing turns other audio down by default; the meeting must stay audible.
             input.voiceProcessingOtherAudioDuckingConfiguration = AVAudioVoiceProcessingOtherAudioDuckingConfiguration(enableAdvancedDucking: false, duckingLevel: .min)
-            // It is one unit for input and output: with no output running the
-            // input stayed silent. The mixer has nothing to play; it only runs it.
-            engine.connect(engine.mainMixerNode, to: engine.outputNode, format: nil)
-            engine.mainMixerNode.outputVolume = 0
         }
         let format = input.outputFormat(forBus: 0)
         let sink = self.sink
