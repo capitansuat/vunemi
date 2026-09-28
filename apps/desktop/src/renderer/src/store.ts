@@ -89,7 +89,7 @@ function storeModel(spec: string | null): void {
  * user should never have to guess whether Vunemi is still listening.
  */
 /** Which view fills the main column. */
-export type View = "chat" | "artefacts" | "settings";
+export type View = "chat" | "artefacts" | "meetings" | "settings";
 
 /** Settings keeps everything besides the conversation and what it made, so the sidebar stays short. */
 export type SettingsSection = "permissions" | "security" | "connections" | "vault" | "outbox" | "automations" | "activity" | "model" | "language" | "memory" | "data";

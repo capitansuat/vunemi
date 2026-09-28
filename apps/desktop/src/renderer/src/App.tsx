@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, Trash2 } from "lucide-react";
+import { ArrowLeft, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, Trash2, Users } from "lucide-react";
 import { ArtefactsView } from "./components/ArtefactsView.js";
+import { MeetingsView } from "./components/MeetingsView.js";
 import { BackgroundBrowsing, BrowserPane } from "./components/BrowserPane.js";
 import { PicturePane } from "./components/PicturePane.js";
 import { Composer } from "./components/Composer.js";
@@ -26,7 +27,8 @@ export function App() {
   const view = useStore((s) => s.view);
 
   useEffect(() => {
-    void refreshProviders();
+    // Once the model is known, a meeting Vunemi quit during can be finished and summarised.
+    void refreshProviders().finally(() => void window.vunemi.meetingsRecover(useStore.getState().model));
     // Subscribed here, not in the pane, so a tab the agent opens can bring
     // the closed pane up.
     void window.vunemi.getEmbedded().then(setEmbedded);
@@ -62,6 +64,8 @@ export function App() {
         {view === "chat" ? <TopBar /> : <PageBar />}
         {view === "artefacts" ? (
           <ArtefactsView />
+        ) : view === "meetings" ? (
+          <MeetingsView />
         ) : view === "settings" ? (
           <SettingsView />
         ) : (
@@ -113,6 +117,7 @@ function Sidebar() {
           <IconButton label={t("app.newSession")} icon={SquarePen} onClick={() => void newSession()} disabled={running} />
           <ViewButton view="chat" label={t("app.nav.chat")} icon={MessageSquare} folded />
           <ViewButton view="artefacts" label={t("app.nav.artefacts")} icon={Package} folded />
+          <ViewButton view="meetings" label={t("app.nav.meetings")} icon={Users} folded />
         </div>
         <div className="no-drag mt-auto pb-4">
           <ViewButton view="settings" label={t("app.nav.settings")} icon={Settings2} folded />
@@ -149,6 +154,7 @@ function Sidebar() {
       <div className="no-drag mt-3 px-2.5">
         <ViewButton view="chat" label={t("app.nav.chat")} icon={MessageSquare} />
         <ViewButton view="artefacts" label={t("app.nav.artefacts")} icon={Package} />
+        <ViewButton view="meetings" label={t("app.nav.meetings")} icon={Users} />
       </div>
 
       <SessionsNav />
