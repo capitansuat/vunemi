@@ -31,7 +31,7 @@ afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 function connector(existing: StoredMailAccount[] = []) {
   const saves: StoredMailAccount[][] = [];
-  const c = mailConnector({ osascript: fake, mailAccounts: existing, saveMailAccounts: (list) => saves.push(list) } as unknown as CatalogueOptions);
+  const c = mailConnector({ osascript: fake, mailAccounts: existing, saveMailAccounts: (list: StoredMailAccount[]) => saves.push(list) } as unknown as CatalogueOptions);
   return { c, saves };
 }
 

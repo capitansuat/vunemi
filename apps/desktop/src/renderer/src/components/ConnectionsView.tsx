@@ -33,7 +33,7 @@ import {
   Workflow,
   type LucideIcon,
 } from "lucide-react";
-import type { ConnectorView, MailAccountInput, NewMcpServer } from "../../../shared/ipc.js";
+import type { ConnectorView, MailAccountInput, MailAppAccount, NewMcpServer } from "../../../shared/ipc.js";
 import { lower, t } from "@vunemi/i18n";
 import { useStore } from "../store.js";
 
@@ -349,6 +349,14 @@ function Details({
     smtpSecure: false, user: "", password: "",
   });
   const field = (key: keyof MailAccountInput, value: string | number | boolean) => setMail((current) => ({ ...current, [key]: value }));
+  // The Mac's Mail app: its accounts, listed for the user to choose from.
+  const [mailApp, setMailApp] = useState<MailAppAccount[] | null>(null);
+  const [mailAppOpen, setMailAppOpen] = useState(false);
+  const [mailAppError, setMailAppError] = useState<string | null>(null);
+  const loadMailApp = () => {
+    setMailAppError(null);
+    window.vunemi.mailAppAccounts().then(setMailApp, (err: unknown) => setMailAppError(err instanceof Error ? err.message : String(err)));
+  };
 
   return (
     <div className="border-t border-line px-3.5 py-3">
@@ -416,8 +424,10 @@ function Details({
               type="button"
               disabled={disabled || !provider.available}
               title={provider.note}
-              onClick={() => row.id === "mail" && (provider.id === "imap" || provider.id === "gmail" || provider.id === "outlook")
-                ? (setMailProvider(provider.id), setMailForm(true))
+              onClick={() => row.id === "mail" && provider.id === "applemail"
+                ? (setMailForm(false), setMailAppOpen(true), setMailApp(null), loadMailApp())
+                : row.id === "mail" && (provider.id === "imap" || provider.id === "gmail" || provider.id === "outlook")
+                ? (setMailAppOpen(false), setMailProvider(provider.id), setMailForm(true))
                 // Google and Microsoft sign-in needs no form: their own page opens in the browser.
                 : void act(row.id, () => window.vunemi.addAccount(row.id, provider.id))}
               className="rounded-full border border-line px-2 py-0.5 text-[11.5px] text-muted transition-colors hover:border-line-strong hover:text-fg disabled:opacity-40"
@@ -479,6 +489,41 @@ function Details({
             <button type="button" onClick={() => { setMailForm(false); field("password", ""); }} className="px-2 text-[12px] text-muted">{t("common.cancel")}</button>
           </div>
         </form>
+      )}
+
+      {row.id === "mail" && mailAppOpen && (
+        <div className="mt-3 grid gap-2 rounded-lg border border-line bg-surface-2 p-3">
+          <p className="text-[12px] text-muted">{t("connections.mail.appleMailPick")}</p>
+          {mailAppError && <p role="alert" className="text-[12px] text-danger">{mailAppError}</p>}
+          {mailApp?.length === 0 && <p className="text-[12px] text-faint">{t("connections.mail.appleMailNone")}</p>}
+          {mailApp && mailApp.length > 0 && (
+            <ul className="space-y-1">
+              {mailApp.map((account) => (
+                <li key={account.name} className="flex items-center gap-2 rounded-md bg-surface px-2.5 py-1.5">
+                  <span className="min-w-0 flex-1 truncate text-[12.5px] text-fg">
+                    {account.name}
+                    {account.emails[0] && <span className="ml-2 text-[11.5px] text-faint">{account.emails[0]}</span>}
+                  </span>
+                  {account.connected ? (
+                    <span className="text-[11.5px] text-muted">{t("connections.mail.appleMailConnected")}</span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => void act(row.id, () => window.vunemi.addAccount(row.id, "applemail", { account: account.name })).then((ok) => ok && loadMailApp())}
+                      className="rounded-md bg-ember px-2.5 py-1 text-[11.5px] text-white disabled:opacity-50"
+                    >
+                      {t("connections.mail.connect")}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div>
+            <button type="button" onClick={() => setMailAppOpen(false)} className="px-1 text-[12px] text-muted">{t("common.cancel")}</button>
+          </div>
+        </div>
       )}
 
       {row.origin === "mcp" && (

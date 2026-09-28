@@ -83,6 +83,11 @@ export interface Moved {
 export interface MailAccount {
   /** How to name this account to the user, e.g. "Gmail (test@…)". */
   readonly label: string;
+  /**
+   * The app that does the sending, when it isn't Vunemi (the Mac's Mail).
+   * Vunemi can then confirm only the hand-over, and the card says so.
+   */
+  readonly handedTo?: string;
   /** False when the account is not connected yet; tools then say so. */
   ready(): Promise<boolean>;
   search(query: SearchQuery): Promise<MessageSummary[]>;

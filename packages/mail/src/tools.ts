@@ -67,6 +67,17 @@ export function createMailTools({ accounts, outbox }: MailToolOptions): ToolDef[
     }
   };
 
+  /** For a mailbox another app sends from: what Vunemi can and can't confirm. */
+  const handedToLine = (account: unknown, inReplyTo: unknown): string[] => {
+    try {
+      const id = account ? String(account) : replyContext(accounts, inReplyTo)?.entry.id;
+      const app = accounts.pick(id).account.handedTo;
+      return app ? [t("mail.preview.handedTo", { app })] : [];
+    } catch {
+      return [];
+    }
+  };
+
   /** What a card calls a message, from the last listing of it. */
   const names = new Map<string, { subject: string; from: string }>();
   const remember = (entry: { id: string }, message: MessageSummary) =>
@@ -134,10 +145,10 @@ export function createMailTools({ accounts, outbox }: MailToolOptions): ToolDef[
       untrustedOutput: true,
       ephemeral: true,
       async preview(args: { text?: string; from?: string }) {
-        const what = [args.text && `"${String(args.text)}"`, args.from && `kimden: ${String(args.from)}`]
+        const what = [args.text && `"${String(args.text)}"`, args.from && t("mail.preview.fromSender", { sender: String(args.from) })]
           .filter(Boolean)
           .join(", ");
-        return `Postada ara${what ? `: ${what}` : ""}`;
+        return what ? t("mail.preview.searchFor", { what }) : t("mail.preview.search");
       },
       async run(args: {
         text?: string;
@@ -255,7 +266,7 @@ export function createMailTools({ accounts, outbox }: MailToolOptions): ToolDef[
         const message = await entry.account.read(messageId);
         remember(entry, message);
         const { text, removed } = stripSecrets(message.text);
-        const body = text.length > MAX_BODY_CHARS ? `${text.slice(0, MAX_BODY_CHARS)}\n[… kesildi]` : text;
+        const body = text.length > MAX_BODY_CHARS ? `${text.slice(0, MAX_BODY_CHARS)}\n[… cut]` : text;
         const note = redactionNote(removed);
 
         return [
@@ -350,6 +361,7 @@ export function createMailTools({ accounts, outbox }: MailToolOptions): ToolDef[
           ...repeat,
           t("mail.preview.send", { to: shown(args.to) }),
           ...fromLine(args.account, args.inReplyTo),
+          ...handedToLine(args.account, args.inReplyTo),
           t("mail.preview.subject", { subject: String(args.subject) }),
           body.length > 300 ? `${body.slice(0, 299)}…` : body,
         ].join("\n");

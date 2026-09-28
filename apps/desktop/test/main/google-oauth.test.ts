@@ -57,8 +57,8 @@ describe("Gmail sign-in with Google", () => {
   });
 
   it("offers Google and Microsoft sign-in only when the build has them", () => {
-    expect(mailProviderOptions({}).map((p) => p.id)).toEqual(["gmail", "outlook", "imap"]);
+    expect(mailProviderOptions({}).map((p) => p.id)).toEqual(["applemail", "gmail", "outlook", "imap"]);
     expect(mailProviderOptions({ google: client, microsoft: { clientId: "12345678-1234-1234-1234-123456789abc" } }).map((p) => p.id))
-      .toEqual(["google", "microsoft", "gmail", "imap"]);
+      .toEqual(["applemail", "google", "microsoft", "gmail", "imap"]);
   });
 });
