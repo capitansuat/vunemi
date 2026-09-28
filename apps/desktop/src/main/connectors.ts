@@ -24,7 +24,7 @@ import { createMailTools, MAIL_INSTRUCTIONS, MailAccounts, Outbox, gmailAppPassw
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { unsealed } from "./mcp-secrets.js";
 import type { VaultClient } from "@vunemi/vault";
-import { mailAddressOf, type StoredMailAccount } from "./settings.js";
+import { mailAddressOf, type StoredAppleMailAccount, type StoredMailAccount } from "./settings.js";
 import { vaultMcpIO } from "./remote-mcp.js";
 import { renderOfficePdf } from "./office-pdf.js";
 import { AUTOMATION_INSTRUCTIONS, createAutomationTools, type AutomationStore } from "./automations.js";
@@ -32,6 +32,7 @@ import { authorizeOutlook, OUTLOOK_TOKEN_TARGET, outlookAddress } from "./outloo
 import { authorizeGoogle, GOOGLE_TOKEN_TARGET, googleAddress } from "./google-oauth.js";
 import { OAUTH_CLIENTS, type OAuthClients } from "./oauth-clients.js";
 import { RemoteMailAccount } from "./remote-mail.js";
+import { AppleMailAccount, listMailAppAccounts } from "./apple-mail.js";
 import { t, type MessageKey } from "@vunemi/i18n";
 
 export interface CatalogueOptions {
@@ -60,6 +61,8 @@ export interface CatalogueOptions {
   oauthClients?: OAuthClients;
   /** Scheduled tasks; without it the connection is not offered. */
   automations?: AutomationStore;
+  /** Replaced in tests: the osascript the Mail app accounts run through. */
+  osascript?: string;
 }
 
 /**
@@ -434,6 +437,8 @@ export function sealedAway(server: McpServerConfig, reason: "connectors.mcpSecre
  */
 export function mailProviderOptions(clients: OAuthClients) {
   return [
+    // First: most people already have their mail in Mail, and it needs nothing typed.
+    { id: "applemail", get label() { return t("connectors.mail.appleMailLabel"); }, available: true, get note() { return t("connectors.mail.appleMailNote"); } },
     ...(clients.google ? [{ id: "google", get label() { return t("connectors.mail.googleLabel"); }, available: true, get note() { return t("connectors.mail.googleProviderNote"); } }] : []),
     ...(clients.microsoft ? [{ id: "microsoft", get label() { return t("connectors.mail.microsoftLabel"); }, available: true, get note() { return t("connectors.mail.microsoftProviderNote"); } }] : []),
     { id: "gmail", label: "Gmail", available: true, get note() { return t("connectors.mail.gmailNote"); } },
@@ -450,8 +455,9 @@ export function mailProviderOptions(clients: OAuthClients) {
  * mailbox as an argument; ten tools per account would bury a small model.
  *
  * IMAP reads and stores drafts; SMTP sends after the outbox hold expires.
+ * Mail app accounts hold no secret: they run here, through Apple Events.
  */
-function mailConnector(opts: CatalogueOptions): Connector {
+export function mailConnector(opts: CatalogueOptions): Connector {
   const accounts = new MailAccounts();
   const outbox = opts.mailOutbox ?? new Outbox();
   let saved = [...(opts.mailAccounts ?? [])];
@@ -459,6 +465,14 @@ function mailConnector(opts: CatalogueOptions): Connector {
   const addressOf = mailAddressOf;
   const vault = opts.vault;
   const clients = opts.oauthClients ?? OAUTH_CLIENTS;
+  /** Whether macOS last refused Vunemi control of Mail; cleared when a call works again. */
+  let mailDenied = false;
+  const run = createRunner({
+    ...(opts.osascript && { osascript: opts.osascript }),
+    onDenied: () => { mailDenied = true; },
+    onAllowed: () => { mailDenied = false; },
+  });
+  const isMailApp = (entry: StoredMailAccount): entry is StoredAppleMailAccount => entry.provider === "applemail";
   /** One sign-in's refresh token into the Vault, then the account into settings; neither without the other. */
   const addSignedIn = async (entry: StoredMailAccount, refreshToken: string, note: string, target: string) => {
     if (saved.some((item) => addressOf(item).toLowerCase() === addressOf(entry).toLowerCase())) {
@@ -475,8 +489,12 @@ function mailConnector(opts: CatalogueOptions): Connector {
   // The accounts whose secret the Vault can read, kept current as it opens,
   // restarts or changes. The connection itself is made in the Vault process.
   const sync = (): void => {
-    if (!vault) return;
     for (const entry of saved) {
+      if (isMailApp(entry)) {
+        if (!accounts.all().some((item) => item.id === entry.id)) accounts.add({ id: entry.id, label: entry.email, account: new AppleMailAccount(run, entry) });
+        continue;
+      }
+      if (!vault) continue;
       const readable = vault.has(secretName(entry.id));
       const present = accounts.all().some((item) => item.id === entry.id);
       if (readable && !present) accounts.add({ id: entry.id, label: addressOf(entry), account: new RemoteMailAccount(vault, entry) });
@@ -514,17 +532,37 @@ function mailConnector(opts: CatalogueOptions): Connector {
     instructions: MAIL_INSTRUCTIONS,
     providers: mailProviderOptions(clients),
     accounts: async () =>
-      saved.map((entry) => ({
-        id: entry.id,
-        label: addressOf(entry),
-        provider: entry.provider ?? "imap",
-        addedAt: entry.addedAt,
-        state: vault?.has(secretName(entry.id)) ? "ready" as const : "blocked" as const,
-        ...(!vault?.has(secretName(entry.id)) && { reason: t("connectors.mail.passwordUnreadable") }),
-      })),
+      saved.map((entry) => {
+        const ok = isMailApp(entry) ? !mailDenied : vault?.has(secretName(entry.id)) === true;
+        const reason = isMailApp(entry) ? t("connectors.apps.denied", { apps: "Mail" }) : t("connectors.mail.passwordUnreadable");
+        return {
+          id: entry.id,
+          label: addressOf(entry),
+          provider: entry.provider ?? "imap",
+          addedAt: entry.addedAt,
+          state: ok ? "ready" as const : "blocked" as const,
+          ...(!ok && { reason }),
+        };
+      }),
     addAccount: async (provider, input) => {
-      const known = ["imap", "gmail", "outlook", ...(clients.google ? ["google"] : []), ...(clients.microsoft ? ["microsoft"] : [])];
+      const known = ["applemail", "imap", "gmail", "outlook", ...(clients.google ? ["google"] : []), ...(clients.microsoft ? ["microsoft"] : [])];
       if (!known.includes(provider)) throw new Error(t("connectors.mail.noFlow", { provider }));
+      if (provider === "applemail") {
+        if (!opts.saveMailAccounts) throw new Error(t("connectors.mail.noVault"));
+        const name = String((input as { account?: unknown } | undefined)?.account ?? "").trim();
+        const found = (await listMailAppAccounts(run)).find((item) => item.name === name);
+        const email = found?.emails.find((address) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address));
+        if (!found || !email) throw new Error(t("connectors.mail.appleMailUnknown", { name }));
+        // The same mailbox twice would answer every search twice.
+        if (saved.some((item) => addressOf(item).toLowerCase() === email.toLowerCase() || (isMailApp(item) && item.account === name))) {
+          throw new Error(t("connectors.mail.duplicate"));
+        }
+        const entry: StoredAppleMailAccount = { id: randomUUID(), provider: "applemail", account: name, email, addedAt: Date.now() };
+        opts.saveMailAccounts([...saved, entry]);
+        saved = [...saved, entry];
+        sync();
+        return { id: entry.id, label: email, provider: "applemail", addedAt: entry.addedAt, state: "ready" as const };
+      }
       if (!vault?.available || !opts.saveMailAccounts) throw new Error(t("connectors.mail.noVault"));
       // Signing in with Google or Microsoft takes no details; the rest do.
       if (provider !== "google" && provider !== "microsoft" && (!input || typeof input !== "object")) throw new Error(t("connectors.mail.needDetails"));
@@ -588,12 +626,16 @@ function mailConnector(opts: CatalogueOptions): Connector {
       opts.saveMailAccounts?.(saved.filter((item) => item.id !== id));
       saved = saved.filter((item) => item.id !== id);
       accounts.remove(id);
+      // A Mail app account left nothing in the Vault.
+      if (isMailApp(entry)) return;
       await vault?.call("mail.close", [id]).catch(() => undefined);
       await vault?.delete(secretName(id));
     },
     status: async () =>
       outboxError
         ? { state: "blocked", reason: outboxError }
+        : mailDenied && saved.some(isMailApp)
+        ? { state: "blocked", settings: "automation", reason: t("connectors.apps.denied", { apps: "Mail" }) }
         : accounts.size === 0
         ? { state: "blocked", reason: !saved.length ? t("connectors.mail.noAccounts") : vault?.available ? t("connectors.mail.passwordsUnreadable") : t("vaultStore.locked") }
         : { state: "ready", account: accounts.list().map((a) => a.label).join(", ") },

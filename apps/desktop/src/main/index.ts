@@ -9,7 +9,7 @@ import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type VaultStatus } from "../shared/ipc.js";
+import { CH, EMERGENCY_STOP_ACCELERATOR, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type VaultStatus } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -26,7 +26,8 @@ import { EngineService } from "./engine/service.js";
 import { Voice, whisperBinary } from "./voice.js";
 import { DownloadError } from "./engine/download.js";
 import { buildConnectors } from "./connectors.js";
-import { ScriptableCatalog, shortcutName } from "@vunemi/apps";
+import { createRunner, ScriptableCatalog, shortcutName } from "@vunemi/apps";
+import { listMailAppAccounts } from "./apple-mail.js";
 import { createDemoTools } from "./demo-tools.js";
 import { MAX_TRUSTED_SITES, SettingsStore, validPolicy } from "./settings.js";
 import { migrateMcpSecrets, removeMcpSecrets, sealMcpServer, unsealed } from "./mcp-secrets.js";
@@ -1011,9 +1012,16 @@ handle(CH.connectionsDisconnect, async (_e, id: string) => {
   return connectors.list();
 });
 
-handle(CH.connectionsAddAccount, async (_e, id: string, provider: string, input?: MailAccountInput) => {
+handle(CH.connectionsAddAccount, async (_e, id: string, provider: string, input?: MailAccountInput | { account: string }) => {
   await connectors.addAccount(String(id), String(provider), input);
   return connectors.list();
+});
+
+// What the Mac's Mail app has, so the user can choose; macOS asks the first time.
+const mailAppRunner = createRunner();
+handle(CH.mailAppAccounts, async (): Promise<MailAppAccount[]> => {
+  const connected = new Set(settings.mailAccounts.flatMap((entry) => (entry.provider === "applemail" ? [entry.account] : [])));
+  return (await listMailAppAccounts(mailAppRunner)).map((account) => ({ ...account, connected: connected.has(account.name) }));
 });
 
 handle(CH.connectionsRemoveAccount, async (_e, id: string, accountId: string) => {

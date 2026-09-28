@@ -68,6 +68,12 @@ export interface SessionList {
   projects: ProjectView[];
 }
 
+export interface MailAppAccount {
+  name: string;
+  emails: string[];
+  connected: boolean;
+}
+
 export interface MailAccountInput {
   email: string;
   imapHost: string;
@@ -394,8 +400,10 @@ export interface VunemiApi {
   openPrivacySettings(pane: PrivacyPane): Promise<void>;
   disconnectConnection(id: string): Promise<ConnectorView[]>;
   /** Adds an account to a connection that holds several, e.g. a second mailbox. */
-  addAccount(id: string, provider: string, input?: MailAccountInput): Promise<ConnectorView[]>;
+  addAccount(id: string, provider: string, input?: MailAccountInput | { account: string }): Promise<ConnectorView[]>;
   removeAccount(id: string, accountId: string): Promise<ConnectorView[]>;
+  /** The accounts the Mac's Mail app has enabled, and whether each is connected already. */
+  mailAppAccounts(): Promise<MailAppAccount[]>;
   listOutbox(): Promise<{ pending: Pending[]; uncertain: UncertainSend[]; events: OutboxEvent[] }>;
   cancelOutbox(id: string): Promise<boolean>;
   dismissOutbox(id: string): Promise<boolean>;
@@ -534,6 +542,7 @@ export const CH = {
   connectionsDisconnect: "connections:disconnect",
   connectionsAddAccount: "connections:add-account",
   connectionsRemoveAccount: "connections:remove-account",
+  mailAppAccounts: "connections:mail-app-accounts",
   outboxList: "outbox:list",
   outboxCancel: "outbox:cancel",
   outboxDismiss: "outbox:dismiss",

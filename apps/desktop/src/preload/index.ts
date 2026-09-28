@@ -83,6 +83,7 @@ const api: VunemiApi = {
   disconnectConnection: (id) => ipcRenderer.invoke(CH.connectionsDisconnect, id),
   addAccount: (id, provider, input) => ipcRenderer.invoke(CH.connectionsAddAccount, id, provider, input),
   removeAccount: (id, accountId) => ipcRenderer.invoke(CH.connectionsRemoveAccount, id, accountId),
+  mailAppAccounts: () => ipcRenderer.invoke(CH.mailAppAccounts),
   listOutbox: () => ipcRenderer.invoke(CH.outboxList),
   cancelOutbox: (id) => ipcRenderer.invoke(CH.outboxCancel, id),
   dismissOutbox: (id) => ipcRenderer.invoke(CH.outboxDismiss, id),
