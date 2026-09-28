@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fbfaf8">
+<title>무슨 일이 있었나요? — Vunemi</title>
+<meta name="description" content="문제가 있거나 아이디어가 있나요? Vunemi 팀에 짧게 알려 주세요. 보내 주신 내용을 검토해 다음 버전을 개선하겠습니다.">
+<link rel="canonical" href="https://vunemi.com/ko/support/">
+<link rel="alternate" hreflang="en" href="https://vunemi.com/en/support/"><link rel="alternate" hreflang="de" href="https://vunemi.com/de/support/"><link rel="alternate" hreflang="es" href="https://vunemi.com/es/support/"><link rel="alternate" hreflang="fr" href="https://vunemi.com/fr/support/"><link rel="alternate" hreflang="it" href="https://vunemi.com/it/support/"><link rel="alternate" hreflang="tr" href="https://vunemi.com/tr/support/"><link rel="alternate" hreflang="pt" href="https://vunemi.com/pt/support/"><link rel="alternate" hreflang="ru" href="https://vunemi.com/ru/support/"><link rel="alternate" hreflang="zh" href="https://vunemi.com/zh/support/"><link rel="alternate" hreflang="ja" href="https://vunemi.com/ja/support/"><link rel="alternate" hreflang="ko" href="https://vunemi.com/ko/support/"><link rel="alternate" hreflang="x-default" href="https://vunemi.com/en/support/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vunemi">
+<meta property="og:title" content="무슨 일이 있었나요? — Vunemi">
+<meta property="og:description" content="문제가 있거나 아이디어가 있나요? Vunemi 팀에 짧게 알려 주세요. 보내 주신 내용을 검토해 다음 버전을 개선하겠습니다.">
+<meta property="og:url" content="https://vunemi.com/ko/support/">
+<meta property="og:image" content="https://vunemi.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="stylesheet" href="/site.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body data-page="support">
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<header class="bar"><div class="wrap bar-inner">
+<a class="brand" href="/ko/"><img src="/icon.svg" width="32" height="32" alt="">Vunemi</a>
+<nav class="site-nav" aria-label="홈"><a href="/ko/features/">기능</a><a href="/ko/screens/">화면</a><a href="/ko/download/">다운로드</a><a href="/ko/support/" aria-current="page">지원</a><a href="/docs/ko/">안내서</a><a href="https://github.com/capitansuat/vunemi">GitHub</a></nav>
+<div class="bar-actions"><select id="language" aria-label="언어" data-page="support/"><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="tr">Türkçe</option><option value="pt">Português</option><option value="ru">Русский</option><option value="zh">中文</option><option value="ja">日本語</option><option value="ko" selected>한국어</option></select><a class="pill small" href="https://github.com/capitansuat/vunemi/releases/download/v0.1.6/Vunemi-0.1.6-arm64.dmg">다운로드</a></div>
+</div></header>
+<div class="wrap">
+<main id="main" class="support-page">
+<div class="page-intro"><p class="kicker">Vunemi</p><h1>무슨 일이 있었나요?</h1><p>문제가 있거나 아이디어가 있나요? Vunemi 팀에 짧게 알려 주세요. 보내 주신 내용을 검토해 다음 버전을 개선하겠습니다.</p></div>
+<form id="support-form" class="support-form" action="/api/support" method="post" data-sending="보내는 중…" data-success="감사합니다. 메시지가 전송되었습니다. 이슈를 만들기 전에 내용을 검토합니다." data-failure="전송하지 못했습니다. 잠시 후 다시 시도해 주세요." data-rate="시도 횟수가 너무 많습니다. 1분 뒤 다시 시도해 주세요." data-verify="보안 확인을 완료한 뒤 다시 시도해 주세요.">
+<input type="hidden" name="language" value="ko">
+<div class="support-trap" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<label for="support-category">문의 종류</label>
+<select id="support-category" name="category" required><option value="bug">작동하지 않는 기능</option><option value="idea">아이디어</option><option value="question">질문</option></select>
+<label for="support-version">앱 버전(선택)</label><input id="support-version" name="version" type="text" maxlength="80" autocomplete="off">
+<label for="support-message">어떤 일이 있었거나 무엇을 원하시나요?</label><textarea id="support-message" name="message" minlength="10" maxlength="2000" required rows="7"></textarea>
+<p class="support-caution">비밀번호, 결제 정보 등 민감한 내용은 적지 마세요. 현재는 개별 답장을 보내지 않습니다.</p>
+<div class="cf-turnstile" data-sitekey="0x4AAAAAAFFf3gXR1E08P-Ab"></div>
+<button class="pill" type="submit">보내기</button><p id="support-status" role="status" aria-live="polite"></p>
+</form>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</main>
+<footer><a class="brand small" href="/ko/"><img src="/icon.svg" width="24" height="24" alt="">Vunemi</a><span>이 사이트는 쿠키나 추적 스크립트를 사용하지 않습니다.</span><span>© 2026 · <a href="https://github.com/capitansuat/vunemi">GitHub</a></span></footer>
+</div>
+<script src="/site.js" defer></script>
+</body>
+</html>

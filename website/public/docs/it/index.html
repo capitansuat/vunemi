@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f3ec">
+  <meta name="description" content="Vunemi è un assistente personale progettato per modelli locali. La prima versione macOS è disponibile e lo sviluppo continua. Questa guida descrive la versione 0.1.6; le funzioni possono cambiare nelle versioni successive.">
+  <meta name="docs-reviewed-commit" content="f569604e9f74d5d78d09e2de04d7bbd938d09a8e">
+  <meta name="docs-reviewed-version" content="0.1.6">
+  <link rel="canonical" href="https://vunemi.com/docs/it/">
+  <link rel="alternate" hreflang="en" href="https://vunemi.com/docs/en/">
+  <link rel="alternate" hreflang="de" href="https://vunemi.com/docs/de/">
+  <link rel="alternate" hreflang="es" href="https://vunemi.com/docs/es/">
+  <link rel="alternate" hreflang="fr" href="https://vunemi.com/docs/fr/">
+  <link rel="alternate" hreflang="it" href="https://vunemi.com/docs/it/">
+  <link rel="alternate" hreflang="tr" href="https://vunemi.com/docs/tr/">
+  <link rel="alternate" hreflang="pt" href="https://vunemi.com/docs/pt/">
+  <link rel="alternate" hreflang="ru" href="https://vunemi.com/docs/ru/">
+  <link rel="alternate" hreflang="zh" href="https://vunemi.com/docs/zh/">
+  <link rel="alternate" hreflang="ja" href="https://vunemi.com/docs/ja/">
+  <link rel="alternate" hreflang="ko" href="https://vunemi.com/docs/ko/">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <title>Guida a Vunemi — Vunemi</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #26241f; background: #f7f3ec; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at 87% 10%, #ffe4d1 0, transparent 30%), #f7f3ec; }
+    a { color: #a64628; }
+    a:focus-visible, select:focus-visible { outline: 3px solid #ec673a; outline-offset: 4px; }
+    .wrap { width: min(1040px, calc(100% - 40px)); margin: auto; }
+    header { display: flex; align-items: center; gap: 20px; padding: 26px 0; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #26241f; font-size: 21px; font-weight: 750; letter-spacing: -.04em; text-decoration: none; }
+    .brand img { width: 42px; height: 42px; border-radius: 12px; }
+    .home { margin-left: auto; text-decoration: none; font-weight: 600; }
+    select { max-width: 145px; padding: 9px 12px; border: 1px solid #d9d1c7; border-radius: 11px; background: #fffdf9; color: inherit; font: inherit; }
+    main { padding: 62px 0 95px; }
+    .eyebrow { color: #ad5030; font-size: 13px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { max-width: 800px; margin: 18px 0; font-size: clamp(43px, 7vw, 72px); line-height: 1.07; letter-spacing: -.06em; }
+    .intro { max-width: 760px; margin: 0; color: #625a50; font-size: clamp(18px, 2vw, 21px); line-height: 1.65; }
+    .status { margin-top: 40px; padding: 25px 29px; border: 1px solid #e9d6c6; border-radius: 18px; background: #fff5ec; }
+    .status h2 { margin-top: 0; color: #9d4527; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px; margin-top: 56px; }
+    section.card { padding: 30px; border: 1px solid #e5ddd2; border-radius: 19px; background: #fffdfa; }
+    h2 { margin: 0 0 13px; font-size: 23px; letter-spacing: -.03em; }
+    p { margin: 0; line-height: 1.72; }
+    .card p, .status p { color: #625a50; }
+    .dev { margin-top: 18px; padding: 30px; border: 1px solid #e3d1c0; border-radius: 19px; background: #f8e9dd; }
+    .dev p { max-width: 860px; color: #625a50; }
+    pre { overflow-x: auto; margin: 22px 0 0; padding: 19px; border-radius: 12px; background: #26241f; color: #fffaf4; line-height: 1.6; }
+    code { font: 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace; }
+    .reviewed { margin-top: 45px; color: #786f65; font-size: 14px; }
+    footer { padding: 25px 0 36px; border-top: 1px solid #ded6cb; color: #786f65; font-size: 14px; }
+    @media (max-width: 700px) { header { gap: 12px; } .home { font-size: 14px; } select { max-width: 105px; font-size: 14px; } main { padding-top: 35px; } .grid { grid-template-columns: 1fr; margin-top: 38px; } section.card, .dev, .status { padding: 23px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><a class="brand" href="/it/"><img src="/icon.svg" width="42" height="42" alt=""> Vunemi</a><a class="home" href="/it/">Home</a><select id="language" aria-label="Lingua"><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it" selected>Italiano</option><option value="tr">Türkçe</option><option value="pt">Português</option><option value="ru">Русский</option><option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option></select></header>
+    <main>
+      <span class="eyebrow">Documentazione</span>
+      <h1>Guida a Vunemi</h1>
+      <p class="intro">Vunemi è un assistente personale progettato per modelli locali. La prima versione macOS è disponibile e lo sviluppo continua. Questa guida descrive la versione 0.1.6; le funzioni possono cambiare nelle versioni successive.</p>
+      <section class="status"><h2>Stato del rilascio</h2><p>Vunemi 0.1.6 è disponibile su GitHub per Mac con Apple Silicon e macOS 14 o successivo. L&#39;app è firmata ma non ancora notarizzata da Apple. La pagina della versione contiene le istruzioni e la verifica SHA-256.</p><p><a href="https://github.com/capitansuat/vunemi/releases/download/v0.1.6/Vunemi-0.1.6-arm64.dmg">Scarica per Mac ↓</a> · <a href="/it/download/">Vunemi 0.1.6</a></p></section>
+      <div class="grid">
+        <section class="card"><h2>Scegliere un modello</h2><p>Seleziona un modello nell&#39;app. Sui Mac supportati puoi usare il motore integrato o un modello locale servito da LM Studio, Ollama o llama.cpp. Dipende dal Mac e dai modelli installati. Velocità delle risposte, comprensione delle immagini e risultati delle attività complesse possono variare in base al modello e alle caratteristiche del computer.</p></section>
+        <section class="card"><h2>Attivare le connessioni</h2><p>Le connessioni sono inizialmente disattivate. Attiva solo quelle necessarie in Impostazioni › Connessioni. Lettura e azioni possono richiedere approvazioni separate; anche macOS può chiedere un permesso. Decidi tu.</p></section>
+        <section class="card"><h2>Dati e privacy</h2><p>Con un modello locale, l&#39;inferenza avviene sul Mac. Quando colleghi un servizio online, i dati necessari all&#39;azione possono essere inviati a quel servizio. Controlla prima l&#39;ambito della connessione.</p></section>
+        <section class="card"><h2>Limiti di sicurezza</h2><p>Vunemi non inserisce password, dati di carte o documenti per te, non risolve CAPTCHA, non effettua pagamenti e non elimina dati in modo permanente. Solo tu approvi le azioni sensibili.</p></section>
+        <section class="card"><h2>Problemi con i permessi?</h2><p>Se il Controllo desktop resta spento dopo aver concesso Accessibilità, chiudi completamente Vunemi e riaprilo. Il permesso macOS e la connessione nell&#39;app sono due passaggi distinti.</p></section>
+        <section class="card"><h2>Contributi della comunità</h2><p>Il codice sorgente di Vunemi è pubblico su GitHub. Prima di contribuire o riutilizzarlo, leggi le regole per i contributi, la licenza GPL-3.0 e le condizioni sul marchio nel repository.</p><p><a href="https://github.com/capitansuat/vunemi">GitHub ↗</a></p></section>
+      </div>
+      <section class="dev"><h2>Per sviluppatori</h2><p>Il codice unisce pacchetti Electron e TypeScript a un helper macOS nativo. Servono Node 22+, pnpm 11 e macOS. Esegui controlli dei tipi e test dopo le modifiche; verifica i permessi nell&#39;app pacchettizzata.</p><pre><code>pnpm install
+pnpm typecheck
+pnpm test
+bash scripts/package.sh</code></pre></section>
+      <p class="reviewed">Ultima revisione: 28 settembre 2026</p>
+    </main>
+    <footer>© 2026 Vunemi · Questa pagina non usa cookie né script di tracciamento.</footer>
+  </div>
+  <script>document.querySelector('#language').addEventListener('change', event => { location.href = '/docs/' + event.target.value + '/'; });</script>
+</body>
+</html>

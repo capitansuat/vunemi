@@ -15,9 +15,9 @@ out="$3"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # A distribution build must not outpace the public documentation review.
-# The site lives in its own repository; skip when it isn't next to the app.
-if [ -f "$here/site/launch/docs/build.mjs" ]; then
-  node "$here/site/launch/docs/build.mjs" --release-check
+# The site is generated from the reviewed sources next to the app.
+if [ -f "$here/website/docs/build.mjs" ]; then
+  node "$here/website/docs/build.mjs" --release-check
 fi
 
 version="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$app/Contents/Info.plist")"

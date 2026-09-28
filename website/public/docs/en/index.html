@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f3ec">
+  <meta name="description" content="Vunemi is a personal assistant built for local models. Its first macOS release is available, and development continues. This guide describes version 0.1.6; features may change in later releases.">
+  <meta name="docs-reviewed-commit" content="f569604e9f74d5d78d09e2de04d7bbd938d09a8e">
+  <meta name="docs-reviewed-version" content="0.1.6">
+  <link rel="canonical" href="https://vunemi.com/docs/en/">
+  <link rel="alternate" hreflang="en" href="https://vunemi.com/docs/en/">
+  <link rel="alternate" hreflang="de" href="https://vunemi.com/docs/de/">
+  <link rel="alternate" hreflang="es" href="https://vunemi.com/docs/es/">
+  <link rel="alternate" hreflang="fr" href="https://vunemi.com/docs/fr/">
+  <link rel="alternate" hreflang="it" href="https://vunemi.com/docs/it/">
+  <link rel="alternate" hreflang="tr" href="https://vunemi.com/docs/tr/">
+  <link rel="alternate" hreflang="pt" href="https://vunemi.com/docs/pt/">
+  <link rel="alternate" hreflang="ru" href="https://vunemi.com/docs/ru/">
+  <link rel="alternate" hreflang="zh" href="https://vunemi.com/docs/zh/">
+  <link rel="alternate" hreflang="ja" href="https://vunemi.com/docs/ja/">
+  <link rel="alternate" hreflang="ko" href="https://vunemi.com/docs/ko/">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <title>Vunemi guide — Vunemi</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #26241f; background: #f7f3ec; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at 87% 10%, #ffe4d1 0, transparent 30%), #f7f3ec; }
+    a { color: #a64628; }
+    a:focus-visible, select:focus-visible { outline: 3px solid #ec673a; outline-offset: 4px; }
+    .wrap { width: min(1040px, calc(100% - 40px)); margin: auto; }
+    header { display: flex; align-items: center; gap: 20px; padding: 26px 0; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #26241f; font-size: 21px; font-weight: 750; letter-spacing: -.04em; text-decoration: none; }
+    .brand img { width: 42px; height: 42px; border-radius: 12px; }
+    .home { margin-left: auto; text-decoration: none; font-weight: 600; }
+    select { max-width: 145px; padding: 9px 12px; border: 1px solid #d9d1c7; border-radius: 11px; background: #fffdf9; color: inherit; font: inherit; }
+    main { padding: 62px 0 95px; }
+    .eyebrow { color: #ad5030; font-size: 13px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { max-width: 800px; margin: 18px 0; font-size: clamp(43px, 7vw, 72px); line-height: 1.07; letter-spacing: -.06em; }
+    .intro { max-width: 760px; margin: 0; color: #625a50; font-size: clamp(18px, 2vw, 21px); line-height: 1.65; }
+    .status { margin-top: 40px; padding: 25px 29px; border: 1px solid #e9d6c6; border-radius: 18px; background: #fff5ec; }
+    .status h2 { margin-top: 0; color: #9d4527; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px; margin-top: 56px; }
+    section.card { padding: 30px; border: 1px solid #e5ddd2; border-radius: 19px; background: #fffdfa; }
+    h2 { margin: 0 0 13px; font-size: 23px; letter-spacing: -.03em; }
+    p { margin: 0; line-height: 1.72; }
+    .card p, .status p { color: #625a50; }
+    .dev { margin-top: 18px; padding: 30px; border: 1px solid #e3d1c0; border-radius: 19px; background: #f8e9dd; }
+    .dev p { max-width: 860px; color: #625a50; }
+    pre { overflow-x: auto; margin: 22px 0 0; padding: 19px; border-radius: 12px; background: #26241f; color: #fffaf4; line-height: 1.6; }
+    code { font: 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace; }
+    .reviewed { margin-top: 45px; color: #786f65; font-size: 14px; }
+    footer { padding: 25px 0 36px; border-top: 1px solid #ded6cb; color: #786f65; font-size: 14px; }
+    @media (max-width: 700px) { header { gap: 12px; } .home { font-size: 14px; } select { max-width: 105px; font-size: 14px; } main { padding-top: 35px; } .grid { grid-template-columns: 1fr; margin-top: 38px; } section.card, .dev, .status { padding: 23px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><a class="brand" href="/en/"><img src="/icon.svg" width="42" height="42" alt=""> Vunemi</a><a class="home" href="/en/">Home</a><select id="language" aria-label="Language"><option value="en" selected>English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="tr">Türkçe</option><option value="pt">Português</option><option value="ru">Русский</option><option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option></select></header>
+    <main>
+      <span class="eyebrow">Documentation</span>
+      <h1>Vunemi guide</h1>
+      <p class="intro">Vunemi is a personal assistant built for local models. Its first macOS release is available, and development continues. This guide describes version 0.1.6; features may change in later releases.</p>
+      <section class="status"><h2>Release status</h2><p>Vunemi 0.1.6 is available on GitHub for Apple Silicon Macs running macOS 14 or later. The app is signed but not yet notarized by Apple. The release page has installation steps and the SHA-256 checksum.</p><p><a href="https://github.com/capitansuat/vunemi/releases/download/v0.1.6/Vunemi-0.1.6-arm64.dmg">Download for Mac ↓</a> · <a href="/en/download/">Vunemi 0.1.6</a></p></section>
+      <div class="grid">
+        <section class="card"><h2>Choose a model</h2><p>Select a model in the app. On supported Macs, you can use the built-in engine or a local model served by LM Studio, Ollama or llama.cpp. Availability depends on your Mac and installed models. Response speed, image understanding and results on complex tasks can vary with the model and your computer&#39;s specifications.</p></section>
+        <section class="card"><h2>Open connections</h2><p>Connections start off. Open only what you need in Settings › Connections. Reading and actions can have separate approvals, and macOS may show its own permission prompt. You make those decisions.</p></section>
+        <section class="card"><h2>Data and privacy</h2><p>With a local model, model inference runs on your Mac. When you connect an online service, the data needed for that action may go to that service. Check its scope before connecting.</p></section>
+        <section class="card"><h2>Safety boundaries</h2><p>Vunemi does not enter passwords, card or identity details for you, solve CAPTCHAs, make payments or permanently delete data. Only you approve sensitive action cards.</p></section>
+        <section class="card"><h2>Permission problem?</h2><p>If Desktop Control remains off after you grant Accessibility, quit Vunemi completely and reopen it. The macOS permission and the connection inside Vunemi are separate steps; then try again in Connections.</p></section>
+        <section class="card"><h2>Community contributions</h2><p>Vunemi&#39;s source code is public on GitHub. Before contributing or reusing the code, read the repository&#39;s contribution guidelines, GPL-3.0 license and trademark terms.</p><p><a href="https://github.com/capitansuat/vunemi">GitHub ↗</a></p></section>
+      </div>
+      <section class="dev"><h2>For developers</h2><p>The codebase combines Electron and TypeScript packages with a native macOS helper. Development needs Node 22+, pnpm 11 and macOS. Run type checks and tests after changes, and verify macOS permissions in a packaged app.</p><pre><code>pnpm install
+pnpm typecheck
+pnpm test
+bash scripts/package.sh</code></pre></section>
+      <p class="reviewed">Last reviewed: September 28, 2026</p>
+    </main>
+    <footer>© 2026 Vunemi · This page uses no cookies or tracking scripts.</footer>
+  </div>
+  <script>document.querySelector('#language').addEventListener('change', event => { location.href = '/docs/' + event.target.value + '/'; });</script>
+</body>
+</html>

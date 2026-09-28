@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fbfaf8">
+<title>Tell us what happened — Vunemi</title>
+<meta name="description" content="Found a problem or have an idea? Send a short note to the Vunemi team. We review reports and use them to improve the next release.">
+<link rel="canonical" href="https://vunemi.com/en/support/">
+<link rel="alternate" hreflang="en" href="https://vunemi.com/en/support/"><link rel="alternate" hreflang="de" href="https://vunemi.com/de/support/"><link rel="alternate" hreflang="es" href="https://vunemi.com/es/support/"><link rel="alternate" hreflang="fr" href="https://vunemi.com/fr/support/"><link rel="alternate" hreflang="it" href="https://vunemi.com/it/support/"><link rel="alternate" hreflang="tr" href="https://vunemi.com/tr/support/"><link rel="alternate" hreflang="pt" href="https://vunemi.com/pt/support/"><link rel="alternate" hreflang="ru" href="https://vunemi.com/ru/support/"><link rel="alternate" hreflang="zh" href="https://vunemi.com/zh/support/"><link rel="alternate" hreflang="ja" href="https://vunemi.com/ja/support/"><link rel="alternate" hreflang="ko" href="https://vunemi.com/ko/support/"><link rel="alternate" hreflang="x-default" href="https://vunemi.com/en/support/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vunemi">
+<meta property="og:title" content="Tell us what happened — Vunemi">
+<meta property="og:description" content="Found a problem or have an idea? Send a short note to the Vunemi team. We review reports and use them to improve the next release.">
+<meta property="og:url" content="https://vunemi.com/en/support/">
+<meta property="og:image" content="https://vunemi.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="stylesheet" href="/site.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body data-page="support">
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar"><div class="wrap bar-inner">
+<a class="brand" href="/en/"><img src="/icon.svg" width="32" height="32" alt="">Vunemi</a>
+<nav class="site-nav" aria-label="Home"><a href="/en/features/">What it does</a><a href="/en/screens/">Screens</a><a href="/en/download/">Download</a><a href="/en/support/" aria-current="page">Support</a><a href="/docs/en/">Guide</a><a href="https://github.com/capitansuat/vunemi">GitHub</a></nav>
+<div class="bar-actions"><select id="language" aria-label="Language" data-page="support/"><option value="en" selected>English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="tr">Türkçe</option><option value="pt">Português</option><option value="ru">Русский</option><option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option></select><a class="pill small" href="https://github.com/capitansuat/vunemi/releases/download/v0.1.6/Vunemi-0.1.6-arm64.dmg">Download</a></div>
+</div></header>
+<div class="wrap">
+<main id="main" class="support-page">
+<div class="page-intro"><p class="kicker">Vunemi</p><h1>Tell us what happened</h1><p>Found a problem or have an idea? Send a short note to the Vunemi team. We review reports and use them to improve the next release.</p></div>
+<form id="support-form" class="support-form" action="/api/support" method="post" data-sending="Sending…" data-success="Thanks — your report was sent. We review messages before creating issues." data-failure="We couldn&#39;t send your report. Please try again later." data-rate="Too many attempts. Please wait a minute and try again." data-verify="Complete the security check and try again.">
+<input type="hidden" name="language" value="en">
+<div class="support-trap" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<label for="support-category">What is this about?</label>
+<select id="support-category" name="category" required><option value="bug">Something isn&#39;t working</option><option value="idea">An idea</option><option value="question">A question</option></select>
+<label for="support-version">App version (optional)</label><input id="support-version" name="version" type="text" maxlength="80" autocomplete="off">
+<label for="support-message">What happened or what would you like to see?</label><textarea id="support-message" name="message" minlength="10" maxlength="2000" required rows="7"></textarea>
+<p class="support-caution">Please don&#39;t include passwords, payment details or other sensitive information. We aren&#39;t replying to individual reports yet.</p>
+<div class="cf-turnstile" data-sitekey="0x4AAAAAAFFf3gXR1E08P-Ab"></div>
+<button class="pill" type="submit">Send report</button><p id="support-status" role="status" aria-live="polite"></p>
+</form>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</main>
+<footer><a class="brand small" href="/en/"><img src="/icon.svg" width="24" height="24" alt="">Vunemi</a><span>This site uses no cookies or tracking scripts.</span><span>© 2026 · <a href="https://github.com/capitansuat/vunemi">GitHub</a></span></footer>
+</div>
+<script src="/site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f3ec">
+  <meta name="description" content="Vunemi 是面向本地模型的个人助手。首个 macOS 版本现已发布，开发仍在继续。本指南介绍 0.1.6 版本；功能可能在后续版本中变化。">
+  <meta name="docs-reviewed-commit" content="f569604e9f74d5d78d09e2de04d7bbd938d09a8e">
+  <meta name="docs-reviewed-version" content="0.1.6">
+  <link rel="canonical" href="https://vunemi.com/docs/zh/">
+  <link rel="alternate" hreflang="en" href="https://vunemi.com/docs/en/">
+  <link rel="alternate" hreflang="de" href="https://vunemi.com/docs/de/">
+  <link rel="alternate" hreflang="es" href="https://vunemi.com/docs/es/">
+  <link rel="alternate" hreflang="fr" href="https://vunemi.com/docs/fr/">
+  <link rel="alternate" hreflang="it" href="https://vunemi.com/docs/it/">
+  <link rel="alternate" hreflang="tr" href="https://vunemi.com/docs/tr/">
+  <link rel="alternate" hreflang="pt" href="https://vunemi.com/docs/pt/">
+  <link rel="alternate" hreflang="ru" href="https://vunemi.com/docs/ru/">
+  <link rel="alternate" hreflang="zh" href="https://vunemi.com/docs/zh/">
+  <link rel="alternate" hreflang="ja" href="https://vunemi.com/docs/ja/">
+  <link rel="alternate" hreflang="ko" href="https://vunemi.com/docs/ko/">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <title>Vunemi 使用指南 — Vunemi</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #26241f; background: #f7f3ec; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at 87% 10%, #ffe4d1 0, transparent 30%), #f7f3ec; }
+    a { color: #a64628; }
+    a:focus-visible, select:focus-visible { outline: 3px solid #ec673a; outline-offset: 4px; }
+    .wrap { width: min(1040px, calc(100% - 40px)); margin: auto; }
+    header { display: flex; align-items: center; gap: 20px; padding: 26px 0; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #26241f; font-size: 21px; font-weight: 750; letter-spacing: -.04em; text-decoration: none; }
+    .brand img { width: 42px; height: 42px; border-radius: 12px; }
+    .home { margin-left: auto; text-decoration: none; font-weight: 600; }
+    select { max-width: 145px; padding: 9px 12px; border: 1px solid #d9d1c7; border-radius: 11px; background: #fffdf9; color: inherit; font: inherit; }
+    main { padding: 62px 0 95px; }
+    .eyebrow { color: #ad5030; font-size: 13px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { max-width: 800px; margin: 18px 0; font-size: clamp(43px, 7vw, 72px); line-height: 1.07; letter-spacing: -.06em; }
+    .intro { max-width: 760px; margin: 0; color: #625a50; font-size: clamp(18px, 2vw, 21px); line-height: 1.65; }
+    .status { margin-top: 40px; padding: 25px 29px; border: 1px solid #e9d6c6; border-radius: 18px; background: #fff5ec; }
+    .status h2 { margin-top: 0; color: #9d4527; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px; margin-top: 56px; }
+    section.card { padding: 30px; border: 1px solid #e5ddd2; border-radius: 19px; background: #fffdfa; }
+    h2 { margin: 0 0 13px; font-size: 23px; letter-spacing: -.03em; }
+    p { margin: 0; line-height: 1.72; }
+    .card p, .status p { color: #625a50; }
+    .dev { margin-top: 18px; padding: 30px; border: 1px solid #e3d1c0; border-radius: 19px; background: #f8e9dd; }
+    .dev p { max-width: 860px; color: #625a50; }
+    pre { overflow-x: auto; margin: 22px 0 0; padding: 19px; border-radius: 12px; background: #26241f; color: #fffaf4; line-height: 1.6; }
+    code { font: 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace; }
+    .reviewed { margin-top: 45px; color: #786f65; font-size: 14px; }
+    footer { padding: 25px 0 36px; border-top: 1px solid #ded6cb; color: #786f65; font-size: 14px; }
+    @media (max-width: 700px) { header { gap: 12px; } .home { font-size: 14px; } select { max-width: 105px; font-size: 14px; } main { padding-top: 35px; } .grid { grid-template-columns: 1fr; margin-top: 38px; } section.card, .dev, .status { padding: 23px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><a class="brand" href="/zh/"><img src="/icon.svg" width="42" height="42" alt=""> Vunemi</a><a class="home" href="/zh/">首页</a><select id="language" aria-label="语言"><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="tr">Türkçe</option><option value="pt">Português</option><option value="ru">Русский</option><option value="zh" selected>中文</option><option value="ja">日本語</option><option value="ko">한국어</option></select></header>
+    <main>
+      <span class="eyebrow">文档</span>
+      <h1>Vunemi 使用指南</h1>
+      <p class="intro">Vunemi 是面向本地模型的个人助手。首个 macOS 版本现已发布，开发仍在继续。本指南介绍 0.1.6 版本；功能可能在后续版本中变化。</p>
+      <section class="status"><h2>发布状态</h2><p>Vunemi 0.1.6 已在 GitHub 发布，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。应用已签名，但尚未通过 Apple 公证。安装步骤和 SHA-256 校验值见版本页面。</p><p><a href="https://github.com/capitansuat/vunemi/releases/download/v0.1.6/Vunemi-0.1.6-arm64.dmg">下载 Mac 版 ↓</a> · <a href="/zh/download/">Vunemi 0.1.6</a></p></section>
+      <div class="grid">
+        <section class="card"><h2>选择模型</h2><p>在应用中选择模型。受支持的 Mac 可使用内置引擎，或由 LM Studio、Ollama、llama.cpp 提供的本地模型。可用性取决于设备和已安装的模型。回复速度、图像理解能力以及复杂任务的完成效果，可能因所选模型和电脑配置而异。</p></section>
+        <section class="card"><h2>开启连接</h2><p>连接默认关闭。请在“设置 › 连接”中仅开启所需连接。读取和执行操作可能分别需要批准；macOS 也可能显示自己的权限提示。决定权在你。</p></section>
+        <section class="card"><h2>数据与隐私</h2><p>使用本地模型时，模型推理在你的 Mac 上进行。连接在线服务后，执行操作所需的数据可能发送给该服务。连接前请查看其访问范围。</p></section>
+        <section class="card"><h2>安全边界</h2><p>Vunemi 不会代你输入密码、银行卡或身份信息，不会破解验证码、付款或永久删除数据。敏感操作只能由你批准。</p></section>
+        <section class="card"><h2>权限遇到问题？</h2><p>授予辅助功能权限后，如果桌面控制仍未开启，请完全退出并重新打开 Vunemi。macOS 权限和 Vunemi 内的连接是两个独立步骤。</p></section>
+        <section class="card"><h2>社区贡献</h2><p>Vunemi 的源代码已在 GitHub 公开。参与贡献或复用代码前，请阅读仓库中的贡献指南、GPL-3.0 许可证和商标条款。</p><p><a href="https://github.com/capitansuat/vunemi">GitHub ↗</a></p></section>
+      </div>
+      <section class="dev"><h2>开发者指南</h2><p>代码由 Electron、TypeScript 软件包和原生 macOS 助手组成。开发需要 Node 22+、pnpm 11 和 macOS。修改后运行类型检查与测试，并在打包应用中验证 macOS 权限。</p><pre><code>pnpm install
+pnpm typecheck
+pnpm test
+bash scripts/package.sh</code></pre></section>
+      <p class="reviewed">最近审核: 2026年9月28日</p>
+    </main>
+    <footer>© 2026 Vunemi · 本页面不使用 Cookie 或跟踪脚本。</footer>
+  </div>
+  <script>document.querySelector('#language').addEventListener('change', event => { location.href = '/docs/' + event.target.value + '/'; });</script>
+</body>
+</html>

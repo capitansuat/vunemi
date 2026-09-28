@@ -1,0 +1,24 @@
+{
+  "name": "vunemi-site",
+  "main": "./worker/index.mjs",
+  "compatibility_date": "2026-09-27",
+  "workers_dev": false,
+  "build": {
+    "command": "node docs/build.mjs --release-check"
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "send_email": [{
+    "name": "SUPPORT_EMAIL",
+    "destination_address": "support@vunemi.com",
+    "allowed_sender_addresses": ["form@vunemi.com"]
+  }],
+  "ratelimits": [{"name": "SUPPORT_RATE", "namespace_id": "20260927", "simple": {"limit": 5, "period": 60}}],
+  "routes": [
+    { "pattern": "vunemi.com", "custom_domain": true },
+    { "pattern": "www.vunemi.com", "custom_domain": true }
+  ]
+}
