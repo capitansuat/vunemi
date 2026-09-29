@@ -510,6 +510,7 @@ export const messages: Catalogue = {
     full: "메모리가 가득 찼습니다(500개). 추가하려면 일부를 삭제하세요.",
     expired: "이 제안은 더 이상 유효하지 않습니다. 여전히 기억하길 원하면 대화에서 다시 말해 주세요.",
     quoteMissing: "이 말은 이번 작업에서 당신이 쓴 내용에 없습니다.",
+    notAsked: "저장하지 않았습니다: 기억해 달라고 요청하지 않았습니다. Vunemi가 작업 후에 제안할 수 있습니다.",
     preview: "기억: {text}",
     previewKind: "종류: {kind}",
     previewQuote: "당신의 말: “{quote}”",

@@ -3,6 +3,43 @@ import type { ToolDef } from "@vunemi/agent-core";
 import { quoted, squash } from "./propose.js";
 import type { MemoryStore, Note, NoteKind } from "./store.js";
 
+/**
+ * Ways of asking to be remembered, in Vunemi's languages. A small model
+ * called the tool for a preference only mentioned in passing; now the user
+ * must have asked, in words, before a card can even appear. What they say in
+ * passing is still offered after the task.
+ */
+const ASKS = [
+  // tr
+  "hatırla", "hatirla", "unutma", "aklında tut", "aklinda tut", "not et", "not al", "hafızana", "hafızaya", "belleğine", "belleğe",
+  // en
+  "remember", "don't forget", "dont forget", "do not forget", "keep in mind", "make a note", "memorize", "memorise", "note that",
+  // de
+  "merk dir", "merke dir", "erinnere dich", "vergiss nicht", "denk dran", "denk daran", "notier",
+  // fr
+  "souviens", "rappelle-toi", "retiens", "n'oublie pas", "n’oublie pas", "mémorise", "garde en tête", "note que",
+  // es
+  "recuerda", "acuérdate", "no olvides", "ten en cuenta", "memoriza", "apunta",
+  // it
+  "ricorda", "non dimenticare", "tieni a mente", "memorizza", "annota",
+  // pt
+  "lembre", "lembra", "não esqueça", "nao esqueca", "não se esqueça", "memorize", "guarde isso", "anote",
+  // ru
+  "запомни", "не забудь", "имей в виду", "помни",
+  // zh
+  "记住", "记得", "别忘了", "不要忘记", "记下",
+  // ja
+  "覚えて", "忘れないで", "記憶して", "メモして",
+  // ko
+  "기억해", "기억하", "잊지 마", "잊지마",
+];
+
+/** Whether the user asked, in so many words, for something to be remembered. */
+export function asksToRemember(text: string): boolean {
+  const said = text.toLocaleLowerCase();
+  return ASKS.some((ask) => said.includes(ask));
+}
+
 interface Args {
   text: string;
   kind: NoteKind;
@@ -29,6 +66,8 @@ export function memoryRememberTool(store: MemoryStore, userWords: () => string[]
     }
     if (args.kind !== "general" && args.kind !== "topic") return t("memory.invalid");
     if (typeof args.quote !== "string" || !quoted(args.quote, userWords())) return t("memory.quoteMissing");
+    // Their request, not only the quoted fact, may hold the asking ("remember this: …").
+    if (!asksToRemember(args.quote) && !asksToRemember(userWords().at(-1) ?? "")) return t("memory.notAsked");
     if (await store.holdsSecret(args.quote)) return t("memory.secret");
     return null;
   };

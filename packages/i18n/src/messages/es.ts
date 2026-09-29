@@ -510,6 +510,7 @@ export const messages: Catalogue = {
     full: "La memoria está llena (500 notas). Elimina algunas para añadir más.",
     expired: "Esta sugerencia ya no está abierta. Dilo de nuevo en la conversación si aún quieres que se recuerde.",
     quoteMissing: "Estas palabras no están en lo que escribiste en esta tarea.",
+    notAsked: "No se guardó: no pediste que se recordara. Vunemi puede ofrecerlo al terminar la tarea.",
     preview: "Recordar: {text}",
     previewKind: "Tipo: {kind}",
     previewQuote: "Tus palabras: «{quote}»",

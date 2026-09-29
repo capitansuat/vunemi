@@ -514,6 +514,7 @@ export const messages = {
     full: "Hafıza dolu (500 not). Yenisi için bazılarını sil.",
     expired: "Bu öneri artık açık değil. Hâlâ hatırlanmasını istiyorsan sohbette yeniden söyle.",
     quoteMissing: "Bu sözler bu görevde yazdıklarında yok.",
+    notAsked: "Kaydedilmedi: bunu hatırlamamı istemedin. Vunemi görevden sonra önerebilir.",
     preview: "Hatırla: {text}",
     previewKind: "Tür: {kind}",
     previewQuote: "Senin sözlerin: “{quote}”",

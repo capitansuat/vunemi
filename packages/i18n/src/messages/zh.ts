@@ -510,6 +510,7 @@ export const messages: Catalogue = {
     full: "记忆已满（500 条笔记）。删除一些后才能添加。",
     expired: "此建议已失效。如果仍想记住，请在对话中再说一次。",
     quoteMissing: "这些话不在你本次任务中写的内容里。",
+    notAsked: "未保存：你没有要求记住这一点。Vunemi 可能会在任务结束后提出。",
     preview: "记住：{text}",
     previewKind: "类型：{kind}",
     previewQuote: "你的原话：“{quote}”",

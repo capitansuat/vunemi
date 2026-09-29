@@ -510,6 +510,7 @@ export const messages: Catalogue = {
     full: "メモリがいっぱいです（500 件）。追加するには一部を削除してください。",
     expired: "この提案はもう有効ではありません。まだ覚えてほしい場合は、会話でもう一度伝えてください。",
     quoteMissing: "この言葉はこのタスクであなたが書いた内容にありません。",
+    notAsked: "保存していません：覚えるよう頼まれていません。Vunemiがタスクの後に提案することがあります。",
     preview: "覚える：{text}",
     previewKind: "種類：{kind}",
     previewQuote: "あなたの言葉：「{quote}」",

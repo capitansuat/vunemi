@@ -60,7 +60,7 @@ describe("memory_remember", () => {
     await tool().run(args, ctx().ctx);
     await tool().run(args, ctx().ctx);
     expect(store.list()).toMatchObject([{ confirmed: 2 }]);
-    words = ["Artık raporları Word olarak isterim"];
+    words = ["Bunu hatırla: artık raporları Word olarak isterim"];
     const change = { text: "Raporları Word olarak ister", kind: "general" as const, quote: "raporları Word olarak isterim", replaces: "Raporları PDF olarak ister" };
     expect(await tool().preview!(change)).toContain("Raporları PDF olarak ister");
     const { ctx: c, undo } = ctx();
@@ -68,5 +68,19 @@ describe("memory_remember", () => {
     expect(store.list().map((n) => n.text)).toEqual(["Raporları Word olarak ister"]);
     await undo[0]!();
     expect(store.list().map((n) => n.text)).toEqual(["Raporları PDF olarak ister"]);
+  });
+});
+
+describe("only when asked", () => {
+  it("refuses a preference mentioned in passing, before any card", async () => {
+    words = ["Bu arada raporları her zaman PDF olarak isterim, şimdi takvimime bak"];
+    expect(await tool().check!(args)).toMatch(/.+/);
+  });
+
+  it("accepts the asking in any of the app's languages, in the quote or the request", async () => {
+    for (const said of ["Remember that I want reports as PDF", "Merk dir: Berichte als PDF", "请记住：报告要PDF", "覚えておいて：レポートはPDF", "Запомни: отчёты в PDF"]) {
+      words = [said];
+      expect(await tool().check!({ ...args, quote: said.slice(-10) }), said).toBeNull();
+    }
   });
 });
