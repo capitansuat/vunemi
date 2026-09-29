@@ -85,6 +85,8 @@ export interface Settings {
    */
   trustedSites: string[];
   appearance: Appearance;
+  /** Look for a new Vunemi once a day. On unless the user turns it off. */
+  updatesCheck: boolean;
 }
 
 const APPEARANCES = new Set<unknown>(["system", "light", "dark"]);
@@ -104,7 +106,7 @@ function cleanSites(value: unknown): string[] {
   return [...new Set(hosts)].slice(0, MAX_TRUSTED_SITES);
 }
 
-const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false, trustedSites: [], appearance: "system" };
+const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false, trustedSites: [], appearance: "system", updatesCheck: true };
 
 /**
  * Settings that exist but can't be read. Everything falls back to its
@@ -213,6 +215,14 @@ export class SettingsStore {
     this.replace({ ...this.current, appearance });
   }
 
+  get updatesCheck(): boolean {
+    return this.current.updatesCheck;
+  }
+
+  setUpdatesCheck(on: boolean): void {
+    this.replace({ ...this.current, updatesCheck: on === true });
+  }
+
   get appLock(): boolean {
     return this.current.appLock;
   }
@@ -235,12 +245,12 @@ export class SettingsStore {
   }
 
   /**
-   * Forgets everything but the language, the look and the lock: a person who
-   * forgets their data has not forgotten how to read, nor stopped wanting the
-   * door shut.
+   * Forgets everything but the language, the look, the lock and whether to
+   * look for updates: a person who forgets their data has not forgotten how
+   * to read, nor stopped wanting the door shut.
    */
   reset(): void {
-    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance });
+    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck });
   }
 
   private replace(next: Settings): void {
@@ -298,7 +308,7 @@ export class SettingsStore {
       // Vunemi in Turkish, the only language it had; keep them there.
       const stored = (parsed as Settings).language;
       const language = stored === undefined ? "tr" : isLocale(stored) ? stored : null;
-      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system" };
+      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false };
     } catch (err) {
       // No file yet is a first launch. A file that can't be read is not.
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { ...EMPTY };

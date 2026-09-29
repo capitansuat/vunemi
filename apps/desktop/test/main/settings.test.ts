@@ -144,3 +144,16 @@ describe("appearance", () => {
     expect(new SettingsStore(dir).appearance).toBe("system");
   });
 });
+
+describe("update checks", () => {
+  it("are on until turned off, stay off through a reset, and read only a boolean", () => {
+    const { dir, settings } = store();
+    expect(settings.updatesCheck).toBe(true);
+    settings.setUpdatesCheck(false);
+    expect(new SettingsStore(dir).updatesCheck).toBe(false);
+    settings.reset();
+    expect(new SettingsStore(dir).updatesCheck).toBe(false);
+    writeFileSync(join(dir, "settings.json"), JSON.stringify({ updatesCheck: "no" }));
+    expect(new SettingsStore(dir).updatesCheck).toBe(true);
+  });
+});
