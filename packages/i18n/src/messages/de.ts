@@ -81,6 +81,7 @@ export const messages: Catalogue = {
   },
 
   app: {
+    reportProblem: "Problem melden",
 
     debugPort: { warning: "Remote-Debugging ist offen (Test-Build): Ein anderes Programm auf diesem Mac kann dieses Fenster und seine Freigabekarten steuern. Beende Vunemi nach dem Test und öffne es normal." },
     newSession: "Neue Sitzung",

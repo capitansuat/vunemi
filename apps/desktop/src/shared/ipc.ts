@@ -471,6 +471,7 @@ export interface VunemiApi {
   forgetEverything(): Promise<void>;
   /** This copy's version, shown so the user knows which one runs. */
   appVersion(): Promise<string>;
+  reportProblem(): Promise<void>;
   updatesStatus(): Promise<UpdateStatus>;
   checkUpdates(): Promise<UpdateStatus>;
   downloadUpdate(): Promise<UpdateStatus>;
@@ -664,6 +665,7 @@ export const CH = {
   meetingsLine: "meetings:line",
   forgetEverything: "data:forget-everything",
   appVersion: "app:version",
+  reportProblem: "app:report-problem",
   updatesStatus: "updates:status",
   updatesCheck: "updates:check",
   updatesDownload: "updates:download",

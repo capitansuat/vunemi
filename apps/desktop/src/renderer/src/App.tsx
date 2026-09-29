@@ -198,6 +198,9 @@ function AppVersion() {
         </details>
       )}
       <div className="selectable tabular-nums">{version ? `Vunemi ${version}` : "\u00a0"}</div>
+      <button type="button" onClick={() => void window.vunemi.reportProblem()} className="no-drag mt-0.5 text-faint underline-offset-2 hover:text-fg hover:underline">
+        {t("app.reportProblem")}
+      </button>
     </div>
   );
 }

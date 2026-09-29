@@ -81,6 +81,7 @@ export const messages: Catalogue = {
   },
 
   app: {
+    reportProblem: "报告问题",
 
     debugPort: { warning: "远程调试已打开（测试版本）：这台 Mac 上的其他程序可以控制此窗口及其批准卡片。测试结束后请退出并正常打开 Vunemi。" },
     newSession: "新会话",

@@ -7,6 +7,10 @@
   });
 
   var form = document.getElementById("support-form");
+  // Opened from Vunemi's "Report a problem": the version comes after the #, never to the server.
+  var sent = /^#version=([0-9A-Za-z.-]{1,40})$/.exec(location.hash);
+  var versionField = document.getElementById("support-version");
+  if (form && sent && versionField && !versionField.value) versionField.value = sent[1];
   if (form) form.addEventListener("submit", async function (event) {
     event.preventDefault();
     var button = form.querySelector('button[type="submit"]');

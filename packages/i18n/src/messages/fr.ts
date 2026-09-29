@@ -81,6 +81,7 @@ export const messages: Catalogue = {
   },
 
   app: {
+    reportProblem: "Signaler un problème",
 
     debugPort: { warning: "Le débogage à distance est ouvert (version de test) : un autre programme de ce Mac peut piloter cette fenêtre et ses cartes d'approbation. Une fois le test fini, quittez et rouvrez Vunemi normalement." },
     newSession: "Nouvelle session",

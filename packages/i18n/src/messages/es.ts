@@ -81,6 +81,7 @@ export const messages: Catalogue = {
   },
 
   app: {
+    reportProblem: "Informar de un problema",
 
     debugPort: { warning: "La depuración remota está abierta (versión de prueba): otro programa de este Mac puede controlar esta ventana y sus tarjetas de aprobación. Al terminar, sal y abre Vunemi de la forma normal." },
     newSession: "Nueva sesión",

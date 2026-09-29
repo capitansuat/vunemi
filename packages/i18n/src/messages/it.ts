@@ -81,6 +81,7 @@ export const messages: Catalogue = {
   },
 
   app: {
+    reportProblem: "Segnala un problema",
 
     debugPort: { warning: "Il debug remoto è aperto (versione di prova): un altro programma su questo Mac può controllare questa finestra e le sue schede di approvazione. Finito il test, esci e riapri Vunemi normalmente." },
     newSession: "Nuova sessione",

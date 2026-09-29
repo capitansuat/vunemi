@@ -81,6 +81,7 @@ export const messages: Catalogue = {
   },
 
   app: {
+    reportProblem: "問題を報告",
 
     debugPort: { warning: "リモートデバッグが開いています（テストビルド）：この Mac の別のプログラムがこのウインドウと承認カードを操作できます。テストが終わったら終了し、通常の方法で開いてください。" },
     newSession: "新規セッション",

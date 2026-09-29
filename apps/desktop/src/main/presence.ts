@@ -19,6 +19,8 @@ export interface RunControls {
   resume(): void;
   stop(): void;
   emergencyStop(): void;
+  /** Opens the support form on vunemi.com. */
+  reportProblem(): void;
   /** While Vunemi is locked, a notification says that something happened, not what. */
   locked?(): boolean;
 }
@@ -174,6 +176,7 @@ export class Presence {
         { label: t("composer.stop"), enabled: running, click: () => this.controls.stop() },
         { label: t("presence.emergency"), accelerator: "CommandOrControl+Shift+Escape", click: () => this.controls.emergencyStop() },
         { type: "separator" },
+        { label: `${t("app.reportProblem")}…`, click: () => this.controls.reportProblem() },
         { label: t("presence.quit"), role: "quit" },
       ]),
     );

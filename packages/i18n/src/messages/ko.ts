@@ -81,6 +81,7 @@ export const messages: Catalogue = {
   },
 
   app: {
+    reportProblem: "문제 신고",
 
     debugPort: { warning: "원격 디버깅이 열려 있습니다(테스트 빌드): 이 Mac의 다른 프로그램이 이 창과 승인 카드를 조종할 수 있습니다. 테스트가 끝나면 종료하고 평소대로 여세요." },
     newSession: "새 세션",

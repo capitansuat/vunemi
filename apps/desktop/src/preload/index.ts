@@ -70,6 +70,7 @@ const api: VunemiApi = {
     return () => ipcRenderer.removeListener(CH.meetingsLine, handler);
   },
   appVersion: () => ipcRenderer.invoke(CH.appVersion),
+  reportProblem: () => ipcRenderer.invoke(CH.reportProblem),
   updatesStatus: () => ipcRenderer.invoke(CH.updatesStatus),
   checkUpdates: () => ipcRenderer.invoke(CH.updatesCheck),
   downloadUpdate: () => ipcRenderer.invoke(CH.updatesDownload),

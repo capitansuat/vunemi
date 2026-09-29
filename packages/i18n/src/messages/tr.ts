@@ -85,6 +85,7 @@ export const messages = {
   },
 
   app: {
+    reportProblem: "Sorun bildir",
 
     debugPort: { warning: "Uzaktan hata ayıklama açık (test sürümü): bu Mac'teki başka bir program bu pencereyi ve onay kartlarını yönetebilir. Test bitince çık ve Vunemi'yi normal biçimde aç." },
     newSession: "Yeni oturum",

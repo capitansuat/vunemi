@@ -51,6 +51,7 @@ import { transcriptText } from "./meetings/summary.js";
 import { PRODUCTION, type FeedSource } from "./updates/feed.js";
 import { UpdateService } from "./updates/service.js";
 import { stagedMatches } from "./updates/staged.js";
+import { supportUrl } from "./support.js";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 registerPreviewScheme();
@@ -494,6 +495,7 @@ const presence = new Presence(
     },
     stop: () => session.stop(),
     emergencyStop: () => emergencyStop(),
+    reportProblem: () => reportProblem(),
     locked: () => appLock.isLocked,
   },
   () => win,
@@ -1126,6 +1128,12 @@ handle(CH.meetingsLevels, () => meetings.levels());
 handle(CH.meetingsDevices, () => meetingCall(() => recorder.devices()));
 
 handle(CH.appVersion, () => app.getVersion());
+
+/** The support form in the browser, the version filled in; the user writes and sends it. */
+function reportProblem(): void {
+  void shell.openExternal(supportUrl(getLocale(), app.getVersion()));
+}
+handle(CH.reportProblem, () => reportProblem());
 
 /**
  * A test build may be pointed at a local feed to try an update end to end;
