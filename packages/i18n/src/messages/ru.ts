@@ -535,11 +535,18 @@ export const messages: Catalogue = {
       connections: "Подключения",
       model: "Модель",
       language: "Язык",
+      appearance: "Оформление",
       memory: "Память",
       data: "Управление данными",
       vault: "Сейф",
       outbox: "Исходящие",
       activity: "Журнал действий",
+    },
+    appearance: {
+      intro: "Светлое или тёмное. «Как в системе» повторяет настройку вашего Mac.",
+      system: "Как в системе",
+      light: "Светлое",
+      dark: "Тёмное",
     },
     actions: {
       read: "Чтение",

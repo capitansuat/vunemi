@@ -363,6 +363,9 @@ export interface MicrophoneView {
   default: boolean;
 }
 
+/** Light or dark: the Mac's choice unless the user makes one. */
+export type Appearance = "system" | "light" | "dark";
+
 /** Exposed on `window.vunemi` by the preload script. */
 export interface VunemiApi {
   listProviders(): Promise<ProviderStatus[]>;
@@ -450,6 +453,8 @@ export interface VunemiApi {
   forgetEverything(): Promise<void>;
   /** This copy's version, shown so the user knows which one runs. */
   appVersion(): Promise<string>;
+  getAppearance(): Promise<Appearance>;
+  setAppearance(appearance: Appearance): Promise<Appearance>;
   /** The language Vunemi speaks; main keeps it, the window follows. */
   getLanguage(): Promise<Locale>;
   setLanguage(locale: Locale): Promise<Locale>;
@@ -629,6 +634,8 @@ export const CH = {
   meetingsLine: "meetings:line",
   forgetEverything: "data:forget-everything",
   appVersion: "app:version",
+  appearanceGet: "appearance:get",
+  appearanceSet: "appearance:set",
   languageGet: "language:get",
   languageSet: "language:set",
   languageChanged: "language:changed",

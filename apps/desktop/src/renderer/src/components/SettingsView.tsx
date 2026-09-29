@@ -3,7 +3,7 @@ import { Check, X } from "lucide-react";
 import type { Autonomy, AutonomyPolicy } from "@vunemi/agent-core";
 import { ACTION_CLASSES } from "@vunemi/agent-core";
 import { LOCALES, t, type MessageKey } from "@vunemi/i18n";
-import type { LockState, PermissionSettings, TrustedSiteResult } from "../../../shared/ipc.js";
+import type { Appearance, LockState, PermissionSettings, TrustedSiteResult } from "../../../shared/ipc.js";
 import { ConnectionsView, Switch } from "./ConnectionsView.js";
 import { ModelPicker } from "./ModelPicker.js";
 import { ModelSources } from "./ModelSources.js";
@@ -15,7 +15,7 @@ import { VaultView } from "./VaultView.js";
 import { MemorySection } from "./MemorySection.js";
 import { useStore, type SettingsSection as Section } from "../store.js";
 
-const SECTIONS: Section[] = ["permissions", "security", "connections", "vault", "outbox", "automations", "activity", "model", "language", "memory", "data"];
+const SECTIONS: Section[] = ["permissions", "security", "connections", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "memory", "data"];
 
 /** Sections that are whole views of their own, with their own scrolling. */
 const WHOLE: Partial<Record<Section, ComponentType>> = { connections: ConnectionsView, vault: VaultView, outbox: OutboxView, activity: ActivityView };
@@ -144,6 +144,7 @@ export function SettingsView() {
           </div>
         )}
         {section === "language" && <LanguageSection />}
+        {section === "appearance" && <AppearanceSection />}
         {section === "memory" && <MemorySection />}
         {section === "data" && (
           <div className="mx-auto max-w-[620px]">
@@ -314,6 +315,43 @@ function TrustedSites() {
       )}
       <p className="mt-3 text-[11.5px] text-faint">{t("settings.trusted.note")}</p>
     </section>
+  );
+}
+
+const APPEARANCES: Appearance[] = ["system", "light", "dark"];
+
+/** Light or dark, or whatever the Mac is set to. Main applies it; the page follows. */
+function AppearanceSection() {
+  const [appearance, setAppearance] = useState<Appearance | null>(null);
+  useEffect(() => {
+    void window.vunemi.getAppearance().then(setAppearance);
+  }, []);
+  return (
+    <div className="mx-auto max-w-[620px]">
+      <h2 className="text-[17px] font-semibold text-fg">{t("settings.sections.appearance")}</h2>
+      <p className="mt-1 text-[13px] text-muted">{t("settings.appearance.intro")}</p>
+      <ul role="radiogroup" aria-label={t("settings.sections.appearance")} className="mt-5 grid gap-1.5 sm:grid-cols-3">
+        {APPEARANCES.map((a) => {
+          const on = a === appearance;
+          return (
+            <li key={a}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => void window.vunemi.setAppearance(a).then(setAppearance)}
+                className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-[13px] ${
+                  on ? "border-ember bg-ember-soft text-fg" : "border-line bg-surface text-fg hover:border-line-strong"
+                }`}
+              >
+                {t(`settings.appearance.${a}`)}
+                {on && <Check size={14} className="text-ember" />}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 

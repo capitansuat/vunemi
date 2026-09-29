@@ -530,11 +530,18 @@ export const messages: Catalogue = {
       connections: "연결",
       model: "모델",
       language: "언어",
+      appearance: "화면 모드",
       memory: "메모리",
       data: "데이터 관리",
       vault: "금고",
       outbox: "보낼 편지함",
       activity: "활동 기록",
+    },
+    appearance: {
+      intro: "라이트 또는 다크. 시스템은 Mac 설정을 따릅니다.",
+      system: "시스템",
+      light: "라이트",
+      dark: "다크",
     },
     actions: {
       read: "읽기",

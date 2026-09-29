@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeTheme, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -9,7 +9,7 @@ import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type VaultStatus } from "../shared/ipc.js";
+import { CH, EMERGENCY_STOP_ACCELERATOR, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type VaultStatus } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -142,6 +142,8 @@ forgetOldPictures(join(shotDir, "photos"), 30 * 24 * 60 * 60_000);
 // Everything the agent can reach, as one list the user controls. A switch
 // that is off takes its tools out of the model's reach entirely.
 const settings = new SettingsStore(app.getPath("userData"));
+// The window's colours follow this through prefers-color-scheme, and so do macOS's menus and dialogs.
+nativeTheme.themeSource = settings.appearance;
 
 // The language before anything says a word. Someone who never chose one gets
 // their Mac's, if Vunemi speaks it, and English if it does not.
@@ -614,7 +616,8 @@ function createWindow(): void {
     show: false,
     titleBarStyle: "hiddenInset",
     trafficLightPosition: { x: 16, y: 18 },
-    backgroundColor: "#15120f",
+    // The page's own background, so nothing flashes before it paints.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#15120f" : "#faf7f3",
     webPreferences: {
       preload: join(here, "../preload/index.cjs"),
       contextIsolation: true,
@@ -1181,6 +1184,13 @@ handle(CH.trustedSitesRemove, (_e, host: unknown): string[] => {
   return settings.trustedSiteList;
 });
 
+handle(CH.appearanceGet, (): Appearance => settings.appearance);
+handle(CH.appearanceSet, (_e, next: unknown): Appearance => {
+  if (next !== "system" && next !== "light" && next !== "dark") throw new Error("Unknown appearance.");
+  settings.setAppearance(next);
+  nativeTheme.themeSource = next;
+  return next;
+});
 handle(CH.languageGet, (): Locale => getLocale());
 handle(CH.languageSet, (_e, next: unknown): Locale => {
   if (!isLocale(next)) throw new Error(t("main.badLanguage"));

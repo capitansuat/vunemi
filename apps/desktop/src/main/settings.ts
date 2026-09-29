@@ -14,7 +14,7 @@ import type { McpServerConfig } from "@vunemi/mcp";
 import { validateMailConfig, type ImapSmtpConfig } from "@vunemi/mail";
 import { isLocale, type Locale } from "@vunemi/i18n";
 import { trustableHost } from "@vunemi/browser";
-import type { LocalModelSettings } from "../shared/ipc.js";
+import type { Appearance, LocalModelSettings } from "../shared/ipc.js";
 import { DEFAULT_MODEL_SETTINGS, validateModelSettings } from "./providers.js";
 import { t } from "@vunemi/i18n";
 
@@ -84,7 +84,11 @@ export interface Settings {
    * open. Only the user adds them, here in Settings; never the agent.
    */
   trustedSites: string[];
+  appearance: Appearance;
 }
+
+const APPEARANCES = new Set<unknown>(["system", "light", "dark"]);
+const isAppearance = (value: unknown): value is Appearance => APPEARANCES.has(value);
 
 /** Enough for anyone's intranet; a list longer than this is no longer a choice. */
 export const MAX_TRUSTED_SITES = 100;
@@ -100,7 +104,7 @@ function cleanSites(value: unknown): string[] {
   return [...new Set(hosts)].slice(0, MAX_TRUSTED_SITES);
 }
 
-const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false, trustedSites: [] };
+const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false, trustedSites: [], appearance: "system" };
 
 /**
  * Settings that exist but can't be read. Everything falls back to its
@@ -200,6 +204,15 @@ export class SettingsStore {
     this.replace({ ...this.current, connections: { ...connections } });
   }
 
+  get appearance(): Appearance {
+    return this.current.appearance;
+  }
+
+  setAppearance(appearance: Appearance): void {
+    if (!isAppearance(appearance)) throw new Error("Unknown appearance.");
+    this.replace({ ...this.current, appearance });
+  }
+
   get appLock(): boolean {
     return this.current.appLock;
   }
@@ -222,11 +235,12 @@ export class SettingsStore {
   }
 
   /**
-   * Forgets everything but the language and the lock: a person who forgets
-   * their data has not forgotten how to read, nor stopped wanting the door shut.
+   * Forgets everything but the language, the look and the lock: a person who
+   * forgets their data has not forgotten how to read, nor stopped wanting the
+   * door shut.
    */
   reset(): void {
-    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock, trustedSites: [] });
+    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance });
   }
 
   private replace(next: Settings): void {
@@ -284,7 +298,7 @@ export class SettingsStore {
       // Vunemi in Turkish, the only language it had; keep them there.
       const stored = (parsed as Settings).language;
       const language = stored === undefined ? "tr" : isLocale(stored) ? stored : null;
-      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites) };
+      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system" };
     } catch (err) {
       // No file yet is a first launch. A file that can't be read is not.
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { ...EMPTY };

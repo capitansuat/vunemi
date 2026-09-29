@@ -530,11 +530,18 @@ export const messages: Catalogue = {
       connections: "Conexiones",
       model: "Modelo",
       language: "Idioma",
+      appearance: "Apariencia",
       memory: "Memoria",
       data: "Control de datos",
       vault: "Caja fuerte",
       outbox: "Bandeja de salida",
       activity: "Registro de actividad",
+    },
+    appearance: {
+      intro: "Claro u oscuro. Sistema sigue el ajuste de tu Mac.",
+      system: "Sistema",
+      light: "Claro",
+      dark: "Oscuro",
     },
     actions: {
       read: "Lectura",

@@ -530,11 +530,18 @@ export const messages: Catalogue = {
       connections: "连接",
       model: "模型",
       language: "语言",
+      appearance: "外观",
       memory: "记忆",
       data: "数据控制",
       vault: "保险箱",
       outbox: "发件箱",
       activity: "活动记录",
+    },
+    appearance: {
+      intro: "浅色或深色。“跟随系统”会使用 Mac 的设置。",
+      system: "跟随系统",
+      light: "浅色",
+      dark: "深色",
     },
     actions: {
       read: "读取",

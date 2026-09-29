@@ -83,6 +83,8 @@ const api: VunemiApi = {
     return () => ipcRenderer.removeListener(CH.memorySearchChanged, handler);
   },
   forgetEverything: () => ipcRenderer.invoke(CH.forgetEverything),
+  getAppearance: () => ipcRenderer.invoke(CH.appearanceGet),
+  setAppearance: (appearance) => ipcRenderer.invoke(CH.appearanceSet, appearance),
   getLanguage: () => ipcRenderer.invoke(CH.languageGet),
   setLanguage: (locale) => ipcRenderer.invoke(CH.languageSet, locale),
   getLock: () => ipcRenderer.invoke(CH.lockGet),

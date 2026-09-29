@@ -534,11 +534,18 @@ export const messages = {
       connections: "Bağlantılar",
       model: "Model",
       language: "Dil",
+      appearance: "Görünüm",
       memory: "Hafıza",
       data: "Veri denetimleri",
       vault: "Kasa",
       outbox: "Gönderim kutusu",
       activity: "Etkinlik defteri",
+    },
+    appearance: {
+      intro: "Açık ya da koyu. Sistem, Mac'inin ayarını izler.",
+      system: "Sistem",
+      light: "Açık",
+      dark: "Koyu",
     },
     actions: {
       read: "Okuma",

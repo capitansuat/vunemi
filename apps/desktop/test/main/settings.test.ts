@@ -130,3 +130,17 @@ describe("security settings", () => {
     }, ollamaContextLength: 16_384 });
   });
 });
+
+describe("appearance", () => {
+  it("follows the Mac until chosen, keeps the choice through a reset, and ignores stray values", () => {
+    const { dir, settings } = store();
+    expect(settings.appearance).toBe("system");
+    settings.setAppearance("dark");
+    expect(new SettingsStore(dir).appearance).toBe("dark");
+    settings.reset();
+    expect(new SettingsStore(dir).appearance).toBe("dark");
+    expect(() => settings.setAppearance("blue" as never)).toThrow();
+    writeFileSync(join(dir, "settings.json"), JSON.stringify({ appearance: "blue" }));
+    expect(new SettingsStore(dir).appearance).toBe("system");
+  });
+});
