@@ -358,6 +358,9 @@ export const messages: Catalogue = {
   },
 
   artefacts: {
+    preview: "Aperçu",
+    previewNote: "Aperçu hors ligne : cette page ne peut pas accéder à Internet.",
+    offline: "Hors ligne",
     intro: "Tout ce que Vunemi a créé et laissé derrière lui : fichiers écrits, brouillons enregistrés, événements ajoutés au calendrier, fichiers téléchargés.",
     filters: {
       all: "Tout",
@@ -758,6 +761,7 @@ export const messages: Catalogue = {
     cannotRemove: "Cette connexion ne peut pas être retirée ; vous pouvez la désactiver.",
     cannotShow: "Ce fichier ne peut pas être affiché.",
     artefact: {
+      notPreviewable: "Seules les pages web s'ouvrent dans l'aperçu.",
       notFile: "Cet élément n’est pas un fichier.",
       missing: "Le fichier n’est plus là où il a été créé.",
       outside: "Ce fichier se trouve hors des dossiers ouverts à Vunemi.",

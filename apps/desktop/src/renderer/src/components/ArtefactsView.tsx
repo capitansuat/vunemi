@@ -9,7 +9,8 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CalendarDays, CornerUpLeft, Download, ExternalLink, FileText, FolderOpen, Mail, Package } from "lucide-react";
+import { Bell, CalendarDays, CornerUpLeft, Download, ExternalLink, Eye, FileText, FolderOpen, Mail, Package } from "lucide-react";
+import { useStore } from "../store.js";
 import type { Produced } from "@vunemi/agent-core";
 import type { ArtefactView } from "../../../shared/ipc.js";
 import { clock, groupByDay } from "../lib/time.js";
@@ -106,6 +107,7 @@ export function ArtefactsView() {
                     row={row}
                     busy={busy === row.id}
                     onOpen={() => void act(row.id, () => window.vunemi.openArtefact(row.id))}
+                    onPreview={() => void act(row.id, () => useStore.getState().showPreview(row.id))}
                     onReveal={() => void act(row.id, () => window.vunemi.revealArtefact(row.id))}
                     onUndo={() => void act(row.id, () => window.vunemi.undoArtefact(row.id))}
                   />
@@ -123,12 +125,14 @@ function Row({
   row,
   busy,
   onOpen,
+  onPreview,
   onReveal,
   onUndo,
 }: {
   row: ArtefactView;
   busy: boolean;
   onOpen: () => void;
+  onPreview: () => void;
   onReveal: () => void;
   onUndo: () => void;
 }) {
@@ -150,6 +154,11 @@ function Row({
         {row.canOpen && (
           <Action onClick={onOpen} disabled={busy} icon={ExternalLink}>
             {t("common.open")}
+          </Action>
+        )}
+        {row.canPreview && (
+          <Action onClick={onPreview} disabled={busy} icon={Eye}>
+            {t("artefacts.preview")}
           </Action>
         )}
         {row.canReveal && (

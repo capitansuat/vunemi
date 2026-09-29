@@ -362,6 +362,9 @@ export const messages = {
   },
 
   artefacts: {
+    preview: "Önizle",
+    previewNote: "Çevrimdışı önizleme: bu sayfa internete çıkamaz.",
+    offline: "Çevrimdışı",
     intro: "Vunemi'nin yaptığı ve geride bıraktığı her şey: yazdığı dosyalar, kaydettiği taslaklar, takvime eklediği etkinlikler, indirilen dosyalar.",
     filters: {
       all: "Tümü",
@@ -762,6 +765,7 @@ export const messages = {
     cannotRemove: "Bu bağlantı kaldırılamaz; kapatabilirsin.",
     cannotShow: "Bu dosya gösterilemez.",
     artefact: {
+      notPreviewable: "Önizlemede yalnız web sayfaları açılır.",
       notFile: "Bu öğe bir dosya değil.",
       missing: "Dosya artık oluşturulduğu yerde değil.",
       outside: "Bu dosya Vunemi'ye açık klasörlerin dışında.",

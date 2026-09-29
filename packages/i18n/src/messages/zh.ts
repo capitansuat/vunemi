@@ -358,6 +358,9 @@ export const messages: Catalogue = {
   },
 
   artefacts: {
+    preview: "预览",
+    previewNote: "离线预览：此页面无法访问互联网。",
+    offline: "离线",
     intro: "Vunemi 创建并留下的一切：写入的文件、保存的草稿、添加到日历的事件、下载的文件。",
     filters: {
       all: "全部",
@@ -758,6 +761,7 @@ export const messages: Catalogue = {
     cannotRemove: "此连接无法移除；你可以把它关闭。",
     cannotShow: "无法显示此文件。",
     artefact: {
+      notPreviewable: "预览中只能打开网页。",
       notFile: "此项目不是文件。",
       missing: "文件已不在创建时的位置。",
       outside: "此文件位于向 Vunemi 开放的文件夹之外。",

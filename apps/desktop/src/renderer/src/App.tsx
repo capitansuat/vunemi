@@ -4,6 +4,7 @@ import { ArtefactsView } from "./components/ArtefactsView.js";
 import { MeetingsView } from "./components/MeetingsView.js";
 import { BackgroundBrowsing, BrowserPane } from "./components/BrowserPane.js";
 import { PicturePane } from "./components/PicturePane.js";
+import { SitePane } from "./components/SitePane.js";
 import { Composer } from "./components/Composer.js";
 import { EngineBanner, EngineSetup } from "./components/EngineSetup.js";
 import { ModelPicker } from "./components/ModelPicker.js";
@@ -24,6 +25,7 @@ export function App() {
   const { runs, ingest, refreshProviders, setEmbedded, setQueue, setSessions, setEngine, refreshEngine } = useStore();
   const showPane = useStore((s) => s.paneOpen);
   const viewer = useStore((s) => s.viewer);
+  const preview = useStore((s) => s.preview);
   const view = useStore((s) => s.view);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export function App() {
       </main>
       {/* The browser belongs to the conversation; Settings and what Vunemi made get the whole window. */}
       {/* A picture opened from a card sits where the browser would; closing it brings the browser back. */}
-      {view === "chat" && (viewer ? <PicturePane /> : showPane && <BrowserPane />)}
+      {view === "chat" && (viewer ? <PicturePane /> : preview ? <SitePane /> : showPane && <BrowserPane />)}
     </div>
   );
 }

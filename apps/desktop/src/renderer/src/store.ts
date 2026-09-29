@@ -184,6 +184,10 @@ interface State {
   setEmbedded(state: EmbeddedState): void;
   setPaneOpen(open: boolean): void;
   showPicture(picture: { path: string; label?: string } | null): void;
+  /** A page Vunemi made, shown offline beside the chat; null when closed. */
+  preview: { title: string } | null;
+  showPreview(id: string): Promise<void>;
+  closePreview(): void;
   setBrowserAutoOpen(on: boolean): void;
   setActivity(entries: ActivityEntry[]): void;
   setView(view: View): void;
@@ -232,6 +236,7 @@ export const useStore = create<State>((set, get) => ({
   embedded: { tabs: [], activeId: null },
   paneOpen: false,
   viewer: null,
+  preview: null,
   browserAutoOpen: readAutoOpen(),
   activity: [],
   view: "chat",
@@ -576,6 +581,17 @@ export const useStore = create<State>((set, get) => ({
 
   showPicture(picture) {
     set({ viewer: picture });
+  },
+
+  async showPreview(id) {
+    const title = await window.vunemi.previewArtefact(id);
+    // It opens where the browser and pictures do: beside the chat.
+    set({ preview: { title }, viewer: null, view: "chat" });
+  },
+
+  closePreview() {
+    window.vunemi.previewClose();
+    set({ preview: null });
   },
 
   setActivity(entries) {

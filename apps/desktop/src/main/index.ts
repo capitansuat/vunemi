@@ -20,6 +20,7 @@ import { AppLock, type AuthResult } from "./app-lock.js";
 import { ArtefactStore, openable } from "./artefacts.js";
 import { carryOverBrowserData, EmbeddedBackend, EmbeddedBrowser } from "./embedded-browser.js";
 import { Presence } from "./presence.js";
+import { previewable, registerPreviewScheme, SitePreview } from "./site-preview.js";
 import { isLocalTestBuild, remoteDebugging, scrubEnv, shouldOfferMove } from "./hardening.js";
 import { engineBinary } from "./engine/binary.js";
 import { EngineService } from "./engine/service.js";
@@ -49,6 +50,7 @@ import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/stor
 import { transcriptText } from "./meetings/summary.js";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
+registerPreviewScheme();
 
 // A development run is a different app from the one people install, and it
 // must not share its data or its keychain key. Both used to be named after
@@ -450,6 +452,7 @@ async function artefactViews(): Promise<ArtefactView[]> {
       missing: path !== null && !present,
       canOpen: present && roots.allows(path) && openable(path),
       canReveal: present && roots.allows(path),
+      canPreview: present && roots.allows(path) && previewable(path),
       canUndo: activity.canUndo(record.callId),
     };
   });
@@ -1160,6 +1163,7 @@ handle(CH.lockSet, async (_e, on: unknown): Promise<LockAttempt> => {
 });
 appLock.onChange((locked) => {
   embedded.setCovered(locked);
+  sitePreview.setCovered(locked);
   // Nothing private read aloud to an empty room; the window drops the
   // microphone when it hears the lock.
   if (locked) voice.stopSpeaking();
@@ -1348,6 +1352,20 @@ handle(CH.artefactsOpen, async (_e, id: string) => {
   }
   const error = await shell.openPath(file);
   if (error) throw new Error(error);
+});
+const sitePreview = new SitePreview(() => win);
+handle(CH.artefactsPreview, async (_e, id: string) => {
+  const file = await artefactFile(id);
+  if (!statSync(file).isFile() || !previewable(file)) throw new Error(t("main.artefact.notPreviewable"));
+  return sitePreview.show(file);
+});
+ipcMain.on(CH.previewBounds, (e, b: PaneBounds | null) => {
+  if (e.sender !== win?.webContents) return;
+  const ok = b && [b.x, b.y, b.width, b.height].every((n) => Number.isFinite(n) && n >= 0);
+  sitePreview.setBounds(ok ? { x: Math.round(b.x), y: Math.round(b.y), width: Math.round(b.width), height: Math.round(b.height) } : null);
+});
+ipcMain.on(CH.previewClose, (e) => {
+  if (e.sender === win?.webContents) sitePreview.close();
 });
 handle(CH.artefactsReveal, async (_e, id: string) => shell.showItemInFolder(await artefactFile(id)));
 // Only opens the shortcut's editor; what runs is still decided on the card.

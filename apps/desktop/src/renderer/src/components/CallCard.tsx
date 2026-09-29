@@ -200,9 +200,15 @@ function Files({ files }: { files: { id: string; name: string }[] }) {
         <div key={file.id} className="flex items-center gap-2 py-0.5 text-[12.5px]">
           <FileText size={13} className="shrink-0 text-faint" />
           <span className="min-w-0 flex-1 truncate text-fg">{file.name}</span>
-          <button type="button" onClick={() => act(() => window.vunemi.openArtefact(file.id))} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted hover:bg-surface-2 hover:text-fg">
-            <ExternalLink size={12} /> {t("common.open")}
-          </button>
+          {/\.html?$/i.test(file.name) ? (
+            <button type="button" onClick={() => act(() => useStore.getState().showPreview(file.id))} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted hover:bg-surface-2 hover:text-fg">
+              <Eye size={12} /> {t("artefacts.preview")}
+            </button>
+          ) : (
+            <button type="button" onClick={() => act(() => window.vunemi.openArtefact(file.id))} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted hover:bg-surface-2 hover:text-fg">
+              <ExternalLink size={12} /> {t("common.open")}
+            </button>
+          )}
           <button type="button" onClick={() => act(() => window.vunemi.revealArtefact(file.id))} className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-muted hover:bg-surface-2 hover:text-fg">
             <FolderOpen size={12} /> {t("artefacts.reveal")}
           </button>

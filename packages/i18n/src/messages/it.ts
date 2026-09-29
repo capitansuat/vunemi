@@ -358,6 +358,9 @@ export const messages: Catalogue = {
   },
 
   artefacts: {
+    preview: "Anteprima",
+    previewNote: "Anteprima offline: questa pagina non può accedere a internet.",
+    offline: "Offline",
     intro: "Tutto ciò che Vunemi ha creato e lasciato: file scritti, bozze salvate, eventi aggiunti al calendario, file scaricati.",
     filters: {
       all: "Tutto",
@@ -758,6 +761,7 @@ export const messages: Catalogue = {
     cannotRemove: "Questa connessione non si può rimuovere; puoi disattivarla.",
     cannotShow: "Questo file non può essere mostrato.",
     artefact: {
+      notPreviewable: "Nell'anteprima si aprono solo pagine web.",
       notFile: "Questo elemento non è un file.",
       missing: "Il file non è più dove è stato creato.",
       outside: "Questo file è fuori dalle cartelle aperte a Vunemi.",

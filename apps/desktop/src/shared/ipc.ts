@@ -177,6 +177,8 @@ export interface ArtefactView {
   canOpen: boolean;
   /** Can be shown in Finder. */
   canReveal: boolean;
+  /** A web page: shown beside the chat, offline. */
+  canPreview: boolean;
   /** Its undo is still held (this session only). */
   canUndo: boolean;
 }
@@ -522,6 +524,10 @@ export interface VunemiApi {
 
   listArtefacts(): Promise<ArtefactView[]>;
   openArtefact(id: string): Promise<void>;
+  /** A page Vunemi made, beside the chat, cut off from the internet. Returns the file's name. */
+  previewArtefact(id: string): Promise<string>;
+  previewBounds(bounds: PaneBounds | null): void;
+  previewClose(): void;
   revealArtefact(id: string): Promise<void>;
   /** Opens a shortcut in the Shortcuts app, so the user can see its steps before approving a run. */
   showShortcut(name: string): Promise<void>;
@@ -670,6 +676,9 @@ export const CH = {
   activityChanged: "activity:changed",
   artefactsList: "artefacts:list",
   artefactsOpen: "artefacts:open",
+  artefactsPreview: "artefacts:preview",
+  previewBounds: "preview:bounds",
+  previewClose: "preview:close",
   artefactsReveal: "artefacts:reveal",
   shortcutShow: "shortcuts:show",
   sessionsResume: "sessions:resume",

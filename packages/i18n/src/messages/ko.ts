@@ -358,6 +358,9 @@ export const messages: Catalogue = {
   },
 
   artefacts: {
+    preview: "미리 보기",
+    previewNote: "오프라인 미리 보기: 이 페이지는 인터넷에 연결할 수 없습니다.",
+    offline: "오프라인",
     intro: "Vunemi가 만들고 남긴 모든 것: 작성한 파일, 저장한 초안, 캘린더에 추가한 이벤트, 다운로드한 파일.",
     filters: {
       all: "전체",
@@ -758,6 +761,7 @@ export const messages: Catalogue = {
     cannotRemove: "이 연결은 제거할 수 없습니다. 끌 수는 있습니다.",
     cannotShow: "이 파일은 표시할 수 없습니다.",
     artefact: {
+      notPreviewable: "미리 보기에서는 웹 페이지만 열립니다.",
       notFile: "이 항목은 파일이 아닙니다.",
       missing: "파일이 만들어진 위치에 더 이상 없습니다.",
       outside: "이 파일은 Vunemi에 열린 폴더 밖에 있습니다.",
