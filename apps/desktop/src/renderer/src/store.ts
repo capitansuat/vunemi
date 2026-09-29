@@ -114,6 +114,8 @@ interface State {
   /** The interface language; main holds the setting. */
   locale: Locale;
   runs: RunView[];
+  /** Visible as soon as Send is pressed, until the main process starts the run. */
+  pendingStart: { goal: string; attachments: string[] } | null;
   /** Kept conversations, and which one new tasks go into. */
   sessions: SessionList;
   /** Messages sent while the agent was busy, waiting their turn. */
@@ -230,6 +232,7 @@ const FOLLOW_MS = 1_500;
 export const useStore = create<State>((set, get) => ({
   locale: getLocale(),
   runs: [],
+  pendingStart: null,
   sessions: { current: "", sessions: [], projects: [] },
   queue: [],
   providers: null,
@@ -312,8 +315,14 @@ export const useStore = create<State>((set, get) => ({
     if (!model || !goal.trim()) return;
     // Never refused for being busy: main decides whether this starts now or
     // waits, and says so by way of the queue.
-    set({ view: "chat" });
-    await window.vunemi.startRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }) });
+    const pending = !get().running && !get().pendingStart ? { goal: goal.trim(), attachments } : null;
+    set({ view: "chat", ...(pending && { pendingStart: pending }) });
+    try {
+      await window.vunemi.startRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }) });
+    } catch (error) {
+      if (pending && get().pendingStart === pending) set({ pendingStart: null });
+      throw error;
+    }
   },
 
   async steer(goal, attachments = []) {
@@ -337,6 +346,7 @@ export const useStore = create<State>((set, get) => ({
 
   async stop() {
     await window.vunemi.stopRun();
+    if (get().pendingStart) set({ pendingStart: null });
   },
 
   async pause() {
@@ -361,14 +371,14 @@ export const useStore = create<State>((set, get) => ({
 
   async newSession(projectId) {
     const sessions = await window.vunemi.newSession(projectId);
-    set({ sessions, runs: [], queue: [], viewer: null, view: "chat" });
+    set({ sessions, runs: [], pendingStart: null, queue: [], viewer: null, view: "chat" });
     void get().refreshContext();
   },
 
   async addProject() {
     const sessions = await window.vunemi.addProject();
     if (!sessions) return;
-    set({ sessions, runs: [], queue: [], viewer: null, view: "chat" });
+    set({ sessions, runs: [], pendingStart: null, queue: [], viewer: null, view: "chat" });
     void get().refreshContext();
   },
 
@@ -384,7 +394,7 @@ export const useStore = create<State>((set, get) => ({
     if (id === get().sessions.current) return set({ view: "chat" });
     const { events, ...sessions } = await window.vunemi.openSession(id);
     // The timeline is a fold of its events, so a kept one rebuilds exactly.
-    set({ sessions, runs: events.reduce(foldEvent, []), queue: [], view: "chat" });
+    set({ sessions, runs: events.reduce(foldEvent, []), pendingStart: null, queue: [], view: "chat" });
     void get().refreshContext();
   },
 
@@ -395,18 +405,18 @@ export const useStore = create<State>((set, get) => ({
   async deleteSession(id) {
     const wasCurrent = id === get().sessions.current;
     const sessions = await window.vunemi.deleteSession(id);
-    set({ sessions, ...(wasCurrent && { runs: [], queue: [], viewer: null }) });
+    set({ sessions, ...(wasCurrent && { runs: [], pendingStart: null, queue: [], viewer: null }) });
   },
 
   async forgetSession() {
     const sessions = await window.vunemi.resetSession();
-    set({ sessions, runs: [], queue: [], viewer: null });
+    set({ sessions, runs: [], pendingStart: null, queue: [], viewer: null });
     void get().refreshContext();
   },
 
   setSessions(sessions) {
     // Main moved to another conversation on its own (a scheduled task started): its timeline starts empty.
-    if (sessions.current !== get().sessions.current) set({ sessions, runs: [], queue: [], viewer: null });
+    if (sessions.current !== get().sessions.current) set({ sessions, runs: [], pendingStart: null, queue: [], viewer: null });
     else set({ sessions });
   },
 
@@ -561,6 +571,7 @@ export const useStore = create<State>((set, get) => ({
     }
     set((s) => ({
       runs: foldEvent(s.runs, event),
+      pendingStart: event.type === "run.started" && s.pendingStart?.goal === event.goal ? null : s.pendingStart,
       // Follows the events rather than the send() call: a queued message
       // starts on its own, with nobody in the UI having asked for it.
       running: event.type === "run.started" ? true : event.type === "run.finished" ? false : s.running,

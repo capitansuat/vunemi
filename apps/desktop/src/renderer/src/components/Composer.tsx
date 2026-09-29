@@ -18,7 +18,7 @@ export function Composer() {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const { running, paused, model, send, steer, stop, pause, resume } = useStore();
+  const { running, paused, pendingStart, model, send, steer, stop, pause, resume } = useStore();
   const { listen, finishListening, cancelListening, setHandsFree, takeDictation, refreshVoice, setVoiceStatus } = useStore();
   // The speech model offer opens when the mic is pressed without one, not before.
   const [offer, setOffer] = useState(false);
@@ -125,7 +125,7 @@ export function Composer() {
       })
       .catch((err: unknown) => setError(String(err instanceof Error ? err.message : err).replace(/^.*Error: /, "")));
   };
-  const ready = (text.trim() !== "" || files.length > 0) && !!model;
+  const ready = (text.trim() !== "" || files.length > 0) && !!model && !pendingStart;
 
   const listening = voice.state === "listening";
   const canHear = voice.status?.canHear ?? false;

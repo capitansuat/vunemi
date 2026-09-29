@@ -634,6 +634,41 @@ describe("pause", () => {
 });
 
 describe("intent preview", () => {
+  it("does not treat an echoed approved plan as completed research", async () => {
+    const { model, seen } = scripted([
+      { text: "1. Uçuşları ara\n2. Fiyatları karşılaştır" },
+      { text: "İyileştirilmiş:\n1. Uçuşları ara\n2. Fiyatları karşılaştır" },
+      { calls: [{ name: "read_page", argumentsText: "{}" }] },
+      { text: "Arama sayfasını okudum; fiyat bilgisi bulunamadı." },
+    ]);
+    const { registry } = tools();
+    const events: AgentEvent[] = [];
+    const result = await runAgent({
+      goal: "Uçuşları ara ve fiyatları karşılaştır", model, tools: registry,
+      emit: (event) => events.push(event),
+      requestApproval: async () => ({ kind: "approve" }),
+      requestPlanApproval: async (steps) => ({ kind: "go", steps }),
+    });
+    expect(result.status).toBe("done");
+    expect(events.some((event) => event.type === "tool.proposed" && event.tool === "read_page")).toBe(true);
+    expect(seen[2]!.messages.at(-1)).toMatchObject({ role: "user", content: expect.stringContaining("have not performed it") });
+  });
+
+  it("reports failure if the model repeats the plan again without using a tool", async () => {
+    const { model } = scripted([
+      { text: "1. Uçuşları ara\n2. Fiyatları karşılaştır" },
+      { text: "1. Uçuşları ara\n2. Fiyatları karşılaştır" },
+      { text: "1. Uçuşları ara\n2. Fiyatları karşılaştır" },
+    ]);
+    const result = await runAgent({
+      goal: "Uçuşları ara ve fiyatları karşılaştır", model, tools: tools().registry,
+      emit: () => {}, requestApproval: async () => ({ kind: "approve" }),
+      requestPlanApproval: async (steps) => ({ kind: "go", steps }),
+    });
+    expect(result.status).toBe("failed");
+    expect(result.detail).toContain("without carrying out");
+  });
+
   it("requires a preview for a one-step action in plan mode", async () => {
     const { model, seen } = scripted([{ text: "1. Notu yaz" }]);
     const { registry, log } = tools();

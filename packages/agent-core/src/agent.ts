@@ -468,6 +468,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let callNudged = false;
   let guideNudged = false;
   const travelNudged = new Set<string>();
+  let planEchoNudged = false;
+  let approvedPlan: string[] | null = null;
   /** Groups a tool opened in this task, such as app_guide's: opened to be used. */
   const guided = new Set<string>();
   /** Tools called in this task: an answer that names one reports on it, it doesn't plan it. */
@@ -491,6 +493,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         const decision = await Promise.race([opts.requestPlanApproval(steps), abortPromise(signal)]);
         emit({ type: "plan.resolved", runId, decision });
         if (decision.kind === "cancel") return finish("stopped", "Plan cancelled by user.");
+        approvedPlan = decision.steps;
         convo[convo.length - 1] = {
           role: "user",
           content: `${request}\n\n${planNote(decision.steps)}`,
@@ -542,6 +545,17 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       }
 
       if (result.toolCalls.length === 0) {
+        // Some local models answer with the approved plan verbatim and then stop.
+        // That is still a promise of work, not a completed search or comparison.
+        if (approvedPlan && called.size === 0 && approvedPlan.length > 0 &&
+            approvedPlan.every((step) => result.text.toLocaleLowerCase().includes(step.toLocaleLowerCase()))) {
+          if (!planEchoNudged && index < maxSteps - 1) {
+            planEchoNudged = true;
+            convo.push({ role: "user", content: "You repeated the approved plan but have not performed it. Use the available read tools to start the first step now. If a needed tool is unavailable, explain that specific obstacle instead of repeating the plan." });
+            continue;
+          }
+          return finish("failed", "The model repeated the plan without carrying out its steps.");
+        }
         if (calendarReadError && !calendarReadSucceeded) {
           const honest = t("agent.calendarUnread", { error: calendarReadError });
           convo[convo.length - 1] = { role: "assistant", content: honest };

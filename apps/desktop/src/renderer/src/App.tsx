@@ -26,7 +26,7 @@ import { UpdateAction } from "./components/UpdateAction.js";
 
 
 export function App() {
-  const { runs, ingest, refreshProviders, setEmbedded, setQueue, setSessions, setEngine, refreshEngine } = useStore();
+  const { runs, pendingStart, ingest, refreshProviders, setEmbedded, setQueue, setSessions, setEngine, refreshEngine } = useStore();
   const showPane = useStore((s) => s.paneOpen);
   const viewer = useStore((s) => s.viewer);
   const preview = useStore((s) => s.preview);
@@ -78,7 +78,7 @@ export function App() {
           <SettingsView />
         ) : (
           <>
-            {runs.length === 0 ? <Empty /> : <Conversation />}
+            {runs.length === 0 && !pendingStart ? <Empty /> : <Conversation />}
             <div className="mx-auto w-full max-w-[760px] px-6 pb-5">
               <EngineBanner />
               <BackgroundBrowsing />
@@ -378,6 +378,8 @@ function ContextMeter({ used, budget, known, parts }: { used: number; budget: nu
 
 function Conversation() {
   const runs = useStore((s) => s.runs);
+  const pendingStart = useStore((s) => s.pendingStart);
+  const stop = useStore((s) => s.stop);
   const scroller = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
 
@@ -400,6 +402,15 @@ function Conversation() {
         {runs.map((r) => (
           <Turn key={r.runId} run={r} />
         ))}
+        {pendingStart && <section className="space-y-4">
+          <div className="flex justify-end">
+            <div className="selectable max-w-[80%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-surface-3 px-4 py-3 text-[13px] text-fg">{pendingStart.goal}</div>
+          </div>
+          <div role="status" className="flex items-center gap-2 text-[12px] text-muted">
+            <span className="size-2 animate-pulse rounded-full bg-ember" />{t("callStatus.proposed")}
+            <button type="button" onClick={() => void stop()} className="ml-2 text-faint underline hover:text-fg">{t("composer.stop")}</button>
+          </div>
+        </section>}
         <Interrupted />
       </div>
     </div>
