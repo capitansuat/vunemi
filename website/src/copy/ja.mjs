@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：Mac の上で動くパーソナルアシスタント", description: "Vunemi は日々の作業を手伝います。AI は Mac 上で動作し、Vunemi のクラウドアカウントは不要です。外部サービスとの接続は自分で選べます。" },
-    features: { title: "Vunemi にできること", description: "メール、カレンダー、ファイル、Web、Mac のアプリ。承認カード、取り消し、はっきりした制限つき。Vunemi 0.1.6 の全機能です。" },
+    features: { title: "Vunemi にできること", description: "メール、カレンダー、ファイル、Web、Mac のアプリ。承認カード、取り消し、はっきりした制限つき。Vunemi 0.1.7 の全機能です。" },
     screens: { title: "Vunemi の画面", description: "Mac 版 Vunemi の実際の画面です。サンプルデータで撮影しています。" },
-    download: { title: "Mac 版 Vunemi をダウンロード", description: "Vunemi 0.1.6 をダウンロード。Apple シリコン搭載、macOS 14 以降の Mac 向け。無料でオープンソースです。" },
+    download: { title: "Mac 版 Vunemi をダウンロード", description: "Vunemi 0.1.7 をダウンロード。Apple シリコン搭載、macOS 14 以降の Mac 向け。無料でオープンソースです。" },
   },
   hero: {
     eyebrow: "Mac のためのパーソナルアシスタント",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi にできることのすべて",
-    intro: "Vunemi 0.1.6 の詳細です。使い方、接続できるもの、そしてあなたが主導権を保つしくみを紹介します。",
+    intro: "Vunemi 0.1.7 の詳細です。使い方、接続できるもの、そしてあなたが主導権を保つしくみを紹介します。",
     chatTitle: "Vunemi との作業",
     chat: [
       { title: "まず計画", body: "いくつかの手順が必要なタスクでは、Vunemi が先に計画を示せます。そのまま進める、手順を編集する、キャンセルする、から選べます。" },
