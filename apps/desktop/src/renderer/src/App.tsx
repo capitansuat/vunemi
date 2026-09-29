@@ -217,9 +217,11 @@ function UpdateAction({ status }: { status: UpdateStatus }) {
       </>
     );
   }
+  // The same download would be refused again: nothing to press.
+  if (status.phase === "failed" && status.error === "signature") return <p className="mt-2 text-muted">{t("updates.badSignature")}</p>;
   return (
     <>
-      {status.phase === "failed" && <p className="mt-2 text-muted">{t(status.error === "signature" ? "updates.badSignature" : "updates.failed")}</p>}
+      {status.phase === "failed" && <p className="mt-2 text-muted">{t("updates.failed")}</p>}
       <button type="button" className={button} onClick={() => void window.vunemi.downloadUpdate()}>
         {status.offer?.sizeMb ? t("updates.updateSize", { size: status.offer.sizeMb }) : t("updates.update")}
       </button>
