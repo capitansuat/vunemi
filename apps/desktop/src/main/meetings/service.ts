@@ -55,6 +55,8 @@ export class MeetingService {
   private stopping: Promise<void> | null = null;
   /** Meetings being finished, so a second Try again waits for the first. */
   private readonly working = new Set<string>();
+  /** Meetings in memory while recorded or finished: a rename must reach these, or their next save undoes it. */
+  private readonly held = new Map<string, Meeting>();
 
   constructor(private readonly opts: MeetingServiceOptions) {}
 
@@ -72,6 +74,7 @@ export class MeetingService {
     if (blocked) throw new Error(blocked);
     const { store } = this.opts;
     const meeting = store.create();
+    this.held.set(meeting.id, meeting);
     const live = new LiveTranscript({
       dir: store.folder(meeting.id),
       transcribe: this.opts.transcribe,
@@ -82,6 +85,7 @@ export class MeetingService {
       await this.opts.recorder.start(store.folder(meeting.id), microphone);
     } catch (err) {
       this.recording = null;
+      this.held.delete(meeting.id);
       this.opts.recorder.dispose();
       // Nothing was recorded: the folder holds only the empty meeting.json.
       rmSync(store.folder(meeting.id), { recursive: true, force: true });
@@ -99,33 +103,52 @@ export class MeetingService {
     const current = this.recording;
     if (!current) return Promise.resolve();
     this.stopping = (async () => {
-      await this.opts.recorder.stop().catch(() => {});
-      // The microphone is let go of now, not when Vunemi quits.
-      this.opts.recorder.dispose();
-      const { meeting, live } = current;
-      meeting.endedAt = Date.now();
-      meeting.state = "transcribing";
-      this.opts.store.save(meeting);
-      this.changed();
       try {
-        await live.finish();
+        await this.stopAndFinish(current, spec);
       } finally {
-        this.recording = null;
-        this.stopping = null;
+        this.held.delete(current.meeting.id);
       }
-      meeting.language = live.language;
-      this.opts.store.save(meeting);
-      this.changed();
-      if (live.failedSegments > 0) {
-        meeting.state = "failed";
-        meeting.error = "transcription";
-        this.opts.store.save(meeting);
-        this.changed();
-        return;
-      }
-      await this.finish(meeting, spec);
     })();
     return this.stopping;
+  }
+
+  private async stopAndFinish(current: { meeting: Meeting; live: LiveTranscript }, spec: string | null): Promise<void> {
+    await this.opts.recorder.stop().catch(() => {});
+    // The microphone is let go of now, not when Vunemi quits.
+    this.opts.recorder.dispose();
+    const { meeting, live } = current;
+    meeting.endedAt = Date.now();
+    meeting.state = "transcribing";
+    this.opts.store.save(meeting);
+    this.changed();
+    try {
+      await live.finish();
+    } finally {
+      this.recording = null;
+      this.stopping = null;
+    }
+    meeting.language = live.language;
+    this.opts.store.save(meeting);
+    this.changed();
+    if (live.failedSegments > 0) {
+      meeting.state = "failed";
+      meeting.error = "transcription";
+      this.opts.store.save(meeting);
+      this.changed();
+      return;
+    }
+    await this.finish(meeting, spec);
+  }
+
+  /** The user's name for a meeting, whether it is on disk or still being worked on. */
+  rename(id: string, title: string): void {
+    const name = title.replace(/\s+/g, " ").trim().slice(0, 200);
+    if (!name) return;
+    const meeting = this.held.get(id) ?? this.opts.store.get(id);
+    if (!meeting) return;
+    meeting.title = name;
+    this.opts.store.save(meeting);
+    this.changed();
   }
 
   /** The recorder ended on its own mid-meeting: keep what it wrote and finish. */
@@ -138,11 +161,16 @@ export class MeetingService {
     if (this.working.has(id) || this.recording?.meeting.id === id) return;
     const meeting = this.opts.store.get(id);
     if (!meeting || meeting.state !== "failed") return;
-    if (meeting.lines.length === 0 || meeting.error === "transcription") {
-      await this.transcribeAgain(meeting);
-      if (meeting.state === "failed") return;
+    this.held.set(id, meeting);
+    try {
+      if (meeting.lines.length === 0 || meeting.error === "transcription") {
+        await this.transcribeAgain(meeting);
+        if (meeting.state === "failed") return;
+      }
+      await this.finish(meeting, spec);
+    } finally {
+      this.held.delete(id);
     }
-    await this.finish(meeting, spec);
   }
 
   /** At launch: meetings Vunemi quit during, finished from what they wrote. */
@@ -150,9 +178,14 @@ export class MeetingService {
     for (const meeting of this.opts.store.unfinished()) {
       if (this.working.has(meeting.id) || this.recording?.meeting.id === meeting.id) continue;
       meeting.endedAt ??= Date.now();
-      // Lines written before the quit are written again, all in order.
-      await this.transcribeAgain(meeting);
-      if (meeting.state !== "failed") await this.finish(meeting, spec);
+      this.held.set(meeting.id, meeting);
+      try {
+        // Lines written before the quit are written again, all in order.
+        await this.transcribeAgain(meeting);
+        if (meeting.state !== "failed") await this.finish(meeting, spec);
+      } finally {
+        this.held.delete(meeting.id);
+      }
     }
   }
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FolderOpen, FolderPlus, Folder, Plus, Trash2 } from "lucide-react";
+import { FolderOpen, FolderPlus, Folder, Pencil, Plus, Trash2 } from "lucide-react";
+import { RenameInput } from "./RenameInput.js";
 import type { ProjectView, SessionSummary } from "../../../shared/ipc.js";
 import { clock, dayLabel } from "../lib/time.js";
 import { useStore } from "../store.js";
@@ -166,10 +167,25 @@ function FreshRow() {
 }
 
 function SessionRow({ item: s }: { item: SessionSummary }) {
-  const { sessions, running, openSession, deleteSession } = useStore();
+  const { sessions, running, openSession, deleteSession, renameSession } = useStore();
   const [confirming, setConfirming] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const current = s.id === sessions.current;
   const title = s.title || t("app.sessions.untitled");
+  if (renaming) {
+    return (
+      <li className="px-1 py-1">
+        <RenameInput
+          initial={s.title}
+          label={t("app.sessions.rename")}
+          onDone={(name) => {
+            setRenaming(false);
+            if (name) void renameSession(s.id, name);
+          }}
+        />
+      </li>
+    );
+  }
   return (
     <li className="group relative">
       <button
@@ -178,7 +194,8 @@ function SessionRow({ item: s }: { item: SessionSummary }) {
         onClick={() => void openSession(s.id)}
         aria-current={current ? "true" : undefined}
         title={title}
-        className={`w-full rounded-lg px-2.5 py-2 pr-8 text-left text-[13px] transition-colors disabled:opacity-50 ${
+        onDoubleClick={() => setRenaming(true)}
+        className={`w-full rounded-lg px-2.5 py-2 pr-14 text-left text-[13px] transition-colors disabled:opacity-50 ${
           current ? "bg-surface-2 text-fg" : "text-muted hover:bg-surface-2 hover:text-fg"
         }`}
       >
@@ -202,15 +219,26 @@ function SessionRow({ item: s }: { item: SessionSummary }) {
           {t("common.delete")}
         </button>
       ) : (
-        <button
-          type="button"
-          aria-label={t("app.sessions.deleteLabel", { title })}
-          disabled={running && current}
-          onClick={() => setConfirming(true)}
-          className="absolute top-1/2 right-1.5 grid size-6 -translate-y-1/2 place-items-center rounded-md text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-danger focus-visible:opacity-100 disabled:hidden"
-        >
-          <Trash2 size={13} />
-        </button>
+        <div className="absolute top-1/2 right-1.5 flex -translate-y-1/2 items-center gap-0.5">
+          <button
+            type="button"
+            aria-label={t("app.sessions.renameLabel", { title })}
+            title={t("app.sessions.rename")}
+            onClick={() => setRenaming(true)}
+            className="grid size-6 place-items-center rounded-md text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-fg focus-visible:opacity-100"
+          >
+            <Pencil size={12} />
+          </button>
+          <button
+            type="button"
+            aria-label={t("app.sessions.deleteLabel", { title })}
+            disabled={running && current}
+            onClick={() => setConfirming(true)}
+            className="grid size-6 place-items-center rounded-md text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-danger focus-visible:opacity-100 disabled:hidden"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
       )}
     </li>
   );

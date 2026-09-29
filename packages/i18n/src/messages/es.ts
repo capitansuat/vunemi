@@ -104,6 +104,8 @@ export const messages: Catalogue = {
       ongoing: "en curso",
       tasks: { one: "1 tarea", other: "{count} tareas" },
       deleteLabel: "Eliminar la sesión {title}",
+      rename: "Renombrar",
+      renameLabel: "Renombrar la sesión {title}",
       untitled: "Sesión sin título",
       interrupted: "interrumpida",
     },

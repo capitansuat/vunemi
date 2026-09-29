@@ -104,6 +104,8 @@ export const messages: Catalogue = {
       ongoing: "進行中",
       tasks: { other: "{count} 件のタスク" },
       deleteLabel: "セッション {title} を削除",
+      rename: "名前を変更",
+      renameLabel: "セッション「{title}」の名前を変更",
       untitled: "名称未設定のセッション",
       interrupted: "中断",
     },

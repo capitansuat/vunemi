@@ -418,6 +418,7 @@ export interface VunemiApi {
   /** Continues a kept conversation; its events rebuild the timeline. */
   openSession(id: string): Promise<SessionList & { events: AgentEvent[] }>;
   deleteSession(id: string): Promise<SessionList>;
+  renameSession(id: string, title: string): Promise<SessionList>;
   /** Picks up the current conversation's cut-short task; every step beyond reading asks. */
   resumeInterrupted(model: string): Promise<void>;
   /** Lets the cut-short task go; the conversation stays. */
@@ -614,6 +615,7 @@ export const CH = {
   projectsReveal: "projects:reveal",
   sessionsOpen: "sessions:open",
   sessionsDelete: "sessions:delete",
+  sessionsRename: "sessions:rename",
   sessionsChanged: "sessions:changed",
   memoryList: "memory:list",
   memoryUpdate: "memory:update",

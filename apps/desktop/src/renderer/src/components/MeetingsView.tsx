@@ -4,7 +4,8 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, Search, Square, Users } from "lucide-react";
+import { Mic, Pencil, Search, Square, Users } from "lucide-react";
+import { RenameInput } from "./RenameInput.js";
 import type { MeetingLine, MeetingStatusView, MeetingSummaryView, MicrophoneView } from "../../../shared/ipc.js";
 import { formatDate, t } from "@vunemi/i18n";
 import { useStore } from "../store.js";
@@ -29,6 +30,7 @@ export function MeetingsView() {
   const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [renaming, setRenaming] = useState<string | null>(null);
   const queryRef = useRef(query);
   queryRef.current = query;
 
@@ -112,16 +114,41 @@ export function MeetingsView() {
         ) : (
           <ul className="mt-3 divide-y divide-line">
             {list.map((m) => (
-              <li key={m.id}>
-                <button
-                  type="button"
-                  onClick={() => setOpen(m.id)}
-                  className="flex w-full items-baseline gap-3 rounded-md px-2 py-2.5 text-left transition-colors hover:bg-surface-2"
-                >
-                  <span className="min-w-0 flex-1 truncate text-[13.5px] text-fg">{meetingTitle(m)}</span>
-                  {m.state !== "done" && <span className={`text-[12px] ${m.state === "failed" ? "text-danger" : "text-muted"}`}>{stateLabel(m.state)}</span>}
-                  <span className="shrink-0 text-[12px] text-faint">{formatDate(m.startedAt, { dateStyle: "medium", timeStyle: "short" })}</span>
-                </button>
+              <li key={m.id} className="group relative">
+                {renaming === m.id ? (
+                  <div className="px-1 py-1.5">
+                    <RenameInput
+                      initial={m.title || meetingTitle(m)}
+                      label={t("meetings.rename")}
+                      onDone={(name) => {
+                        setRenaming(null);
+                        if (name) void window.vunemi.meetingsRename(m.id, name).then(() => window.vunemi.meetingsList(queryRef.current)).then(setList);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(m.id)}
+                      onDoubleClick={() => setRenaming(m.id)}
+                      className="flex w-full items-baseline gap-3 rounded-md px-2 py-2.5 pr-10 text-left transition-colors hover:bg-surface-2"
+                    >
+                      <span className="min-w-0 flex-1 truncate text-[13.5px] text-fg">{meetingTitle(m)}</span>
+                      {m.state !== "done" && <span className={`text-[12px] ${m.state === "failed" ? "text-danger" : "text-muted"}`}>{stateLabel(m.state)}</span>}
+                      <span className="shrink-0 text-[12px] text-faint">{formatDate(m.startedAt, { dateStyle: "medium", timeStyle: "short" })}</span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t("meetings.rename")}
+                      title={t("meetings.rename")}
+                      onClick={() => setRenaming(m.id)}
+                      className="absolute top-1/2 right-2 grid size-6 -translate-y-1/2 place-items-center rounded-md text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-fg focus-visible:opacity-100"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                  </>
+                )}
               </li>
             ))}
           </ul>

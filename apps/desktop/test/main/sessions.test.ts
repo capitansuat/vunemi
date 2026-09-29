@@ -212,3 +212,20 @@ describe("a task cut short by Vunemi closing", () => {
     expect(readdirSync(dir)).toContain("s_broken123.checkpoint");
   });
 });
+
+describe("renaming", () => {
+  it("keeps the user's name for a conversation, current or not, and a later task does not change it", () => {
+    const store = new SessionStore(dir);
+    run(store, "r1", "bütçe tablosunu hazırla", "tamam");
+    const first = store.currentId;
+    store.rename(first, "  Bütçe   2027 ");
+    run(store, "r2", "bir şey daha", "tamam");
+    store.create();
+    run(store, "r3", "başka bir iş", "tamam");
+    store.rename(first, "Bütçe planı");
+    store.rename(first, "   "); // empty changes nothing
+    const again = new SessionStore(dir);
+    expect(again.list().find((s) => s.id === first)?.title).toBe("Bütçe planı");
+    expect(() => store.rename("s_nothere", "x")).toThrow();
+  });
+});

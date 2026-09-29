@@ -160,3 +160,16 @@ describe("MeetingService", () => {
     expect(existsSync(join(store.folder(meeting.id), "mic.pcm"))).toBe(false);
   });
 });
+
+describe("renaming a meeting", () => {
+  it("keeps a name given while recording through the summary", async () => {
+    const s = service();
+    const meeting = await s.start();
+    writeFileSync(join(store.folder(meeting.id), "mic.pcm"), speech(1));
+    s.rename(meeting.id, "  Haftalık   plan ");
+    await s.stop("lmstudio:m");
+    expect(store.get(meeting.id)).toMatchObject({ state: "done", title: "Haftalık plan" });
+    s.rename(meeting.id, "Plan 2");
+    expect(store.get(meeting.id)?.title).toBe("Plan 2");
+  });
+});

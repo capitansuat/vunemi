@@ -41,6 +41,7 @@ const api: VunemiApi = {
   resumeInterrupted: (model) => ipcRenderer.invoke(CH.sessionsResume, model),
   dismissInterrupted: () => ipcRenderer.invoke(CH.sessionsDismiss),
   deleteSession: (id) => ipcRenderer.invoke(CH.sessionsDelete, id),
+  renameSession: (id, title) => ipcRenderer.invoke(CH.sessionsRename, id, title),
   onSessions: (listener) => {
     const handler = (_e: IpcRendererEvent, list: SessionList) => listener(list);
     ipcRenderer.on(CH.sessionsChanged, handler);

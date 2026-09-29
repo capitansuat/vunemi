@@ -173,6 +173,7 @@ interface State {
   revealProject(id: string): Promise<void>;
   openSession(id: string): Promise<void>;
   deleteSession(id: string): Promise<void>;
+  renameSession(id: string, title: string): Promise<void>;
   /** Forgets the conversation on screen. */
   forgetSession(): Promise<void>;
   setSessions(list: SessionList): void;
@@ -381,6 +382,10 @@ export const useStore = create<State>((set, get) => ({
     // The timeline is a fold of its events, so a kept one rebuilds exactly.
     set({ sessions, runs: events.reduce(foldEvent, []), queue: [], view: "chat" });
     void get().refreshContext();
+  },
+
+  async renameSession(id, title) {
+    set({ sessions: await window.vunemi.renameSession(id, title) });
   },
 
   async deleteSession(id) {

@@ -104,6 +104,8 @@ export const messages: Catalogue = {
       ongoing: "läuft",
       tasks: { one: "1 Aufgabe", other: "{count} Aufgaben" },
       deleteLabel: "Sitzung {title} löschen",
+      rename: "Umbenennen",
+      renameLabel: "Sitzung {title} umbenennen",
       untitled: "Unbenannte Sitzung",
       interrupted: "abgebrochen",
     },

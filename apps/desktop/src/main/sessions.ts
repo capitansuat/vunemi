@@ -170,6 +170,17 @@ export class SessionStore {
     return { history: stored.history, events: stored.events };
   }
 
+  /** The user's own name for a conversation. An empty one changes nothing. */
+  rename(id: string, title: string): void {
+    const name = title.replace(/\s+/g, " ").trim().slice(0, TITLE_CHARS);
+    if (!name || !ID.test(id)) return;
+    const s = id === this.current.id ? this.current : this.read(id);
+    if (!s) throw new Error(t("sessions.notFound"));
+    s.title = name;
+    // The current one is written with its next finished task if it has none yet.
+    if (s !== this.current || s.events.length > 0) this.write(s);
+  }
+
   /** Forgets one conversation. Forgetting the current one starts a fresh one. */
   remove(id: string): void {
     if (!ID.test(id)) return;

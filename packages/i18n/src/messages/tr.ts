@@ -108,6 +108,8 @@ export const messages = {
       ongoing: "sürüyor",
       tasks: { other: "{count} görev" },
       deleteLabel: "{title} oturumunu sil",
+      rename: "Yeniden adlandır",
+      renameLabel: "{title} oturumunu yeniden adlandır",
       untitled: "Adsız oturum",
       interrupted: "yarıda kaldı",
     },

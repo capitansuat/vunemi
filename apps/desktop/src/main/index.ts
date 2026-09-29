@@ -917,6 +917,10 @@ handle(CH.projectsReveal, async (_e, id: string) => {
   if (project) await shell.openPath(project.folder);
 });
 handle(CH.sessionsDelete, (_e, id: string) => forgetConversation(String(id)));
+handle(CH.sessionsRename, (_e, id: unknown, title: unknown) => {
+  if (typeof id === "string" && typeof title === "string") conversations.rename(id, title);
+  return sessionList();
+});
 // A task Vunemi's closing cut short. Picking it up is the user's call, and
 // every step beyond reading asks again: the model may not know what the
 // interrupted step already did.
@@ -1096,12 +1100,7 @@ handle(CH.meetingsRecover, (_e, model: unknown) => {
   void meetings.recover(meetingModel).catch((err: unknown) => console.error("[vunemi] meetings recovery:", err instanceof Error ? err.message : String(err)));
 });
 handle(CH.meetingsRename, (_e, id: unknown, title: unknown) => {
-  if (typeof id !== "string" || typeof title !== "string") return meetingList();
-  const m = meetingStore.get(id);
-  if (m) {
-    m.title = title.trim().slice(0, 200);
-    meetingStore.save(m);
-  }
+  if (typeof id === "string" && typeof title === "string") meetings.rename(id, title);
   return meetingList();
 });
 handle(CH.meetingsDelete, async (_e, id: unknown) => {

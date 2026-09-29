@@ -104,6 +104,8 @@ export const messages: Catalogue = {
       ongoing: "идёт",
       tasks: { one: "{count} задача", few: "{count} задачи", many: "{count} задач", other: "{count} задачи" },
       deleteLabel: "Удалить сеанс {title}",
+      rename: "Переименовать",
+      renameLabel: "Переименовать сессию {title}",
       untitled: "Сеанс без названия",
       interrupted: "прервано",
     },

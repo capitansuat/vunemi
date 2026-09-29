@@ -104,6 +104,8 @@ export const messages: Catalogue = {
       ongoing: "进行中",
       tasks: { other: "{count} 个任务" },
       deleteLabel: "删除会话 {title}",
+      rename: "重命名",
+      renameLabel: "重命名会话 {title}",
       untitled: "未命名会话",
       interrupted: "已中断",
     },

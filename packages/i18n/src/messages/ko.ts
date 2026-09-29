@@ -104,6 +104,8 @@ export const messages: Catalogue = {
       ongoing: "진행 중",
       tasks: { other: "작업 {count}개" },
       deleteLabel: "{title} 세션 삭제",
+      rename: "이름 변경",
+      renameLabel: "{title} 세션 이름 변경",
       untitled: "제목 없는 세션",
       interrupted: "중단됨",
     },
