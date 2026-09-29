@@ -28,7 +28,17 @@ export function valueSeen(value: string, output: string): boolean {
   const normalize = (s: string) => s.normalize("NFKC").toLocaleLowerCase()
     .replace(/(\d)[.,\s](?=\d{3}(?:\D|$))/g, "$1")
     .replace(/\s+/g, " ").trim();
-  return normalize(output).includes(normalize(value));
+  const needle = normalize(value);
+  const haystack = normalize(output);
+  if (!needle) return false;
+  const word = /[\p{L}\p{N}]/u;
+  for (let at = haystack.indexOf(needle); at !== -1; at = haystack.indexOf(needle, at + 1)) {
+    const before = at > 0 ? haystack[at - 1]! : "";
+    const after = haystack[at + needle.length] ?? "";
+    if ((!word.test(needle[0]!) || !word.test(before)) &&
+        (!word.test(needle.at(-1)!) || !word.test(after))) return true;
+  }
+  return false;
 }
 
 function source(raw: unknown, evidence: ChoiceEvidence): string | undefined {

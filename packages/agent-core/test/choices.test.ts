@@ -18,6 +18,9 @@ describe("choice card data", () => {
 
   it("matches read page values and prices, including thousands separators", () => {
     expect(valueSeen("62499 TL", page.text)).toBe(true);
+    expect(valueSeen("16 GB", "RAM 116 GB")).toBe(false);
+    expect(valueSeen("100 TL", "Fiyat 1100 TL")).toBe(false);
+    expect(valueSeen("16 GB", "RAM 16 GB")).toBe(true);
     const result = prepareChoice("present_options", { items: [
       { title: "A", price: "62499 TL", facts: [{ label: "RAM", value: "16 GB" }, { label: "Weight", value: "1 kg" }], sourceUrl: page.url },
       { title: "B", facts: [{ label: "When", value: "Friday 14:00" }], sourceUrl: "https://example.com/not-opened" },
