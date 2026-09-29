@@ -105,6 +105,8 @@ if (debugPortOpen) {
 
 let win: BrowserWindow | null = null;
 let quitting = false;
+/** Squirrel is closing the windows to install an update: they must really close, or it waits forever. */
+let updating = false;
 
 /** To the renderer, if it's still there: events can fire while the window is closing. */
 function send(channel: string, payload: unknown): void {
@@ -637,7 +639,7 @@ function createWindow(): void {
   // Closing the window hides it: the run keeps going, its tabs stay alive,
   // and the menu bar remains. Quitting is what actually ends a run.
   win.on("close", (e) => {
-    if (quitting || process.platform !== "darwin") return;
+    if (quitting || updating || process.platform !== "darwin") return;
     e.preventDefault();
     win?.hide();
   });
@@ -1162,6 +1164,10 @@ const updates = updateSourceNow && new UpdateService({
   ),
   now: Date.now,
   onChange: (status) => send(CH.updatesChanged, status),
+});
+
+autoUpdater.on("before-quit-for-update", () => {
+  updating = true;
 });
 
 const noUpdates = (): UpdateStatus => ({ phase: "idle", offer: null, error: null, checkedAt: null, installable: false, idle: true });
