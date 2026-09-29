@@ -161,6 +161,15 @@ export default {
     intro: "Schermate reali dell'app in inglese, catturate con dati di esempio. Apri un'immagine per vederla a grandezza piena.",
   },
   downloadPage: {
+    highlightsTitle: "Novità di questa versione",
+    highlights: [
+      "Modalità scura per lavorare più comodamente.",
+      "Anteprima dei siti web anche senza connessione.",
+      "Rinomina chat e riunioni.",
+      "La memoria si apre solo quando lo chiedi.",
+      "Correzioni per microfono ed eco nelle riunioni.",
+      "Le riunioni rinominate o eliminate si aggiornano subito nell'elenco.",
+    ],
     title: "Scarica Vunemi",
     intro: "Gratuito e open source. Per Mac con Apple Silicon e macOS 14 o successivo.",
     requirementsTitle: "Ti serve",

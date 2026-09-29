@@ -208,6 +208,10 @@ function download(t, lang) {
 <p class="file">Vunemi ${release.version} · ${release.asset} · ${release.sizeMb} MB</p>
 <p class="release-links"><a href="${release.notes}">${esc(d.notes)} ↗</a><a href="${repoUrl}">${esc(d.source)} ↗</a><a href="/docs/${lang}/">${esc(d.guide)}</a></p>
 </section>
+<section class="release-highlights" aria-labelledby="release-highlights-title">
+<h2 id="release-highlights-title">${esc(d.highlightsTitle)} · ${release.version}</h2>
+<ul>${d.highlights.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+</section>
 <aside class="gatekeeper-notice" aria-labelledby="gatekeeper-title">
 <div class="gatekeeper-mark" aria-hidden="true">!</div>
 <div><h2 id="gatekeeper-title">${esc(warning[1])}</h2><p>${esc(warning[2])}</p><p>${esc(warning[3])}</p><p>${esc(warning[4])}</p><p><a href="https://support.apple.com/en-gb/102445">${esc(warning[5])} ↗</a></p></div>

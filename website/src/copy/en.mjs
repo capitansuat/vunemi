@@ -165,6 +165,15 @@ export default {
   downloadPage: {
     title: "Download Vunemi",
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
+    highlightsTitle: "What's new",
+    highlights: [
+      "Dark mode for a more comfortable workspace.",
+      "Preview websites while offline.",
+      "Rename chats and meetings.",
+      "Memory opens only when you ask for it.",
+      "Microphone and echo fixes for meetings.",
+      "Renamed or deleted meetings update in the list immediately.",
+    ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],
     installTitle: "Install",

@@ -161,6 +161,15 @@ export default {
     intro: "Telas reais do app em inglês, capturadas com dados de exemplo. Abra qualquer imagem para ver em tamanho real.",
   },
   downloadPage: {
+    highlightsTitle: "Novidades desta versão",
+    highlights: [
+      "Modo escuro para trabalhar com mais conforto.",
+      "Prévia de sites mesmo sem internet.",
+      "Renomeie conversas e reuniões.",
+      "A memória só abre quando você pede.",
+      "Correções de microfone e eco nas reuniões.",
+      "Reuniões renomeadas ou excluídas são atualizadas na lista imediatamente.",
+    ],
     title: "Baixe o Vunemi",
     intro: "Gratuito e de código aberto. Para Macs com Apple Silicon e macOS 14 ou posterior.",
     requirementsTitle: "Você precisa de",

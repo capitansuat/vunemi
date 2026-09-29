@@ -161,6 +161,15 @@ export default {
     intro: "De vraies captures de l'app en anglais, réalisées avec des données d'exemple. Ouvrez une image pour la voir en grand.",
   },
   downloadPage: {
+    highlightsTitle: "Nouveautés de cette version",
+    highlights: [
+      "Mode sombre pour travailler plus confortablement.",
+      "Aperçu des sites web même hors ligne.",
+      "Renommez les conversations et les réunions.",
+      "La mémoire ne s'ouvre que lorsque vous le demandez.",
+      "Corrections du microphone et de l'écho pendant les réunions.",
+      "Les réunions renommées ou supprimées sont aussitôt mises à jour dans la liste.",
+    ],
     title: "Télécharger Vunemi",
     intro: "Gratuit et open source. Pour les Mac avec puce Apple et macOS 14 ou ultérieur.",
     requirementsTitle: "Il vous faut",

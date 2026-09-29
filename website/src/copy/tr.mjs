@@ -163,6 +163,15 @@ export default {
   downloadPage: {
     title: "Vunemi'yi indir",
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
+    highlightsTitle: "Bu sürümde neler yeni?",
+    highlights: [
+      "Daha rahat bir çalışma alanı için gece modu.",
+      "Siteleri internetsizken önizleme.",
+      "Sohbet ve toplantı adlarını değiştirme.",
+      "Hafıza yalnız sen istediğinde açılır.",
+      "Toplantılarda mikrofon ve yankı düzeltmeleri.",
+      "Silinen veya adı değişen toplantılar listede hemen güncellenir.",
+    ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],
     installTitle: "Kurulum",

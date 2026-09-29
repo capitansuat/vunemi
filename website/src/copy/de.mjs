@@ -161,6 +161,15 @@ export default {
     intro: "Echte Ansichten der englischen App, mit Beispieldaten aufgenommen. Öffne ein Bild, um es in voller Größe zu sehen.",
   },
   downloadPage: {
+    highlightsTitle: "Neu in dieser Version",
+    highlights: [
+      "Dunkelmodus für angenehmeres Arbeiten.",
+      "Websites auch offline in der Vorschau ansehen.",
+      "Chats und Besprechungen umbenennen.",
+      "Die Erinnerung wird nur geöffnet, wenn du darum bittest.",
+      "Verbesserungen für Mikrofon und Echo bei Besprechungen.",
+      "Umbenannte oder gelöschte Besprechungen erscheinen sofort aktualisiert in der Liste.",
+    ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",
     requirementsTitle: "Du brauchst",

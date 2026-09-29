@@ -161,6 +161,15 @@ export default {
     intro: "英文版应用的真实画面，使用示例数据截取。点开任意图片可查看原尺寸。",
   },
   downloadPage: {
+    highlightsTitle: "本次更新",
+    highlights: [
+      "深色模式，使用更舒适。",
+      "离线时也能预览网站。",
+      "可以重命名聊天和会议。",
+      "记忆仅在你提出请求时开启。",
+      "修复会议中的麦克风和回声问题。",
+      "重命名或删除会议后，列表会立即更新。",
+    ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",
     requirementsTitle: "所需条件",
