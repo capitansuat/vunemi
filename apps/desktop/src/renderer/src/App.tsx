@@ -187,7 +187,7 @@ function AppVersion() {
   return (
     <div className="px-4 pb-4 pt-1 pl-[36px] text-[11px] text-faint">
       {offer && update && (
-        <details className="mb-2 rounded-lg border border-line bg-surface px-2.5 py-2 text-[12px] text-fg">
+        <details className="no-drag mb-2 rounded-lg border border-line bg-surface px-2.5 py-2 text-[12px] text-fg">
           <summary className="cursor-pointer font-medium">{t("updates.available", { version: offer.version })}</summary>
           {offer.notes.length > 0 && (
             <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-muted">
