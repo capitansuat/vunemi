@@ -471,6 +471,13 @@ export interface VunemiApi {
   forgetEverything(): Promise<void>;
   /** This copy's version, shown so the user knows which one runs. */
   appVersion(): Promise<string>;
+  updatesStatus(): Promise<UpdateStatus>;
+  checkUpdates(): Promise<UpdateStatus>;
+  downloadUpdate(): Promise<UpdateStatus>;
+  installUpdate(): Promise<UpdateStatus>;
+  getUpdatesAuto(): Promise<boolean>;
+  setUpdatesAuto(on: boolean): Promise<boolean>;
+  onUpdates(listener: (status: UpdateStatus) => void): () => void;
   getAppearance(): Promise<Appearance>;
   setAppearance(appearance: Appearance): Promise<Appearance>;
   /** The language Vunemi speaks; main keeps it, the window follows. */
@@ -657,6 +664,13 @@ export const CH = {
   meetingsLine: "meetings:line",
   forgetEverything: "data:forget-everything",
   appVersion: "app:version",
+  updatesStatus: "updates:status",
+  updatesCheck: "updates:check",
+  updatesDownload: "updates:download",
+  updatesInstall: "updates:install",
+  updatesAutoGet: "updates:auto-get",
+  updatesAutoSet: "updates:auto-set",
+  updatesChanged: "updates:changed",
   appearanceGet: "appearance:get",
   appearanceSet: "appearance:set",
   languageGet: "language:get",

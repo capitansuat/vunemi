@@ -537,6 +537,7 @@ export const messages: Catalogue = {
       model: "モデル",
       language: "言語",
       appearance: "外観",
+      updates: "アップデート",
       memory: "メモリ",
       data: "データの管理",
       vault: "金庫",
@@ -548,6 +549,13 @@ export const messages: Catalogue = {
       system: "システム",
       light: "ライト",
       dark: "ダーク",
+    },
+    updates: {
+      intro: "Vunemi は 1 日に 1 回、新しいバージョンがあるかを vunemi.com に確認します。相手に見えるのは IP アドレスと Vunemi のバージョンだけで、「アップデート」を押すまで何もダウンロードしません。",
+      current: "このバージョンは Vunemi {version} です。",
+      auto: "アップデートを自動で確認",
+      checkNow: "今すぐ確認",
+      lastChecked: "最終確認：{time}",
     },
     actions: {
       read: "読み取り",
@@ -610,6 +618,19 @@ export const messages: Catalogue = {
     },
   },
 
+  updates: {
+    available: "Vunemi {version} が公開されました",
+    update: "アップデート",
+    updateSize: "アップデート（{size} MB）",
+    downloading: "ダウンロード中…",
+    restart: "再起動してアップデート",
+    busy: "タスクや会議が終わったら再起動できます。",
+    moveFirst: "アップデートするには、Vunemi を「アプリケーション」フォルダに移動してください。",
+    failed: "アップデートをダウンロードできませんでした。後でもう一度お試しください。",
+    badSignature: "ダウンロードしたファイルに Vunemi の署名がないため、インストールしませんでした。",
+    upToDate: "Vunemi は最新です。",
+    checkFailed: "アップデートを確認できませんでした。",
+  },
   connections: {
     intro: "Vunemi が届く範囲のものはすべてここにあります。接続をオフにすると、そのツールはモデルの手から完全に離れます。一覧から消え、名前で呼び出すこともできません。",
     search: "接続を検索",

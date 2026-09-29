@@ -16,7 +16,7 @@ function setup(over: { feed?: () => Promise<unknown>; idle?: boolean; installabl
     checkForUpdates: () => calls.push("download"),
     quitAndInstall: () => calls.push("install"),
     on: (event: string, fn: (...args: never[]) => void) => {
-      emitter.on(event, fn);
+      emitter.on(event, fn as (...args: unknown[]) => void);
     },
   };
   const seen: UpdateStatus[] = [];

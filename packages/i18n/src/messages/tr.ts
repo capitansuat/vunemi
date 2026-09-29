@@ -541,6 +541,7 @@ export const messages = {
       model: "Model",
       language: "Dil",
       appearance: "Görünüm",
+      updates: "Güncellemeler",
       memory: "Hafıza",
       data: "Veri denetimleri",
       vault: "Kasa",
@@ -552,6 +553,13 @@ export const messages = {
       system: "Sistem",
       light: "Açık",
       dark: "Koyu",
+    },
+    updates: {
+      intro: "Vunemi günde bir kez vunemi.com'a yeni sürüm olup olmadığını sorar. Yalnız IP adresin ve Vunemi'nin sürümü görünür; sen Güncelle'ye basmadan hiçbir şey inmez.",
+      current: "Bu, Vunemi {version}.",
+      auto: "Güncellemeleri kendiliğinden denetle",
+      checkNow: "Şimdi denetle",
+      lastChecked: "Son denetim: {time}",
     },
     actions: {
       read: "Okuma",
@@ -614,6 +622,19 @@ export const messages = {
     },
   },
 
+  updates: {
+    available: "Vunemi {version} çıktı",
+    update: "Güncelle",
+    updateSize: "Güncelle ({size} MB)",
+    downloading: "İndiriliyor…",
+    restart: "Güncellemek için yeniden başlat",
+    busy: "Görev ya da toplantı bitince yeniden başlatabilirsin.",
+    moveFirst: "Güncellemek için Vunemi'yi Uygulamalar klasörüne taşı.",
+    failed: "Güncelleme indirilemedi. Sonra yeniden dene.",
+    badSignature: "İndirilen dosya Vunemi imzası taşımıyor, kurulmadı.",
+    upToDate: "Vunemi güncel.",
+    checkFailed: "Güncellemeler denetlenemedi.",
+  },
   connections: {
     intro: "Vunemi'nin ulaşabildiği her şey burada. Kapattığın bir bağlantının araçları modelin elinden tamamen çıkar — listede görünmez ve adıyla da çağrılamaz.",
     search: "Bağlantı ara",

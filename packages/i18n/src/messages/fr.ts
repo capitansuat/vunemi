@@ -537,6 +537,7 @@ export const messages: Catalogue = {
       model: "Modèle",
       language: "Langue",
       appearance: "Apparence",
+      updates: "Mises à jour",
       memory: "Mémoire",
       data: "Contrôle des données",
       vault: "Coffre",
@@ -548,6 +549,13 @@ export const messages: Catalogue = {
       system: "Système",
       light: "Clair",
       dark: "Sombre",
+    },
+    updates: {
+      intro: "Vunemi demande une fois par jour à vunemi.com si une nouvelle version est disponible. Seules votre adresse IP et la version de Vunemi sont visibles ; rien n'est téléchargé tant que vous n'appuyez pas sur Mettre à jour.",
+      current: "Vous utilisez Vunemi {version}.",
+      auto: "Rechercher automatiquement les mises à jour",
+      checkNow: "Rechercher maintenant",
+      lastChecked: "Dernière recherche : {time}",
     },
     actions: {
       read: "Lecture",
@@ -610,6 +618,19 @@ export const messages: Catalogue = {
     },
   },
 
+  updates: {
+    available: "Vunemi {version} est disponible",
+    update: "Mettre à jour",
+    updateSize: "Mettre à jour ({size} Mo)",
+    downloading: "Téléchargement…",
+    restart: "Redémarrer pour mettre à jour",
+    busy: "Vous pourrez redémarrer une fois la tâche ou la réunion terminée.",
+    moveFirst: "Déplacez Vunemi dans le dossier Applications pour le mettre à jour.",
+    failed: "La mise à jour n'a pas pu être téléchargée. Réessayez plus tard.",
+    badSignature: "Le fichier téléchargé n'est pas signé par Vunemi ; il n'a donc pas été installé.",
+    upToDate: "Vunemi est à jour.",
+    checkFailed: "Impossible de rechercher des mises à jour.",
+  },
   connections: {
     intro: "Tout ce que Vunemi peut atteindre est ici. Désactivez une connexion et ses outils sortent complètement de la portée du modèle — ils disparaissent de la liste et ne peuvent pas non plus être appelés par leur nom.",
     search: "Rechercher une connexion",

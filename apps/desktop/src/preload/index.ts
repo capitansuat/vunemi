@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from "electron";
 import type { AgentEvent } from "@vunemi/agent-core";
 import type { OutboxEvent } from "@vunemi/mail";
-import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MeetingLine, type MeetingStatusView, type MemorySearchStatus, type VunemiApi, type QueuedMessage, type SessionList, type VoiceStatus } from "../shared/ipc.js";
+import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MeetingLine, type MeetingStatusView, type MemorySearchStatus, type VunemiApi, type QueuedMessage, type SessionList, type UpdateStatus, type VoiceStatus } from "../shared/ipc.js";
 import type { Locale } from "@vunemi/i18n";
 
 const api: VunemiApi = {
@@ -70,6 +70,17 @@ const api: VunemiApi = {
     return () => ipcRenderer.removeListener(CH.meetingsLine, handler);
   },
   appVersion: () => ipcRenderer.invoke(CH.appVersion),
+  updatesStatus: () => ipcRenderer.invoke(CH.updatesStatus),
+  checkUpdates: () => ipcRenderer.invoke(CH.updatesCheck),
+  downloadUpdate: () => ipcRenderer.invoke(CH.updatesDownload),
+  installUpdate: () => ipcRenderer.invoke(CH.updatesInstall),
+  getUpdatesAuto: () => ipcRenderer.invoke(CH.updatesAutoGet),
+  setUpdatesAuto: (on) => ipcRenderer.invoke(CH.updatesAutoSet, on),
+  onUpdates: (listener) => {
+    const handler = (_e: unknown, status: UpdateStatus) => listener(status);
+    ipcRenderer.on(CH.updatesChanged, handler);
+    return () => ipcRenderer.removeListener(CH.updatesChanged, handler);
+  },
   listMemory: () => ipcRenderer.invoke(CH.memoryList),
   updateMemory: (id, text) => ipcRenderer.invoke(CH.memoryUpdate, id, text),
   deleteMemory: (id) => ipcRenderer.invoke(CH.memoryDelete, id),

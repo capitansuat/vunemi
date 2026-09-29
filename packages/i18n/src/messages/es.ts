@@ -537,6 +537,7 @@ export const messages: Catalogue = {
       model: "Modelo",
       language: "Idioma",
       appearance: "Apariencia",
+      updates: "Actualizaciones",
       memory: "Memoria",
       data: "Control de datos",
       vault: "Caja fuerte",
@@ -548,6 +549,13 @@ export const messages: Catalogue = {
       system: "Sistema",
       light: "Claro",
       dark: "Oscuro",
+    },
+    updates: {
+      intro: "Vunemi pregunta una vez al día a vunemi.com si hay una versión nueva. Solo se ven tu dirección IP y la versión de Vunemi; no se descarga nada hasta que pulses Actualizar.",
+      current: "Esta es la versión {version} de Vunemi.",
+      auto: "Buscar actualizaciones automáticamente",
+      checkNow: "Buscar ahora",
+      lastChecked: "Última búsqueda: {time}",
     },
     actions: {
       read: "Lectura",
@@ -610,6 +618,19 @@ export const messages: Catalogue = {
     },
   },
 
+  updates: {
+    available: "Ya está disponible Vunemi {version}",
+    update: "Actualizar",
+    updateSize: "Actualizar ({size} MB)",
+    downloading: "Descargando…",
+    restart: "Reiniciar para actualizar",
+    busy: "Podrás reiniciar cuando termine la tarea o la reunión.",
+    moveFirst: "Mueve Vunemi a la carpeta Aplicaciones para actualizarlo.",
+    failed: "No se pudo descargar la actualización. Vuelve a intentarlo más tarde.",
+    badSignature: "La descarga no está firmada por Vunemi, así que no se instaló.",
+    upToDate: "Vunemi está actualizado.",
+    checkFailed: "No se pudo buscar actualizaciones.",
+  },
   connections: {
     intro: "Todo lo que Vunemi puede alcanzar está aquí. Si desactivas una conexión, sus herramientas salen por completo del alcance del modelo: desaparecen de la lista y tampoco se pueden llamar por su nombre.",
     search: "Buscar conexiones",

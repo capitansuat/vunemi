@@ -537,6 +537,7 @@ export const messages: Catalogue = {
       model: "模型",
       language: "语言",
       appearance: "外观",
+      updates: "更新",
       memory: "记忆",
       data: "数据控制",
       vault: "保险箱",
@@ -548,6 +549,13 @@ export const messages: Catalogue = {
       system: "跟随系统",
       light: "浅色",
       dark: "深色",
+    },
+    updates: {
+      intro: "Vunemi 每天向 vunemi.com 询问一次是否有新版本。对方只能看到你的 IP 地址和 Vunemi 的版本；在你点按“更新”之前不会下载任何内容。",
+      current: "当前为 Vunemi {version}。",
+      auto: "自动检查更新",
+      checkNow: "立即检查",
+      lastChecked: "上次检查：{time}",
     },
     actions: {
       read: "读取",
@@ -610,6 +618,19 @@ export const messages: Catalogue = {
     },
   },
 
+  updates: {
+    available: "Vunemi {version} 已发布",
+    update: "更新",
+    updateSize: "更新（{size} MB）",
+    downloading: "正在下载…",
+    restart: "重新启动以更新",
+    busy: "任务或会议结束后即可重新启动。",
+    moveFirst: "请将 Vunemi 移到“应用程序”文件夹后再更新。",
+    failed: "无法下载更新，请稍后再试。",
+    badSignature: "下载的文件没有 Vunemi 的签名，因此未安装。",
+    upToDate: "Vunemi 已是最新版本。",
+    checkFailed: "无法检查更新。",
+  },
   connections: {
     intro: "Vunemi 能触及的一切都在这里。关闭某个连接后，它的工具会完全脱离模型的掌控：不会出现在列表中，也无法按名称调用。",
     search: "搜索连接",

@@ -537,6 +537,7 @@ export const messages: Catalogue = {
       model: "모델",
       language: "언어",
       appearance: "화면 모드",
+      updates: "업데이트",
       memory: "메모리",
       data: "데이터 관리",
       vault: "금고",
@@ -548,6 +549,13 @@ export const messages: Catalogue = {
       system: "시스템",
       light: "라이트",
       dark: "다크",
+    },
+    updates: {
+      intro: "Vunemi는 하루에 한 번 vunemi.com에 새 버전이 있는지 확인합니다. 보이는 것은 IP 주소와 Vunemi 버전뿐이며, 업데이트를 누르기 전에는 아무것도 다운로드하지 않습니다.",
+      current: "현재 Vunemi {version}입니다.",
+      auto: "자동으로 업데이트 확인",
+      checkNow: "지금 확인",
+      lastChecked: "마지막 확인: {time}",
     },
     actions: {
       read: "읽기",
@@ -610,6 +618,19 @@ export const messages: Catalogue = {
     },
   },
 
+  updates: {
+    available: "Vunemi {version} 출시",
+    update: "업데이트",
+    updateSize: "업데이트 ({size}MB)",
+    downloading: "다운로드 중…",
+    restart: "재시작하여 업데이트",
+    busy: "작업이나 회의가 끝나면 재시작할 수 있습니다.",
+    moveFirst: "업데이트하려면 Vunemi를 응용 프로그램 폴더로 옮기세요.",
+    failed: "업데이트를 다운로드하지 못했습니다. 나중에 다시 시도하세요.",
+    badSignature: "다운로드한 파일에 Vunemi 서명이 없어 설치하지 않았습니다.",
+    upToDate: "Vunemi가 최신 버전입니다.",
+    checkFailed: "업데이트를 확인하지 못했습니다.",
+  },
   connections: {
     intro: "Vunemi가 닿을 수 있는 모든 것이 여기에 있습니다. 연결을 끄면 그 도구는 모델의 손에서 완전히 벗어납니다. 목록에서 사라지고 이름으로도 호출할 수 없습니다.",
     search: "연결 검색",

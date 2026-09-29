@@ -537,6 +537,7 @@ export const messages: Catalogue = {
       model: "Modello",
       language: "Lingua",
       appearance: "Aspetto",
+      updates: "Aggiornamenti",
       memory: "Memoria",
       data: "Controllo dei dati",
       vault: "Cassaforte",
@@ -548,6 +549,13 @@ export const messages: Catalogue = {
       system: "Sistema",
       light: "Chiaro",
       dark: "Scuro",
+    },
+    updates: {
+      intro: "Vunemi chiede una volta al giorno a vunemi.com se c'è una nuova versione. Si vedono solo il tuo indirizzo IP e la versione di Vunemi; non viene scaricato nulla finché non premi Aggiorna.",
+      current: "Questo è Vunemi {version}.",
+      auto: "Cerca aggiornamenti automaticamente",
+      checkNow: "Cerca ora",
+      lastChecked: "Ultima ricerca: {time}",
     },
     actions: {
       read: "Lettura",
@@ -610,6 +618,19 @@ export const messages: Catalogue = {
     },
   },
 
+  updates: {
+    available: "È disponibile Vunemi {version}",
+    update: "Aggiorna",
+    updateSize: "Aggiorna ({size} MB)",
+    downloading: "Download in corso…",
+    restart: "Riavvia per aggiornare",
+    busy: "Potrai riavviare quando l'attività o la riunione sarà finita.",
+    moveFirst: "Sposta Vunemi nella cartella Applicazioni per aggiornarlo.",
+    failed: "Non è stato possibile scaricare l'aggiornamento. Riprova più tardi.",
+    badSignature: "Il file scaricato non è firmato da Vunemi, quindi non è stato installato.",
+    upToDate: "Vunemi è aggiornato.",
+    checkFailed: "Impossibile cercare aggiornamenti.",
+  },
   connections: {
     intro: "Qui c’è tutto ciò che Vunemi può raggiungere. Se disattivi una connessione, i suoi strumenti escono del tutto dalla portata del modello: spariscono dall’elenco e non si possono chiamare nemmeno per nome.",
     search: "Cerca connessioni",

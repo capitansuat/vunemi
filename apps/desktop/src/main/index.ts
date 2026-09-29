@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeTheme, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
+import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -9,7 +9,7 @@ import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type VaultStatus } from "../shared/ipc.js";
+import { CH, EMERGENCY_STOP_ACCELERATOR, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -48,6 +48,9 @@ import { Recorder, recorderBinary } from "./meetings/recorder.js";
 import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
+import { PRODUCTION, type FeedSource } from "./updates/feed.js";
+import { UpdateService } from "./updates/service.js";
+import { stagedMatches } from "./updates/staged.js";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 registerPreviewScheme();
@@ -1121,6 +1124,56 @@ handle(CH.meetingsLevels, () => meetings.levels());
 handle(CH.meetingsDevices, () => meetingCall(() => recorder.devices()));
 
 handle(CH.appVersion, () => app.getVersion());
+
+/**
+ * A test build may be pointed at a local feed to try an update end to end;
+ * a build for other people only ever asks vunemi.com.
+ */
+function updateSource(): FeedSource | null {
+  if (isLocalTestBuild(ownManifest())) {
+    const local = process.env.VUNEMI_UPDATE_FEED;
+    if (!local || !/^http:\/\/127\.0\.0\.1:\d+\/$/.test(local)) return null;
+    return { feed: `${local}mac-arm64.json`, zip: (version) => `${local}Vunemi-${version}-arm64.zip` };
+  }
+  return app.isPackaged ? PRODUCTION : null;
+}
+
+const runTool = (cmd: string, args: string[]): Promise<string> =>
+  new Promise((resolve, reject) => execFile(cmd, args, { encoding: "utf8", timeout: 30_000 }, (err, stdout) => (err ? reject(err) : resolve(stdout))));
+const updateSourceNow = updateSource();
+const updates = updateSourceNow && new UpdateService({
+  current: app.getVersion(),
+  locale: () => getLocale(),
+  source: updateSourceNow,
+  fetchFeed: async (url) => {
+    const res = await net.fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+  updater: autoUpdater,
+  enabled: () => settings.updatesCheck,
+  installable: () => app.isInApplicationsFolder(),
+  // Nothing a restart would cut short: no task running or waiting, no mail about to go, no meeting being recorded.
+  idle: () => !session.running && session.queued.length === 0 && !mailOutbox.busy && !meetings.status().recording,
+  stagedMatches: () => stagedMatches(
+    runTool,
+    join(homedir(), "Library/Caches/com.vunemi.app.ShipIt/ShipItState.plist"),
+    app.getPath("exe").replace(/\/Contents\/MacOS\/[^/]+$/, ""),
+  ),
+  now: Date.now,
+  onChange: (status) => send(CH.updatesChanged, status),
+});
+
+const noUpdates = (): UpdateStatus => ({ phase: "idle", offer: null, error: null, checkedAt: null, installable: false, idle: true });
+handle(CH.updatesStatus, () => updates?.status() ?? noUpdates());
+handle(CH.updatesCheck, () => updates?.check(true) ?? noUpdates());
+handle(CH.updatesDownload, () => updates?.download() ?? noUpdates());
+handle(CH.updatesInstall, () => updates?.install() ?? noUpdates());
+handle(CH.updatesAutoGet, () => settings.updatesCheck);
+handle(CH.updatesAutoSet, (_e, on: unknown) => {
+  settings.setUpdatesCheck(on === true);
+  return settings.updatesCheck;
+});
 handle(CH.forgetEverything, async () => {
   if (session.running || mailOutbox.busy || meetings.status().recording) {
     throw new Error(t("main.stopAndSettleFirst"));
@@ -1506,6 +1559,15 @@ void app.whenReady().then(async () => {
   setInterval(() => scheduler.tick(), 30_000);
   powerMonitor.on("resume", () => scheduler.tick());
   scheduler.tick();
+  // A few minutes after launch, then hourly to see whether a day has passed.
+  if (updates) {
+    setTimeout(() => updates.tick(), 3 * 60_000);
+    setInterval(() => updates.tick(), 60 * 60_000);
+    // While an update waits, so Restart is offered as soon as Vunemi is idle.
+    setInterval(() => {
+      if (updates.status().phase === "ready") updates.refresh();
+    }, 5_000);
+  }
 });
 
 app.on("before-quit", (e) => {

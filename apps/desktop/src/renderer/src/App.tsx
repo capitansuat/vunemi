@@ -19,6 +19,7 @@ import { formatTokens } from "./lib/labels.js";
 import { clock, dayLabel } from "./lib/time.js";
 import { useStore, type View } from "./store.js";
 import { t } from "@vunemi/i18n";
+import type { UpdateStatus } from "../../shared/ipc.js";
 
 
 export function App() {
@@ -173,13 +174,57 @@ function Sidebar() {
   );
 }
 
-/** Which Vunemi this is, so nobody has to guess after an update. */
+/** Which Vunemi this is, so nobody has to guess after an update, and whether a newer one is out. */
 function AppVersion() {
   const [version, setVersion] = useState<string | null>(null);
+  const [update, setUpdate] = useState<UpdateStatus | null>(null);
   useEffect(() => {
     void window.vunemi.appVersion().then(setVersion, () => setVersion(null));
+    void window.vunemi.updatesStatus().then(setUpdate, () => setUpdate(null));
+    return window.vunemi.onUpdates(setUpdate);
   }, []);
-  return <div className="selectable px-4 pb-4 pt-1 pl-[36px] text-[11px] tabular-nums text-faint">{version ? `Vunemi ${version}` : "\u00a0"}</div>;
+  const offer = update && ["available", "downloading", "ready", "failed"].includes(update.phase) ? update.offer : null;
+  return (
+    <div className="px-4 pb-4 pt-1 pl-[36px] text-[11px] text-faint">
+      {offer && update && (
+        <details className="mb-2 rounded-lg border border-line bg-surface px-2.5 py-2 text-[12px] text-fg">
+          <summary className="cursor-pointer font-medium">{t("updates.available", { version: offer.version })}</summary>
+          {offer.notes.length > 0 && (
+            <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-muted">
+              {offer.notes.map((note) => <li key={note}>{note}</li>)}
+            </ul>
+          )}
+          <UpdateAction status={update} />
+        </details>
+      )}
+      <div className="selectable tabular-nums">{version ? `Vunemi ${version}` : "\u00a0"}</div>
+    </div>
+  );
+}
+
+/** The one thing to do next about an update: move, download, wait, or restart. */
+function UpdateAction({ status }: { status: UpdateStatus }) {
+  const button = "mt-2 rounded-md bg-ember px-2.5 py-1 text-[11.5px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50";
+  if (!status.installable) return <p className="mt-2 text-muted">{t("updates.moveFirst")}</p>;
+  if (status.phase === "downloading") return <p className="mt-2 text-muted">{t("updates.downloading")}</p>;
+  if (status.phase === "ready") {
+    return (
+      <>
+        <button type="button" className={button} disabled={!status.idle} onClick={() => void window.vunemi.installUpdate()}>
+          {t("updates.restart")}
+        </button>
+        {!status.idle && <p className="mt-1 text-muted">{t("updates.busy")}</p>}
+      </>
+    );
+  }
+  return (
+    <>
+      {status.phase === "failed" && <p className="mt-2 text-muted">{t(status.error === "signature" ? "updates.badSignature" : "updates.failed")}</p>}
+      <button type="button" className={button} onClick={() => void window.vunemi.downloadUpdate()}>
+        {status.offer?.sizeMb ? t("updates.updateSize", { size: status.offer.sizeMb }) : t("updates.update")}
+      </button>
+    </>
+  );
 }
 
 function IconButton({ label, icon: Icon, onClick, disabled }: { label: string; icon: typeof Package; onClick: () => void; disabled?: boolean }) {

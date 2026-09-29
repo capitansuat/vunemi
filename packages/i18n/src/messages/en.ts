@@ -537,6 +537,7 @@ export const messages: Catalogue = {
       model: "Model",
       language: "Language",
       appearance: "Appearance",
+      updates: "Updates",
       memory: "Memory",
       data: "Data controls",
       vault: "Vault",
@@ -548,6 +549,13 @@ export const messages: Catalogue = {
       system: "System",
       light: "Light",
       dark: "Dark",
+    },
+    updates: {
+      intro: "Vunemi asks vunemi.com once a day whether a new version is out. Only your IP address and Vunemi's version are seen; nothing is downloaded until you press Update.",
+      current: "This is Vunemi {version}.",
+      auto: "Check for updates automatically",
+      checkNow: "Check now",
+      lastChecked: "Last checked {time}",
     },
     actions: {
       read: "Reading",
@@ -610,6 +618,19 @@ export const messages: Catalogue = {
     },
   },
 
+  updates: {
+    available: "Vunemi {version} is out",
+    update: "Update",
+    updateSize: "Update ({size} MB)",
+    downloading: "Downloading…",
+    restart: "Restart to update",
+    busy: "You can restart when the task or meeting is done.",
+    moveFirst: "Move Vunemi to the Applications folder to update it.",
+    failed: "The update could not be downloaded. Try again later.",
+    badSignature: "The download is not signed by Vunemi, so it was not installed.",
+    upToDate: "Vunemi is up to date.",
+    checkFailed: "Could not check for updates.",
+  },
   connections: {
     intro: "Everything Vunemi can reach is here. Switch a connection off and its tools leave the model's hands completely — they vanish from the list and can't be called by name either.",
     search: "Search connections",

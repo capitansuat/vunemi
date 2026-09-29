@@ -537,6 +537,7 @@ export const messages: Catalogue = {
       model: "Modell",
       language: "Sprache",
       appearance: "Erscheinungsbild",
+      updates: "Updates",
       memory: "Gedächtnis",
       data: "Datenkontrolle",
       vault: "Tresor",
@@ -548,6 +549,13 @@ export const messages: Catalogue = {
       system: "System",
       light: "Hell",
       dark: "Dunkel",
+    },
+    updates: {
+      intro: "Vunemi fragt einmal am Tag bei vunemi.com nach, ob es eine neue Version gibt. Dabei sind nur deine IP-Adresse und die Vunemi-Version zu sehen; geladen wird erst, wenn du auf Aktualisieren klickst.",
+      current: "Das ist Vunemi {version}.",
+      auto: "Automatisch nach Updates suchen",
+      checkNow: "Jetzt suchen",
+      lastChecked: "Zuletzt gesucht: {time}",
     },
     actions: {
       read: "Lesen",
@@ -610,6 +618,19 @@ export const messages: Catalogue = {
     },
   },
 
+  updates: {
+    available: "Vunemi {version} ist da",
+    update: "Aktualisieren",
+    updateSize: "Aktualisieren ({size} MB)",
+    downloading: "Wird geladen…",
+    restart: "Neu starten und aktualisieren",
+    busy: "Du kannst neu starten, sobald die Aufgabe oder das Meeting beendet ist.",
+    moveFirst: "Bewege Vunemi in den Programme-Ordner, um es zu aktualisieren.",
+    failed: "Das Update konnte nicht geladen werden. Versuche es später noch einmal.",
+    badSignature: "Der Download ist nicht von Vunemi signiert und wurde deshalb nicht installiert.",
+    upToDate: "Vunemi ist auf dem neuesten Stand.",
+    checkFailed: "Es konnte nicht nach Updates gesucht werden.",
+  },
   connections: {
     intro: "Alles, was Vunemi erreichen kann, steht hier. Schaltest du eine Verbindung aus, verschwinden ihre Werkzeuge vollständig aus der Reichweite des Modells – sie stehen nicht in der Liste und lassen sich auch nicht per Name aufrufen.",
     search: "Verbindungen suchen",

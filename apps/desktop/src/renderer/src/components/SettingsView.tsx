@@ -3,7 +3,7 @@ import { Check, X } from "lucide-react";
 import type { Autonomy, AutonomyPolicy } from "@vunemi/agent-core";
 import { ACTION_CLASSES } from "@vunemi/agent-core";
 import { LOCALES, t, type MessageKey } from "@vunemi/i18n";
-import type { Appearance, LockState, PermissionSettings, TrustedSiteResult } from "../../../shared/ipc.js";
+import type { Appearance, LockState, PermissionSettings, TrustedSiteResult, UpdateStatus } from "../../../shared/ipc.js";
 import { ConnectionsView, Switch } from "./ConnectionsView.js";
 import { ModelPicker } from "./ModelPicker.js";
 import { ModelSources } from "./ModelSources.js";
@@ -15,7 +15,7 @@ import { VaultView } from "./VaultView.js";
 import { MemorySection } from "./MemorySection.js";
 import { useStore, type SettingsSection as Section } from "../store.js";
 
-const SECTIONS: Section[] = ["permissions", "security", "connections", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "memory", "data"];
+const SECTIONS: Section[] = ["permissions", "security", "connections", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "memory", "data", "updates"];
 
 /** Sections that are whole views of their own, with their own scrolling. */
 const WHOLE: Partial<Record<Section, ComponentType>> = { connections: ConnectionsView, vault: VaultView, outbox: OutboxView, activity: ActivityView };
@@ -145,6 +145,7 @@ export function SettingsView() {
         )}
         {section === "language" && <LanguageSection />}
         {section === "appearance" && <AppearanceSection />}
+        {section === "updates" && <UpdatesSection />}
         {section === "memory" && <MemorySection />}
         {section === "data" && (
           <div className="mx-auto max-w-[620px]">
@@ -321,6 +322,52 @@ function TrustedSites() {
 const APPEARANCES: Appearance[] = ["system", "light", "dark"];
 
 /** Light or dark, or whatever the Mac is set to. Main applies it; the page follows. */
+/** Whether Vunemi looks for a new version, and a way to look now. */
+function UpdatesSection() {
+  const [auto, setAuto] = useState<boolean | null>(null);
+  const [version, setVersion] = useState("");
+  const [status, setStatus] = useState<UpdateStatus | null>(null);
+  const [checking, setChecking] = useState(false);
+  useEffect(() => {
+    void window.vunemi.getUpdatesAuto().then(setAuto);
+    void window.vunemi.appVersion().then(setVersion);
+    void window.vunemi.updatesStatus().then(setStatus);
+    return window.vunemi.onUpdates(setStatus);
+  }, []);
+  async function checkNow() {
+    setChecking(true);
+    try {
+      setStatus(await window.vunemi.checkUpdates());
+    } finally {
+      setChecking(false);
+    }
+  }
+  const result =
+    status?.phase === "current" ? t("updates.upToDate")
+    : status?.offer && ["available", "downloading", "ready"].includes(status.phase) ? t("updates.available", { version: status.offer.version })
+    : status?.phase === "failed" && (status.error === "network" || status.error === "feed") ? t("updates.checkFailed")
+    : null;
+  return (
+    <div className="mx-auto max-w-[620px]">
+      <h2 className="text-[17px] font-semibold text-fg">{t("settings.sections.updates")}</h2>
+      <p className="mt-1 text-[13px] text-muted">{t("settings.updates.intro")}</p>
+      <p className="mt-4 text-[13px] text-fg">{t("settings.updates.current", { version })}</p>
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-3">
+        <span className="text-[12.5px] text-fg">{t("settings.updates.auto")}</span>
+        <Switch on={auto ?? true} label={t("settings.updates.auto")} disabled={auto === null} onChange={(next) => void window.vunemi.setUpdatesAuto(next).then(setAuto)} />
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <button type="button" disabled={checking} onClick={() => void checkNow()}
+          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] text-fg hover:border-line-strong disabled:opacity-60">
+          {t("settings.updates.checkNow")}
+        </button>
+        {!checking && result && <span className="text-[12.5px] text-muted">{result}</span>}
+      </div>
+      {status?.checkedAt && <p className="mt-2 text-[11.5px] text-faint">{t("settings.updates.lastChecked", { time: new Date(status.checkedAt).toLocaleString() })}</p>}
+    </div>
+  );
+}
+
 function AppearanceSection() {
   const [appearance, setAppearance] = useState<Appearance | null>(null);
   useEffect(() => {
