@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.7의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.8의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.7를 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.8을 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.1.7 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.1.8 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -163,12 +163,8 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "더 편안하게 사용할 수 있는 다크 모드.",
-      "오프라인에서도 웹사이트를 미리 볼 수 있습니다.",
-      "채팅과 회의의 이름을 변경할 수 있습니다.",
-      "메모리는 요청할 때만 열립니다.",
-      "회의 중 마이크와 에코 문제를 수정했습니다.",
-      "이름을 바꾸거나 삭제한 회의가 목록에 즉시 반영됩니다.",
+      "이제 새 버전이 나오면 Vunemi가 알려 주고, 업데이트를 누르면 스스로 업데이트합니다.",
+      "사이드바나 메뉴 막대에서 문제를 신고할 수 있습니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",
@@ -182,7 +178,7 @@ export default {
       "첫 화면에서 모델을 고르세요. Vunemi가 Mac에 맞는 모델을 추천합니다.",
     ],
     updateTitle: "업데이트",
-    updateBody: "새 디스크 이미지를 다운로드하고 Vunemi를 다시 응용 프로그램으로 드래그한 뒤 '대치'를 선택하세요.",
+    updateBody: "0.1.8부터는 새 버전이 나오면 Vunemi가 알려 주고, 업데이트를 누르면 스스로 업데이트합니다. 이전 버전에서는 새 디스크 이미지를 한 번 내려받아 Vunemi를 응용 프로그램 폴더로 드래그한 뒤 대치를 선택하세요.",
     checksum: "SHA-256",
     notes: "릴리스 노트",
     source: "소스 코드",

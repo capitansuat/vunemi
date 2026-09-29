@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: um assistente pessoal que roda no seu Mac", description: "O Vunemi ajuda nas tarefas do dia a dia. A IA roda no seu Mac, sem conta na nuvem do Vunemi. Você escolhe quais serviços externos conectar." },
-    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.1.7 faz." },
+    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.1.8 faz." },
     screens: { title: "Telas do Vunemi", description: "Telas reais do app Vunemi para Mac, capturadas com dados de exemplo." },
-    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.1.7 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
+    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.1.8 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
   },
   hero: {
     eyebrow: "Assistente pessoal para Mac",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Tudo o que o Vunemi faz",
-    intro: "O Vunemi 0.1.7 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
+    intro: "O Vunemi 0.1.8 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
     chatTitle: "Trabalhando com o Vunemi",
     chat: [
       { title: "Primeiro o plano", body: "Numa tarefa com vários passos, o Vunemi pode mostrar o plano antes. Siga em frente, edite os passos ou cancele." },
@@ -163,12 +163,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Novidades desta versão",
     highlights: [
-      "Modo escuro para trabalhar com mais conforto.",
-      "Prévia de sites mesmo sem internet.",
-      "Renomeie conversas e reuniões.",
-      "A memória só abre quando você pede.",
-      "Correções de microfone e eco nas reuniões.",
-      "Reuniões renomeadas ou excluídas são atualizadas na lista imediatamente.",
+      "O Vunemi agora avisa quando sai uma versão nova e se atualiza quando você toca em Atualizar.",
+      "Informe um problema pela barra lateral ou pela barra de menus.",
     ],
     title: "Baixe o Vunemi",
     intro: "Gratuito e de código aberto. Para Macs com Apple Silicon e macOS 14 ou posterior.",
@@ -182,7 +178,7 @@ export default {
       "Escolha um modelo na primeira tela. O Vunemi sugere um adequado ao seu Mac.",
     ],
     updateTitle: "Atualização",
-    updateBody: "Baixe a nova imagem de disco, arraste o Vunemi de novo para Aplicativos e escolha Substituir.",
+    updateBody: "A partir da 0.1.8, o Vunemi avisa quando sai uma versão nova e se atualiza quando você toca em Atualizar. Numa versão mais antiga, baixe uma vez a nova imagem de disco e arraste o Vunemi para Aplicativos, escolhendo Substituir.",
     checksum: "SHA-256",
     notes: "Notas da versão",
     source: "Código-fonte",

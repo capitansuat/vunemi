@@ -60,7 +60,7 @@ sha="$(shasum -a 256 "$dmg" | cut -d' ' -f1)"
 echo "$sha  $name" > "$dmg.sha256"
 size_mb="$(( ($(stat -f%z "$dmg") + 524287) / 1048576 ))"
 
-# The zip installed Vunemis update from. Made from the same signed app, with
+# The zip an installed Vunemi updates itself from. Made from the same signed app, with
 # ditto so the signature's extended attributes survive, and checked unpacked.
 zipname="Vunemi-$version-arm64.zip"
 zip="$site/$zipname"

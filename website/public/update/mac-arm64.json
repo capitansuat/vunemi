@@ -1,0 +1,62 @@
+{
+  "currentRelease": "0.1.8",
+  "releases": [
+    {
+      "version": "0.1.8",
+      "updateTo": {
+        "version": "0.1.8",
+        "name": "Vunemi 0.1.8",
+        "pub_date": "2026-09-29T00:00:00Z",
+        "notes": "",
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.8/Vunemi-0.1.8-arm64.zip"
+      }
+    }
+  ],
+  "sizeMb": 135,
+  "notes": {
+    "en": [
+      "Vunemi now tells you when a new version is out and updates itself when you press Update.",
+      "Report a problem from the sidebar or the menu bar."
+    ],
+    "de": [
+      "Vunemi sagt dir jetzt, wenn eine neue Version da ist, und aktualisiert sich, wenn du auf Aktualisieren klickst.",
+      "Probleme direkt aus der Seitenleiste oder der Menüleiste melden."
+    ],
+    "es": [
+      "Vunemi ahora te avisa cuando sale una versión nueva y se actualiza cuando pulsas Actualizar.",
+      "Informa de un problema desde la barra lateral o la barra de menús."
+    ],
+    "fr": [
+      "Vunemi vous prévient désormais quand une nouvelle version sort et se met à jour quand vous appuyez sur Mettre à jour.",
+      "Signalez un problème depuis la barre latérale ou la barre des menus."
+    ],
+    "it": [
+      "Vunemi ora ti avvisa quando esce una nuova versione e si aggiorna quando premi Aggiorna.",
+      "Segnala un problema dalla barra laterale o dalla barra dei menu."
+    ],
+    "tr": [
+      "Vunemi artık yeni sürüm çıktığında haber veriyor ve Güncelle'ye basınca kendini güncelliyor.",
+      "Kenar çubuğundan ya da menü çubuğundan sorun bildirme."
+    ],
+    "pt": [
+      "O Vunemi agora avisa quando sai uma versão nova e se atualiza quando você toca em Atualizar.",
+      "Informe um problema pela barra lateral ou pela barra de menus."
+    ],
+    "ru": [
+      "Vunemi теперь сообщает о выходе новой версии и обновляется, когда вы нажимаете «Обновить».",
+      "Сообщить о проблеме можно из боковой панели или строки меню."
+    ],
+    "zh": [
+      "新版本发布时，Vunemi 会通知你；点按“更新”即可自动更新。",
+      "可在侧边栏或菜单栏中报告问题。"
+    ],
+    "ja": [
+      "新しいバージョンが出ると Vunemi がお知らせし、「アップデート」を押すと自動で更新します。",
+      "サイドバーやメニューバーから問題を報告できます。"
+    ],
+    "ko": [
+      "이제 새 버전이 나오면 Vunemi가 알려 주고, 업데이트를 누르면 스스로 업데이트합니다.",
+      "사이드바나 메뉴 막대에서 문제를 신고할 수 있습니다."
+    ]
+  }
+}

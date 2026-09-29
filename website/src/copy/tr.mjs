@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.7'nin yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.8'in yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.7'yi Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.8'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.1.7: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.1.8: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -165,12 +165,8 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Daha rahat bir çalışma alanı için gece modu.",
-      "Siteleri internetsizken önizleme.",
-      "Sohbet ve toplantı adlarını değiştirme.",
-      "Hafıza yalnız sen istediğinde açılır.",
-      "Toplantılarda mikrofon ve yankı düzeltmeleri.",
-      "Silinen veya adı değişen toplantılar listede hemen güncellenir.",
+      "Vunemi artık yeni sürüm çıktığında haber veriyor ve Güncelle'ye basınca kendini güncelliyor.",
+      "Kenar çubuğundan ya da menü çubuğundan sorun bildirme.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],
@@ -182,7 +178,7 @@ export default {
       "İlk ekranda bir model seç. Vunemi Mac'ine uygun olanı önerir.",
     ],
     updateTitle: "Güncelleme",
-    updateBody: "Yeni disk görüntüsünü indir, Vunemi'yi yine Uygulamalar'a sürükle ve Değiştir'i seç.",
+    updateBody: "0.1.8'den itibaren Vunemi yeni sürüm çıktığında haber verir ve Güncelle'ye basınca kendini günceller. Daha eski bir sürümden, yeni disk görüntüsünü bir kez indirip Vunemi'yi Uygulamalar'a sürükle ve Değiştir'i seç.",
     checksum: "SHA-256",
     notes: "Sürüm notları",
     source: "Kaynak kod",

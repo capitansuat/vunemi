@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.7 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.8 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.7 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.8 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.1.7 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.1.8 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -167,12 +167,8 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "Dark mode for a more comfortable workspace.",
-      "Preview websites while offline.",
-      "Rename chats and meetings.",
-      "Memory opens only when you ask for it.",
-      "Microphone and echo fixes for meetings.",
-      "Renamed or deleted meetings update in the list immediately.",
+      "Vunemi now tells you when a new version is out and updates itself when you press Update.",
+      "Report a problem from the sidebar or the menu bar.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],
@@ -184,7 +180,7 @@ export default {
       "Choose a model on the first screen. Vunemi suggests one that fits your Mac.",
     ],
     updateTitle: "Updating",
-    updateBody: "Download the new disk image and drag Vunemi into Applications again, choosing Replace.",
+    updateBody: "From 0.1.8 on, Vunemi tells you when a new version is out and updates itself when you press Update. From an older version, download the new disk image once and drag Vunemi into Applications, choosing Replace.",
     checksum: "SHA-256",
     notes: "Release notes",
     source: "Source code",
