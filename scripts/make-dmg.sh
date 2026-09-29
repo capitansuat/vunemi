@@ -60,6 +60,23 @@ sha="$(shasum -a 256 "$dmg" | cut -d' ' -f1)"
 echo "$sha  $name" > "$dmg.sha256"
 size_mb="$(( ($(stat -f%z "$dmg") + 524287) / 1048576 ))"
 
+# The zip installed Vunemis update from. Made from the same signed app, with
+# ditto so the signature's extended attributes survive, and checked unpacked.
+zipname="Vunemi-$version-arm64.zip"
+zip="$site/$zipname"
+echo "› ZIP: $zipname"
+ditto -c -k --sequesterRsrc --keepParent "$app" "$zip"
+unpacked="$(mktemp -d -t vunemi-zip)"
+ditto -x -k "$zip" "$unpacked"
+if ! codesign --verify --deep --strict "$unpacked/Vunemi.app"; then
+  echo "! zip içindeki uygulamanın imzası doğrulanmadı" >&2
+  exit 1
+fi
+rm -rf "$unpacked"
+zip_sha="$(shasum -a 256 "$zip" | cut -d' ' -f1)"
+echo "$zip_sha  $zipname" > "$zip.sha256"
+zip_mb="$(( ($(stat -f%z "$zip") + 524287) / 1048576 ))"
+
 for page in "$here"/site/*.html; do
   [ -f "$page" ] || continue
   sed -e "s/{{VERSION}}/$version/g" -e "s/{{DMG}}/$name/g" -e "s/{{SHA256}}/$sha/g" -e "s/{{SIZE_MB}}/$size_mb/g" \
@@ -69,3 +86,4 @@ cp "$here/apps/desktop/build/icon.png" "$site/icon.png"
 
 echo "› site klasörü hazır (yayımlanmadı): $site"
 echo "  $name · $size_mb MB · sha256 $sha"
+echo "  $zipname · $zip_mb MB · sha256 $zip_sha"
