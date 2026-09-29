@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Bug, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, Trash2, Users } from "lucide-react";
 import { ArtefactsView } from "./components/ArtefactsView.js";
 import { MeetingsView } from "./components/MeetingsView.js";
 import { BackgroundBrowsing, BrowserPane } from "./components/BrowserPane.js";
@@ -122,7 +122,8 @@ function Sidebar() {
           <ViewButton view="artefacts" label={t("app.nav.artefacts")} icon={Package} folded />
           <ViewButton view="meetings" label={t("app.nav.meetings")} icon={Users} folded />
         </div>
-        <div className="no-drag mt-auto pb-4">
+        <div className="no-drag mt-auto flex flex-col items-center gap-1 pb-4">
+          <IconButton label={t("app.reportProblem")} icon={Bug} onClick={() => void window.vunemi.reportProblem()} />
           <ViewButton view="settings" label={t("app.nav.settings")} icon={Settings2} folded />
         </div>
       </aside>
@@ -162,12 +163,11 @@ function Sidebar() {
 
       <SessionsNav />
 
-      <div className="no-drag border-t border-line px-2.5 pt-2">
-        <ViewButton view="settings" label={t("app.nav.settings")} icon={Settings2} />
-      </div>
-      <div className="flex items-start gap-2 px-4 pt-2 text-[11.5px] leading-snug text-faint">
-        <Lock size={12} className="mt-0.5 shrink-0" />
-        <span>{t("app.local")}</span>
+      <div className="no-drag flex items-center gap-1 border-t border-line px-2.5 pt-2">
+        <div className="min-w-0 flex-1">
+          <ViewButton view="settings" label={t("app.nav.settings")} icon={Settings2} />
+        </div>
+        <IconButton label={t("app.reportProblem")} icon={Bug} onClick={() => void window.vunemi.reportProblem()} />
       </div>
       <AppVersion />
     </aside>
@@ -185,7 +185,7 @@ function AppVersion() {
   }, []);
   const offer = update && ["available", "downloading", "ready", "failed"].includes(update.phase) ? update.offer : null;
   return (
-    <div className="px-4 pb-4 pt-1 pl-[36px] text-[11px] text-faint">
+    <div className="px-4 pb-4 pt-1.5 pl-[42px] text-[11px] text-faint">
       {offer && update && (
         <details className="no-drag mb-2 rounded-lg border border-line bg-surface px-2.5 py-2 text-[12px] text-fg">
           <summary className="cursor-pointer font-medium">{t("updates.available", { version: offer.version })}</summary>
@@ -198,9 +198,6 @@ function AppVersion() {
         </details>
       )}
       <div className="selectable tabular-nums">{version ? `Vunemi ${version}` : "\u00a0"}</div>
-      <button type="button" onClick={() => void window.vunemi.reportProblem()} className="no-drag mt-0.5 text-faint underline-offset-2 hover:text-fg hover:underline">
-        {t("app.reportProblem")}
-      </button>
     </div>
   );
 }
@@ -299,6 +296,10 @@ function TopBar() {
   return (
     <header className="drag flex h-[52px] shrink-0 items-center gap-3 border-b border-line px-4">
       <ModelPicker />
+      {/* The promise that matters most, one hover away instead of a paragraph in the sidebar. */}
+      <span role="img" tabIndex={0} aria-label={t("app.local")} title={t("app.local")} className="no-drag grid size-7 place-items-center rounded-md text-faint hover:text-muted focus-visible:text-muted">
+        <Lock size={13} />
+      </span>
       <div className="flex-1" />
       {used !== null && <ContextMeter used={used} budget={context?.window ?? 32_768} known={context?.known ?? false} />}
       <PaneToggle />
