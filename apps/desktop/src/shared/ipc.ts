@@ -368,6 +368,21 @@ export interface MicrophoneView {
 /** Light or dark: the Mac's choice unless the user makes one. */
 export type Appearance = "system" | "light" | "dark";
 
+/** Why an update could not be had: no answer, an answer we could not use, a failed download, or a foreign signature. */
+export type UpdateError = "network" | "feed" | "download" | "signature";
+
+export interface UpdateStatus {
+  /** "current": a manual check found nothing newer. */
+  phase: "idle" | "current" | "available" | "downloading" | "ready" | "failed";
+  offer: { version: string; notes: string[]; sizeMb: number | null } | null;
+  error: UpdateError | null;
+  checkedAt: number | null;
+  /** Vunemi runs from Applications, where it can replace itself. */
+  installable: boolean;
+  /** Nothing is running that a restart would cut short. */
+  idle: boolean;
+}
+
 /** Exposed on `window.vunemi` by the preload script. */
 export interface VunemiApi {
   listProviders(): Promise<ProviderStatus[]>;
