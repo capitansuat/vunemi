@@ -26,6 +26,8 @@ import {
   sealInterrupted,
   type AgentEvent,
   type ApprovalDecision,
+  type ChoiceAnswer,
+  type ChoiceCard,
   type ChatModel,
   type HandoffOutcome,
   type MemoryNote,
@@ -138,6 +140,7 @@ export class AgentSession {
   private nextQueueId = 1;
   private readonly pending = new Map<string, (d: ApprovalDecision) => void>();
   private readonly handoffs = new Map<string, (o: HandoffOutcome) => void>();
+  private readonly choices = new Map<string, { card: ChoiceCard; resolve: (answer: ChoiceAnswer) => void }>();
   private runId: string | null = null;
   private pendingPlan: ((d: PlanDecision) => void) | null = null;
   /** Set while paused; resolves on resume. */
@@ -209,6 +212,10 @@ export class AgentSession {
   submit(text: string, model: string, attachments: string[] = []): QueuedMessage | null {
     const goal = text.trim();
     if (!goal) return null;
+    if (this.active && attachments.length === 0) {
+      const waiting = [...this.choices].findLast(([, entry]) => entry.card.kind === "choice" && entry.card.allowOther);
+      if (waiting && this.runId && this.resolveChoice(this.runId, waiting[0], { text: goal })) return null;
+    }
     if (!this.active) {
       void this.start(goal, model, attachments).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
       return null;
@@ -356,6 +363,7 @@ export class AgentSession {
         ...(run.askBeyondRead && { askBeyondRead: true }),
         ...(this.opts.onCheckpoint && { onCheckpoint: this.opts.onCheckpoint }),
         requestApproval: (req) => waitFor<ApprovalDecision>((resolve) => this.pending.set(req.callId, resolve)),
+        requestChoice: (req) => waitFor<ChoiceAnswer>((resolve) => this.choices.set(req.callId, { card: req.card, resolve })),
         requestHandoff: (req) => waitFor<HandoffOutcome>((resolve) => this.handoffs.set(req.callId, resolve)),
         requestPlanApproval: (steps) =>
           waitFor<PlanDecision>((resolve) => {
@@ -388,6 +396,7 @@ export class AgentSession {
       this.given = null;
       this.pending.clear();
       this.handoffs.clear();
+      this.choices.clear();
       this.pendingPlan = null;
       this.pauseGate?.release();
       this.pauseGate = null;
@@ -559,6 +568,19 @@ export class AgentSession {
     if (!resolve) return;
     this.handoffs.delete(callId);
     resolve(outcome);
+  }
+
+  /** A second click or a stale card cannot answer the same wait again. */
+  resolveChoice(runId: string, callId: string, answer: ChoiceAnswer): boolean {
+    const entry = this.choices.get(callId);
+    if (!entry || runId !== this.runId || !this.active || this.active.signal.aborted) return false;
+    const index = answer.index;
+    if (index !== undefined && (!Number.isInteger(index) || index < 0 || index >= (entry.card.kind === "choice" ? entry.card.options.length : entry.card.items.length))) return false;
+    if (index === undefined && (entry.card.kind !== "choice" || !entry.card.allowOther || !answer.text.trim())) return false;
+    this.choices.delete(callId);
+    if (index === undefined) this.words = [...this.words, answer.text.trim()].slice(-WORDS_KEPT);
+    entry.resolve(answer);
+    return true;
   }
 
   resolvePlan(decision: PlanDecision): void {

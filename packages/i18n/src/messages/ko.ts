@@ -1,6 +1,21 @@
 import type { Catalogue } from "../types.js";
 
 export const messages: Catalogue = {
+  choice: {
+    choose: "이 항목 선택",
+    compare: "비교",
+    pageMatch: "페이지에서 확인됨",
+    localMatch: "로컬 출처에서 확인됨",
+    notFound: "페이지에서 찾을 수 없음",
+    noSource: "출처 없음",
+    source: "출처 열기",
+    expired: "더 이상 활성 상태가 아님",
+    view: "Vunemi의 의견",
+    price: "가격",
+    noMatches: "출처와 일치하는 정보가 없습니다",
+    typeInstead: "직접 답을 입력할 수도 있습니다.",
+  },
+
   time: {
     today: "오늘",
     yesterday: "어제",

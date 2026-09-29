@@ -1,6 +1,21 @@
 import type { Catalogue } from "../types.js";
 
 export const messages: Catalogue = {
+  choice: {
+    choose: "Choose this",
+    compare: "Compare",
+    pageMatch: "Matched on page",
+    localMatch: "Found in local source",
+    notFound: "Not found on page",
+    noSource: "No source",
+    source: "Open source",
+    expired: "No longer active",
+    view: "Vunemi's view",
+    price: "Price",
+    noMatches: "No facts matched a source",
+    typeInstead: "You can type your own answer.",
+  },
+
   time: {
     today: "Today",
     yesterday: "Yesterday",

@@ -11,6 +11,26 @@ import type { LedgerPart } from "./ledger.js";
 
 export type RunStatus = "done" | "stopped" | "failed" | "max_steps";
 
+/** A bounded question or comparison shown inside a chat turn. */
+export type ChoiceCard =
+  | { kind: "choice"; question: string; options: string[]; allowOther: boolean }
+  | { kind: "options"; intro?: string; items: OptionCard[] };
+
+export interface OptionCard {
+  title: string;
+  price?: VerifiedFact;
+  facts: VerifiedFact[];
+  view?: string;
+  sourceUrl?: string;
+}
+
+export interface VerifiedFact {
+  label: string;
+  value: string;
+  /** An exact value match in a read page or local connector result, not a truth guarantee. */
+  status: "page" | "local" | "unverified";
+}
+
 export type AgentEvent =
   | { type: "run.started"; runId: string; goal: string; attachments?: string[]; model: string; at: number }
   | { type: "step.started"; runId: string; stepId: string; index: number; at: number }
@@ -61,6 +81,9 @@ export type AgentEvent =
    */
   | { type: "handoff.required"; runId: string; callId: string; reason: string; at: number }
   | { type: "handoff.resolved"; runId: string; callId: string; outcome: HandoffOutcome }
+  /** A bounded, read-only decision inside an ordinary chat turn. */
+  | { type: "choice.asked"; runId: string; stepId: string; callId: string; card: ChoiceCard; at: number }
+  | { type: "choice.answered"; runId: string; callId: string; text: string; index?: number; at: number }
   /** Intent preview: what the agent means to do, before it starts. */
   | { type: "plan.proposed"; runId: string; steps: string[]; at: number }
   | { type: "plan.resolved"; runId: string; decision: PlanDecision }

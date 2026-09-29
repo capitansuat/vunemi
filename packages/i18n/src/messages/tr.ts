@@ -4,6 +4,21 @@
  * `count`.
  */
 export const messages = {
+  choice: {
+    choose: "Bunu seç",
+    compare: "Karşılaştır",
+    pageMatch: "Sayfada eşleşti",
+    localMatch: "Yerel kaynakta bulundu",
+    notFound: "Sayfada bulunamadı",
+    noSource: "Kaynak yok",
+    source: "Kaynağı aç",
+    expired: "Artık geçerli değil",
+    view: "Vunemi'nin görüşü",
+    price: "Fiyat",
+    noMatches: "Hiçbir bilgi kaynakta eşleşmedi",
+    typeInstead: "İstersen yanıtını yazabilirsin.",
+  },
+
   time: {
     today: "Bugün",
     yesterday: "Dün",

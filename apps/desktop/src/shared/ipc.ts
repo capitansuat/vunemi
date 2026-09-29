@@ -3,7 +3,7 @@
  * imports these so a channel can't drift out of sync with its handler.
  */
 
-import type { ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, HandoffOutcome, PlanDecision, Produced, ProviderKind } from "@vunemi/agent-core";
+import type { ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, ChoiceAnswer, HandoffOutcome, PlanDecision, Produced, ProviderKind } from "@vunemi/agent-core";
 import type { ConnectorView, PrivacyPane } from "@vunemi/connectors";
 import type { OutboxEvent, Pending, UncertainSend } from "@vunemi/mail";
 import type { Locale } from "@vunemi/i18n";
@@ -436,6 +436,9 @@ export interface VunemiApi {
   pauseRun(): Promise<void>;
   resumeRun(): Promise<void>;
   resolveApproval(callId: string, decision: ApprovalDecision): Promise<void>;
+  resolveChoice(runId: string, callId: string, answer: ChoiceAnswer): Promise<boolean>;
+  /** Opens a card's observed public source in Vunemi's browser pane. */
+  openChoiceSource(url: string): Promise<void>;
   /** The user accepted, edited or cancelled the intent preview. */
   resolvePlan(decision: PlanDecision): Promise<void>;
   /** The user finished (or gave up on) a step the agent handed to them. */
@@ -657,6 +660,8 @@ export const CH = {
   pauseRun: "run:pause",
   resumeRun: "run:resume",
   resolveApproval: "approval:resolve",
+  resolveChoice: "choice:resolve",
+  openChoiceSource: "choice:open-source",
   resolveHandoff: "handoff:resolve",
   resolvePlan: "plan:resolve",
   resetSession: "session:reset",

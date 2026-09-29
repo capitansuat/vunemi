@@ -5,8 +5,8 @@ import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
 import { toolAreas } from "./areas.js";
-import { createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
-import { BrowserController, trustableHost } from "@vunemi/browser";
+import { choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import { BrowserController, checkNavigation, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
@@ -167,6 +167,7 @@ if (work) {
     },
   })) tools.register(tool);
 }
+for (const tool of choiceTools()) tools.register(tool);
 
 // The folders the user opened to Vunemi — Desktop, Documents, Downloads — and
 // nothing else. Overwritten files are kept aside so the log can undo them.
@@ -894,6 +895,13 @@ function emergencyStop(): void {
 
 handle(CH.resolveApproval, (_e, callId: string, decision: ApprovalDecision) => {
   session.resolveApproval(callId, decision);
+});
+handle(CH.resolveChoice, (_e, runId: string, callId: string, answer: ChoiceAnswer) => session.resolveChoice(String(runId), String(callId), answer));
+handle(CH.openChoiceSource, async (_e, raw: string) => {
+  const url = String(raw);
+  const blocked = checkNavigation(url, trustedSites());
+  if (blocked) throw new Error(blocked);
+  await browser.goto(url, true);
 });
 
 handle(CH.resolveHandoff, (_e, callId: string, outcome: HandoffOutcome) => {

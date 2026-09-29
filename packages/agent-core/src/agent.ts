@@ -4,7 +4,8 @@
  * trips. Everything observable goes out through `emit`.
  */
 
-import type { Artifact, ApprovalDecision, Produced, EmitFn, HandoffOutcome, PlanDecision, RunStatus } from "./events.js";
+import type { Artifact, ApprovalDecision, ChoiceCard, Produced, EmitFn, HandoffOutcome, PlanDecision, RunStatus } from "./events.js";
+import { prepareChoice, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
 import { maskSecrets } from "./secrets.js";
@@ -94,6 +95,8 @@ export interface RunOptions {
   tools: ToolRegistry;
   emit: EmitFn;
   requestApproval: (req: ApprovalRequest) => Promise<ApprovalDecision>;
+  /** A read-only choice waits for the person; it never authorises another tool. */
+  requestChoice?: (req: { callId: string; card: ChoiceCard }) => Promise<ChoiceAnswer>;
   /**
    * For a tool the user switched off: its connection and part in their words
    * when it may be offered back to them on a card, or null when it may not.
@@ -220,6 +223,8 @@ Working rules:
 - Use tools when the task needs them; answer directly when it doesn't.
 - Call one tool at a time and look at its result before deciding the next step.
 - If a tool fails, read the error and try something different rather than repeating the same call.
+- Ask with ask_choice only when the answer changes what you do next. Ask at most twice before doing work.
+- Use present_options after comparing candidates. Put only observed values in facts; put your judgement in view. Choosing is not permission to book, send or change anything.
 - A failed read does not mean the list is empty. Never claim there are no calendar events unless calendar_events succeeded for the requested range.
 - Each request ends with when the user sent it, in their own time zone. Work out "today", "tomorrow" and weekdays from that, and give tools real dates, never placeholders.
 - Say something was done only if the tool said so. If it failed, say it wasn't done.
@@ -325,6 +330,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const offerable = opts.switchedOff ? (name: string) => opts.switchedOff!(name) !== null : undefined;
   const withinRun = (tool: ToolDef): boolean =>
     !(opts.unattended === true && UNATTENDED_NEVER.has(tool.actionClass)) &&
+    !(opts.unattended === true && (tool.name === "ask_choice" || tool.name === "present_options")) &&
     (!opts.onlySources || inSources(tools.sourceOf(tool.name), opts.onlySources));
   const areaMode = opts.areas !== undefined && opts.shownTools !== undefined;
   const listed = opts.shownTools ?? new Set<string>();
@@ -419,6 +425,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   }
   let charsPerToken = opts.charsPerToken ?? DEFAULT_CHARS_PER_TOKEN;
   const maxOut = opts.maxToolOutputChars ?? toolOutputChars(window, charsPerToken);
+  const evidence: ChoiceEvidence = { pages: [], local: [] };
   // The Vault hides the secrets it knows; common key shapes are hidden too.
   const redactText = async (text: string): Promise<string> => maskSecrets(opts.redact ? await opts.redact(text) : text);
 
@@ -873,6 +880,23 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       if (why) return fail(call, `${why} Nothing was done; no card was shown.`, false);
     }
 
+    if (tool.name === "ask_choice" || tool.name === "present_options") {
+      const prepared = prepareChoice(tool.name, parsed.value, evidence);
+      if ("error" in prepared) return fail(call, prepared.error, false);
+      if (!opts.requestChoice) return fail(call, "Interactive choices are unavailable in this run.", false);
+      const card = prepared.card;
+      emit({ type: "choice.asked", runId, stepId, callId: call.id, card, at: now() });
+      checkpoint();
+      const answer = await Promise.race([opts.requestChoice({ callId: call.id, card }), abortPromise(signal)]);
+      const selected = answer.index === undefined ? undefined : card.kind === "choice" ? card.options[answer.index] : card.items[answer.index]?.title;
+      const text = selected ?? (card.kind === "choice" && card.allowOther ? answer.text.trim().slice(0, 200) : "");
+      if (!text) return fail(call, "No valid option was selected.", false);
+      emit({ type: "choice.answered", runId, callId: call.id, text, ...(answer.index !== undefined && { index: answer.index }), at: now() });
+      const output = `<untrusted_content source="user_selection">\nThe user chose: "${defuseTags(text)}"\n</untrusted_content>`;
+      emit({ type: "tool.finished", runId, callId: call.id, ok: true, output, durationMs: 0 });
+      return output;
+    }
+
     const gate = offer
       ? await switchOnCard(tool, call, parsed.value, stepId, preview, actionClass, offer.label)
       : await authorize(tool, call, parsed.value, stepId, preview, actionClass);
@@ -910,6 +934,13 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         openTools(group);
       };
       const raw = await redact(await tool.run(parsed.value as Record<string, unknown>, { signal, userGoal: opts.goal, runId, handoff, offerUndo, attach, gallery, produced, openTools: opened }));
+      if (tool.name.startsWith("page_")) {
+        const url = /^\[tab \d+\] [^\n]* — (https?:\/\/\S+)/m.exec(raw)?.[1];
+        const bodyStart = raw.indexOf("\n");
+        if (url && bodyStart >= 0) evidence.pages.push({ url, text: raw.slice(bodyStart + 1, 20_000) });
+      } else if (actionClass === "read" && !["core", "browser"].includes(tools.sourceOf(tool.name) ?? "core")) {
+        evidence.local.push(raw.slice(0, 20_000));
+      }
       let output = shapeOutput(keepLong(modelCopy(raw, tool), tool), tool, maxOut) + takeOwed();
       const display = tool.forModel ? shapeOutput(raw, tool, maxOut) : undefined;
       if (artifact?.kind === "image") output += await imageFor(tool.name, artifact);

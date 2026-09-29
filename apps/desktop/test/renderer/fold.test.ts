@@ -17,6 +17,15 @@ const start: AgentEvent[] = [
 ];
 
 describe("foldEvent", () => {
+  it("rebuilds answered and expired choice cards from stored events", () => {
+    const card = { kind: "choice" as const, question: "When?", options: ["Friday", "Saturday"], allowOther: true };
+    const asked: AgentEvent = { type: "choice.asked", runId: "r", stepId: "s0", callId: "c1", card, at: 2 };
+    const answered = fold([...start, asked, { type: "choice.answered", runId: "r", callId: "c1", text: "Friday", index: 0, at: 3 }, { type: "run.finished", runId: "r", status: "done", detail: "ok", at: 4 }]);
+    expect(answered[0]!.steps[0]!.choices[0]).toMatchObject({ status: "answered", answer: "Friday", index: 0 });
+    const expired = fold([...start, asked, { type: "run.finished", runId: "r", status: "stopped", detail: "", at: 4 }]);
+    expect(expired[0]!.steps[0]!.choices[0]!.status).toBe("expired");
+  });
+
   it("shows compaction under the run it follows, and drops it when nothing changed", () => {
     const base: AgentEvent[] = [...start, { type: "run.finished", runId: "r", status: "done", detail: "ok", at: 2 }];
     expect(fold([...base, { type: "context.compacting", runId: "r", at: 3 }])[0]!.compaction).toEqual({ status: "running" });
@@ -219,6 +228,7 @@ describe("what is waiting for the user", () => {
         startedAt: 0,
         thought: "",
         text: "",
+        choices: [],
         calls: calls.map((c, i) => ({
           callId: `c${i}`,
           tool: "page_click",

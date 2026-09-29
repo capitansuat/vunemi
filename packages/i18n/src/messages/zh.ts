@@ -1,6 +1,21 @@
 import type { Catalogue } from "../types.js";
 
 export const messages: Catalogue = {
+  choice: {
+    choose: "选择此项",
+    compare: "比较",
+    pageMatch: "在页面上找到",
+    localMatch: "在本地来源中找到",
+    notFound: "页面上未找到",
+    noSource: "无来源",
+    source: "打开来源",
+    expired: "已失效",
+    view: "Vunemi 的看法",
+    price: "价格",
+    noMatches: "没有信息与来源匹配",
+    typeInstead: "也可以自行输入答案。",
+  },
+
   time: {
     today: "今天",
     yesterday: "昨天",

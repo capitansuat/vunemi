@@ -3,7 +3,7 @@
  * same view out, so the timeline can be rebuilt from a recorded log.
  */
 
-import { ledgerTotals, type ActionClass, type AgentEvent, type ApprovalDecision, type Artifact, type LedgerKind, type MemoryNote, type MemoryProposal, type Produced, type RunStatus } from "@vunemi/agent-core";
+import { ledgerTotals, type ActionClass, type AgentEvent, type ApprovalDecision, type Artifact, type ChoiceCard, type LedgerKind, type MemoryNote, type MemoryProposal, type Produced, type RunStatus } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 
 export type CallStatus = "proposed" | "awaiting" | "running" | "ok" | "error" | "rejected";
@@ -51,7 +51,17 @@ export interface StepView {
   thought: string;
   text: string;
   calls: CallView[];
+  choices: ChoiceView[];
   usage?: UsageView;
+}
+
+export interface ChoiceView {
+  runId: string;
+  callId: string;
+  card: ChoiceCard;
+  status: "awaiting" | "answered" | "expired";
+  answer?: string;
+  index?: number;
 }
 
 export interface PlanView {
@@ -124,7 +134,7 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
     case "step.started":
       return {
         ...run,
-        steps: [...run.steps, { stepId: e.stepId, index: e.index, startedAt: e.at, thought: "", text: "", calls: [] }],
+        steps: [...run.steps, { stepId: e.stepId, index: e.index, startedAt: e.at, thought: "", text: "", calls: [], choices: [] }],
       };
     case "thought.delta":
       return updateStep(run, e.stepId, (s) => ({ ...s, thought: s.thought + e.text }));
@@ -142,6 +152,7 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
         },
       }));
     case "tool.proposed":
+      if (e.tool === "ask_choice" || e.tool === "present_options") return run;
       return updateStep(run, e.stepId, (s) => ({
         ...s,
         calls: [
@@ -171,6 +182,10 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
       return updateCall(run, e.callId, (c) => ({ ...c, handoff: e.reason }));
     case "handoff.resolved":
       return updateCall(run, e.callId, ({ handoff: _, ...c }) => c);
+    case "choice.asked":
+      return updateStep(run, e.stepId, (s) => ({ ...s, choices: [...s.choices, { runId: e.runId, callId: e.callId, card: e.card, status: "awaiting" }] }));
+    case "choice.answered":
+      return { ...run, steps: run.steps.map((s) => ({ ...s, choices: s.choices.map((c) => c.callId === e.callId ? { ...c, status: "answered" as const, answer: e.text, ...(e.index !== undefined && { index: e.index }) } : c) })) };
     case "tool.started":
       return updateCall(run, e.callId, (c) => ({ ...c, status: "running" }));
     case "tool.finished":
@@ -196,6 +211,7 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
         // Anything still waiting will never be answered now.
         steps: run.steps.map((s) => ({
           ...s,
+          choices: s.choices.map((c) => c.status === "awaiting" ? { ...c, status: "expired" as const } : c),
           calls: s.calls.map((c) =>
             c.status === "awaiting" || c.status === "running" || c.status === "proposed"
               ? { ...withoutHandoff(c), status: e.status === "stopped" ? "rejected" : "error" }
@@ -273,7 +289,7 @@ export function runStats(run: RunView): { steps: number; tools: number; tokensPe
   const tps = usages.flatMap((u) => (u.tokensPerSec !== null ? [u.tokensPerSec] : []));
   return {
     steps: run.steps.length,
-    tools: run.steps.reduce((n, s) => n + s.calls.length, 0),
+    tools: run.steps.reduce((n, s) => n + s.calls.length + s.choices.length, 0),
     tokensPerSec: tps.length ? Math.round((tps.reduce((a, b) => a + b, 0) / tps.length) * 10) / 10 : null,
     ttftMs: usages[0]?.ttftMs ?? null,
     lastPromptTokens: usages.at(-1)?.promptTokens ?? null,

@@ -4,6 +4,7 @@ import { Mochi } from "./Mochi.js";
 import { runStats, type CompactionView, type RunView, type StepView } from "../lib/fold.js";
 import { formatMs, formatTokens, runStatusLabel, shortModelName } from "../lib/labels.js";
 import { CallCard } from "./CallCard.js";
+import { ChoiceCard } from "./ChoiceCard.js";
 import { PlanCard } from "./PlanCard.js";
 import { MemoryNotice, MemoryProposals } from "./MemoryNotes.js";
 import { SavedNotes } from "./WorkNotes.js";
@@ -118,6 +119,7 @@ function Step({ step, streaming, isAnswer }: { step: StepView; streaming: boolea
       {step.calls.map((c) => (
         <CallCard key={c.callId} call={c} />
       ))}
+      {step.choices.map((choice) => <ChoiceCard key={choice.callId} choice={choice} />)}
     </div>
   );
 }
@@ -168,7 +170,7 @@ function useSecondsSince(since: number): number {
 
 /** A last step that says something and asks for nothing: an answer. */
 function answered(step: StepView | undefined): boolean {
-  return step !== undefined && step.text.trim() !== "" && step.calls.length === 0;
+  return step !== undefined && step.text.trim() !== "" && step.calls.length === 0 && step.choices.length === 0;
 }
 
 function Ending({ run }: { run: RunView }) {
@@ -216,5 +218,5 @@ function Footer({ run }: { run: RunView }) {
 }
 
 function isEmpty(s: StepView): boolean {
-  return s.thought === "" && s.text === "" && s.calls.length === 0;
+  return s.thought === "" && s.text === "" && s.calls.length === 0 && s.choices.length === 0;
 }
