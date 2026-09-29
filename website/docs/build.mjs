@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { review, translations } from "./content.mjs";
 import { release } from "../src/release.mjs";
+import { updateFeed } from "../src/update-feed.mjs";
 import { languages, pageNames, pagePath, renderPage, redirectPage, shotFiles } from "../src/pages.mjs";
 import { supportCopy } from "../src/support-copy.mjs";
 import { gatekeeperCopy } from "../src/gatekeeper-copy.mjs";
@@ -156,6 +157,10 @@ function releaseCheck() {
   const committed = git(["diff", "--name-only", `${review.commit}..HEAD`, "--", ...watched]);
   const local = git(["status", "--porcelain", "--", ...watched]);
   if (committed || local) throw new Error(`Application changed since documentation review. Recheck the facts and update review.commit/date.\n${committed}\n${local}`);
+  if (release.zip !== undefined) {
+    if (release.zip !== `Vunemi-${release.version}-arm64.zip`) throw new Error(`Update zip ${release.zip} does not match ${release.version}`);
+    if (!/^[a-f0-9]{64}$/.test(release.zipSha256 ?? "") || !(release.zipSizeMb > 0)) throw new Error("Update zip size or SHA-256 missing");
+  }
 }
 
 try {
@@ -167,6 +172,8 @@ try {
     pages.set(join(publicDir, pagePath("x", page).slice(3), "index.html"), redirectPage(page));
     for (const language of languages) pages.set(join(publicDir, pagePath(language, page), "index.html"), renderPage(copy, language, page));
   }
+  const feed = updateFeed(release, copy, languages);
+  if (feed) pages.set(join(publicDir, "update/mac-arm64.json"), `${JSON.stringify(feed, null, 2)}\n`);
 
   if (!["--build", "--check", "--release-check"].includes(command)) throw new Error(`Unknown option: ${command}`);
   for (const [path, html] of pages) {

@@ -6,6 +6,11 @@ export const release = {
   asset: "Vunemi-0.1.7-arm64.dmg",
   sizeMb: 133,
   sha256: "6fcd3e16e6858dc6511f797d25eb3587f31ad90c98476481ea4937a27c7d7cbe",
+  // The zip installed Vunemis update from (0.1.8 on). Absent: no update feed.
+  zip: undefined,
+  zipSizeMb: undefined,
+  zipSha256: undefined,
+  get zipUrl() { return `https://github.com/capitansuat/vunemi/releases/download/v${this.version}/${this.zip}`; },
   get url() { return `https://github.com/capitansuat/vunemi/releases/download/v${this.version}/${this.asset}`; },
   get notes() { return `https://github.com/capitansuat/vunemi/releases/tag/v${this.version}`; },
 };
