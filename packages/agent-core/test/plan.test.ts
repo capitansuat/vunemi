@@ -44,8 +44,9 @@ describe("worthPlanning", () => {
     expect(worthPlanning("Takvim penceresini oku")).toBe(false);
   });
 
-  it("errs towards planning when the request is long", () => {
-    expect(worthPlanning("bu hafta sonu için İstanbul'da uygun fiyatlı bir otel bul bana")).toBe(true);
+  it("does not plan a single research request just because it is long", () => {
+    expect(worthPlanning("bu hafta sonu için İstanbul'da uygun fiyatlı bir otel bul bana")).toBe(false);
+    expect(worthPlanning("bir yetişkin bir çocuk için Manchester İzmir uçuşlarına bak")).toBe(false);
   });
 });
 

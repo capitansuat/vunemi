@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { argumentMisfit, claimsChange, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
+import { announcesRead, argumentMisfit, claimsChange, comparesOptions, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
 import { requestedTravelTools } from "../src/travel-intent.js";
+import { choiceTools } from "../src/choices.js";
 import type { AgentEvent, ApprovalDecision } from "../src/events.js";
 import { t } from "@vunemi/i18n";
 import { ProviderError, type ChatMessage, type ChatModel, type ChatRequest, type ChatResult, type ToolCall } from "../src/provider.js";
@@ -634,6 +635,66 @@ describe("pause", () => {
 });
 
 describe("intent preview", () => {
+  it("turns a flight comparison table into option cards before finishing", async () => {
+    const table = "| Airline | Price |\n|---|---|\n| A | £311 |\n| B | £384 |";
+    expect(comparesOptions("flight tickets", table)).toBe(true);
+    const { model, seen } = scripted([
+      { calls: [{ name: "read_page", argumentsText: "{}" }] },
+      { text: table },
+      { calls: [{ name: "present_options", argumentsText: JSON.stringify({ items: [
+        { title: "A", facts: [{ label: "Price", value: "£311" }] },
+        { title: "B", facts: [{ label: "Price", value: "£384" }] },
+      ] }) }] },
+      { text: "A selected; no booking made." },
+    ]);
+    const { registry } = tools();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({
+      goal: "compare flight tickets", model, tools: registry,
+      emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }),
+      requestChoice: async () => ({ text: "", index: 0 }),
+    });
+    expect(result.status).toBe("done");
+    expect(events.some((event) => event.type === "choice.asked" && event.card.kind === "options")).toBe(true);
+    expect(seen[2]!.messages.at(-1)).toMatchObject({ role: "user", content: expect.stringContaining("Call present_options now") });
+  });
+
+  it("continues when the model says it will search without calling the browser", async () => {
+    expect(announcesRead("Önce Skyscanner'dan bir bakayım.")).toBe(true);
+    expect(announcesRead("I checked the page yesterday.")).toBe(false);
+    const { model, seen } = scripted([
+      { text: "1. Uçuşları ara\n2. Fiyatları karşılaştır" },
+      { text: "Önce Skyscanner'dan bir bakayım." },
+      { calls: [{ name: "read_page", argumentsText: "{}" }] },
+      { text: "Sayfada fiyat bulunamadı." },
+    ]);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({
+      goal: "Uçuşları ara ve fiyatları karşılaştır", model, tools: tools().registry,
+      emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }),
+      requestPlanApproval: async (steps) => ({ kind: "go", steps }),
+    });
+    expect(result.status).toBe("done");
+    expect(events.some((event) => event.type === "tool.proposed" && event.tool === "read_page")).toBe(true);
+    expect(seen[2]!.messages.at(-1)).toMatchObject({ role: "user", content: expect.stringContaining("called no tool") });
+  });
+
+  it("does not mark repeated promises of research as done", async () => {
+    const { model } = scripted([
+      { text: "1. Uçuşları ara\n2. Fiyatları karşılaştır" },
+      { text: "Önce Skyscanner'dan bir bakayım." },
+      { text: "Şimdi uçuşlara bakacağım." },
+    ]);
+    const result = await runAgent({
+      goal: "Uçuşları ara ve fiyatları karşılaştır", model, tools: tools().registry,
+      emit: () => {}, requestApproval: async () => ({ kind: "approve" }),
+      requestPlanApproval: async (steps) => ({ kind: "go", steps }),
+    });
+    expect(result.status).toBe("failed");
+    expect(result.detail).toContain("No current information was verified");
+  });
+
   it("does not treat an echoed approved plan as completed research", async () => {
     const { model, seen } = scripted([
       { text: "1. Uçuşları ara\n2. Fiyatları karşılaştır" },

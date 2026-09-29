@@ -27,19 +27,16 @@ const JOINS = /(?:^|\s)(?:ve|sonra|ardından|sonrasında|önce|then|and)(?:\s|$)
 /**
  * Whether to spend a model call on planning at all.
  *
- * The plan call is tool-free and short, but on a local reasoning model it
- * still costs five to twelve seconds of thinking before the task even
- * starts — and for a one-step request the answer is always NONE. So a
- * request with no comma, no joining word and only a few words skips it. The
- * rule deliberately mirrors what the model itself would have replied, and it
- * errs towards planning: a plan that wasn't needed costs a card the user
- * dismisses, while a missing plan costs them a surprise.
+ * The plan call is tool-free, but a local reasoning model can still spend
+ * several seconds on it. Length alone is not evidence of multiple actions:
+ * a flight search with dates and passenger details is still one request.
+ * Only an explicit separator or joining word earns an extra plan call.
  */
 export function worthPlanning(goal: string): boolean {
   const text = goal.trim();
   if (text.includes(",") || text.includes(";") || text.includes("\n")) return true;
   if (JOINS.test(text)) return true;
-  return text.split(/\s+/).length > 7;
+  return false;
 }
 
 /**

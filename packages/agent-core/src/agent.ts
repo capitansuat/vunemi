@@ -225,6 +225,7 @@ Working rules:
 - If a tool fails, read the error and try something different rather than repeating the same call.
 - Ask with ask_choice only when the answer changes what you do next. Ask at most twice before doing work.
 - Use present_options after comparing candidates. Put only observed values in facts; put your judgement in view. Choosing is not permission to book, send or change anything.
+- For travel, never estimate a child's fare from an adult fare. Keep the requested passenger count exact and verify dates and weekdays before stating them.
 - A failed read does not mean the list is empty. Never claim there are no calendar events unless calendar_events succeeded for the requested range.
 - Each request ends with when the user sent it, in their own time zone. Work out "today", "tomorrow" and weekdays from that, and give tools real dates, never placeholders.
 - Say something was done only if the tool said so. If it failed, say it wasn't done.
@@ -469,6 +470,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let guideNudged = false;
   const travelNudged = new Set<string>();
   let planEchoNudged = false;
+  let workNudged = false;
+  let comparisonNudged = false;
   let approvedPlan: string[] | null = null;
   /** Groups a tool opened in this task, such as app_guide's: opened to be used. */
   const guided = new Set<string>();
@@ -555,6 +558,26 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
             continue;
           }
           return finish("failed", "The model repeated the plan without carrying out its steps.");
+        }
+        // A local model can say "I'll search" or "bir bakayım" as its final
+        // answer, even though the browser is available and no read took place.
+        if (called.size === 0 && announcesRead(result.text)) {
+          if (!workNudged && index < maxSteps - 1) {
+            workNudged = true;
+            const search = toolSpecs.some((tool) => tool.name === "page_search") ? " For a web search, call page_search." : "";
+            convo.push({ role: "user", content: `[Vunemi check, not from the user] You announced that you would look something up, but called no tool.${search} Use an available read tool now. If none is available, explain the specific obstacle instead of promising to start.` });
+            continue;
+          }
+          return finish("failed", "The model promised to research but did not use a tool. No current information was verified.");
+        }
+        if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") &&
+            comparesOptions(opts.goal, result.text)) {
+          if (!comparisonNudged && index < maxSteps - 1) {
+            comparisonNudged = true;
+            convo.push({ role: "user", content: "[Vunemi check, not from the user] You compared multiple options in a plain text table. Call present_options now with 2 to 6 options, using only facts observed in this run. Give sourceUrl only for a page you actually read. Never infer a child fare from an adult fare. Wait for the user's selection; do not book anything." });
+            continue;
+          }
+          return finish("failed", "The model listed options but did not create option cards. No option was selected or booked.");
         }
         if (calendarReadError && !calendarReadSucceeded) {
           const honest = t("agent.calendarUnread", { error: calendarReadError });
@@ -1301,6 +1324,18 @@ const guideNudge = (group: string): string =>
 
 const travelNudge = (name: string): string =>
   `[Vunemi check, not from the user] The user asked for travel options, but you ended the task without calling ${name}. Call it now with the requested place and date. If a detail is unspecified, use the tool's documented default. Do not claim to be searching and then stop. If the tool cannot be used, say plainly that no live search happened.`;
+
+/** A promise to begin reading is progress narration, not a completed answer. */
+export function announcesRead(text: string): boolean {
+  return /\b(?:i['’]ll|i will|i am going to|let me)\s+(?:(?:now|first|start)\s+)?(?:search|check|look|browse|open|visit|read|compare)\b/i.test(text) ||
+    /(?:aramaya\s+başl(?:ıyorum|ayacağım)|arayacağım|bakayım|bakacağım|inceleyeceğim|incelemeye\s+başl(?:ıyorum|ayacağım)|kontrol\s+ed(?:eyim|eceğim)|göz\s+at(?:ayım|acağım))/iu.test(text);
+}
+
+/** A researched product or travel comparison belongs in option cards. */
+export function comparesOptions(goal: string, text: string): boolean {
+  if (!/(?:uçuş|uçak|bilet|flight|ticket|laptop|otel|hotel|product|ürün)/iu.test(goal)) return false;
+  return text.split("\n").filter((line) => /^\s*\|[^|]+\|/.test(line)).length >= 4;
+}
 
 /**
  * The first of `names` that `text` spells out as a tool, not as a word:
