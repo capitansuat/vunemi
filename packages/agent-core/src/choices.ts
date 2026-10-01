@@ -11,6 +11,39 @@ export interface ChoiceEvidence {
   local: string[];
 }
 
+/** A plain comparison table can become cards without another model round trip. */
+export function tableChoiceInput(text: string): { items: { title: string; price?: string; facts: { label: string; value: string }[] }[] } | null {
+  const lines = text.split("\n");
+  const cells = (line: string): string[] => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+  for (let at = 0; at < lines.length - 3; at++) {
+    if (!/^\s*\|/.test(lines[at] ?? "")) continue;
+    const headers = cells(lines[at]!);
+    if (headers.length < 2 || headers.length > 8 || headers.some((cell) => !cell)) continue;
+    const separator = cells(lines[at + 1] ?? "");
+    if (separator.length !== headers.length || !separator.every((cell) => /^:?-{3,}:?$/.test(cell))) continue;
+    const rows: string[][] = [];
+    for (let row = at + 2; row < lines.length && /^\s*\|/.test(lines[row]!) && rows.length < 7; row++) {
+      const values = cells(lines[row]!);
+      if (values.length !== headers.length || !values[0]) break;
+      rows.push(values);
+    }
+    if (rows.length < 2 || rows.length > 6 || new Set(rows.map((row) => row[0])).size !== rows.length) continue;
+    const items = rows.map((row) => {
+      const facts: { label: string; value: string }[] = [];
+      let price: string | undefined;
+      for (let col = 1; col < headers.length; col++) {
+        const value = row[col]!;
+        if (!value || value === "—" || value === "-") continue;
+        if (/^(?:price|fiyat|ücret|fare|cost)$/iu.test(headers[col]!) && !price) price = value;
+        else facts.push({ label: headers[col]!, value });
+      }
+      return { title: row[0]!, ...(price && { price }), facts };
+    });
+    return { items };
+  }
+  return null;
+}
+
 const string = (value: unknown, limit: number): string => {
   if (typeof value !== "string") return "";
   // Cards are data, never markup or model-authored UI.

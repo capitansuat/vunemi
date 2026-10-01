@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { choiceTools, prepareChoice, valueSeen } from "../src/choices.js";
+import { choiceTools, prepareChoice, tableChoiceInput, valueSeen } from "../src/choices.js";
 import { runAgent } from "../src/agent.js";
 import { ToolRegistry } from "../src/tools.js";
 import type { AgentEvent } from "../src/events.js";
@@ -9,6 +9,15 @@ const page = { url: "https://example.com/laptop", text: "[tab 1] Laptop — http
 const evidence = { pages: [page], local: ["Calendar: Friday 14:00"] };
 
 describe("choice card data", () => {
+  it("extracts only complete comparison rows and keeps missing prices absent", () => {
+    expect(tableChoiceInput("| Airline | Price | Stops |\n|---|---|---|\n| A | £311 | Direct |\n| B | — | 1 stop |"))
+      .toEqual({ items: [
+        { title: "A", price: "£311", facts: [{ label: "Stops", value: "Direct" }] },
+        { title: "B", facts: [{ label: "Stops", value: "1 stop" }] },
+      ] });
+    const oneRow = tableChoiceInput("| Airline | Price |\n|---|---|\n| A | £311 |");
+    expect(oneRow).toBeNull();
+  });
   it("bounds content and rejects incomplete choices", () => {
     expect(prepareChoice("ask_choice", { question: "?", options: ["one"] }, evidence)).toHaveProperty("error");
     const result = prepareChoice("ask_choice", { question: "Q".repeat(210), options: ["A".repeat(90), "B", "C", "D", "E", "F"] }, evidence);

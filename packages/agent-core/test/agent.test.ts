@@ -635,16 +635,12 @@ describe("pause", () => {
 });
 
 describe("intent preview", () => {
-  it("turns a flight comparison table into option cards before finishing", async () => {
+  it("turns a flight comparison table into option cards without another model call", async () => {
     const table = "| Airline | Price |\n|---|---|\n| A | £311 |\n| B | £384 |";
     expect(comparesOptions("flight tickets", table)).toBe(true);
     const { model, seen } = scripted([
       { calls: [{ name: "read_page", argumentsText: "{}" }] },
       { text: table },
-      { calls: [{ name: "present_options", argumentsText: JSON.stringify({ items: [
-        { title: "A", facts: [{ label: "Price", value: "£311" }] },
-        { title: "B", facts: [{ label: "Price", value: "£384" }] },
-      ] }) }] },
       { text: "A selected; no booking made." },
     ]);
     const { registry } = tools();
@@ -656,8 +652,14 @@ describe("intent preview", () => {
       requestChoice: async () => ({ text: "", index: 0 }),
     });
     expect(result.status).toBe("done");
-    expect(events.some((event) => event.type === "choice.asked" && event.card.kind === "options")).toBe(true);
-    expect(seen[2]!.messages.at(-1)).toMatchObject({ role: "user", content: expect.stringContaining("Call present_options now") });
+    const asked = events.find((event) => event.type === "choice.asked");
+    if (!asked || asked.type !== "choice.asked" || asked.card.kind !== "options") throw new Error("cards not shown");
+    expect(asked.card.items).toMatchObject([
+      { title: "A", price: { value: "£311", status: "unverified" } },
+      { title: "B", price: { value: "£384", status: "unverified" } },
+    ]);
+    expect(seen).toHaveLength(3);
+    expect(seen[2]!.messages.at(-1)).toMatchObject({ role: "tool", toolName: "present_options", content: expect.stringContaining("The user chose") });
   });
 
   it("continues when the model says it will search without calling the browser", async () => {

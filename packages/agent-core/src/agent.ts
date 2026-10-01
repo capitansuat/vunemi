@@ -5,7 +5,7 @@
  */
 
 import type { Artifact, ApprovalDecision, ChoiceCard, Produced, EmitFn, HandoffOutcome, PlanDecision, RunStatus } from "./events.js";
-import { prepareChoice, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
+import { prepareChoice, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
 import { maskSecrets } from "./secrets.js";
@@ -572,6 +572,18 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         }
         if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") &&
             comparesOptions(opts.goal, result.text)) {
+          const items = tableChoiceInput(result.text);
+          if (items && opts.requestChoice && index < maxSteps - 1) {
+            const call: ToolCall = { id: `${stepId}.table`, name: "present_options", argumentsText: JSON.stringify(items) };
+            convo.push({ role: "assistant", content: "", toolCalls: [call] });
+            checkpoint();
+            called.add(call.name);
+            const output = await handleCall(call, stepId);
+            convo.push({ role: "tool", content: output, toolCallId: call.id, toolName: call.name });
+            checkpoint();
+            if (signal.aborted) return finish("stopped", "Stopped by user.");
+            continue;
+          }
           if (!comparisonNudged && index < maxSteps - 1) {
             comparisonNudged = true;
             convo.push({ role: "user", content: "[Vunemi check, not from the user] You compared multiple options in a plain text table. Call present_options now with 2 to 6 options, using only facts observed in this run. Give sourceUrl only for a page you actually read. Never infer a child fare from an adult fare. Wait for the user's selection; do not book anything." });
@@ -1333,8 +1345,8 @@ export function announcesRead(text: string): boolean {
 
 /** A researched product or travel comparison belongs in option cards. */
 export function comparesOptions(goal: string, text: string): boolean {
-  if (!/(?:uçuş|uçak|bilet|flight|ticket|laptop|otel|hotel|product|ürün)/iu.test(goal)) return false;
-  return text.split("\n").filter((line) => /^\s*\|[^|]+\|/.test(line)).length >= 4;
+  if (!/(?:uçuş|uçak|bilet|flight|ticket|laptop|otel|hotel|product|ürün|compare|comparison|karşılaştır|seçenek)/iu.test(goal)) return false;
+  return tableChoiceInput(text) !== null;
 }
 
 /**
