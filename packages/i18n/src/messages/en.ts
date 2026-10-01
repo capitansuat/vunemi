@@ -904,6 +904,8 @@ export const messages: Catalogue = {
     claimCheck: "🔎 Vunemi: this answer says something was done, but nothing changed. The model is trying once more.",
     callCheck: "🔎 Vunemi: the model named a tool but didn't use it. It is trying once more.",
     guideCheck: "🔎 Vunemi: the model opened an app's tools but used none of them. It is trying once more.",
+    travelCheck: "🔎 Vunemi: the hotel or flight search has not run yet. The model is trying once more.",
+    travelNotSearched: "⚠️ Vunemi: no live hotel or flight search ran in this task.",
     resumeAsk: "This task was cut short and picked up again; every step beyond reading waits for you.",
   },
   vaultStore: {

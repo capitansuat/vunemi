@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { argumentMisfit, claimsChange, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
+import { argumentMisfit, claimsChange, leakedCall, namedTool, requestedTravelTools, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
 import type { AgentEvent, ApprovalDecision } from "../src/events.js";
 import { t } from "@vunemi/i18n";
 import { ProviderError, type ChatMessage, type ChatModel, type ChatRequest, type ChatResult, type ToolCall } from "../src/provider.js";
@@ -78,6 +78,38 @@ function run(overrides: Partial<RunOptions> & Pick<RunOptions, "model">) {
 }
 
 describe("runAgent", () => {
+  it("continues a hotel search that the model only promises to do", async () => {
+    const searched: unknown[] = [];
+    const registry = new ToolRegistry().register({
+      name: "travel_search_hotels", description: "Search hotels", actionClass: "read",
+      parameters: { type: "object", properties: { destination: { type: "string" }, check_in: { type: "string" } }, required: ["destination", "check_in"] },
+      run: async (args) => { searched.push(args); return "Two hotels found"; },
+    });
+    const { model, seen } = scripted([
+      { text: "Önce bir otel araması yapıyorum." },
+      { calls: [{ name: "travel_search_hotels", argumentsText: '{"destination":"İzmir","check_in":"2026-10-02"}' }] },
+      { text: "İki otel buldum." },
+    ]);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "Yarın için İzmir'de otel bakar mısın?", model, tools: registry, emit: (e) => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
+    expect(seen[1]!.messages.at(-1)!.content).toContain("without calling travel_search_hotels");
+    expect(searched).toEqual([{ destination: "İzmir", check_in: "2026-10-02" }]);
+    expect(events.some((e) => e.type === "tool.proposed" && e.tool === "travel_search_hotels")).toBe(true);
+    expect(result.detail).toBe("İki otel buldum.");
+  });
+
+  it("does not mark a repeated unperformed search promise as a completed search", async () => {
+    const registry = new ToolRegistry().register({
+      name: "travel_search_hotels", description: "Search hotels", actionClass: "read",
+      parameters: { type: "object", properties: {} }, run: async () => "found",
+    });
+    const { model, seen } = scripted([{ text: "Otel araması yapıyorum." }, { text: "Şimdi otel araması yapıyorum." }]);
+    const result = await runAgent({ goal: "İzmir'de otel ara", model, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(seen).toHaveLength(2);
+    expect(result.detail).toContain("canlı otel veya uçuş araması yapılmadı");
+    expect(requestedTravelTools("Otel araması nasıl çalışıyor?")).toEqual([]);
+  });
+
   it("does not present a failed calendar read as an empty calendar", async () => {
     const { model } = scripted([
       { calls: [{ name: "calendar_events", argumentsText: '{"days":0}' }] },

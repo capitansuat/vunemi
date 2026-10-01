@@ -1,7 +1,7 @@
 /** Words about tools and statuses, looked up in the current language when shown. */
 
 import type { ActionClass, RunStatus } from "@vunemi/agent-core";
-import { has, t } from "@vunemi/i18n";
+import { getLocale, has, t } from "@vunemi/i18n";
 import type { CallStatus, CallView } from "./fold.js";
 
 export function actionClassLabel(actionClass: ActionClass): string {
@@ -9,6 +9,12 @@ export function actionClassLabel(actionClass: ActionClass): string {
 }
 
 export function toolLabel(tool: string, status: CallStatus): string {
+  if (tool === "travel_search_flights") return getLocale() === "tr"
+    ? (status === "ok" ? "Uçuş seçeneklerini buldu" : status === "awaiting" ? "Uçuş aramak istiyor" : "Uçuş arıyor")
+    : (status === "ok" ? "Found flight options" : status === "awaiting" ? "Wants to search flights" : "Searching flights");
+  if (tool === "travel_search_hotels") return getLocale() === "tr"
+    ? (status === "ok" ? "Otel seçeneklerini buldu" : status === "awaiting" ? "Otel aramak istiyor" : "Otel arıyor")
+    : (status === "ok" ? "Found hotel options" : status === "awaiting" ? "Wants to search hotels" : "Searching hotels");
   const key = `tools.${tool}.${status === "ok" ? "done" : status === "awaiting" ? "ask" : "doing"}`;
   return has(key) ? t(key) : tool;
 }

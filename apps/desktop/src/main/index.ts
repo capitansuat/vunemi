@@ -80,6 +80,14 @@ if (app.isPackaged) {
 // The data folder is named after the app, not the package. Before anything
 // reads or writes it.
 if (app.isPackaged) app.setPath("userData", join(app.getPath("appData"), "Vunemi"));
+// Sessions, checkpoints, the model server, and the embedded browser all use
+// this profile. Two processes must never read or write it at the same time.
+if (!app.requestSingleInstanceLock()) app.exit(0);
+app.on("second-instance", () => {
+  // The first launch creates its window after the vault startup check. A
+  // second launch during that check must not create an extra window early.
+  if (win && !win.isDestroyed()) showWindow();
+});
 carryOverBrowserData(app.getPath("userData"));
 
 // Remote debugging lets any program on this Mac drive the window. A local
@@ -356,6 +364,7 @@ const connectors = buildConnectors({
   vaultReady,
   mailOutbox,
   openOAuthBrowser: (url) => shell.openExternal(url),
+  countryCode: () => app.getLocaleCountryCode(),
 });
 
 // Sealed once the Vault can answer; then each such server runs from it. If
@@ -404,7 +413,7 @@ function describeServer(input: NewMcpServer, existing: McpServerConfig[]): McpSe
 }
 
 /** Built-in connection ids, so a server cannot take one of their names. */
-const RESERVED = new Set(["browser", "files", "desktop", "calendar", "reminders", "mail", "core"]);
+const RESERVED = new Set(["browser", "files", "desktop", "calendar", "reminders", "mail", "travel-flights", "travel-hotels", "core"]);
 
 /** Splits a command line on spaces, honouring quotes. No shell involved. */
 function splitCommand(line: string): string[] {
@@ -569,10 +578,7 @@ const session: AgentSession = new AgentSession({
   // A part the user switched off comes back only through its card, and
   // only for a connection that is itself on.
   switchedOff: (tool) => connectors.partOf(tool),
-  switchOn: (tool) => {
-    const part = connectors.partOf(tool);
-    if (part) connectors.setPartOn(part.connectorId, part.partId, true);
-  },
+  switchOn: (tool) => connectors.switchOnFor(tool),
   onUntrustedOutput: (text, tool) => sentinel.noteUntrusted(text, sourceOf(tool)),
   redact,
   loadImage: (path) => loadImage(path),

@@ -904,6 +904,8 @@ export const messages: Catalogue = {
     claimCheck: "🔎 Vunemi：这个回答说已经完成，但什么都没有改变。模型再试一次。",
     callCheck: "🔎 Vunemi：模型提到了一个工具但没有使用。它正在再试一次。",
     guideCheck: "🔎 Vunemi：模型打开了一个应用的工具，但一个都没有使用。它正在再试一次。",
+    travelCheck: "🔎 Vunemi：尚未搜索酒店或航班。模型正在重试。",
+    travelNotSearched: "⚠️ Vunemi：此任务未进行实时酒店或航班搜索。",
     resumeAsk: "此任务曾被中断，现已继续；除读取外的每一步都会等你确认。",
   },
   vaultStore: {

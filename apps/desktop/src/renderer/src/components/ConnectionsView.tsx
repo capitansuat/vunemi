@@ -25,6 +25,8 @@ import {
   Globe,
   Loader2,
   Mail,
+  Plane,
+  BedDouble,
   Monitor,
   Plus,
   Search,
@@ -47,6 +49,8 @@ export const ICONS: Record<string, LucideIcon> = {
   mail: Mail,
   automations: Clock,
   shortcuts: Workflow,
+  "travel-flights": Plane,
+  "travel-hotels": BedDouble,
 };
 
 export function ConnectionsView() {

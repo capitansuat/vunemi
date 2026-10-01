@@ -160,7 +160,7 @@ export class McpClient {
   private session: string | null = null;
   private started: Promise<McpServerInfo> | null = null;
 
-  constructor(private readonly transport: McpTransport, private readonly io: McpIO = localIO) {}
+  constructor(private readonly transport: McpTransport, private readonly io: McpIO = localIO, private readonly startTimeoutMs = START_TIMEOUT_MS) {}
 
   /** Handshake, once. Repeated calls wait on the first. */
   async start(): Promise<McpServerInfo> {
@@ -180,6 +180,24 @@ export class McpClient {
 
   /** Calls a tool and flattens the reply to text. */
   async callTool(name: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<string> {
+    const result = await this.callToolResult(name, args, signal);
+    const text = (result.content ?? [])
+      .map((part) => {
+        if (typeof part?.text === "string") return part.text;
+        if (part?.type) return `[${String(part.type)} content — not text, cannot be shown]`;
+        return "";
+      })
+      .filter(Boolean)
+      .join("\n");
+    return text || (result.structuredContent ? JSON.stringify(result.structuredContent) : "(empty response)");
+  }
+
+  /** Structured data for built-in adapters; third-party prose is not a schema. */
+  async callToolResult(name: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<{
+    content?: { type?: string; text?: string; [k: string]: unknown }[];
+    structuredContent?: unknown;
+    isError?: boolean;
+  }> {
     await this.start();
     const result = (await this.request("tools/call", { name, arguments: args }, signal)) as {
       content?: { type?: string; text?: string; [k: string]: unknown }[];
@@ -187,20 +205,9 @@ export class McpClient {
       structuredContent?: unknown;
     };
 
-    const text = (result?.content ?? [])
-      .map((part) => {
-        if (typeof part?.text === "string") return part.text;
-        // Images and audio cannot reach a text model; say so rather than
-        // dropping them silently.
-        if (part?.type) return `[${String(part.type)} content — not text, cannot be shown]`;
-        return "";
-      })
-      .filter(Boolean)
-      .join("\n");
-
-    const body = text || (result?.structuredContent ? JSON.stringify(result.structuredContent) : "(empty response)");
-    if (result?.isError) throw new McpError(body);
-    return body;
+    if (result?.isError) throw new McpError(result.content?.map((part) => part.text ?? "").join("\n") ||
+      (result.structuredContent ? JSON.stringify(result.structuredContent) : "MCP tool failed"));
+    return result;
   }
 
   dispose(): void {
@@ -221,7 +228,7 @@ export class McpClient {
       "initialize",
       { protocolVersion: PROTOCOL, capabilities: {}, clientInfo: CLIENT },
       undefined,
-      START_TIMEOUT_MS,
+      this.startTimeoutMs,
     )) as { serverInfo?: McpServerInfo };
     await this.notify("notifications/initialized");
     return result?.serverInfo ?? {};

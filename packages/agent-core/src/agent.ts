@@ -343,6 +343,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let claimNudged = false;
   let callNudged = false;
   let guideNudged = false;
+  const travelNudged = new Set<string>();
   /** Groups a tool opened in this task, such as app_guide's: opened to be used. */
   const guided = new Set<string>();
   /** Tools called in this task: an answer that names one reports on it, it doesn't plan it. */
@@ -420,6 +421,23 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           convo[convo.length - 1] = { role: "assistant", content: honest };
           emit({ type: "message.delta", runId, stepId, text: honest });
           return finish("done", honest);
+        }
+        // A small local model can end a turn with "I'm searching now" without
+        // ever calling the search tool. A travel request needs an actual search
+        // (or an explicit failure), not a completed run containing a promise.
+        const missingTravel = requestedTravelTools(opts.goal).find((name) =>
+          toolSpecs.some((spec) => spec.name === name) && !called.has(name));
+        if (missingTravel) {
+          if (!travelNudged.has(missingTravel) && index < maxSteps - 1) {
+            travelNudged.add(missingTravel);
+            emit({ type: "message.delta", runId, stepId, text: `\n\n${t("agent.travelCheck")}` });
+            convo.push({ role: "user", content: travelNudge(missingTravel) });
+            continue;
+          }
+          const note = `\n\n${t("agent.travelNotSearched")}`;
+          convo[convo.length - 1] = { role: "assistant", content: result.text + note };
+          emit({ type: "message.delta", runId, stepId, text: note });
+          return finish("done", (result.text + note).trim());
         }
         // "I've added it" after nothing but reads is the worst thing a small
         // model says: the user believes it. What ran decides, not the words.
@@ -700,7 +718,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         guided.add(group);
         openTools(group);
       };
-      const raw = await redact(await tool.run(parsed.value as Record<string, unknown>, { signal, handoff, offerUndo, attach, gallery, produced, openTools: opened }));
+      const raw = await redact(await tool.run(parsed.value as Record<string, unknown>, { signal, userGoal: opts.goal, runId, handoff, offerUndo, attach, gallery, produced, openTools: opened }));
       let output = shapeOutput(raw, tool, maxOut);
       if (artifact?.kind === "image") output += await imageFor(tool.name, artifact);
       if (call.name === "calendar_events") {
@@ -1036,6 +1054,19 @@ const callNudge = (name: string): string =>
 /** Said to the model, once, when it opened a group of tools and answered without using any. */
 const guideNudge = (group: string): string =>
   `[Vunemi check, not from the user] You opened the ${group} tools but called none of them. If the user's request needs one, call it now. Otherwise answer the user plainly, and don't say you checked or did anything you didn't.`;
+
+/** Only explicit requests to look for travel options require a search call. */
+export function requestedTravelTools(goal: string): string[] {
+  const action = /\b(?:search|find|show|compare|check|look|browse)\b|(?:ara(?!ma)|bul|bak|göster|karşılaştır|listele)(?:\p{L})*|arama(?:sı|si)?\s+yap/iu;
+  if (!action.test(goal)) return [];
+  const wanted: string[] = [];
+  if (/(?:otel|konaklama|hotel|accommodation)/iu.test(goal)) wanted.push("travel_search_hotels");
+  if (/(?:uçuş|ucus|uçak|ucak|flight|airfare|plane ticket)/iu.test(goal)) wanted.push("travel_search_flights");
+  return wanted;
+}
+
+const travelNudge = (name: string): string =>
+  `[Vunemi check, not from the user] The user asked for travel options, but you ended the task without calling ${name}. Call it now with the requested place and date. If a detail is unspecified, use the tool's documented default. Do not claim to be searching and then stop. If the tool cannot be used, say plainly that no live search happened.`;
 
 /**
  * The first of `names` that `text` spells out as a tool, not as a word:

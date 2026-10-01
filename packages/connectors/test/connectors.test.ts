@@ -3,7 +3,7 @@
  * user switched off does not merely disappear from a menu — the model
  * cannot call its tools by name either.
  */
-import { ToolRegistry, type ToolDef } from "@vunemi/agent-core";
+import { ToolRegistry, toolSpecsOf, type ToolDef } from "@vunemi/agent-core";
 import { describe, expect, it } from "vitest";
 import { Connectors, type Connector, type ConnectorStatus } from "../src/index.js";
 
@@ -60,6 +60,26 @@ describe("switching a connection off", () => {
 });
 
 describe("what starts on", () => {
+  it("offers a built-in travel search for one approval while it remains off", () => {
+    const tools = new ToolRegistry();
+    const saved: Record<string, boolean>[] = [];
+    const connectors = new Connectors({ tools, onChange: (state) => saved.push(state) });
+    connectors.add(fake("travel-hotels", { defaultOn: false, requestableWhenOff: true,
+      tools: () => [tool("travel_search_hotels")] }));
+    expect(connectors.isOn("travel-hotels")).toBe(false);
+    expect(tools.get("travel_search_hotels")).toBeUndefined();
+    expect(connectors.partOf("travel_search_hotels")?.label).toBe("travel-hotels");
+    expect(toolSpecsOf(tools, undefined, (name) => connectors.partOf(name) !== null, "İzmir'de yarın otel bak"))
+      .toEqual(expect.arrayContaining([expect.objectContaining({ name: "travel_search_hotels" })]));
+    expect(connectors.instructions()).toContain("call travel_search_flights or travel_search_hotels first");
+    expect(connectors.instructions()).not.toContain("not switched on: travel-hotels");
+    expect(saved).toEqual([]); // A one-time approval need not change the switch.
+    connectors.switchOnFor("travel_search_hotels");
+    expect(connectors.isOn("travel-hotels")).toBe(true);
+    expect(tools.get("travel_search_hotels")).toBeDefined();
+    expect(saved.at(-1)).toEqual({ "travel-hotels": true });
+  });
+
   it("honours each connection's own default", () => {
     const tools = new ToolRegistry();
     const connectors = new Connectors({ tools });

@@ -904,6 +904,8 @@ export const messages: Catalogue = {
     claimCheck: "🔎 Vunemi: Diese Antwort sagt, etwas sei erledigt, aber nichts hat sich geändert. Das Modell versucht es noch einmal.",
     callCheck: "🔎 Vunemi: Das Modell hat ein Werkzeug genannt, aber nicht benutzt. Es versucht es noch einmal.",
     guideCheck: "🔎 Vunemi: Das Modell hat die Werkzeuge einer App geöffnet, aber keines benutzt. Es versucht es noch einmal.",
+    travelCheck: "🔎 Vunemi: Die Hotel- oder Flugsuche wurde noch nicht ausgeführt. Das Modell versucht es erneut.",
+    travelNotSearched: "⚠️ Vunemi: In dieser Aufgabe wurde keine Live-Hotel- oder Flugsuche ausgeführt.",
     resumeAsk: "Diese Aufgabe wurde unterbrochen und wieder aufgenommen; jeder Schritt über das Lesen hinaus wartet auf dich.",
   },
   vaultStore: {

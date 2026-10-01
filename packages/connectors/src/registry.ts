@@ -85,12 +85,15 @@ export class Connectors {
 
   /**
    * The switched-off part a tool belongs to, in the user's words, when it
-   * may be offered back to them: the connection itself is on and the part
-   * is one they can see in Settings. Null otherwise — a connection that is
-   * off stays off until they open it themselves.
+   * may be offered back to them: a visible part of an on connection, or a
+   * built-in source explicitly marked requestable for a one-time approval.
+   * Other off connections remain unavailable.
    */
   partOf(toolName: string): { connectorId: string; partId: string; label: string } | null {
     for (const connector of this.items.values()) {
+      if (connector.requestableWhenOff && !this.isOn(connector.id) && connector.tools().some((tool) => tool.name === toolName)) {
+        return { connectorId: connector.id, partId: "", label: connector.label };
+      }
       const part = connector.capabilities?.find((c) => c.tools.includes(toolName));
       if (!part) continue;
       if (part.hidden || !this.isOn(connector.id) || this.isPartOn(connector.id, part.id)) return null;
@@ -163,6 +166,14 @@ export class Connectors {
     return this.chosen[id] ?? connector?.defaultOn ?? false;
   }
 
+  /** The durable choice after approving an off connection for all future calls. */
+  switchOnFor(toolName: string): void {
+    const offer = this.partOf(toolName);
+    if (!offer) return;
+    if (!offer.partId) this.setOn(offer.connectorId, true);
+    else this.setPartOn(offer.connectorId, offer.partId, true);
+  }
+
   setOn(id: string, on: boolean): void {
     const connector = this.need(id);
     this.chosen[id] = on;
@@ -198,8 +209,8 @@ export class Connectors {
   }
 
   /**
-   * The guidance for everything currently switched on. Telling the model how
-   * to use a tool it cannot call wastes context and invites it to try.
+   * Guidance for switched-on connections and the small set of built-in
+   * sources available through a one-time approval card.
    */
   instructions(): string {
     const on = [...this.items.values()].filter((c) => this.isOn(c.id));
@@ -217,7 +228,11 @@ export class Connectors {
     }
     // A new user starts with every connection off; asked what Vunemi can do,
     // a model that knew only its own scratchpad described nothing else.
-    const offConnections = [...this.items.values()].filter((c) => !this.isOn(c.id)).map((c) => c.label);
+    const requestable = [...this.items.values()].filter((c) => c.requestableWhenOff);
+    if (requestable.some((c) => c.id === "travel-flights" || c.id === "travel-hotels")) {
+      guides.unshift("For flight or hotel searches, call travel_search_flights or travel_search_hotels first. An off travel connection offers the user a one-time approval card. Use the browser if that source fails or the user asks for it; do not start with a web search.");
+    }
+    const offConnections = [...this.items.values()].filter((c) => !this.isOn(c.id) && !c.requestableWhenOff).map((c) => c.label);
     if (offConnections.length > 0) {
       guides.push(`Also part of Vunemi, but not switched on: ${offConnections.join(", ")}. None of them can be used until the user switches it on in Settings › Connections. When the user asks what you can do, or asks for something one of them does, say so.`);
     }

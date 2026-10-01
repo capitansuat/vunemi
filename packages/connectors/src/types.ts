@@ -32,7 +32,7 @@ export type ConnectorNeed =
   | { kind: "none" };
 
 export type ConnectorStatus =
-  /** Switched off by the user. Its tools do not exist for the model. */
+  /** Switched off by the user. Only explicitly requestable built-ins can offer an approval card. */
   | { state: "off" }
   /** On, and working. `account` names whose it is, when that applies. */
   | { state: "ready"; account?: string }
@@ -115,6 +115,8 @@ export interface ConnectorDef {
    * starts off, and the user turns it on deliberately.
    */
   defaultOn: boolean;
+  /** An off built-in source may still be offered for one user-approved call. */
+  requestableWhenOff?: boolean;
   /** Built now, or contributed later by an MCP server the user adds. */
   origin: "builtin" | "mcp";
   /**

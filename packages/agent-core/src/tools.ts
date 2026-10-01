@@ -36,6 +36,9 @@ export interface JsonSchema {
 
 export interface ToolContext {
   signal: AbortSignal;
+  /** The current user request and run, for tools that must enforce its scope. */
+  userGoal?: string;
+  runId?: string;
   /**
    * Pauses the run until the user has done something only they may do
    * (solve a CAPTCHA, log in). `reason` is shown to them, in their language.

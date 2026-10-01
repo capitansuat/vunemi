@@ -23,6 +23,7 @@ import type { CallView } from "../lib/fold.js";
 import { actionClassLabel, callDetail, callStatusLabel, formatMs, toolLabel } from "../lib/labels.js";
 import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
+import { TravelOptionsCard } from "./TravelOptionsCard.js";
 
 const CLASS_ICON: Record<ActionClass, LucideIcon> = {
   read: Eye,
@@ -81,6 +82,7 @@ function CallRow({ call }: { call: CallView }) {
       {call.artifact && <Shot artifact={call.artifact} />}
       {call.gallery && call.gallery.length > 0 && <Gallery pictures={call.gallery} />}
       {call.files && call.files.length > 0 && <Files files={call.files} />}
+      <TravelOptionsCard call={call} />
       {open && (
         <div className="selectable space-y-2.5 border-t border-line bg-surface-2/60 px-3 py-2.5">
           <Meta label={t("call.tool")} value={<span className="font-mono">{call.tool}</span>} />

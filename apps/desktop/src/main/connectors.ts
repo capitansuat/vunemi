@@ -27,6 +27,7 @@ import type { VaultClient } from "@vunemi/vault";
 import { mailAddressOf, type StoredAppleMailAccount, type StoredMailAccount } from "./settings.js";
 import { vaultMcpIO } from "./remote-mcp.js";
 import { renderOfficePdf } from "./office-pdf.js";
+import { travelConnectors } from "./travel.js";
 import { AUTOMATION_INSTRUCTIONS, createAutomationTools, type AutomationStore } from "./automations.js";
 import { authorizeOutlook, OUTLOOK_TOKEN_TARGET, outlookAddress } from "./outlook-oauth.js";
 import { authorizeGoogle, GOOGLE_TOKEN_TARGET, googleAddress } from "./google-oauth.js";
@@ -63,6 +64,8 @@ export interface CatalogueOptions {
   automations?: AutomationStore;
   /** Replaced in tests: the osascript the Mail app accounts run through. */
   osascript?: string;
+  /** Country from macOS regional settings, independent of conversation language. */
+  countryCode?: () => string;
 }
 
 /**
@@ -391,6 +394,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
     },
 
     mailConnector(opts),
+    ...travelConnectors({ countryCode: opts.countryCode }),
   ];
 
   for (const connector of all) connectors.add(connector);

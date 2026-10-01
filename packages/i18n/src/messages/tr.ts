@@ -908,6 +908,8 @@ export const messages = {
     claimCheck: "🔎 Vunemi: bu cevap bir şeyin yapıldığını söylüyor ama hiçbir şey değişmedi. Model bir kez daha deniyor.",
     callCheck: "🔎 Vunemi: model bir aracı andı ama kullanmadı. Bir kez daha deniyor.",
     guideCheck: "🔎 Vunemi: model uygulama araçlarını açtı ama hiçbirini kullanmadı. Bir kez daha deniyor.",
+    travelCheck: "🔎 Vunemi: otel veya uçuş araması henüz yapılmadı. Model bir kez daha deniyor.",
+    travelNotSearched: "⚠️ Vunemi: bu görevde canlı otel veya uçuş araması yapılmadı.",
     resumeAsk: "Bu görev yarıda kalmıştı ve yeniden başladı; okumanın ötesindeki her adım sizi bekler.",
   },
   vaultStore: {
