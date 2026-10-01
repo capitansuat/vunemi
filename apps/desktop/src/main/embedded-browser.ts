@@ -105,20 +105,6 @@ export class EmbeddedBrowser {
     return this.win !== null && !this.win.isDestroyed();
   }
 
-  /**
-   * A page fetched with this browser's own session: the Chromium it is, the
-   * cookies and choices the user made in it, and the same site rules. For
-   * built-in sources that read a public page without opening a tab.
-   */
-  async fetchPage(url: string, signal?: AbortSignal): Promise<{ url: string; status: number; text: string }> {
-    const browserSession = this.ses ?? session.fromPartition(PARTITION);
-    this.secureSession(browserSession);
-    const timeout = AbortSignal.timeout(30_000);
-    const response = await browserSession.fetch(url, { credentials: "include", signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
-    // Electron leaves `url` empty when the request was not redirected.
-    return { url: response.url || url, status: response.status, text: await response.text() };
-  }
-
   async clearData(): Promise<void> {
     for (const tab of [...this.tabs]) this.close(tab.id);
     const browserSession = this.ses ?? session.fromPartition(PARTITION);

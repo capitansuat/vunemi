@@ -4,7 +4,7 @@ import type { Connector, ConnectorStatus } from "@vunemi/connectors";
 import { wantsMoreTravelSearches, type ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import { McpClient } from "@vunemi/mcp";
-import { ConsentRequired, SEARCH_PAGE, searchFlights, type FetchPage } from "./flights/search.js";
+import { searchFlights, type FetchPage } from "./flights/search.js";
 
 const TRIVAGO_MCP = "https://mcp.trivago.com/mcp";
 
@@ -196,10 +196,8 @@ export function hotelOptions(raw: unknown, searchedAt = new Date().toISOString()
 export interface TravelOptionsDeps {
   systemCurrency?: () => Promise<string>;
   countryCode?: () => string;
-  /** Fetches a page through the embedded browser's session. */
+  /** Fetches a Google Flights page through the flight search's own session. */
   fetchPage?: FetchPage;
-  /** Shows a page in the embedded browser, for the user to act on. */
-  showPage?: (url: string) => void;
 }
 
 export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
@@ -227,19 +225,9 @@ export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
       if (adults + children > 9) throw new Error("At most 9 passengers can be searched.");
       const money = await moneyFor(ctx.userGoal ?? "");
       const fetchPage = opts.fetchPage;
-      if (!fetchPage) throw new Error("Flight search needs the Vunemi window, which is closed.");
+      if (!fetchPage) throw new Error("Flight search is not available in this build.");
       const query = { origin, destination, departure, ...(returning && { returning }), adults, children, currency: money, country: country() };
-      let flights;
-      try {
-        flights = await searchFlights(query, fetchPage, ctx.signal);
-      } catch (error) {
-        // Only the user may answer Google's cookie choice. Show it to them,
-        // wait, and search again with whatever they chose.
-        if (!(error instanceof ConsentRequired) || !opts.showPage) throw error;
-        opts.showPage(`${SEARCH_PAGE}?hl=en-GB`);
-        if (!await ctx.handoff(t("travel.googleConsent"))) throw new Error("The user did not finish Google's cookie choice, so no flights were searched.");
-        flights = await searchFlights(query, fetchPage, ctx.signal);
-      }
+      const flights = await searchFlights(query, fetchPage, ctx.signal);
       const options = flightOptions({ flights }, new Date().toISOString(), returning,
         flightSearchUrl(origin, destination, departure, returning, adults, children, money, country()));
       limit.mark(ctx.runId, "flight");

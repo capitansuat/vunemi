@@ -6,9 +6,11 @@
  * and the round-trip method (pin an outbound, fetch its returns) come from
  * Fli (MIT, Copyright (c) 2025 Punit Arani; see LICENSE in this folder).
  *
- * Pages are fetched through the embedded browser's own session, so Google
- * sees the Chromium Vunemi is, with the cookie choices the user made there.
- * Nothing here pretends to be another browser or accepts consent for them.
+ * Pages are fetched through a session of their own (see page-session.ts),
+ * as the Chromium Vunemi is; nothing here pretends to be another browser.
+ * If Google asks for cookie choices first, the search declines everything
+ * that is not essential, the choice that needs no one's consent, and never
+ * accepts on the user's behalf.
  */
 import { encodeTfs, currencyOfToken, itineraryTfs, passengerKinds, segment, type PinnedLeg } from "./tfs.js";
 
@@ -26,7 +28,8 @@ export interface FlightQuery {
 }
 
 export interface FetchedPage { url: string; status: number; text: string }
-export type FetchPage = (url: string, signal?: AbortSignal) => Promise<FetchedPage>;
+/** GETs `url`, or POSTs `form` to it. */
+export type FetchPage = (url: string, signal?: AbortSignal, form?: URLSearchParams) => Promise<FetchedPage>;
 
 export interface FlightLeg {
   departure_airport: string;
@@ -46,9 +49,11 @@ export interface FlightRow {
   legs: FlightLeg[];
 }
 
-/** Google showed its cookie choice page instead of results. Only the user can answer it. */
+/** Google kept showing its cookie page, even after its non-essential cookies were declined. */
 export class ConsentRequired extends Error {
-  constructor() { super("Google asks for cookie choices before showing results."); }
+  constructor() {
+    super("Google Flights showed its cookie page, and declining its non-essential cookies did not bring results, so no flights were searched. Tell the user; they can search in the browser instead.");
+  }
 }
 
 /** How many outbound flights a round trip prices returns for: one page each. */
@@ -157,21 +162,57 @@ export function pageUrl(tfs: string, query: Pick<FlightQuery, "currency" | "coun
   return `${SEARCH_PAGE}?tfs=${tfs}&hl=${LANGUAGE}&gl=${query.country}&curr=${query.currency}`;
 }
 
-const onConsentPage = (page: FetchedPage): boolean => {
-  try { return new URL(page.url).hostname === "consent.google.com"; } catch { return false; }
+const CONSENT_SAVE = "https://consent.google.com/save";
+
+const isConsentUrl = (value: string): boolean => {
+  try { const url = new URL(value); return url.protocol === "https:" && url.hostname === "consent.google.com"; } catch { return false; }
 };
 
+const unescape = (value: string): string => value
+  .replaceAll("&quot;", '"').replaceAll("&#39;", "'").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
+const attribute = (tag: string, name: string): string | null => {
+  const found = new RegExp(`(?:^|\\s)${name}="([^"]*)"`).exec(tag);
+  return found ? unescape(found[1]!) : null;
+};
+
+/**
+ * The "Reject all" form of Google's cookie page, found by its fields rather
+ * than its words, which follow the page language: it sets only
+ * `set_eom=true`, where "Accept all" also sets `set_sc` and `set_aps`.
+ */
+export function rejectForm(html: string): { action: string; body: URLSearchParams } | null {
+  for (const form of html.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/g)) {
+    const body = new URLSearchParams();
+    for (const input of form[2]!.matchAll(/<input\b[^>]*>/g)) {
+      const name = attribute(input[0], "name");
+      if (name) body.append(name, attribute(input[0], "value") ?? "");
+    }
+    if (body.get("set_eom") !== "true" || body.has("set_sc") || body.has("set_aps")) continue;
+    const action = attribute(form[1]!, "action");
+    return { action: action && isConsentUrl(action) ? action : CONSENT_SAVE, body };
+  }
+  return null;
+}
+
+/** Whether non-essential cookies were already declined during this search. */
+interface Consent { declined: boolean }
+
 /** One search page; a page that came back without its results is tried again. */
-async function fetchRows(fetchPage: FetchPage, url: string, signal?: AbortSignal): Promise<Decoded[]> {
+async function fetchRows(fetchPage: FetchPage, url: string, consent: Consent, signal?: AbortSignal): Promise<Decoded[]> {
   for (let attempt = 0; ; attempt++) {
     const page = await fetchPage(url, signal);
-    if (onConsentPage(page)) throw new ConsentRequired();
     if (page.status === 429) throw new Error("Google Flights is limiting requests right now. Try again later.");
     if (page.status < 200 || page.status >= 300) throw new Error(`Google Flights answered HTTP ${page.status}.`);
     const payload = payloadOf(page.text);
     if (payload != null) return rowsOf(payload);
-    // Served in place, without a redirect: a page with no results whose forms post to the consent service.
-    if (/consent\.google\.com/.test(page.text)) throw new ConsentRequired();
+    // Redirected, or served in place: a page without results whose forms post to the consent service.
+    if (isConsentUrl(page.url) || /consent\.google\.com/.test(page.text)) {
+      const reject = consent.declined ? null : rejectForm(page.text);
+      if (!reject) throw new ConsentRequired();
+      consent.declined = true;
+      await fetchPage(reject.action, signal, reject.body);
+      continue;
+    }
     if (attempt + 1 >= PAGE_ATTEMPTS) throw new Error("Google Flights sent a page without results. Try again in a moment.");
     await wait(RETRY_MS[attempt] ?? 1500, signal);
   }
@@ -197,7 +238,8 @@ export async function searchFlights(query: FlightQuery, fetchPage: FetchPage, si
     booking_url: link(legs), legs: legs.flat().map(plain),
   });
 
-  const outbound = await fetchRows(fetchPage, pageUrl(encodeTfs(directions(), { roundTrip, passengers }), query), signal);
+  const consent: Consent = { declined: false };
+  const outbound = await fetchRows(fetchPage, pageUrl(encodeTfs(directions(), { roundTrip, passengers }), query), consent, signal);
   if (!roundTrip) return outbound.map((o) => row(o.price!, o.currency, o.airlineName, [o.legs]));
 
   // Each outbound's returns are priced as a pair; keep the cheapest return
@@ -205,7 +247,7 @@ export async function searchFlights(query: FlightQuery, fetchPage: FetchPage, si
   const rows: FlightRow[] = [];
   for (const out of outbound.slice(0, ROUND_TRIP_OUTBOUNDS)) {
     const tfs = encodeTfs(directions(pins(out.legs)), { roundTrip, passengers });
-    const back = (await fetchRows(fetchPage, pageUrl(tfs, query), signal))[0];
+    const back = (await fetchRows(fetchPage, pageUrl(tfs, query), consent, signal))[0];
     if (back) rows.push(row(back.price ?? out.price!, back.currency ?? out.currency, out.airlineName, [out.legs, back.legs]));
   }
   return rows.sort((a, b) => a.price - b.price);

@@ -26,6 +26,7 @@ import { engineBinary } from "./engine/binary.js";
 import { EngineService } from "./engine/service.js";
 import { Voice, whisperBinary } from "./voice.js";
 import { DownloadError } from "./engine/download.js";
+import { fetchFlightPage } from "./flights/page-session.js";
 import { buildConnectors } from "./connectors.js";
 import { createRunner, ScriptableCatalog, shortcutName } from "@vunemi/apps";
 import { listMailAppAccounts } from "./apple-mail.js";
@@ -365,10 +366,7 @@ const connectors = buildConnectors({
   mailOutbox,
   openOAuthBrowser: (url) => shell.openExternal(url),
   countryCode: () => app.getLocaleCountryCode(),
-  browserPages: {
-    fetchPage: (url, signal) => embedded.fetchPage(url, signal),
-    showPage: (url) => { embedded.open(url); },
-  },
+  fetchFlightPage,
 });
 
 // Sealed once the Vault can answer; then each such server runs from it. If

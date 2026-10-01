@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ConsentRequired, pageUrl, payloadOf, rowsOf, searchFlights, type FetchPage } from "../../src/main/flights/search.js";
+import { ConsentRequired, pageUrl, payloadOf, rejectForm, rowsOf, searchFlights, type FetchPage } from "../../src/main/flights/search.js";
 import { currencyOfToken, encodeTfs, itineraryTfs, passengerKinds, segment } from "../../src/main/flights/tfs.js";
 import { travelConnectors } from "../../src/main/travel.js";
 
@@ -37,6 +37,11 @@ function page(rows: unknown[], others: unknown[] = []): string {
   return `<html><script>AF_initDataCallback({key: 'ds:0', hash: '0', data:[1], sideChannel: {}});</script>`
     + `<script>AF_initDataCallback({key: 'ds:1', hash: '1', data:${JSON.stringify(payload)}, sideChannel: {}});</script></html>`;
 }
+
+// The shape of Google's cookie page: "Accept all" sets more fields than "Reject all".
+const CONSENT_PAGE = `<html><title>Before you continue</title>
+<form method="POST" action="https://consent.google.com/save"><input type="hidden" name="gl" value="GB"><input type="hidden" name="continue" value="https://www.google.com/travel/flights?a=1&amp;b=2"><input type="hidden" name="set_sc" value="true"><input type="hidden" name="set_aps" value="true"><input type="hidden" name="set_eom" value="false"><button>Accept all</button></form>
+<form method="POST" action="https://consent.google.com/save"><input type="hidden" name="gl" value="GB"><input type="hidden" name="continue" value="https://www.google.com/travel/flights?a=1&amp;b=2"><input type="hidden" name="set_eom" value="true"><button>Reject all</button></form></html>`;
 
 const ok = (text: string, url = "https://www.google.com/travel/flights") => ({ url, status: 200, text });
 const query = { origin: "MAN", destination: "ADB", departure: "2026-10-25", adults: 2, children: 1, currency: "GBP", country: "GB" };
@@ -104,11 +109,30 @@ describe("searchFlights", () => {
     expect(rows[0]!.legs.map((l) => l.flight_number)).toEqual(["1994", "2316", "1203"]);
   });
 
-  it("stops at Google's cookie choice instead of answering it", async () => {
-    const fetchPage: FetchPage = async () => ok("<html>consent</html>", "https://consent.google.com/ml?continue=x");
-    await expect(searchFlights(query, fetchPage)).rejects.toBeInstanceOf(ConsentRequired);
-     const inPlace: FetchPage = async () => ok('<form action="https://consent.google.com/save"><input name="set_eom" value="true"></form>');
-    await expect(searchFlights(query, inPlace)).rejects.toBeInstanceOf(ConsentRequired);
+  it("declines Google's non-essential cookies, never accepts them, and searches on", async () => {
+    let declined = false;
+    const posts: { url: string; form: URLSearchParams }[] = [];
+    const fetchPage = vi.fn<FetchPage>(async (url, _signal, form) => {
+      if (form) { posts.push({ url, form }); declined = true; return ok(""); }
+      return declined ? ok(page([pegasus])) : ok(CONSENT_PAGE);
+    });
+    expect(await searchFlights(query, fetchPage)).toHaveLength(1);
+    expect(posts).toHaveLength(1);
+    expect(posts[0]!.url).toBe("https://consent.google.com/save");
+    expect(Object.fromEntries(posts[0]!.form)).toEqual({ gl: "GB", continue: "https://www.google.com/travel/flights?a=1&b=2", set_eom: "true" });
+  });
+
+  it("declines once per search and then says so plainly", async () => {
+    const fetchPage = vi.fn<FetchPage>(async (_url, _signal, form) => ok(form ? "" : CONSENT_PAGE));
+    await expect(searchFlights({ ...query, returning: "2026-10-30" }, fetchPage)).rejects.toBeInstanceOf(ConsentRequired);
+    expect(fetchPage.mock.calls.filter((call) => call[2]).length).toBe(1);
+  });
+
+  it("finds the reject form by its fields and only posts to the consent service", () => {
+    expect(rejectForm(CONSENT_PAGE.replace("Reject all", "Alle ablehnen"))?.body.get("set_eom")).toBe("true");
+    expect(rejectForm('<form action="https://evil.example/save"><input name="set_eom" value="true"></form>')?.action).toBe("https://consent.google.com/save");
+    expect(rejectForm('<form><input name="set_eom" value="false"><input name="set_sc" value="true"></form>')).toBeNull();
+    expect(rejectForm("<html>no forms</html>")).toBeNull();
   });
 
   it("tries a page again when it came back without results", async () => {
@@ -124,25 +148,11 @@ describe("searchFlights", () => {
 });
 
 describe("flight tool", () => {
-  const ctx = (handoff: (reason: string) => Promise<boolean>) =>
-    ({ signal: new AbortController().signal, runId: "r1", userGoal: "MAN to ADB flights £", handoff }) as never;
-
-  it("hands Google's cookie choice to the user, then searches again", async () => {
-    let consented = false;
-    const showPage = vi.fn();
-    const fetchPage: FetchPage = async () => consented ? ok(page([pegasus])) : ok("", "https://consent.google.com/ml");
-    const tool = travelConnectors({ fetchPage, showPage }).find((c) => c.id === "travel-flights")!.tools()[0]!;
-    const handoff = vi.fn(async () => { consented = true; return true; });
-    const result = JSON.parse(String(await tool.run({ origin: "MAN", destination: "ADB", departure_date: "2026-10-25" }, ctx(handoff))));
-    expect(showPage).toHaveBeenCalledWith("https://www.google.com/travel/flights?hl=en-GB");
-    expect(handoff).toHaveBeenCalledTimes(1);
+  it("returns cards from the built-in search", async () => {
+    const tool = travelConnectors({ fetchPage: async () => ok(page([pegasus])) }).find((c) => c.id === "travel-flights")!.tools()[0]!;
+    const ctx = { signal: new AbortController().signal, runId: "r1", userGoal: "MAN to ADB flights £" } as never;
+    const result = JSON.parse(String(await tool.run({ origin: "MAN", destination: "ADB", departure_date: "2026-10-25" }, ctx)));
     expect(result).toMatchObject({ kind: "travel-options", source: "google" });
     expect(result.options[0]).toMatchObject({ title: "Pegasus", price: "£180" });
-  });
-
-  it("says plainly when the user leaves the cookie choice unanswered", async () => {
-    const tool = travelConnectors({ fetchPage: async () => ok("", "https://consent.google.com/ml"), showPage: () => {} })
-      .find((c) => c.id === "travel-flights")!.tools()[0]!;
-    await expect(tool.run({ origin: "MAN", destination: "ADB", departure_date: "2026-10-25" }, ctx(async () => false))).rejects.toThrow(/no flights were searched/);
   });
 });
