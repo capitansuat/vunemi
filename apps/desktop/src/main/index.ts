@@ -365,6 +365,10 @@ const connectors = buildConnectors({
   mailOutbox,
   openOAuthBrowser: (url) => shell.openExternal(url),
   countryCode: () => app.getLocaleCountryCode(),
+  browserPages: {
+    fetchPage: (url, signal) => embedded.fetchPage(url, signal),
+    showPage: (url) => { embedded.open(url); },
+  },
 });
 
 // Sealed once the Vault can answer; then each such server runs from it. If

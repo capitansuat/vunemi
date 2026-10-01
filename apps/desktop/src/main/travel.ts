@@ -1,19 +1,12 @@
 /** Two opt-in travel sources. Searches are user-initiated; neither books nor pays. */
-import { constants } from "node:fs";
-import { access } from "node:fs/promises";
 import { execFile } from "node:child_process";
-import { homedir } from "node:os";
-import { delimiter, join } from "node:path";
 import type { Connector, ConnectorStatus } from "@vunemi/connectors";
 import { wantsMoreTravelSearches, type ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import { McpClient } from "@vunemi/mcp";
+import { ConsentRequired, SEARCH_PAGE, searchFlights, type FetchPage } from "./flights/search.js";
 
 const TRIVAGO_MCP = "https://mcp.trivago.com/mcp";
-// PyPI 0.9.0 lacks child passengers in its MCP tool. Pin the current source
-// until a release with that schema is published; uv caches it after setup.
-const FLI_REV = "881aee5ff4321e81ea2157cb44be94ce6a21dc1b";
-const FLI_SOURCE = `flights[mcp] @ git+https://github.com/punitarani/fli@${FLI_REV}`;
 
 type Json = Record<string, unknown>;
 const obj = (value: unknown): Json => value !== null && typeof value === "object" && !Array.isArray(value) ? value as Json : {};
@@ -85,7 +78,6 @@ export class TravelSearchLimit {
     if (this.runs.size > 100) this.runs.delete(this.runs.keys().next().value!);
   }
 }
-const UV_MISSING = "Fli needs uv (https://docs.astral.sh/uv/), which is not installed on this Mac. Tell the user it is missing; you may search in the browser instead.";
 const stopsText = (n: number): string => n === 0 ? t("travel.direct") : t("travel.stops", { count: n });
 
 const safeUrl = (value: unknown, hosts: readonly string[]): string => {
@@ -105,7 +97,7 @@ export interface TravelOption {
 }
 export interface TravelOptions {
   kind: "travel-options";
-  source: "fli" | "trivago";
+  source: "google" | "trivago";
   searchedAt: string;
   options: TravelOption[];
   resultCount: number;
@@ -139,7 +131,7 @@ export function trivagoSearchUrl(offer: string): string {
 
 export function flightOptions(raw: unknown, searchedAt = new Date().toISOString(), returnDate?: string, searchUrl?: string): TravelOptions {
   const data = obj(raw);
-  if (data.success === false) throw new Error(str(data.error) || "The Fli search failed.");
+  if (data.success === false) throw new Error(str(data.error) || "The flight search failed.");
   const rows = Array.isArray(data.flights) ? data.flights : [];
   const seen = new Set<string>();
   const options: TravelOption[] = [];
@@ -172,7 +164,7 @@ export function flightOptions(raw: unknown, searchedAt = new Date().toISOString(
       url,
     });
   }
-  return { kind: "travel-options", source: "fli", searchedAt, options, resultCount, ...(searchUrl && { searchUrl }),
+  return { kind: "travel-options", source: "google", searchedAt, options, resultCount, ...(searchUrl && { searchUrl }),
     warning: options.length ? t("travel.flightsNote") : t("travel.flightsEmpty") };
 }
 
@@ -201,40 +193,31 @@ export function hotelOptions(raw: unknown, searchedAt = new Date().toISOString()
     warning: options.length ? t("travel.hotelsNote") : t("travel.hotelsEmpty") };
 }
 
-async function executable(name: string): Promise<string | null> {
-  const candidates = [join(homedir(), ".local/bin", name), "/opt/homebrew/bin/" + name, "/usr/local/bin/" + name,
-    ...(process.env.PATH ?? "").split(delimiter).filter(Boolean).map((dir) => join(dir, name))];
-  for (const path of candidates) {
-    try { await access(path, constants.X_OK); return path; } catch { /* next */ }
-  }
-  return null;
+export interface TravelOptionsDeps {
+  systemCurrency?: () => Promise<string>;
+  countryCode?: () => string;
+  /** Fetches a page through the embedded browser's session. */
+  fetchPage?: FetchPage;
+  /** Shows a page in the embedded browser, for the user to act on. */
+  showPage?: (url: string) => void;
 }
 
-export function travelConnectors(opts: { systemCurrency?: () => Promise<string>; countryCode?: () => string } = {}): Connector[] {
+export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
   const limit = new TravelSearchLimit();
   let systemMoney: Promise<string> | null = null;
   const moneyFor = (goal: string) => travelCurrency(goal, () => (systemMoney ??= (opts.systemCurrency ?? macCurrency)()));
   const country = () => { const code = str(opts.countryCode?.()).toUpperCase(); return /^[A-Z]{2}$/.test(code) ? code : "GB"; };
-  let fli: McpClient | null = null;
   const trivago = new McpClient({ kind: "http", url: TRIVAGO_MCP });
-  const fliClient = async (): Promise<McpClient> => {
-    if (fli) return fli;
-    const uvx = await executable("uvx");
-    if (!uvx) throw new Error(UV_MISSING);
-    fli = new McpClient({ kind: "stdio", command: uvx, args: ["--from", FLI_SOURCE, "--with", "click", "fli-mcp"] }, undefined, 60_000);
-    return fli;
-  };
   const flightTool: ToolDef = {
     name: "travel_search_flights",
-    description: "Search flight prices and options with Fli. Use IATA airport codes, YYYY-MM-DD dates and passenger counts. A child is 2–11 years old. Results are shown to the user as option cards. Nothing is booked.",
+    description: "Search flight prices and options on Google Flights. Use IATA airport codes, YYYY-MM-DD dates and passenger counts. A child is 2–11 years old. Results are shown to the user as option cards. Nothing is booked.",
     parameters: { type: "object", properties: {
       origin: { type: "string", description: "Departure IATA code, e.g. MAN" }, destination: { type: "string", description: "Arrival IATA code, e.g. ADB" },
       departure_date: { type: "string", description: "YYYY-MM-DD" }, return_date: { type: "string", description: "Optional return date, YYYY-MM-DD" },
       adults: { type: "integer", minimum: 1, maximum: 9 }, children: { type: "integer", minimum: 0, maximum: 8 },
     }, required: ["origin", "destination", "departure_date"], additionalProperties: false },
     actionClass: "outbound", untrustedOutput: true,
-    async check() { return (await executable("uvx")) ? null : UV_MISSING; },
-    async preview(args) { return `Fli › ${str(args.origin)} → ${str(args.destination)} · ${str(args.departure_date)}${args.return_date ? ` – ${str(args.return_date)}` : ""}`; },
+    async preview(args) { return `Google Flights › ${str(args.origin)} → ${str(args.destination)} · ${str(args.departure_date)}${args.return_date ? ` – ${str(args.return_date)}` : ""}`; },
     async run(args, ctx) {
       if (limit.used(ctx.runId, "flight", ctx.userGoal ?? "")) return JSON.stringify({ kind: "travel-search-skipped", reason: "Flights were already searched for this request, and the user did not ask for other dates or routes. Use the earlier results." });
       const origin = airport(args.origin), destination = airport(args.destination), departure = date(args.departure_date);
@@ -243,10 +226,21 @@ export function travelConnectors(opts: { systemCurrency?: () => Promise<string>;
       const adults = count(args.adults ?? 1, 1, 9), children = count(args.children ?? 0, 0, 8);
       if (adults + children > 9) throw new Error("At most 9 passengers can be searched.");
       const money = await moneyFor(ctx.userGoal ?? "");
-      const client = await fliClient();
-      const result = await client.callToolResult("search_flights", { origin, destination, departure_date: departure,
-        ...(returning && { return_date: returning }), passengers: adults, children, currency: money, language: "en-GB", country: country(), top_n: 10 }, ctx.signal);
-      const options = flightOptions(result.structuredContent, new Date().toISOString(), returning,
+      const fetchPage = opts.fetchPage;
+      if (!fetchPage) throw new Error("Flight search needs the Vunemi window, which is closed.");
+      const query = { origin, destination, departure, ...(returning && { returning }), adults, children, currency: money, country: country() };
+      let flights;
+      try {
+        flights = await searchFlights(query, fetchPage, ctx.signal);
+      } catch (error) {
+        // Only the user may answer Google's cookie choice. Show it to them,
+        // wait, and search again with whatever they chose.
+        if (!(error instanceof ConsentRequired) || !opts.showPage) throw error;
+        opts.showPage(`${SEARCH_PAGE}?hl=en-GB`);
+        if (!await ctx.handoff(t("travel.googleConsent"))) throw new Error("The user did not finish Google's cookie choice, so no flights were searched.");
+        flights = await searchFlights(query, fetchPage, ctx.signal);
+      }
+      const options = flightOptions({ flights }, new Date().toISOString(), returning,
         flightSearchUrl(origin, destination, departure, returning, adults, children, money, country()));
       limit.mark(ctx.runId, "flight");
       return JSON.stringify(options);
@@ -286,8 +280,8 @@ export function travelConnectors(opts: { systemCurrency?: () => Promise<string>;
     get description() { return t("connectors.travelFlights.description"); },
     get provides() { return [t("connectors.travelFlights.provides.flights")]; },
     needs: { kind: "none" }, defaultOn: false, requestableWhenOff: true, origin: "builtin",
-    status: async () => (await executable("uvx")) ? ready : { state: "blocked", reason: t("connectors.travelFlights.needsUv") },
-    tools: () => [flightTool], disconnect: async () => { fli?.dispose(); fli = null; },
+    status: async () => ready,
+    tools: () => [flightTool], disconnect: async () => {},
     instructions: "For flight searches, use travel_search_flights first. The tool picks the currency: the one the user named, otherwise the Mac's regional currency. If the user gave one date, do not search other dates; one successful search is enough. Results are shown as cards; never invent prices or links. An empty result does not prove there are no flights. Do not open a booking page until the user has chosen an option.",
   }, {
     id: "travel-hotels", group: "service",

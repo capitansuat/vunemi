@@ -2,7 +2,7 @@ import { t } from "@vunemi/i18n";
 import type { CallView } from "./fold.js";
 
 export interface TravelOption { title: string; price: string; detail: string; extra?: string; url: string; image?: string }
-export interface TravelResults { kind: "travel-options"; source: "fli" | "trivago"; searchedAt: string; options: TravelOption[]; resultCount: number; searchUrl?: string; summary?: string; warning?: string }
+export interface TravelResults { kind: "travel-options"; source: "google" | "trivago"; searchedAt: string; options: TravelOption[]; resultCount: number; searchUrl?: string; summary?: string; warning?: string }
 
 /** Give the next turn the actual card, even if earlier tool output was compacted. */
 export function travelSelectionMessage(results: TravelResults, index: number, pageOpened: boolean): string {
@@ -22,7 +22,7 @@ function safeUrl(value: unknown, hosts: string[]): string | null {
 
 export function parseTravelOptions(call: Pick<CallView, "tool" | "status" | "output">): TravelResults | null {
   if (call.status !== "ok" || (call.tool !== "travel_search_flights" && call.tool !== "travel_search_hotels")) return null;
-  const source = call.tool === "travel_search_flights" ? "fli" : "trivago";
+  const source = call.tool === "travel_search_flights" ? "google" : "trivago";
   const wrapped = call.output?.match(/^<untrusted_content source="travel_search_(?:flights|hotels)">\n([\s\S]*)\n<\/untrusted_content>$/);
   if (!wrapped) return null;
   try {
@@ -30,7 +30,7 @@ export function parseTravelOptions(call: Pick<CallView, "tool" | "status" | "out
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
     const data = raw as Record<string, unknown>;
     if (data.kind !== "travel-options" || data.source !== source || !Array.isArray(data.options)) return null;
-    const hosts = source === "fli" ? ["www.google.com", "google.com"] : ["www.trivago.co.uk", "www.trivago.com"];
+    const hosts = source === "google" ? ["www.google.com", "google.com"] : ["www.trivago.co.uk", "www.trivago.com"];
     const options: TravelOption[] = data.options.slice(0, 6).flatMap((value: unknown) => {
       if (!value || typeof value !== "object" || Array.isArray(value)) return [];
       const row = value as Record<string, unknown>;

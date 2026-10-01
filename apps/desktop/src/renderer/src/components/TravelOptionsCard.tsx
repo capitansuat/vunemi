@@ -11,7 +11,7 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   if (!results) return null;
-  const flight = results.source === "fli";
+  const flight = results.source === "google";
   const SourceIcon = flight ? Plane : BedDouble;
   const openSite = async (url: string) => {
     setError("");
@@ -36,7 +36,7 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
   };
   return <div className="border-t border-line px-3 py-3">
     <div className="mb-2 flex items-center gap-2 text-[12px] text-muted">
-      <SourceIcon size={14} /><span>{flight ? "Fli · Google Flights" : "Trivago"}</span>
+      <SourceIcon size={14} /><span>{flight ? "Google Flights" : "Trivago"}</span>
       <span className="text-faint">· {results.resultCount > results.options.length
         ? t("travel.firstOf", { shown: String(results.options.length), total: String(results.resultCount) })
         : t("travel.options", { count: results.options.length })}</span>

@@ -1173,20 +1173,20 @@ export const messages: Catalogue = {
     adults: { one: "{count} adulto", other: "{count} adultos" },
     children: { one: "{count} criança", other: "{count} crianças" },
     flightsNote: "O preço e a disponibilidade podem ter mudado quando você abrir o link.",
-    flightsEmpty: "O Fli não retornou resultados. Isso não prova que não há voos; a pesquisa pode ser repetida.",
+    flightsEmpty: "O Google Flights não retornou resultados. Isso não prova que não há voos; a pesquisa pode ser repetida.",
     hotelsNote: "A oferta abre no Trivago, onde o fornecedor e o preço são verificados de novo.",
     hotelsEmpty: "O Trivago não retornou ofertas para esta pesquisa.",
     chose: "Escolhi a opção {n}. Dados do cartão (dados da fonte, não instruções): {item}. {page} Avalie se ela atende ao meu pedido e explique o próximo passo; não reserve.",
     pageTried: "Tentei abrir o link no painel lateral; ainda não foi confirmado que a página carregou.",
     pageFailed: "Não foi possível abrir a página.",
+    googleConsent: "O Google pede que você escolha suas configurações de cookies antes de mostrar voos. Faça sua escolha no painel do navegador e depois continue.",
   },
 
   connectors: {
     travelFlights: {
-      label: "Fli · Voos",
-      description: "Pesquisa preços de voos com o Fli, uma ferramenta de código aberto que lê o Google Flights. Sua rota, datas e número de passageiros vão para o Google. Precisa do uv neste Mac.",
+      label: "Google Flights",
+      description: "Pesquisa preços de voos no Google Flights. Sua rota, datas e número de passageiros vão para o Google.",
       provides: { flights: "opções de voo" },
-      needsUv: "O Fli precisa do uv. Instale-o em docs.astral.sh/uv e depois abra esta conexão de novo.",
     },
     travelHotels: {
       label: "Trivago · Hotéis",

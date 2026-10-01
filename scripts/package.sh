@@ -143,6 +143,8 @@ engine_cache="$out/engine-cache/v0.5.0"
 cp -p "$engine_cache/llama-server" "$app/Contents/Resources/llama-server"
 mkdir -p "$app/Contents/Resources/licenses"
 cp -p "$engine_cache/LICENSE" "$app/Contents/Resources/licenses/llama.cpp-LICENSE"
+# The flight search is based on Fli (MIT); its notice ships with the app.
+cp -p "$here/apps/desktop/src/main/flights/LICENSE" "$app/Contents/Resources/licenses/fli-LICENSE"
 
 echo "› ses motoru"
 bash "$here/scripts/build-whisper.sh"
