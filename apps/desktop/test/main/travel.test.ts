@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { setLocale } from "@vunemi/i18n";
 import { shapeOutput } from "@vunemi/agent-core";
 import { flightOptions, flightSearchUrl, hotelOptions, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoSearchUrl } from "../../src/main/travel.js";
 import { parseTravelOptions, travelSelectionMessage } from "../../src/renderer/src/lib/travel-options.js";
@@ -65,13 +66,18 @@ describe("travel sources", () => {
         { title: "Hotel B", price: "£120", detail: "", url: "https://www.trivago.co.uk/en-GB/lm/hotel-b" },
       ],
     }), { name: "travel_search_hotels", untrustedOutput: true }, 12_000) })!;
-    const message = travelSelectionMessage(results, 1, true, true);
+    setLocale("tr");
+    const message = travelSelectionMessage(results, 1, true);
     expect(message).toContain('"title":"Hotel B"');
     expect(message).toContain('"displayedPrice":"£120"');
     expect(message).toContain('"offerUrl":"https://www.trivago.co.uk/en-GB/lm/hotel-b"');
     expect(message).not.toContain("Hotel A");
     expect(message).toContain("rezervasyon yapma");
-    expect(travelSelectionMessage(results, 1, false, false)).toContain("Its page could not be opened.");
+    setLocale("en");
+    expect(travelSelectionMessage(results, 1, false)).toContain("Its page could not be opened.");
+    setLocale("de");
+    expect(travelSelectionMessage(results, 1, false)).toContain("nicht buchen");
+    setLocale("en");
   });
 
   it("uses the Mac's currency unless the user explicitly chooses another", async () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { argumentMisfit, claimsChange, leakedCall, namedTool, requestedTravelTools, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
+import { argumentMisfit, claimsChange, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
+import { requestedTravelTools } from "../src/travel-intent.js";
 import type { AgentEvent, ApprovalDecision } from "../src/events.js";
 import { t } from "@vunemi/i18n";
 import { ProviderError, type ChatMessage, type ChatModel, type ChatRequest, type ChatResult, type ToolCall } from "../src/provider.js";

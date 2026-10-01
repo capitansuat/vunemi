@@ -5,7 +5,8 @@ import { execFile } from "node:child_process";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
 import type { Connector, ConnectorStatus } from "@vunemi/connectors";
-import type { ToolDef } from "@vunemi/agent-core";
+import { wantsMoreTravelSearches, type ToolDef } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 import { McpClient } from "@vunemi/mcp";
 
 const TRIVAGO_MCP = "https://mcp.trivago.com/mcp";
@@ -20,17 +21,17 @@ const str = (value: unknown): string => typeof value === "string" ? value.trim()
 const number = (value: unknown): number | null => typeof value === "number" && Number.isFinite(value) ? value : null;
 const date = (value: unknown): string => {
   const text = str(value);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || Number.isNaN(Date.parse(`${text}T12:00:00Z`))) throw new Error("Tarih YYYY-MM-DD biçiminde olmalı.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || Number.isNaN(Date.parse(`${text}T12:00:00Z`))) throw new Error("Dates must be YYYY-MM-DD.");
   return text;
 };
 const count = (value: unknown, min: number, max: number): number => {
   const n = Number(value);
-  if (!Number.isInteger(n) || n < min || n > max) throw new Error(`Kişi sayısı ${min}–${max} arasında olmalı.`);
+  if (!Number.isInteger(n) || n < min || n > max) throw new Error(`The number of people must be ${min}–${max}.`);
   return n;
 };
 const airport = (value: unknown): string => {
   const code = str(value).toUpperCase();
-  if (!/^[A-Z]{3}$/.test(code)) throw new Error("Havalimanı üç harfli IATA kodu olmalı.");
+  if (!/^[A-Z]{3}$/.test(code)) throw new Error("Airports must be three-letter IATA codes.");
   return code;
 };
 const currency = (value: unknown): string => /^[A-Z]{3}$/.test(str(value).toUpperCase()) ? str(value).toUpperCase() : "GBP";
@@ -56,7 +57,7 @@ export function requestedCurrency(goal: string): string | null {
 
 export async function travelCurrency(goal: string, systemCurrency: () => Promise<string>): Promise<string> {
   const selected = requestedCurrency(goal) ?? await systemCurrency();
-  if (!/^[A-Z]{3}$/.test(selected)) throw new Error("Geçerli bir para birimi gerekli.");
+  if (!/^[A-Z]{3}$/.test(selected)) throw new Error("A valid currency code is required.");
   return selected;
 }
 
@@ -66,19 +67,15 @@ function macCurrency(): Promise<string> {
     'ObjC.import("Foundation"); ObjC.unwrap($.NSLocale.currentLocale.objectForKey($.NSLocaleCurrencyCode))'],
   { timeout: 5_000 }, (error, stdout) => {
     const code = str(stdout).toUpperCase();
-    if (error || !/^[A-Z]{3}$/.test(code)) reject(new Error("Mac'in bölgesel para birimi okunamadı; lütfen para birimini isteğinizde belirtin."));
+    if (error || !/^[A-Z]{3}$/.test(code)) reject(new Error("Could not read the Mac's regional currency. Ask the user which currency to use."));
     else resolve(code);
   }));
-}
-
-export function allowsAdditionalTravelSearch(goal: string): boolean {
-  return /(?:farklı|alternatif|esnek|birkaç|birden fazla|kıyasla|karşılaştır|different|alternative|flexible|multiple|compare|several).{0,32}(?:tarih|gün|rota|şehir|otel|uçuş|date|day|route|city|hotel|flight)|(?:tarih|gün|rota|şehir|otel|uçuş|date|day|route|city|hotel|flight).{0,32}(?:farklı|alternatif|esnek|birkaç|birden fazla|kıyasla|karşılaştır|different|alternative|flexible|multiple|compare|several)/i.test(goal);
 }
 
 export class TravelSearchLimit {
   private readonly runs = new Map<string, Set<"flight" | "hotel">>();
   used(runId: string | undefined, kind: "flight" | "hotel", goal: string): boolean {
-    return !!runId && !allowsAdditionalTravelSearch(goal) && this.runs.get(runId)?.has(kind) === true;
+    return !!runId && !wantsMoreTravelSearches(goal) && this.runs.get(runId)?.has(kind) === true;
   }
   mark(runId: string | undefined, kind: "flight" | "hotel"): void {
     if (!runId) return;
@@ -88,6 +85,9 @@ export class TravelSearchLimit {
     if (this.runs.size > 100) this.runs.delete(this.runs.keys().next().value!);
   }
 }
+const UV_MISSING = "Fli needs uv (https://docs.astral.sh/uv/), which is not installed on this Mac. Tell the user it is missing; you may search in the browser instead.";
+const stopsText = (n: number): string => n === 0 ? t("travel.direct") : t("travel.stops", { count: n });
+
 const safeUrl = (value: unknown, hosts: readonly string[]): string => {
   try {
     const url = new URL(str(value));
@@ -139,7 +139,7 @@ export function trivagoSearchUrl(offer: string): string {
 
 export function flightOptions(raw: unknown, searchedAt = new Date().toISOString(), returnDate?: string, searchUrl?: string): TravelOptions {
   const data = obj(raw);
-  if (data.success === false) throw new Error(str(data.error) || "Fli araması başarısız oldu.");
+  if (data.success === false) throw new Error(str(data.error) || "The Fli search failed.");
   const rows = Array.isArray(data.flights) ? data.flights : [];
   const seen = new Set<string>();
   const options: TravelOption[] = [];
@@ -159,21 +159,21 @@ export function flightOptions(raw: unknown, searchedAt = new Date().toISOString(
     const outward = split > 0 ? legs.slice(0, split) : legs;
     const homeward = split > 0 ? legs.slice(split) : [];
     const finish = outward.at(-1)!;
-    const airline = str(row.primary_airline_name) || str(first.airline) || "Uçuş";
+    const airline = str(row.primary_airline_name) || str(first.airline) || t("travel.flight");
     const stops = Math.max(0, outward.length - 1);
     const backStops = homeward.length ? Math.max(0, homeward.length - 1) : null;
     const outboundText = `${str(first.departure_time).replace("T", " ")} → ${str(finish.arrival_time).replace("T", " ")}`;
-    const returnText = homeward.length ? `Dönüş ${str(homeward[0]?.departure_time).replace("T", " ")} → ${str(last.arrival_time).replace("T", " ")}` : "";
+    const returnText = homeward.length ? t("travel.returnLeg", { time: `${str(homeward[0]?.departure_time).replace("T", " ")} → ${str(last.arrival_time).replace("T", " ")}` }) : "";
     options.push({
       title: airline,
       price: new Intl.NumberFormat("en-GB", { style: "currency", currency: currency(row.currency), maximumFractionDigits: 0 }).format(price),
-      detail: `${outboundText} · ${stops} aktarma`,
-      ...(returnText && { extra: `${returnText} · ${backStops} aktarma` }),
+      detail: `${outboundText} · ${stopsText(stops)}`,
+      ...(returnText && { extra: `${returnText} · ${stopsText(backStops ?? 0)}` }),
       url,
     });
   }
   return { kind: "travel-options", source: "fli", searchedAt, options, resultCount, ...(searchUrl && { searchUrl }),
-    warning: options.length ? "Fiyat ve uygunluk, bağlantıyı açtığınızda değişmiş olabilir." : "Fli sonuç döndürmedi. Bu, uçuş bulunmadığını doğrulamaz; arama tekrar denenebilir." };
+    warning: options.length ? t("travel.flightsNote") : t("travel.flightsEmpty") };
 }
 
 export function hotelOptions(raw: unknown, searchedAt = new Date().toISOString(), summary?: string): TravelOptions {
@@ -192,13 +192,13 @@ export function hotelOptions(raw: unknown, searchedAt = new Date().toISOString()
     const rating = str(row.review_rating);
     const nights = str(row.price_per_night);
     const stay = str(row.price_per_stay);
-    options.push({ title, price: stay || nights || "Fiyatı aç", detail: [rating && `Puan ${rating}`, nights && `${nights}/gece`].filter(Boolean).join(" · "),
+    options.push({ title, price: stay || nights || t("travel.seePrice"), detail: [rating && t("travel.rating", { rating }), nights && t("travel.perNight", { price: nights })].filter(Boolean).join(" · "),
       extra: str(row.country_city), url,
       ...(safeUrl(row.main_image, ["imgcy.trivago.com"]) && { image: safeUrl(row.main_image, ["imgcy.trivago.com"]) }) });
   }
   const searchUrl = options.map((item) => trivagoSearchUrl(item.url)).find(Boolean);
   return { kind: "travel-options", source: "trivago", searchedAt, options, resultCount, ...(searchUrl && { searchUrl }), ...(summary && { summary }),
-    warning: options.length ? "Teklif Trivago'da açılır; sağlayıcı ve fiyat orada yeniden kontrol edilir." : "Trivago bu arama için teklif döndürmedi." };
+    warning: options.length ? t("travel.hotelsNote") : t("travel.hotelsEmpty") };
 }
 
 async function executable(name: string): Promise<string | null> {
@@ -220,28 +220,28 @@ export function travelConnectors(opts: { systemCurrency?: () => Promise<string>;
   const fliClient = async (): Promise<McpClient> => {
     if (fli) return fli;
     const uvx = await executable("uvx");
-    if (!uvx) throw new Error("Fli için uvx kurulu olmalı (https://docs.astral.sh/uv/). Kurulumdan sonra bağlantıyı yeniden açın.");
+    if (!uvx) throw new Error(UV_MISSING);
     fli = new McpClient({ kind: "stdio", command: uvx, args: ["--from", FLI_SOURCE, "--with", "click", "fli-mcp"] }, undefined, 60_000);
     return fli;
   };
   const flightTool: ToolDef = {
     name: "travel_search_flights",
-    description: "Fli ile uçuş fiyatı ve seçenekleri ara. IATA havalimanı kodları, YYYY-MM-DD tarihleri ve yolcu sayısı kullan. Bir çocuk 2–11 yaşındadır. Sonuçlar seçenek kartı olarak gösterilir. Rezervasyon yapılmaz.",
+    description: "Search flight prices and options with Fli. Use IATA airport codes, YYYY-MM-DD dates and passenger counts. A child is 2–11 years old. Results are shown to the user as option cards. Nothing is booked.",
     parameters: { type: "object", properties: {
-      origin: { type: "string", description: "Kalkış IATA kodu, örn. MAN" }, destination: { type: "string", description: "Varış IATA kodu, örn. ADB" },
-      departure_date: { type: "string", description: "YYYY-MM-DD" }, return_date: { type: "string", description: "İsteğe bağlı dönüş tarihi YYYY-MM-DD" },
+      origin: { type: "string", description: "Departure IATA code, e.g. MAN" }, destination: { type: "string", description: "Arrival IATA code, e.g. ADB" },
+      departure_date: { type: "string", description: "YYYY-MM-DD" }, return_date: { type: "string", description: "Optional return date, YYYY-MM-DD" },
       adults: { type: "integer", minimum: 1, maximum: 9 }, children: { type: "integer", minimum: 0, maximum: 8 },
     }, required: ["origin", "destination", "departure_date"], additionalProperties: false },
     actionClass: "outbound", untrustedOutput: true,
-    async check() { return (await executable("uvx")) ? null : "Fli için uvx kurulu olmalı. Kurulumdan sonra yeniden deneyin."; },
+    async check() { return (await executable("uvx")) ? null : UV_MISSING; },
     async preview(args) { return `Fli › ${str(args.origin)} → ${str(args.destination)} · ${str(args.departure_date)}${args.return_date ? ` – ${str(args.return_date)}` : ""}`; },
     async run(args, ctx) {
-      if (limit.used(ctx.runId, "flight", ctx.userGoal ?? "")) return JSON.stringify({ kind: "travel-search-skipped", reason: "Bu istekte uçuş zaten arandı. Kullanıcı farklı tarih veya rota istemedi; önceki sonuçları kullan." });
+      if (limit.used(ctx.runId, "flight", ctx.userGoal ?? "")) return JSON.stringify({ kind: "travel-search-skipped", reason: "Flights were already searched for this request, and the user did not ask for other dates or routes. Use the earlier results." });
       const origin = airport(args.origin), destination = airport(args.destination), departure = date(args.departure_date);
       const returning = args.return_date ? date(args.return_date) : undefined;
-      if (returning && returning < departure) throw new Error("Dönüş tarihi gidişten önce olamaz.");
+      if (returning && returning < departure) throw new Error("The return date cannot be before the departure date.");
       const adults = count(args.adults ?? 1, 1, 9), children = count(args.children ?? 0, 0, 8);
-      if (adults + children > 9) throw new Error("En fazla 9 yolcu aranabilir.");
+      if (adults + children > 9) throw new Error("At most 9 passengers can be searched.");
       const money = await moneyFor(ctx.userGoal ?? "");
       const client = await fliClient();
       const result = await client.callToolResult("search_flights", { origin, destination, departure_date: departure,
@@ -254,41 +254,48 @@ export function travelConnectors(opts: { systemCurrency?: () => Promise<string>;
   };
   const hotelTool: ToolDef = {
     name: "travel_search_hotels",
-    description: "Trivago'nun resmî MCP sunucusunda otel fiyatlarını ara. Tek tarih verilirse bir gece kalınacağını varsay; çıkış tarihi isteğe bağlıdır. Misafir sayısı söylenmezse bir yetişkinle ara. Çocuk bilgisi verilmişse yaşını kullan. Sonuçlar seçenek kartı olarak gösterilir. Rezervasyon yapılmaz.",
+    description: "Search hotel prices on Trivago's official MCP server. Given one date, assume one night; check-out is optional. If the number of guests is not given, search for one adult. If children are mentioned, use their ages. Results are shown to the user as option cards. Nothing is booked.",
     parameters: { type: "object", properties: {
-      destination: { type: "string" }, check_in: { type: "string", description: "YYYY-MM-DD" }, check_out: { type: "string", description: "İsteğe bağlı YYYY-MM-DD; yoksa bir gece" },
+      destination: { type: "string" }, check_in: { type: "string", description: "YYYY-MM-DD" }, check_out: { type: "string", description: "Optional, YYYY-MM-DD; one night if omitted" },
       adults: { type: "integer", minimum: 1 }, child_ages: { type: "array", items: { type: "integer", minimum: 0, maximum: 17 } }, rooms: { type: "integer", minimum: 1 },
     }, required: ["destination", "check_in"], additionalProperties: false },
     actionClass: "outbound", untrustedOutput: true,
-    async preview(args) { return `Trivago › ${str(args.destination)} · ${str(args.check_in)}${args.check_out ? ` – ${str(args.check_out)}` : " · 1 gece"}`; },
+    async preview(args) { return `Trivago › ${str(args.destination)} · ${str(args.check_in)}${args.check_out ? ` – ${str(args.check_out)}` : ""}`; },
     async run(args, ctx) {
-      if (limit.used(ctx.runId, "hotel", ctx.userGoal ?? "")) return JSON.stringify({ kind: "travel-search-skipped", reason: "Bu istekte otel zaten arandı. Kullanıcı farklı tarih veya bölge istemedi; önceki sonuçları kullan." });
+      if (limit.used(ctx.runId, "hotel", ctx.userGoal ?? "")) return JSON.stringify({ kind: "travel-search-skipped", reason: "Hotels were already searched for this request, and the user did not ask for other dates or areas. Use the earlier results." });
       const destination = str(args.destination).slice(0, 120), arrival = date(args.check_in);
       const departure = args.check_out ? date(args.check_out) : new Date(Date.parse(`${arrival}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
-      if (!destination || departure <= arrival) throw new Error("Otel konumu ve geçerli giriş/çıkış tarihleri gerekli.");
+      if (!destination || departure <= arrival) throw new Error("A hotel destination and valid check-in/check-out dates are required.");
       const adults = count(args.adults ?? 1, 1, 9), ages = Array.isArray(args.child_ages) ? args.child_ages.map((x) => count(x, 0, 17)) : [];
-      if (adults + ages.length > 9) throw new Error("En fazla 9 misafir aranabilir.");
+      if (adults + ages.length > 9) throw new Error("At most 9 guests can be searched.");
       const rooms = count(args.rooms ?? 1, 1, adults);
       const money = await moneyFor(ctx.userGoal ?? "");
       const result = await trivago.callToolResult("trivago-accommodation-search", { query: destination, arrival, departure,
         adults, children: ages.length, ...(ages.length && { children_ages: ages.join("-") }), rooms,
         country: country(), currency: money, language: "EN_GB" }, ctx.signal);
       const options = hotelOptions(result.structuredContent, new Date().toISOString(),
-        `${destination} · ${arrival} – ${departure} · ${adults} yetişkin${ages.length ? `, ${ages.length} çocuk` : ""}`);
+        `${destination} · ${arrival} – ${departure} · ${[t("travel.adults", { count: adults }), ...(ages.length ? [t("travel.children", { count: ages.length })] : [])].join(", ")}`);
       limit.mark(ctx.runId, "hotel");
       return JSON.stringify(options);
     },
   };
   const ready: ConnectorStatus = { state: "ready" };
   return [{
-    id: "travel-flights", label: "Fli · Uçuşlar", group: "service", description: "Uçuş fiyatlarını Fli üzerinden arar.", provides: ["Uçuş seçenekleri"],
-    needs: { kind: "none" }, defaultOn: false, requestableWhenOff: true, origin: "builtin", status: async () => (await executable("uvx")) ? ready : { state: "blocked", reason: "Fli için uvx kurulmalı." },
+    id: "travel-flights", group: "service",
+    get label() { return t("connectors.travelFlights.label"); },
+    get description() { return t("connectors.travelFlights.description"); },
+    get provides() { return [t("connectors.travelFlights.provides.flights")]; },
+    needs: { kind: "none" }, defaultOn: false, requestableWhenOff: true, origin: "builtin",
+    status: async () => (await executable("uvx")) ? ready : { state: "blocked", reason: t("connectors.travelFlights.needsUv") },
     tools: () => [flightTool], disconnect: async () => { fli?.dispose(); fli = null; },
-    instructions: "Uçuş aramasında önce travel_search_flights kullan. Para birimini araç seçer: kullanıcı isteğinde açıkça belirtmişse onu, yoksa Mac'in bölgesel para birimini kullanır. Tek tarih istenmişse alternatif tarih arama; bir başarılı arama yeterli. Sonuçlar kart olarak gösterilir; fiyatı ve bağlantıyı uydurma. Boş sonuç uçuş olmadığına kanıt değildir. Kullanıcı bir seçenek seçmeden rezervasyon sayfasını açma.",
+    instructions: "For flight searches, use travel_search_flights first. The tool picks the currency: the one the user named, otherwise the Mac's regional currency. If the user gave one date, do not search other dates; one successful search is enough. Results are shown as cards; never invent prices or links. An empty result does not prove there are no flights. Do not open a booking page until the user has chosen an option.",
   }, {
-    id: "travel-hotels", label: "Trivago · Oteller", group: "service", description: "Resmî Trivago MCP üzerinden otel tekliflerini arar.", provides: ["Otel seçenekleri"],
+    id: "travel-hotels", group: "service",
+    get label() { return t("connectors.travelHotels.label"); },
+    get description() { return t("connectors.travelHotels.description"); },
+    get provides() { return [t("connectors.travelHotels.provides.hotels")]; },
     needs: { kind: "none" }, defaultOn: false, requestableWhenOff: true, origin: "builtin", status: async () => ready,
     tools: () => [hotelTool], disconnect: async () => trivago.dispose(),
-    instructions: "Otel aramasında önce travel_search_hotels kullan. Para birimini araç seçer: kullanıcı isteğinde açıkça belirtmişse onu, yoksa Mac'in bölgesel para birimini kullanır. Kullanıcı yalnızca giriş günü söylerse bir gece varsay; kişi sayısı belirsizse bir yetişkinle ilk aramayı yap ve kartta bunu açıkça göster. Tek tarih/bölge için bir başarılı arama yeterli; istenmemiş alternatif arama yapma. Çocuk bilgisi varsa yaşını yalnızca gerekliyse sor. Sonuçlar kart olarak gösterilir; MCP'deki reklamveren adı tıklamada değişebildiği için sağlayıcıyı kesin diye söyleme. Rezervasyonu kullanıcı yapar.",
+    instructions: "For hotel searches, use travel_search_hotels first. The tool picks the currency: the one the user named, otherwise the Mac's regional currency. If the user gives only a check-in day, assume one night; if the number of guests is unclear, search for one adult first and say so. For one date and area, one successful search is enough; do not search alternatives the user did not ask for. If children are mentioned, ask their ages only when needed. Results are shown as cards. The advertiser name can change on click, so do not state the provider as certain. The user makes the booking.",
   }];
 }

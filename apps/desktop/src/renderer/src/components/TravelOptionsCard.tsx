@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ExternalLink, Plane, BedDouble } from "lucide-react";
-import { getLocale } from "@vunemi/i18n";
+import { getLocale, t } from "@vunemi/i18n";
 import { useStore } from "../store.js";
 import type { CallView } from "../lib/fold.js";
 import { parseTravelOptions, travelSelectionMessage } from "../lib/travel-options.js";
@@ -11,7 +11,6 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   if (!results) return null;
-  const tr = getLocale() === "tr";
   const flight = results.source === "fli";
   const SourceIcon = flight ? Plane : BedDouble;
   const openSite = async (url: string) => {
@@ -30,7 +29,7 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
     setBusy(true); setError("");
     try {
       const pageOpened = await openSite(results.options[index]!.url);
-      await useStore.getState().send(travelSelectionMessage(results, index, tr, pageOpened));
+      await useStore.getState().send(travelSelectionMessage(results, index, pageOpened));
       setSelected(index);
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
@@ -39,9 +38,9 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
     <div className="mb-2 flex items-center gap-2 text-[12px] text-muted">
       <SourceIcon size={14} /><span>{flight ? "Fli · Google Flights" : "Trivago"}</span>
       <span className="text-faint">· {results.resultCount > results.options.length
-        ? (tr ? `${results.resultCount} sonuçtan ilk ${results.options.length}` : `First ${results.options.length} of ${results.resultCount} results`)
-        : (tr ? `${results.options.length} seçenek` : `${results.options.length} options`)}</span>
-      {results.searchedAt && <time className="ml-auto text-faint" dateTime={results.searchedAt}>{new Date(results.searchedAt).toLocaleTimeString(tr ? "tr-TR" : "en-GB", { hour: "2-digit", minute: "2-digit" })}</time>}
+        ? t("travel.firstOf", { shown: String(results.options.length), total: String(results.resultCount) })
+        : t("travel.options", { count: results.options.length })}</span>
+      {results.searchedAt && <time className="ml-auto text-faint" dateTime={results.searchedAt}>{new Date(results.searchedAt).toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit" })}</time>}
     </div>
     {results.summary && <p className="mb-2 text-[12px] text-muted">{results.summary}</p>}
     {results.options.length ? <div className="grid gap-2 sm:grid-cols-2">
@@ -54,12 +53,12 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
         {option.detail && <p className="mt-1 text-[12px] leading-snug text-muted">{option.detail}</p>}
         {option.extra && <p className="mt-1 text-[12px] leading-snug text-muted">{option.extra}</p>}
         <div className="mt-3 flex items-center gap-2">
-          <button type="button" disabled={busy || selected !== null} onClick={() => void choose(index)} className="rounded-lg bg-fg px-3 py-1.5 text-[12px] font-medium text-bg disabled:opacity-50">{selected === index ? (tr ? "Seçildi" : "Selected") : (tr ? "Seç" : "Choose")}</button>
-          <button type="button" onClick={() => void openSite(option.url)} className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-[12px] text-fg hover:bg-surface"><ExternalLink size={12} />{tr ? "Teklifi aç" : "Open offer"}</button>
+          <button type="button" disabled={busy || selected !== null} onClick={() => void choose(index)} className="rounded-lg bg-fg px-3 py-1.5 text-[12px] font-medium text-bg disabled:opacity-50">{selected === index ? t("travel.chosen") : t("travel.choose")}</button>
+          <button type="button" onClick={() => void openSite(option.url)} className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-[12px] text-fg hover:bg-surface"><ExternalLink size={12} />{t("travel.openOffer")}</button>
         </div>
       </div>)}
-    </div> : <p className="text-[12px] text-muted">{tr ? "Gösterilecek seçenek bulunamadı." : "No options to show."}</p>}
-    {results.searchUrl && <button type="button" onClick={() => void openSite(results.searchUrl!)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-[12px] font-medium text-fg hover:bg-surface"><ExternalLink size={13} />{tr ? "Sitede daha fazlasını gör" : "See more on the site"}</button>}
+    </div> : <p className="text-[12px] text-muted">{t("travel.none")}</p>}
+    {results.searchUrl && <button type="button" onClick={() => void openSite(results.searchUrl!)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-[12px] font-medium text-fg hover:bg-surface"><ExternalLink size={13} />{t("travel.seeMore")}</button>}
     {results.warning && <p className="mt-2 text-[11px] text-faint">{results.warning}</p>}
     {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
   </div>;

@@ -11,6 +11,7 @@ import { maskSecrets } from "./secrets.js";
 import type { ChatMessage, ChatModel, ChatResult, ImageData, ToolCall, ToolSpec } from "./provider.js";
 import type { ActionClass, ToolDef, ToolRegistry } from "./tools.js";
 import { t } from "@vunemi/i18n";
+import { requestedTravelTools } from "./travel-intent.js";
 
 export type Autonomy = "auto" | "ask" | "deny";
 export type AutonomyPolicy = Record<ActionClass, Autonomy>;
@@ -1054,16 +1055,6 @@ const callNudge = (name: string): string =>
 /** Said to the model, once, when it opened a group of tools and answered without using any. */
 const guideNudge = (group: string): string =>
   `[Vunemi check, not from the user] You opened the ${group} tools but called none of them. If the user's request needs one, call it now. Otherwise answer the user plainly, and don't say you checked or did anything you didn't.`;
-
-/** Only explicit requests to look for travel options require a search call. */
-export function requestedTravelTools(goal: string): string[] {
-  const action = /\b(?:search|find|show|compare|check|look|browse)\b|(?:ara(?!ma)|bul|bak|göster|karşılaştır|listele)(?:\p{L})*|arama(?:sı|si)?\s+yap/iu;
-  if (!action.test(goal)) return [];
-  const wanted: string[] = [];
-  if (/(?:otel|konaklama|hotel|accommodation)/iu.test(goal)) wanted.push("travel_search_hotels");
-  if (/(?:uçuş|ucus|uçak|ucak|flight|airfare|plane ticket)/iu.test(goal)) wanted.push("travel_search_flights");
-  return wanted;
-}
 
 const travelNudge = (name: string): string =>
   `[Vunemi check, not from the user] The user asked for travel options, but you ended the task without calling ${name}. Call it now with the requested place and date. If a detail is unspecified, use the tool's documented default. Do not claim to be searching and then stop. If the tool cannot be used, say plainly that no live search happened.`;
