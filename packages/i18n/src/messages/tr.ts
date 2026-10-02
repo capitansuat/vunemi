@@ -182,6 +182,15 @@ export const messages = {
     compactNow: "Şimdi sıkıştır",
     compactHint: "Konuşmanın eski kısmını özetleyip modelde yer açar.",
     estimated: "Model sınırını bildirmedi; {budget} token varsayıldı.",
+    lastRequest: "Son istek",
+    parts: {
+      system: "Sistem talimatı",
+      instructions: "Talimatlar",
+      tools: "Araç tanımları",
+      conversation: "Konuşma",
+      toolOutputs: "Araç çıktıları",
+      images: "Resimler",
+    },
   },
 
   composer: {

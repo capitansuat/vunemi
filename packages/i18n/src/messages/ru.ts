@@ -178,6 +178,15 @@ export const messages: Catalogue = {
     compactNow: "Сжать сейчас",
     compactHint: "Сжимает начало разговора, чтобы освободить место для модели.",
     estimated: "Модель не сообщила свой предел; предполагается {budget} токенов.",
+    lastRequest: "Последний запрос",
+    parts: {
+      system: "Системная инструкция",
+      instructions: "Инструкции",
+      tools: "Описания инструментов",
+      conversation: "Разговор",
+      toolOutputs: "Вывод инструментов",
+      images: "Изображения",
+    },
   },
 
   composer: {

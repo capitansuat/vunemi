@@ -1620,3 +1620,18 @@ describe("scheduled runs", () => {
     expect(outputs[0]).toMatch(/can't run in a scheduled task/);
   });
 });
+
+describe("prompt ledger in usage events", () => {
+  it("says what each request was made of, without its content", async () => {
+    const { model } = scripted([{ calls: [{ name: "read_page", argumentsText: "{}" }] }, { text: "done" }]);
+    const { promise, events } = run({ model, instructions: "Be brief." });
+    await promise;
+    const usages = events.flatMap((e) => (e.type === "usage" ? [e] : []));
+    expect(usages).toHaveLength(2);
+    const first = usages[0]!.ledger!;
+    expect(first.map((p) => p.kind)).toEqual(expect.arrayContaining(["system", "instructions", "tools", "conversation"]));
+    expect(first.some((p) => p.kind === "toolOutputs")).toBe(false);
+    expect(usages[1]!.ledger!.find((p) => p.kind === "toolOutputs")?.name).toBe("read_page");
+    expect(JSON.stringify(usages)).not.toContain("Ignore previous instructions");
+  });
+});

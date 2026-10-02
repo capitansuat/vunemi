@@ -178,6 +178,15 @@ export const messages: Catalogue = {
     compactNow: "지금 압축",
     compactHint: "대화의 앞부분을 요약해 모델에 여유를 만듭니다.",
     estimated: "모델이 한도를 알려 주지 않아 {budget} 토큰으로 가정합니다.",
+    lastRequest: "마지막 요청",
+    parts: {
+      system: "시스템 프롬프트",
+      instructions: "지침",
+      tools: "도구 정의",
+      conversation: "대화",
+      toolOutputs: "도구 출력",
+      images: "이미지",
+    },
   },
 
   composer: {

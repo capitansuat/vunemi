@@ -7,6 +7,7 @@
  */
 
 import type { ActionClass } from "./tools.js";
+import type { LedgerPart } from "./ledger.js";
 
 export type RunStatus = "done" | "stopped" | "failed" | "max_steps";
 
@@ -90,6 +91,8 @@ export type AgentEvent =
       completionTokens: number | null;
       ttftMs: number | null;
       tokensPerSec: number | null;
+      /** What the request was made of, by part; names only, never content. */
+      ledger?: LedgerPart[];
     }
   /** The notes from memory this run was given; shown under its answer. */
   | { type: "memory.given"; runId: string; notes: MemoryNote[]; at: number }

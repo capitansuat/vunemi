@@ -13,6 +13,7 @@ import { SessionsNav } from "./components/SessionsNav.js";
 import { SettingsView } from "./components/SettingsView.js";
 import { Turn } from "./components/Turn.js";
 import { runStats } from "./lib/fold.js";
+import type { LedgerKind } from "@vunemi/agent-core";
 import { available, GOALS, IDEAS, PROJECT_GOALS, PROJECT_IDEAS, switchable } from "./lib/suggestions.js";
 import { ICONS } from "./components/ConnectionsView.js";
 import { formatTokens } from "./lib/labels.js";
@@ -266,6 +267,8 @@ function TopBar() {
   const last = runs.at(-1);
   const compacted = last?.compaction?.status === "done" ? last.compaction.after : null;
   const used = compacted ?? (last ? runStats(last).lastPromptTokens : null) ?? context?.estimate ?? null;
+  // After a compaction the last request no longer describes what's sent next.
+  const parts = compacted === null && last ? runStats(last).lastParts : null;
 
   return (
     <header className="drag flex h-[52px] shrink-0 items-center gap-3 border-b border-line px-4">
@@ -275,7 +278,7 @@ function TopBar() {
         <Lock size={13} />
       </span>
       <div className="flex-1" />
-      {used !== null && <ContextMeter used={used} budget={context?.window ?? 32_768} known={context?.known ?? false} />}
+      {used !== null && <ContextMeter used={used} budget={context?.window ?? 32_768} known={context?.known ?? false} parts={parts} />}
       <PaneToggle />
     </header>
   );
@@ -326,14 +329,25 @@ function PaneToggle() {
   );
 }
 
-function ContextMeter({ used, budget, known }: { used: number; budget: number; known: boolean }) {
+const PART_ORDER: readonly LedgerKind[] = ["system", "instructions", "tools", "conversation", "toolOutputs", "images"];
+
+/** The last request part by part, largest first: where the context goes. */
+function partLines(parts: Partial<Record<LedgerKind, number>> | null): string[] {
+  if (!parts) return [];
+  const lines = PART_ORDER.flatMap((kind) => (parts[kind] ? [[kind, parts[kind]!] as const] : []))
+    .sort((a, b) => b[1] - a[1])
+    .map(([kind, n]) => `  ${t(`context.parts.${kind}`)}: ${formatTokens(n)}`);
+  return lines.length ? ["", `${t("context.lastRequest")}:`, ...lines] : [];
+}
+
+function ContextMeter({ used, budget, known, parts }: { used: number; budget: number; known: boolean; parts: Partial<Record<LedgerKind, number>> | null }) {
   const running = useStore((s) => s.running);
   const hasRuns = useStore((s) => s.runs.length > 0);
   const compactNow = useStore((s) => s.compactNow);
   const [busy, setBusy] = useState(false);
   const ratio = Math.min(used / budget, 1);
   const tone = ratio > 0.8 ? "bg-danger" : ratio > 0.5 ? "bg-warn" : "bg-ok";
-  const title = [t("app.context", { used, budget }), known ? null : t("context.estimated", { budget })].filter(Boolean).join("\n");
+  const title = [t("app.context", { used, budget }), known ? null : t("context.estimated", { budget }), ...partLines(parts)].filter((line) => line !== null).join("\n");
   return (
     <div className="no-drag flex items-center gap-2 text-[11.5px] text-faint" title={title}>
       <span className="tabular-nums">

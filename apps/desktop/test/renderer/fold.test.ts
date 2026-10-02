@@ -136,7 +136,16 @@ describe("runStats", () => {
       { type: "step.started", runId: "r", stepId: "s1", index: 1, at: 2 },
       { type: "usage", runId: "r", stepId: "s1", promptTokens: 620, completionTokens: 10, ttftMs: 700, tokensPerSec: 50 },
     ]);
-    expect(runStats(run!)).toEqual({ steps: 2, tools: 0, tokensPerSec: 45, ttftMs: 800, lastPromptTokens: 620 });
+    expect(runStats(run!)).toEqual({ steps: 2, tools: 0, tokensPerSec: 45, ttftMs: 800, lastPromptTokens: 620, lastParts: null });
+  });
+
+  it("keeps what the last request was made of, by kind", () => {
+    const [run] = fold([
+      ...start,
+      { type: "usage", runId: "r", stepId: "s0", promptTokens: 900, completionTokens: 10, ttftMs: 800, tokensPerSec: 40,
+        ledger: [{ kind: "tools", name: "mail", tokens: 400 }, { kind: "tools", name: "browser", tokens: 300 }, { kind: "system", name: "core", tokens: 200 }] },
+    ]);
+    expect(runStats(run!).lastParts).toEqual({ tools: 700, system: 200 });
   });
 });
 

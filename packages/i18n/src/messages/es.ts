@@ -178,6 +178,15 @@ export const messages: Catalogue = {
     compactNow: "Compactar ahora",
     compactHint: "Resume la parte anterior de la conversación para liberar espacio al modelo.",
     estimated: "El modelo no informó su límite; se suponen {budget} tokens.",
+    lastRequest: "Última solicitud",
+    parts: {
+      system: "Indicación del sistema",
+      instructions: "Instrucciones",
+      tools: "Definiciones de herramientas",
+      conversation: "Conversación",
+      toolOutputs: "Resultados de herramientas",
+      images: "Imágenes",
+    },
   },
 
   composer: {

@@ -3,7 +3,7 @@
  * same view out, so the timeline can be rebuilt from a recorded log.
  */
 
-import type { ActionClass, AgentEvent, ApprovalDecision, Artifact, MemoryNote, MemoryProposal, Produced, RunStatus } from "@vunemi/agent-core";
+import { ledgerTotals, type ActionClass, type AgentEvent, type ApprovalDecision, type Artifact, type LedgerKind, type MemoryNote, type MemoryProposal, type Produced, type RunStatus } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 
 export type CallStatus = "proposed" | "awaiting" | "running" | "ok" | "error" | "rejected";
@@ -40,6 +40,8 @@ export interface UsageView {
   completionTokens: number | null;
   ttftMs: number | null;
   tokensPerSec: number | null;
+  /** Tokens per kind of part in the request; absent from older runs. */
+  parts?: Partial<Record<LedgerKind, number>>;
 }
 
 export interface StepView {
@@ -132,6 +134,7 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
           completionTokens: e.completionTokens,
           ttftMs: e.ttftMs,
           tokensPerSec: e.tokensPerSec,
+          ...(e.ledger && { parts: ledgerTotals(e.ledger) }),
         },
       }));
     case "tool.proposed":
@@ -254,7 +257,7 @@ function updateCall(run: RunView, callId: string, f: (c: CallView) => CallView):
 }
 
 /** Aggregates for the run footer. */
-export function runStats(run: RunView): { steps: number; tools: number; tokensPerSec: number | null; ttftMs: number | null; lastPromptTokens: number | null } {
+export function runStats(run: RunView): { steps: number; tools: number; tokensPerSec: number | null; ttftMs: number | null; lastPromptTokens: number | null; lastParts: Partial<Record<LedgerKind, number>> | null } {
   const usages = run.steps.flatMap((s) => (s.usage ? [s.usage] : []));
   const tps = usages.flatMap((u) => (u.tokensPerSec !== null ? [u.tokensPerSec] : []));
   return {
@@ -263,6 +266,7 @@ export function runStats(run: RunView): { steps: number; tools: number; tokensPe
     tokensPerSec: tps.length ? Math.round((tps.reduce((a, b) => a + b, 0) / tps.length) * 10) / 10 : null,
     ttftMs: usages[0]?.ttftMs ?? null,
     lastPromptTokens: usages.at(-1)?.promptTokens ?? null,
+    lastParts: usages.at(-1)?.parts ?? null,
   };
 }
 

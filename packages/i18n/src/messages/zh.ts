@@ -178,6 +178,15 @@ export const messages: Catalogue = {
     compactNow: "立即压缩",
     compactHint: "压缩对话的前半部分，为模型腾出空间。",
     estimated: "模型未报告其上限；按 {budget} 个 token 估算。",
+    lastRequest: "上一次请求",
+    parts: {
+      system: "系统提示",
+      instructions: "说明",
+      tools: "工具定义",
+      conversation: "对话",
+      toolOutputs: "工具输出",
+      images: "图片",
+    },
   },
 
   composer: {

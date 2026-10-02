@@ -12,6 +12,7 @@ import type { ChatMessage, ChatModel, ChatResult, ImageData, ToolCall, ToolSpec 
 import type { ActionClass, ToolDef, ToolRegistry } from "./tools.js";
 import { t } from "@vunemi/i18n";
 import { requestedTravelTools } from "./travel-intent.js";
+import { promptLedger, type LedgerPart } from "./ledger.js";
 
 export type Autonomy = "auto" | "ask" | "deny";
 export type AutonomyPolicy = Record<ActionClass, Autonomy>;
@@ -345,6 +346,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   };
 
   let lastSignature = "";
+  let lastLedger: LedgerPart[] | undefined;
   let repeats = 0;
   let calendarReadError: string | null = null;
   let calendarReadSucceeded = false;
@@ -411,7 +413,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           throw again;
         }
       }
-      emit({ type: "usage", runId, stepId, ...result.usage });
+      emit({ type: "usage", runId, stepId, ...result.usage, ...(lastLedger && { ledger: lastLedger }) });
 
       convo.push({
         role: "assistant",
@@ -559,7 +561,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
             : { type: "message.delta", runId, stepId, text: chunk.text },
         ),
       );
-      emit({ type: "usage", runId, stepId, ...result.usage });
+      emit({ type: "usage", runId, stepId, ...result.usage, ledger: ledgerOf(messages) });
       const text = result.text.trim();
       if (!text) return null;
       convo.push({ role: "assistant", content: text });
@@ -577,6 +579,11 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     if (!image) return "\n\n[The image could not be read.]";
     stepImages.push({ tool: toolName, ...(artifact.label && { label: artifact.label }), image });
     return "\n\n[The image follows in the next message.]";
+  }
+
+  /** The parts of a request, for the usage event. */
+  function ledgerOf(messages: readonly ChatMessage[]): LedgerPart[] {
+    return promptLedger({ core: SYSTEM_PROMPT, ...(opts.instructions && { instructions: opts.instructions }), tools: toolSpecs, sourceOf: (name) => tools.sourceOf(name), messages }, charsPerToken);
   }
 
   /** One model call for this step; teaches the token estimate from what the server reports. */
@@ -609,6 +616,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     if (!passing && !markup && held && !leakedCall(held, "")) say(held);
     const learned = calibrate(JSON.stringify(toolSpecs).length + messageChars(messages), result.usage.promptTokens);
     if (learned !== null) charsPerToken = learned;
+    lastLedger = ledgerOf(messages);
     return result;
   }
 

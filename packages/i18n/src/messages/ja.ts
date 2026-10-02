@@ -178,6 +178,15 @@ export const messages: Catalogue = {
     compactNow: "今すぐ圧縮",
     compactHint: "会話の前半を要約して、モデルの空きを作ります。",
     estimated: "モデルが上限を報告しなかったため、{budget} トークンと仮定しています。",
+    lastRequest: "直近のリクエスト",
+    parts: {
+      system: "システムプロンプト",
+      instructions: "指示",
+      tools: "ツール定義",
+      conversation: "会話",
+      toolOutputs: "ツールの出力",
+      images: "画像",
+    },
   },
 
   composer: {
