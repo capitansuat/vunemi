@@ -498,33 +498,43 @@ describe("previews, instructions and ephemeral outputs", () => {
     expect(seen[0]!.messages[0]!.content).toMatch(/^You are Vunemi[\s\S]*\n\nUse the browser carefully\.$/);
   });
 
-  it("keeps only the newest ephemeral output, in requests and in the returned history", async () => {
+  /** A browser-like tool whose snapshots are ephemeral: only the newest describes the page. */
+  const snapshots = (size = 0) => {
     let n = 0;
-    const registry = new ToolRegistry().register({
+    return new ToolRegistry().register({
       name: "snapshot",
       description: "",
       parameters: { type: "object", properties: {} },
       actionClass: "read",
       ephemeral: true,
-      run: async () => `page v${++n}`,
+      run: async () => `page v${++n}${"x".repeat(size)}`,
     });
-    const { model, seen } = scripted([
-      { calls: [{ name: "snapshot", argumentsText: '{"a":1}' }] },
-      { calls: [{ name: "snapshot", argumentsText: '{"a":2}' }] },
-      { text: "done" },
-    ]);
-    const result = await runAgent({
-      goal: "g",
-      model,
-      tools: registry,
-      emit: () => {},
-      requestApproval: async () => ({ kind: "approve" }),
-    });
+  };
+  const twoSnapshots = () => scripted([
+    { calls: [{ name: "snapshot", argumentsText: '{"a":1}' }] },
+    { calls: [{ name: "snapshot", argumentsText: '{"a":2}' }] },
+    { text: "done" },
+  ]);
+  const toolContents = (msgs: { role: string; content: string }[]) =>
+    msgs.filter((m) => m.role === "tool").map((m) => m.content.slice(0, 7));
 
-    const toolContents = (msgs: { role: string; content: string }[]) =>
-      msgs.filter((m) => m.role === "tool").map((m) => m.content);
-    expect(toolContents(seen[2]!.messages)).toEqual([EPHEMERAL_PLACEHOLDER, "page v2"]);
-    expect(toolContents(result.messages)).toEqual([EPHEMERAL_PLACEHOLDER, "page v2"]);
+  it("never edits earlier messages while there is room: a local server would read everything again", async () => {
+    const { model, seen } = twoSnapshots();
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "g", model, tools: snapshots(), emit: (e) => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
+    expect(toolContents(seen[2]!.messages)).toEqual(["page v1", "page v2"]);
+    expect(toolContents(result.messages)).toEqual(["page v1", "page v2"]);
+    // Each request starts with the whole of the one before it.
+    expect(seen[2]!.messages.slice(0, seen[1]!.messages.length)).toEqual(seen[1]!.messages);
+    expect(events.some((e) => e.type === "context.compacted")).toBe(false);
+  });
+
+  it("drops old snapshots first when room runs out, keeping the newest", async () => {
+    const { model, seen } = twoSnapshots();
+    const events: AgentEvent[] = [];
+    await runAgent({ goal: "g", model, tools: snapshots(4_000), contextWindow: 2_000, emit: (e) => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
+    expect(toolContents(seen[2]!.messages)).toEqual([EPHEMERAL_PLACEHOLDER.slice(0, 7), "page v2"]);
+    expect(events.find((e) => e.type === "context.compacted")).toMatchObject({ kind: "pruned" });
   });
 });
 

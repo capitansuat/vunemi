@@ -289,7 +289,10 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   /** Images tools attached during the current step, shown to the model after it. */
   let stepImages: { tool: string; label?: string; image: ImageData }[] = [];
   /** What the model is sent: one page snapshot and one image, the newest of each. */
-  const shown = (): ChatMessage[] => keepNewestImage(compactEphemeral(convo, ephemeral));
+  // Earlier messages are never edited between steps: on a local server any
+  // change before the end makes it read the whole prompt again (seconds per
+  // thousand tokens). Old page snapshots go only when room runs out (makeRoom).
+  const shown = (): ChatMessage[] => keepNewestImage(convo);
   const system = systemPrompt(opts.instructions);
   const ephemeral = new Set(tools.list().flatMap((t) => (t.ephemeral ? [t.name] : [])));
   // Recomputed when a guide opens a group of tools; the same otherwise.
@@ -626,6 +629,12 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
    * refused — trims harder and may summarise earlier turns.
    */
   async function makeRoom(hard: boolean): Promise<void> {
+    // Old page snapshots first: they cost no model call, and only the newest
+    // describes the page as it is.
+    const before = estimateTokens(fixedChars + messageChars(shown()), charsPerToken);
+    const lean = compactEphemeral(convo, ephemeral);
+    const dropped = lean.some((m, i) => m !== convo[i]);
+    if (dropped) convo.splice(0, convo.length, ...lean);
     const result = await compact(shown(), {
       model,
       window,
@@ -640,13 +649,13 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       force: hard,
       signal,
     });
-    if (result.kind === "none") return;
+    if (result.kind === "none" && !dropped) return;
     convo.splice(0, convo.length, ...result.history);
     emit({
       type: "context.compacted",
       runId,
-      kind: result.kind,
-      before: result.before,
+      kind: result.kind === "none" ? "pruned" : result.kind,
+      before,
       after: result.after,
       window,
       ...(result.summary && { summary: await redactText(result.summary) }),
