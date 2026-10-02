@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getLocale, setLocale } from "@vunemi/i18n";
 import { shapeOutput } from "@vunemi/agent-core";
-import { DECLINE_TRIVAGO_COOKIES, flightOptions, flightSearchUrl, hotelOptions, offerPageUrl, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoPage, trivagoSearchUrl } from "../../src/main/travel.js";
+import { DECLINE_TRIVAGO_COOKIES, flightOptions, flightSearchUrl, hotelOptions, offerPageUrl, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoPage, trivagoSearchUrl, withoutLinks } from "../../src/main/travel.js";
 import { parseTravelOptions } from "../../src/renderer/src/lib/travel-options.js";
 
 const flightUrl = "https://www.google.com/travel/flights/booking?tfs=abc";
@@ -84,6 +84,18 @@ describe("travel sources", () => {
     expect(displayed?.options[0]?.url).toBe(flightUrl);
     expect(displayed?.searchUrl).toBe(searchUrl);
     expect(new URL(searchUrl).searchParams.get("q")).toContain("1 adult 1 child");
+  });
+
+  it("gives the model the options without their links, which only the cards need", () => {
+    const hotels = hotelOptions({ accommodations: [{ accommodation_name: "Radisson RED", accommodation_url: hotelUrl, price_per_stay: "£400",
+      main_image: "https://imgcy.trivago.com/x.jpeg" }] }, "2026-09-30T12:00:00Z");
+    const forModel = JSON.parse(withoutLinks(JSON.stringify(hotels)));
+    expect(forModel.options).toEqual([{ title: "Radisson RED", price: "£400", detail: "", extra: "" }]);
+    expect(forModel.searchUrl).toBeUndefined();
+    expect(forModel.kind).toBe("travel-options");
+    const skipped = JSON.stringify({ kind: "travel-search-skipped", reason: "x" });
+    expect(withoutLinks(skipped)).toBe(skipped);
+    for (const tool of travelConnectors().flatMap((c) => c.tools())) expect(tool.forModel).toBe(withoutLinks);
   });
 
   it("uses Trivago's offer and does not misstate the advertiser as the booking provider", () => {

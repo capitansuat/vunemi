@@ -301,8 +301,9 @@ export function appendCompacted(events: AgentEvent[], event: AgentEvent): void {
     events[events.length - 1] = { ...last, text: last.text + event.text };
     return;
   }
-  if (event.type === "tool.finished" && event.output.length > MAX_STORED_OUTPUT) {
-    events.push({ ...event, output: `${event.output.slice(0, MAX_STORED_OUTPUT)}\n[…]` });
+  if (event.type === "tool.finished" && Math.max(event.output.length, event.display?.length ?? 0) > MAX_STORED_OUTPUT) {
+    const cut = (text: string) => (text.length > MAX_STORED_OUTPUT ? `${text.slice(0, MAX_STORED_OUTPUT)}\n[…]` : text);
+    events.push({ ...event, output: cut(event.output), ...(event.display !== undefined && { display: cut(event.display) }) });
     return;
   }
   events.push(event);

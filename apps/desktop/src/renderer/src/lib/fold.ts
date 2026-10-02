@@ -174,7 +174,8 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
         ...c,
         // A refusal is reported through tool.finished too; keep it as "rejected".
         status: c.status === "rejected" ? "rejected" : e.ok ? "ok" : "error",
-        output: e.output,
+        // What the model was given may be shorter; the user sees all of it.
+        output: e.display ?? e.output,
         ...(e.artifact && { artifact: e.artifact }),
         ...(e.gallery?.length && { gallery: e.gallery }),
         ...(e.ok && e.produced && { files: producedFiles(e.callId, e.produced) }),

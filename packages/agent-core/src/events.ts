@@ -75,6 +75,8 @@ export type AgentEvent =
       ok: boolean;
       /** Text handed back to the model (already truncated / wrapped). */
       output: string;
+      /** The whole output for the UI, when the model was given less (ToolDef.forModel). */
+      display?: string;
       /** Something the call produced that isn't text, for the user to look at. */
       artifact?: Artifact;
       /** Pictures for the person only (see ToolContext.gallery). */

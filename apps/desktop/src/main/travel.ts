@@ -232,6 +232,22 @@ export const DECLINE_TRIVAGO_COOKIES = `(async () => {
   return true;
 })()`;
 
+/**
+ * The model's copy of travel results, without links: half its tokens were
+ * booking links it never needs. The cards show them, and choosing an
+ * option sends that option's link back to the model.
+ */
+export function withoutLinks(raw: string): string {
+  const data = JSON.parse(raw) as Record<string, unknown>;
+  if (data.kind !== "travel-options" || !Array.isArray(data.options)) return raw;
+  const { searchUrl: _search, ...rest } = data;
+  const options = data.options.map((o: Record<string, unknown>) => {
+    const { url: _url, image: _image, ...keep } = o;
+    return keep;
+  });
+  return JSON.stringify({ ...rest, options });
+}
+
 export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
   const limit = new TravelSearchLimit();
   let systemMoney: Promise<string> | null = null;
@@ -246,7 +262,7 @@ export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
       departure_date: { type: "string", description: "YYYY-MM-DD" }, return_date: { type: "string", description: "Optional return date, YYYY-MM-DD" },
       adults: { type: "integer", minimum: 1, maximum: 9 }, children: { type: "integer", minimum: 0, maximum: 8 },
     }, required: ["origin", "destination", "departure_date"], additionalProperties: false },
-    actionClass: "outbound", untrustedOutput: true,
+    actionClass: "outbound", untrustedOutput: true, forModel: withoutLinks,
     // The approval card says where the search goes before anything is sent.
     async preview(args) { return t("travel.sentFlights", { what: `${str(args.origin)} → ${str(args.destination)} · ${str(args.departure_date)}${args.return_date ? ` – ${str(args.return_date)}` : ""}` }); },
     async run(args, ctx) {
@@ -274,7 +290,7 @@ export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
       destination: { type: "string" }, check_in: { type: "string", description: "YYYY-MM-DD" }, check_out: { type: "string", description: "Optional, YYYY-MM-DD; one night if omitted" },
       adults: { type: "integer", minimum: 1 }, child_ages: { type: "array", items: { type: "integer", minimum: 0, maximum: 17 } }, rooms: { type: "integer", minimum: 1 },
     }, required: ["destination", "check_in"], additionalProperties: false },
-    actionClass: "outbound", untrustedOutput: true,
+    actionClass: "outbound", untrustedOutput: true, forModel: withoutLinks,
     async preview(args) { return t("travel.sentHotels", { what: `${str(args.destination)} · ${str(args.check_in)}${args.check_out ? ` – ${str(args.check_out)}` : ""}` }); },
     async run(args, ctx) {
       if (limit.used(ctx.runId, "hotel", ctx.userGoal ?? "")) return JSON.stringify({ kind: "travel-search-skipped", reason: "Hotels were already searched for this request, and the user did not ask for other dates or areas. Use the earlier results." });

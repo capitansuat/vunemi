@@ -1680,3 +1680,28 @@ describe("long tool output", () => {
     expect(seen[1]!.messages.find((m) => m.role === "tool")!.content).toContain("characters trimmed");
   });
 });
+
+describe("output for the model and for the user", () => {
+  it("gives the model the tool's own short copy and the user all of it", async () => {
+    const registry = new ToolRegistry().register({
+      name: "search", description: "", parameters: { type: "object", properties: {} }, actionClass: "read",
+      run: async () => "card https://example.com/long-link",
+      forModel: (raw) => raw.replace(/ https:\S+/, ""),
+    });
+    const { model, seen } = scripted([{ calls: [{ name: "search", argumentsText: "{}" }] }, { text: "done" }]);
+    const events: AgentEvent[] = [];
+    await runAgent({ goal: "g", model, tools: registry, emit: (e) => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
+    expect(seen[1]!.messages.find((m) => m.role === "tool")!.content).toBe("card");
+    expect(events.find((e) => e.type === "tool.finished")).toMatchObject({ output: "card", display: "card https://example.com/long-link" });
+  });
+
+  it("gives the model everything when the short copy fails", async () => {
+    const registry = new ToolRegistry().register({
+      name: "search", description: "", parameters: { type: "object", properties: {} }, actionClass: "read",
+      run: async () => "not json", forModel: (raw) => JSON.stringify(JSON.parse(raw)),
+    });
+    const { model, seen } = scripted([{ calls: [{ name: "search", argumentsText: "{}" }] }, { text: "done" }]);
+    await runAgent({ goal: "g", model, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(seen[1]!.messages.find((m) => m.role === "tool")!.content).toBe("not json");
+  });
+});

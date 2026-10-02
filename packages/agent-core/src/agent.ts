@@ -587,6 +587,12 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     return "\n\n[The image follows in the next message.]";
   }
 
+  /** The model's copy of an output; the whole of it if the tool can't say less. */
+  function modelCopy(raw: string, tool: ToolDef): string {
+    if (!tool.forModel) return raw;
+    try { return tool.forModel(raw); } catch { return raw; }
+  }
+
   /** Long output kept whole, the model shown its start; room is left for the note. */
   function keepLong(raw: string, tool: ToolDef): string {
     const first = Math.min(tool.firstPartChars ?? maxOut, maxOut - KEPT_NOTE_ROOM);
@@ -765,7 +771,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         openTools(group);
       };
       const raw = await redact(await tool.run(parsed.value as Record<string, unknown>, { signal, userGoal: opts.goal, runId, handoff, offerUndo, attach, gallery, produced, openTools: opened }));
-      let output = shapeOutput(keepLong(raw, tool), tool, maxOut);
+      let output = shapeOutput(keepLong(modelCopy(raw, tool), tool), tool, maxOut);
+      const display = tool.forModel ? shapeOutput(raw, tool, maxOut) : undefined;
       if (artifact?.kind === "image") output += await imageFor(tool.name, artifact);
       if (call.name === "calendar_events") {
         calendarReadSucceeded = true;
@@ -780,6 +787,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         callId: call.id,
         ok: true,
         output,
+        ...(display !== undefined && display !== output && { display }),
         ...(artifact && { artifact }),
         ...(pictures.length > 0 && { gallery: pictures }),
         ...(made.length > 0 && { produced: made }),

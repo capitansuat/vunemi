@@ -128,6 +128,17 @@ describe("foldEvent", () => {
   });
 });
 
+describe("tool output", () => {
+  it("shows the user all of it when the model was given a shorter copy", () => {
+    const [run] = fold([
+      ...start,
+      { type: "tool.proposed", runId: "r", stepId: "s0", callId: "c", tool: "t", args: {}, actionClass: "read" },
+      { type: "tool.finished", runId: "r", callId: "c", ok: true, output: "short", display: "short and links", durationMs: 1 },
+    ]);
+    expect(run!.steps[0]!.calls[0]!.output).toBe("short and links");
+  });
+});
+
 describe("runStats", () => {
   it("averages throughput and reports first-token latency", () => {
     const [run] = fold([

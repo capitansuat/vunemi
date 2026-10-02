@@ -138,6 +138,11 @@ export interface ToolDef<Args = Record<string, unknown>> {
    */
   firstPartChars?: number;
   /**
+   * What the model is given instead of the whole output, when part of it is
+   * for the user only (links shown on a card, say). The UI gets all of it.
+   */
+  forModel?: (raw: string) => string;
+  /**
    * One line, in the user's language, saying what this call will do — shown
    * on approval cards instead of raw arguments ("Click: button 'Add to cart'").
    */
