@@ -13,6 +13,7 @@ import type { ActionClass, ToolDef, ToolRegistry } from "./tools.js";
 import { t } from "@vunemi/i18n";
 import { requestedTravelTools } from "./travel-intent.js";
 import { promptLedger, type LedgerPart } from "./ledger.js";
+import type { KeptOutputs } from "./kept.js";
 
 export type Autonomy = "auto" | "ask" | "deny";
 export type AutonomyPolicy = Record<ActionClass, Autonomy>;
@@ -167,6 +168,8 @@ export interface RunOptions {
   whenUnpaused?: () => Promise<void>;
   maxSteps?: number;
   maxToolOutputChars?: number;
+  /** Where long tool output is kept whole; without it, its middle is cut. */
+  keptOutputs?: KeptOutputs;
   /** Consecutive identical tool calls tolerated before the run is failed. Default 5; a reminder goes to the model from the third. */
   maxRepeats?: number;
   /** Tokens the model takes per request; trimming starts before it fills. */
@@ -584,6 +587,13 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     return "\n\n[The image follows in the next message.]";
   }
 
+  /** Long output kept whole, the model shown its start; room is left for the note. */
+  function keepLong(raw: string, tool: ToolDef): string {
+    const first = Math.min(tool.firstPartChars ?? maxOut, maxOut - KEPT_NOTE_ROOM);
+    if (!opts.keptOutputs || raw.length <= first || KEPT_READERS.has(tool.name)) return raw;
+    return opts.keptOutputs.keep(tool.name, raw, first);
+  }
+
   /** The parts of a request, for the usage event. */
   function ledgerOf(messages: readonly ChatMessage[]): LedgerPart[] {
     return promptLedger({ core: SYSTEM_PROMPT, ...(opts.instructions && { instructions: opts.instructions }), tools: toolSpecs, sourceOf: (name) => tools.sourceOf(name), messages }, charsPerToken);
@@ -755,7 +765,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         openTools(group);
       };
       const raw = await redact(await tool.run(parsed.value as Record<string, unknown>, { signal, userGoal: opts.goal, runId, handoff, offerUndo, attach, gallery, produced, openTools: opened }));
-      let output = shapeOutput(raw, tool, maxOut);
+      let output = shapeOutput(keepLong(raw, tool), tool, maxOut);
       if (artifact?.kind === "image") output += await imageFor(tool.name, artifact);
       if (call.name === "calendar_events") {
         calendarReadSucceeded = true;
@@ -1008,6 +1018,11 @@ async function attachedImages(
   };
 }
 
+
+/** The note under a kept output's first part fits in this. */
+const KEPT_NOTE_ROOM = 400;
+/** Reading a kept output never keeps it again. */
+const KEPT_READERS: ReadonlySet<string> = new Set(["output_read", "output_search"]);
 
 export const EPHEMERAL_PLACEHOLDER =
   "[Earlier snapshot removed to save context. The page may have changed since; look again if you need it.]";

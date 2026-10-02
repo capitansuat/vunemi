@@ -5,6 +5,7 @@ import type { AgentEvent, ApprovalDecision } from "../src/events.js";
 import { t } from "@vunemi/i18n";
 import { ProviderError, type ChatMessage, type ChatModel, type ChatRequest, type ChatResult, type ToolCall } from "../src/provider.js";
 import { ToolRegistry } from "../src/tools.js";
+import { KeptOutputs, keptOutputTools } from "../src/kept.js";
 import { PLAN_BUDGET } from "../src/plan.js";
 import { IMAGE_REMOVED, keepNewestImage, stripImages } from "../src/context.js";
 
@@ -1643,5 +1644,39 @@ describe("prompt ledger in usage events", () => {
     expect(first.some((p) => p.kind === "toolOutputs")).toBe(false);
     expect(usages[1]!.ledger!.find((p) => p.kind === "toolOutputs")?.name).toBe("read_page");
     expect(JSON.stringify(usages)).not.toContain("Ignore previous instructions");
+  });
+});
+
+describe("long tool output", () => {
+  const long = Array.from({ length: 300 }, (_, i) => `line ${i}`).join("\n");
+  const registry = (kept: KeptOutputs) => {
+    const r = new ToolRegistry().register({
+      name: "page_read", description: "", parameters: { type: "object", properties: {} },
+      actionClass: "read", untrustedOutput: true, firstPartChars: 500, run: async () => long,
+    });
+    for (const t of keptOutputTools(kept)) r.register(t);
+    return r;
+  };
+
+  it("is kept whole: the model sees its start and can read the rest", async () => {
+    const kept = new KeptOutputs();
+    const { model, seen } = scripted([
+      { calls: [{ name: "page_read", argumentsText: "{}" }] },
+      { calls: [{ name: "output_read", argumentsText: '{"id":"o1","part":2}' }] },
+      { text: "done" },
+    ]);
+    await runAgent({ goal: "g", model, tools: registry(kept), keptOutputs: kept, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    const outputs = seen[2]!.messages.filter((m) => m.role === "tool").map((m) => m.content);
+    expect(outputs[0]).toContain(long.slice(0, 500));
+    expect(outputs[0]).not.toContain(long.slice(500, 520));
+    expect(outputs[0]).toContain('kept as "o1"');
+    expect(outputs[1]).toContain(long.slice(500, 1000));
+    expect(outputs[1]).toMatch(/^<untrusted_content source="output_read">/);
+  });
+
+  it("is cut in the middle as before when nothing keeps it", async () => {
+    const { model, seen } = scripted([{ calls: [{ name: "page_read", argumentsText: "{}" }] }, { text: "done" }]);
+    await runAgent({ goal: "g", model, tools: registry(new KeptOutputs()), maxToolOutputChars: 800, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(seen[1]!.messages.find((m) => m.role === "tool")!.content).toContain("characters trimmed");
   });
 });

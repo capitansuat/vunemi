@@ -129,9 +129,14 @@ export interface ToolDef<Args = Record<string, unknown>> {
   /**
    * Output describes a moment in time (a page snapshot). Only the latest such
    * output is kept verbatim in the conversation; older ones are replaced by a
-   * short note, so long browsing sessions fit a small context window.
+   * short note when the context window runs short.
    */
   ephemeral?: boolean;
+  /**
+   * Output longer than this is kept whole and shown from the start, with a
+   * note on reading the rest (see KeptOutputs). Default: the run's limit.
+   */
+  firstPartChars?: number;
   /**
    * One line, in the user's language, saying what this call will do — shown
    * on approval cards instead of raw arguments ("Click: button 'Add to cart'").

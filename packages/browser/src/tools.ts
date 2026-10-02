@@ -154,15 +154,14 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
     },
     {
       name: "page_read",
-      description: "Return the visible text of the current page, for reading articles, results or details.",
-      parameters: {
-        type: "object",
-        properties: { max_chars: { type: "integer", description: "Default 6000." } },
-      },
+      description: "Return the visible text of the current page, for reading articles, results or details. A long page comes with a note on reading the rest.",
+      parameters: { type: "object", properties: {} },
       actionClass: "read",
       untrustedOutput: true,
       ephemeral: true,
-      run: (a) => browser.read(clampInt(a.max_chars, 500, 20_000, 6_000)),
+      // The whole page is read; the model sees the start, the rest is kept.
+      firstPartChars: 6_000,
+      run: () => browser.read(PAGE_TEXT_CHARS),
     },
     ...(opts.shotDir ? [pageScreenshot(browser, opts.shotDir)] : []),
     {
@@ -350,6 +349,9 @@ function num(v: unknown): number {
   if (!Number.isInteger(n)) throw new PageActionError(`Expected a number, got ${JSON.stringify(v)}.`);
   return n;
 }
+
+/** As much of a page as is read at once; past this, nobody reads on. */
+const PAGE_TEXT_CHARS = 100_000;
 
 function clampInt(v: unknown, min: number, max: number, fallback: number): number {
   const n = Number(v);

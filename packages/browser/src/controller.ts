@@ -176,7 +176,7 @@ export class BrowserController {
   async read(maxChars: number): Promise<string> {
     const { driver, target } = await this.page();
     const r = await driver.readText(maxChars);
-    const more = r.truncated > 0 ? `\n[… ${r.truncated} more characters. Scroll or use page_find for specifics.]` : "";
+    const more = r.truncated > 0 ? `\n[… ${r.truncated} more characters not read.]` : "";
     return `${header(await this.tabNumber(target), r)}\n${r.text || "(no visible text)"}${more}`;
   }
 

@@ -32,6 +32,7 @@ import {
   type RunStatus,
   type PlanDecision,
   type ChatMessage,
+  type KeptOutputs,
   type RunOptions,
   type ToolRegistry,
   type ProviderConfig,
@@ -40,6 +41,8 @@ import { t } from "@vunemi/i18n";
 
 export interface SessionOptions {
   tools: ToolRegistry;
+  /** Long tool output, kept whole for output_read and output_search. */
+  keptOutputs?: KeptOutputs;
   emit: (event: AgentEvent) => void;
   /**
    * Extra guidance for the model, e.g. how to use the browser. Asked for at
@@ -303,6 +306,7 @@ export class AgentSession {
         contextWindow: window,
         charsPerToken: this.charsPerToken,
         tools: this.opts.tools,
+        ...(this.opts.keptOutputs && { keptOutputs: this.opts.keptOutputs }),
         emit: this.emit,
         history: this.history,
         ...(this.opts.instructions && { instructions: this.opts.instructions() }),

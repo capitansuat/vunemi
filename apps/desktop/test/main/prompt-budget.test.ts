@@ -33,12 +33,14 @@ const LIMITS = {
 };
 
 async function compose() {
-  const { ToolRegistry, toolSpecsOf, SYSTEM_PROMPT } = await import("@vunemi/agent-core");
+  const { ToolRegistry, toolSpecsOf, SYSTEM_PROMPT, KeptOutputs, keptOutputTools } = await import("@vunemi/agent-core");
   const { ScriptableCatalog } = await import("@vunemi/apps");
   const { buildConnectors } = await import("../../src/main/connectors.js");
   const { AutomationStore } = await import("../../src/main/automations.js");
   const dir = mkdtempSync(join(tmpdir(), "vunemi-budget-"));
   const tools = new ToolRegistry();
+  // As in main: tools that read long output kept whole.
+  for (const tool of keptOutputTools(new KeptOutputs())) tools.register(tool);
   const connectors = buildConnectors({
     tools, browser: {} as never, roots: { list: () => [] } as never, appCatalog: new ScriptableCatalog(join(dir, "apps")),
     shadowDir: join(dir, "shadow"), helper: {} as never, shotDir: join(dir, "shots"),

@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, 
 import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
-import { createModel, type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import { createModel, KeptOutputs, keptOutputTools, type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
 import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
@@ -138,6 +138,8 @@ const browser = new BrowserController(async () => {
 browser.onPointer((target, p) => embedded.showPointer(target, p));
 
 const tools = createDemoTools();
+const keptOutputs = new KeptOutputs();
+for (const tool of keptOutputTools(keptOutputs)) tools.register(tool);
 
 // The folders the user opened to Vunemi — Desktop, Documents, Downloads — and
 // nothing else. Overwritten files are kept aside so the log can undo them.
@@ -562,6 +564,7 @@ function record(event: AgentEvent): void {
 
 const session: AgentSession = new AgentSession({
   tools,
+  keptOutputs,
   emit: record,
   onHistory: (history) => {
     conversations.setHistory(history);
