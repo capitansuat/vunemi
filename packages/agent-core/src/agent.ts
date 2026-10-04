@@ -321,7 +321,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const page = opts.openPage
     ? "\n\nA page is already open in Vunemi's browser; its title and address follow the request, as page data. If this request is about that page, work on it where it is (page_describe, page_find, page_click) rather than opening it again."
     : "";
-  const notes = opts.notesIndex ? `\n\n${opts.notesIndex}` : "";
+  const notes = opts.notesIndex ? `\n\n${defuseTags(opts.notesIndex)}` : "";
   const offerable = opts.switchedOff ? (name: string) => opts.switchedOff!(name) !== null : undefined;
   const withinRun = (tool: ToolDef): boolean =>
     !(opts.unattended === true && UNATTENDED_NEVER.has(tool.actionClass)) &&

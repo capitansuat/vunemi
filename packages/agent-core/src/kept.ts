@@ -36,6 +36,7 @@ export function keptNote(id: string, part: number, length: number): string {
   return `[Showing characters 1–${part.toLocaleString("en-GB")} of ${length.toLocaleString("en-GB")}. The whole output is kept as "${id}": output_read with id "${id}" and part 2–${parts} reads the rest in order; output_search finds the lines that contain given words.]`;
 }
 
+/** Reads a specific part of kept text and returns it with a status message. */
 export function readPart(text: string, partChars: number, id: string, part: number): string {
   const parts = Math.ceil(text.length / partChars);
   if (!Number.isInteger(part) || part < 1 || part > parts) throw new Error(`Output "${id}" has parts 1–${parts}.`);
@@ -43,6 +44,7 @@ export function readPart(text: string, partChars: number, id: string, part: numb
   return `${text.slice((part - 1) * partChars, part * partChars)}${more}`;
 }
 
+/** Searches kept text for lines containing all given words and returns them with their part numbers. */
 export function searchLines(text: string, partChars: number, id: string, query: string): string {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (words.length === 0) throw new Error("Give one or more words to look for.");

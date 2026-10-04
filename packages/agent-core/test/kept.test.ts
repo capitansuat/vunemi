@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { KeptOutputs, keptOutputTools } from "../src/kept.js";
+import { KeptOutputs, keptOutputTools, keptNote, readPart, searchLines } from "../src/kept.js";
 
 const page = Array.from({ length: 40 }, (_, i) => `Room ${i + 1}: booking code ${1000 + i}.`).join("\n");
 
@@ -47,8 +47,6 @@ describe("KeptOutputs", () => {
     expect(await search!.run({ id: "o1", query: "1039" }, {} as never)).toBe("(part 4) Room 40: booking code 1039.");
   });
 });
-
-import { keptNote, readPart, searchLines } from "../src/kept.js";
 
 describe("kept output helpers", () => {
   const text = ["alpha one", "beta two", "gamma three", "delta four"].join("\n");
