@@ -348,6 +348,20 @@ export function isContextOverflow(err: unknown): boolean {
 
 export const IMAGE_REMOVED = "[Earlier image removed to save context.]";
 
+/**
+ * Images a conversation keeps before the older ones go. Each costs ~1,700
+ * tokens, but dropping one changes the prompt where it was, and a local
+ * server then reads everything after it again: so they go together, not one
+ * per new image, and earlier when room runs out.
+ */
+export const IMAGES_KEPT = 4;
+
+/** The conversation with at most IMAGES_KEPT images; past that, only the newest stays. */
+export function capImages(messages: ChatMessage[], kept = IMAGES_KEPT): ChatMessage[] {
+  const count = messages.filter((m) => m.role === "user" && (m.images?.length ?? 0) > 0).length;
+  return count > kept ? keepNewestImage(messages) : messages;
+}
+
 /** Drops pictures from every message but the newest that has one. */
 export function keepNewestImage(messages: ChatMessage[]): ChatMessage[] {
   const last = messages.findLastIndex((m) => m.role === "user" && (m.images?.length ?? 0) > 0);

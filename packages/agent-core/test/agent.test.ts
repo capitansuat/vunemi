@@ -8,7 +8,7 @@ import { ToolRegistry, type ToolDef } from "../src/tools.js";
 import type { ToolArea } from "../src/areas.js";
 import { KeptOutputs, keptOutputTools } from "../src/kept.js";
 import { PLAN_BUDGET } from "../src/plan.js";
-import { IMAGE_REMOVED, keepNewestImage, stripImages } from "../src/context.js";
+import { IMAGE_REMOVED, IMAGES_KEPT, capImages, keepNewestImage, stripImages } from "../src/context.js";
 
 /** A model that replays a fixed script of turns, and records what it was sent. */
 function scripted(turns: Array<{ text?: string; calls?: Array<Omit<ToolCall, "id">> }>) {
@@ -1458,24 +1458,50 @@ describe("images", () => {
     expect(t.seen[1]!.messages.find((m) => m.role === "tool")!.content).toMatch(/no readable text/i);
   });
 
-  it("keeps only the newest image, in requests and in the returned history", async () => {
-    const s = seeing(scripted([
-      { calls: [{ name: "shot", argumentsText: "{}" }] },
-      { calls: [{ name: "shot", argumentsText: '{"again":1}' }] },
-      { text: "done" },
-    ]), true);
+  const shots = (n: number) => scripted([...Array.from({ length: n }, (_, i) => ({ calls: [{ name: "shot", argumentsText: `{"n":${i}}` }] })), { text: "done" }]);
+  const withImages = (msgs: ChatMessage[]) => msgs.filter((m) => m.role === "user" && m.images?.length);
+
+  it("keeps earlier images while there are few, so the prompt before them stays the same", async () => {
+    const s = seeing(shots(2), true);
     let n = 0;
     const result = await runAgent({ ...base, goal: "look twice", tools: shooter(), model: s.model, loadImage: async () => img(`S${++n}`) });
-    const withImages = (msgs: ChatMessage[]) => msgs.filter((m) => m.role === "user" && m.images?.length);
-    expect(withImages(s.seen[2]!.messages)).toEqual([expect.objectContaining({ images: [img("S2")] })]);
-    expect(s.seen[2]!.messages.some((m) => m.content.includes(IMAGE_REMOVED))).toBe(true);
-    expect(withImages(result.messages)).toHaveLength(1);
+    expect(withImages(s.seen[2]!.messages)).toHaveLength(2);
+    expect(s.seen[2]!.messages.slice(0, s.seen[1]!.messages.length)).toEqual(s.seen[1]!.messages);
+    expect(withImages(result.messages)).toHaveLength(2);
+  });
+
+  it(`past ${IMAGES_KEPT} images, drops all but the newest at once`, async () => {
+    const s = seeing(shots(IMAGES_KEPT + 2), true);
+    let n = 0;
+    const result = await runAgent({ ...base, goal: "keep looking", tools: shooter(), model: s.model, loadImage: async () => img(`S${++n}`), maxSteps: 20 });
+    // 1, 2, 3, 4 images, then the fifth leaves only itself: 1, 2.
+    const expected = Array.from({ length: IMAGES_KEPT + 2 }, (_, i) => (i < IMAGES_KEPT ? i + 1 : i - IMAGES_KEPT + 1));
+    expect(s.seen.slice(1).map((r) => withImages(r.messages).length)).toEqual(expected);
+    expect(withImages(s.seen[IMAGES_KEPT + 1]!.messages)).toEqual([expect.objectContaining({ images: [img(`S${IMAGES_KEPT + 1}`)] })]);
+    expect(s.seen[IMAGES_KEPT + 1]!.messages.some((m) => m.content.includes(IMAGE_REMOVED))).toBe(true);
+    expect(withImages(result.messages)).toHaveLength(2);
+  });
+
+  it("drops earlier images first when room runs out", async () => {
+    const s = seeing(shots(2), true);
+    let n = 0;
+    const events: AgentEvent[] = [];
+    await runAgent({ ...base, emit: (e) => events.push(e), goal: "look", tools: shooter(), model: s.model, loadImage: async () => img(`S${++n}`),
+      // The scripted model calibrates to 5 chars/token: the limit is 0.8 × 3 000 × 5 = 12 000
+      // chars, which the system prompt and one image stay under and two cross.
+      contextWindow: 3_000 });
+    expect(withImages(s.seen[2]!.messages)).toHaveLength(1);
+    expect(events.some((e) => e.type === "context.compacted")).toBe(true);
   });
 
   it("strips every image for the summarizer", () => {
     const msgs: ChatMessage[] = [{ role: "user", content: "a", images: [img("X")] }, { role: "assistant", content: "b" }];
     expect(stripImages(msgs)).toEqual([{ role: "user", content: `a\n${IMAGE_REMOVED}` }, { role: "assistant", content: "b" }]);
     expect(keepNewestImage(msgs)).toEqual(msgs);
+    expect(capImages(msgs, 0)).toEqual(msgs);
+    const two: ChatMessage[] = [msgs[0]!, { role: "user", content: "c", images: [img("Y")] }];
+    expect(capImages(two, 2)).toBe(two);
+    expect(withImages(capImages(two, 1))).toEqual([two[1]]);
   });
 
   it("knows an image file by its name", () => {

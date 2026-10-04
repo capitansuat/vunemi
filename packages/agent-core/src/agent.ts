@@ -5,7 +5,7 @@
  */
 
 import type { Artifact, ApprovalDecision, Produced, EmitFn, HandoffOutcome, PlanDecision, RunStatus } from "./events.js";
-import { calibrate, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
+import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
 import { maskSecrets } from "./secrets.js";
 import type { ChatMessage, ChatModel, ChatResult, ImageData, ToolCall, ToolSpec } from "./provider.js";
@@ -365,17 +365,17 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const request = userRequest(opts.goal, attached.listed, attached.note + undone + memory + page, sentAt(new Date((opts.now ?? Date.now)())))
     + (opts.openPage ? `\n\n<untrusted_content source="open_page">\n${defuseTags(opts.openPage.title)} — ${defuseTags(opts.openPage.url)}\n</untrusted_content>` : "")
     + (toolsNote ? `\n\n[Vunemi, not from the user] This request may need tools that are not in your list.\n${toolsNote}` : "");
-  const convo: ChatMessage[] = [
+  const convo: ChatMessage[] = capImages([
     ...(opts.history ?? []),
     { role: "user", content: request, ...(attached.images.length > 0 && { images: attached.images }) },
-  ];
+  ]);
   /** Images tools attached during the current step, shown to the model after it. */
   let stepImages: { tool: string; label?: string; image: ImageData }[] = [];
-  /** What the model is sent: one page snapshot and one image, the newest of each. */
-  // Earlier messages are never edited between steps: on a local server any
-  // change before the end makes it read the whole prompt again (seconds per
-  // thousand tokens). Old page snapshots go only when room runs out (makeRoom).
-  const shown = (): ChatMessage[] => keepNewestImage(convo);
+  // What the model is sent. Earlier messages are never edited between
+  // steps: on a local server any change before the end makes it read the
+  // whole prompt again (seconds per thousand tokens). Old page snapshots and
+  // images go only past a limit (capImages) or when room runs out (makeRoom).
+  const shown = (): ChatMessage[] => convo;
   const listedParts = areaMode ? listedRequest(tools, areas, listed, opts.instructions, offerable, withinRun) : null;
   const system = listedParts?.system ?? systemPrompt(opts.instructions);
   const ephemeral = new Set(tools.list().flatMap((t) => (t.ephemeral ? [t.name] : [])));
@@ -617,6 +617,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           content: `<untrusted_content source="${stepImages[0]!.tool}">\n${lines}\n</untrusted_content>`,
           images: stepImages.map((s) => s.image),
         });
+        convo.splice(0, convo.length, ...capImages(convo));
         stepImages = [];
         checkpoint();
       }
@@ -730,10 +731,10 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
    * refused — trims harder and may summarise earlier turns.
    */
   async function makeRoom(hard: boolean): Promise<void> {
-    // Old page snapshots first: they cost no model call, and only the newest
-    // describes the page as it is.
+    // Old page snapshots and images first: they cost no model call, and only
+    // the newest describes the page or the screen as it is.
     const before = estimateTokens(fixedChars + messageChars(shown()), charsPerToken);
-    const lean = compactEphemeral(convo, ephemeral);
+    const lean = keepNewestImage(compactEphemeral(convo, ephemeral));
     const dropped = lean.some((m, i) => m !== convo[i]);
     if (dropped) convo.splice(0, convo.length, ...lean);
     const result = await compact(shown(), {
