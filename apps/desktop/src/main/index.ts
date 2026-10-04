@@ -55,7 +55,7 @@ import { PRODUCTION, type FeedSource } from "./updates/feed.js";
 import { UpdateService } from "./updates/service.js";
 import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
-import { createNoteTools } from "./work/notes-tools.js";
+import { createNoteTools, noteWhere } from "./work/notes-tools.js";
 import { ArchivedOutputs } from "./work/outputs.js";
 import { notesIndex } from "./work/notes-index.js";
 import { conversationScope, openWorkStore, projectScope } from "./work/store.js";
@@ -153,7 +153,11 @@ for (const tool of keptOutputTools(keptOutputs)) tools.register(tool);
 if (work) {
   for (const tool of createNoteTools({
     store: work,
-    where: () => ({ conversationId: conversations.currentId, ...(conversations.currentProject && { projectId: conversations.currentProject }) }),
+    // A removed project leaves its conversations with a dead id: currentProject() answers for it.
+    where: () => {
+      const project = currentProject();
+      return noteWhere({ conversationId: conversations.currentId, projectId: project?.id, projectExists: project !== null });
+    },
     sources: () => sentinel.untrustedSources(),
     redact: redactOrThrow,
     onSaved: ({ runId, note, scope }) => {
@@ -621,7 +625,7 @@ const session: AgentSession = new AgentSession({
   onUndoOffered: (u) => activity.offerUndo(u.callId, u.label, u.undo),
   recall: (goal) => recall(memory, meaning, goal),
   openPage: () => (connectors.isOn("browser") ? embedded.openPage() : null),
-  notesIndex: () => (work ? notesIndex(work, conversations.currentProject) : null),
+  notesIndex: () => (work ? notesIndex(work, currentProject()?.id) : null),
   afterRun: ({ runId, model, words }) => {
     const conversation = conversations.currentId;
     void propose({ model, messages: words, store: memory, meaning, signal: AbortSignal.timeout(120_000), sessionId: conversation })
@@ -1267,7 +1271,10 @@ handle(CH.forgetEverything, async () => {
   // Nothing may hold a model file open while it is deleted.
   await engine.dispose();
   await meaning.stop();
-  for (const name of ["shots", "shadow", "models", "engine", "meetings", "projects.json", "preferences.json", "preferences.json.bak"]) {
+  // work.db too: when it could not be opened this launch, work?.clear() above did nothing.
+  const names = ["shots", "shadow", "models", "engine", "meetings", "projects.json", "preferences.json", "preferences.json.bak"];
+  if (!work) names.push("work.db", "work.db-journal");
+  for (const name of names) {
     rmSync(join(app.getPath("userData"), name), { recursive: true, force: true });
   }
   mkdirSync(shotDir, { recursive: true });

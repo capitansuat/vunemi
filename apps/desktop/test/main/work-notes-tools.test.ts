@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
-import { createNoteTools } from "../../src/main/work/notes-tools.js";
-import { WorkStore, projectScope } from "../../src/main/work/store.js";
+import { createNoteTools, noteScope, noteWhere } from "../../src/main/work/notes-tools.js";
+import { WorkStore, conversationScope, projectScope } from "../../src/main/work/store.js";
 
 let dir = "";
 let store: WorkStore;
@@ -103,5 +103,36 @@ describe("worknote tools", () => {
   it("masks a secret in the title too", async () => {
     await run("worknote_write", { title: "hunter2 login", text: "x" });
     expect(store.readNote(projectScope("p1"), "[hidden secret] login")).not.toBeNull();
+  });
+});
+
+describe("which scope a conversation's notes are in", () => {
+  it("is the project's while it exists", () => {
+    const here = noteWhere({ conversationId: "c1", projectId: "p1", projectExists: true });
+    expect(here).toEqual({ conversationId: "c1", projectId: "p1" });
+    expect(noteScope(here)).toBe(projectScope("p1"));
+  });
+
+  it("falls back to the conversation's own when the project was removed", () => {
+    const here = noteWhere({ conversationId: "c1", projectId: "p1", projectExists: false });
+    expect(here).toEqual({ conversationId: "c1" });
+    expect(noteScope(here)).toBe(conversationScope("c1"));
+  });
+
+  it("is the conversation's own without a project", () => {
+    expect(noteWhere({ conversationId: "c1", projectExists: false })).toEqual({ conversationId: "c1" });
+  });
+});
+
+describe("secrets in notes", () => {
+  it("masks key shapes the Vault doesn't know, in title and text", async () => {
+    const key = "sk-abcdefghijklmnopqrstuvwxyz0123456789";
+    await run("worknote_write", { title: `Key ${key}`, text: `Use ${key} and token: abcdefgh12345678 for the API.` });
+    const stored = store.listNotes(projectScope("p1"));
+    expect(stored).toHaveLength(1);
+    const all = JSON.stringify(stored);
+    expect(all).not.toContain("sk-abcdefghij");
+    expect(all).not.toContain("abcdefgh12345678");
+    expect(stored[0]!.text).toContain("[hidden secret]");
   });
 });
