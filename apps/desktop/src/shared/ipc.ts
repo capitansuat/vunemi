@@ -314,6 +314,22 @@ export interface WorkNoteView {
   updatedAt: number;
 }
 
+/** A local model server the model manager measures and may stop. */
+export type ResidentId = "chat" | "meaning" | "voice";
+
+/** The model manager's last decision, for the models page. */
+export type ModelsDecision =
+  | { at: number; kind: "unloaded"; ids: ResidentId[] }
+  | { at: number; kind: "lowered"; context: number; wanted: number };
+
+/** "Now in memory" on the models page. Bytes are null when they could not be measured. */
+export interface ModelsMemoryView {
+  total: number;
+  available: number | null;
+  residents: { id: ResidentId; loaded: boolean; bytes: number | null }[];
+  last: ModelsDecision | null;
+}
+
 /** A note in memory, with the user's own words it came from. */
 export interface MemoryNoteView {
   id: string;
