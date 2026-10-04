@@ -101,6 +101,8 @@ export type AgentEvent =
   /** What Vunemi would like to remember from the run, waiting for the user's yes. */
   | { type: "memory.proposed"; runId: string; proposals: MemoryProposal[]; at: number }
   | { type: "memory.resolved"; runId: string; proposalId: string; decision: "saved" | "skipped"; text?: string; at: number }
+  /** The model saved a work note (worknote_write); the timeline shows its title. */
+  | { type: "note.saved"; runId: string; noteId: string; title: string; scope: "project" | "conversation"; at: number }
   /** Older turns are being condensed; the UI shows it under the run it follows. */
   | { type: "context.compacting"; runId: string; at: number }
   | {

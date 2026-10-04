@@ -14,55 +14,76 @@ interface Kept {
   part: number;
 }
 
+/** Where long output is kept: in memory (KeptOutputs) or on disk (the desktop's work archive). */
+export interface OutputKeeper {
+  /** Keeps `text` and returns what the model sees instead: its first part and a note. */
+  keep(tool: string, text: string, part: number): string;
+  read(id: string, part: number): string;
+  search(id: string, query: string): string;
+  /** The tool that produced a kept output, for wrapping what's read from it. */
+  toolOf(id: string): string | undefined;
+}
+
 /** How many outputs are kept, oldest dropped first. */
 const MAX_KEPT = 30;
 /** Lines a search returns, and how long each may be. */
 const MAX_HITS = 30;
 const MAX_LINE = 300;
 
-export class KeptOutputs {
+/** The note under a kept output's first part. */
+export function keptNote(id: string, part: number, length: number): string {
+  const parts = Math.ceil(length / part);
+  return `[Showing characters 1–${part.toLocaleString("en-GB")} of ${length.toLocaleString("en-GB")}. The whole output is kept as "${id}": output_read with id "${id}" and part 2–${parts} reads the rest in order; output_search finds the lines that contain given words.]`;
+}
+
+export function readPart(text: string, partChars: number, id: string, part: number): string {
+  const parts = Math.ceil(text.length / partChars);
+  if (!Number.isInteger(part) || part < 1 || part > parts) throw new Error(`Output "${id}" has parts 1–${parts}.`);
+  const more = part < parts ? `\n[Part ${part} of ${parts}. output_read part ${part + 1} continues.]` : `\n[Part ${part} of ${parts}, the last.]`;
+  return `${text.slice((part - 1) * partChars, part * partChars)}${more}`;
+}
+
+export function searchLines(text: string, partChars: number, id: string, query: string): string {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) throw new Error("Give one or more words to look for.");
+  const hits: string[] = [];
+  let at = 0;
+  for (const line of text.split("\n")) {
+    const lower = line.toLowerCase();
+    if (words.every((w) => lower.includes(w))) {
+      const part = Math.floor(at / partChars) + 1;
+      hits.push(`(part ${part}) ${line.trim().slice(0, MAX_LINE)}`);
+      if (hits.length === MAX_HITS) break;
+    }
+    at += line.length + 1;
+  }
+  return hits.length ? hits.join("\n") : `No line in "${id}" contains all of: ${words.join(", ")}.`;
+}
+
+/** Kept in memory, for every conversation, until the app quits. */
+export class KeptOutputs implements OutputKeeper {
   private readonly items = new Map<string, Kept>();
   private next = 1;
 
-  /** Keeps `text` and returns what the model sees instead: its first part and a note. */
   keep(tool: string, text: string, part: number): string {
     const id = `o${this.next++}`;
     this.items.set(id, { tool, text, part });
     while (this.items.size > MAX_KEPT) this.items.delete(this.items.keys().next().value!);
-    const parts = Math.ceil(text.length / part);
-    const note = `[Showing characters 1–${part.toLocaleString("en-GB")} of ${text.length.toLocaleString("en-GB")}. The whole output is kept as "${id}": output_read with id "${id}" and part 2–${parts} reads the rest in order; output_search finds the lines that contain given words.]`;
-    return `${text.slice(0, part)}\n${note}`;
+    return `${text.slice(0, part)}\n${keptNote(id, part, text.length)}`;
   }
 
-  /** The tool that produced a kept output, for wrapping what's read from it. */
   toolOf(id: string): string | undefined {
     return this.items.get(id)?.tool;
   }
 
   read(id: string, part: number): string {
     const kept = this.need(id);
-    const parts = Math.ceil(kept.text.length / kept.part);
-    if (!Number.isInteger(part) || part < 1 || part > parts) throw new Error(`Output "${id}" has parts 1–${parts}.`);
-    const more = part < parts ? `\n[Part ${part} of ${parts}. output_read part ${part + 1} continues.]` : `\n[Part ${part} of ${parts}, the last.]`;
-    return `${kept.text.slice((part - 1) * kept.part, part * kept.part)}${more}`;
+    return readPart(kept.text, kept.part, id, part);
   }
 
   search(id: string, query: string): string {
     const kept = this.need(id);
-    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (words.length === 0) throw new Error("Give one or more words to look for.");
-    const hits: string[] = [];
-    let at = 0;
-    for (const line of kept.text.split("\n")) {
-      const lower = line.toLowerCase();
-      if (words.every((w) => lower.includes(w))) {
-        const part = Math.floor(at / kept.part) + 1;
-        hits.push(`(part ${part}) ${line.trim().slice(0, MAX_LINE)}`);
-        if (hits.length === MAX_HITS) break;
-      }
-      at += line.length + 1;
-    }
-    return hits.length ? hits.join("\n") : `No line in "${id}" contains all of: ${words.join(", ")}.`;
+    return searchLines(kept.text, kept.part, id, query);
   }
 
   private need(id: string): Kept {
@@ -73,7 +94,7 @@ export class KeptOutputs {
 }
 
 /** The two tools that read kept output. Always offered; they cost ~150 tokens. */
-export function keptOutputTools(kept: KeptOutputs): ToolDef[] {
+export function keptOutputTools(kept: OutputKeeper): ToolDef[] {
   return [
     {
       name: "output_read",

@@ -1869,5 +1869,18 @@ describe("areas: one tool list for the whole conversation", () => {
     expect(system).not.toContain("- calendar:");
     expect(seen[1]!.messages.at(-1)!.content).toMatch(/none are available/);
   });
+});
 
+describe("notes index", () => {
+  it("adds the index to the request it is given with, after the request", async () => {
+    const { model, seen } = scripted([{ text: "ok" }]);
+    await runAgent({
+      goal: "Logoyu bitir", model, tools: new ToolRegistry(), emit: () => {}, requestApproval: async () => ({ kind: "approve" }),
+      notesIndex: "[Vunemi, not from the user] Notes earlier conversations of this project left.\n- \"Logo decision\" (2026-10-03)",
+    });
+    const user = seen[0]!.messages.filter((m) => m.role === "user").at(-1)!;
+    expect(user.content).toContain("Logoyu bitir");
+    expect(user.content).toContain('- "Logo decision" (2026-10-03)');
+    expect(user.content.indexOf("Logoyu bitir")).toBeLessThan(user.content.indexOf("Logo decision"));
+  });
 });

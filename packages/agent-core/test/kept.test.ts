@@ -47,3 +47,23 @@ describe("KeptOutputs", () => {
     expect(await search!.run({ id: "o1", query: "1039" }, {} as never)).toBe("(part 4) Room 40: booking code 1039.");
   });
 });
+
+import { keptNote, readPart, searchLines } from "../src/kept.js";
+
+describe("kept output helpers", () => {
+  const text = ["alpha one", "beta two", "gamma three", "delta four"].join("\n");
+
+  it("say how to read on, in the same words for every keeper", () => {
+    expect(keptNote("o3", 10, 1234)).toBe('[Showing characters 1–10 of 1,234. The whole output is kept as "o3": output_read with id "o3" and part 2–124 reads the rest in order; output_search finds the lines that contain given words.]');
+  });
+
+  it("read a part and say whether more follows", () => {
+    expect(readPart(text, 10, "o1", 2)).toBe("beta two\ng\n[Part 2 of 5. output_read part 3 continues.]");
+    expect(() => readPart(text, 10, "o1", 6)).toThrow('Output "o1" has parts 1–5.');
+  });
+
+  it("find lines with all the words, with their part", () => {
+    expect(searchLines(text, 10, "o1", "GAMMA three")).toBe("(part 2) gamma three");
+    expect(searchLines(text, 10, "o1", "omega")).toBe('No line in "o1" contains all of: omega.');
+  });
+});
