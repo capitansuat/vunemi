@@ -9,6 +9,8 @@ import { Engine, type Endpoint } from "./engine.js";
 import { isGguf, modelShape, type ModelShape } from "./gguf.js";
 import { ModelStore, projectorFile, type InstalledModel, type PendingDownload } from "./models.js";
 import { HF, inspectRepo, pickProjector, popularModels, searchModels, type HubOptions, type RepoFile } from "./search.js";
+import type { FitRequest } from "../models/manager.js";
+import { need } from "../models/memory.js";
 
 /**
  * Everything the rest of main needs from the built-in engine, in one place:
@@ -28,6 +30,8 @@ export interface EngineServiceOptions {
   allowUrl?: (url: URL) => boolean;
   freeBytes?: (dir: string) => Promise<number>;
   idleMs?: number;
+  /** Fits the context to the memory there is (models/manager.ts); without it the wanted length is used. */
+  manager?: { fit(req: FitRequest): Promise<{ context: number; tight: boolean }> };
 }
 
 const PREFIX = "vunemi:";
@@ -48,6 +52,17 @@ interface PopularCache {
   items: PopularView[];
 }
 
+/** What `prepare` opened the chat model with. */
+export interface PreparedModel {
+  context: number;
+  /** The length the model's setting asks for. */
+  wanted: number;
+  /** Not even the shortest context fitted; it opened anyway. */
+  tight: boolean;
+  /** This call launched the server; false when the loaded one was reused. */
+  launched: boolean;
+}
+
 export class EngineService {
   private readonly store: ModelStore;
   private readonly engine: Engine;
@@ -55,6 +70,8 @@ export class EngineService {
   private popularRun: Promise<PopularView[]> | null = null;
   /** Trained context lengths read from the files' headers, by path. */
   private readonly shapes = new Map<string, ModelShape>();
+  /** What the loaded model was launched for; it is reused while the wanted length is unchanged. */
+  private launched: { wanted: number; tight: boolean } | null = null;
 
   constructor(private readonly opts: EngineServiceOptions) {
     mkdirSync(opts.dir, { recursive: true });
@@ -363,13 +380,45 @@ export class EngineService {
   }
 
   /** Before a task: make sure the model it names is loaded. Other providers need nothing. */
-  async prepare(spec: string): Promise<void> {
-    if (!spec.startsWith(PREFIX)) return;
+  async prepare(spec: string): Promise<PreparedModel | null> {
+    if (!spec.startsWith(PREFIX)) return null;
     const id = spec.slice(PREFIX.length);
     const m = this.store.get(id);
     if (!m) throw new Error(t("engine.error.missing"));
     const projector = this.store.projectorPathOf(m);
-    await this.engine.ensure({ id, path: this.store.pathOf(m), context: this.contextOf(m), ...(projector && { projector }) });
+    const path = this.store.pathOf(m);
+    const wanted = this.contextOf(m);
+    const loaded = this.engine.loaded();
+    // Loaded, perhaps with a shorter context than wanted: a reload would throw its cache away.
+    if (loaded && this.launched?.wanted === wanted && loaded.id === id && loaded.path === path && (loaded.projector ?? null) === (projector ?? null)) {
+      await this.engine.ensure(loaded);
+      return { context: loaded.context, wanted, tight: this.launched.tight, launched: false };
+    }
+    const weights = this.weightsOf(m);
+    const kv = this.shapeOf(path).kvBytesPerToken;
+    const fit = this.opts.manager
+      ? await this.opts.manager.fit({ wanted, need: (context) => need(weights, kv, context), ...(loaded && { replacing: "chat" as const }) })
+      : { context: wanted, tight: false };
+    this.launched = { wanted, tight: fit.tight };
+    await this.engine.ensure({ id, path, context: fit.context, ...(projector && { projector }) });
+    return { context: fit.context, wanted, tight: fit.tight, launched: true };
+  }
+
+  /** The chat model's server while one runs, for the model manager. */
+  pid(): number | null {
+    return this.engine.pid();
+  }
+
+  /** Bytes of the model file the loaded server maps; its footprint leaves them out. */
+  mapped(): number {
+    const loaded = this.engine.loaded();
+    const m = loaded ? this.store.get(loaded.id) : undefined;
+    return m ? m.size : 0;
+  }
+
+  /** Stops the chat model's server; the next task loads it again. */
+  async unload(): Promise<void> {
+    await this.engine.stop();
   }
 
   endpoint(spec: string): Endpoint | null {

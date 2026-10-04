@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GiB } from "../../src/main/engine/catalog.js";
 import { EngineService } from "../../src/main/engine/service.js";
+import type { FitRequest } from "../../src/main/models/manager.js";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-llama-server.mjs", import.meta.url));
 const BYTES = randomBytes(50_000);
@@ -118,6 +119,39 @@ describe("the engine service", () => {
     service.recordToolTest("lmstudio:x", false); // not ours
     service.recordToolTest("vunemi:gone", false);
     expect(service.view().installed[0]?.toolTest).toBe("ok");
+  });
+
+  it("opens the model with the context the manager fits, and reuses it while it is loaded", async () => {
+    const fit = vi.fn(async (_req: FitRequest) => ({ context: 8_192, tight: true }));
+    service = new EngineService({
+      dir, binary: FAKE, totalMemory: 64 * GiB, isBusy: () => false, testModel: vi.fn(async () => true), onChange: () => {},
+      hub: { base }, allowUrl: () => true, freeBytes: async () => 1e12, manager: { fit },
+    });
+    const spec = (await service.download({ repo: "org/tiny-GGUF" }))!;
+    await service.unload();
+    expect(service.pid()).toBeNull();
+    expect(service.mapped()).toBe(0);
+    fit.mockClear();
+
+    expect(await service.prepare(spec)).toEqual({ context: 8_192, wanted: 65_536, tight: true, launched: true });
+    expect(fit).toHaveBeenCalledTimes(1);
+    expect(fit.mock.calls[0]![0]).toMatchObject({ wanted: 65_536 });
+    expect(fit.mock.calls[0]![0].replacing).toBeUndefined();
+    // The file says nothing about its KV cache: a fifth of the file, whatever the context.
+    expect(fit.mock.calls[0]![0].need(65_536)).toBe(fit.mock.calls[0]![0].need(8_192));
+    const args = await argsOf(service.endpoint(spec)!);
+    expect(args[args.indexOf("-c") + 1]).toBe("8192");
+    expect(service.pid()).toEqual(expect.any(Number));
+    expect(service.mapped()).toBe(50_000);
+
+    // Loaded with a shorter context: used as it is, not reloaded.
+    expect(await service.prepare(spec)).toEqual({ context: 8_192, wanted: 65_536, tight: true, launched: false });
+    expect(fit).toHaveBeenCalledTimes(1);
+
+    // A new length from the user is a new launch, which replaces the loaded model.
+    await service.setContext("tiny-q4_k_m", 16_384);
+    expect(fit).toHaveBeenCalledTimes(2);
+    expect(fit.mock.calls[1]![0]).toMatchObject({ wanted: 16_384, replacing: "chat" });
   });
 
   it("loads the model again with the context length the user picks", async () => {

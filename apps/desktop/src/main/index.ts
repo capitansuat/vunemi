@@ -611,7 +611,9 @@ const session: AgentSession = new AgentSession({
       .join("\n\n"),
   planBeforeRun: () => settings.planBeforeRun,
   modelConfig: (spec) => modelConfig(spec, settings.modelSettings, (s) => engine.endpoint(s)),
-  prepareModel: (spec) => engine.prepare(spec),
+  prepareModel: async (spec) => {
+    await engine.prepare(spec);
+  },
   authorize: (req) => sentinel.check(req),
   // A part the user switched off comes back only through its card, and
   // only for a connection that is itself on.
