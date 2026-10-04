@@ -238,6 +238,17 @@ export class WorkStore {
     });
   }
 
+  /** "Forget everything": every output and note, and the file forgets them too. */
+  clear(): void {
+    this.transaction(() => {
+      this.db.exec("DELETE FROM outputs;");
+      this.db.exec("DELETE FROM output_counters;");
+      this.db.exec("DELETE FROM notes;");
+      this.db.exec("INSERT INTO notes_fts(notes_fts) VALUES ('rebuild');");
+    });
+    this.db.exec("VACUUM;");
+  }
+
   /** A forgotten project: all of its notes. */
   forgetProject(projectId: string): void {
     this.db.prepare("DELETE FROM notes WHERE scope = ?").run(projectScope(projectId));

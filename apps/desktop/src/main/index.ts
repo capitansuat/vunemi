@@ -1222,6 +1222,7 @@ handle(CH.forgetEverything, async () => {
   await artefacts.clear();
   await vault.clear();
   memory.clear();
+  work?.clear();
   proposals.clear();
   settings.reset();
   session.reset();

@@ -140,6 +140,21 @@ describe("outputs edge case", () => {
   });
 });
 
+describe("clear", () => {
+  it("forgets every output and note, leaves no words in work.db, and numbers outputs from o1 again", () => {
+    store.addOutput("c1", "page_read", "a page about quokkaharbor", 4);
+    note({ title: "Harbor", text: "Notes on quokkaharbor." });
+    store.clear();
+    expect(store.listNotes(projectScope("p1"))).toEqual([]);
+    expect(store.searchNotes(projectScope("p1"), "quokkaharbor")).toEqual([]);
+    expect(store.output("c1", "o1")).toBeNull();
+    store.close();
+    expect(readFileSync(join(dir, "work.db")).toString()).not.toContain("quokkaharbor");
+    store = new WorkStore(dir, () => clock);
+    expect(store.addOutput("c1", "t", "fresh", 1)).toBe("o1");
+  });
+});
+
 describe("secure delete", () => {
   it("does not leave deleted note text in work.db", () => {
     note({ scope: projectScope("p1"), title: "To delete", text: "This has zebrafjord in it." });
