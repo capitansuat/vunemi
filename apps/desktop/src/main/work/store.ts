@@ -153,6 +153,12 @@ export class WorkStore {
     return { tool: row.tool, text: row.text, part: row.part };
   }
 
+  /** The tool that made a kept output, without loading its text or counting as a use. */
+  outputTool(conversationId: string, id: string): string | undefined {
+    const row = this.db.prepare("SELECT tool FROM outputs WHERE conversation_id = ? AND id = ?").get(conversationId, id) as { tool: string } | undefined;
+    return row?.tool;
+  }
+
   /** At launch: outputs nobody read for 30 days go. */
   prune(): void {
     this.db.prepare("DELETE FROM outputs WHERE used_at < ?").run(this.now() - UNUSED_MS);

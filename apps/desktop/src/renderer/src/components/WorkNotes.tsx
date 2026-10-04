@@ -21,7 +21,10 @@ export function SavedNotes({ notes }: { notes: NonNullable<RunView["notes"]> }) 
               aria-label={t("workNotes.delete")}
               title={t("workNotes.delete")}
               className="rounded p-0.5 hover:text-muted"
-              onClick={() => void window.vunemi.deleteWorkNote(note.id, { conversationId }).then(() => setGone(new Set([...gone, note.id])))}
+              onClick={() => void window.vunemi
+                .deleteWorkNote(note.id, { conversationId })
+                .then(() => setGone((g) => new Set([...g, note.id])))
+                .catch((err: unknown) => console.error("[vunemi] work notes:", err))}
             >
               <Trash2 size={11} />
             </button>
@@ -38,7 +41,19 @@ export function ProjectNotesView() {
   const project = useStore((s) => s.sessions.projects.find((p) => p.id === s.notesProject));
   const [notes, setNotes] = useState<WorkNoteView[]>([]);
   useEffect(() => {
-    if (projectId) void window.vunemi.listWorkNotes({ projectId }).then(setNotes);
+    // Another project's notes must not show while this one's load, nor arrive late over them.
+    setNotes([]);
+    if (!projectId) return;
+    let cancelled = false;
+    window.vunemi
+      .listWorkNotes({ projectId })
+      .then((list) => {
+        if (!cancelled) setNotes(list);
+      })
+      .catch((err: unknown) => console.error("[vunemi] work notes:", err));
+    return () => {
+      cancelled = true;
+    };
   }, [projectId]);
   if (!projectId || !project) return null;
   return (
@@ -58,7 +73,12 @@ export function ProjectNotesView() {
                 aria-label={t("workNotes.delete")}
                 title={t("workNotes.delete")}
                 className="rounded p-1 text-faint hover:bg-surface-2 hover:text-fg"
-                onClick={() => void window.vunemi.deleteWorkNote(note.id, { projectId }).then(setNotes)}
+                onClick={() =>
+                  void window.vunemi
+                    .deleteWorkNote(note.id, { projectId })
+                    .then(setNotes)
+                    .catch((err: unknown) => console.error("[vunemi] work notes:", err))
+                }
               >
                 <Trash2 size={13} />
               </button>

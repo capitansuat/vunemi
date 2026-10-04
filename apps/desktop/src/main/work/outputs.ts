@@ -29,7 +29,7 @@ export class ArchivedOutputs implements OutputKeeper {
   }
 
   toolOf(id: string): string | undefined {
-    return this.store.output(this.conversation(), id)?.tool;
+    return this.store.outputTool(this.conversation(), id);
   }
 
   private need(id: string): { tool: string; text: string; part: number } {

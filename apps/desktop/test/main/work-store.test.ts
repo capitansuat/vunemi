@@ -39,6 +39,17 @@ describe("outputs", () => {
     expect(store.addOutput("c1", "t", "y", 1)).toBe("o32");
   });
 
+  it("outputTool names the tool without loading the text or counting as a use", () => {
+    store.addOutput("c1", "page_read", "text", 1);
+    expect(store.outputTool("c1", "o1")).toBe("page_read");
+    expect(store.outputTool("c2", "o1")).toBeUndefined();
+    expect(store.outputTool("c1", "o9")).toBeUndefined();
+    clock += 31 * 86_400_000;
+    store.outputTool("c1", "o1");
+    store.prune();
+    expect(store.output("c1", "o1")).toBeNull();
+  });
+
   it("drops outputs unused for 30 days, and keeps those read since", () => {
     store.addOutput("c1", "t", "old", 1);
     store.addOutput("c1", "t", "read", 1);
