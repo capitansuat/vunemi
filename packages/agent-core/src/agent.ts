@@ -14,7 +14,7 @@ import { t } from "@vunemi/i18n";
 import { requestedTravelTools } from "./travel-intent.js";
 import { promptLedger, type LedgerPart } from "./ledger.js";
 import type { KeptOutputs } from "./kept.js";
-import { areaOf, capabilityList, definitionsText, openToolSpec, runToolSpec, TOOL_RUN, TOOLS_OPEN, unwrapRun, type ToolArea } from "./areas.js";
+import { areaOf, capabilityList, definitionsText, openToolSpec, pickAreas, runToolSpec, TOOL_RUN, TOOLS_OPEN, unwrapRun, type ToolArea } from "./areas.js";
 
 export type Autonomy = "auto" | "ask" | "deny";
 export type AutonomyPolicy = Record<ActionClass, Autonomy>;
@@ -319,7 +319,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let toolsNote = "";
   if (areaMode) {
     const onDemand = new Set(tools.list().flatMap((t) => (t.onDemand ? [t.onDemand] : [])));
-    const picked = (opts.pickAreas ? await opts.pickAreas(opts.goal).catch(() => null) : null) ?? areas.map((a) => a.id).filter((id) => !onDemand.has(id));
+    const decide = opts.pickAreas ?? ((goal: string) => pickAreas(model, goal, areas, signal));
+    const picked = (await decide(opts.goal).catch(() => null)) ?? areas.map((a) => a.id).filter((id) => !onDemand.has(id));
     // A request that names a group's tool, or matches what it is for, gets it.
     const wanted = new Set(picked);
     for (const tool of tools.list()) {

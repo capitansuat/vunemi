@@ -64,6 +64,12 @@ export interface ChatModel {
   contextWindow?(): Promise<number | null>;
   /** Whether the loaded model takes images. False when the server can't say. */
   vision?(): Promise<boolean>;
+  /**
+   * How likely each candidate is as the first token of the answer, from one
+   * prefill and no text generated: a fast decision (see areas.ts). Null when
+   * the server can't say.
+   */
+  firstTokenOdds?(messages: ChatMessage[], candidates: readonly string[], signal?: AbortSignal): Promise<Record<string, number> | null>;
 }
 
 export type ProviderKind = "lmstudio" | "ollama" | "llamacpp" | "vunemi" | "openai";
@@ -231,6 +237,49 @@ class OpenAICompatibleModel implements ChatModel {
 
   vision(): Promise<boolean> {
     return probeVision(this.config, this.model);
+  }
+
+  async firstTokenOdds(messages: ChatMessage[], candidates: readonly string[], signal?: AbortSignal): Promise<Record<string, number> | null> {
+    // Only llama.cpp's server renders a prompt and reports token odds.
+    if (this.config.kind !== "llamacpp" && this.config.kind !== "vunemi") return null;
+    try {
+      const origin = new URL(this.config.baseUrl).origin;
+      const post = async (path: string, body: unknown): Promise<unknown> => {
+        const res = await fetch(`${origin}${path}`, {
+          method: "POST",
+          headers: { ...headers(this.config), "content-type": "application/json" },
+          body: JSON.stringify(body),
+          ...(signal && { signal }),
+        });
+        return res.ok ? res.json() : null;
+      };
+      // The model's own chat template, without thinking: the answer starts at once.
+      const rendered = (await post("/apply-template", {
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        chat_template_kwargs: { enable_thinking: false },
+      })) as { prompt?: unknown } | null;
+      if (typeof rendered?.prompt !== "string") return null;
+      const done = (await post("/completion", {
+        prompt: `${rendered.prompt}Answer: `,
+        n_predict: 1,
+        n_probs: 20,
+        temperature: 0,
+        cache_prompt: true,
+      })) as { completion_probabilities?: { top_logprobs?: { token?: string; logprob?: number }[] }[] } | null;
+      const top = done?.completion_probabilities?.[0]?.top_logprobs;
+      if (!Array.isArray(top)) return null;
+      const odds: Record<string, number> = Object.fromEntries(candidates.map((c) => [c, 0]));
+      for (const t of top) {
+        const token = (t.token ?? "").trim();
+        if (token in odds && typeof t.logprob === "number") odds[token]! += Math.exp(t.logprob);
+      }
+      const sum = Object.values(odds).reduce((a, b) => a + b, 0);
+      if (sum <= 0) return null;
+      for (const c of candidates) odds[c] = odds[c]! / sum;
+      return odds;
+    } catch {
+      return null;
+    }
   }
 
   async chat(req: ChatRequest, onChunk: (c: StreamChunk) => void): Promise<ChatResult> {
