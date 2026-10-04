@@ -212,11 +212,14 @@ export class Connectors {
    * Guidance for switched-on connections and the small set of built-in
    * sources available through a one-time approval card.
    */
-  instructions(): string {
+  /**
+   * What the model is told about the connections. With `guides: false` each
+   * connection's own instructions are left out: they travel with its tools
+   * (see guides()), and only what concerns all of them stays.
+   */
+  instructions(opts: { guides?: boolean } = {}): string {
     const on = [...this.items.values()].filter((c) => this.isOn(c.id));
-    const guides = on
-      .filter((c) => c.instructions && this.sourcesOf(c).some((s) => this.opts.tools.isEnabled(s)))
-      .map((c) => c.instructions!);
+    const guides = opts.guides === false ? [] : this.working().flatMap((c) => (c.instructions ? [c.instructions] : []));
     // A guide names every tool of its connection; the ones in a part the user
     // switched off don't exist right now. Said plainly, so a model asked to
     // add an event says adding is off instead of reading and claiming it did.
@@ -237,6 +240,13 @@ export class Connectors {
       guides.push(`Also part of Vunemi, but not switched on: ${offConnections.join(", ")}. None of them can be used until the user switches it on in Settings › Connections. When the user asks what you can do, or asks for something one of them does, say so.`);
     }
     return guides.join("\n\n");
+  }
+
+  /** Each switched-on connection with a working part, and its own instructions if it has any. */
+  working(): { id: string; label: string; instructions?: string }[] {
+    return [...this.items.values()]
+      .filter((c) => this.isOn(c.id) && this.sourcesOf(c).some((s) => this.opts.tools.isEnabled(s)))
+      .map((c) => ({ id: c.id, label: c.label, ...(c.instructions && { instructions: c.instructions }) }));
   }
 
   /** Runs a connection's own sign-in or permission prompt. */

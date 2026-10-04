@@ -19,6 +19,11 @@ export interface ToolArea {
   guide?: string;
   /** Tools listed in every conversation, whatever was picked (e.g. automation_create). */
   alwaysShown?: string[];
+  /**
+   * False for areas reached through others (an app group, through app_guide):
+   * not an answer to the question of which areas a request needs.
+   */
+  routed?: boolean;
 }
 
 export const TOOL_RUN = "tool_run";

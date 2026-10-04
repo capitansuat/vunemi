@@ -256,6 +256,28 @@ function inSources(source: string | undefined, allowed: readonly string[]): bool
 
 const OFF_NOTE = "[Switched off by the user: calling it shows them a card to allow it once or switch it on.]";
 
+/**
+ * The system prompt and tool list of a conversation with areas: the tools in
+ * `listed`, tool_run and tools_open, and the guides of the areas listed. Both
+ * change only with `listed`, which a conversation fills once.
+ */
+export function listedRequest(
+  tools: ToolRegistry,
+  areas: readonly ToolArea[],
+  listed: ReadonlySet<string>,
+  instructions?: string,
+  offer?: (name: string) => boolean,
+  allow?: (t: ToolDef) => boolean,
+): { system: string; tools: ToolSpec[] } {
+  const specs = toolSpecsOf(tools, undefined, offer, undefined, allow).filter((s) => listed.has(s.name));
+  const areaOfName = (name: string) => { const def = tools.getAny(name); return def ? areaOf(tools, def) : undefined; };
+  const guides = areas.filter((a) => a.guide && specs.some((s) => areaOfName(s.name) === a.id)).map((a) => a.guide!);
+  return {
+    system: systemPrompt([instructions, capabilityList(areas), ...guides].filter(Boolean).join("\n\n")),
+    tools: [...specs, runToolSpec(), openToolSpec(areas)],
+  };
+}
+
 /** What every request carries besides the conversation: the system prompt and the tool definitions. */
 export function overheadChars(tools: ToolRegistry, instructions?: string, opened?: ReadonlySet<string>, offer?: (name: string) => boolean): number {
   return systemPrompt(instructions).length + JSON.stringify(toolSpecsOf(tools, opened, offer)).length;
@@ -319,7 +341,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let toolsNote = "";
   if (areaMode) {
     const onDemand = new Set(tools.list().flatMap((t) => (t.onDemand ? [t.onDemand] : [])));
-    const decide = opts.pickAreas ?? ((goal: string) => pickAreas(model, goal, areas, signal));
+    const decide = opts.pickAreas ?? ((goal: string) => pickAreas(model, goal, areas.filter((a) => a.routed !== false), signal));
     const picked = (await decide(opts.goal).catch(() => null)) ?? areas.map((a) => a.id).filter((id) => !onDemand.has(id));
     // A request that names a group's tool, or matches what it is for, gets it.
     const wanted = new Set(picked);
@@ -328,9 +350,11 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     }
     if (listed.size === 0) {
       const always = new Set(areas.flatMap((a) => a.alwaysShown ?? []));
+      const described = new Set(areas.map((a) => a.id));
       for (const spec of everySpec) {
+        // A tool of no described area (a server the user added) is always listed.
         const area = areaOfName(spec.name);
-        if (area === undefined || wanted.has(area) || always.has(spec.name)) listed.add(spec.name);
+        if (area === undefined || !described.has(area) || wanted.has(area) || always.has(spec.name)) listed.add(spec.name);
       }
       // Never empty again in this conversation, even when nothing was picked.
       listed.add(TOOL_RUN);
@@ -352,16 +376,12 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   // change before the end makes it read the whole prompt again (seconds per
   // thousand tokens). Old page snapshots go only when room runs out (makeRoom).
   const shown = (): ChatMessage[] => keepNewestImage(convo);
-  // With areas: the guides of the areas listed, which change only with the list.
-  const system = areaMode
-    ? systemPrompt([opts.instructions, capabilityList(areas), ...areas.filter((a) => a.guide && everySpec.some((s) => listed.has(s.name) && areaOfName(s.name) === a.id)).map((a) => a.guide!)].filter(Boolean).join("\n\n"))
-    : systemPrompt(opts.instructions);
+  const listedParts = areaMode ? listedRequest(tools, areas, listed, opts.instructions, offerable, withinRun) : null;
+  const system = listedParts?.system ?? systemPrompt(opts.instructions);
   const ephemeral = new Set(tools.list().flatMap((t) => (t.ephemeral ? [t.name] : [])));
   // Recomputed when a guide opens a group of tools; the same otherwise. With
   // areas never: the group's definitions are given in the conversation instead.
-  let toolSpecs = areaMode
-    ? [...everySpec.filter((s) => listed.has(s.name)), runToolSpec(), openToolSpec(areas)]
-    : toolSpecsOf(tools, opts.openedTools, offerable, opts.goal, withinRun);
+  let toolSpecs = listedParts?.tools ?? toolSpecsOf(tools, opts.openedTools, offerable, opts.goal, withinRun);
   /** Definitions owed to the model after a guide opened a group mid-run. */
   let owed: string[] = [];
   const window = opts.contextWindow ?? FALLBACK_WINDOW;

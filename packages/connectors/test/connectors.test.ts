@@ -281,6 +281,17 @@ describe("connecting and disconnecting", () => {
 });
 
 describe("what the model is told", () => {
+  it("can give each connection's guide apart from what concerns them all", () => {
+    const connectors = new Connectors({ tools: new ToolRegistry() });
+    connectors.add(fake("takvim", { instructions: "Takvimi şöyle kullan." }));
+    connectors.add(fake("posta", { defaultOn: false, instructions: "Postayı şöyle kullan." }));
+    expect(connectors.working()).toEqual([{ id: "takvim", label: "takvim", instructions: "Takvimi şöyle kullan." }]);
+    const shared = connectors.instructions({ guides: false });
+    expect(shared).not.toContain("Takvimi");
+    expect(shared).toMatch(/not switched on: posta/);
+  });
+
+
   it("describes only the connections that are on", () => {
     const connectors = new Connectors({ tools: new ToolRegistry() });
     connectors.add(fake("takvim", { instructions: "Takvimi şöyle kullan." }));

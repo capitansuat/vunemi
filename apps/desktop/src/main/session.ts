@@ -32,7 +32,10 @@ import {
   type RunStatus,
   type PlanDecision,
   type ChatMessage,
+  type ToolSpec,
   type KeptOutputs,
+  listedRequest,
+  type ToolArea,
   type RunOptions,
   type ToolRegistry,
   type ProviderConfig,
@@ -43,6 +46,11 @@ export interface SessionOptions {
   tools: ToolRegistry;
   /** Long tool output, kept whole for output_read and output_search. */
   keptOutputs?: KeptOutputs;
+  /**
+   * The areas of tools, asked for at the start of each run. With them a
+   * conversation keeps one tool list from its first request on.
+   */
+  areas?: () => ToolArea[];
   emit: (event: AgentEvent) => void;
   /**
    * Extra guidance for the model, e.g. how to use the browser. Asked for at
@@ -115,6 +123,8 @@ export class AgentSession {
   private undone: string[] = [];
   /** App tool groups a guide has opened in this conversation (ToolDef.onDemand). */
   private readonly openedTools = new Set<string>();
+  /** The tools this conversation lists to the model; filled by its first run. */
+  private readonly shownTools = new Set<string>();
   private active: AbortController | null = null;
   private queue: QueuedMessage[] = [];
   private queueListeners = new Set<(queue: QueuedMessage[]) => void>();
@@ -314,6 +324,7 @@ export class AgentSession {
         maxSteps: 30,
         sessionGrants: this.opts.grants,
         openedTools: this.openedTools,
+        ...(this.opts.areas && { areas: this.opts.areas(), shownTools: this.shownTools }),
         authorize: this.opts.authorize,
         ...(this.opts.switchedOff && { switchedOff: this.opts.switchedOff }),
         ...(this.opts.switchOn && { switchOn: this.opts.switchOn }),
@@ -397,7 +408,18 @@ export class AgentSession {
     return entry;
   }
 
+  /** What every request carries besides the conversation, as the next run would send it. */
+  private fixed(): { system: string; tools: ToolSpec[] } {
+    const instructions = this.opts.instructions?.();
+    if (this.opts.areas && this.shownTools.size > 0) return listedRequest(this.opts.tools, this.opts.areas(), this.shownTools, instructions, this.offerable);
+    return { system: systemPrompt(instructions), tools: toolSpecsOf(this.opts.tools, this.openedTools, this.offerable) };
+  }
+
   private fixedChars(): number {
+    if (this.opts.areas && this.shownTools.size > 0) {
+      const { system, tools } = this.fixed();
+      return system.length + JSON.stringify(tools).length;
+    }
     return overheadChars(this.opts.tools, this.opts.instructions?.(), this.openedTools, this.offerable);
   }
 
@@ -444,8 +466,7 @@ export class AgentSession {
       const result = await compact(this.history, {
         model,
         window,
-        system: systemPrompt(this.opts.instructions?.()),
-        tools: toolSpecsOf(this.opts.tools, this.openedTools, this.offerable),
+        ...this.fixed(),
         charsPerToken: this.charsPerToken,
         target: AFTER_RUN_TARGET,
         keepTurns: 2,
@@ -534,6 +555,7 @@ export class AgentSession {
     this.history = [...history];
     this.undone = [];
     this.openedTools.clear();
+    this.shownTools.clear();
     this.words = [];
     this.remembered.clear();
   }

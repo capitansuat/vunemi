@@ -30,10 +30,13 @@ const LIMITS = {
   guide: 2_000,
   /** System prompt, every connection's instructions and every tool shown, all switched on (37,019). */
   total: 38_000,
+  /** With areas: a conversation's first prompt with one area picked, the largest (11,743, browser). */
+  oneArea: 12_000,
 };
 
 async function compose() {
-  const { ToolRegistry, toolSpecsOf, SYSTEM_PROMPT, KeptOutputs, keptOutputTools } = await import("@vunemi/agent-core");
+  const { ToolRegistry, toolSpecsOf, SYSTEM_PROMPT, KeptOutputs, keptOutputTools, listedRequest, areaOf } = await import("@vunemi/agent-core");
+  const { toolAreas } = await import("../../src/main/areas.js");
   const { ScriptableCatalog } = await import("@vunemi/apps");
   const { buildConnectors } = await import("../../src/main/connectors.js");
   const { AutomationStore } = await import("../../src/main/automations.js");
@@ -60,7 +63,18 @@ async function compose() {
   const specs = shown.map((s) => ({ name: s.name, chars: JSON.stringify(s).length }));
   const onDemand = toolSpecsOf(tools).filter((s) => !shown.some((x) => x.name === s.name)).map((s) => ({ name: s.name, chars: JSON.stringify(s).length }));
   const instructions = connectors.instructions().length;
-  return { core: SYSTEM_PROMPT.length, guides, specs, onDemand, instructions, total: SYSTEM_PROMPT.length + instructions + specs.reduce((n, s) => n + s.chars, 0) };
+  // As a conversation starts with areas: built-in tools, automation_create,
+  // and one picked area; each area tried, the largest kept.
+  const areas = toolAreas(connectors.working());
+  const shared = connectors.instructions({ guides: false });
+  const listedFor = (area: string) => {
+    const names = new Set(shown.filter((s) => { const def = tools.getAny(s.name); const a = def ? areaOf(tools, def) : undefined; return a === undefined || a === area || s.name === "automation_create"; }).map((s) => s.name));
+    const r = listedRequest(tools, areas, names, shared);
+    return { area, chars: r.system.length + JSON.stringify(r.tools).length };
+  };
+  const perArea = areas.filter((a) => a.routed !== false).map((a) => listedFor(a.id)).sort((a, b) => b.chars - a.chars);
+  const none = listedFor("");
+  return { perArea, none, core: SYSTEM_PROMPT.length, guides, specs, onDemand, instructions, total: SYSTEM_PROMPT.length + instructions + specs.reduce((n, s) => n + s.chars, 0) };
 }
 
 describe("prompt budget", async () => {
@@ -71,6 +85,7 @@ describe("prompt budget", async () => {
     const lines = [
       `core ${tok(c.core)}`, `instructions ${tok(c.instructions)}`,
       `tools shown: ${c.specs.length}, ${tok(c.specs.reduce((n, s) => n + s.chars, 0))}; on demand: ${c.onDemand.length}, ${tok(c.onDemand.reduce((n, s) => n + s.chars, 0))}`,
+      `with areas: nothing picked ${tok(c.none.chars)}; one area, largest ${c.perArea[0]!.area} ${tok(c.perArea[0]!.chars)} (${c.perArea[0]!.chars} chars)`,
       `total ${tok(c.total)} (${c.total} chars; core ${c.core}, largest tool ${Math.max(...[...c.specs, ...c.onDemand].map((s) => s.chars))}, largest guide ${Math.max(...c.guides.map((g) => g.chars))})`, "", "guides:", ...c.guides.sort((a, b) => b.chars - a.chars).map((g) => `  ${g.id.padEnd(16)} ${tok(g.chars)}`),
       "", "largest tools:", ...[...c.specs, ...c.onDemand].sort((a, b) => b.chars - a.chars).slice(0, 15).map((s) => `  ${s.name.padEnd(28)} ${tok(s.chars)}`),
     ];
@@ -89,6 +104,10 @@ describe("prompt budget", async () => {
   it("keeps every connection's instructions within budget", () => {
     const over = c.guides.filter((g) => g.chars > LIMITS.guide).map((g) => `${g.id} ${g.chars}`);
     expect(over).toEqual([]);
+  });
+
+  it("keeps a conversation's first prompt with one area within budget", () => {
+    expect(c.perArea[0]!.chars).toBeLessThanOrEqual(LIMITS.oneArea);
   });
 
   it("keeps the whole first prompt within budget", () => {

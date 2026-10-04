@@ -1792,6 +1792,22 @@ describe("areas: one tool list for the whole conversation", () => {
     expect(output).toContain('"name":"play_song"');
   });
 
+  it("always lists tools of a connection no area describes", async () => {
+    const tools = registry().register(def("weather_now"), "mcp-weather");
+    const { promise, seen } = go(new Set(), [], [{ text: "ok" }], tools);
+    await promise;
+    expect(names(seen[0]!)).toContain("weather_now");
+  });
+
+  it("asks only about the areas that are routed", async () => {
+    const asked: string[] = [];
+    const { model } = scripted([{ text: "ok" }]);
+    const odds = { ...model, firstTokenOdds: async (m: ChatMessage[]) => { asked.push(m.at(-1)!.content); return null; } };
+    await runAgent({ goal: "g", model: odds, tools: registry(), areas: [...AREAS.slice(0, 4), { ...AREAS[4]!, routed: false }], shownTools: new Set(), emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(asked[0]).toContain("Mac apps");
+    expect(asked[0]).not.toMatch(/\) music/);
+  });
+
   it("lists every connection's tools when the areas can't be told", async () => {
     const { promise, seen } = go(new Set(), null, [{ text: "ok" }]);
     await promise;

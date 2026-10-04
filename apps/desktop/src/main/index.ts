@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, 
 import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
+import { toolAreas } from "./areas.js";
 import { createModel, KeptOutputs, keptOutputTools, type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
 import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
@@ -565,6 +566,8 @@ function record(event: AgentEvent): void {
 const session: AgentSession = new AgentSession({
   tools,
   keptOutputs,
+  // Each connection's guide travels with its tools (see areas.ts).
+  areas: () => toolAreas(connectors.working()),
   emit: record,
   onHistory: (history) => {
     conversations.setHistory(history);
@@ -574,7 +577,7 @@ const session: AgentSession = new AgentSession({
   // Read per run: a connection switched off mid-session stops being
   // described as well as stopping working.
   instructions: () =>
-    [languageInstructions(), generalInstructions(memory), connectors.instructions(), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write"))]
+    [languageInstructions(), generalInstructions(memory), connectors.instructions({ guides: false }), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write"))]
       .filter(Boolean)
       .join("\n\n"),
   planBeforeRun: () => settings.planBeforeRun,
