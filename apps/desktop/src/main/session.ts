@@ -33,7 +33,7 @@ import {
   type PlanDecision,
   type ChatMessage,
   type ToolSpec,
-  type KeptOutputs,
+  type OutputKeeper,
   listedRequest,
   type ToolArea,
   type RunOptions,
@@ -45,7 +45,7 @@ import { t } from "@vunemi/i18n";
 export interface SessionOptions {
   tools: ToolRegistry;
   /** Long tool output, kept whole for output_read and output_search. */
-  keptOutputs?: KeptOutputs;
+  keptOutputs?: OutputKeeper;
   /**
    * The areas of tools, asked for at the start of each run. With them a
    * conversation keeps one tool list from its first request on.

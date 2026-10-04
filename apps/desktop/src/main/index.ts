@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
 import { toolAreas } from "./areas.js";
-import { createModel, KeptOutputs, keptOutputTools, type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import { createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
 import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
@@ -55,6 +55,8 @@ import { PRODUCTION, type FeedSource } from "./updates/feed.js";
 import { UpdateService } from "./updates/service.js";
 import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
+import { ArchivedOutputs } from "./work/outputs.js";
+import { openWorkStore } from "./work/store.js";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 registerPreviewScheme();
@@ -139,7 +141,12 @@ const browser = new BrowserController(async () => {
 browser.onPointer((target, p) => embedded.showPointer(target, p));
 
 const tools = createDemoTools();
-const keptOutputs = new KeptOutputs();
+// The work archive: kept outputs for their conversation, and work notes.
+// Without it, outputs stay in memory as before and notes are not offered.
+const work = openWorkStore(app.getPath("userData"));
+work?.prune();
+// `conversations` is read only when a tool runs, long after it exists.
+const keptOutputs: OutputKeeper = work ? new ArchivedOutputs(work, () => conversations.currentId) : new KeptOutputs();
 for (const tool of keptOutputTools(keptOutputs)) tools.register(tool);
 
 // The folders the user opened to Vunemi — Desktop, Documents, Downloads — and
@@ -902,6 +909,7 @@ function forgetConversation(id: string): SessionList {
   const current = id === conversations.currentId;
   if (current) switchConversation([]);
   conversations.remove(id);
+  work?.forgetConversation(id);
   return listAfterSwitch();
 }
 
@@ -933,6 +941,7 @@ handle(CH.projectsAdd, async () => {
 handle(CH.projectsRemove, (_e, id: string) => {
   if (session.running) throw new Error(t("main.stopFirst"));
   projects.remove(String(id));
+  work?.forgetProject(String(id));
   return listAfterSwitch();
 });
 handle(CH.projectsReveal, async (_e, id: string) => {
