@@ -1850,4 +1850,24 @@ describe("areas: one tool list for the whole conversation", () => {
     expect(seen[1]!.messages.at(-1)!.content).toMatch(/exact name/);
     expect(seen[2]!.messages.at(-1)!.content).toMatch(/directly/);
   });
+
+  it("leaves out a tool avoided for the request, even one always shown, and the areas a scheduled task may not use", async () => {
+    const tools = registry().register(def("plan_task", { avoidFor: /^Scheduled task/ }), "automations:create");
+    tools.list().find((t) => t.name === "automation_create")!.avoidFor = /^Scheduled task/;
+    const { model, seen } = scripted([
+      { calls: [{ name: "tools_open", argumentsText: '{"area":"automations"}' }] },
+      { text: "done" },
+    ]);
+    const shown = new Set<string>();
+    await runAgent({
+      goal: "Scheduled task: summarise my mail", model, tools, areas: AREAS, shownTools: shown, pickAreas: async () => ["mail"],
+      unattended: true, onlySources: ["mail", "automations"], emit: () => {}, requestApproval: async () => ({ kind: "approve" }),
+    });
+    expect(names(seen[0]!)).toEqual(["get_time", "mail_search", "tool_run", "tools_open"]);
+    const system = seen[0]!.messages[0]!.content;
+    expect(system).toContain("- mail: the user's mail");
+    expect(system).not.toContain("- calendar:");
+    expect(seen[1]!.messages.at(-1)!.content).toMatch(/none are available/);
+  });
+
 });

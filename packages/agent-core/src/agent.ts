@@ -320,14 +320,17 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     !(opts.unattended === true && UNATTENDED_NEVER.has(tool.actionClass)) &&
     (!opts.onlySources || inSources(tools.sourceOf(tool.name), opts.onlySources));
   const areaMode = opts.areas !== undefined && opts.shownTools !== undefined;
-  const areas = opts.areas ?? [];
   const listed = opts.shownTools ?? new Set<string>();
-  /** Every tool this run may use, switched-off ones the user may allow included. */
-  const everySpec = areaMode ? toolSpecsOf(tools, undefined, offerable, undefined, withinRun) : [];
   const areaOfName = (name: string): string | undefined => {
     const def = tools.getAny(name);
     return def ? areaOf(tools, def) : undefined;
   };
+  /** Every tool runs of this kind may use, switched-off ones the user may allow included. */
+  const allowedSpecs = areaMode ? toolSpecsOf(tools, undefined, offerable, undefined, withinRun) : [];
+  /** Of those, the ones this request may use: not one avoided for it (avoidFor). */
+  const everySpec = areaMode ? toolSpecsOf(tools, undefined, offerable, opts.goal, withinRun) : [];
+  // A scheduled task limited to some connections isn't told of the others.
+  const areas = (opts.areas ?? []).filter((a) => allowedSpecs.some((s) => areaOfName(s.name) === a.id));
   /** Areas whose definitions this run already gave in the conversation. */
   const delivered = new Set<string>();
   const unlisted = (area: string): ToolSpec[] => everySpec.filter((s) => areaOfName(s.name) === area && !listed.has(s.name));
