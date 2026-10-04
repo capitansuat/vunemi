@@ -124,19 +124,22 @@ export class WorkStore {
   // -- outputs ----------------------------------------------------------------
 
   addOutput(conversationId: string, tool: string, text: string, part: number): string {
-    const at = this.now();
-    const counter = this.db.prepare("SELECT next FROM output_counters WHERE conversation_id = ?").get(conversationId) as { next: number } | undefined;
-    const n = counter?.next ?? 1;
-    this.db.prepare("INSERT INTO output_counters (conversation_id, next) VALUES (?, ?) ON CONFLICT(conversation_id) DO UPDATE SET next = excluded.next").run(conversationId, n + 1);
-    const id = `o${n}`;
-    this.db
-      .prepare("INSERT INTO outputs (conversation_id, id, tool, text, part, bytes, created_at, used_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-      .run(conversationId, id, tool, text, part, Buffer.byteLength(text), at, at);
-    const newRowid = (this.db.prepare("SELECT rowid FROM outputs WHERE conversation_id = ? AND id = ?").get(conversationId, id) as { rowid: number }).rowid;
-    this.db
-      .prepare(`DELETE FROM outputs WHERE conversation_id = ? AND rowid NOT IN (SELECT rowid FROM outputs WHERE conversation_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ${OUTPUTS_PER_CONVERSATION})`)
-      .run(conversationId, conversationId);
-    this.trimBytes(newRowid);
+    let id = "";
+    this.transaction(() => {
+      const at = this.now();
+      const counter = this.db.prepare("SELECT next FROM output_counters WHERE conversation_id = ?").get(conversationId) as { next: number } | undefined;
+      const n = counter?.next ?? 1;
+      this.db.prepare("INSERT INTO output_counters (conversation_id, next) VALUES (?, ?) ON CONFLICT(conversation_id) DO UPDATE SET next = excluded.next").run(conversationId, n + 1);
+      id = `o${n}`;
+      this.db
+        .prepare("INSERT INTO outputs (conversation_id, id, tool, text, part, bytes, created_at, used_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+        .run(conversationId, id, tool, text, part, Buffer.byteLength(text), at, at);
+      const newRowid = (this.db.prepare("SELECT rowid FROM outputs WHERE conversation_id = ? AND id = ?").get(conversationId, id) as { rowid: number }).rowid;
+      this.db
+        .prepare(`DELETE FROM outputs WHERE conversation_id = ? AND rowid NOT IN (SELECT rowid FROM outputs WHERE conversation_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ${OUTPUTS_PER_CONVERSATION})`)
+        .run(conversationId, conversationId);
+      this.trimBytes(newRowid);
+    });
     return id;
   }
 
