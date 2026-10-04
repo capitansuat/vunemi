@@ -739,6 +739,7 @@ export const messages: Catalogue = {
       file: "un fichier lu",
       window: "la fenêtre d’une autre app",
       page: "la page ouverte",
+      notes: "des notes de travail antérieures",
     },
     attach: {
       filesOff: "Pour joindre des fichiers, activez Fichiers dans Connexions.",
@@ -748,10 +749,6 @@ export const messages: Catalogue = {
     invalidPolicy: "Réglage d’autorisation non valide.",
     badLanguage: "Cette langue n’est pas prise en charge.",
     undoGone: "Cette action ne peut plus être annulée.",
-    demo: {
-      empty: "Vider le bloc-notes",
-      restore: "Rétablir le contenu précédent",
-    },
     models: {
       invalid: "Réglages du modèle non valides.",
       badUrl: "Adresse du serveur de modèles non valide.",

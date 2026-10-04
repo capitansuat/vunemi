@@ -739,6 +739,7 @@ export const messages: Catalogue = {
       file: "einer gelesenen Datei",
       window: "dem Fenster einer anderen App",
       page: "der offenen Seite",
+      notes: "früheren Arbeitsnotizen",
     },
     attach: {
       filesOff: "Um Dateien anzuhängen, schalte unter Verbindungen „Dateien“ ein.",
@@ -748,10 +749,6 @@ export const messages: Catalogue = {
     invalidPolicy: "Ungültige Berechtigungseinstellung.",
     badLanguage: "Diese Sprache wird nicht unterstützt.",
     undoGone: "Das lässt sich nicht mehr widerrufen.",
-    demo: {
-      empty: "Notizblock leeren",
-      restore: "Vorherigen Stand wiederherstellen",
-    },
     models: {
       invalid: "Ungültige Modelleinstellungen.",
       badUrl: "Ungültige Adresse des Modellservers.",

@@ -739,6 +739,7 @@ export const messages: Catalogue = {
       file: "读取的文件",
       window: "另一个应用的窗口",
       page: "打开的页面",
+      notes: "之前的工作笔记",
     },
     attach: {
       filesOff: "要附加文件，请在“连接”中开启“文件”。",
@@ -748,10 +749,6 @@ export const messages: Catalogue = {
     invalidPolicy: "权限设置无效。",
     badLanguage: "不支持这种语言。",
     undoGone: "此操作已无法撤销。",
-    demo: {
-      empty: "清空记事本",
-      restore: "恢复之前的内容",
-    },
     models: {
       invalid: "模型设置无效。",
       badUrl: "模型服务器地址无效。",

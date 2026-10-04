@@ -58,7 +58,7 @@ describe("ActivityLog", () => {
 
   it("offers undo, runs it once, then marks the entry", async () => {
     const log = new ActivityLog(dir);
-    for (const e of call("c1", "scratchpad_write")) log.record(e);
+    for (const e of call("c1", "pad_write")) log.record(e);
     let undone = 0;
     log.offerUndo("c1", "Önceki hâline döndür", async () => {
       undone++;

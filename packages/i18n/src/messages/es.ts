@@ -739,6 +739,7 @@ export const messages: Catalogue = {
       file: "un archivo leído",
       window: "la ventana de otra app",
       page: "la página abierta",
+      notes: "notas de trabajo anteriores",
     },
     attach: {
       filesOff: "Para adjuntar archivos, activa Archivos en Conexiones.",
@@ -748,10 +749,6 @@ export const messages: Catalogue = {
     invalidPolicy: "Ajuste de permisos no válido.",
     badLanguage: "Este idioma no es compatible.",
     undoGone: "Esto ya no se puede deshacer.",
-    demo: {
-      empty: "Vaciar el bloc de notas",
-      restore: "Restaurar lo que había",
-    },
     models: {
       invalid: "Ajustes del modelo no válidos.",
       badUrl: "Dirección del servidor de modelos no válida.",

@@ -154,7 +154,7 @@ if (work) {
     store: work,
     where: () => ({ conversationId: conversations.currentId, ...(conversations.currentProject && { projectId: conversations.currentProject }) }),
     sources: () => sentinel.untrustedSources(),
-    redact,
+    redact: redactOrThrow,
     onSaved: ({ runId, note, scope }) => {
       if (runId) record({ type: "note.saved", runId, noteId: note.id, title: note.title, scope, at: Date.now() });
     },
@@ -281,6 +281,11 @@ async function redact(text: string): Promise<string> {
   } catch {
     return "[Withheld: the Vault couldn't check this text for stored secrets. Try again in a moment.]";
   }
+}
+/** For saving: a text the Vault can't check is refused, never stored as a placeholder. */
+async function redactOrThrow(text: string): Promise<string> {
+  if (!text || vault.list().length === 0) return text;
+  return vault.redact(text);
 }
 // Built-in llama.cpp: the engine for chat, and search by meaning in memory.
 const llamaServer = engineBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir() });
@@ -632,6 +637,7 @@ const session: AgentSession = new AgentSession({
 function sourceOf(tool: string): string {
   if (tool === "files_read") return t("main.source.file");
   if (tool.startsWith("desktop_")) return t("main.source.window");
+  if (tool.startsWith("worknote_")) return t("main.source.notes");
   if (!tool.startsWith("page_") && !tool.startsWith("tabs_")) return tool;
   const url = embedded.state.tabs.find((t) => t.id === embedded.state.activeId)?.url;
   try {

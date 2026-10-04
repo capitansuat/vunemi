@@ -739,6 +739,7 @@ export const messages: Catalogue = {
       file: "읽은 파일",
       window: "다른 앱의 윈도우",
       page: "열려 있는 페이지",
+      notes: "이전 작업 메모",
     },
     attach: {
       filesOff: "파일을 첨부하려면 '연결'에서 '파일'을 켜십시오.",
@@ -748,10 +749,6 @@ export const messages: Catalogue = {
     invalidPolicy: "권한 설정이 유효하지 않습니다.",
     badLanguage: "지원하지 않는 언어입니다.",
     undoGone: "이 작업은 더 이상 되돌릴 수 없습니다.",
-    demo: {
-      empty: "메모장 비우기",
-      restore: "이전 내용으로 되돌리기",
-    },
     models: {
       invalid: "모델 설정이 유효하지 않습니다.",
       badUrl: "모델 서버 주소가 유효하지 않습니다.",

@@ -38,6 +38,12 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
+function toolsWith(redact: (text: string) => string | Promise<string>): Map<string, ToolDef> {
+  return new Map(
+    createNoteTools({ store, where: () => where, sources: () => sources, redact, onSaved: () => {} }).map((t) => [t.name, t]),
+  );
+}
+
 describe("worknote tools", () => {
   it("writes into the project, says so, and another conversation of it reads the note", async () => {
     expect(await run("worknote_write", { title: "Logo decision", text: "Orange stays." })).toMatch(/Saved "Logo decision" for this project/);
@@ -72,5 +78,30 @@ describe("worknote tools", () => {
     expect(tools.get("worknote_read")!.untrustedOutput).toBe(true);
     expect(tools.get("worknote_search")!.untrustedOutput).toBe(true);
     expect(tools.get("worknote_write")!.actionClass).toBe("read");
+  });
+
+  it("answers Replaced when a title is written again", async () => {
+    await run("worknote_write", { title: "Plan", text: "one" });
+    expect(await run("worknote_write", { title: "PLAN", text: "two" })).toMatch(/^Replaced "PLAN" for this project\./);
+  });
+
+  it("rejects a text over the limit with the store's message", async () => {
+    await expect(run("worknote_write", { title: "Long", text: "x".repeat(4_001) })).rejects.toThrow(/at most 4,000 characters/);
+  });
+
+  it("saves nothing when the Vault can't check the note, and keeps the old one", async () => {
+    await run("worknote_write", { title: "Plan", text: "old text" });
+    const broken = toolsWith(async () => {
+      throw new Error("vault down");
+    });
+    await expect(broken.get("worknote_write")!.run({ title: "Plan", text: "new text" }, ctx)).rejects.toThrow(
+      "The Vault couldn't check this note for stored secrets, so nothing was saved. Try again in a moment.",
+    );
+    expect(store.readNote(projectScope("p1"), "Plan")!.text).toBe("old text");
+  });
+
+  it("masks a secret in the title too", async () => {
+    await run("worknote_write", { title: "hunter2 login", text: "x" });
+    expect(store.readNote(projectScope("p1"), "[hidden secret] login")).not.toBeNull();
   });
 });

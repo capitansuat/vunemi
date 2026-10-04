@@ -48,11 +48,19 @@ export function createNoteTools(opts: NoteToolsOptions): ToolDef[] {
       run: async (a, ctx) => {
         const here = opts.where();
         const scope = noteScope(here);
+        let title: string;
+        let text: string;
+        try {
+          title = await opts.redact(String(a.title ?? ""));
+          text = await opts.redact(String(a.text ?? ""));
+        } catch {
+          throw new Error("The Vault couldn't check this note for stored secrets, so nothing was saved. Try again in a moment.");
+        }
         const { note, replaced } = opts.store.writeNote({
           scope,
           conversationId: here.conversationId,
-          title: String(a.title ?? ""),
-          text: await opts.redact(String(a.text ?? "")),
+          title,
+          text,
           sources: opts.sources(),
         });
         const kind = here.projectId ? "project" : "conversation";

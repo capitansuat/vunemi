@@ -743,6 +743,7 @@ export const messages = {
       file: "okunan dosya",
       window: "başka bir uygulamanın penceresi",
       page: "açık sayfa",
+      notes: "önceki çalışma notları",
     },
     attach: {
       filesOff: "Dosya eklemek için Bağlantılar'da Dosyalar'ı aç.",
@@ -752,10 +753,6 @@ export const messages = {
     invalidPolicy: "Geçersiz izin ayarı.",
     badLanguage: "Bu dil desteklenmiyor.",
     undoGone: "Bu işlem artık geri alınamıyor.",
-    demo: {
-      empty: "Not defterini boşalt",
-      restore: "Önceki hâline döndür",
-    },
     models: {
       invalid: "Model ayarları geçersiz.",
       badUrl: "Model sunucusu adresi geçersiz.",

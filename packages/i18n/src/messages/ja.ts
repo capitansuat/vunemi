@@ -739,6 +739,7 @@ export const messages: Catalogue = {
       file: "読み取ったファイル",
       window: "ほかのアプリのウインドウ",
       page: "開いているページ",
+      notes: "以前の作業メモ",
     },
     attach: {
       filesOff: "ファイルを添付するには、「接続」で「ファイル」をオンにしてください。",
@@ -748,10 +749,6 @@ export const messages: Catalogue = {
     invalidPolicy: "権限の設定が無効です。",
     badLanguage: "この言語には対応していません。",
     undoGone: "この操作はもう取り消せません。",
-    demo: {
-      empty: "メモ帳を空にする",
-      restore: "前の内容に戻す",
-    },
     models: {
       invalid: "モデルの設定が無効です。",
       badUrl: "モデルサーバのアドレスが無効です。",

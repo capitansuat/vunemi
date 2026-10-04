@@ -739,6 +739,7 @@ export const messages: Catalogue = {
       file: "a file it read",
       window: "another app's window",
       page: "the open page",
+      notes: "earlier work notes",
     },
     attach: {
       filesOff: "To attach files, turn on Files under Connections.",
@@ -748,10 +749,6 @@ export const messages: Catalogue = {
     invalidPolicy: "Invalid permission setting.",
     badLanguage: "This language isn't supported.",
     undoGone: "This can no longer be undone.",
-    demo: {
-      empty: "Empty the notepad",
-      restore: "Restore what was there",
-    },
     models: {
       invalid: "Invalid model settings.",
       badUrl: "Invalid model server address.",
