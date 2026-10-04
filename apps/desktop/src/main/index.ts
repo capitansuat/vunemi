@@ -55,6 +55,7 @@ import { PRODUCTION, type FeedSource } from "./updates/feed.js";
 import { UpdateService } from "./updates/service.js";
 import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
+import { createNoteTools } from "./work/notes-tools.js";
 import { ArchivedOutputs } from "./work/outputs.js";
 import { openWorkStore } from "./work/store.js";
 
@@ -148,6 +149,17 @@ work?.prune();
 // `conversations` is read only when a tool runs, long after it exists.
 const keptOutputs: OutputKeeper = work ? new ArchivedOutputs(work, () => conversations.currentId) : new KeptOutputs();
 for (const tool of keptOutputTools(keptOutputs)) tools.register(tool);
+if (work) {
+  for (const tool of createNoteTools({
+    store: work,
+    where: () => ({ conversationId: conversations.currentId, ...(conversations.currentProject && { projectId: conversations.currentProject }) }),
+    sources: () => sentinel.untrustedSources(),
+    redact,
+    onSaved: ({ runId, note, scope }) => {
+      if (runId) record({ type: "note.saved", runId, noteId: note.id, title: note.title, scope, at: Date.now() });
+    },
+  })) tools.register(tool);
+}
 
 // The folders the user opened to Vunemi — Desktop, Documents, Downloads — and
 // nothing else. Overwritten files are kept aside so the log can undo them.

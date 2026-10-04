@@ -126,3 +126,16 @@ describe("always-ask tools", () => {
     expect(sentinel.check({ tool: "app_command", actionClass: "destructive", args: {}, alwaysAsk: true }).kind).toBe("deny");
   });
 });
+
+describe("untrusted sources", () => {
+  it("says where untrusted content came from, once each, until reset", () => {
+    const sentinel = make();
+    expect(sentinel.untrustedSources()).toEqual([]);
+    sentinel.noteUntrusted("a page", "booking.com");
+    sentinel.noteUntrusted("another page", "booking.com");
+    sentinel.noteUntrusted("a mail", "Mail");
+    expect(sentinel.untrustedSources()).toEqual(["booking.com", "Mail"]);
+    sentinel.reset();
+    expect(sentinel.untrustedSources()).toEqual([]);
+  });
+});

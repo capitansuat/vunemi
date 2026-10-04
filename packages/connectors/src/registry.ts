@@ -230,7 +230,7 @@ export class Connectors {
       guides.push(`Switched off by the user: ${off.join(", ")}. If the task needs one, call it anyway: Vunemi asks the user whether to allow it once or switch it on. Never say it was done unless it ran.`);
     }
     // A new user starts with every connection off; asked what Vunemi can do,
-    // a model that knew only its own scratchpad described nothing else.
+    // a model that knew only its own built-in tools described nothing else.
     const requestable = [...this.items.values()].filter((c) => c.requestableWhenOff);
     if (requestable.some((c) => c.id === "travel-flights" || c.id === "travel-hotels")) {
       guides.unshift("For flight or hotel searches, call travel_search_flights or travel_search_hotels first. An off travel connection offers the user a one-time approval card. Use the browser if that source fails or the user asks for it; do not start with a web search.");

@@ -99,6 +99,11 @@ export class Sentinel {
     }
   }
 
+  /** Where the untrusted content read since the last reset came from, once each. */
+  untrustedSources(): string[] {
+    return [...new Set(this.tainted.map((t) => t.source))];
+  }
+
   /** Starts a fresh conversation: nothing read, nothing granted. */
   reset(): void {
     this.tainted = [];
