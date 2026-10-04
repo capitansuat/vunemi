@@ -54,7 +54,7 @@ export function openToolSpec(areas: readonly ToolArea[]): ToolSpec {
 
 /** One line per area, in the system prompt: what can be done, listed or not. */
 export function capabilityList(areas: readonly ToolArea[]): string {
-  return `Areas of tools. Tools of an area not in your list: call tools_open with the area, then tool_run.\n${areas.map((a) => `- ${a.id}: ${a.summary}`).join("\n")}`;
+  return `Areas of tools. A tool not in your list whose definition is already in the conversation: call it through tool_run. Otherwise call tools_open with its area first.\n${areas.map((a) => `- ${a.id}: ${a.summary}`).join("\n")}`;
 }
 
 /** Definitions for tools reached through tool_run, with the area's guide. */
