@@ -54,6 +54,7 @@ export interface EngineOptions {
 const IDLE_MS = 15 * 60_000;
 const READY_MS = 3 * 60_000;
 const STOP_GRACE_MS = 3_000;
+const STOPPED = "The engine stopped while loading the model.";
 
 export function serverArgs(spec: LaunchSpec, port: number, apiKey: string): string[] {
   if (spec.pooling) {
@@ -84,6 +85,11 @@ export class Engine {
   private queued: { spec: LaunchSpec; promise: Promise<Endpoint> } | null = null;
   private restarts = 0;
   private idleTimer: NodeJS.Timeout | null = null;
+  /**
+   * Bumped by every launch and every stop. A launch that is no longer the
+   * latest ends quietly: the process and state now belong to whatever came after.
+   */
+  private generation = 0;
 
   constructor(private readonly opts: EngineOptions) {
     this.state = { state: opts.binary ? "idle" : "absent", model: null };
@@ -138,6 +144,7 @@ export class Engine {
   }
 
   async stop(): Promise<void> {
+    this.generation++;
     if (this.idleTimer) clearTimeout(this.idleTimer);
     this.idleTimer = null;
     const child = this.child;
@@ -156,14 +163,18 @@ export class Engine {
   }
 
   private launch(spec: LaunchSpec): Promise<Endpoint> {
+    const generation = ++this.generation;
     this.set({ state: "starting", model: spec.id });
-    const started = this.start(spec).then(
+    const started = this.start(spec, generation).then(
       (endpoint) => {
+        if (generation !== this.generation) throw new Error(STOPPED);
         this.set({ state: "ready", model: spec.id });
         this.touch();
         return endpoint;
       },
       (err: unknown) => {
+        // Stopped on purpose meanwhile, perhaps relaunched: not this launch's failure.
+        if (generation !== this.generation) throw err;
         const child = this.child;
         this.child = null;
         this.current = null;
@@ -180,8 +191,10 @@ export class Engine {
     return started;
   }
 
-  private async start(spec: LaunchSpec): Promise<Endpoint> {
+  private async start(spec: LaunchSpec, generation: number): Promise<Endpoint> {
     const port = await freePort();
+    // Stopped while a port was found: nothing is spawned.
+    if (generation !== this.generation) throw new Error(STOPPED);
     const apiKey = randomBytes(24).toString("hex");
     const endpoint = { baseUrl: `http://127.0.0.1:${port}/v1`, apiKey };
     const child = spawn(this.opts.binary!, serverArgs(spec, port, apiKey), {
@@ -202,7 +215,7 @@ export class Engine {
 
     const deadline = Date.now() + (this.opts.readyTimeoutMs ?? READY_MS);
     while (Date.now() < deadline) {
-      if (exited) throw new Error(lastLine(tail) || "The engine stopped while loading the model.");
+      if (exited) throw new Error(lastLine(tail) || STOPPED);
       try {
         const res = await fetch(`http://127.0.0.1:${port}/health`, { signal: AbortSignal.timeout(2_000) });
         if (res.ok) return endpoint;

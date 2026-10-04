@@ -108,6 +108,28 @@ describe("the built-in engine", () => {
     expect(engine.snapshot.error).toMatch(/does not fit/);
   });
 
+  it("is idle, not failed, when stopped while it loads", async () => {
+    const { engine } = make({ env: { ...process.env, FAKE_ENGINE_MODE: "slow" } });
+    const loading = engine.ensure(spec).then(() => "ready", () => "rejected");
+    await new Promise((r) => setTimeout(r, 150));
+    await engine.stop();
+    expect(await loading).toBe("rejected");
+    expect(engine.snapshot).toEqual({ state: "idle", model: null });
+  });
+
+  it("starts the next launch after a stop during a load, and leaves it running", async () => {
+    const { engine } = make({ env: { ...process.env, FAKE_ENGINE_MODE: "slow" } });
+    const loading = engine.ensure(spec).then(() => "ready", () => "rejected");
+    await new Promise((r) => setTimeout(r, 150));
+    await engine.stop();
+    const next = await engine.ensure({ ...spec, context: 16_384 });
+    expect(await loading).toBe("rejected");
+    expect(engine.snapshot).toEqual({ state: "ready", model: "m" });
+    expect(engine.pid()).toEqual(expect.any(Number));
+    expect(engine.endpoint("m")).toEqual(next);
+    expect((await fetch(`${next.baseUrl.replace(/\/v1$/, "")}/health`)).status).toBe(200);
+  });
+
   it("is absent when this build has no engine", async () => {
     const { engine } = make({ binary: null });
     expect(engine.snapshot.state).toBe("absent");
