@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GiB } from "../../src/main/engine/catalog.js";
 import { EngineService } from "../../src/main/engine/service.js";
-import type { FitRequest } from "../../src/main/models/manager.js";
+import { ModelManager, type FitRequest } from "../../src/main/models/manager.js";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-llama-server.mjs", import.meta.url));
 const BYTES = randomBytes(50_000);
@@ -152,6 +152,46 @@ describe("the engine service", () => {
     await service.setContext("tiny-q4_k_m", 16_384);
     expect(fit).toHaveBeenCalledTimes(2);
     expect(fit.mock.calls[1]![0]).toMatchObject({ wanted: 16_384, replacing: "chat" });
+  });
+
+  it("counts as busy while it loads or tests the model, so memory pressure leaves it alone", async () => {
+    const busyInTest: boolean[] = [];
+    const { service } = make(vi.fn(async () => {
+      busyInTest.push(service.busy());
+      return true;
+    }));
+    const spec = (await service.download({ repo: "org/tiny-GGUF" }))!;
+    // The tool test after a download holds the model too.
+    expect(busyInTest).toEqual([true]);
+    await service.unload();
+    expect(service.busy()).toBe(false);
+
+    // macOS at critical, the whole time.
+    const manager = new ModelManager({
+      reader: { available: async () => null, footprint: async () => 1_000, pressure: async () => 4 },
+      totalMemory: 64 * GiB,
+    });
+    manager.register({ id: "chat", busy: () => service.busy(), pid: () => service.pid(), mapped: () => service.mapped(), unload: () => service.unload() });
+    process.env.FAKE_ENGINE_MODE = "slow";
+    try {
+      const loading = service.prepare(spec);
+      while (service.pid() === null) await new Promise((r) => setTimeout(r, 10));
+      expect(service.busy()).toBe(true);
+      await manager.tick();
+      await expect(loading).resolves.toMatchObject({ context: 65_536 });
+      expect(service.endpoint(spec)).not.toBeNull();
+    } finally {
+      delete process.env.FAKE_ENGINE_MODE;
+    }
+    // Something else holding it, such as the check from Settings.
+    await service.hold(async () => {
+      await manager.tick();
+      expect(service.pid()).not.toBeNull();
+    });
+    // Loaded and nothing in flight: now it may go.
+    expect(service.busy()).toBe(false);
+    await manager.tick();
+    expect(service.pid()).toBeNull();
   });
 
   it("loads the model again with the context length the user picks", async () => {

@@ -72,6 +72,8 @@ export class EngineService {
   private readonly shapes = new Map<string, ModelShape>();
   /** What the loaded model was launched for; it is reused while the wanted length is unchanged. */
   private launched: { wanted: number; tight: boolean } | null = null;
+  /** Loads and tests in flight; while any runs the model is busy and not unloaded. */
+  private holds = 0;
 
   constructor(private readonly opts: EngineServiceOptions) {
     mkdirSync(opts.dir, { recursive: true });
@@ -259,17 +261,19 @@ export class EngineService {
     return spec;
   }
 
-  private async testTools(spec: string): Promise<boolean> {
-    for (let i = 0; i < TOOL_TEST_TRIES; i++) {
-      try {
-        await this.prepare(spec);
-        const endpoint = this.endpoint(spec);
-        if (endpoint && (await this.opts.testModel(spec, endpoint))) return true;
-      } catch {
-        // A timeout or a refused first answer: try again.
+  private testTools(spec: string): Promise<boolean> {
+    return this.hold(async () => {
+      for (let i = 0; i < TOOL_TEST_TRIES; i++) {
+        try {
+          await this.prepare(spec);
+          const endpoint = this.endpoint(spec);
+          if (endpoint && (await this.opts.testModel(spec, endpoint))) return true;
+        } catch {
+          // A timeout or a refused first answer: try again.
+        }
       }
-    }
-    return false;
+      return false;
+    });
   }
 
   /** The answer of a test the user ran from Settings replaces the one from the download. */
@@ -382,6 +386,10 @@ export class EngineService {
   /** Before a task: make sure the model it names is loaded. Other providers need nothing. */
   async prepare(spec: string): Promise<PreparedModel | null> {
     if (!spec.startsWith(PREFIX)) return null;
+    return this.hold(() => this.load(spec));
+  }
+
+  private async load(spec: string): Promise<PreparedModel> {
     const id = spec.slice(PREFIX.length);
     const m = this.store.get(id);
     if (!m) throw new Error(t("engine.error.missing"));
@@ -402,6 +410,25 @@ export class EngineService {
     this.launched = { wanted, tight: fit.tight };
     await this.engine.ensure({ id, path, context: fit.context, ...(projector && { projector }) });
     return { context: fit.context, wanted, tight: fit.tight, launched: true };
+  }
+
+  /**
+   * True while the model is being loaded or tested, by anyone: a run, the
+   * check from Settings, the test after a download, or a warm-up. The model
+   * manager does not unload it then; a run's own busyness is the session's.
+   */
+  busy(): boolean {
+    return this.holds > 0 || this.engine.snapshot.state === "starting";
+  }
+
+  /** Counts as busy while `work` runs, so the model is not unloaded under it. */
+  async hold<T>(work: () => Promise<T>): Promise<T> {
+    this.holds++;
+    try {
+      return await work();
+    } finally {
+      this.holds--;
+    }
   }
 
   /** The chat model's server while one runs, for the model manager. */

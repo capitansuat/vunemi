@@ -732,12 +732,13 @@ function createWindow(): void {
 handle(CH.listProviders, () => probeProviders(settings.modelSettings, engine.specs()));
 handle(CH.modelSettingsGet, () => settings.modelSettings);
 handle(CH.modelSettingsSet, (_e, input: unknown) => settings.setModelSettings(input as LocalModelSettings));
-handle(CH.modelCheck, async (_e, spec: string) => {
+// Held for the whole check: memory pressure must not stop the model between loading and answering.
+handle(CH.modelCheck, (_e, spec: string) => engine.hold(async () => {
   await engine.prepare(String(spec));
   const result = await checkAgentModel(String(spec), settings.modelSettings, (s) => engine.endpoint(s));
   engine.recordToolTest(String(spec), result.toolCalled);
   return result;
-});
+}));
 handle(CH.debugPortOpen, () => debugPortOpen);
 handle(CH.engineGet, () => engine.view());
 handle(CH.engineSearch, (_e, text: string) => engine.search(String(text)));
@@ -1132,7 +1133,8 @@ models.register({
 });
 models.register({
   id: "chat",
-  busy: () => session.running || session.queued.length > 0 || meetings.summarising,
+  // Loading or being tested counts too (a warm-up, the check from Settings, the test after a download).
+  busy: () => session.running || session.queued.length > 0 || meetings.summarising || engine.busy(),
   pid: () => engine.pid(),
   mapped: () => engine.mapped(),
   unload: () => engine.unload(),
