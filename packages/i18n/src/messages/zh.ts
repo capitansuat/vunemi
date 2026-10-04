@@ -497,6 +497,7 @@ export const messages: Catalogue = {
   },
 
   workNotes: { saved: "已保存笔记：{title}", delete: "删除笔记", title: "笔记 · {name}", open: "{name} 的笔记", empty: "还没有笔记。Vunemi 会在这里记下本项目后续对话需要知道的决定和发现。", outside: "看过外部内容：{sources}" },
+  modelsMemory: { title: "当前内存中", chat: "聊天模型", meaning: "语义搜索", voice: "语音识别", notLoaded: "未加载", unmeasured: "无法测量", summary: "这台 Mac：{total} · 当前可用：{available}", unloaded: "{time} · 内存不足；已卸载：{names}", lowered: "{time} · 上下文已降至 {context}" },
   memory: {
     title: "记忆",
     description: "Vunemi 从你这里学到的内容，每条笔记都附有它来自的你的原话。每个任务只会收到与之相关的笔记。",

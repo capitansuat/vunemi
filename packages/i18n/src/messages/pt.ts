@@ -497,6 +497,7 @@ export const messages: Catalogue = {
   },
 
   workNotes: { saved: "Nota salva: {title}", delete: "Excluir nota", title: "Notas · {name}", open: "Notas de {name}", empty: "Ainda não há notas. O Vunemi anota aqui as decisões e descobertas que as próximas conversas deste projeto devem conhecer.", outside: "Viu conteúdo externo: {sources}" },
+  modelsMemory: { title: "Na memória agora", chat: "Modelo de conversa", meaning: "Busca por significado", voice: "Reconhecimento de voz", notLoaded: "não carregado", unmeasured: "não foi possível medir", summary: "Este Mac: {total} · livre agora: {available}", unloaded: "{time} · faltou memória; descarregado: {names}", lowered: "{time} · contexto reduzido para {context}" },
   memory: {
     title: "Memória",
     description: "O que o Vunemi aprendeu com você, cada nota com as palavras de onde veio. Cada tarefa recebe só as notas que lhe dizem respeito.",

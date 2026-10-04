@@ -502,6 +502,7 @@ export const messages: Catalogue = {
   },
 
   workNotes: { saved: "Заметка сохранена: {title}", delete: "Удалить заметку", title: "Заметки · {name}", open: "Заметки проекта {name}", empty: "Заметок пока нет. Vunemi записывает сюда решения и находки, которые должны знать следующие разговоры в этом проекте.", outside: "Видел внешнее содержимое: {sources}" },
+  modelsMemory: { title: "Сейчас в памяти", chat: "Модель чата", meaning: "Поиск по смыслу", voice: "Распознавание речи", notLoaded: "не загружена", unmeasured: "не удалось измерить", summary: "Этот Mac: {total} · свободно сейчас: {available}", unloaded: "{time} · не хватило памяти; выгружено: {names}", lowered: "{time} · контекст уменьшен до {context}" },
   memory: {
     title: "Память",
     description: "Что Vunemi узнал от вас; у каждой заметки — ваши слова, из которых она взята. Задаче передаются только подходящие ей заметки.",

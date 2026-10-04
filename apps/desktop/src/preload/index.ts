@@ -87,6 +87,7 @@ const api: VunemiApi = {
   deleteMemory: (id) => ipcRenderer.invoke(CH.memoryDelete, id),
   forgetMemory: () => ipcRenderer.invoke(CH.memoryForget),
   listWorkNotes: (scope) => ipcRenderer.invoke(CH.workNotesList, scope),
+  modelsMemory: () => ipcRenderer.invoke(CH.modelsMemory),
   deleteWorkNote: (id, scope) => ipcRenderer.invoke(CH.workNotesDelete, id, scope),
   resolveMemory: (runId, proposalId, decision, text) => ipcRenderer.invoke(CH.memoryResolve, runId, proposalId, decision, text),
   memorySearch: () => ipcRenderer.invoke(CH.memorySearch),

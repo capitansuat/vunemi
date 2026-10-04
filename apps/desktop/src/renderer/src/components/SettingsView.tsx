@@ -8,6 +8,7 @@ import { ConnectionsView, Switch } from "./ConnectionsView.js";
 import { ModelPicker } from "./ModelPicker.js";
 import { ModelSources } from "./ModelSources.js";
 import { EngineSetup } from "./EngineSetup.js";
+import { MemoryInUse } from "./MemoryInUse.js";
 import { AutomationsSection } from "./AutomationsSection.js";
 import { ActivityView } from "./ActivityView.js";
 import { OutboxView } from "./OutboxView.js";
@@ -141,6 +142,7 @@ export function SettingsView() {
             <div className="my-5">
               <EngineSetup showInstalled />
             </div>
+            <MemoryInUse />
             <ModelSources />
           </div>
         )}

@@ -41,6 +41,8 @@ import { forgetOldPictures, loadImage, readImageText } from "./images.js";
 import { AgentSession } from "./session.js";
 import { SessionStore } from "./sessions.js";
 import { MemoryStore } from "./memory/store.js";
+import { ModelManager } from "./models/manager.js";
+import { macMemory } from "./models/memory.js";
 import { Embedder } from "./memory/embedder.js";
 import { generalInstructions, recall } from "./memory/recall.js";
 import { propose, type Proposal } from "./memory/propose.js";
@@ -571,11 +573,15 @@ const sessionList = (): SessionList => {
   };
 };
 
+/** Measures the local models, fits the chat model's context, unloads idle ones under pressure (models/manager.ts). */
+const models = new ModelManager({ reader: macMemory(), totalMemory: totalmem() });
+
 // Vunemi's own model server, for people with no model server of their own.
 const engine: EngineService = new EngineService({
   dir: join(app.getPath("userData"), "engine"),
   binary: llamaServer,
   totalMemory: totalmem(),
+  manager: models,
   isBusy: () => session.running || session.queued.length > 0,
   testModel: async (spec, endpoint) => (await checkAgentModel(spec, settings.modelSettings, () => endpoint)).toolCalled,
   onChange: (view) => send(CH.engineChanged, view),
@@ -1016,6 +1022,7 @@ function workScope(scope: unknown): string | null {
 const workNoteViews = (scope: string | null): WorkNoteView[] =>
   work && scope ? work.listNotes(scope).map(({ id, title, text, sources, updatedAt }) => ({ id, title, text, sources, updatedAt })) : [];
 handle(CH.workNotesList, (_e, scope: unknown) => workNoteViews(workScope(scope)));
+handle(CH.modelsMemory, () => models.view());
 handle(CH.workNotesDelete, (_e, id: unknown, scope: unknown) => {
   const where = workScope(scope);
   // Only a note of the scope asked about: an id alone can't reach another project's.
@@ -1113,6 +1120,24 @@ const meetings: MeetingService = new MeetingService({
   },
   onLine: (id, line) => send(CH.meetingsLine, { id, line }),
 });
+// The order the model manager unloads in is its own; these say what each server holds and when it is busy.
+models.register({ id: "meaning", busy: () => meaning.busy(), pid: () => meaning.pid(), mapped: () => meaning.mapped(), unload: () => meaning.stop() });
+models.register({
+  id: "voice",
+  // A meeting being recorded or caught up on needs whisper between clips too.
+  busy: () => voice.busy() || meetings.status().recording !== null,
+  pid: () => voice.pid(),
+  mapped: () => 0,
+  unload: async () => voice.unload(),
+});
+models.register({
+  id: "chat",
+  busy: () => session.running || session.queued.length > 0 || meetings.summarising,
+  pid: () => engine.pid(),
+  mapped: () => engine.mapped(),
+  unload: () => engine.unload(),
+});
+models.start();
 const modelSpec = (value: unknown): string | null => (typeof value === "string" && value.trim() ? value : null);
 const meetingList = (query?: unknown) => {
   const list = meetingStore.list().map(meetingView);

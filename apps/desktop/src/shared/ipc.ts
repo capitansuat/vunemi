@@ -470,6 +470,8 @@ export interface VunemiApi {
   forgetMemory(): Promise<MemoryNoteView[]>;
   listWorkNotes(scope: { projectId?: string; conversationId?: string }): Promise<WorkNoteView[]>;
   deleteWorkNote(id: string, scope: { projectId?: string; conversationId?: string }): Promise<WorkNoteView[]>;
+  /** What the local models hold now (models/manager.ts); measured on each call. */
+  modelsMemory(): Promise<ModelsMemoryView>;
   /** The user's answer to a note proposed under a reply; `text` when they edited it. */
   resolveMemory(runId: string, proposalId: string, decision: "saved" | "skipped", text?: string): Promise<void>;
   memorySearch(): Promise<MemorySearchStatus>;
@@ -675,6 +677,7 @@ export const CH = {
   memoryForget: "memory:forget",
   workNotesList: "workNotes:list",
   workNotesDelete: "workNotes:delete",
+  modelsMemory: "models:memory",
   memoryResolve: "memory:resolve",
   memorySearch: "memory:search",
   memorySearchDownload: "memory:search-download",
