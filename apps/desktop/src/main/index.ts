@@ -10,7 +10,7 @@ import { BrowserController, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus } from "../shared/ipc.js";
+import { CH, EMERGENCY_STOP_ACCELERATOR, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -58,7 +58,7 @@ import { supportUrl } from "./support.js";
 import { createNoteTools } from "./work/notes-tools.js";
 import { ArchivedOutputs } from "./work/outputs.js";
 import { notesIndex } from "./work/notes-index.js";
-import { openWorkStore } from "./work/store.js";
+import { conversationScope, openWorkStore, projectScope } from "./work/store.js";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 registerPreviewScheme();
@@ -1001,6 +1001,22 @@ handle(CH.memoryForget, () => {
   memory.clear();
   proposals.clear();
   return memory.list();
+});
+/** A project's notes, or a conversation's own; the scope is checked here, never trusted as given. */
+function workScope(scope: unknown): string | null {
+  const s = (scope ?? {}) as { projectId?: unknown; conversationId?: unknown };
+  if (typeof s.projectId === "string" && projects.get(s.projectId)) return projectScope(s.projectId);
+  if (typeof s.conversationId === "string" && s.conversationId) return conversationScope(s.conversationId);
+  return null;
+}
+const workNoteViews = (scope: string | null): WorkNoteView[] =>
+  work && scope ? work.listNotes(scope).map(({ id, title, text, sources, updatedAt }) => ({ id, title, text, sources, updatedAt })) : [];
+handle(CH.workNotesList, (_e, scope: unknown) => workNoteViews(workScope(scope)));
+handle(CH.workNotesDelete, (_e, id: unknown, scope: unknown) => {
+  const where = workScope(scope);
+  // Only a note of the scope asked about: an id alone can't reach another project's.
+  if (work && where && typeof id === "string" && work.listNotes(where).some((n) => n.id === id)) work.deleteNote(id);
+  return workNoteViews(where);
 });
 handle(CH.memoryResolve, async (_e, runId: unknown, proposalId: unknown, decision: unknown, edited: unknown) => {
   const held = typeof proposalId === "string" ? proposals.get(proposalId) : undefined;

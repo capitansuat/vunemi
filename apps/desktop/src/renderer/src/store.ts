@@ -89,7 +89,7 @@ function storeModel(spec: string | null): void {
  * user should never have to guess whether Vunemi is still listening.
  */
 /** Which view fills the main column. */
-export type View = "chat" | "artefacts" | "meetings" | "settings";
+export type View = "chat" | "artefacts" | "meetings" | "settings" | "notes";
 
 /** Settings keeps everything besides the conversation and what it made, so the sidebar stays short. */
 export type SettingsSection = "permissions" | "security" | "connections" | "vault" | "outbox" | "automations" | "activity" | "model" | "language" | "appearance" | "memory" | "data" | "updates";
@@ -135,6 +135,8 @@ interface State {
   view: View;
   /** The Settings section on screen, kept so another view can open Settings at the right place. */
   settingsSection: SettingsSection;
+  /** The project whose notes the notes view shows. */
+  notesProject: string | null;
   /** A connection to open and show when Connections next appears. */
   connectionFocus: string | null;
   /** The sidebar folded to icons. */
@@ -193,6 +195,7 @@ interface State {
   setActivity(entries: ActivityEntry[]): void;
   setView(view: View): void;
   openSettings(section: SettingsSection): void;
+  openProjectNotes(projectId: string): void;
   /** Settings › Connections, with this one opened. */
   openConnection(id: string | null): void;
   setNavFolded(folded: boolean): void;
@@ -242,6 +245,7 @@ export const useStore = create<State>((set, get) => ({
   activity: [],
   view: "chat",
   settingsSection: "permissions",
+  notesProject: null,
   connectionFocus: null,
   navFolded: readFolded(),
   voice: { status: null, state: "off", partial: "", level: 0, handsFree: false, turn: false, error: null },
@@ -609,6 +613,10 @@ export const useStore = create<State>((set, get) => ({
 
   openSettings(section) {
     set({ view: "settings", settingsSection: section });
+  },
+
+  openProjectNotes(projectId) {
+    set({ view: "notes", notesProject: projectId });
   },
 
   openConnection(id) {

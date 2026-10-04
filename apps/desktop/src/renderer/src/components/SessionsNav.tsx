@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FolderOpen, FolderPlus, Folder, Pencil, Plus, Trash2 } from "lucide-react";
+import { FolderOpen, FolderPlus, Folder, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { RenameInput } from "./RenameInput.js";
 import type { ProjectView, SessionSummary } from "../../../shared/ipc.js";
 import { clock, dayLabel } from "../lib/time.js";
@@ -78,6 +78,7 @@ export function SessionsNav() {
 
 function ProjectGroup({ project, items, fresh }: { project: ProjectView; items: SessionSummary[]; fresh: boolean }) {
   const { sessions, running, newSession, removeProject, revealProject } = useStore();
+  const openProjectNotes = useStore((s) => s.openProjectNotes);
   const [confirming, setConfirming] = useState(false);
   const here = sessions.project === project.id;
   return (
@@ -131,6 +132,15 @@ function ProjectGroup({ project, items, fresh }: { project: ProjectView; items: 
               className="grid size-6 place-items-center rounded-md text-faint hover:text-fg disabled:hidden"
             >
               <FolderOpen size={13} />
+            </button>
+            <button
+              type="button"
+              aria-label={t("workNotes.open", { name: project.name })}
+              title={t("workNotes.open", { name: project.name })}
+              onClick={() => openProjectNotes(project.id)}
+              className="grid size-6 place-items-center rounded-md text-faint hover:text-fg disabled:hidden"
+            >
+              <NotebookPen size={13} />
             </button>
             <button
               type="button"

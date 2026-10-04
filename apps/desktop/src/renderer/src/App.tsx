@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowLeft, Bug, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, Trash2, Users } from "lucide-react";
 import { ArtefactsView } from "./components/ArtefactsView.js";
 import { MeetingsView } from "./components/MeetingsView.js";
+import { ProjectNotesView } from "./components/WorkNotes.js";
 import { BackgroundBrowsing, BrowserPane } from "./components/BrowserPane.js";
 import { PicturePane } from "./components/PicturePane.js";
 import { SitePane } from "./components/SitePane.js";
@@ -71,6 +72,8 @@ export function App() {
           <ArtefactsView />
         ) : view === "meetings" ? (
           <MeetingsView />
+        ) : view === "notes" ? (
+          <ProjectNotesView />
         ) : view === "settings" ? (
           <SettingsView />
         ) : (

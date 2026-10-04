@@ -126,6 +126,20 @@ describe("foldEvent", () => {
       ["b", "running", 1],
     ]);
   });
+  it("lists the notes a run saved, once per note", () => {
+    const at = 0;
+    const runs = [
+      { type: "run.started", runId: "r1", goal: "g", model: "m", at },
+      { type: "note.saved", runId: "r1", noteId: "n1", title: "Logo decision", scope: "project", at },
+      { type: "note.saved", runId: "r1", noteId: "n1", title: "Logo decision v2", scope: "project", at },
+      { type: "note.saved", runId: "r1", noteId: "n2", title: "Mine", scope: "conversation", at },
+    ].reduce(foldEvent as never, []) as RunView[];
+    expect(runs[0]!.notes).toEqual([
+      { id: "n1", title: "Logo decision v2", scope: "project" },
+      { id: "n2", title: "Mine", scope: "conversation" },
+    ]);
+  });
+
 });
 
 describe("tool output", () => {

@@ -494,6 +494,7 @@ export const messages: Catalogue = {
     },
   },
 
+  workNotes: { saved: "メモを保存しました：{title}", delete: "メモを削除", title: "メモ · {name}", open: "{name} のメモ", empty: "まだメモはありません。Vunemi は、このプロジェクトの今後の会話が知っておくべき決定や発見をここに記録します。", outside: "外部のコンテンツを参照：{sources}" },
   memory: {
     title: "メモリ",
     description: "Vunemi があなたから学んだこと。各メモには、その元になったあなたの言葉が付いています。タスクには関係するメモだけが渡されます。",

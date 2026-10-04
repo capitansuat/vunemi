@@ -494,6 +494,7 @@ export const messages: Catalogue = {
     },
   },
 
+  workNotes: { saved: "Nota guardada: {title}", delete: "Eliminar nota", title: "Notas · {name}", open: "Notas de {name}", empty: "Aún no hay notas. Vunemi anota aquí las decisiones y los hallazgos que las próximas conversaciones de este proyecto deben conocer.", outside: "Vio contenido externo: {sources}" },
   memory: {
     title: "Memoria",
     description: "Lo que Vunemi ha aprendido de ti, cada nota con las palabras de las que salió. A cada tarea solo se le dan las notas que le corresponden.",

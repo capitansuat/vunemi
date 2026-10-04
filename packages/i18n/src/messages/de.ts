@@ -494,6 +494,7 @@ export const messages: Catalogue = {
     },
   },
 
+  workNotes: { saved: "Notiz gespeichert: {title}", delete: "Notiz löschen", title: "Notizen · {name}", open: "Notizen von {name}", empty: "Noch keine Notizen. Vunemi notiert hier Entscheidungen und Ergebnisse, die spätere Unterhaltungen in diesem Projekt kennen sollten.", outside: "Hat fremde Inhalte gesehen: {sources}" },
   memory: {
     title: "Gedächtnis",
     description: "Was Vunemi von dir gelernt hat, jede Notiz mit den Worten, aus denen sie stammt. Eine Aufgabe erhält nur die Notizen, die zu ihr passen.",

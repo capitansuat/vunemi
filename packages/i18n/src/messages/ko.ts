@@ -494,6 +494,7 @@ export const messages: Catalogue = {
     },
   },
 
+  workNotes: { saved: "메모 저장됨: {title}", delete: "메모 삭제", title: "메모 · {name}", open: "{name} 메모", empty: "아직 메모가 없습니다. Vunemi는 이 프로젝트의 다음 대화가 알아야 할 결정과 발견을 여기에 기록합니다.", outside: "외부 콘텐츠를 봄: {sources}" },
   memory: {
     title: "메모리",
     description: "Vunemi가 당신에게서 배운 것. 각 메모에는 그 출처인 당신의 말이 함께 있습니다. 작업에는 관련된 메모만 전달됩니다.",

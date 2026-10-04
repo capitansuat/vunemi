@@ -498,6 +498,7 @@ export const messages = {
     },
   },
 
+  workNotes: { saved: "Not alındı: {title}", delete: "Notu sil", title: "Notlar · {name}", open: "{name} notları", empty: "Henüz not yok. Vunemi bu projede sonraki konuşmaların bilmesi gereken bir karar ya da bulgu olduğunda buraya not alır.", outside: "Dış içerik görmüş: {sources}" },
   memory: {
     title: "Hafıza",
     description: "Vunemi'nin senden öğrendikleri; her not, geldiği sözlerinle birlikte. Bir göreve yalnızca ona uyan notlar verilir.",

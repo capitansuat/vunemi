@@ -305,6 +305,15 @@ export type InspectView =
   | { ok: false; repo: string; reason: "gated" | "license" | "tooBig" | "noFile" | "notFound" };
 export type DownloadRequest = { catalog: string } | { repo: string } | { resume: true } | { vision: string };
 
+/** A work note, for the project's notes view and the timeline's delete. */
+export interface WorkNoteView {
+  id: string;
+  title: string;
+  text: string;
+  sources: string[];
+  updatedAt: number;
+}
+
 /** A note in memory, with the user's own words it came from. */
 export interface MemoryNoteView {
   id: string;
@@ -443,6 +452,8 @@ export interface VunemiApi {
   updateMemory(id: string, text: string): Promise<MemoryNoteView[]>;
   deleteMemory(id: string): Promise<MemoryNoteView[]>;
   forgetMemory(): Promise<MemoryNoteView[]>;
+  listWorkNotes(scope: { projectId?: string; conversationId?: string }): Promise<WorkNoteView[]>;
+  deleteWorkNote(id: string, scope: { projectId?: string; conversationId?: string }): Promise<WorkNoteView[]>;
   /** The user's answer to a note proposed under a reply; `text` when they edited it. */
   resolveMemory(runId: string, proposalId: string, decision: "saved" | "skipped", text?: string): Promise<void>;
   memorySearch(): Promise<MemorySearchStatus>;
@@ -646,6 +657,8 @@ export const CH = {
   memoryUpdate: "memory:update",
   memoryDelete: "memory:delete",
   memoryForget: "memory:forget",
+  workNotesList: "workNotes:list",
+  workNotesDelete: "workNotes:delete",
   memoryResolve: "memory:resolve",
   memorySearch: "memory:search",
   memorySearchDownload: "memory:search-download",

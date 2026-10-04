@@ -79,6 +79,8 @@ export interface RunView {
   compaction?: CompactionView;
   /** Notes from memory the run was given, and notes it proposes to remember. */
   memory?: MemoryView;
+  /** Work notes the run saved; a note saved twice shows once, with its last title. */
+  notes?: { id: string; title: string; scope: "project" | "conversation"; deleted?: boolean }[];
   steps: StepView[];
 }
 
@@ -203,6 +205,10 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
       return { ...run, compaction: { status: "running" } };
     case "memory.given":
       return { ...run, memory: { given: e.notes, proposals: run.memory?.proposals ?? [] } };
+    case "note.saved": {
+      const notes = (run.notes ?? []).filter((n) => n.id !== e.noteId);
+      return { ...run, notes: [...notes, { id: e.noteId, title: e.title, scope: e.scope }] };
+    }
     case "memory.proposed":
       return {
         ...run,
