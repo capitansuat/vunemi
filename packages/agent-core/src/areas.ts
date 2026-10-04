@@ -1,0 +1,74 @@
+/**
+ * Areas of tools, and a tool list that stays the same for a whole
+ * conversation. A local server reads the prompt again from the first change
+ * on; with ~70 tool definitions that was 11,000 tokens and half a minute.
+ * So a conversation lists only the areas its first request needed, and the
+ * rest are reached without touching the start of the prompt: their
+ * definitions arrive later in the conversation (tools_open, or appended to a
+ * request) and are called through tool_run.
+ */
+import type { ToolSpec } from "./provider.js";
+import type { ToolDef, ToolRegistry } from "./tools.js";
+
+export interface ToolArea {
+  /** The connection ("mail"), or an on-demand group of app tools ("music"). */
+  id: string;
+  /** One line for the model: what the area is for. */
+  summary: string;
+  /** The connection's instructions; given with its tools. */
+  guide?: string;
+  /** Tools listed in every conversation, whatever was picked (e.g. automation_create). */
+  alwaysShown?: string[];
+}
+
+export const TOOL_RUN = "tool_run";
+export const TOOLS_OPEN = "tools_open";
+
+/** The area a tool belongs to; undefined for built-in tools, which are always listed. */
+export function areaOf(tools: ToolRegistry, tool: Pick<ToolDef, "name" | "onDemand">): string | undefined {
+  if (tool.onDemand) return tool.onDemand;
+  const connection = tools.sourceOf(tool.name)?.split(":")[0];
+  return connection === "core" ? undefined : connection;
+}
+
+export function runToolSpec(): ToolSpec {
+  return {
+    name: TOOL_RUN,
+    description: "Run a tool whose definition was given in the conversation but which is not in your tool list, by its exact name, with arguments as its definition says.",
+    parameters: { type: "object", properties: { name: { type: "string" }, arguments: { type: "object" } }, required: ["name", "arguments"] },
+  };
+}
+
+export function openToolSpec(areas: readonly ToolArea[]): ToolSpec {
+  return {
+    name: TOOLS_OPEN,
+    description: "Get the tools of an area that are not in your tool list. Then call them through tool_run.",
+    parameters: { type: "object", properties: { area: { type: "string", enum: areas.map((a) => a.id) } }, required: ["area"] },
+  };
+}
+
+/** One line per area, in the system prompt: what can be done, listed or not. */
+export function capabilityList(areas: readonly ToolArea[]): string {
+  return `Areas of tools. Tools of an area not in your list: call tools_open with the area, then tool_run.\n${areas.map((a) => `- ${a.id}: ${a.summary}`).join("\n")}`;
+}
+
+/** Definitions for tools reached through tool_run, with the area's guide. */
+export function definitionsText(area: ToolArea | undefined, specs: readonly ToolSpec[]): string {
+  const lines = specs.map((s) => JSON.stringify({ name: s.name, description: s.description, parameters: s.parameters }));
+  return [
+    `Tools${area ? ` for ${area.id}` : ""}, called through tool_run with {"name": …, "arguments": {…}}:`,
+    ...lines,
+    ...(area?.guide ? ["", area.guide] : []),
+  ].join("\n");
+}
+
+/** A tool_run call, read as the call it stands for; null when it isn't one. */
+export function unwrapRun(argumentsText: string): { name: string; argumentsText: string } | { error: string } {
+  let parsed: unknown;
+  try { parsed = JSON.parse(argumentsText); } catch { return { error: `${TOOL_RUN} needs JSON: {"name": "…", "arguments": {…}}.` }; }
+  const p = parsed as { name?: unknown; arguments?: unknown };
+  if (typeof p?.name !== "string" || !p.name) return { error: `${TOOL_RUN} needs the tool's exact name.` };
+  if (p.name === TOOL_RUN || p.name === TOOLS_OPEN) return { error: `Call ${p.name} directly, not through ${TOOL_RUN}.` };
+  const args = typeof p.arguments === "string" ? p.arguments : JSON.stringify(p.arguments ?? {});
+  return { name: p.name, argumentsText: args };
+}

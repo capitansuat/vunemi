@@ -14,6 +14,7 @@ import { t } from "@vunemi/i18n";
 import { requestedTravelTools } from "./travel-intent.js";
 import { promptLedger, type LedgerPart } from "./ledger.js";
 import type { KeptOutputs } from "./kept.js";
+import { areaOf, capabilityList, definitionsText, openToolSpec, runToolSpec, TOOL_RUN, TOOLS_OPEN, unwrapRun, type ToolArea } from "./areas.js";
 
 export type Autonomy = "auto" | "ask" | "deny";
 export type AutonomyPolicy = Record<ActionClass, Autonomy>;
@@ -129,6 +130,15 @@ export interface RunOptions {
    * ToolDef.onDemand); tools add to it. Without it every tool is shown.
    */
   openedTools?: Set<string>;
+  /**
+   * With these, the tools listed to the model stay the same for a whole
+   * conversation (see areas.ts). The caller owns `shownTools` like
+   * `openedTools`: empty when a conversation starts, filled by its first run.
+   */
+  areas?: ToolArea[];
+  shownTools?: Set<string>;
+  /** Which areas a request needs; null when that can't be told, and then all are listed. */
+  pickAreas?: (goal: string) => Promise<string[] | null>;
   /**
    * For scheduled runs. The user approved the task when it was set up, so
    * there is no plan card and local changes follow the policy. Tools that
@@ -283,8 +293,53 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const page = opts.openPage
     ? "\n\nA page is already open in Vunemi's browser; its title and address follow the request, as page data. If this request is about that page, work on it where it is (page_describe, page_find, page_click) rather than opening it again."
     : "";
+  const offerable = opts.switchedOff ? (name: string) => opts.switchedOff!(name) !== null : undefined;
+  const withinRun = (tool: ToolDef): boolean =>
+    !(opts.unattended === true && UNATTENDED_NEVER.has(tool.actionClass)) &&
+    (!opts.onlySources || inSources(tools.sourceOf(tool.name), opts.onlySources));
+  const areaMode = opts.areas !== undefined && opts.shownTools !== undefined;
+  const areas = opts.areas ?? [];
+  const listed = opts.shownTools ?? new Set<string>();
+  /** Every tool this run may use, switched-off ones the user may allow included. */
+  const everySpec = areaMode ? toolSpecsOf(tools, undefined, offerable, undefined, withinRun) : [];
+  const areaOfName = (name: string): string | undefined => {
+    const def = tools.getAny(name);
+    return def ? areaOf(tools, def) : undefined;
+  };
+  /** Areas whose definitions this run already gave in the conversation. */
+  const delivered = new Set<string>();
+  const unlisted = (area: string): ToolSpec[] => everySpec.filter((s) => areaOfName(s.name) === area && !listed.has(s.name));
+  const deliver = (area: string): string => {
+    if (delivered.has(area)) return "";
+    const specs = unlisted(area);
+    if (specs.length === 0) return "";
+    delivered.add(area);
+    return definitionsText(areas.find((a) => a.id === area), specs);
+  };
+  let toolsNote = "";
+  if (areaMode) {
+    const onDemand = new Set(tools.list().flatMap((t) => (t.onDemand ? [t.onDemand] : [])));
+    const picked = (opts.pickAreas ? await opts.pickAreas(opts.goal).catch(() => null) : null) ?? areas.map((a) => a.id).filter((id) => !onDemand.has(id));
+    // A request that names a group's tool, or matches what it is for, gets it.
+    const wanted = new Set(picked);
+    for (const tool of tools.list()) {
+      if (tool.onDemand && (namedTool(opts.goal, [tool.name]) || tool.wantedFor?.test(opts.goal))) wanted.add(tool.onDemand);
+    }
+    if (listed.size === 0) {
+      const always = new Set(areas.flatMap((a) => a.alwaysShown ?? []));
+      for (const spec of everySpec) {
+        const area = areaOfName(spec.name);
+        if (area === undefined || wanted.has(area) || always.has(spec.name)) listed.add(spec.name);
+      }
+      // Never empty again in this conversation, even when nothing was picked.
+      listed.add(TOOL_RUN);
+    } else {
+      toolsNote = [...wanted].map(deliver).filter(Boolean).join("\n\n");
+    }
+  }
   const request = userRequest(opts.goal, attached.listed, attached.note + undone + memory + page, sentAt(new Date((opts.now ?? Date.now)())))
-    + (opts.openPage ? `\n\n<untrusted_content source="open_page">\n${defuseTags(opts.openPage.title)} — ${defuseTags(opts.openPage.url)}\n</untrusted_content>` : "");
+    + (opts.openPage ? `\n\n<untrusted_content source="open_page">\n${defuseTags(opts.openPage.title)} — ${defuseTags(opts.openPage.url)}\n</untrusted_content>` : "")
+    + (toolsNote ? `\n\n[Vunemi, not from the user] This request may need tools that are not in your list.\n${toolsNote}` : "");
   const convo: ChatMessage[] = [
     ...(opts.history ?? []),
     { role: "user", content: request, ...(attached.images.length > 0 && { images: attached.images }) },
@@ -296,17 +351,26 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   // change before the end makes it read the whole prompt again (seconds per
   // thousand tokens). Old page snapshots go only when room runs out (makeRoom).
   const shown = (): ChatMessage[] => keepNewestImage(convo);
-  const system = systemPrompt(opts.instructions);
+  // With areas: the guides of the areas listed, which change only with the list.
+  const system = areaMode
+    ? systemPrompt([opts.instructions, capabilityList(areas), ...areas.filter((a) => a.guide && everySpec.some((s) => listed.has(s.name) && areaOfName(s.name) === a.id)).map((a) => a.guide!)].filter(Boolean).join("\n\n"))
+    : systemPrompt(opts.instructions);
   const ephemeral = new Set(tools.list().flatMap((t) => (t.ephemeral ? [t.name] : [])));
-  // Recomputed when a guide opens a group of tools; the same otherwise.
-  const offerable = opts.switchedOff ? (name: string) => opts.switchedOff!(name) !== null : undefined;
-  const withinRun = (tool: ToolDef): boolean =>
-    !(opts.unattended === true && UNATTENDED_NEVER.has(tool.actionClass)) &&
-    (!opts.onlySources || inSources(tools.sourceOf(tool.name), opts.onlySources));
-  let toolSpecs = toolSpecsOf(tools, opts.openedTools, offerable, opts.goal, withinRun);
+  // Recomputed when a guide opens a group of tools; the same otherwise. With
+  // areas never: the group's definitions are given in the conversation instead.
+  let toolSpecs = areaMode
+    ? [...everySpec.filter((s) => listed.has(s.name)), runToolSpec(), openToolSpec(areas)]
+    : toolSpecsOf(tools, opts.openedTools, offerable, opts.goal, withinRun);
+  /** Definitions owed to the model after a guide opened a group mid-run. */
+  let owed: string[] = [];
   const window = opts.contextWindow ?? FALLBACK_WINDOW;
   let fixedChars = system.length + JSON.stringify(toolSpecs).length;
   const openTools = (group: string): void => {
+    if (areaMode) {
+      const text = deliver(group);
+      if (text) owed.push(text);
+      return;
+    }
     if (!opts.openedTools || opts.openedTools.has(group)) return;
     opts.openedTools.add(group);
     toolSpecs = toolSpecsOf(tools, opts.openedTools, offerable, opts.goal, withinRun);
@@ -316,7 +380,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   // excel_write_range, Gemma 4 E2B never opened Office and said it had none.
   const groupOf = (name: string): string | undefined => tools.get(name)?.onDemand;
   // Asked about "the Excel I have open", it reached for the screen instead of opening Office.
-  for (const tool of tools.list()) {
+  for (const tool of areaMode ? [] : tools.list()) {
     if (tool.onDemand && (namedTool(opts.goal, [tool.name]) || tool.wantedFor?.test(opts.goal))) openTools(tool.onDemand);
   }
   let charsPerToken = opts.charsPerToken ?? DEFAULT_CHARS_PER_TOKEN;
@@ -447,7 +511,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         // ever calling the search tool. A travel request needs an actual search
         // (or an explicit failure), not a completed run containing a promise.
         const missingTravel = requestedTravelTools(opts.goal).find((name) =>
-          toolSpecs.some((spec) => spec.name === name) && !called.has(name));
+          (areaMode ? everySpec : toolSpecs).some((spec) => spec.name === name) && !called.has(name));
         if (missingTravel) {
           if (!travelNudged.has(missingTravel) && index < maxSteps - 1) {
             travelNudged.add(missingTravel);
@@ -486,7 +550,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           const group = groupOf(named);
           if (group) openTools(group);
           emit({ type: "message.delta", runId, stepId, text: `\n\n${t("agent.callCheck")}` });
-          convo.push({ role: "user", content: callNudge(named) });
+          convo.push({ role: "user", content: callNudge(named) + takeOwed() });
           continue;
         }
         // "I checked what's playing" right after opening Music's guide, and
@@ -519,7 +583,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
 
         let output = await handleCall(call, stepId);
         if (repeats >= REMIND_AT) output += REPEAT_REMINDER;
-        convo.push({ role: "tool", content: output, toolCallId: call.id, toolName: call.name });
+        convo.push({ role: "tool", content: output, toolCallId: call.id, toolName: realName(call) });
         checkpoint();
         if (signal.aborted) return finish("stopped", "Stopped by user.");
       }
@@ -679,10 +743,50 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     });
   }
 
-  async function handleCall(call: ToolCall, stepId: string): Promise<string> {
+  /** The tool a call stands for: tool_run's target, or the call itself. */
+  function realName(call: ToolCall): string {
+    if (!areaMode || call.name !== TOOL_RUN) return call.name;
+    const target = unwrapRun(call.argumentsText);
+    return "name" in target ? target.name : call.name;
+  }
+
+  /** Definitions a guide opened during the call, for the model to read next. */
+  function takeOwed(): string {
+    const text = owed.length ? `\n\n${owed.join("\n\n")}` : "";
+    owed = [];
+    return text;
+  }
+
+  /** tools_open: the definitions of an area's unlisted tools. */
+  function openArea(): ToolDef {
+    return {
+      name: TOOLS_OPEN,
+      description: "",
+      parameters: { type: "object", properties: {} },
+      actionClass: "read",
+      run: async (a) => {
+        const area = areas.find((x) => x.id === String(a.area ?? "").trim().toLowerCase());
+        if (!area) throw new Error(`area must be one of: ${areas.map((x) => x.id).join(", ")}.`);
+        if (unlisted(area.id).length === 0) return `The ${area.id} tools are already in your list, or none are available. Call them directly.`;
+        return deliver(area.id) || `The ${area.id} tools were given earlier in this task; call them through tool_run.`;
+      },
+    };
+  }
+
+  async function handleCall(given: ToolCall, stepId: string): Promise<string> {
+    let call = given;
+    if (areaMode && call.name === TOOL_RUN) {
+      const target = unwrapRun(call.argumentsText);
+      if ("error" in target) {
+        emit({ type: "tool.proposed", runId, stepId, callId: call.id, tool: TOOL_RUN, args: call.argumentsText, actionClass: "read" });
+        return fail(call, target.error, false);
+      }
+      call = { ...call, ...target };
+      called.add(call.name);
+    }
     // Switched off, but the user may switch it back on from its card.
     const offer = !tools.get(call.name) && tools.isSwitchedOff(call.name) ? opts.switchedOff?.(call.name) ?? null : null;
-    const tool = tools.get(call.name) ?? (offer ? tools.getAny(call.name) : undefined);
+    const tool = (areaMode && call.name === TOOLS_OPEN ? openArea() : undefined) ?? tools.get(call.name) ?? (offer ? tools.getAny(call.name) : undefined);
     const parsed = parseArgs(call.argumentsText);
     const args = parsed.ok ? parsed.value : call.argumentsText;
     const redact = redactText;
@@ -771,7 +875,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         openTools(group);
       };
       const raw = await redact(await tool.run(parsed.value as Record<string, unknown>, { signal, userGoal: opts.goal, runId, handoff, offerUndo, attach, gallery, produced, openTools: opened }));
-      let output = shapeOutput(keepLong(modelCopy(raw, tool), tool), tool, maxOut);
+      let output = shapeOutput(keepLong(modelCopy(raw, tool), tool), tool, maxOut) + takeOwed();
       const display = tool.forModel ? shapeOutput(raw, tool, maxOut) : undefined;
       if (artifact?.kind === "image") output += await imageFor(tool.name, artifact);
       if (call.name === "calendar_events") {

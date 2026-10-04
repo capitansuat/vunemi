@@ -4,7 +4,8 @@ import { requestedTravelTools } from "../src/travel-intent.js";
 import type { AgentEvent, ApprovalDecision } from "../src/events.js";
 import { t } from "@vunemi/i18n";
 import { ProviderError, type ChatMessage, type ChatModel, type ChatRequest, type ChatResult, type ToolCall } from "../src/provider.js";
-import { ToolRegistry } from "../src/tools.js";
+import { ToolRegistry, type ToolDef } from "../src/tools.js";
+import type { ToolArea } from "../src/areas.js";
 import { KeptOutputs, keptOutputTools } from "../src/kept.js";
 import { PLAN_BUDGET } from "../src/plan.js";
 import { IMAGE_REMOVED, keepNewestImage, stripImages } from "../src/context.js";
@@ -1703,5 +1704,108 @@ describe("output for the model and for the user", () => {
     const { model, seen } = scripted([{ calls: [{ name: "search", argumentsText: "{}" }] }, { text: "done" }]);
     await runAgent({ goal: "g", model, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
     expect(seen[1]!.messages.find((m) => m.role === "tool")!.content).toBe("not json");
+  });
+});
+
+describe("areas: one tool list for the whole conversation", () => {
+  const def = (name: string, extra: Partial<ToolDef> = {}): ToolDef => ({
+    name, description: `${name} tool`, parameters: { type: "object", properties: { q: { type: "string" } } }, actionClass: "read",
+    run: async (a) => `${name} ran with ${JSON.stringify(a)}`, ...extra,
+  });
+  const registry = () => new ToolRegistry()
+    .register(def("get_time"))
+    .register(def("mail_search"), "mail:read")
+    .register(def("calendar_events"), "calendar:read")
+    .register(def("automation_create"), "automations:create")
+    .register(def("play_song", { onDemand: "music" }), "apps:music")
+    .register(def("app_guide", { run: async (_a, ctx) => { ctx.openTools?.("music"); return "Music guide."; } }), "apps:request");
+  const AREAS: ToolArea[] = [
+    { id: "mail", summary: "the user's mail", guide: "MAIL GUIDE" },
+    { id: "calendar", summary: "calendar and reminders", guide: "CALENDAR GUIDE" },
+    { id: "automations", summary: "scheduled tasks", alwaysShown: ["automation_create"] },
+    { id: "apps", summary: "Mac apps", guide: "APPS GUIDE" },
+    { id: "music", summary: "music" },
+  ];
+  const names = (req: ChatRequest) => req.tools.map((t) => t.name);
+  const go = (shownTools: Set<string>, picked: string[] | null, turns: Parameters<typeof scripted>[0], tools = registry()) => {
+    const { model, seen } = scripted(turns);
+    const events: AgentEvent[] = [];
+    const promise = runAgent({ goal: "g", model, tools, areas: AREAS, shownTools, pickAreas: async () => picked, emit: (e) => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
+    return { promise, seen, events };
+  };
+
+  it("lists the built-in tools, the picked areas and what is always shown, with guides for those only", async () => {
+    const shown = new Set<string>();
+    const { promise, seen } = go(shown, ["mail"], [{ text: "ok" }]);
+    await promise;
+    expect(names(seen[0]!)).toEqual(["get_time", "mail_search", "automation_create", "tool_run", "tools_open"]);
+    const system = seen[0]!.messages[0]!.content;
+    expect(system).toContain("- calendar: calendar and reminders");
+    expect(system).toContain("MAIL GUIDE");
+    expect(system).not.toContain("CALENDAR GUIDE");
+  });
+
+  it("keeps the same list and system prompt in the next request, and gives a new area's tools in the request", async () => {
+    const shown = new Set<string>();
+    const first = go(shown, ["mail"], [{ text: "ok" }]);
+    await first.promise;
+    const second = go(shown, ["calendar"], [
+      { calls: [{ name: "tool_run", argumentsText: '{"name":"calendar_events","arguments":{"q":"tomorrow"}}' }] },
+      { text: "done" },
+    ]);
+    await second.promise;
+    expect(names(second.seen[0]!)).toEqual(names(first.seen[0]!));
+    expect(second.seen[0]!.messages[0]!.content).toBe(first.seen[0]!.messages[0]!.content);
+    const request = second.seen[0]!.messages.at(-1)!.content;
+    expect(request).toContain('"name":"calendar_events"');
+    expect(request).toContain("CALENDAR GUIDE");
+    const proposed = second.events.find((e) => e.type === "tool.proposed");
+    expect(proposed).toMatchObject({ tool: "calendar_events", args: { q: "tomorrow" } });
+    const output = second.seen[1]!.messages.at(-1)!;
+    expect(output).toMatchObject({ role: "tool", toolName: "calendar_events", content: 'calendar_events ran with {"q":"tomorrow"}' });
+  });
+
+  it("opens an area on request without changing the list", async () => {
+    const { promise, seen } = go(new Set(), [], [
+      { calls: [{ name: "tools_open", argumentsText: '{"area":"calendar"}' }] },
+      { calls: [{ name: "tool_run", argumentsText: '{"name":"calendar_events","arguments":{}}' }] },
+      { text: "done" },
+    ]);
+    const result = await promise;
+    expect(result.detail).toBe("done");
+    expect(names(seen[1]!)).toEqual(names(seen[0]!));
+    expect(seen[1]!.messages.at(-1)!.content).toContain('"name":"calendar_events"');
+    expect(seen[2]!.messages.at(-1)!.content).toBe("calendar_events ran with {}");
+  });
+
+  it("gives a guide's group with the guide's answer, the list unchanged", async () => {
+    const { promise, seen } = go(new Set(), ["apps"], [
+      { calls: [{ name: "app_guide", argumentsText: "{}" }] },
+      { text: "done" },
+    ]);
+    await promise;
+    expect(names(seen[0]!)).toContain("app_guide");
+    expect(names(seen[0]!)).not.toContain("play_song");
+    expect(names(seen[1]!)).toEqual(names(seen[0]!));
+    const output = seen[1]!.messages.at(-1)!.content;
+    expect(output).toContain("Music guide.");
+    expect(output).toContain('"name":"play_song"');
+  });
+
+  it("lists every connection's tools when the areas can't be told", async () => {
+    const { promise, seen } = go(new Set(), null, [{ text: "ok" }]);
+    await promise;
+    expect(names(seen[0]!)).toEqual(["get_time", "mail_search", "calendar_events", "automation_create", "app_guide", "tool_run", "tools_open"]);
+  });
+
+  it("refuses a tool_run without a name, and never runs tool_run through itself", async () => {
+    const { promise, seen } = go(new Set(), [], [
+      { calls: [{ name: "tool_run", argumentsText: '{"arguments":{}}' }] },
+      { calls: [{ name: "tool_run", argumentsText: '{"name":"tool_run","arguments":{}}' }] },
+      { text: "done" },
+    ]);
+    await promise;
+    expect(seen[1]!.messages.at(-1)!.content).toMatch(/exact name/);
+    expect(seen[2]!.messages.at(-1)!.content).toMatch(/directly/);
   });
 });
