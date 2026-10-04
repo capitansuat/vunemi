@@ -103,6 +103,8 @@ export type AgentEvent =
   | { type: "memory.resolved"; runId: string; proposalId: string; decision: "saved" | "skipped"; text?: string; at: number }
   /** The model saved a work note (worknote_write); the timeline shows its title. */
   | { type: "note.saved"; runId: string; noteId: string; title: string; scope: "project" | "conversation"; at: number }
+  /** The chat model opened with a shorter context than its setting, for lack of memory (`tight`: not even the shortest fitted). */
+  | { type: "model.context"; runId: string; context: number; wanted: number; tight: boolean; at: number }
   /** Older turns are being condensed; the UI shows it under the run it follows. */
   | { type: "context.compacting"; runId: string; at: number }
   | {

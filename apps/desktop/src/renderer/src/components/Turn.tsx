@@ -61,12 +61,22 @@ export function Turn({ run }: { run: RunView }) {
       </div>
 
       {!live && <Footer run={run} />}
+      {run.lowered && <Lowered l={run.lowered} />}
       {!live && run.memory && run.memory.given.length > 0 && <MemoryNotice notes={run.memory.given} />}
       {run.memory && run.memory.proposals.length > 0 && <MemoryProposals runId={run.runId} proposals={run.memory.proposals} />}
       {run.notes && run.notes.length > 0 && <SavedNotes notes={run.notes} />}
       {run.compaction && <Compaction c={run.compaction} />}
     </section>
   );
+}
+
+/** The model opened with a shorter context for lack of memory; it changes how much this conversation keeps in view. */
+function Lowered({ l }: { l: NonNullable<RunView["lowered"]> }) {
+  const parts = [
+    ...(l.context < l.wanted ? [t("context.lowered", { context: formatTokens(l.context), wanted: formatTokens(l.wanted) })] : []),
+    ...(l.tight ? [t("context.tight")] : []),
+  ];
+  return <p className="mt-2 text-[11.5px] text-faint">{parts.join(" ")}</p>;
 }
 
 function Compaction({ c }: { c: CompactionView }) {

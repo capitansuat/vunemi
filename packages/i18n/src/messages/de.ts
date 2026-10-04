@@ -179,6 +179,8 @@ export const messages: Catalogue = {
     compactNow: "Jetzt verdichten",
     compactHint: "Verdichtet den früheren Teil des Gesprächs, um dem Modell Platz zu schaffen.",
     estimated: "Das Modell hat sein Limit nicht gemeldet; es werden {budget} Token angenommen.",
+    lowered: "Wenig Speicher: Diese Unterhaltung läuft mit {context} statt {wanted} Kontext.",
+    tight: "Sehr wenig Speicher; wenn du andere Apps schließt, wird Vunemi schneller.",
     lastRequest: "Letzte Anfrage",
     parts: {
       system: "Systemanweisung",

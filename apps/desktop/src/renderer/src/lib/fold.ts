@@ -81,6 +81,8 @@ export interface RunView {
   memory?: MemoryView;
   /** Work notes the run saved; a note saved twice shows once, with its last title. */
   notes?: { id: string; title: string; scope: "project" | "conversation"; deleted?: boolean }[];
+  /** The model opened with a shorter context than its setting, for lack of memory. */
+  lowered?: { context: number; wanted: number; tight: boolean };
   steps: StepView[];
 }
 
@@ -209,6 +211,8 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
       const notes = (run.notes ?? []).filter((n) => n.id !== e.noteId);
       return { ...run, notes: [...notes, { id: e.noteId, title: e.title, scope: e.scope }] };
     }
+    case "model.context":
+      return { ...run, lowered: { context: e.context, wanted: e.wanted, tight: e.tight } };
     case "memory.proposed":
       return {
         ...run,

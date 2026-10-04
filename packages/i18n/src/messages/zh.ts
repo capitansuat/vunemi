@@ -179,6 +179,8 @@ export const messages: Catalogue = {
     compactNow: "立即压缩",
     compactHint: "压缩对话的前半部分，为模型腾出空间。",
     estimated: "模型未报告其上限；按 {budget} 个 token 估算。",
+    lowered: "内存不足：此对话使用 {context} 上下文，而不是 {wanted}。",
+    tight: "内存非常紧张；关闭其他应用可以让 Vunemi 更快。",
     lastRequest: "上一次请求",
     parts: {
       system: "系统提示",

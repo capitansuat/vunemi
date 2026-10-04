@@ -41,6 +41,7 @@ import {
   type ProviderConfig,
 } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
+import type { PreparedModel } from "./engine/service.js";
 
 export interface SessionOptions {
   tools: ToolRegistry;
@@ -63,9 +64,10 @@ export interface SessionOptions {
   /**
    * Loads the model a run names, e.g. starts the built-in engine. A failure
    * shows where the engine reports its state; the run then fails as
-   * unreachable, which says the rest.
+   * unreachable, which says the rest. It says the context it opened with, so
+   * a shorter one reaches the run.
    */
-  prepareModel?: (spec: string) => Promise<void>;
+  prepareModel?: (spec: string) => Promise<PreparedModel | null | void>;
   /** The Sentinel: the only thing that may authorise an action. */
   authorize: RunOptions["authorize"];
   /** A switched-off tool the user may switch back on from its card (see RunOptions.switchedOff). */
@@ -150,6 +152,8 @@ export class AgentSession {
   private readonly remembered = new Set<string>();
   /** Notes to announce once the run has its id. */
   private given: MemoryNote[] | null = null;
+  /** A shorter context the last launch had to take; told to the run once it has an id. */
+  private lowered: { context: number; wanted: number; tight: boolean } | null = null;
 
   constructor(private readonly opts: SessionOptions) {}
 
@@ -165,6 +169,10 @@ export class AgentSession {
     if (event.type === "run.started" && this.given) {
       this.opts.emit({ type: "memory.given", runId: event.runId, notes: this.given, at: Date.now() });
       this.given = null;
+    }
+    if (event.type === "run.started" && this.lowered) {
+      this.opts.emit({ type: "model.context", runId: event.runId, ...this.lowered, at: Date.now() });
+      this.lowered = null;
     }
   };
 
@@ -299,7 +307,7 @@ export class AgentSession {
       if (this.opts.prepareModel) {
         // Loading can take a while; Stop must still work during it.
         await Promise.race([
-          this.opts.prepareModel(modelSpec).catch(() => {}),
+          this.prepare(modelSpec),
           new Promise<void>((resolve) => ctrl.signal.addEventListener("abort", () => resolve(), { once: true })),
         ]);
       }
@@ -404,6 +412,16 @@ export class AgentSession {
     this.windows.delete(spec);
   }
 
+  /** Loads the model; a context other than the cached one is asked for again, and a lowered one is told to the run. */
+  private async prepare(spec: string): Promise<void> {
+    const prepared = await this.opts.prepareModel?.(spec).catch(() => null);
+    if (!prepared) return;
+    if (this.windows.get(spec)?.window !== prepared.context) this.windows.delete(spec);
+    if (prepared.launched && (prepared.context < prepared.wanted || prepared.tight)) {
+      this.lowered = { context: prepared.context, wanted: prepared.wanted, tight: prepared.tight };
+    }
+  }
+
   private async windowOf(spec: string, model: ChatModel): Promise<{ window: number; known: boolean }> {
     const cached = this.windows.get(spec);
     if (cached) return cached;
@@ -443,7 +461,7 @@ export class AgentSession {
     if (this.active) throw new Error(t("main.stopFirst"));
     if (this.history.length === 0) return;
     try {
-      await this.opts.prepareModel?.(modelSpec).catch(() => {});
+      await this.prepare(modelSpec);
       const model = this.model(modelSpec);
       const { window } = await this.windowOf(modelSpec, model);
       await this.compactHistory(runId, model, window, { allowSummary: true, force: true });

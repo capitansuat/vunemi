@@ -246,3 +246,11 @@ describe("what is waiting for the user", () => {
     expect(pendingApprovals(runs)).toBe(2);
   });
 });
+
+describe("a shorter context", () => {
+  it("is kept with the run it was told to", () => {
+    let runs = foldEvent([], { type: "run.started", runId: "r", goal: "g", model: "m", at: 0 });
+    runs = foldEvent(runs, { type: "model.context", runId: "r", context: 16_384, wanted: 32_768, tight: false, at: 1 });
+    expect(runs[0]!.lowered).toEqual({ context: 16_384, wanted: 32_768, tight: false });
+  });
+});
