@@ -6,13 +6,13 @@
  *   VUNEMI_LIVE_VOICE=1 pnpm --filter @vunemi/desktop test voice
  */
 import { execFile } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setLocale } from "@vunemi/i18n";
-import { clean, findModel, noSpeech, Voice } from "../../src/main/voice.js";
+import { clean, findModel, noSpeech, Voice, VOICE_MODEL } from "../../src/main/voice.js";
 
 const run = promisify(execFile);
 
@@ -126,5 +126,20 @@ describe("the voice as the model manager sees it", () => {
     expect(voice.busy()).toBe(false);
     voice.unload(); // nothing to stop
     expect(voice.pid()).toBeNull();
+  });
+
+  it("is busy from the moment a clip is asked for, while the server starts, until it settles", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "vunemi-voice-"));
+    mkdirSync(join(folder, "models"));
+    writeFileSync(join(folder, "models", VOICE_MODEL.file), "");
+    const server = join(folder, "whisper-server");
+    writeFileSync(server, "#!/bin/sh\nexit 1\n"); // a server that never comes up
+    chmodSync(server, 0o755);
+    const voice = new Voice(folder, { builtIn: server, shared: false });
+    const clip = voice.clip(Buffer.alloc(0), "auto").catch(() => "failed");
+    expect(voice.busy()).toBe(true); // before the server is even up
+    expect(await clip).toBe("failed");
+    expect(voice.busy()).toBe(false);
+    rmSync(folder, { recursive: true, force: true });
   });
 });

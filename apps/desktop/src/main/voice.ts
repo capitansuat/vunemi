@@ -152,7 +152,7 @@ export class Voice {
   private port = 0;
   private ready: Promise<void> | null = null;
   private idleTimer: NodeJS.Timeout | null = null;
-  /** Clips being transcribed now: the model manager never stops the server under one. */
+  /** Transcriptions under way, from asking for the server to the last word: the model manager never stops it under one. */
   private inflight = 0;
   private speaking: ChildProcess | null = null;
   private binary: string | null;
@@ -247,17 +247,22 @@ export class Voice {
    * guess, a Turkish "selam" came back as Persian.
    */
   async transcribe(wav: Buffer): Promise<string> {
-    await this.start("auto");
-    this.touch();
+    this.inflight++;
+    try {
+      await this.start("auto");
+      this.touch();
 
-    const heard = await this.inference(wav, "auto");
-    // Whisper's code for what it heard, e.g. "tr"; the name ("turkish") is in `language`.
-    const code = Object.entries(heard.language_probabilities ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0];
-    const ours = spokenIn(heard.language_probabilities, getLocale());
-    this.heardLanguage = ours;
-    // Whisper wrote it down in another language than the one decided on: again, in that one.
-    if (code !== ours) return clean((await this.inference(wav, ours)).text ?? "");
-    return clean(heard.text ?? "");
+      const heard = await this.inference(wav, "auto");
+      // Whisper's code for what it heard, e.g. "tr"; the name ("turkish") is in `language`.
+      const code = Object.entries(heard.language_probabilities ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0];
+      const ours = spokenIn(heard.language_probabilities, getLocale());
+      this.heardLanguage = ours;
+      // Whisper wrote it down in another language than the one decided on: again, in that one.
+      if (code !== ours) return clean((await this.inference(wav, ours)).text ?? "");
+      return clean(heard.text ?? "");
+    } finally {
+      this.inflight--;
+    }
   }
 
   /**
@@ -266,39 +271,39 @@ export class Voice {
    * languages. `noSpeech` is whisper's own belief that nothing was said.
    */
   async clip(wav: Buffer, language: Locale | "auto"): Promise<{ text: string; language: Locale; noSpeech: number }> {
-    await this.start("auto");
-    this.touch();
-    let heard = await this.inference(wav, language);
-    const spoken: Locale = language === "auto" ? spokenIn(heard.language_probabilities, getLocale()) : language;
-    const code = Object.entries(heard.language_probabilities ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0];
-    if (language === "auto" && code !== spoken) heard = await this.inference(wav, spoken);
-    this.touch();
-    return { text: clean(heard.text ?? ""), language: spoken, noSpeech: noSpeech(heard.segments) };
-  }
-
-  private async inference(wav: Buffer, language: string): Promise<Heard> {
     this.inflight++;
     try {
-      const body = new FormData();
-      body.append("file", new Blob([new Uint8Array(wav)], { type: "audio/wav" }), "clip.wav");
-      body.append("response_format", "verbose_json");
-      body.append("language", language);
-      body.append("temperature", "0");
-
-      // Never open-ended: a request that hangs would leave the UI saying it
-      // is working with nothing behind it.
-      const res = await fetch(`http://127.0.0.1:${this.port}/inference`, {
-        method: "POST",
-        body,
-        signal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
-      });
-      if (!res.ok) throw new Error(t("voiceEngine.failed", { status: res.status }));
-      const payload = (await res.json()) as Heard & { error?: string };
-      if (payload.error) throw new Error(payload.error);
-      return payload;
+      await this.start("auto");
+      this.touch();
+      let heard = await this.inference(wav, language);
+      const spoken: Locale = language === "auto" ? spokenIn(heard.language_probabilities, getLocale()) : language;
+      const code = Object.entries(heard.language_probabilities ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (language === "auto" && code !== spoken) heard = await this.inference(wav, spoken);
+      this.touch();
+      return { text: clean(heard.text ?? ""), language: spoken, noSpeech: noSpeech(heard.segments) };
     } finally {
       this.inflight--;
     }
+  }
+
+  private async inference(wav: Buffer, language: string): Promise<Heard> {
+    const body = new FormData();
+    body.append("file", new Blob([new Uint8Array(wav)], { type: "audio/wav" }), "clip.wav");
+    body.append("response_format", "verbose_json");
+    body.append("language", language);
+    body.append("temperature", "0");
+
+    // Never open-ended: a request that hangs would leave the UI saying it
+    // is working with nothing behind it.
+    const res = await fetch(`http://127.0.0.1:${this.port}/inference`, {
+      method: "POST",
+      body,
+      signal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(t("voiceEngine.failed", { status: res.status }));
+    const payload = (await res.json()) as Heard & { error?: string };
+    if (payload.error) throw new Error(payload.error);
+    return payload;
   }
 
   /**
