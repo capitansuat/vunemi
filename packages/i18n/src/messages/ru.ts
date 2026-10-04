@@ -1171,6 +1171,8 @@ export const messages: Catalogue = {
   },
 
   travel: {
+    sentFlights: "Этот запрос будет отправлен в Google Flights: {what}",
+    sentHotels: "Этот запрос будет отправлен в Trivago: {what}",
     firstOf: "Первые {shown} из {total} результатов",
     options: { one: "{count} вариант", few: "{count} варианта", many: "{count} вариантов", other: "{count} варианта" },
     choose: "Выбрать",

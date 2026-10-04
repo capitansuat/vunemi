@@ -1160,6 +1160,8 @@ export const messages = {
   },
 
   travel: {
+    sentFlights: "Bu arama Google Flights'a gönderilecek: {what}",
+    sentHotels: "Bu arama Trivago'ya gönderilecek: {what}",
     firstOf: "{total} sonuçtan ilk {shown}",
     options: { other: "{count} seçenek" },
     choose: "Seç",

@@ -215,7 +215,8 @@ export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
       adults: { type: "integer", minimum: 1, maximum: 9 }, children: { type: "integer", minimum: 0, maximum: 8 },
     }, required: ["origin", "destination", "departure_date"], additionalProperties: false },
     actionClass: "outbound", untrustedOutput: true,
-    async preview(args) { return `Google Flights › ${str(args.origin)} → ${str(args.destination)} · ${str(args.departure_date)}${args.return_date ? ` – ${str(args.return_date)}` : ""}`; },
+    // The approval card says where the search goes before anything is sent.
+    async preview(args) { return t("travel.sentFlights", { what: `${str(args.origin)} → ${str(args.destination)} · ${str(args.departure_date)}${args.return_date ? ` – ${str(args.return_date)}` : ""}` }); },
     async run(args, ctx) {
       if (limit.used(ctx.runId, "flight", ctx.userGoal ?? "")) return JSON.stringify({ kind: "travel-search-skipped", reason: "Flights were already searched for this request, and the user did not ask for other dates or routes. Use the earlier results." });
       const origin = airport(args.origin), destination = airport(args.destination), departure = date(args.departure_date);
@@ -242,7 +243,7 @@ export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
       adults: { type: "integer", minimum: 1 }, child_ages: { type: "array", items: { type: "integer", minimum: 0, maximum: 17 } }, rooms: { type: "integer", minimum: 1 },
     }, required: ["destination", "check_in"], additionalProperties: false },
     actionClass: "outbound", untrustedOutput: true,
-    async preview(args) { return `Trivago › ${str(args.destination)} · ${str(args.check_in)}${args.check_out ? ` – ${str(args.check_out)}` : ""}`; },
+    async preview(args) { return t("travel.sentHotels", { what: `${str(args.destination)} · ${str(args.check_in)}${args.check_out ? ` – ${str(args.check_out)}` : ""}` }); },
     async run(args, ctx) {
       if (limit.used(ctx.runId, "hotel", ctx.userGoal ?? "")) return JSON.stringify({ kind: "travel-search-skipped", reason: "Hotels were already searched for this request, and the user did not ask for other dates or areas. Use the earlier results." });
       const destination = str(args.destination).slice(0, 120), arrival = date(args.check_in);

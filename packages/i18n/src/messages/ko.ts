@@ -1156,6 +1156,8 @@ export const messages: Catalogue = {
   },
 
   travel: {
+    sentFlights: "이 검색은 Google Flights로 전송됩니다: {what}",
+    sentHotels: "이 검색은 Trivago로 전송됩니다: {what}",
     firstOf: "결과 {total}개 중 처음 {shown}개",
     options: { other: "옵션 {count}개" },
     choose: "선택",

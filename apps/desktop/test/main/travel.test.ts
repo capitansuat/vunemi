@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { setLocale } from "@vunemi/i18n";
+import { getLocale, setLocale } from "@vunemi/i18n";
 import { shapeOutput } from "@vunemi/agent-core";
 import { flightOptions, flightSearchUrl, hotelOptions, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoSearchUrl } from "../../src/main/travel.js";
 import { parseTravelOptions, travelSelectionMessage } from "../../src/renderer/src/lib/travel-options.js";
@@ -15,6 +15,19 @@ describe("travel sources", () => {
     expect(travelConnectors().every((c) => c.requestableWhenOff)).toBe(true);
     const hotel = travelConnectors().find((c) => c.id === "travel-hotels")!.tools()[0]!;
     expect(hotel.parameters.required).toEqual(["destination", "check_in"]);
+  });
+
+  it("says on the approval card where the search is sent, in the app's language", async () => {
+    const [flights, hotels] = travelConnectors().map((c) => c.tools()[0]!);
+    const before = getLocale();
+    setLocale("tr");
+    expect(await flights!.preview!({ origin: "MAN", destination: "ADB", departure_date: "2026-11-03", return_date: "2026-11-10" }))
+      .toBe("Bu arama Google Flights'a gönderilecek: MAN → ADB · 2026-11-03 – 2026-11-10");
+    expect(await hotels!.preview!({ destination: "Roma", check_in: "2026-11-03" })).toBe("Bu arama Trivago'ya gönderilecek: Roma · 2026-11-03");
+    setLocale("en");
+    expect(await hotels!.preview!({ destination: "Rome", check_in: "2026-11-03", check_out: "2026-11-05" }))
+      .toBe("This search will be sent to Trivago: Rome · 2026-11-03 – 2026-11-05");
+    setLocale(before);
   });
 
   it("turns flight results into priced cards, deduplicates and rejects foreign links", () => {
