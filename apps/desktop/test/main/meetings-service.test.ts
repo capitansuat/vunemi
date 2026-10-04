@@ -159,6 +159,21 @@ describe("MeetingService", () => {
     expect(store.get(meeting.id)).toMatchObject({ state: "done" });
     expect(existsSync(join(store.folder(meeting.id), "mic.pcm"))).toBe(false);
   });
+
+  it("says it is summarising while the summary is written, and only then", async () => {
+    const s = service();
+    const during: boolean[] = [];
+    modelAnswer = () => {
+      during.push(s.summarising);
+      return SUMMARY;
+    };
+    const meeting = await s.start();
+    expect(s.summarising).toBe(false);
+    writeFileSync(join(store.folder(meeting.id), "system.pcm"), speech(1.5));
+    await s.stop("lmstudio:m");
+    expect(during).toContain(true);
+    expect(s.summarising).toBe(false);
+  });
 });
 
 describe("renaming a meeting", () => {

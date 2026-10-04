@@ -98,6 +98,16 @@ export class Engine {
     return this.state.state === "ready" && this.current?.spec.id === id ? this.current.endpoint : null;
   }
 
+  /** The server's process while one runs or starts, for measuring its memory. */
+  pid(): number | null {
+    return this.child?.pid ?? null;
+  }
+
+  /** What the running (or starting) server was launched with. */
+  loaded(): LaunchSpec | null {
+    return this.current?.spec ?? null;
+  }
+
   ensure(spec: LaunchSpec): Promise<Endpoint> {
     if (!this.opts.binary) return Promise.reject(new Error("This Vunemi has no built-in engine."));
     this.touch();

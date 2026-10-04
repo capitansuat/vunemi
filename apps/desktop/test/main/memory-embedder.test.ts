@@ -79,6 +79,20 @@ describe("the meaning model", () => {
     expect(await embedder.download()).toMatchObject({ state: "ready" });
     expect(calls).toEqual([{ file: EMBED_MODEL.file, dir }]);
   });
+
+  it("is busy only while it embeds, and says which process holds the model", async () => {
+    withModel();
+    const embedder = make();
+    expect(embedder.pid()).toBeNull();
+    expect(embedder.mapped()).toBe(EMBED_MODEL.size);
+    const running = embedder.embed(["a"], "passage");
+    expect(embedder.busy()).toBe(true);
+    await running;
+    expect(embedder.busy()).toBe(false);
+    expect(embedder.pid()).toEqual(expect.any(Number));
+    await embedder.stop();
+    expect(embedder.pid()).toBeNull();
+  });
 });
 
 describe("cosine", () => {

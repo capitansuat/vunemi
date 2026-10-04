@@ -152,6 +152,8 @@ export class Voice {
   private port = 0;
   private ready: Promise<void> | null = null;
   private idleTimer: NodeJS.Timeout | null = null;
+  /** Clips being transcribed now: the model manager never stops the server under one. */
+  private inflight = 0;
   private speaking: ChildProcess | null = null;
   private binary: string | null;
   private model: string | null;
@@ -275,23 +277,28 @@ export class Voice {
   }
 
   private async inference(wav: Buffer, language: string): Promise<Heard> {
-    const body = new FormData();
-    body.append("file", new Blob([new Uint8Array(wav)], { type: "audio/wav" }), "clip.wav");
-    body.append("response_format", "verbose_json");
-    body.append("language", language);
-    body.append("temperature", "0");
+    this.inflight++;
+    try {
+      const body = new FormData();
+      body.append("file", new Blob([new Uint8Array(wav)], { type: "audio/wav" }), "clip.wav");
+      body.append("response_format", "verbose_json");
+      body.append("language", language);
+      body.append("temperature", "0");
 
-    // Never open-ended: a request that hangs would leave the UI saying it
-    // is working with nothing behind it.
-    const res = await fetch(`http://127.0.0.1:${this.port}/inference`, {
-      method: "POST",
-      body,
-      signal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
-    });
-    if (!res.ok) throw new Error(t("voiceEngine.failed", { status: res.status }));
-    const payload = (await res.json()) as Heard & { error?: string };
-    if (payload.error) throw new Error(payload.error);
-    return payload;
+      // Never open-ended: a request that hangs would leave the UI saying it
+      // is working with nothing behind it.
+      const res = await fetch(`http://127.0.0.1:${this.port}/inference`, {
+        method: "POST",
+        body,
+        signal: AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
+      });
+      if (!res.ok) throw new Error(t("voiceEngine.failed", { status: res.status }));
+      const payload = (await res.json()) as Heard & { error?: string };
+      if (payload.error) throw new Error(payload.error);
+      return payload;
+    } finally {
+      this.inflight--;
+    }
   }
 
   /**
@@ -381,6 +388,20 @@ export class Voice {
     })();
 
     return this.ready;
+  }
+
+  busy(): boolean {
+    return this.inflight > 0;
+  }
+
+  /** The whisper server's process while one runs. It reads its model into its own memory, so the footprint is all of it. */
+  pid(): number | null {
+    return this.server?.pid ?? null;
+  }
+
+  /** Lets the model go now rather than after the idle minutes; the next clip starts it again. */
+  unload(): void {
+    this.shutdown();
   }
 
   /** The model is big; hand the memory back once the user stops dictating. */

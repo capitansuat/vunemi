@@ -113,6 +113,18 @@ describe("the built-in engine", () => {
     expect(engine.snapshot.state).toBe("absent");
     await expect(engine.ensure(spec)).rejects.toThrow();
   });
+
+  it("says which process holds the model and what it was launched with", async () => {
+    const { engine } = make();
+    expect(engine.pid()).toBeNull();
+    expect(engine.loaded()).toBeNull();
+    await engine.ensure(spec);
+    expect(engine.pid()).toEqual(expect.any(Number));
+    expect(engine.loaded()).toEqual(spec);
+    await engine.stop();
+    expect(engine.pid()).toBeNull();
+    expect(engine.loaded()).toBeNull();
+  });
 });
 
 describe("a server left behind", () => {

@@ -50,6 +50,8 @@ export class Embedder {
   private readonly engine: Engine;
   private readonly path: string;
   private downloading: { controller: AbortController; progress: DownloadProgress | null; done: Promise<string> } | null = null;
+  /** Requests being embedded now: the model manager never stops it under one. */
+  private inflight = 0;
 
   constructor(private readonly opts: EmbedderOptions) {
     this.path = join(opts.dir, EMBED_MODEL.file);
@@ -64,6 +66,19 @@ export class Embedder {
 
   available(): boolean {
     return !!this.opts.binary && existsSync(this.path);
+  }
+
+  busy(): boolean {
+    return this.inflight > 0;
+  }
+
+  pid(): number | null {
+    return this.engine.pid();
+  }
+
+  /** The model file the server maps; its footprint leaves it out. */
+  mapped(): number {
+    return EMBED_MODEL.size;
   }
 
   status(): EmbedderStatus {
@@ -107,25 +122,30 @@ export class Embedder {
   async embed(texts: string[], as: "query" | "passage"): Promise<Float32Array[]> {
     if (!this.available()) throw new Error("The meaning model is not downloaded.");
     if (texts.length === 0) return [];
-    // The last token (llama.cpp appends <|endoftext|>) stands for the text.
-    const endpoint = await this.engine.ensure({ id: EMBED_MODEL_ID, path: this.path, context: CONTEXT, pooling: "last" });
-    const input = texts.map((text) => (as === "query" ? `Instruct: ${QUERY_TASK}\nQuery: ${text.slice(0, MAX_QUERY_CHARS)}` : text));
-    const res = await fetch(`${endpoint.baseUrl}/embeddings`, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${endpoint.apiKey}` },
-      body: JSON.stringify({ model: EMBED_MODEL_ID, input }),
-      signal: AbortSignal.timeout(REQUEST_MS),
-    });
-    if (!res.ok) throw new Error(`The meaning model answered ${res.status}.`);
-    this.engine.touch();
-    const body = (await res.json()) as { data?: { index: number; embedding: number[] }[] };
-    const vectors: Float32Array[] = [];
-    for (const item of body.data ?? []) {
-      if (!Number.isInteger(item.index) || item.index < 0 || item.index >= texts.length || !Array.isArray(item.embedding)) continue;
-      vectors[item.index] = normalise(Float32Array.from(item.embedding));
+    this.inflight++;
+    try {
+      // The last token (llama.cpp appends <|endoftext|>) stands for the text.
+      const endpoint = await this.engine.ensure({ id: EMBED_MODEL_ID, path: this.path, context: CONTEXT, pooling: "last" });
+      const input = texts.map((text) => (as === "query" ? `Instruct: ${QUERY_TASK}\nQuery: ${text.slice(0, MAX_QUERY_CHARS)}` : text));
+      const res = await fetch(`${endpoint.baseUrl}/embeddings`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${endpoint.apiKey}` },
+        body: JSON.stringify({ model: EMBED_MODEL_ID, input }),
+        signal: AbortSignal.timeout(REQUEST_MS),
+      });
+      if (!res.ok) throw new Error(`The meaning model answered ${res.status}.`);
+      this.engine.touch();
+      const body = (await res.json()) as { data?: { index: number; embedding: number[] }[] };
+      const vectors: Float32Array[] = [];
+      for (const item of body.data ?? []) {
+        if (!Number.isInteger(item.index) || item.index < 0 || item.index >= texts.length || !Array.isArray(item.embedding)) continue;
+        vectors[item.index] = normalise(Float32Array.from(item.embedding));
+      }
+      if (vectors.length !== texts.length || vectors.some((v) => !v)) throw new Error("The meaning model gave an incomplete answer.");
+      return vectors;
+    } finally {
+      this.inflight--;
     }
-    if (vectors.length !== texts.length || vectors.some((v) => !v)) throw new Error("The meaning model gave an incomplete answer.");
-    return vectors;
   }
 
   stop(): Promise<void> {

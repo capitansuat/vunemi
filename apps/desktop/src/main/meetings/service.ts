@@ -68,6 +68,11 @@ export class MeetingService {
     };
   }
 
+  /** A summary is being written with the chat model: it must not be unloaded under it. */
+  get summarising(): boolean {
+    return this.working.size > 0;
+  }
+
   async start(microphone?: string): Promise<Meeting> {
     if (this.recording || this.stopping) throw new Error("already");
     const blocked = this.opts.blocked();

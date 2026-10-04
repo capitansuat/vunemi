@@ -118,3 +118,13 @@ describe("noSpeech", () => {
     expect(noSpeech([{ t0: 0, t1: 100, no_speech_prob: 0.8 }, { text: "x" } as never])).toBeCloseTo(0.8);
   });
 });
+
+describe("the voice as the model manager sees it", () => {
+  it("holds nothing and is not busy before it is used", () => {
+    const voice = new Voice(mkdtempSync(join(tmpdir(), "vunemi-voice-")));
+    expect(voice.pid()).toBeNull();
+    expect(voice.busy()).toBe(false);
+    voice.unload(); // nothing to stop
+    expect(voice.pid()).toBeNull();
+  });
+});
