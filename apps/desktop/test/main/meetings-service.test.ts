@@ -160,6 +160,22 @@ describe("MeetingService", () => {
     expect(existsSync(join(store.folder(meeting.id), "mic.pcm"))).toBe(false);
   });
 
+  it("says whether it records without asking why it could not", async () => {
+    let asked = 0;
+    const s = service(() => {
+      asked++;
+      return null;
+    });
+    expect(s.isRecording).toBe(false);
+    const meeting = await s.start();
+    const before = asked;
+    expect(s.isRecording).toBe(true);
+    expect(asked).toBe(before);
+    writeFileSync(join(store.folder(meeting.id), "system.pcm"), speech(1.5));
+    await s.stop("lmstudio:m");
+    expect(s.isRecording).toBe(false);
+  });
+
   it("says it is summarising while the summary is written, and only then", async () => {
     const s = service();
     const during: boolean[] = [];

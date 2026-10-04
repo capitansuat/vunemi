@@ -31,6 +31,7 @@ describe("reading macOS memory", () => {
     expect(parseFootprint("zsh [23220]: 64-bit    Footprint: 1728 KB (16384 bytes per page)")).toBe(1_769_472);
     expect(parseFootprint("x [1]: 64-bit    Footprint: 22.4 GB (16384 bytes per page)")).toBe(24_051_816_858);
     expect(parseFootprint("footprint: no process")).toBeNull();
+    expect(parseFootprint("x [1]: 64-bit    Footprint: 1.2.3 MB (16384 bytes per page)")).toBeNull();
   });
 
   it("knows only the three pressure levels", () => {

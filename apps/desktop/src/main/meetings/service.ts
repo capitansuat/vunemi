@@ -68,6 +68,11 @@ export class MeetingService {
     };
   }
 
+  /** A meeting is being recorded; cheaper than status(), which also asks why it could not be. */
+  get isRecording(): boolean {
+    return this.recording !== null;
+  }
+
   /** A meeting is being worked on after recording (transcript, summary): the chat model may be needed until the pass is done, so it must not be unloaded under it. */
   get summarising(): boolean {
     return this.working.size > 0;

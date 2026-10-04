@@ -582,6 +582,8 @@ export class AgentSession {
     this.shownTools.clear();
     this.words = [];
     this.remembered.clear();
+    // A notice from a load in the previous conversation is not this one's.
+    this.lowered = null;
   }
 
   /** The user undid something this conversation did; the model hears it next time. */

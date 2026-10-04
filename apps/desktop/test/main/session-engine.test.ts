@@ -91,6 +91,29 @@ describe("getting the model ready", () => {
     ]);
   });
 
+  it("does not carry a notice into another conversation", async () => {
+    windowAnswers = [];
+    const events: AgentEvent[] = [];
+    let release: () => void = () => {};
+    const answers = [
+      // The first load is slow, and the user stops the run before it is done.
+      new Promise((resolve) => {
+        release = () => resolve({ context: 16_384, wanted: 32_768, tight: false, announce: true });
+      }),
+      Promise.resolve(null),
+    ];
+    const session = makeSession(() => answers.shift()!, (e) => events.push(e));
+    const first = session.start("hi", "vunemi:m");
+    await new Promise((r) => setTimeout(r, 5));
+    session.stop();
+    await first;
+    release();
+    await new Promise((r) => setTimeout(r, 5));
+    session.load([]);
+    await session.start("elsewhere", "vunemi:m");
+    expect(events.filter((e) => e.type === "model.context")).toEqual([]);
+  });
+
   it("tells the run when memory is too short even for the shortest context", async () => {
     windowAnswers = [];
     const events: AgentEvent[] = [];

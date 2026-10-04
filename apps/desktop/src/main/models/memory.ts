@@ -40,7 +40,10 @@ export function parseVmStat(text: string): number | null {
 
 export function parseFootprint(text: string): number | null {
   const m = /Footprint:\s+([\d.]+)\s+(B|KB|MB|GB)\b/.exec(text);
-  return m ? Math.round(Number(m[1]) * UNITS[m[2]!]!) : null;
+  if (!m) return null;
+  // "1.2.3" matches the pattern but is no number.
+  const value = Number(m[1]);
+  return Number.isFinite(value) ? Math.round(value * UNITS[m[2]!]!) : null;
 }
 
 export function parsePressure(text: string): number | null {

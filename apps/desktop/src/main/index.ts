@@ -1127,7 +1127,7 @@ models.register({ id: "meaning", busy: () => meaning.busy(), pid: () => meaning.
 models.register({
   id: "voice",
   // A meeting being recorded or caught up on needs whisper between clips too.
-  busy: () => voice.busy() || meetings.status().recording !== null,
+  busy: () => voice.busy() || meetings.isRecording,
   pid: () => voice.pid(),
   mapped: () => 0,
   unload: async () => voice.unload(),
