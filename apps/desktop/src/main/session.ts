@@ -90,6 +90,11 @@ export interface SessionOptions {
   /** The page showing in Vunemi's browser, if any, read as each request is sent. */
   openPage?: () => { title: string; url: string } | null;
   /**
+   * The titles of the project's work notes, for a conversation's first
+   * request only; null when there are none.
+   */
+  notesIndex?: () => string | null;
+  /**
    * After a finished task the user watched: what they wrote lately, and the
    * model that did it, so memory can propose notes from their own words.
    */
@@ -306,11 +311,14 @@ export class AgentSession {
       const memory = recalled?.topic.filter((text) => !this.remembered.has(text)) ?? [];
       this.given = recalled?.notes.length ? recalled.notes : null;
       const openPage = this.opts.openPage?.() ?? null;
+      // Only a conversation's first request: added later, it would sit in the middle of the history.
+      const notesIndex = this.history.length === 0 ? (this.opts.notesIndex?.() ?? null) : null;
       const result = await runAgent({
         goal,
         ...(openPage && { openPage }),
         ...(undone.length > 0 && { undone }),
         ...(memory.length > 0 && { memory }),
+        ...(notesIndex && { notesIndex }),
         ...(attachments.length > 0 && { attachments }),
         model,
         contextWindow: window,

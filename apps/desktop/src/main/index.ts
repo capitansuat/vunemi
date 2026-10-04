@@ -57,6 +57,7 @@ import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
 import { createNoteTools } from "./work/notes-tools.js";
 import { ArchivedOutputs } from "./work/outputs.js";
+import { notesIndex } from "./work/notes-index.js";
 import { openWorkStore } from "./work/store.js";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -620,6 +621,7 @@ const session: AgentSession = new AgentSession({
   onUndoOffered: (u) => activity.offerUndo(u.callId, u.label, u.undo),
   recall: (goal) => recall(memory, meaning, goal),
   openPage: () => (connectors.isOn("browser") ? embedded.openPage() : null),
+  notesIndex: () => (work ? notesIndex(work, conversations.currentProject) : null),
   afterRun: ({ runId, model, words }) => {
     const conversation = conversations.currentId;
     void propose({ model, messages: words, store: memory, meaning, signal: AbortSignal.timeout(120_000), sessionId: conversation })
