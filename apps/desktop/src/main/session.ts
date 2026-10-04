@@ -417,9 +417,7 @@ export class AgentSession {
     const prepared = await this.opts.prepareModel?.(spec).catch(() => null);
     if (!prepared) return;
     if (this.windows.get(spec)?.window !== prepared.context) this.windows.delete(spec);
-    if (prepared.launched && (prepared.context < prepared.wanted || prepared.tight)) {
-      this.lowered = { context: prepared.context, wanted: prepared.wanted, tight: prepared.tight };
-    }
+    if (prepared.announce) this.lowered = { context: prepared.context, wanted: prepared.wanted, tight: prepared.tight };
   }
 
   private async windowOf(spec: string, model: ChatModel): Promise<{ window: number; known: boolean }> {

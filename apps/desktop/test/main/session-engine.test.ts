@@ -81,10 +81,10 @@ describe("getting the model ready", () => {
   it("tells the run once when the model had to open with a shorter context", async () => {
     windowAnswers = [];
     const events: AgentEvent[] = [];
-    let launched = true;
-    const session = makeSession(async () => ({ context: 16_384, wanted: 32_768, tight: false, launched }), (e) => events.push(e));
+    let announce = true;
+    const session = makeSession(async () => ({ context: 16_384, wanted: 32_768, tight: false, announce }), (e) => events.push(e));
     await session.start("hi", "vunemi:m");
-    launched = false;
+    announce = false;
     await session.start("again", "vunemi:m");
     expect(events.filter((e) => e.type === "model.context")).toEqual([
       { type: "model.context", runId: "r1", context: 16_384, wanted: 32_768, tight: false, at: expect.any(Number) },
@@ -94,7 +94,7 @@ describe("getting the model ready", () => {
   it("tells the run when memory is too short even for the shortest context", async () => {
     windowAnswers = [];
     const events: AgentEvent[] = [];
-    const session = makeSession(async () => ({ context: 8_192, wanted: 8_192, tight: true, launched: true }), (e) => events.push(e));
+    const session = makeSession(async () => ({ context: 8_192, wanted: 8_192, tight: true, announce: true }), (e) => events.push(e));
     await session.start("hi", "vunemi:m");
     expect(events.find((e) => e.type === "model.context")).toMatchObject({ context: 8_192, wanted: 8_192, tight: true });
   });
@@ -102,7 +102,7 @@ describe("getting the model ready", () => {
   it("asks the server for its window again when the context changed", async () => {
     windowAnswers = [32_768, 16_384];
     const contexts = [32_768, 16_384];
-    const session = makeSession(async () => ({ context: contexts.shift()!, wanted: 32_768, tight: false, launched: true }));
+    const session = makeSession(async () => ({ context: contexts.shift()!, wanted: 32_768, tight: false, announce: false }));
     await session.start("hi", "vunemi:m");
     expect((await session.contextInfo("vunemi:m")).window).toBe(32_768);
     await session.start("again", "vunemi:m");

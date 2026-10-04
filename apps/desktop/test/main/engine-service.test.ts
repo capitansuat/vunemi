@@ -133,7 +133,7 @@ describe("the engine service", () => {
     expect(service.mapped()).toBe(0);
     fit.mockClear();
 
-    expect(await service.prepare(spec)).toEqual({ context: 8_192, wanted: 65_536, tight: true, launched: true });
+    expect(await service.prepare(spec, { announce: true })).toEqual({ context: 8_192, wanted: 65_536, tight: true, announce: true });
     expect(fit).toHaveBeenCalledTimes(1);
     expect(fit.mock.calls[0]![0]).toMatchObject({ wanted: 65_536 });
     expect(fit.mock.calls[0]![0].replacing).toBeUndefined();
@@ -145,13 +145,32 @@ describe("the engine service", () => {
     expect(service.mapped()).toBe(50_000);
 
     // Loaded with a shorter context: used as it is, not reloaded.
-    expect(await service.prepare(spec)).toEqual({ context: 8_192, wanted: 65_536, tight: true, launched: false });
+    expect(await service.prepare(spec, { announce: true })).toEqual({ context: 8_192, wanted: 65_536, tight: true, announce: false });
     expect(fit).toHaveBeenCalledTimes(1);
 
     // A new length from the user is a new launch, which replaces the loaded model.
     await service.setContext("tiny-q4_k_m", 16_384);
     expect(fit).toHaveBeenCalledTimes(2);
     expect(fit.mock.calls[1]![0]).toMatchObject({ wanted: 16_384, replacing: "chat" });
+  });
+
+  it("tells a lowered context once, to the first caller that announces it, whoever launched", async () => {
+    const fit = vi.fn(async (_req: FitRequest) => ({ context: 16_384, tight: false }));
+    service = new EngineService({
+      dir, binary: FAKE, totalMemory: 64 * GiB, isBusy: () => false, testModel: vi.fn(async () => true), onChange: () => {},
+      hub: { base }, allowUrl: () => true, freeBytes: async () => 1e12, manager: { fit },
+    });
+    const spec = (await service.download({ repo: "org/tiny-GGUF" }))!;
+    await service.unload();
+    // The user picks the model: it loads in the background, lowered.
+    service.warm(spec);
+    while (service.endpoint(spec) === null) await new Promise((r) => setTimeout(r, 10));
+    // A caller that does not announce (the check from Settings, a meeting's summary) leaves it untold.
+    expect(await service.prepare(spec)).toEqual({ context: 16_384, wanted: 65_536, tight: false, announce: false });
+    // The conversation's first run hears it, once.
+    expect(await service.prepare(spec, { announce: true })).toEqual({ context: 16_384, wanted: 65_536, tight: false, announce: true });
+    expect(await service.prepare(spec, { announce: true })).toEqual({ context: 16_384, wanted: 65_536, tight: false, announce: false });
+    expect(fit).toHaveBeenCalledTimes(2); // the download's test, and the warm-up
   });
 
   it("counts as busy while it loads or tests the model, so memory pressure leaves it alone", async () => {

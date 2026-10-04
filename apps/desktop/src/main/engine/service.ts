@@ -59,8 +59,11 @@ export interface PreparedModel {
   wanted: number;
   /** Not even the shortest context fitted; it opened anyway. */
   tight: boolean;
-  /** This call launched the server; false when the loaded one was reused. */
-  launched: boolean;
+  /**
+   * The launch had to take a shorter context, or not even the shortest fitted,
+   * and this caller is the first to tell the user. True once per such launch.
+   */
+  announce: boolean;
 }
 
 export class EngineService {
@@ -70,8 +73,12 @@ export class EngineService {
   private popularRun: Promise<PopularView[]> | null = null;
   /** Trained context lengths read from the files' headers, by path. */
   private readonly shapes = new Map<string, ModelShape>();
-  /** What the loaded model was launched for; it is reused while the wanted length is unchanged. */
-  private launched: { wanted: number; tight: boolean } | null = null;
+  /**
+   * What the loaded model was launched for; it is reused while the wanted
+   * length is unchanged. `told` is false while a lowered or tight launch is
+   * still to be told to the conversation, whoever launched it.
+   */
+  private launched: { wanted: number; tight: boolean; told: boolean } | null = null;
   /** Loads and tests in flight; while any runs the model is busy and not unloaded. */
   private holds = 0;
 
@@ -383,13 +390,17 @@ export class EngineService {
     this.changed();
   }
 
-  /** Before a task: make sure the model it names is loaded. Other providers need nothing. */
-  async prepare(spec: string): Promise<PreparedModel | null> {
+  /**
+   * Before a task: make sure the model it names is loaded. Other providers
+   * need nothing. Only the conversation passes `announce`: a context lowered
+   * by a warm-up or a check still reaches its next run.
+   */
+  async prepare(spec: string, opts: { announce?: boolean } = {}): Promise<PreparedModel | null> {
     if (!spec.startsWith(PREFIX)) return null;
-    return this.hold(() => this.load(spec));
+    return this.hold(() => this.load(spec, opts.announce === true));
   }
 
-  private async load(spec: string): Promise<PreparedModel> {
+  private async load(spec: string, announce: boolean): Promise<PreparedModel> {
     const id = spec.slice(PREFIX.length);
     const m = this.store.get(id);
     if (!m) throw new Error(t("engine.error.missing"));
@@ -400,16 +411,23 @@ export class EngineService {
     // Loaded, perhaps with a shorter context than wanted: a reload would throw its cache away.
     if (loaded && this.launched?.wanted === wanted && loaded.id === id && loaded.path === path && (loaded.projector ?? null) === (projector ?? null)) {
       await this.engine.ensure(loaded);
-      return { context: loaded.context, wanted, tight: this.launched.tight, launched: false };
+      return { context: loaded.context, wanted, tight: this.launched.tight, announce: this.tell(announce) };
     }
     const weights = this.weightsOf(m);
     const kv = this.shapeOf(path).kvBytesPerToken;
     const fit = this.opts.manager
       ? await this.opts.manager.fit({ wanted, need: (context) => need(weights, kv, context), ...(loaded && { replacing: "chat" as const }) })
       : { context: wanted, tight: false };
-    this.launched = { wanted, tight: fit.tight };
+    this.launched = { wanted, tight: fit.tight, told: fit.context >= wanted && !fit.tight };
     await this.engine.ensure({ id, path, context: fit.context, ...(projector && { projector }) });
-    return { context: fit.context, wanted, tight: fit.tight, launched: true };
+    return { context: fit.context, wanted, tight: fit.tight, announce: this.tell(announce) };
+  }
+
+  /** True for the first announcing caller after a lowered or tight launch. */
+  private tell(announce: boolean): boolean {
+    if (!announce || !this.launched || this.launched.told) return false;
+    this.launched.told = true;
+    return true;
   }
 
   /**
