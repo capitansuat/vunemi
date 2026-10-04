@@ -65,7 +65,7 @@ async function compose() {
   const instructions = connectors.instructions().length;
   // As a conversation starts with areas: built-in tools, automation_create,
   // and one picked area; each area tried, the largest kept.
-  const areas = toolAreas(connectors.working());
+  const areas = toolAreas(connectors.reachable());
   const shared = connectors.instructions({ guides: false });
   const listedFor = (area: string) => {
     const names = new Set(shown.filter((s) => { const def = tools.getAny(s.name); const a = def ? areaOf(tools, def) : undefined; return a === undefined || a === area || s.name === "automation_create"; }).map((s) => s.name));

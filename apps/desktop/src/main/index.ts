@@ -567,7 +567,7 @@ const session: AgentSession = new AgentSession({
   tools,
   keptOutputs,
   // Each connection's guide travels with its tools (see areas.ts).
-  areas: () => toolAreas(connectors.working()),
+  areas: () => toolAreas(connectors.reachable()),
   emit: record,
   onHistory: (history) => {
     conversations.setHistory(history);

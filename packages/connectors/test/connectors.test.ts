@@ -291,6 +291,15 @@ describe("what the model is told", () => {
     expect(shared).toMatch(/not switched on: posta/);
   });
 
+  it("counts an off connection the model may still ask for as reachable", () => {
+    const connectors = new Connectors({ tools: new ToolRegistry() });
+    connectors.add(fake("takvim"));
+    connectors.add(fake("ucus", { defaultOn: false, requestableWhenOff: true, instructions: "Uçuşları şöyle ara." }));
+    connectors.add(fake("posta", { defaultOn: false }));
+    expect(connectors.reachable().map((c) => c.id)).toEqual(["takvim", "ucus"]);
+    expect(connectors.working().map((c) => c.id)).toEqual(["takvim"]);
+  });
+
 
   it("describes only the connections that are on", () => {
     const connectors = new Connectors({ tools: new ToolRegistry() });

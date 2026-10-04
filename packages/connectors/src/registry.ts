@@ -242,6 +242,18 @@ export class Connectors {
     return guides.join("\n\n");
   }
 
+  /**
+   * The connections the model can reach: those working, and those off that it
+   * may still ask for, through a card (requestableWhenOff). Each is an area of
+   * tools (see the desktop's areas.ts).
+   */
+  reachable(): { id: string; label: string; instructions?: string }[] {
+    const off = [...this.items.values()]
+      .filter((c) => c.requestableWhenOff && !this.isOn(c.id))
+      .map((c) => ({ id: c.id, label: c.label, ...(c.instructions && { instructions: c.instructions }) }));
+    return [...this.working(), ...off];
+  }
+
   /** Each switched-on connection with a working part, and its own instructions if it has any. */
   working(): { id: string; label: string; instructions?: string }[] {
     return [...this.items.values()]
