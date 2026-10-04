@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, statSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -113,5 +113,51 @@ describe("notes", () => {
   it("keeps the sources of a note written after outside content", () => {
     note({ sources: ["booking.com", "Mail"] });
     expect(store.readNote(projectScope("p1"), "Logo decision")?.sources).toEqual(["booking.com", "Mail"]);
+  });
+
+  it("has FTS triggers: replacing a note updates the search index", () => {
+    note({ title: "Old title", text: "This has zebrafjord in it." });
+    expect(store.searchNotes(projectScope("p1"), "zebrafjord").map((n) => n.title)).toEqual(["Old title"]);
+    clock = 2_000;
+    note({ title: "Old title", text: "This has completely new content without the old word." });
+    expect(store.searchNotes(projectScope("p1"), "zebrafjord")).toEqual([]);
+    expect(store.searchNotes(projectScope("p1"), "completely").map((n) => n.title)).toEqual(["Old title"]);
+  });
+
+  it("folds title case in every script (Cyrillic, German umlauts, etc.)", () => {
+    note({ scope: projectScope("p2"), title: "Решение", text: "Russian title" });
+    expect(note({ scope: projectScope("p2"), title: "решение", text: "Replaced" }).replaced).toBe(true);
+    note({ scope: projectScope("p3"), title: "Ärger", text: "German title" });
+    expect(note({ scope: projectScope("p3"), title: "ärger", text: "Replaced" }).replaced).toBe(true);
+  });
+});
+
+describe("outputs edge case", () => {
+  it("keeps an output larger than 20 MB readable after adding it", () => {
+    const big = "x".repeat(21 * 1024 * 1024);
+    const id = store.addOutput("c1", "t", big, 1000);
+    expect(store.output("c1", id)).not.toBeNull();
+  });
+});
+
+describe("secure delete", () => {
+  it("does not leave deleted note text in work.db", () => {
+    note({ scope: projectScope("p1"), title: "To delete", text: "This has zebrafjord in it." });
+    const noteBefore = store.readNote(projectScope("p1"), "To delete")!;
+    store.deleteNote(noteBefore.id);
+    store.close();
+    const dbBytes = readFileSync(join(dir, "work.db"));
+    expect(dbBytes.toString()).not.toContain("zebrafjord");
+    store = new WorkStore(dir, () => clock);
+  });
+
+  it("does not leave replaced note text in work.db", () => {
+    note({ scope: projectScope("p1"), title: "To replace", text: "This has zebrafjord in it." });
+    clock = 2_000;
+    note({ scope: projectScope("p1"), title: "To replace", text: "Completely new content." });
+    store.close();
+    const dbBytes = readFileSync(join(dir, "work.db"));
+    expect(dbBytes.toString()).not.toContain("zebrafjord");
+    store = new WorkStore(dir, () => clock);
   });
 });

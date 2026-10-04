@@ -55,11 +55,12 @@ CREATE TABLE IF NOT EXISTS notes (
   scope TEXT NOT NULL,
   conversation_id TEXT NOT NULL,
   title TEXT NOT NULL,
+  title_key TEXT NOT NULL,
   text TEXT NOT NULL,
   sources TEXT NOT NULL DEFAULT '[]',
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
-  UNIQUE (scope, title COLLATE NOCASE)
+  UNIQUE (scope, title_key)
 );
 CREATE INDEX IF NOT EXISTS notes_scope ON notes(scope, updated_at);
 CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
@@ -83,6 +84,7 @@ interface NoteRow {
   scope: string;
   conversation_id: string;
   title: string;
+  title_key: string;
   text: string;
   sources: string;
   created_at: number;
@@ -100,10 +102,23 @@ export class WorkStore {
     // A deleted note or output is overwritten on disk, not just unlinked.
     this.db.exec("PRAGMA secure_delete = ON;");
     this.db.exec(SCHEMA);
+    // Deleted and replaced notes leave no words behind in the search index.
+    this.db.exec("INSERT INTO notes_fts(notes_fts, rank) VALUES('secure-delete', 1);");
   }
 
   close(): void {
     this.db.close();
+  }
+
+  private transaction(work: () => void): void {
+    this.db.exec("BEGIN");
+    try {
+      work();
+      this.db.exec("COMMIT");
+    } catch (err) {
+      this.db.exec("ROLLBACK");
+      throw err;
+    }
   }
 
   // -- outputs ----------------------------------------------------------------
@@ -117,10 +132,11 @@ export class WorkStore {
     this.db
       .prepare("INSERT INTO outputs (conversation_id, id, tool, text, part, bytes, created_at, used_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
       .run(conversationId, id, tool, text, part, Buffer.byteLength(text), at, at);
+    const newRowid = (this.db.prepare("SELECT rowid FROM outputs WHERE conversation_id = ? AND id = ?").get(conversationId, id) as { rowid: number }).rowid;
     this.db
       .prepare(`DELETE FROM outputs WHERE conversation_id = ? AND rowid NOT IN (SELECT rowid FROM outputs WHERE conversation_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ${OUTPUTS_PER_CONVERSATION})`)
       .run(conversationId, conversationId);
-    this.trimBytes();
+    this.trimBytes(newRowid);
     return id;
   }
 
@@ -139,10 +155,10 @@ export class WorkStore {
     this.db.prepare("DELETE FROM outputs WHERE used_at < ?").run(this.now() - UNUSED_MS);
   }
 
-  private trimBytes(): void {
+  private trimBytes(excludeRowid: number = -1): void {
     let total = (this.db.prepare("SELECT COALESCE(SUM(bytes), 0) AS n FROM outputs").get() as { n: number }).n;
     while (total > OUTPUT_BYTES) {
-      const oldest = this.db.prepare("SELECT rowid, bytes FROM outputs ORDER BY used_at, rowid LIMIT 1").get() as { rowid: number; bytes: number } | undefined;
+      const oldest = this.db.prepare("SELECT rowid, bytes FROM outputs WHERE rowid != ? ORDER BY used_at, rowid LIMIT 1").get(excludeRowid) as { rowid: number; bytes: number } | undefined;
       if (!oldest) return;
       this.db.prepare("DELETE FROM outputs WHERE rowid = ?").run(oldest.rowid);
       total -= oldest.bytes;
@@ -158,26 +174,36 @@ export class WorkStore {
     if (!text) throw new Error("A note needs some text.");
     if (text.length > NOTE_LIMITS.text) throw new Error(`A note may hold at most ${NOTE_LIMITS.text.toLocaleString("en-GB")} characters; shorten it or split it under two titles.`);
     const at = this.now();
+    const titleKey = title.normalize("NFC").toLowerCase();
     const old = this.readNote(input.scope, title);
     if (old) {
-      this.db
-        .prepare("UPDATE notes SET title = ?, text = ?, sources = ?, conversation_id = ?, updated_at = ? WHERE id = ?")
-        .run(title, text, JSON.stringify(input.sources), input.conversationId, at, old.id);
-      return { note: this.readNote(input.scope, title)!, replaced: true };
+      let result: { note: WorkNote; replaced: boolean } = null!;
+      this.transaction(() => {
+        this.db
+          .prepare("UPDATE notes SET title = ?, title_key = ?, text = ?, sources = ?, conversation_id = ?, updated_at = ? WHERE id = ?")
+          .run(title, titleKey, text, JSON.stringify(input.sources), input.conversationId, at, old.id);
+        result = { note: this.readNote(input.scope, title)!, replaced: true };
+      });
+      return result;
     }
     const count = (this.db.prepare("SELECT COUNT(*) AS n FROM notes WHERE scope = ?").get(input.scope) as { n: number }).n;
     if (count >= NOTE_LIMITS.perScope) {
       throw new Error(`There are already ${NOTE_LIMITS.perScope} notes here. Replace one by writing under its title, or tell the user to delete some.`);
     }
     const id = randomUUID();
-    this.db
-      .prepare("INSERT INTO notes (id, scope, conversation_id, title, text, sources, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-      .run(id, input.scope, input.conversationId, title, text, JSON.stringify(input.sources), at, at);
-    return { note: this.readNote(input.scope, title)!, replaced: false };
+    let result: { note: WorkNote; replaced: boolean } = null!;
+    this.transaction(() => {
+      this.db
+        .prepare("INSERT INTO notes (id, scope, conversation_id, title, title_key, text, sources, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        .run(id, input.scope, input.conversationId, title, titleKey, text, JSON.stringify(input.sources), at, at);
+      result = { note: this.readNote(input.scope, title)!, replaced: false };
+    });
+    return result;
   }
 
   readNote(scope: string, title: string): WorkNote | null {
-    const row = this.db.prepare("SELECT * FROM notes WHERE scope = ? AND title = ? COLLATE NOCASE").get(scope, title.replace(/\s+/g, " ").trim()) as NoteRow | undefined;
+    const titleKey = title.replace(/\s+/g, " ").trim().normalize("NFC").toLowerCase();
+    const row = this.db.prepare("SELECT * FROM notes WHERE scope = ? AND title_key = ?").get(scope, titleKey) as NoteRow | undefined;
     return row ? toNote(row) : null;
   }
 
@@ -202,9 +228,11 @@ export class WorkStore {
 
   /** A deleted conversation: its outputs and its own notes. What it wrote into its project stays there. */
   forgetConversation(conversationId: string): void {
-    this.db.prepare("DELETE FROM outputs WHERE conversation_id = ?").run(conversationId);
-    this.db.prepare("DELETE FROM output_counters WHERE conversation_id = ?").run(conversationId);
-    this.db.prepare("DELETE FROM notes WHERE scope = ?").run(conversationScope(conversationId));
+    this.transaction(() => {
+      this.db.prepare("DELETE FROM outputs WHERE conversation_id = ?").run(conversationId);
+      this.db.prepare("DELETE FROM output_counters WHERE conversation_id = ?").run(conversationId);
+      this.db.prepare("DELETE FROM notes WHERE scope = ?").run(conversationScope(conversationId));
+    });
   }
 
   /** A forgotten project: all of its notes. */
