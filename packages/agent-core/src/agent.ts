@@ -358,6 +358,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     for (const tool of tools.list()) {
       if (tool.onDemand && (namedTool(opts.goal, [tool.name]) || tool.wantedFor?.test(opts.goal))) wanted.add(tool.onDemand);
     }
+    // The pick reads the request alone; "is baggage included?" about an open page names no area.
+    const pageArea = opts.openPage ? areaOfName("page_describe") : undefined;
+    if (pageArea) wanted.add(pageArea);
     if (listed.size === 0) {
       const always = new Set(areas.flatMap((a) => a.alwaysShown ?? []));
       const described = new Set(areas.map((a) => a.id));

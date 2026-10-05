@@ -1791,6 +1791,22 @@ describe("areas: one tool list for the whole conversation", () => {
     expect(output).toMatchObject({ role: "tool", toolName: "calendar_events", content: 'calendar_events ran with {"q":"tomorrow"}' });
   });
 
+  it("gives the browser's tools with a request sent while a page is open, whatever was picked", async () => {
+    const tools = registry().register(def("page_describe"), "browser:read");
+    const areas: ToolArea[] = [...AREAS, { id: "browser", summary: "web pages", guide: "BROWSER GUIDE" }];
+    const openPage = { title: "Offer", url: "https://example.com/offer" };
+    const first = scripted([{ text: "ok" }]);
+    await runAgent({ goal: "is baggage included?", model: first.model, tools, areas, shownTools: new Set(), pickAreas: async () => [], openPage, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(names(first.seen[0]!)).toContain("page_describe");
+    // Later in a conversation the list stays; the definitions come with the request.
+    const shown = new Set<string>();
+    await runAgent({ goal: "g", model: scripted([{ text: "ok" }]).model, tools, areas, shownTools: shown, pickAreas: async () => ["mail"], emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    const later = scripted([{ text: "ok" }]);
+    await runAgent({ goal: "is baggage included?", model: later.model, tools, areas, shownTools: shown, pickAreas: async () => [], openPage, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(names(later.seen[0]!)).not.toContain("page_describe");
+    expect(later.seen[0]!.messages.at(-1)!.content).toContain('"name":"page_describe"');
+  });
+
   it("opens an area on request without changing the list", async () => {
     const { promise, seen } = go(new Set(), [], [
       { calls: [{ name: "tools_open", argumentsText: '{"area":"calendar"}' }] },
