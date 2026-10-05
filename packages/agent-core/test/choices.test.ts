@@ -158,6 +158,26 @@ describe("choice run", () => {
     expect(result).toMatchObject({ status: "done", detail: expect.stringContaining("Which drink?") });
   });
 
+  it("asks once for cards when the request named them and the answer was prose", async () => {
+    const cards = '{"items":[{"title":"Mantı","facts":[{"label":"Time","value":"1 h"}]},{"title":"Köfte","facts":[{"label":"Time","value":"45 min"}]}]}';
+    const { chat, seen } = model([
+      { text: "1. Mantı: about an hour.\n2. Köfte: 45 minutes.\n\nTell me which you want a recipe for." },
+      { calls: [{ name: "present_options", argumentsText: cards }] },
+      { text: "Mantı it is." },
+    ]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "Two dinner ideas as option cards", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(seen[1]!.messages.at(-1)!.content).toContain("asked for option cards");
+    expect(events).toContainEqual(expect.objectContaining({ type: "choice.asked", card: expect.objectContaining({ kind: "options", unchecked: true }) }));
+    expect(result).toMatchObject({ status: "done", detail: "Mantı it is." });
+    // A request that names no cards is left as it was answered.
+    const plain = model([{ text: "1. Mantı: about an hour.\n2. Köfte: 45 minutes.\n\nEnjoy." }]);
+    await runAgent({ goal: "Two dinner ideas", model: plain.chat, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(plain.seen).toHaveLength(1);
+  });
+
   it("does not offer or wait for choice tools in unattended runs", async () => {
     const { chat, seen } = model([{ text: "Done" }]);
     const registry = new ToolRegistry();

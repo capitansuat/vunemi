@@ -585,6 +585,13 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           if (signal.aborted) return finish("stopped", "Stopped by user.");
           continue;
         }
+        // The user asked for cards in so many words and got prose: one more turn to make them.
+        if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") && opts.requestChoice &&
+            !comparisonNudged && index < maxSteps - 1 && asksForCards(opts.goal) && tableChoiceInput(result.text) === null) {
+          comparisonNudged = true;
+          convo.push({ role: "user", content: "[Vunemi check, not from the user] The user asked for option cards, and you answered in plain text. Call present_options now with the 2 to 6 options you just described: a title each, and the facts as label and value. Use only what you already wrote; give sourceUrl only for a page you actually read." });
+          continue;
+        }
         if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") &&
             comparesOptions(opts.goal, result.text)) {
           const items = tableChoiceInput(result.text);
@@ -1356,6 +1363,11 @@ const travelNudge = (name: string): string =>
 export function announcesRead(text: string): boolean {
   return /\b(?:i['’]ll|i will|i am going to|let me)\s+(?:(?:now|first|start)\s+)?(?:search|check|look|browse|open|visit|read|compare)\b/i.test(text) ||
     /(?:aramaya\s+başl(?:ıyorum|ayacağım)|arayacağım|bakayım|bakacağım|inceleyeceğim|incelemeye\s+başl(?:ıyorum|ayacağım)|kontrol\s+ed(?:eyim|eceğim)|göz\s+at(?:ayım|acağım))/iu.test(text);
+}
+
+/** The request names cards itself: "as option cards", "kart olarak", "seçenek kartı". */
+export function asksForCards(goal: string): boolean {
+  return /\b(?:option|choice|comparison)\s+cards?\b|\bas\s+cards\b|\bcards\s+(?:so|to)\b|seçenek\s+kart|kart(?:lar)?\s+(?:olarak|halinde|hâlinde|şeklinde)|kartlarla/iu.test(goal);
 }
 
 /** A researched product or travel comparison belongs in option cards. */
