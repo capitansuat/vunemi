@@ -33,12 +33,20 @@ const FLIGHT = new RegExp([
   "航班|机票|飞机|フライト|航空券|飛行機|항공편|항공권|비행기",
 ].join("|"), "iu");
 
+/**
+ * The user's own words: a chosen card's details, quoted back as JSON, and
+ * links say nothing about what to search. An offer link carries "search="
+ * and a hotel's name carries "Hotel", which made a choice read as a request.
+ */
+const ownWords = (goal: string): string => goal.replace(/\{[^{}]*\}/g, " ").replace(/https?:\/\/\S+/g, " ");
+
 /** Only explicit requests to look for travel options require a search call. */
 export function requestedTravelTools(goal: string): string[] {
-  if (!ACTION.test(goal)) return [];
+  const words = ownWords(goal);
+  if (!ACTION.test(words)) return [];
   const wanted: string[] = [];
-  if (HOTEL.test(goal)) wanted.push("travel_search_hotels");
-  if (FLIGHT.test(goal)) wanted.push("travel_search_flights");
+  if (HOTEL.test(words)) wanted.push("travel_search_hotels");
+  if (FLIGHT.test(words)) wanted.push("travel_search_flights");
   return wanted;
 }
 
