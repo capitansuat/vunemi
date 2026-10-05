@@ -12,6 +12,43 @@ export interface ChoiceEvidence {
 }
 
 /** A plain comparison table can become cards without another model round trip. */
+/**
+ * A question the model wrote out as a plain list instead of calling
+ * ask_choice: 2 to 5 short list items with a question right before or
+ * right after them. Live, the same request gave buttons once and a
+ * numbered list the next time. An item that opens in bold gives only
+ * that name to its button; its description stays in the text above. An
+ * item that only says "something else" becomes the free answer the card
+ * already allows.
+ */
+export function listChoiceInput(text: string): { question: string; options: string[]; allowOther: boolean } | null {
+  const plain = (line: string): string => line.replace(/\*\*|__|`/g, "").trim();
+  const asks = (line: string): boolean => /[?？]\s*$/.test(plain(line));
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const item = /^(?:\d{1,2}[.)]|[-*•])\s+(.+)$/;
+  let end = lines.length;
+  // One line may follow the list: the question itself, or "or tell me your own".
+  const closing = end > 0 && !item.test(lines[end - 1]!) && lines[end - 1]!.length <= 120 ? lines[--end]! : null;
+  let start = end;
+  while (start > 0 && item.test(lines[start - 1]!)) start--;
+  if (end - start < 2 || end - start > 6) return null;
+  const before = start > 0 ? lines[start - 1]! : "";
+  const question = plain(closing && asks(closing) ? closing : asks(before) ? before : "");
+  if (!question || question.length > 200) return null;
+  // More than a sentence or two before the list is an answer, not a question.
+  if (lines.slice(0, start).join(" ").length > 300) return null;
+  const label = (line: string): string => {
+    const body = item.exec(line)![1]!;
+    const bold = /^(?:\*\*|__)(.+?)(?:\*\*|__)/.exec(body);
+    return plain(bold ? bold[1]! : body);
+  };
+  const all = lines.slice(start, end).map(label);
+  const other = /^(?:something else|other|another|none of these|başka(?: bir şey)?|diğer|hiçbiri)\b/iu;
+  const options = all.filter((option) => !other.test(option));
+  if (options.length < 2 || options.length > 5 || options.some((option) => !option || option.length > 80) || new Set(options).size !== options.length) return null;
+  return { question, options, allowOther: true };
+}
+
 export function tableChoiceInput(text: string): { items: { title: string; price?: string; facts: { label: string; value: string }[] }[] } | null {
   const lines = text.split("\n");
   const cells = (line: string): string[] => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());

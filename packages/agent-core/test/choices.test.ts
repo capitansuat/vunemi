@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { choiceTools, prepareChoice, tableChoiceInput, valueSeen } from "../src/choices.js";
+import { choiceTools, listChoiceInput, prepareChoice, tableChoiceInput, valueSeen } from "../src/choices.js";
 import { runAgent } from "../src/agent.js";
 import { ToolRegistry } from "../src/tools.js";
 import type { AgentEvent } from "../src/events.js";
@@ -18,6 +18,23 @@ describe("choice card data", () => {
     const oneRow = tableChoiceInput("| Airline | Price |\n|---|---|\n| A | £311 |");
     expect(oneRow).toBeNull();
   });
+  it("reads a question written as a short list, and nothing that is an answer", () => {
+    expect(listChoiceInput("Friday dinner — which cuisine sounds good?\n\n1. **Italian** (pasta, risotto…)\n2. **Japanese** (ramen…)\n3. **Something else** — tell me!"))
+      .toEqual({ question: "Friday dinner — which cuisine sounds good?", options: ["Italian", "Japanese"], allowOther: true });
+    expect(listChoiceInput("Tarih esnek mi?\n- Yalnız Cuma\n- ±2 gün\nİstersen kendin yaz."))
+      .toEqual({ question: "Tarih esnek mi?", options: ["Yalnız Cuma", "±2 gün"], allowOther: true });
+    // The question after the list, each item a name in bold and a long description.
+    expect(listChoiceInput(`Friday dinner — Turkish:\n\n1. **Köfte + pilav** — ${"grilled patties with rice ".repeat(5)}\n2. **Karnıyarık** — baked eggplant.\n\nWhich one?`))
+      .toEqual({ question: "Which one?", options: ["Köfte + pilav", "Karnıyarık"], allowOther: true });
+    // An answer that lists things, a list with one item, long items, a long lead-in, too many.
+    expect(listChoiceInput("Here are three ideas:\n1. Ramen\n2. Tacos\n3. Curry")).toBeNull();
+    expect(listChoiceInput("Here are three ideas:\n1. Ramen\n2. Tacos\nEnjoy your dinner.")).toBeNull();
+    expect(listChoiceInput("Which one?\n1. Ramen")).toBeNull();
+    expect(listChoiceInput(`Which one?\n1. ${"a".repeat(90)}\n2. b`)).toBeNull();
+    expect(listChoiceInput(`${"I looked into it. ".repeat(20)}\nWhich one?\n1. Ramen\n2. Tacos`)).toBeNull();
+    expect(listChoiceInput("Which one?\n1. a\n2. b\n3. c\n4. d\n5. e\n6. f")).toBeNull();
+  });
+
   it("bounds content and rejects incomplete choices", () => {
     expect(prepareChoice("ask_choice", { question: "?", options: ["one"] }, evidence)).toHaveProperty("error");
     const result = prepareChoice("ask_choice", { question: "Q".repeat(210), options: ["A".repeat(90), "B", "C", "D", "E", "F"] }, evidence);
@@ -115,6 +132,23 @@ describe("choice run", () => {
     expect((await finished).status).toBe("done");
     expect(events).toContainEqual(expect.objectContaining({ type: "choice.answered", text: "Friday" }));
     expect(seen[1]!.messages.at(-1)).toMatchObject({ role: "tool", content: expect.stringContaining('<untrusted_content source="user_selection">') });
+  });
+
+  it("asks with buttons when the model wrote its question as a list, twice in a task at most", async () => {
+    const { chat, seen } = model([
+      { text: "Which cuisine?\n1. **Italian** (pasta)\n2. **Japanese** (ramen)" },
+      { text: "Which dish?\n1. Ramen\n2. Katsu" },
+      { text: "Which drink?\n1. Tea\n2. Water" },
+    ]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "Dinner idea, ask me first", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 1 }) });
+    expect(events.filter((event) => event.type === "choice.asked")).toHaveLength(2);
+    expect(events).toContainEqual(expect.objectContaining({ type: "choice.asked", card: { kind: "choice", question: "Which cuisine?", options: ["Italian", "Japanese"], allowOther: true } }));
+    expect(seen[1]!.messages.at(-1)).toMatchObject({ role: "tool", content: expect.stringContaining('The user chose: "Japanese"') });
+    // The third list stays an answer: the user picks from it by writing.
+    expect(result).toMatchObject({ status: "done", detail: expect.stringContaining("Which drink?") });
   });
 
   it("does not offer or wait for choice tools in unattended runs", async () => {

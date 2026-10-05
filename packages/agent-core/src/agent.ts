@@ -5,7 +5,7 @@
  */
 
 import type { Artifact, ApprovalDecision, ChoiceCard, Produced, EmitFn, HandoffOutcome, PlanDecision, RunStatus } from "./events.js";
-import { prepareChoice, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
+import { listChoiceInput, prepareChoice, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
 import { maskSecrets } from "./secrets.js";
@@ -470,6 +470,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let planEchoNudged = false;
   let workNudged = false;
   let comparisonNudged = false;
+  /** Questions written as lists that were turned into choice cards in this task: two at most, as the model is told for ask_choice. */
+  let listsAsked = 0;
   let approvedPlan: string[] | null = null;
   /** Groups a tool opened in this task, such as app_guide's: opened to be used. */
   const guided = new Set<string>();
@@ -567,6 +569,21 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
             continue;
           }
           return finish("failed", "The model promised to research but did not use a tool. No current information was verified.");
+        }
+        // A question written out as a list is asked with buttons, as ask_choice would have.
+        const asked = toolSpecs.some((tool) => tool.name === "ask_choice") && opts.requestChoice && listsAsked < 2 && index < maxSteps - 1
+          ? listChoiceInput(result.text) : null;
+        if (asked) {
+          listsAsked++;
+          const call: ToolCall = { id: `${stepId}.list`, name: "ask_choice", argumentsText: JSON.stringify(asked) };
+          convo.push({ role: "assistant", content: "", toolCalls: [call] });
+          checkpoint();
+          called.add(call.name);
+          const output = await handleCall(call, stepId);
+          convo.push({ role: "tool", content: output, toolCallId: call.id, toolName: call.name });
+          checkpoint();
+          if (signal.aborted) return finish("stopped", "Stopped by user.");
+          continue;
         }
         if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") &&
             comparesOptions(opts.goal, result.text)) {
