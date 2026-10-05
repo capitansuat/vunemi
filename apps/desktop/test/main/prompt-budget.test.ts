@@ -30,8 +30,12 @@ const LIMITS = {
   guide: 2_000,
   /** System prompt, every connection's instructions and every tool shown, all switched on (37,019). */
   total: 38_000,
-  /** With areas: a conversation's first prompt with one area picked, the largest (11,743, browser). */
-  oneArea: 12_000,
+  /**
+   * With areas: a conversation's first prompt with one area picked, the
+   * largest (12,025, browser). Was 11,743 before the browser's rule on
+   * handing sign-in and passenger forms to the user grew in 0.1.9.
+   */
+  oneArea: 12_100,
 };
 
 async function compose() {
