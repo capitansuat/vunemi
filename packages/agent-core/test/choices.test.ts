@@ -25,6 +25,20 @@ describe("choice card data", () => {
     expect("card" in result && result.card.kind === "choice" && result.card.options).toHaveLength(5);
   });
 
+  it("checks a card that names no source against the pages read in this run", () => {
+    const other = { url: "https://example.com/phone#specs", text: "RAM 8 GB\nWeight 200 g" };
+    const result = prepareChoice("present_options", { items: [
+      { title: "Laptop", price: "62499 TL", facts: [{ label: "RAM", value: "16 GB" }, { label: "Weight", value: "1 kg" }] },
+      { title: "Phone", facts: [{ label: "RAM", value: "8 GB" }] },
+      { title: "Nowhere", facts: [{ label: "RAM", value: "64 GB" }] },
+    ] }, { pages: [page, other], local: [] });
+    if (!("card" in result) || result.card.kind !== "options") throw new Error("card not made");
+    expect(result.card.items[0]).toMatchObject({ sourceUrl: page.url, price: { status: "page" }, facts: [{ status: "page" }, { status: "unverified" }] });
+    expect(result.card.items[1]).toMatchObject({ sourceUrl: "https://example.com/phone", facts: [{ status: "page" }] });
+    expect(result.card.items[2]!.sourceUrl).toBeUndefined();
+    expect(result.card.items[2]!.facts[0]!.status).toBe("unverified");
+  });
+
   it("matches read page values and prices, including thousands separators", () => {
     expect(valueSeen("62499 TL", page.text)).toBe(true);
     expect(valueSeen("16 GB", "RAM 116 GB")).toBe(false);

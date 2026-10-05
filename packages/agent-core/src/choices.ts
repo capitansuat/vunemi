@@ -90,6 +90,23 @@ function source(raw: unknown, evidence: ChoiceEvidence): string | undefined {
   } catch { return undefined; }
 }
 
+/**
+ * For a card without a source: the page read in this run that shows the
+ * most of its values, the latest when several do. A small model fills in
+ * the facts and leaves the link out; live, every value then read "not
+ * found" though the page it had just read showed them.
+ */
+function readSource(item: Record<string, unknown>, evidence: ChoiceEvidence): string | undefined {
+  const values = [item.price, ...(Array.isArray(item.facts) ? item.facts.map((f) => object(f)?.value) : [])]
+    .map((value) => string(value, 80)).filter(Boolean);
+  let best: { url: string; seen: number } | undefined;
+  for (const page of evidence.pages) {
+    const seen = values.filter((value) => valueSeen(value, page.text)).length;
+    if (seen > 0 && (!best || seen >= best.seen)) best = { url: page.url, seen };
+  }
+  return best && source(best.url, evidence);
+}
+
 function fact(label: string, value: string, sourceUrl: string | undefined, evidence: ChoiceEvidence): VerifiedFact {
   const page = sourceUrl && evidence.pages.some((entry) => {
     try {
@@ -119,7 +136,8 @@ export function prepareChoice(name: string, input: unknown, evidence: ChoiceEvid
     if (!item) return { error: "Each card must be an object." };
     const title = string(item.title, 80);
     if (!title) return { error: "Each card needs a title." };
-    const sourceUrl = source(item.sourceUrl, evidence);
+    // A card that names no source is checked against the pages read in this run.
+    const sourceUrl = item.sourceUrl === undefined || item.sourceUrl === "" ? readSource(item, evidence) : source(item.sourceUrl, evidence);
     const facts: VerifiedFact[] = [];
     if (item.facts !== undefined && !Array.isArray(item.facts)) return { error: "Facts must be an array." };
     for (const rawFact of (item.facts as unknown[] | undefined ?? []).slice(0, 6)) {
