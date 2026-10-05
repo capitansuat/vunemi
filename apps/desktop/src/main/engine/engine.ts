@@ -85,6 +85,7 @@ export class Engine {
   private queued: { spec: LaunchSpec; promise: Promise<Endpoint> } | null = null;
   private restarts = 0;
   private idleTimer: NodeJS.Timeout | null = null;
+  private touchedAt: number | null = null;
   /**
    * Bumped by every launch and every stop. A launch that is no longer the
    * latest ends quietly: the process and state now belong to whatever came after.
@@ -136,8 +137,14 @@ export class Engine {
     return promise;
   }
 
+  /** When something last happened, for the model manager; null before anything has. */
+  usedAt(): number | null {
+    return this.touchedAt;
+  }
+
   /** Something happened: the idle clock starts again. */
   touch(): void {
+    this.touchedAt = Date.now();
     if (this.idleTimer) clearTimeout(this.idleTimer);
     this.idleTimer = setTimeout(() => this.onIdle(), this.opts.idleMs ?? IDLE_MS);
     this.idleTimer.unref();

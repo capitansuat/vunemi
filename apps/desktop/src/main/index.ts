@@ -1138,6 +1138,7 @@ models.register({
   busy: () => session.running || session.queued.length > 0 || meetings.summarising || engine.busy(),
   pid: () => engine.pid(),
   mapped: () => engine.mapped(),
+  usedAt: () => engine.usedAt(),
   unload: () => engine.unload(),
 });
 models.start();

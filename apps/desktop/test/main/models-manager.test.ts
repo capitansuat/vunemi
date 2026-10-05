@@ -124,6 +124,25 @@ describe("the pressure watcher", () => {
     expect(chat.unloads).toBe(1);
   });
 
+  it("leaves a chat model used in the last five minutes alone while a warning stays, and takes it on critical", async () => {
+    mem.pressure = 2;
+    let clock = 10 * 60_000;
+    const chat = Object.assign(resident("chat"), { usedAt: () => 10 * 60_000 - 30_000 });
+    const m = new ModelManager({ reader, totalMemory: 64 * GB, now: () => clock });
+    m.register(chat);
+    await m.tick();
+    await m.tick();
+    expect(chat.unloads).toBe(0);
+    clock += 5 * 60_000;
+    await m.tick();
+    expect(chat.unloads).toBe(1);
+    const busyTalk = Object.assign(resident("chat"), { usedAt: () => clock });
+    m.register(busyTalk);
+    mem.pressure = 4;
+    await m.tick();
+    expect(busyTalk.unloads).toBe(1);
+  });
+
   it("starts counting again once the warning is gone", async () => {
     const chat = resident("chat");
     const m = manager(chat);

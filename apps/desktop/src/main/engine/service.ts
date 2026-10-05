@@ -479,6 +479,11 @@ export class EngineService {
     this.engine.touch();
   }
 
+  /** When the chat model last started or ended a task, or was loaded. */
+  usedAt(): number | null {
+    return this.engine.usedAt();
+  }
+
   async dispose(): Promise<void> {
     this.cancel();
     await this.engine.stop();

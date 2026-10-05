@@ -17,6 +17,8 @@ export interface Resident {
   pid(): number | null;
   /** Bytes of the model file the process maps: its footprint leaves them out. */
   mapped(): number;
+  /** When it last did work, as a time in milliseconds; null when it has not yet. */
+  usedAt?(): number | null;
   unload(): Promise<void>;
 }
 
@@ -34,6 +36,14 @@ const HELPERS: ResidentId[] = ["meaning", "voice"];
 /** The shortest context the chat model is opened with. */
 export const FLOOR_CONTEXT = 8_192;
 const WATCH_MS = 15_000;
+/**
+ * A warning leaves the chat model alone this long after its last task.
+ * Between two messages of a conversation it is not running, yet unloading
+ * it there made the next message load the model and read the whole
+ * conversation again; measured live, a warning came seconds after a first
+ * answer. Critical still takes it at once.
+ */
+export const IN_USE_MS = 5 * 60_000;
 
 /** The wanted context, then halves of it, ending at the floor. */
 export function candidates(wanted: number): number[] {
@@ -89,7 +99,7 @@ export class ModelManager {
       const level = await this.opts.reader.pressure();
       if (level === null) return;
       if (level >= 4) await this.unloadIdle(ORDER);
-      else if (level >= 2) await this.unloadIdle(this.warned ? ORDER : HELPERS);
+      else if (level >= 2) await this.unloadIdle(this.warned ? ORDER : HELPERS, true);
       this.warned = level >= 2;
     });
   }
@@ -128,11 +138,14 @@ export class ModelManager {
     return available + ((await this.opts.reader.footprint(pid)) ?? 0) + r.mapped();
   }
 
-  private async unloadIdle(ids: ResidentId[]): Promise<ResidentId[]> {
+  /** `spareRecent` keeps a chat model that worked in the last few minutes. */
+  private async unloadIdle(ids: ResidentId[], spareRecent = false): Promise<ResidentId[]> {
     const done: ResidentId[] = [];
     for (const id of ids) {
       const r = this.residents.get(id);
       if (!r || r.pid() === null || r.busy()) continue;
+      const used = id === "chat" && spareRecent ? (r.usedAt?.() ?? null) : null;
+      if (used !== null && (this.opts.now ?? Date.now)() - used < IN_USE_MS) continue;
       try {
         await r.unload();
         done.push(id);
