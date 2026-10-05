@@ -1082,6 +1082,19 @@ describe("claims of a change that didn't happen", () => {
   });
 });
 
+describe("a tool that saves without approval", () => {
+  it("makes \"I've saved it\" true: no second turn, no note that nothing changed", async () => {
+    const registry = new ToolRegistry().register({
+      name: "worknote_write", description: "", parameters: { type: "object", properties: {} }, actionClass: "read", saves: true,
+      run: async () => 'Saved "Logo" for this project.',
+    });
+    const { model, seen } = scripted([{ calls: [{ name: "worknote_write", argumentsText: "{}" }] }, { text: 'I\'ve saved the note "Logo".' }]);
+    const result = await runAgent({ goal: "note that the logo stays orange", model, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(seen).toHaveLength(2);
+    expect(result.detail).toBe('I\'ve saved the note "Logo".');
+  });
+});
+
 describe("a tool call written out as text", () => {
   it("is read in Gemma's and Hermes' markup", () => {
     expect(leakedCall('<tool_call>\ncalendar_create{title:<|"|>Diş<|"|>,start:<|"|>2026-09-27T10:00<|"|>}\n</tool_call>', "x")).toEqual({ id: "x", name: "calendar_create", argumentsText: '{"title":"Diş","start":"2026-09-27T10:00"}' });

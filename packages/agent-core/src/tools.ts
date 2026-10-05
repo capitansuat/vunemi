@@ -143,6 +143,11 @@ export interface ToolDef<Args = Record<string, unknown>> {
    */
   forModel?: (raw: string) => string;
   /**
+   * It saves something of Vunemi's own (a work note) though it needs no
+   * approval: "I've saved it" after it ran is true, not a claim to check.
+   */
+  saves?: boolean;
+  /**
    * One line, in the user's language, saying what this call will do — shown
    * on approval cards instead of raw arguments ("Click: button 'Add to cart'").
    */

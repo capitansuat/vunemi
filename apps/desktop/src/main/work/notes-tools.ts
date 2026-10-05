@@ -54,6 +54,7 @@ export function createNoteTools(opts: NoteToolsOptions): ToolDef[] {
       // Changes only Vunemi's own notes, which the user sees and can delete:
       // no approval card for each one.
       actionClass: "read",
+      saves: true,
       run: async (a, ctx) => {
         const here = opts.where();
         const scope = noteScope(here);

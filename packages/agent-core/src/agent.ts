@@ -917,7 +917,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         calendarReadSucceeded = true;
         calendarReadError = null;
       }
-      if (actionClass !== "read") changedSomething = true;
+      if (actionClass !== "read" || tool.saves) changedSomething = true;
       if (call.name.startsWith("travel_search_") && raw.includes('"kind":"travel-options"')) travelShown = true;
       if (tool.untrustedOutput) opts.onUntrustedOutput?.(raw, tool.name);
       emit({
