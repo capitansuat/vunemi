@@ -194,6 +194,23 @@ export function rejectForm(html: string): { action: string; body: URLSearchParam
   return null;
 }
 
+/**
+ * On a page of Google asking for cookie choices, the "Reject all" form to
+ * send; null for any other page. Google shows the question on its consent
+ * service or in place on its own pages; another site's page is never touched.
+ */
+export function consentDecline(url: string, html: string): { action: string; body: URLSearchParams } | null {
+  let host: string;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return null;
+    host = parsed.hostname;
+  } catch { return null; }
+  const google = host === "google.com" || host.endsWith(".google.com");
+  if (!google || (host !== "consent.google.com" && !/consent\.google\.com/.test(html))) return null;
+  return rejectForm(html);
+}
+
 /** Whether non-essential cookies were already declined during this search. */
 interface Consent { declined: boolean }
 

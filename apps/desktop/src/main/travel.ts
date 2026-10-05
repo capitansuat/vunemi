@@ -200,6 +200,14 @@ export interface TravelOptionsDeps {
   fetchPage?: FetchPage;
 }
 
+/** Where an offer card may open: Google Flights or Trivago over https, nothing else. */
+const OFFER_HOSTS = ["www.google.com", "google.com", "www.trivago.co.uk", "www.trivago.com"];
+export function offerPageUrl(raw: string): string {
+  const url = safeUrl(raw, OFFER_HOSTS);
+  if (!url) throw new Error("Only Google Flights and Trivago offers open from a travel card.");
+  return url;
+}
+
 export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
   const limit = new TravelSearchLimit();
   let systemMoney: Promise<string> | null = null;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getLocale, setLocale } from "@vunemi/i18n";
 import { shapeOutput } from "@vunemi/agent-core";
-import { flightOptions, flightSearchUrl, hotelOptions, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoSearchUrl } from "../../src/main/travel.js";
+import { flightOptions, flightSearchUrl, hotelOptions, offerPageUrl, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoSearchUrl } from "../../src/main/travel.js";
 import { parseTravelOptions, travelSelectionMessage } from "../../src/renderer/src/lib/travel-options.js";
 
 const flightUrl = "https://www.google.com/travel/flights/booking?tfs=abc";
@@ -28,6 +28,14 @@ describe("travel sources", () => {
     expect(await hotels!.preview!({ destination: "Rome", check_in: "2026-11-03", check_out: "2026-11-05" }))
       .toBe("This search will be sent to Trivago: Rome · 2026-11-03 – 2026-11-05");
     setLocale(before);
+  });
+
+  it("opens only Google Flights and Trivago offers from a card", () => {
+    expect(offerPageUrl(flightUrl)).toBe(flightUrl);
+    expect(offerPageUrl(hotelUrl)).toBe(hotelUrl);
+    expect(() => offerPageUrl("https://www.flypgs.com/en")).toThrow();
+    expect(() => offerPageUrl("http://www.google.com/travel/flights")).toThrow();
+    expect(() => offerPageUrl("javascript:alert(1)")).toThrow();
   });
 
   it("turns flight results into priced cards, deduplicates and rejects foreign links", () => {

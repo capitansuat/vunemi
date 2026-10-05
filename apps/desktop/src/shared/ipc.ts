@@ -582,6 +582,8 @@ export interface VunemiApi {
 
   getEmbedded(): Promise<EmbeddedState>;
   embeddedOpen(url: string): Promise<void>;
+  /** A travel card's offer, in the pane; Google's cookie question there is declined. */
+  travelOpen(url: string): Promise<void>;
   embeddedNavigate(id: string, url: string): Promise<void>;
   embeddedHistory(id: string, action: "back" | "forward" | "reload" | "stop"): Promise<void>;
   embeddedActivate(id: string): Promise<void>;
@@ -738,6 +740,7 @@ export const CH = {
   vaultDelete: "vault:delete",
   embeddedGet: "embedded:get",
   embeddedOpen: "embedded:open",
+  travelOpen: "travel:open",
   embeddedNavigate: "embedded:navigate",
   embeddedHistory: "embedded:history",
   embeddedActivate: "embedded:activate",

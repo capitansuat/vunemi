@@ -28,6 +28,7 @@ import { Voice, whisperBinary } from "./voice.js";
 import { DownloadError } from "./engine/download.js";
 import { fetchFlightPage } from "./flights/page-session.js";
 import { buildConnectors } from "./connectors.js";
+import { offerPageUrl } from "./travel.js";
 import { createRunner, ScriptableCatalog, shortcutName } from "@vunemi/apps";
 import { listMailAppAccounts } from "./apple-mail.js";
 import { createDemoTools } from "./demo-tools.js";
@@ -1504,6 +1505,8 @@ handle(CH.vaultDelete, async (_e, name: string) => {
 
 handle(CH.embeddedGet, () => embedded.state);
 handle(CH.embeddedOpen, (_e, url: string) => void embedded.open(String(url)));
+// Only Google Flights and Trivago offers; Google's cookie question in that tab is declined.
+handle(CH.travelOpen, (_e, url: string) => void embedded.open(offerPageUrl(String(url)), { declineGoogleConsent: true }));
 handle(CH.embeddedNavigate, (_e, id: string, url: string) => embedded.navigate(String(id), String(url)));
 handle(CH.embeddedHistory, (_e, id: string, action: "back" | "forward" | "reload" | "stop") => {
   if (!["back", "forward", "reload", "stop"].includes(action)) throw new Error(`Unknown action: ${String(action)}`);

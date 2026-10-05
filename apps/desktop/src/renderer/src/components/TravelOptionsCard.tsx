@@ -16,7 +16,7 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
   const openSite = async (url: string) => {
     setError("");
     try {
-      await window.vunemi.embeddedOpen(url);
+      await window.vunemi.travelOpen(url);
       const store = useStore.getState();
       store.showPicture(null);
       if (store.preview) store.closePreview();

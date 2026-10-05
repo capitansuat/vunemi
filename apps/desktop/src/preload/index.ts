@@ -191,6 +191,7 @@ const api: VunemiApi = {
   vaultDelete: (name) => ipcRenderer.invoke(CH.vaultDelete, name),
   getEmbedded: () => ipcRenderer.invoke(CH.embeddedGet),
   embeddedOpen: (url) => ipcRenderer.invoke(CH.embeddedOpen, url),
+  travelOpen: (url) => ipcRenderer.invoke(CH.travelOpen, url),
   embeddedNavigate: (id, url) => ipcRenderer.invoke(CH.embeddedNavigate, id, url),
   embeddedHistory: (id, action) => ipcRenderer.invoke(CH.embeddedHistory, id, action),
   embeddedActivate: (id) => ipcRenderer.invoke(CH.embeddedActivate, id),

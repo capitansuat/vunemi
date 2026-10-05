@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ConsentRequired, pageUrl, payloadOf, rejectForm, rowsOf, searchFlights, type FetchPage } from "../../src/main/flights/search.js";
+import { ConsentRequired, consentDecline, pageUrl, payloadOf, rejectForm, rowsOf, searchFlights, type FetchPage } from "../../src/main/flights/search.js";
 import { currencyOfToken, encodeTfs, itineraryTfs, passengerKinds, segment } from "../../src/main/flights/tfs.js";
 import { travelConnectors } from "../../src/main/travel.js";
 
@@ -133,6 +133,18 @@ describe("searchFlights", () => {
     expect(rejectForm('<form action="https://evil.example/save"><input name="set_eom" value="true"></form>')?.action).toBe("https://consent.google.com/save");
     expect(rejectForm('<form><input name="set_eom" value="false"><input name="set_sc" value="true"></form>')).toBeNull();
     expect(rejectForm("<html>no forms</html>")).toBeNull();
+  });
+
+  it("declines Google's cookie page in the browser pane too, and nothing else", () => {
+    expect(consentDecline("https://consent.google.com/ml?continue=x", CONSENT_PAGE)?.body.get("set_eom")).toBe("true");
+    // Served in place on Google's own page, its forms posting to the consent service.
+    expect(consentDecline("https://www.google.com/travel/flights/booking?tfs=a", CONSENT_PAGE)?.action).toBe("https://consent.google.com/save");
+    // Any other site's page, even one that copies Google's form, is left alone.
+    expect(consentDecline("https://www.trivago.co.uk/en-GB/lm", CONSENT_PAGE)).toBeNull();
+    expect(consentDecline("https://google.com.evil.example/", CONSENT_PAGE)).toBeNull();
+    expect(consentDecline("http://consent.google.com/ml", CONSENT_PAGE)).toBeNull();
+    // A Google page with no cookie question.
+    expect(consentDecline("https://www.google.com/travel/flights", "<html><form action=\"/search\"></form></html>")).toBeNull();
   });
 
   it("tries a page again when it came back without results", async () => {

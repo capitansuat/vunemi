@@ -21,6 +21,7 @@ import { existsSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
 import { requestGuard, trustableHost, trustWouldOpen, type BrowserBackend, type CdpSession, type PointerEvent, type TabInfo, type TrustedSites } from "@vunemi/browser";
 import { CURSOR_WORLD_ID, cursorScript } from "./agent-cursor.js";
+import { consentDecline } from "./flights/search.js";
 import type { EmbeddedState, PaneBounds } from "../shared/ipc.js";
 
 const PARTITION = "persist:vunemi-browser";
@@ -57,6 +58,8 @@ interface Tab {
   session: CdpSession | null;
   /** The page the guard last refused in this tab, until it navigates again. */
   blocked: { host: string; trustable: boolean; reason: string } | null;
+  /** A travel offer opened for the user: Google's cookie question is declined here, once. */
+  consent?: "decline" | "declined";
 }
 
 function webUrl(raw: string): string | null {
@@ -150,7 +153,7 @@ export class EmbeddedBrowser {
 
   // -- user and agent share these ------------------------------------------
 
-  open(raw: string): string {
+  open(raw: string, opts: { declineGoogleConsent?: boolean } = {}): string {
     const win = this.win;
     if (!win || win.isDestroyed()) throw new Error("The Vunemi window is closed.");
     const url = webUrl(raw);
@@ -170,7 +173,7 @@ export class EmbeddedBrowser {
     view.setBackgroundColor("#ffffff");
     // A real size even while the pane is closed, so layout and hit-testing work.
     view.setBounds(this.bounds ?? this.parked());
-    const tab: Tab = { id: String(view.webContents.id), view, session: null, blocked: null };
+    const tab: Tab = { id: String(view.webContents.id), view, session: null, blocked: null, ...(opts.declineGoogleConsent && { consent: "decline" as const }) };
     this.tabs.push(tab);
     this.wire(tab);
     win.contentView.addChildView(view);
@@ -367,6 +370,7 @@ export class EmbeddedBrowser {
       this.changed();
     });
     this.wireDetach(tab);
+    wc.on("did-finish-load", () => void this.declineConsent(tab));
 
     // Only web pages; a page can't steer the view to file:, chrome: etc.
     wc.on("will-navigate", (e, url) => {
@@ -389,6 +393,29 @@ export class EmbeddedBrowser {
         this.changed();
       }
     });
+  }
+
+  /**
+   * Google asks for cookie choices before a travel offer it serves: answered
+   * "Reject all" for the user, as the flight search does, never "Accept".
+   * Once per tab, so a page that keeps asking can't loop.
+   */
+  private async declineConsent(tab: Tab): Promise<void> {
+    if (tab.consent !== "decline") return;
+    const wc = tab.view.webContents;
+    let html: string;
+    try {
+      html = String(await wc.executeJavaScript("document.documentElement.outerHTML"));
+    } catch {
+      return;
+    }
+    const form = consentDecline(wc.getURL(), html);
+    if (!form || tab.consent !== "decline") return;
+    tab.consent = "declined";
+    void wc.loadURL(form.action, {
+      postData: [{ type: "rawData", bytes: Buffer.from(form.body.toString()) }],
+      extraHeaders: "Content-Type: application/x-www-form-urlencoded\n",
+    }).catch(() => {});
   }
 
   /** Remembers a refused page so the pane can say why and where to trust it. */
