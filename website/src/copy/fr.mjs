@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi : un assistant personnel qui fonctionne sur votre Mac", description: "Vunemi aide au quotidien. Son IA fonctionne sur votre Mac, sans compte cloud Vunemi. Vous choisissez les services externes à connecter." },
-    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.1.10." },
+    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.1.11." },
     screens: { title: "Captures de Vunemi", description: "De vraies captures de l'app Vunemi pour Mac, réalisées avec des données d'exemple." },
-    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.1.10 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
+    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.1.11 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
   },
   hero: {
     eyebrow: "Assistant personnel pour Mac",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Tout ce que Vunemi sait faire",
-    intro: "Vunemi 0.1.10 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
+    intro: "Vunemi 0.1.11 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
     chatTitle: "Travailler avec Vunemi",
     chat: [
       { title: "D'abord le plan", body: "Pour une tâche en plusieurs étapes, Vunemi peut d'abord présenter son plan. Lancez-le, modifiez les étapes ou annulez." },
@@ -164,10 +164,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Nouveautés de cette version",
     highlights: [
-      "Recherchez des vols sur Google Flights et des hôtels sur Trivago : les options arrivent sous forme de cartes, et en choisir une ouvre son offre à côté de la conversation. Les deux connexions sont désactivées au départ.",
-      "Vunemi ne réserve pas et ne paie pas à votre place : la connexion et le paiement restent entre vos mains.",
-      "Une barre latérale plus sobre : la note indiquant que le modèle et vos données restent sur ce Mac devient une icône de cadenas à côté du modèle.",
-      "Une nouvelle version s'installe désormais aussi depuis Réglages › Mises à jour, et plus seulement depuis la barre latérale.",
+      "Les réponses commencent plus vite : Vunemi ne donne au modèle que les outils dont une demande a besoin, et un message de suivi n'attend plus la relecture de toute la conversation.",
+      "Dans un projet, Vunemi peut enregistrer des notes de travail (une décision, un constat) et les retrouver dans les conversations suivantes de ce projet. Vous les voyez dans les notes du projet et pouvez les supprimer.",
+      "Les longs résultats sont conservés avec leur conversation : Vunemi peut encore les lire après la réouverture de l'app.",
+      "Vunemi adapte le modèle à la mémoire libre de votre Mac et ferme les modèles inactifs quand macOS vient à en manquer. Réglages › Modèle indique ce qui est en mémoire à cet instant.",
     ],
     title: "Télécharger Vunemi",
     intro: "Gratuit et open source. Pour les Mac avec puce Apple et macOS 14 ou ultérieur.",

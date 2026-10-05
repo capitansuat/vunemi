@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.10의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.11의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.10을 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.11을 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.1.10 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.1.11 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -164,10 +164,10 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "Google Flights에서 항공편을, Trivago에서 호텔을 검색합니다. 결과는 카드로 표시되며, 하나를 선택하면 해당 제안이 채팅 옆에 열립니다. 두 연결 모두 처음에는 꺼져 있습니다.",
-      "Vunemi는 사용자를 대신해 예약하거나 결제하지 않습니다. 로그인과 결제는 사용자가 직접 합니다.",
-      "더 간결해진 사이드바: 모델과 데이터가 이 Mac에 남는다는 안내가 이제 모델 옆의 자물쇠 아이콘으로 표시됩니다.",
-      "새 버전이 나오면 이제 사이드바뿐 아니라 설정 › 업데이트에서도 설치할 수 있습니다.",
+      "응답이 더 빨리 시작됩니다. Vunemi는 요청에 필요한 도구만 모델에 전달하고, 이어지는 메시지에서 대화 전체를 다시 읽지 않습니다.",
+      "프로젝트에서 Vunemi는 작업 메모(결정 사항, 알아낸 내용)를 저장하고 같은 프로젝트의 이후 대화에서 다시 찾을 수 있습니다. 메모는 프로젝트의 메모에서 확인하고 삭제할 수 있습니다.",
+      "긴 결과는 해당 대화와 함께 보관되어, 앱을 다시 연 뒤에도 Vunemi가 읽을 수 있습니다.",
+      "Vunemi는 Mac의 여유 메모리에 맞춰 모델을 열고, macOS의 메모리가 부족해지면 사용하지 않는 모델을 닫습니다. 설정 › 모델에서 지금 메모리에 있는 항목을 볼 수 있습니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",

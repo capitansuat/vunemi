@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.10'un yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.11'in yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.10'u Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.11'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.1.10: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.1.11: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -166,10 +166,10 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Uçuşları Google Flights'ta, otelleri Trivago'da ara: seçenekler kart olarak gelir, birini seçince teklifi sohbetin yanında açılır. İki bağlantı da kapalı başlar.",
-      "Vunemi senin yerine rezervasyon ya da ödeme yapmaz: giriş ve ödeme sende kalır.",
-      "Daha sade bir kenar çubuğu: modelin ve verilerin bu Mac'te kaldığını söyleyen not artık modelin yanında bir kilit simgesi.",
-      "Yeni sürüm çıktığında artık Ayarlar › Güncellemeler'den de kurabilirsin; yalnız kenar çubuğundan değil.",
+      "Yanıtlar daha çabuk başlıyor: Vunemi modele yalnız isteğin gerektirdiği araçları veriyor ve takip mesajında konuşmanın tamamı yeniden okunmuyor.",
+      "Bir projede Vunemi iş notu kaydedebilir (bir karar, bir bulgu) ve o projenin sonraki konuşmalarında bulur. Notları projenin notlarında görür, silebilirsin.",
+      "Uzun sonuçlar konuşmasıyla birlikte saklanır; uygulamayı yeniden açtıktan sonra da Vunemi onları okuyabilir.",
+      "Vunemi modeli Mac'indeki boş belleğe göre açar ve macOS'ta bellek daralınca boştaki modelleri kapatır. Ayarlar › Model, o an bellekte ne olduğunu gösterir.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

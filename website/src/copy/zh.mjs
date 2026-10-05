@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.10 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.11 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.10，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.11，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.1.10：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.1.11：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -164,10 +164,10 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "在 Google Flights 搜索航班、在 Trivago 搜索酒店：结果以卡片呈现，选择其中一张即可在对话旁打开对应报价。两个连接默认关闭。",
-      "Vunemi 不会替你预订或付款：登录和付款始终由你完成。",
-      "更简洁的侧边栏：“模型和数据都留在这台 Mac 上”的说明现在是模型旁边的一个锁形图标。",
-      "有新版本时，现在也可以在“设置 › 更新”中安装，不再只能从侧边栏安装。",
+      "回复开始得更快：Vunemi 只把请求所需的工具交给模型，后续消息也不必再等整段对话重新读取。",
+      "在项目中，Vunemi 可以保存工作笔记（一项决定、一个发现），并在该项目之后的对话中找到它们。你可以在项目的笔记里查看并删除。",
+      "较长的结果会随对话一起保存，重新打开应用后 Vunemi 仍然可以读取。",
+      "Vunemi 会根据 Mac 的可用内存来加载模型，并在 macOS 内存不足时关闭空闲的模型。“设置 › 模型”会显示当前内存中的内容。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",
