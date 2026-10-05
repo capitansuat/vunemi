@@ -4,8 +4,9 @@ Vunemi is a personal assistant for the Mac that runs on local models. Your
 files, mail and calendar stay on your computer; the model runs there too.
 
 It can use its built-in engine or a local model server you already have
-(LM Studio, Ollama, llama.cpp). Files, calendar, mail, the browser and Mac
-apps are offered as connections, and every connection starts switched off.
+(LM Studio, Ollama, llama.cpp). Files, calendar, mail, the browser, flight
+and hotel search and Mac apps are offered as connections, and every
+connection starts switched off.
 Anything beyond reading goes through an approval card first.
 
 Vunemi never types passwords, card or ID numbers for you, never solves

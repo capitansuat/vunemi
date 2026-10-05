@@ -132,6 +132,7 @@ export default {
     connections: [
       { name: "Dateien", body: "Deine Ordner Schreibtisch, Dokumente und Downloads, sonst nichts.", parts: "Lesen · Schreiben (rückgängig machbar; Gelöschtes geht in den Papierkorb) · Umwandeln (Bilder, Audio, Dokumente)" },
       { name: "Browser", body: "Ein Browser im Vunemi-Fenster, getrennt von deinem Chrome oder Safari. Einmal anmelden, angemeldet bleiben; jederzeit übernehmen.", parts: "Seiten lesen · Klicken und tippen" },
+      { name: "Flüge und Hotels", body: "Sucht bei Google Flights und Trivago und zeigt die Optionen als Karten. Mit der Auswahl einer Karte öffnet sich das Angebot neben dem Chat. Route oder Reiseziel, Daten und Personenzahl gehen an Google oder Trivago. Vunemi bucht und bezahlt nicht.", parts: "Google Flights · Trivago" },
       { name: "E-Mail", body: "Die Accounts aus der Mail-App deines Mac (ohne Passwort), Gmail (mit App-Passwort), andere IMAP/SMTP-Konten und Outlook (mit deiner eigenen Microsoft-Entra-App-ID). Ausgehende Mails warten 45 Sekunden im Postausgang. Einmalcodes und Anmeldelinks bekommt das Modell nie zu sehen.", parts: "Lesen · Entwürfe · Senden · Ordnen" },
       { name: "Kalender", body: "Die Kalender auf deinem Mac, auch Google- oder Outlook-Kalender aus den Internetaccounts. Einladen kann es niemanden.", parts: "Lesen · Hinzufügen und ändern (rückgängig machbar)" },
       { name: "Erinnerungen", body: "Die Erinnerungen auf deinem Mac.", parts: "Lesen · Hinzufügen und ändern (rückgängig machbar)" },

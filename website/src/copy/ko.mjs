@@ -132,6 +132,7 @@ export default {
     connections: [
       { name: "파일", body: "데스크탑, 문서, 다운로드 폴더뿐, 다른 곳은 건드리지 않습니다.", parts: "읽기 · 쓰기(되돌리기 가능, 삭제한 항목은 휴지통으로) · 변환(이미지, 오디오, 문서)" },
       { name: "브라우저", body: "Chrome이나 Safari와 분리된, Vunemi 창 안의 브라우저입니다. 한 번 로그인하면 계속 유지되고, 언제든 직접 조작할 수 있습니다.", parts: "페이지 읽기 · 클릭과 입력" },
+      { name: "항공편과 호텔", body: "Google Flights와 Trivago에서 검색해 결과를 카드로 보여 줍니다. 카드를 선택하면 해당 제안이 채팅 옆에 열립니다. 경로나 목적지, 날짜, 인원수는 Google 또는 Trivago로 전송됩니다. Vunemi는 예약하거나 결제하지 않습니다.", parts: "Google Flights · Trivago" },
       { name: "이메일", body: "Mac의 Mail 앱에 있는 계정(암호 불필요), Gmail(앱 비밀번호 사용), 기타 IMAP/SMTP 계정, Outlook(본인의 Microsoft Entra 앱 ID 사용). 보내는 메일은 보낼 편지함에서 45초간 대기합니다. 일회용 코드와 로그인 링크는 모델에게 절대 보여 주지 않습니다.", parts: "읽기 · 초안 · 보내기 · 정리" },
       { name: "캘린더", body: "인터넷 계정에 추가한 Google 또는 Outlook 캘린더를 포함한 Mac의 캘린더. 누구도 초대할 수 없습니다.", parts: "읽기 · 추가와 변경(되돌리기 가능)" },
       { name: "미리 알림", body: "Mac의 미리 알림.", parts: "읽기 · 추가와 변경(되돌리기 가능)" },

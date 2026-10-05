@@ -132,6 +132,7 @@ export default {
     connections: [
       { name: "Dosyalar", body: "Masaüstü, Belgeler ve İndirilenler klasörlerin; başka hiçbir yer.", parts: "Okuma · Yazma (geri alınabilir; silinenler Çöp'e gider) · Dönüştürme (resim, ses, belge)" },
       { name: "Tarayıcı", body: "Chrome veya Safari'nden ayrı, Vunemi penceresindeki bir tarayıcı. Bir kez giriş yap, oturumun açık kalsın; istediğin an Kontrolü al.", parts: "Sayfa okuma · Tıklama ve yazma" },
+      { name: "Uçuş ve otel", body: "Google Flights ve Trivago'da arar, seçenekleri kart olarak gösterir. Bir kartı seçince teklifi sohbetin yanında açılır. Rotan ya da gideceğin yer, tarihler ve kişi sayısı Google'a ya da Trivago'ya gider. Vunemi rezervasyon ya da ödeme yapmaz.", parts: "Google Flights · Trivago" },
       { name: "E-posta", body: "Mac'teki Mail uygulamasındaki hesaplar (parola gerekmez), Gmail (uygulama şifresiyle), diğer IMAP/SMTP hesapları ve Outlook (kendi Microsoft Entra uygulama kimliğinle). Giden e-posta Giden Kutusu'nda 45 saniye bekler. Tek kullanımlık kodlar ve giriş bağlantıları modele asla gösterilmez.", parts: "Okuma · Taslak · Gönderme · Düzenleme" },
       { name: "Takvim", body: "İnternet Hesapları'na eklediğin Google veya Outlook takvimleri dahil Mac'indeki takvimler. Kimseyi davet edemez.", parts: "Okuma · Ekleme ve değiştirme (geri alınabilir)" },
       { name: "Anımsatıcılar", body: "Mac'indeki anımsatıcılar.", parts: "Okuma · Ekleme ve değiştirme (geri alınabilir)" },

@@ -99,6 +99,7 @@ without writing scripts, and without sending their private data to a cloud AI.
 |---|---|---|
 | **Files** | Desktop, Documents and Downloads only | Reading · Writing (undoable, deletes go to Trash) · Converting (ffmpeg, sips, textutil; no shell) |
 | **Browser** | A browser inside Vunemi's window, separate from the user's Chrome | Reading pages · Interaction (click, type, fill forms) |
+| **Flights and hotels** | Searches Google Flights and Trivago and shows the options as cards; choosing one opens its offer beside the chat | Google Flights · Trivago (each off until switched on; a search asks first) |
 | **Mail** | Gmail (app password), any IMAP/SMTP account, Outlook (with the user's own Microsoft Entra app ID) | Reading · Drafts · Sending · Organising (archive, folders, Trash, read) |
 | **Calendar** | The Mac's calendars, including Google or Outlook calendars added in macOS Internet Accounts | Reading · Adding and changing (undoable) |
 | **Reminders** | The Mac's reminders | Reading · Adding and changing (undoable) |
@@ -113,6 +114,11 @@ Details worth telling:
 - **Browser:** the user can browse in the same panel, sign in once and stay
   signed in, and press **Take control** at any moment; the agent stops before
   its next step. At sign-in pages, CAPTCHAs and payments it hands over.
+- **Flights and hotels:** the route or destination, dates and traveller count
+  go to Google or Trivago, and the approval card says so. Vunemi does not
+  book or pay; an offer page opened from a card declines optional cookies
+  (Google "Reject all", Trivago "Essential cookies only"). No Python or other
+  runtime is needed.
 - **Mail:** every outgoing message waits **45 seconds** in the Outbox and can
   be taken back. One-time codes and sign-in links are never shown to the
   model. The mail password is kept in the Vault; with Outlook, the user signs

@@ -132,6 +132,7 @@ export default {
     connections: [
       { name: "Arquivos", body: "Suas pastas Mesa, Documentos e Downloads, nada além disso.", parts: "Leitura · Gravação (dá para desfazer; o que for apagado vai para o Lixo) · Conversão (imagens, áudio, documentos)" },
       { name: "Navegador", body: "Um navegador dentro da janela do Vunemi, separado do seu Chrome ou Safari. Entre uma vez e continue conectado; assuma o controle quando quiser.", parts: "Leitura de páginas · Cliques e digitação" },
+      { name: "Voos e hotéis", body: "Busca no Google Flights e no Trivago e mostra as opções como cartões. Ao escolher um cartão, a oferta abre ao lado do chat. Sua rota ou destino, as datas e o número de viajantes vão para o Google ou o Trivago. O Vunemi não reserva nem paga.", parts: "Google Flights · Trivago" },
       { name: "E-mail", body: "As contas do app Mail do seu Mac (sem senha), Gmail (com senha de app), outras contas IMAP/SMTP e Outlook (com seu próprio ID de aplicativo do Microsoft Entra). O e-mail enviado espera 45 segundos na Caixa de saída. Códigos de uso único e links de acesso nunca são mostrados ao modelo.", parts: "Leitura · Rascunhos · Envio · Organização" },
       { name: "Agenda", body: "As agendas do seu Mac, incluindo as do Google ou Outlook adicionadas em Contas de Internet. Ele não pode convidar ninguém.", parts: "Leitura · Criar e alterar (dá para desfazer)" },
       { name: "Lembretes", body: "Os lembretes do seu Mac.", parts: "Leitura · Criar e alterar (dá para desfazer)" },

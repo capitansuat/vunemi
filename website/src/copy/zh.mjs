@@ -132,6 +132,7 @@ export default {
     connections: [
       { name: "文件", body: "只限你的桌面、文稿和下载文件夹。", parts: "读取 · 写入（可撤销；删除的内容进入废纸篓）· 转换（图片、音频、文档）" },
       { name: "浏览器", body: "Vunemi 窗口中的浏览器，与你的 Chrome 或 Safari 分开。登录一次即可保持登录；随时可以接管控制。", parts: "读取网页 · 点击和输入" },
+      { name: "航班和酒店", body: "在 Google Flights 和 Trivago 搜索，并以卡片展示结果。选择一张卡片即可在对话旁打开对应报价。你的航线或目的地、日期和人数会发送给 Google 或 Trivago。Vunemi 不会预订或付款。", parts: "Google Flights · Trivago" },
       { name: "邮件", body: "Mac 上“邮件”App 中的账户（无需密码）、Gmail（使用应用专用密码）、其他 IMAP/SMTP 账户，以及 Outlook（使用你自己的 Microsoft Entra 应用 ID）。发出的邮件会在发件箱等待 45 秒。一次性验证码和登录链接绝不会显示给模型。", parts: "读取 · 草稿 · 发送 · 整理" },
       { name: "日历", body: "你 Mac 上的日历，包括在“互联网账户”中添加的 Google 或 Outlook 日历。它无法邀请任何人。", parts: "读取 · 添加和修改（可撤销）" },
       { name: "提醒事项", body: "你 Mac 上的提醒事项。", parts: "读取 · 添加和修改（可撤销）" },
