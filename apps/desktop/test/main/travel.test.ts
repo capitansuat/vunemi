@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getLocale, setLocale } from "@vunemi/i18n";
 import { shapeOutput } from "@vunemi/agent-core";
-import { flightOptions, flightSearchUrl, hotelOptions, offerPageUrl, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoSearchUrl } from "../../src/main/travel.js";
+import { DECLINE_TRIVAGO_COOKIES, flightOptions, flightSearchUrl, hotelOptions, offerPageUrl, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoPage, trivagoSearchUrl } from "../../src/main/travel.js";
 import { parseTravelOptions, travelSelectionMessage } from "../../src/renderer/src/lib/travel-options.js";
 
 const flightUrl = "https://www.google.com/travel/flights/booking?tfs=abc";
@@ -36,6 +36,32 @@ describe("travel sources", () => {
     expect(() => offerPageUrl("https://www.flypgs.com/en")).toThrow();
     expect(() => offerPageUrl("http://www.google.com/travel/flights")).toThrow();
     expect(() => offerPageUrl("javascript:alert(1)")).toThrow();
+  });
+
+  it("answers Trivago's cookie question with essential cookies only, and only on Trivago", async () => {
+    expect(trivagoPage(hotelUrl)).toBe(true);
+    expect(trivagoPage("https://www.trivago.com/en-US/srl/hotels")).toBe(true);
+    expect(trivagoPage("https://www.google.com/travel/flights")).toBe(false);
+    expect(trivagoPage("https://www.trivago.co.uk.evil.example/")).toBe(false);
+    expect(trivagoPage("http://www.trivago.co.uk/en-GB/lm")).toBe(false);
+    const page = (required: boolean) => {
+      const calls: string[] = [];
+      const cmp = {
+        isInitialized: async () => true,
+        isConsentRequired: async () => required,
+        denyAllConsents: async () => void calls.push("deny"),
+        saveConsents: async () => void calls.push("save"),
+        closeCmp: async () => void calls.push("close"),
+        acceptAllConsents: async () => void calls.push("ACCEPT"),
+      };
+      return { calls, run: () => new Function("window", `return ${DECLINE_TRIVAGO_COOKIES}`)({ __ucCmp: cmp }) as Promise<boolean> };
+    };
+    const asked = page(true);
+    expect(await asked.run()).toBe(true);
+    expect(asked.calls).toEqual(["deny", "save", "close"]);
+    const answered = page(false);
+    expect(await answered.run()).toBe(false);
+    expect(answered.calls).toEqual([]);
   });
 
   it("turns flight results into priced cards, deduplicates and rejects foreign links", () => {

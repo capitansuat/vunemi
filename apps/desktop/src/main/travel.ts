@@ -117,7 +117,7 @@ export function flightSearchUrl(origin: string, destination: string, departure: 
 
 /** A Trivago MCP property link carries the destination and party search state. */
 export function trivagoSearchUrl(offer: string): string {
-  const safe = safeUrl(offer, ["www.trivago.co.uk", "www.trivago.com"]);
+  const safe = safeUrl(offer, TRIVAGO_HOSTS);
   if (!safe) return "";
   const property = new URL(safe);
   const parts = (property.searchParams.get("search") ?? "").split(";").filter((part) => /^(200-|dr-|drs-|rc-)/.test(part));
@@ -176,7 +176,7 @@ export function hotelOptions(raw: unknown, searchedAt = new Date().toISOString()
   let resultCount = 0;
   for (const rawRow of rows) {
     const row = obj(rawRow);
-    const url = safeUrl(row.accommodation_url, ["www.trivago.co.uk", "www.trivago.com"]);
+    const url = safeUrl(row.accommodation_url, TRIVAGO_HOSTS);
     const title = str(row.accommodation_name);
     if (!url || !title) continue;
     resultCount++;
@@ -200,13 +200,37 @@ export interface TravelOptionsDeps {
   fetchPage?: FetchPage;
 }
 
+const TRIVAGO_HOSTS = ["www.trivago.co.uk", "www.trivago.com"];
+
 /** Where an offer card may open: Google Flights or Trivago over https, nothing else. */
-const OFFER_HOSTS = ["www.google.com", "google.com", "www.trivago.co.uk", "www.trivago.com"];
+const OFFER_HOSTS = ["www.google.com", "google.com", ...TRIVAGO_HOSTS];
 export function offerPageUrl(raw: string): string {
   const url = safeUrl(raw, OFFER_HOSTS);
   if (!url) throw new Error("Only Google Flights and Trivago offers open from a travel card.");
   return url;
 }
+
+/** Whether a page is one of Trivago's, where an opened offer may land. */
+export function trivagoPage(url: string): boolean {
+  return safeUrl(url, TRIVAGO_HOSTS) !== "";
+}
+
+/**
+ * Run in a Trivago page: answers its cookie question (Usercentrics) with
+ * "Essential cookies only", through the consent tool's own interface rather
+ * than its buttons, whose words follow the page language. Resolves true
+ * when it answered, false when nothing was asked. Never accepts.
+ */
+export const DECLINE_TRIVAGO_COOKIES = `(async () => {
+  const ready = async () => { try { return Boolean(window.__ucCmp && await window.__ucCmp.isInitialized()); } catch { return false; } };
+  for (let i = 0; i < 40 && !(await ready()); i++) await new Promise((r) => setTimeout(r, 250));
+  const cmp = window.__ucCmp;
+  if (!cmp || !(await ready()) || !(await cmp.isConsentRequired())) return false;
+  await cmp.denyAllConsents();
+  await cmp.saveConsents();
+  await cmp.closeCmp();
+  return true;
+})()`;
 
 export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
   const limit = new TravelSearchLimit();
