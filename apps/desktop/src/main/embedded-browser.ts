@@ -21,7 +21,7 @@ import { existsSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
 import { requestGuard, trustableHost, trustWouldOpen, type BrowserBackend, type CdpSession, type PointerEvent, type TabInfo, type TrustedSites } from "@vunemi/browser";
 import { CURSOR_WORLD_ID, cursorScript } from "./agent-cursor.js";
-import { consentDecline } from "./flights/search.js";
+import { consentDecline, consentReturn } from "./flights/search.js";
 import type { EmbeddedState, PaneBounds } from "../shared/ipc.js";
 
 const PARTITION = "persist:vunemi-browser";
@@ -412,10 +412,17 @@ export class EmbeddedBrowser {
     const form = consentDecline(wc.getURL(), html);
     if (!form || tab.consent !== "decline") return;
     tab.consent = "declined";
-    void wc.loadURL(form.action, {
-      postData: [{ type: "rawData", bytes: Buffer.from(form.body.toString()) }],
-      extraHeaders: "Content-Type: application/x-www-form-urlencoded\n",
-    }).catch(() => {});
+    // Sent beside the page, as the flight search does: Google Flights fails
+    // to start when it is reached through the consent service's redirect.
+    try {
+      await wc.session.fetch(form.action, { method: "POST", body: form.body, credentials: "include", signal: AbortSignal.timeout(30_000) });
+    } catch {
+      return;
+    }
+    if (wc.isDestroyed()) return;
+    const next = consentReturn(form.body.get("continue"));
+    if (next) void wc.loadURL(next).catch(() => {});
+    else wc.reload();
   }
 
   /** Remembers a refused page so the pane can say why and where to trust it. */

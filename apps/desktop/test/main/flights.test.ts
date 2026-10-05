@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ConsentRequired, consentDecline, pageUrl, payloadOf, rejectForm, rowsOf, searchFlights, type FetchPage } from "../../src/main/flights/search.js";
+import { ConsentRequired, consentDecline, consentReturn, pageUrl, payloadOf, rejectForm, rowsOf, searchFlights, type FetchPage } from "../../src/main/flights/search.js";
 import { currencyOfToken, encodeTfs, itineraryTfs, passengerKinds, segment } from "../../src/main/flights/tfs.js";
 import { travelConnectors } from "../../src/main/travel.js";
 
@@ -145,6 +145,16 @@ describe("searchFlights", () => {
     expect(consentDecline("http://consent.google.com/ml", CONSENT_PAGE)).toBeNull();
     // A Google page with no cookie question.
     expect(consentDecline("https://www.google.com/travel/flights", "<html><form action=\"/search\"></form></html>")).toBeNull();
+  });
+
+  it("returns to the Google page the cookie question came from, and nowhere else", () => {
+    const flights = "https://www.google.com/travel/flights?q=MAN+to+ADB";
+    expect(consentReturn(flights)).toBe(flights);
+    expect(consentReturn("https://consent.google.com/ml?continue=x")).toBeNull();
+    expect(consentReturn("https://evil.example/?google.com")).toBeNull();
+    expect(consentReturn("http://www.google.com/travel/flights")).toBeNull();
+    expect(consentReturn("javascript:alert(1)")).toBeNull();
+    expect(consentReturn(null)).toBeNull();
   });
 
   it("tries a page again when it came back without results", async () => {

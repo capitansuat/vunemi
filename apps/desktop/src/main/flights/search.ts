@@ -211,6 +211,19 @@ export function consentDecline(url: string, html: string): { action: string; bod
   return rejectForm(html);
 }
 
+/**
+ * The Google page a consent form returns to, once cookies are declined;
+ * null when it names anything else, including the consent service itself.
+ */
+export function consentReturn(raw: string | null): string | null {
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    const google = url.hostname === "google.com" || url.hostname.endsWith(".google.com");
+    return url.protocol === "https:" && google && url.hostname !== "consent.google.com" ? url.href : null;
+  } catch { return null; }
+}
+
 /** Whether non-essential cookies were already declined during this search. */
 interface Consent { declined: boolean }
 
