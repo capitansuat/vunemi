@@ -3,12 +3,11 @@ import { ExternalLink, Plane, BedDouble } from "lucide-react";
 import { getLocale, t } from "@vunemi/i18n";
 import { useStore } from "../store.js";
 import type { CallView } from "../lib/fold.js";
-import { parseTravelOptions, travelSelectionMessage } from "../lib/travel-options.js";
+import { parseTravelOptions } from "../lib/travel-options.js";
 
 export function TravelOptionsCard({ call }: { call: CallView }) {
   const results = parseTravelOptions(call);
   const [selected, setSelected] = useState<number | null>(null);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   if (!results) return null;
   const flight = results.source === "google";
@@ -25,14 +24,10 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
       return true;
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); return false; }
   };
+  // Choosing opens the offer beside the chat and nothing more: the user
+  // weighs it there, and asks Vunemi for help on the page if they want it.
   const choose = async (index: number) => {
-    setBusy(true); setError("");
-    try {
-      const pageOpened = await openSite(results.options[index]!.url);
-      await useStore.getState().send(travelSelectionMessage(results, index, pageOpened));
-      setSelected(index);
-    } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
-    finally { setBusy(false); }
+    if (await openSite(results.options[index]!.url)) setSelected(index);
   };
   return <div className="border-t border-line px-3 py-3">
     <div className="mb-2 flex items-center gap-2 text-[12px] text-muted">
@@ -53,12 +48,14 @@ export function TravelOptionsCard({ call }: { call: CallView }) {
         {option.detail && <p className="mt-1 text-[12px] leading-snug text-muted">{option.detail}</p>}
         {option.extra && <p className="mt-1 text-[12px] leading-snug text-muted">{option.extra}</p>}
         <div className="mt-3 flex items-center gap-2">
-          <button type="button" disabled={busy || selected !== null} onClick={() => void choose(index)} className="rounded-lg bg-fg px-3 py-1.5 text-[12px] font-medium text-bg disabled:opacity-50">{selected === index ? t("travel.chosen") : t("travel.choose")}</button>
-          <button type="button" onClick={() => void openSite(option.url)} className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-[12px] text-fg hover:bg-surface"><ExternalLink size={12} />{t("travel.openOffer")}</button>
+          <button type="button" aria-pressed={selected === index} onClick={() => void choose(index)} className={selected === index
+            ? "inline-flex items-center gap-1 rounded-lg border border-line-strong px-3 py-1.5 text-[12px] font-medium text-fg"
+            : "inline-flex items-center gap-1 rounded-lg bg-fg px-3 py-1.5 text-[12px] font-medium text-bg"}><ExternalLink size={12} />{selected === index ? t("travel.chosen") : t("travel.choose")}</button>
         </div>
       </div>)}
     </div> : <p className="text-[12px] text-muted">{t("travel.none")}</p>}
     {results.searchUrl && <button type="button" onClick={() => void openSite(results.searchUrl!)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-[12px] font-medium text-fg hover:bg-surface"><ExternalLink size={13} />{t("travel.seeMore")}</button>}
+    {selected !== null && <p className="mt-2 text-[12px] text-muted">{t("travel.opened")}</p>}
     {results.warning && <p className="mt-2 text-[11px] text-faint">{results.warning}</p>}
     {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
   </div>;

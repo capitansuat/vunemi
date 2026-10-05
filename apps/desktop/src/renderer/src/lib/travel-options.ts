@@ -1,16 +1,7 @@
-import { t } from "@vunemi/i18n";
 import type { CallView } from "./fold.js";
 
 export interface TravelOption { title: string; price: string; detail: string; extra?: string; url: string; image?: string }
 export interface TravelResults { kind: "travel-options"; source: "google" | "trivago"; searchedAt: string; options: TravelOption[]; resultCount: number; searchUrl?: string; summary?: string; warning?: string }
-
-/** Give the next turn the actual card, even if earlier tool output was compacted. */
-export function travelSelectionMessage(results: TravelResults, index: number, pageOpened: boolean): string {
-  const option = results.options[index];
-  if (!option) throw new Error("Travel option not found");
-  const item = JSON.stringify({ source: results.source, title: option.title, displayedPrice: option.price, offerUrl: option.url });
-  return t("travel.chose", { n: String(index + 1), item, page: t(pageOpened ? "travel.pageTried" : "travel.pageFailed") });
-}
 
 function safeUrl(value: unknown, hosts: string[]): string | null {
   if (typeof value !== "string") return null;

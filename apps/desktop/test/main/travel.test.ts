@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getLocale, setLocale } from "@vunemi/i18n";
 import { shapeOutput } from "@vunemi/agent-core";
 import { DECLINE_TRIVAGO_COOKIES, flightOptions, flightSearchUrl, hotelOptions, offerPageUrl, requestedCurrency, travelConnectors, travelCurrency, TravelSearchLimit, trivagoPage, trivagoSearchUrl } from "../../src/main/travel.js";
-import { parseTravelOptions, travelSelectionMessage } from "../../src/renderer/src/lib/travel-options.js";
+import { parseTravelOptions } from "../../src/renderer/src/lib/travel-options.js";
 
 const flightUrl = "https://www.google.com/travel/flights/booking?tfs=abc";
 const hotelUrl = "https://www.trivago.co.uk/en-GB/lm/radisson-red?currencyCode=GBP&search=100-456;200-15289;dr-20261025-20261030;drs-40;rc-1-1-10";
@@ -104,27 +104,6 @@ describe("travel sources", () => {
     const result = { kind: "travel-options", source: "trivago", searchedAt: "", options: [{ title: "Fake", price: "£1", detail: "", url: "https://example.com/steal" }] };
     const displayed = parseTravelOptions({ tool: "travel_search_hotels", status: "ok", output: shapeOutput(JSON.stringify(result), { name: "travel_search_hotels", untrustedOutput: true }, 12_000) });
     expect(displayed?.options).toEqual([]);
-  });
-
-  it("binds a choice to the selected offer and states whether its page opened", () => {
-    const results = parseTravelOptions({ tool: "travel_search_hotels", status: "ok", output: shapeOutput(JSON.stringify({
-      kind: "travel-options", source: "trivago", searchedAt: "", resultCount: 2, options: [
-        { title: "Hotel A", price: "£90", detail: "", url: hotelUrl },
-        { title: "Hotel B", price: "£120", detail: "", url: "https://www.trivago.co.uk/en-GB/lm/hotel-b" },
-      ],
-    }), { name: "travel_search_hotels", untrustedOutput: true }, 12_000) })!;
-    setLocale("tr");
-    const message = travelSelectionMessage(results, 1, true);
-    expect(message).toContain('"title":"Hotel B"');
-    expect(message).toContain('"displayedPrice":"£120"');
-    expect(message).toContain('"offerUrl":"https://www.trivago.co.uk/en-GB/lm/hotel-b"');
-    expect(message).not.toContain("Hotel A");
-    expect(message).toContain("rezervasyon yapma");
-    setLocale("en");
-    expect(travelSelectionMessage(results, 1, false)).toContain("Its page could not be opened.");
-    setLocale("de");
-    expect(travelSelectionMessage(results, 1, false)).toContain("nicht buchen");
-    setLocale("en");
   });
 
   it("uses the Mac's currency unless the user explicitly chooses another", async () => {
