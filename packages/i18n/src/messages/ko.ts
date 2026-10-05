@@ -14,6 +14,7 @@ export const messages: Catalogue = {
     price: "가격",
     noMatches: "출처와 일치하는 정보가 없습니다",
     typeInstead: "직접 답을 입력할 수도 있습니다.",
+    unchecked: "Vunemi가 직접 제안한 내용입니다. 페이지나 사용자 데이터에서 읽은 정보가 아닙니다.",
   },
 
   time: {

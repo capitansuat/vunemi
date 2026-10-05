@@ -42,6 +42,13 @@ describe("choice card data", () => {
     expect("card" in result && result.card.kind === "choice" && result.card.options).toHaveLength(5);
   });
 
+  it("says so when nothing was read, instead of marking every value as not found", () => {
+    const items = [{ title: "Köfte", facts: [{ label: "Time", value: "45 min" }] }, { title: "Mantı", facts: [{ label: "Time", value: "1 h" }] }];
+    expect(prepareChoice("present_options", { items }, { pages: [], local: [] })).toMatchObject({ card: { unchecked: true } });
+    const read = prepareChoice("present_options", { items }, evidence);
+    expect("card" in read && read.card.kind === "options" && read.card.unchecked).toBeUndefined();
+  });
+
   it("checks a card that names no source against the pages read in this run", () => {
     const other = { url: "https://example.com/phone#specs", text: "RAM 8 GB\nWeight 200 g" };
     const result = prepareChoice("present_options", { items: [

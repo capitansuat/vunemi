@@ -14,6 +14,7 @@ export const messages: Catalogue = {
     price: "Preço",
     noMatches: "Nenhum dado correspondeu a uma fonte",
     typeInstead: "Também pode escrever a sua resposta.",
+    unchecked: "Sugestões do próprio Vunemi: nada aqui foi lido de uma página nem dos seus dados.",
   },
 
   time: {

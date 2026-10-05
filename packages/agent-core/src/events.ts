@@ -14,7 +14,8 @@ export type RunStatus = "done" | "stopped" | "failed" | "max_steps";
 /** A bounded question or comparison shown inside a chat turn. */
 export type ChoiceCard =
   | { kind: "choice"; question: string; options: string[]; allowOther: boolean }
-  | { kind: "options"; intro?: string; items: OptionCard[] };
+  /** `unchecked`: nothing was read in the run, so the cards are the model's own suggestions and carry no marks. */
+  | { kind: "options"; intro?: string; items: OptionCard[]; unchecked?: true };
 
 export interface OptionCard {
   title: string;

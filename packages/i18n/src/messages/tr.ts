@@ -17,6 +17,7 @@ export const messages = {
     price: "Fiyat",
     noMatches: "Hiçbir bilgi kaynakta eşleşmedi",
     typeInstead: "İstersen yanıtını yazabilirsin.",
+    unchecked: "Vunemi'nin kendi önerileri: buradaki bilgiler bir sayfadan ya da senin verilerinden okunmadı.",
   },
 
   time: {

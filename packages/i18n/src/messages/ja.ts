@@ -14,6 +14,7 @@ export const messages: Catalogue = {
     price: "価格",
     noMatches: "出典と一致する情報がありません",
     typeInstead: "回答を入力することもできます。",
+    unchecked: "Vunemi 自身の提案です。ここにある内容は、ページやあなたのデータから読み取ったものではありません。",
   },
 
   time: {

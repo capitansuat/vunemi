@@ -189,7 +189,9 @@ export function prepareChoice(name: string, input: unknown, evidence: ChoiceEvid
     items.push({ title, facts, ...(price && { price: fact("price", price, sourceUrl, evidence) }), ...(view && { view }), ...(sourceUrl && { sourceUrl }) });
   }
   const intro = string(args.intro, 200);
-  return { card: { kind: "options", items, ...(intro && { intro }) } };
+  // Dinner ideas, names for a project: nothing to match them against, and "not found on the page" under each would be untrue.
+  const unchecked = evidence.pages.length === 0 && evidence.local.length === 0;
+  return { card: { kind: "options", items, ...(intro && { intro }), ...(unchecked && { unchecked }) } };
 }
 
 /** The runtime handles these calls; the registry supplies schemas to small models. */
