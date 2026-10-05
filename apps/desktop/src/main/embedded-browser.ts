@@ -15,7 +15,7 @@
  * whatever does arrive is recorded where the user can undo it.
  */
 
-import { app, session, WebContentsView, type BrowserWindow, type Session } from "electron";
+import { app, session, WebContentsView, type BrowserWindow, type LoadURLOptions, type PostBody, type Session } from "electron";
 import { lookup } from "node:dns/promises";
 import { existsSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -64,6 +64,22 @@ interface Tab {
    * Google's once, as its question can come back; Trivago's whenever asked.
    */
   consent?: "decline" | "declined";
+}
+
+/**
+ * How a page opened into a new tab is loaded. A form posted to a new window
+ * keeps its body and the page it came from: Google Flights' "Continue to
+ * book" posts to /travel/clk, which answers a bare GET with a 404.
+ */
+export function newTabLoad(opts: { postBody?: PostBody; referrer?: string }): LoadURLOptions {
+  const load: LoadURLOptions = {};
+  if (opts.postBody) {
+    const { contentType, boundary, data } = opts.postBody;
+    load.postData = data;
+    load.extraHeaders = `Content-Type: ${boundary ? `${contentType}; boundary=${boundary}` : contentType}\n`;
+  }
+  if (opts.referrer) load.httpReferrer = opts.referrer;
+  return load;
 }
 
 function webUrl(raw: string): string | null {
@@ -165,7 +181,7 @@ export class EmbeddedBrowser {
 
   // -- user and agent share these ------------------------------------------
 
-  open(raw: string, opts: { declineCookies?: boolean } = {}): string {
+  open(raw: string, opts: { declineCookies?: boolean; postBody?: PostBody; referrer?: string } = {}): string {
     const win = this.win;
     if (!win || win.isDestroyed()) throw new Error("The Vunemi window is closed.");
     const url = webUrl(raw);
@@ -190,7 +206,7 @@ export class EmbeddedBrowser {
     this.wire(tab);
     win.contentView.addChildView(view);
     this.activate(tab.id);
-    void view.webContents.loadURL(url).catch(() => {});
+    void view.webContents.loadURL(url, newTabLoad(opts)).catch(() => {});
     return tab.id;
   }
 
@@ -392,8 +408,8 @@ export class EmbeddedBrowser {
       if (!webUrl(url)) e.preventDefault();
     });
     // target=_blank and window.open become tabs here, never native windows.
-    wc.setWindowOpenHandler(({ url }) => {
-      if (webUrl(url)) setImmediate(() => this.open(url));
+    wc.setWindowOpenHandler(({ url, postBody, referrer }) => {
+      if (webUrl(url)) setImmediate(() => this.open(url, { ...(postBody && { postBody }), ...(referrer.url && { referrer: referrer.url }) }));
       return { action: "deny" };
     });
     wc.on("destroyed", () => {
