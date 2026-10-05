@@ -14,6 +14,7 @@ import { OutboxView } from "./OutboxView.js";
 import { VaultView } from "./VaultView.js";
 import { MemorySection } from "./MemorySection.js";
 import { useStore, type SettingsSection as Section } from "../store.js";
+import { UpdateAction } from "./UpdateAction.js";
 
 const SECTIONS: Section[] = ["permissions", "security", "connections", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "memory", "data", "updates"];
 
@@ -342,9 +343,10 @@ function UpdatesSection() {
       setChecking(false);
     }
   }
+  // The offer as the sidebar shows it, with the same next step to press.
+  const offer = status && ["available", "downloading", "ready", "failed"].includes(status.phase) ? status.offer : null;
   const result =
     status?.phase === "current" ? t("updates.upToDate")
-    : status?.offer && ["available", "downloading", "ready"].includes(status.phase) ? t("updates.available", { version: status.offer.version })
     : status?.phase === "failed" && (status.error === "network" || status.error === "feed") ? t("updates.checkFailed")
     : null;
   return (
@@ -364,6 +366,17 @@ function UpdatesSection() {
         {!checking && result && <span className="text-[12.5px] text-muted">{result}</span>}
       </div>
       {status?.checkedAt && <p className="mt-2 text-[11.5px] text-faint">{t("settings.updates.lastChecked", { time: new Date(status.checkedAt).toLocaleString() })}</p>}
+      {offer && status && (
+        <div className="mt-4 rounded-xl border border-line bg-surface px-3.5 py-3 text-[13px] text-fg">
+          <div className="font-medium">{t("updates.available", { version: offer.version })}</div>
+          {offer.notes.length > 0 && (
+            <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[12.5px] text-muted">
+              {offer.notes.map((note) => <li key={note}>{note}</li>)}
+            </ul>
+          )}
+          <UpdateAction status={status} roomy />
+        </div>
+      )}
     </div>
   );
 }

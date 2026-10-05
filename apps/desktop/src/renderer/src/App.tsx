@@ -20,6 +20,7 @@ import { clock, dayLabel } from "./lib/time.js";
 import { useStore, type View } from "./store.js";
 import { t } from "@vunemi/i18n";
 import type { UpdateStatus } from "../../shared/ipc.js";
+import { UpdateAction } from "./components/UpdateAction.js";
 
 
 export function App() {
@@ -199,33 +200,6 @@ function AppVersion() {
       )}
       <div className="selectable tabular-nums">{version ? `Vunemi ${version}` : "\u00a0"}</div>
     </div>
-  );
-}
-
-/** The one thing to do next about an update: move, download, wait, or restart. */
-function UpdateAction({ status }: { status: UpdateStatus }) {
-  const button = "mt-2 rounded-md bg-ember px-2.5 py-1 text-[11.5px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50";
-  if (!status.installable) return <p className="mt-2 text-muted">{t("updates.moveFirst")}</p>;
-  if (status.phase === "downloading") return <p className="mt-2 text-muted">{t("updates.downloading")}</p>;
-  if (status.phase === "ready") {
-    return (
-      <>
-        <button type="button" className={button} disabled={!status.idle} onClick={() => void window.vunemi.installUpdate()}>
-          {t("updates.restart")}
-        </button>
-        {!status.idle && <p className="mt-1 text-muted">{t("updates.busy")}</p>}
-      </>
-    );
-  }
-  // The same download would be refused again: nothing to press.
-  if (status.phase === "failed" && status.error === "signature") return <p className="mt-2 text-muted">{t("updates.badSignature")}</p>;
-  return (
-    <>
-      {status.phase === "failed" && <p className="mt-2 text-muted">{t("updates.failed")}</p>}
-      <button type="button" className={button} onClick={() => void window.vunemi.downloadUpdate()}>
-        {status.offer?.sizeMb ? t("updates.updateSize", { size: status.offer.sizeMb }) : t("updates.update")}
-      </button>
-    </>
   );
 }
 
