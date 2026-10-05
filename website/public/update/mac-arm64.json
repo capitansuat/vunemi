@@ -1,14 +1,14 @@
 {
-  "currentRelease": "0.1.9",
+  "currentRelease": "0.1.10",
   "releases": [
     {
-      "version": "0.1.9",
+      "version": "0.1.10",
       "updateTo": {
-        "version": "0.1.9",
-        "name": "Vunemi 0.1.9",
+        "version": "0.1.10",
+        "name": "Vunemi 0.1.10",
         "pub_date": "2026-10-05T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.9/Vunemi-0.1.9-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.10/Vunemi-0.1.10-arm64.zip"
       }
     }
   ],
@@ -17,57 +17,68 @@
     "en": [
       "Search flights on Google Flights and hotels on Trivago: options arrive as cards, and choosing one opens its offer beside the chat. Both connections start off.",
       "Vunemi does not book or pay for you: signing in and paying stay with you.",
-      "A quieter sidebar: the note that your model and data stay on this Mac is now a lock icon beside the model."
+      "A quieter sidebar: the note that your model and data stay on this Mac is now a lock icon beside the model.",
+      "When a new version is out, you can now install it from Settings › Updates too, not only from the sidebar."
     ],
     "de": [
       "Flüge bei Google Flights und Hotels bei Trivago suchen: Die Optionen erscheinen als Karten, und mit einer Auswahl öffnet sich das Angebot neben dem Chat. Beide Verbindungen sind zunächst aus.",
       "Vunemi bucht und bezahlt nicht für dich: Anmelden und Bezahlen bleiben bei dir.",
-      "Eine ruhigere Seitenleiste: Der Hinweis, dass Modell und Daten auf diesem Mac bleiben, ist jetzt ein Schloss-Symbol neben dem Modell."
+      "Eine ruhigere Seitenleiste: Der Hinweis, dass Modell und Daten auf diesem Mac bleiben, ist jetzt ein Schloss-Symbol neben dem Modell.",
+      "Eine neue Version lässt sich jetzt auch unter Einstellungen › Updates installieren, nicht nur über die Seitenleiste."
     ],
     "es": [
       "Busca vuelos en Google Flights y hoteles en Trivago: las opciones llegan como tarjetas y, al elegir una, su oferta se abre junto al chat. Ambas conexiones empiezan desactivadas.",
       "Vunemi no reserva ni paga por ti: iniciar sesión y pagar siguen en tus manos.",
-      "Una barra lateral más sobria: la nota de que el modelo y tus datos se quedan en este Mac es ahora un icono de candado junto al modelo."
+      "Una barra lateral más sobria: la nota de que el modelo y tus datos se quedan en este Mac es ahora un icono de candado junto al modelo.",
+      "Cuando sale una versión nueva, ahora también puedes instalarla desde Ajustes › Actualizaciones, no solo desde la barra lateral."
     ],
     "fr": [
       "Recherchez des vols sur Google Flights et des hôtels sur Trivago : les options arrivent sous forme de cartes, et en choisir une ouvre son offre à côté de la conversation. Les deux connexions sont désactivées au départ.",
       "Vunemi ne réserve pas et ne paie pas à votre place : la connexion et le paiement restent entre vos mains.",
-      "Une barre latérale plus sobre : la note indiquant que le modèle et vos données restent sur ce Mac devient une icône de cadenas à côté du modèle."
+      "Une barre latérale plus sobre : la note indiquant que le modèle et vos données restent sur ce Mac devient une icône de cadenas à côté du modèle.",
+      "Une nouvelle version s'installe désormais aussi depuis Réglages › Mises à jour, et plus seulement depuis la barre latérale."
     ],
     "it": [
       "Cerca voli su Google Flights e hotel su Trivago: le opzioni arrivano come schede e, scegliendone una, la sua offerta si apre accanto alla chat. Entrambe le connessioni sono inizialmente disattivate.",
       "Vunemi non prenota e non paga al posto tuo: accesso e pagamento restano a te.",
-      "Una barra laterale più essenziale: la nota che modello e dati restano su questo Mac è ora un'icona a lucchetto accanto al modello."
+      "Una barra laterale più essenziale: la nota che modello e dati restano su questo Mac è ora un'icona a lucchetto accanto al modello.",
+      "Quando esce una nuova versione, ora puoi installarla anche da Impostazioni › Aggiornamenti, non solo dalla barra laterale."
     ],
     "tr": [
       "Uçuşları Google Flights'ta, otelleri Trivago'da ara: seçenekler kart olarak gelir, birini seçince teklifi sohbetin yanında açılır. İki bağlantı da kapalı başlar.",
       "Vunemi senin yerine rezervasyon ya da ödeme yapmaz: giriş ve ödeme sende kalır.",
-      "Daha sade bir kenar çubuğu: modelin ve verilerin bu Mac'te kaldığını söyleyen not artık modelin yanında bir kilit simgesi."
+      "Daha sade bir kenar çubuğu: modelin ve verilerin bu Mac'te kaldığını söyleyen not artık modelin yanında bir kilit simgesi.",
+      "Yeni sürüm çıktığında artık Ayarlar › Güncellemeler'den de kurabilirsin; yalnız kenar çubuğundan değil."
     ],
     "pt": [
       "Busque voos no Google Flights e hotéis no Trivago: as opções chegam como cartões e, ao escolher uma, a oferta abre ao lado do chat. As duas conexões começam desativadas.",
       "O Vunemi não reserva nem paga por você: o login e o pagamento continuam com você.",
-      "Uma barra lateral mais limpa: o aviso de que o modelo e seus dados ficam neste Mac agora é um ícone de cadeado ao lado do modelo."
+      "Uma barra lateral mais limpa: o aviso de que o modelo e seus dados ficam neste Mac agora é um ícone de cadeado ao lado do modelo.",
+      "Quando sai uma versão nova, agora você também pode instalá-la em Ajustes › Atualizações, não só pela barra lateral."
     ],
     "ru": [
       "Ищите рейсы в Google Flights и отели в Trivago: варианты приходят карточками, а выбор одной открывает её предложение рядом с чатом. Оба подключения изначально выключены.",
       "Vunemi не бронирует и не платит за вас: вход и оплата остаются за вами.",
-      "Более спокойная боковая панель: пометка о том, что модель и данные остаются на этом Mac, теперь значок замка рядом с моделью."
+      "Более спокойная боковая панель: пометка о том, что модель и данные остаются на этом Mac, теперь значок замка рядом с моделью.",
+      "Когда выходит новая версия, её теперь можно установить и в разделе «Настройки › Обновления», а не только из боковой панели."
     ],
     "zh": [
       "在 Google Flights 搜索航班、在 Trivago 搜索酒店：结果以卡片呈现，选择其中一张即可在对话旁打开对应报价。两个连接默认关闭。",
       "Vunemi 不会替你预订或付款：登录和付款始终由你完成。",
-      "更简洁的侧边栏：“模型和数据都留在这台 Mac 上”的说明现在是模型旁边的一个锁形图标。"
+      "更简洁的侧边栏：“模型和数据都留在这台 Mac 上”的说明现在是模型旁边的一个锁形图标。",
+      "有新版本时，现在也可以在“设置 › 更新”中安装，不再只能从侧边栏安装。"
     ],
     "ja": [
       "Google Flights でフライトを、Trivago でホテルを検索できます。候補はカードで表示され、選ぶとそのオファーがチャットの横に開きます。どちらの接続も最初はオフです。",
       "Vunemi があなたの代わりに予約や支払いをすることはありません。ログインと支払いはあなたが行います。",
-      "サイドバーをすっきりさせました。モデルとデータがこの Mac に残るという説明は、モデルの横の鍵アイコンになりました。"
+      "サイドバーをすっきりさせました。モデルとデータがこの Mac に残るという説明は、モデルの横の鍵アイコンになりました。",
+      "新しいバージョンが出たら、サイドバーだけでなく「設定 › アップデート」からもインストールできるようになりました。"
     ],
     "ko": [
       "Google Flights에서 항공편을, Trivago에서 호텔을 검색합니다. 결과는 카드로 표시되며, 하나를 선택하면 해당 제안이 채팅 옆에 열립니다. 두 연결 모두 처음에는 꺼져 있습니다.",
       "Vunemi는 사용자를 대신해 예약하거나 결제하지 않습니다. 로그인과 결제는 사용자가 직접 합니다.",
-      "더 간결해진 사이드바: 모델과 데이터가 이 Mac에 남는다는 안내가 이제 모델 옆의 자물쇠 아이콘으로 표시됩니다."
+      "더 간결해진 사이드바: 모델과 데이터가 이 Mac에 남는다는 안내가 이제 모델 옆의 자물쇠 아이콘으로 표시됩니다.",
+      "새 버전이 나오면 이제 사이드바뿐 아니라 설정 › 업데이트에서도 설치할 수 있습니다."
     ]
   }
 }
