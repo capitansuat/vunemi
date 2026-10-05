@@ -22,24 +22,26 @@ vi.mock("electron", () => {
  * lower them as the prompt is trimmed.
  */
 const LIMITS = {
-  /** The system prompt itself (1,806). */
-  core: 1_900,
+  /** The system prompt itself (1,991: 1,806 and the rule for choice and option cards). */
+  core: 2_000,
   /** One tool's definition: name, description and parameters (largest 782, travel_search_flights). */
   tool: 800,
   /** One connection's instructions (largest 1,999, apps). */
   guide: 2_000,
-  /** System prompt, every connection's instructions and every tool shown, all switched on (37,019). */
-  total: 38_000,
+  /** System prompt, every connection's instructions and every tool shown, all switched on (39,037 with ask_choice and present_options). */
+  total: 39_100,
   /**
    * With areas: a conversation's first prompt with one area picked, the
-   * largest (12,025, browser). Was 11,743 before the browser's rule on
-   * handing sign-in and passenger forms to the user grew in 0.1.9.
+   * largest (13,171, browser). Was 11,743 before the browser's rule on
+   * handing sign-in and passenger forms to the user grew in 0.1.9, and
+   * 12,025 before ask_choice and present_options, which every
+   * conversation lists (about 280 tokens).
    */
-  oneArea: 12_100,
+  oneArea: 13_200,
 };
 
 async function compose() {
-  const { ToolRegistry, toolSpecsOf, SYSTEM_PROMPT, KeptOutputs, keptOutputTools, listedRequest, areaOf } = await import("@vunemi/agent-core");
+  const { ToolRegistry, toolSpecsOf, SYSTEM_PROMPT, KeptOutputs, keptOutputTools, choiceTools, listedRequest, areaOf } = await import("@vunemi/agent-core");
   const { toolAreas } = await import("../../src/main/areas.js");
   const { ScriptableCatalog } = await import("@vunemi/apps");
   const { buildConnectors } = await import("../../src/main/connectors.js");
@@ -48,6 +50,7 @@ async function compose() {
   const tools = new ToolRegistry();
   // As in main: tools that read long output kept whole.
   for (const tool of keptOutputTools(new KeptOutputs())) tools.register(tool);
+  for (const tool of choiceTools()) tools.register(tool);
   const connectors = buildConnectors({
     tools, browser: {} as never, roots: { list: () => [] } as never, appCatalog: new ScriptableCatalog(join(dir, "apps")),
     shadowDir: join(dir, "shadow"), helper: {} as never, shotDir: join(dir, "shots"),

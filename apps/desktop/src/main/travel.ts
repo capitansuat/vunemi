@@ -319,7 +319,7 @@ export function travelConnectors(opts: TravelOptionsDeps = {}): Connector[] {
     needs: { kind: "none" }, defaultOn: false, requestableWhenOff: true, origin: "builtin",
     status: async () => ready,
     tools: () => [flightTool], disconnect: async () => {},
-    instructions: "For flight searches, use travel_search_flights first. The tool picks the currency: the one the user named, otherwise the Mac's regional currency. If the user gave one date, do not search other dates; one successful search is enough. Results are shown as cards; never invent prices or links. An empty result does not prove there are no flights. Do not open a booking page until the user has chosen an option.",
+    instructions: "For flight searches, use travel_search_flights first. The tool picks the currency: the one the user named, otherwise the Mac's regional currency. If the user gave one date, do not search other dates; one successful search is enough. Results are shown as cards; never invent prices or links. An empty result does not prove there are no flights. Do not open a booking page until the user has chosen an option. Never estimate a child's fare from an adult fare; keep the passenger count exact and check dates and weekdays before stating them.",
   }, {
     id: "travel-hotels", group: "service",
     get label() { return t("connectors.travelHotels.label"); },
