@@ -8,7 +8,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { find, outline } from "@vunemi/perception";
-import type { BrowserBackend } from "./backend.js";
+import type { BrowserBackend, TabInfo } from "./backend.js";
 import { detectChallenge } from "./challenge.js";
 import { PageActionError, PageDriver, type PointerEvent } from "./page.js";
 import type { TrustedSites } from "./url-policy.js";
@@ -29,6 +29,12 @@ interface Snapshot {
 
 const DESCRIBE_BUDGET = 16_000; // ≈4K tokens
 const VERDICT_LINES = 30;
+
+/** The tab an action opened, if it opened one: the newest that was not there before. */
+export function openedTab(before: readonly TabInfo[], after: readonly TabInfo[]): string | null {
+  const known = new Set(before.map((t) => t.targetId));
+  return after.filter((t) => !known.has(t.targetId)).at(-1)?.targetId ?? null;
+}
 
 export class BrowserController {
   private backend: BrowserBackend | null = null;
@@ -212,9 +218,22 @@ export class BrowserController {
     const { driver, target } = await this.page();
     const before = this.snapshots.get(target) ?? (await this.snapshot(driver, target));
     const beforeUrl = (await driver.location()).url;
+    const backend = await this.ensure();
+    const tabsBefore = await backend.listTabs();
 
     await action(driver);
     await driver.settle();
+
+    // A link or a form can open its page in a new tab ("Continue to book"
+    // does). The old tab then looks unchanged: the model pressed the button
+    // again and again, a new tab each time. Go where the action led.
+    const opened = openedTab(tabsBefore, await backend.listTabs());
+    if (opened) {
+      this.follow(opened);
+      const next = await this.page();
+      await next.driver.settle();
+      return `${label}\n→ This opened a new tab, which is now the current tab. ${await this.landing(next.driver, next.target)}`;
+    }
 
     const loc = await driver.location();
     if (loc.url !== beforeUrl) return `${label}\n→ ${await this.landing(driver, target)}`;

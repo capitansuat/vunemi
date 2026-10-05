@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BrowserBackend, TabInfo } from "../src/backend.js";
-import { BrowserController } from "../src/controller.js";
+import { BrowserController, openedTab } from "../src/controller.js";
 import { PageActionError } from "../src/page.js";
 
 /** Tabs only; attaching fails the way the embedded browser does for a closed tab. */
@@ -46,5 +46,15 @@ describe("a tab closed under a running task", () => {
     expect((await browser.tabs()).find((t) => t.current)?.title).toBe("A");
     browser.follow("9");
     expect((await browser.tabs()).find((t) => t.current)?.title).toBe("Offer");
+  });
+
+  it("sees the tab an action opened, the newest when there are several", () => {
+    const a = { targetId: "7", url: "https://www.google.com/travel/flights/booking", title: "Flights" };
+    const b = { targetId: "8", url: "https://web.example.com/booking", title: "Airline" };
+    const c = { targetId: "9", url: "https://web.example.com/booking", title: "Airline" };
+    expect(openedTab([a], [a])).toBeNull();
+    expect(openedTab([a], [a, b])).toBe("8");
+    expect(openedTab([a], [a, b, c])).toBe("9");
+    expect(openedTab([a, b], [b])).toBeNull();
   });
 });

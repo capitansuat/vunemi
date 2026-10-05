@@ -34,7 +34,7 @@ export const BROWSER_INSTRUCTIONS = `Using the web browser:
 - page_describe shows the whole page structure; page_read returns its visible text; page_find searches it. page_screenshot, when available, shows a picture of the tab for charts, images and layout.
 - Refs marked with * appeared since you last looked.
 - Never try to solve or get around a CAPTCHA or "are you a robot" check. When one appears, the user is asked to handle it and you continue afterwards.
-- If a page needs the user to log in, or to enter payment or personal details, call user_takeover with a short reason in the user's language. Never type passwords, card numbers or ID numbers yourself.`;
+- If a page asks the user to log in or offers to continue as a guest, or asks for passenger, contact, payment or other personal details, stop there: call user_takeover with a short reason in the user's language that names the choices on the page (for example: sign in if you have an account, or continue as a guest). Do not choose for them or go on yourself. Never type passwords, card numbers or ID numbers yourself.`;
 
 /** Shown to the user while the agent waits at a bot check. */
 const CHALLENGE_HANDOFF = (what: string) =>
