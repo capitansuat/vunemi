@@ -349,6 +349,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const guided = new Set<string>();
   /** Tools called in this task: an answer that names one reports on it, it doesn't plan it. */
   const called = new Set<string>();
+  /** Travel options reached the user's cards in this run: they choose before any site is opened. */
+  let travelShown = false;
 
   try {
     // A plan is a whole model call before anything happens; a one-step
@@ -671,6 +673,12 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     if (avoided(tool, opts.goal)) {
       return fail(call, `${call.name} is not for this request: it is about another app. Use that app's tools instead. Nothing was done.`, false);
     }
+    // A small model went on to the airline's own site and filled in its form
+    // before the user had picked anything. The cards are the answer: the
+    // chosen offer opens for the user, in their next turn.
+    if (travelShown && tools.sourceOf(call.name)?.split(":")[0] === "browser") {
+      return fail(call, "Travel options were just shown to the user as cards. Do not open or use websites in this turn: end it with a short summary and let the user choose an option. The chosen offer opens for them. Nothing was done.", false);
+    }
     if (!withinRun(tool) || (opts.unattended === true && UNATTENDED_NEVER.has(actionClass))) {
       return fail(call, `${call.name} can't run in a scheduled task: scheduled tasks never send, delete or pay, and use only the connections they were set up with. Nothing was done. Say so in your answer.`, false);
     }
@@ -727,6 +735,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         calendarReadError = null;
       }
       if (actionClass !== "read") changedSomething = true;
+      if (call.name.startsWith("travel_search_") && raw.includes('"kind":"travel-options"')) travelShown = true;
       if (tool.untrustedOutput) opts.onUntrustedOutput?.(raw, tool.name);
       emit({
         type: "tool.finished",

@@ -99,6 +99,53 @@ describe("runAgent", () => {
     expect(result.detail).toBe("İki otel buldum.");
   });
 
+  it("opens no website once travel options are on cards, until the user chooses one", async () => {
+    const opened: unknown[] = [];
+    const registry = new ToolRegistry()
+      .register({
+        name: "travel_search_flights", description: "Search flights", actionClass: "read",
+        parameters: { type: "object", properties: {} },
+        run: async () => JSON.stringify({ kind: "travel-options", source: "google", options: [{ title: "Pegasus", price: "£100" }] }),
+      }, "travel-flights")
+      .register({
+        name: "page_goto", description: "Open a page", actionClass: "read",
+        parameters: { type: "object", properties: { url: { type: "string" } } },
+        run: async (args) => { opened.push(args); return "Now on the page"; },
+      }, "browser:act");
+    const { model, seen } = scripted([
+      { calls: [{ name: "travel_search_flights", argumentsText: "{}" }] },
+      { calls: [{ name: "page_goto", argumentsText: '{"url":"https://www.flypgs.com/en"}' }] },
+      { text: "Pegasus en ucuzu; birini seçebilirsin." },
+    ]);
+    const events: AgentEvent[] = [];
+    await runAgent({ goal: "3 Kasım için Manchester'dan İzmir'e uçuş bul", model, tools: registry, emit: (e) => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
+    expect(opened).toEqual([]);
+    expect(seen[2]!.messages.at(-1)!.content).toContain("let the user choose");
+    expect(events.some((e) => e.type === "tool.finished" && !e.ok)).toBe(true);
+  });
+
+  it("still lets a request browse when no travel options were shown", async () => {
+    const opened: unknown[] = [];
+    const registry = new ToolRegistry()
+      .register({
+        name: "travel_search_flights", description: "Search flights", actionClass: "read",
+        parameters: { type: "object", properties: {} },
+        run: async () => JSON.stringify({ kind: "travel-search-skipped", reason: "Use the earlier results." }),
+      }, "travel-flights")
+      .register({
+        name: "page_goto", description: "Open a page", actionClass: "read",
+        parameters: { type: "object", properties: { url: { type: "string" } } },
+        run: async (args) => { opened.push(args); return "Now on the page"; },
+      }, "browser");
+    const { model } = scripted([
+      { calls: [{ name: "travel_search_flights", argumentsText: "{}" }] },
+      { calls: [{ name: "page_goto", argumentsText: '{"url":"https://www.flypgs.com/en"}' }] },
+      { text: "Baktım." },
+    ]);
+    await runAgent({ goal: "Pegasus'un bagaj kurallarına bak", model, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(opened).toEqual([{ url: "https://www.flypgs.com/en" }]);
+  });
+
   it("does not mark a repeated unperformed search promise as a completed search", async () => {
     const registry = new ToolRegistry().register({
       name: "travel_search_hotels", description: "Search hotels", actionClass: "read",
