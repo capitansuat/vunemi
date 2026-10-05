@@ -589,6 +589,7 @@ const session: AgentSession = new AgentSession({
   grants,
   onUndoOffered: (u) => activity.offerUndo(u.callId, u.label, u.undo),
   recall: (goal) => recall(memory, meaning, goal),
+  openPage: () => (connectors.isOn("browser") ? embedded.openPage() : null),
   afterRun: ({ runId, model, words }) => {
     const conversation = conversations.currentId;
     void propose({ model, messages: words, store: memory, meaning, signal: AbortSignal.timeout(120_000), sessionId: conversation })
@@ -1504,15 +1505,19 @@ handle(CH.vaultDelete, async (_e, name: string) => {
 });
 
 handle(CH.embeddedGet, () => embedded.state);
-handle(CH.embeddedOpen, (_e, url: string) => void embedded.open(String(url)));
+// What the user opens or picks in the pane is where the page tools work next.
+handle(CH.embeddedOpen, (_e, url: string) => browser.follow(embedded.open(String(url))));
 // Only Google Flights and Trivago offers; Google's cookie question in that tab is declined.
-handle(CH.travelOpen, (_e, url: string) => void embedded.open(offerPageUrl(String(url)), { declineCookies: true }));
+handle(CH.travelOpen, (_e, url: string) => browser.follow(embedded.open(offerPageUrl(String(url)), { declineCookies: true })));
 handle(CH.embeddedNavigate, (_e, id: string, url: string) => embedded.navigate(String(id), String(url)));
 handle(CH.embeddedHistory, (_e, id: string, action: "back" | "forward" | "reload" | "stop") => {
   if (!["back", "forward", "reload", "stop"].includes(action)) throw new Error(`Unknown action: ${String(action)}`);
   embedded.history(String(id), action);
 });
-handle(CH.embeddedActivate, (_e, id: string) => embedded.activate(String(id)));
+handle(CH.embeddedActivate, (_e, id: string) => {
+  embedded.activate(String(id));
+  browser.follow(String(id));
+});
 handle(CH.embeddedClose, (_e, id: string) => embedded.close(String(id)));
 ipcMain.on(CH.embeddedBounds, (e, b: PaneBounds | null) => {
   if (e.sender !== win?.webContents) return;

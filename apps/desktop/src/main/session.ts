@@ -76,6 +76,8 @@ export interface SessionOptions {
   onCheckpoint?: RunOptions["onCheckpoint"];
   /** The notes from memory a request is given; an error only means none. */
   recall?: (goal: string) => Promise<{ notes: MemoryNote[]; topic: string[] }>;
+  /** The page showing in Vunemi's browser, if any, read as each request is sent. */
+  openPage?: () => { title: string; url: string } | null;
   /**
    * After a finished task the user watched: what they wrote lately, and the
    * model that did it, so memory can propose notes from their own words.
@@ -290,8 +292,10 @@ export class AgentSession {
       const recalled = await this.opts.recall?.(goal).catch(() => null);
       const memory = recalled?.topic.filter((text) => !this.remembered.has(text)) ?? [];
       this.given = recalled?.notes.length ? recalled.notes : null;
+      const openPage = this.opts.openPage?.() ?? null;
       const result = await runAgent({
         goal,
+        ...(openPage && { openPage }),
         ...(undone.length > 0 && { undone }),
         ...(memory.length > 0 && { memory }),
         ...(attachments.length > 0 && { attachments }),

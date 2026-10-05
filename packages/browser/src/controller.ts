@@ -80,6 +80,17 @@ export class BrowserController {
     }));
   }
 
+  /**
+   * The user brought a tab forward in Vunemi's browser: opened an offer from
+   * a card, say, or picked a tab. The page tools work there next, rather
+   * than in the tab the last task left behind, which made the agent open
+   * the user's page a second time.
+   */
+  follow(targetId: string): void {
+    if (!this.shortIds.has(targetId)) this.shortIds.set(targetId, this.nextShort++);
+    this.current = targetId;
+  }
+
   async focus(tab: number): Promise<TabView> {
     const target = await this.resolveTab(tab);
     await (await this.ensure()).activateTab(target);

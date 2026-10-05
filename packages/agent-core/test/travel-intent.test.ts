@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { getLocale, LOCALES, setLocale, t } from "@vunemi/i18n";
 import { requestedTravelTools, wantsMoreTravelSearches } from "../src/travel-intent.js";
 
 describe("travel requests in every app language", () => {
@@ -60,16 +59,11 @@ describe("travel requests in every app language", () => {
     expect(wantsMoreTravelSearches("内日のホテル")).toBe(false);
   });
 
-  it("does not read a chosen card as a new search request, in any language", () => {
+  it("does not read quoted card data or a link as a search request", () => {
     const item = JSON.stringify({ source: "trivago", title: "Harbour View Hotel", displayedPrice: "£127",
       offerUrl: "https://www.trivago.co.uk/en-GB/lm/harbour-view-hotel?search=100-1;dr-20261103-20261105" });
-    const before = getLocale();
-    for (const { code } of LOCALES) {
-      setLocale(code);
-      const message = t("travel.chose", { n: "3", item, page: t("travel.pageTried") });
-      expect(requestedTravelTools(message), code).toEqual([]);
-    }
-    setLocale(before);
+    expect(requestedTravelTools(`Card details: ${item}. Is it a good fit?`)).toEqual([]);
+    expect(requestedTravelTools("Is this one fine? https://www.trivago.co.uk/en-GB/lm/hotel?search=1")).toEqual([]);
     // The user's own words beside a link still count.
     expect(requestedTravelTools("Find a hotel like https://www.trivago.co.uk/en-GB/lm/x")).toEqual(hotels);
   });

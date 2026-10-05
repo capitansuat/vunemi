@@ -139,6 +139,14 @@ export class EmbeddedBrowser {
     };
   }
 
+  /** The web page showing in the pane, if one is: its title and address. */
+  openPage(): { title: string; url: string } | null {
+    const tab = this.tabs.find((t) => t.id === this.active);
+    const wc = tab?.view.webContents;
+    if (!wc || wc.isDestroyed() || !/^https?:/i.test(wc.getURL())) return null;
+    return { title: wc.getTitle() || wc.getURL(), url: wc.getURL() };
+  }
+
   onState(listener: (s: EmbeddedState) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);

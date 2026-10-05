@@ -36,4 +36,15 @@ describe("a tab closed under a running task", () => {
     // The next look at the tabs no longer lists it, and nothing points at it.
     expect((await browser.tabs()).map((t) => t.title)).toEqual(["B"]);
   });
+
+  it("works in the tab the user brought forward, not the one the last task used", async () => {
+    const tabs: TabInfo[] = [
+      { targetId: "7", url: "https://example.com/a", title: "A" },
+      { targetId: "9", url: "https://example.com/offer", title: "Offer" },
+    ];
+    const browser = new BrowserController(async () => backend(tabs));
+    expect((await browser.tabs()).find((t) => t.current)?.title).toBe("A");
+    browser.follow("9");
+    expect((await browser.tabs()).find((t) => t.current)?.title).toBe("Offer");
+  });
 });
