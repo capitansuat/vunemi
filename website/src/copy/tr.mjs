@@ -167,7 +167,7 @@ export default {
     highlights: [
       "Uçuşları Google Flights'ta, otelleri Trivago'da ara: seçenekler kart olarak gelir, birini seçince teklifi sohbetin yanında açılır. İki bağlantı da kapalı başlar.",
       "Vunemi senin yerine rezervasyon ya da ödeme yapmaz: giriş ve ödeme sende kalır.",
-      "Daha sade bir kenar çubuğu; kilit artık modelin yanında.",
+      "Daha sade bir kenar çubuğu: modelin ve verilerin bu Mac'te kaldığını söyleyen not artık modelin yanında bir kilit simgesi.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

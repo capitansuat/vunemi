@@ -165,7 +165,7 @@ export default {
     highlights: [
       "Busca vuelos en Google Flights y hoteles en Trivago: las opciones llegan como tarjetas y, al elegir una, su oferta se abre junto al chat. Ambas conexiones empiezan desactivadas.",
       "Vunemi no reserva ni paga por ti: iniciar sesión y pagar siguen en tus manos.",
-      "Una barra lateral más sobria, con el candado junto al modelo.",
+      "Una barra lateral más sobria: la nota de que el modelo y tus datos se quedan en este Mac es ahora un icono de candado junto al modelo.",
     ],
     title: "Descarga Vunemi",
     intro: "Gratis y de código abierto. Para Mac con Apple Silicon y macOS 14 o posterior.",

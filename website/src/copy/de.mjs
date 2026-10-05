@@ -165,7 +165,7 @@ export default {
     highlights: [
       "Flüge bei Google Flights und Hotels bei Trivago suchen: Die Optionen erscheinen als Karten, und mit einer Auswahl öffnet sich das Angebot neben dem Chat. Beide Verbindungen sind zunächst aus.",
       "Vunemi bucht und bezahlt nicht für dich: Anmelden und Bezahlen bleiben bei dir.",
-      "Eine ruhigere Seitenleiste; das Schloss sitzt jetzt beim Modell.",
+      "Eine ruhigere Seitenleiste: Der Hinweis, dass Modell und Daten auf diesem Mac bleiben, ist jetzt ein Schloss-Symbol neben dem Modell.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

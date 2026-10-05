@@ -169,7 +169,7 @@ export default {
     highlights: [
       "Search flights on Google Flights and hotels on Trivago: options arrive as cards, and choosing one opens its offer beside the chat. Both connections start off.",
       "Vunemi does not book or pay for you: signing in and paying stay with you.",
-      "A quieter sidebar, with the lock beside the model.",
+      "A quieter sidebar: the note that your model and data stay on this Mac is now a lock icon beside the model.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],
