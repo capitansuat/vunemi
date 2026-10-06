@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Bot, Globe, Hand, Play, Plus, RotateCw, ShieldAlert, X } from "lucide-react";
+import { awaitingChoice } from "../lib/fold.js";
 import { callDetail, toolLabel } from "../lib/labels.js";
 import type { EmbeddedTab } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
@@ -156,6 +157,8 @@ function AgentBar() {
     const d = callDetail(c);
     return `${toolLabel(c.tool, c.status)}${d ? ` · ${d}` : ""}`;
   });
+  // A question or cards on screen: the task is not working, it waits for a pick.
+  const choosing = useStore((s) => awaitingChoice(s.runs));
   if (!running) return null;
 
   return (
@@ -186,7 +189,8 @@ function AgentBar() {
             <span className="relative size-2 rounded-full bg-ember" />
           </span>
           <span className="min-w-0 flex-1 truncate">
-            <b className="font-medium">{t("pane.agentWorking")}</b> <span className="text-muted">· {current}</span>
+            {choosing ? <b className="font-medium">{t("pane.awaitingChoice")}</b>
+              : <><b className="font-medium">{t("pane.agentWorking")}</b> <span className="text-muted">· {current}</span></>}
           </span>
           <button
             type="button"

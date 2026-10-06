@@ -15,6 +15,7 @@ export const messages: Catalogue = {
     noMatches: "Nessun dato trovato in una fonte",
     typeInstead: "Puoi anche scrivere la tua risposta.",
     unchecked: "Suggerimenti di Vunemi: nulla di questo è stato letto da una pagina o dai tuoi dati.",
+    draft: "Bozza, mostrata sotto come schede",
   },
 
   time: {
@@ -334,6 +335,7 @@ export const messages: Catalogue = {
     youHaveControl: "Hai tu il controllo.",
     agentWaiting: "L’agente aspetta; fai pure ciò che ti serve sulla pagina.",
     agentWorking: "L’agente sta lavorando",
+    awaitingChoice: "L’agente aspetta la tua scelta",
     takeControl: "Prendi il controllo",
     takeControlHint: "L’agente si ferma prima del prossimo passaggio e la pagina è tua",
     webOnly: "Si possono aprire solo indirizzi web.",

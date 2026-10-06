@@ -352,8 +352,8 @@ function ContextMeter({ used, budget, known, parts }: { used: number; budget: nu
   const tone = ratio > 0.8 ? "bg-danger" : ratio > 0.5 ? "bg-warn" : "bg-ok";
   const title = [t("app.context", { used, budget }), known ? null : t("context.estimated", { budget }), ...partLines(parts)].filter((line) => line !== null).join("\n");
   return (
-    <div className="no-drag flex items-center gap-2 text-[11.5px] text-faint" title={title}>
-      <span className="tabular-nums">
+    <div className="no-drag flex shrink-0 items-center gap-2 text-[11.5px] text-faint" title={title}>
+      <span className="whitespace-nowrap tabular-nums">
         {formatTokens(used)} / {formatTokens(budget)}
       </span>
       <div className="h-1 w-16 overflow-hidden rounded-full bg-surface-3">

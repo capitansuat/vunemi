@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { AgentEvent } from "@vunemi/agent-core";
 import {
+  awaitingChoice,
+  draftText,
   foldEvent,
   pendingApprovals,
   pendingHandoff,
@@ -24,6 +26,22 @@ describe("foldEvent", () => {
     expect(answered[0]!.steps[0]!.choices[0]).toMatchObject({ status: "answered", answer: "Friday", index: 0 });
     const expired = fold([...start, asked, { type: "run.finished", runId: "r", status: "stopped", detail: "", at: 4 }]);
     expect(expired[0]!.steps[0]!.choices[0]!.status).toBe("expired");
+  });
+
+  it("marks the text that option cards stand in for, and awaits the choice", () => {
+    const card = { kind: "options" as const, items: [{ title: "A", facts: [] }, { title: "B", facts: [] }] };
+    const events: AgentEvent[] = [
+      ...start,
+      { type: "message.delta", runId: "r", stepId: "s0", text: "1. A [shop](https://example.com/a)\n2. B" },
+      { type: "step.started", runId: "r", stepId: "s1", index: 1, at: 2 },
+      { type: "choice.asked", runId: "r", stepId: "s1", callId: "c1", card, replaces: "s0", at: 3 },
+    ];
+    const runs = fold(events);
+    expect(runs[0]!.steps.map((step) => step.replaced === true)).toEqual([true, false]);
+    expect(awaitingChoice(runs)).toBe(true);
+    expect(awaitingChoice(fold([...events, { type: "choice.answered", runId: "r", callId: "c1", text: "A", index: 0, at: 4 }]))).toBe(false);
+    // What is left to read of a draft: its words, without the addresses nobody checked.
+    expect(draftText("**1. Skillet**\n- Source: [Amazon UK](https://www.amazon.co.uk/dp/B0)\nSee https://example.com/x too.")).toBe("**1. Skillet**\n- Source: Amazon UK\nSee too.");
   });
 
   it("shows compaction under the run it follows, and drops it when nothing changed", () => {

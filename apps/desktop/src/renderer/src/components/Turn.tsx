@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronRight, CircleStop, FileText, TriangleAlert } from "lucide-react";
 import { Mochi } from "./Mochi.js";
-import { runStats, type CompactionView, type RunView, type StepView } from "../lib/fold.js";
+import { draftText, runStats, type CompactionView, type RunView, type StepView } from "../lib/fold.js";
 import { formatMs, formatTokens, runStatusLabel, shortModelName } from "../lib/labels.js";
 import { CallCard } from "./CallCard.js";
 import { ChoiceCard } from "./ChoiceCard.js";
@@ -110,7 +110,9 @@ function Step({ step, streaming, isAnswer }: { step: StepView; streaming: boolea
   return (
     <div className="space-y-2">
       {step.thought !== "" && <Thought text={step.thought} active={thinking} />}
-      {step.text.trim() !== "" &&
+      {step.replaced && step.text.trim() !== "" ? (
+        <Draft text={step.text} />
+      ) : step.text.trim() !== "" &&
         (isAnswer || (streaming && step.calls.length === 0) ? (
           <Markdown text={step.text} />
         ) : (
@@ -120,6 +122,29 @@ function Step({ step, streaming, isAnswer }: { step: StepView; streaming: boolea
         <CallCard key={c.callId} call={c} />
       ))}
       {step.choices.map((choice) => <ChoiceCard key={choice.callId} choice={choice} />)}
+    </div>
+  );
+}
+
+/** What the model wrote before the cards that now show it: kept, out of the way. */
+function Draft({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1 text-[12.5px] text-faint transition-colors hover:text-muted"
+        aria-expanded={open}
+      >
+        <ChevronRight size={12} className={`transition-transform ${open ? "rotate-90" : ""}`} />
+        <span>{t("choice.draft")}</span>
+      </button>
+      {open && (
+        <div className="selectable mt-1.5 ml-[5px] max-h-72 overflow-auto whitespace-pre-wrap border-l border-line pl-3.5 text-[12.5px] leading-relaxed text-faint scroll-thin">
+          {draftText(text)}
+        </div>
+      )}
     </div>
   );
 }

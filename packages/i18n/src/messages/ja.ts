@@ -15,6 +15,7 @@ export const messages: Catalogue = {
     noMatches: "出典と一致する情報がありません",
     typeInstead: "回答を入力することもできます。",
     unchecked: "Vunemi 自身の提案です。ここにある内容は、ページやあなたのデータから読み取ったものではありません。",
+    draft: "下書き（下にカードで表示）",
   },
 
   time: {
@@ -334,6 +335,7 @@ export const messages: Catalogue = {
     youHaveControl: "操作はあなたにあります。",
     agentWaiting: "エージェントは待機中です。ページで必要なことを自由に行ってください。",
     agentWorking: "エージェントが作業中",
+    awaitingChoice: "エージェントは選択を待っています",
     takeControl: "操作を引き継ぐ",
     takeControlHint: "エージェントは次のステップの前で止まり、ページはあなたのものになります",
     webOnly: "開けるのは Web アドレスだけです。",

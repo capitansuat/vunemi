@@ -15,6 +15,7 @@ export const messages: Catalogue = {
     noMatches: "No facts matched a source",
     typeInstead: "You can type your own answer.",
     unchecked: "Vunemi's own suggestions: nothing here was read from a page or from your data.",
+    draft: "Draft, shown as cards below",
   },
 
   time: {
@@ -334,6 +335,7 @@ export const messages: Catalogue = {
     youHaveControl: "You have control.",
     agentWaiting: "The agent is waiting; do whatever you need on the page.",
     agentWorking: "The agent is working",
+    awaitingChoice: "The agent is waiting for your choice",
     takeControl: "Take control",
     takeControlHint: "The agent stops before its next step and the page is yours",
     webOnly: "Only web addresses can be opened.",

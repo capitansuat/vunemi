@@ -18,6 +18,7 @@ export const messages = {
     noMatches: "Hiçbir bilgi kaynakta eşleşmedi",
     typeInstead: "İstersen yanıtını yazabilirsin.",
     unchecked: "Vunemi'nin kendi önerileri: buradaki bilgiler bir sayfadan ya da senin verilerinden okunmadı.",
+    draft: "Taslak; aşağıda kart olarak gösteriliyor",
   },
 
   time: {
@@ -338,6 +339,7 @@ export const messages = {
     youHaveControl: "Kontrol sende.",
     agentWaiting: "Ajan bekliyor; sayfada istediğini yapabilirsin.",
     agentWorking: "Ajan çalışıyor",
+    awaitingChoice: "Ajan senin seçimini bekliyor",
     takeControl: "Kontrolü al",
     takeControlHint: "Ajan sıradaki adımdan önce durur; sayfa sende olur",
     webOnly: "Yalnızca web adresleri açılabilir.",

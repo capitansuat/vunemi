@@ -51,9 +51,9 @@ export function ChoiceCard({ choice }: { choice: ChoiceView }) {
   const labels = [...new Set(compared.flatMap((i) => items[i]?.facts.map((fact) => fact.label) ?? []))];
   const compare = (index: number) => setCompared((current) => current.includes(index) ? current.filter((i) => i !== index) : [...current, index]);
   return (
-    <div className="rounded-xl border border-line bg-surface p-3.5">
+    <div className="@container rounded-xl border border-line bg-surface p-3.5">
       {choice.card.intro && <p className="mb-3 text-[13px] text-fg">{choice.card.intro}</p>}
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 @lg:grid-cols-2">
         {items.map((item, index) => (
           <div key={index} className="flex min-w-0 flex-col rounded-xl border border-line bg-surface-2 p-3">
             <div className="flex items-start justify-between gap-2">
@@ -63,7 +63,7 @@ export function ChoiceCard({ choice }: { choice: ChoiceView }) {
             {item.price && !unchecked && <FactMark fact={item.price} />}
             <dl className="mt-2 space-y-1.5">
               {item.facts.map((fact, factIndex) => <div key={factIndex} className="flex items-start justify-between gap-3 text-[12px]">
-                <dt className="min-w-0 text-muted">{fact.label}</dt>
+                <dt className="max-w-[45%] shrink-0 break-words text-muted">{fact.label}</dt>
                 <dd className="min-w-0 break-words text-right text-fg">{fact.value}{!unchecked && <FactMark fact={fact} />}</dd>
               </div>)}
             </dl>
@@ -101,7 +101,7 @@ function Comparison({ items, indices, labels, marks }: { items: OptionCard[]; in
     <table className="w-full min-w-[420px] border-collapse text-[12px]">
       <thead className="bg-surface-2"><tr><th className="px-2 py-1.5 text-left">{t("choice.compare")}</th>{indices.map((i) => <th key={i} className="px-2 py-1.5 text-left">{items[i]?.title}</th>)}</tr></thead>
       <tbody>
-        <tr className="border-t border-line"><th className="px-2 py-1.5 text-left text-muted">{t("choice.price")}</th>{indices.map((i) => <td key={i} className="px-2 py-1.5">{items[i]?.price?.value ?? "—"}{marks && items[i]?.price && <FactMark fact={items[i]!.price!} compact />}</td>)}</tr>
+        {indices.some((i) => items[i]?.price) && <tr className="border-t border-line"><th className="px-2 py-1.5 text-left text-muted">{t("choice.price")}</th>{indices.map((i) => <td key={i} className="px-2 py-1.5">{items[i]?.price?.value ?? "—"}{marks && items[i]?.price && <FactMark fact={items[i]!.price!} compact />}</td>)}</tr>}
         {labels.map((label) => <tr key={label} className="border-t border-line"><th className="px-2 py-1.5 text-left text-muted">{label}</th>{indices.map((i) => {
           const fact = items[i]?.facts.find((entry) => entry.label === label);
           return <td key={i} className="px-2 py-1.5">{fact?.value ?? "—"}{marks && fact && <FactMark fact={fact} compact />}</td>;

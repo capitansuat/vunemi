@@ -52,6 +52,8 @@ export interface StepView {
   text: string;
   calls: CallView[];
   choices: ChoiceView[];
+  /** Option cards in a later step show what this text listed. */
+  replaced?: boolean;
   usage?: UsageView;
 }
 
@@ -182,8 +184,10 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
       return updateCall(run, e.callId, (c) => ({ ...c, handoff: e.reason }));
     case "handoff.resolved":
       return updateCall(run, e.callId, ({ handoff: _, ...c }) => c);
-    case "choice.asked":
-      return updateStep(run, e.stepId, (s) => ({ ...s, choices: [...s.choices, { runId: e.runId, callId: e.callId, card: e.card, status: "awaiting" }] }));
+    case "choice.asked": {
+      const asked = updateStep(run, e.stepId, (s) => ({ ...s, choices: [...s.choices, { runId: e.runId, callId: e.callId, card: e.card, status: "awaiting" }] }));
+      return e.replaces ? updateStep(asked, e.replaces, (s) => ({ ...s, replaced: true })) : asked;
+    }
     case "choice.answered":
       return { ...run, steps: run.steps.map((s) => ({ ...s, choices: s.choices.map((c) => c.callId === e.callId ? { ...c, status: "answered" as const, answer: e.text, ...(e.index !== undefined && { index: e.index }) } : c) })) };
     case "tool.started":
@@ -329,6 +333,19 @@ export function pendingHandoff(runs: readonly RunView[]): { callId: string; reas
     }
   }
   return null;
+}
+
+/** True while a question or option cards wait for the user's pick. */
+export function awaitingChoice(runs: readonly RunView[]): boolean {
+  return runs.at(-1)?.steps.some((step) => step.choices.some((choice) => choice.status === "awaiting")) ?? false;
+}
+
+/**
+ * A draft that option cards replaced, as plain words: link addresses go,
+ * since nothing checked them. The cards carry the sources that were read.
+ */
+export function draftText(text: string): string {
+  return text.replace(/\[([^\]]+)\]\((?:https?:\/\/)[^)\s]+\)/g, "$1").replace(/\s*https?:\/\/\S+/g, "").trim();
 }
 
 /** True while an intent preview is waiting for a yes. */

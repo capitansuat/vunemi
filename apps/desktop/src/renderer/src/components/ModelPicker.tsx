@@ -17,19 +17,19 @@ export function ModelPicker() {
     <Menu.Root onOpenChange={(open) => open && void refreshProviders()}>
       <Menu.Trigger
         disabled={running}
-        className="no-drag flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors hover:bg-surface-2 disabled:opacity-60 data-[state=open]:bg-surface-2"
+        className="no-drag flex min-w-0 items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors hover:bg-surface-2 disabled:opacity-60 data-[state=open]:bg-surface-2"
       >
         <span
           className={`size-1.5 rounded-full ${noneReachable ? "bg-danger" : selectedAvailable ? "bg-ok" : "bg-faint"}`}
           aria-hidden
         />
-        <span className="font-medium text-fg">{model ? shortModelName(model) : t("model.pick")}</span>
+        <span className="min-w-0 truncate font-medium text-fg">{model ? shortModelName(model) : t("model.pick")}</span>
         {provider && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-px text-[11px] text-muted">
+          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-surface-2 px-1.5 py-px text-[11px] text-muted">
             <HardDrive size={10} /> {t("model.local")} · {PROVIDER_LABEL[provider] ?? provider}
           </span>
         )}
-        <ChevronDown size={13} className="text-faint" />
+        <ChevronDown size={13} className="shrink-0 text-faint" />
       </Menu.Trigger>
 
       <Menu.Portal>

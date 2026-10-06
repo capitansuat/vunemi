@@ -15,6 +15,7 @@ export const messages: Catalogue = {
     noMatches: "没有信息与来源匹配",
     typeInstead: "也可以自行输入答案。",
     unchecked: "这些是 Vunemi 自己的建议：其中内容并非读取自网页或你的数据。",
+    draft: "草稿，已在下方以卡片显示",
   },
 
   time: {
@@ -334,6 +335,7 @@ export const messages: Catalogue = {
     youHaveControl: "控制权在你手中。",
     agentWaiting: "代理正在等待；你可以在页面上做任何需要的事。",
     agentWorking: "代理正在工作",
+    awaitingChoice: "代理正在等待你的选择",
     takeControl: "接管控制",
     takeControlHint: "代理会在下一步之前停下，页面交给你",
     webOnly: "只能打开网页地址。",
