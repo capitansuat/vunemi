@@ -832,6 +832,11 @@ export const messages: Catalogue = {
     startFailed: "Couldn't start speech recognition: {why}",
   },
 
+  menu: {
+    about: "About Vunemi",
+    hide: "Hide Vunemi",
+  },
+
   presence: {
     approval: "Vunemi is waiting for approval",
     done: "Task finished",

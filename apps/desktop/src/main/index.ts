@@ -1,9 +1,10 @@
-import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
+import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
+import { appMenuTemplate } from "./app-menu.js";
 import { toolAreas } from "./areas.js";
 import { choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
 import { BrowserController, checkNavigation, trustableHost } from "@vunemi/browser";
@@ -664,6 +665,13 @@ function sourceOf(tool: string): string {
   } catch {
     return t("main.source.page");
   }
+}
+
+/** The menu bar's menus, in the app's language. */
+function setAppMenu(): void {
+  if (process.platform !== "darwin") return;
+  Menu.setApplicationMenu(Menu.buildFromTemplate(appMenuTemplate()));
+  app.setAboutPanelOptions({ applicationName: "Vunemi" });
 }
 
 /** Brings the window back, creating it again if the user closed it. */
@@ -1380,6 +1388,7 @@ handle(CH.languageSet, (_e, next: unknown): Locale => {
   if (!isLocale(next)) throw new Error(t("main.badLanguage"));
   settings.setLanguage(next);
   setLocale(next);
+  setAppMenu();
   void vault.call("locale", [next]).catch(() => undefined);
   send(CH.languageChanged, next);
   return next;
@@ -1672,6 +1681,7 @@ void app.whenReady().then(async () => {
     return;
   }
   createWindow();
+  setAppMenu();
   presence.start();
   // The Mac locking locks Vunemi too, when the user asked for a lock at all.
   powerMonitor.on("lock-screen", () => {

@@ -832,6 +832,11 @@ export const messages: Catalogue = {
     startFailed: "无法启动语音识别：{why}",
   },
 
+  menu: {
+    about: "关于 Vunemi",
+    hide: "隐藏 Vunemi",
+  },
+
   presence: {
     approval: "Vunemi 正在等待批准",
     done: "任务已完成",

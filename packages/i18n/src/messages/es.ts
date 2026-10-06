@@ -832,6 +832,11 @@ export const messages: Catalogue = {
     startFailed: "No se pudo iniciar el reconocimiento de voz: {why}",
   },
 
+  menu: {
+    about: "Acerca de Vunemi",
+    hide: "Ocultar Vunemi",
+  },
+
   presence: {
     approval: "Vunemi espera una aprobación",
     done: "Tarea terminada",

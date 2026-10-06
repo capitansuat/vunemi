@@ -837,6 +837,11 @@ export const messages: Catalogue = {
     startFailed: "Не удалось запустить распознавание речи: {why}",
   },
 
+  menu: {
+    about: "О программе Vunemi",
+    hide: "Скрыть Vunemi",
+  },
+
   presence: {
     approval: "Vunemi ждёт одобрения",
     done: "Задача выполнена",

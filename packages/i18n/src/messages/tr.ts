@@ -836,6 +836,11 @@ export const messages = {
     startFailed: "Ses tanıma başlatılamadı: {why}",
   },
 
+  menu: {
+    about: "Vunemi Hakkında",
+    hide: "Vunemi'yi gizle",
+  },
+
   presence: {
     approval: "Vunemi onay bekliyor",
     done: "Görev bitti",

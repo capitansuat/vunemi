@@ -832,6 +832,11 @@ export const messages: Catalogue = {
     startFailed: "Spracherkennung konnte nicht gestartet werden: {why}",
   },
 
+  menu: {
+    about: "Über Vunemi",
+    hide: "Vunemi ausblenden",
+  },
+
   presence: {
     approval: "Vunemi wartet auf Freigabe",
     done: "Aufgabe erledigt",

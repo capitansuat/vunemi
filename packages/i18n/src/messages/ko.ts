@@ -832,6 +832,11 @@ export const messages: Catalogue = {
     startFailed: "음성 인식을 시작할 수 없습니다: {why}",
   },
 
+  menu: {
+    about: "Vunemi에 관하여",
+    hide: "Vunemi 가리기",
+  },
+
   presence: {
     approval: "Vunemi가 승인을 기다리고 있습니다",
     done: "작업 완료",
