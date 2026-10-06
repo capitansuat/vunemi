@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un asistente personal que funciona en tu Mac", description: "Vunemi ayuda con las tareas diarias. La IA funciona en tu Mac, sin cuenta en la nube de Vunemi. Tú eliges qué servicios externos conectar." },
-    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.1.11." },
+    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.1.12." },
     screens: { title: "Pantallas de Vunemi", description: "Pantallas reales de la app Vunemi para Mac, capturadas con datos de ejemplo." },
-    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.1.11 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
+    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.1.12 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
   },
   hero: {
     eyebrow: "Asistente personal para Mac",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Todo lo que puede hacer Vunemi",
-    intro: "Vunemi 0.1.11 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
+    intro: "Vunemi 0.1.12 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
     chatTitle: "Trabajar con Vunemi",
     chat: [
       { title: "Primero, el plan", body: "En una tarea de varios pasos, Vunemi puede mostrarte antes el plan. Adelante, edita los pasos o cancela." },
@@ -164,10 +164,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novedades de esta versión",
     highlights: [
-      "Las respuestas empiezan antes: Vunemi da al modelo solo las herramientas que necesita cada petición, y un mensaje de seguimiento ya no espera a que se vuelva a leer toda la conversación.",
-      "En un proyecto, Vunemi puede guardar notas de trabajo (una decisión, un hallazgo) y encontrarlas en conversaciones posteriores de ese proyecto. Las ves en las notas del proyecto y puedes eliminarlas.",
-      "Los resultados largos se guardan con su conversación, así que Vunemi puede seguir leyéndolos después de volver a abrir la app.",
-      "Vunemi ajusta el modelo a la memoria libre de tu Mac y cierra los modelos inactivos cuando a macOS le falta memoria. Ajustes › Modelo muestra qué hay en memoria en ese momento.",
+      "Cuando Vunemi necesita que elijas, pregunta con botones. Puedes seguir escribiendo tu propia respuesta.",
+      "Las opciones para elegir, como vuelos, productos o lugares, llegan en forma de tarjetas. Marca dos o más para compararlas una al lado de la otra.",
+      "Cada dato de una tarjeta se comprueba con la página de la que se leyó y se señala cuando no se encontró allí. Las tarjetas hechas sin leer nada indican que son sugerencias propias de Vunemi.",
+      "Cmd+Q ahora siempre cierra Vunemi por completo, y la barra de menús muestra su nombre.",
     ],
     title: "Descarga Vunemi",
     intro: "Gratis y de código abierto. Para Mac con Apple Silicon y macOS 14 o posterior.",

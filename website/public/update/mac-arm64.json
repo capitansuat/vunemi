@@ -1,84 +1,84 @@
 {
-  "currentRelease": "0.1.11",
+  "currentRelease": "0.1.12",
   "releases": [
     {
-      "version": "0.1.11",
+      "version": "0.1.12",
       "updateTo": {
-        "version": "0.1.11",
-        "name": "Vunemi 0.1.11",
-        "pub_date": "2026-10-05T00:00:00Z",
+        "version": "0.1.12",
+        "name": "Vunemi 0.1.12",
+        "pub_date": "2026-10-06T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.11/Vunemi-0.1.11-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.12/Vunemi-0.1.12-arm64.zip"
       }
     }
   ],
   "sizeMb": 135,
   "notes": {
     "en": [
-      "Replies start sooner: Vunemi gives the model only the tools a request needs, and a follow-up no longer waits for the whole conversation to be read again.",
-      "In a project, Vunemi can save work notes (a decision, a finding) and find them in later conversations of that project. You see them under the project's notes and can delete them.",
-      "Long results are kept with their conversation, so Vunemi can still read them after you reopen the app.",
-      "Vunemi fits the model to the memory your Mac has free and closes idle models when macOS runs short. Settings › Model shows what is in memory now."
+      "When Vunemi needs you to choose, it asks with buttons. You can still type your own answer.",
+      "Options to pick from, such as flights, products or places, come as cards. Tick two or more to compare them side by side.",
+      "Each fact on a card is checked against the page it was read from, and marked when it was not found there. Cards made without reading anything say they are Vunemi's own suggestions.",
+      "Cmd+Q now always quits Vunemi completely, and the menu bar shows its name."
     ],
     "de": [
-      "Antworten beginnen schneller: Vunemi gibt dem Modell nur die Werkzeuge, die eine Anfrage braucht, und bei einer Folgenachricht wird nicht mehr die ganze Unterhaltung neu gelesen.",
-      "In einem Projekt kann Vunemi Arbeitsnotizen speichern (eine Entscheidung, ein Ergebnis) und findet sie in späteren Unterhaltungen dieses Projekts wieder. Du siehst sie unter den Notizen des Projekts und kannst sie löschen.",
-      "Lange Ergebnisse bleiben bei ihrer Unterhaltung gespeichert, sodass Vunemi sie auch nach einem Neustart der App noch lesen kann.",
-      "Vunemi passt das Modell an den freien Arbeitsspeicher deines Mac an und schließt ungenutzte Modelle, wenn macOS der Speicher knapp wird. Einstellungen › Modell zeigt, was gerade im Speicher ist."
+      "Wenn du etwas auswählen sollst, fragt Vunemi jetzt mit Schaltflächen. Du kannst weiterhin eine eigene Antwort eintippen.",
+      "Optionen zur Auswahl, etwa Flüge, Produkte oder Orte, erscheinen als Karten. Markiere zwei oder mehr, um sie nebeneinander zu vergleichen.",
+      "Jede Angabe auf einer Karte wird mit der Seite abgeglichen, von der sie stammt, und gekennzeichnet, wenn sie dort nicht gefunden wurde. Karten, für die nichts gelesen wurde, weisen sich als Vunemis eigene Vorschläge aus.",
+      "Cmd+Q beendet Vunemi jetzt immer vollständig, und die Menüleiste zeigt den Namen Vunemi."
     ],
     "es": [
-      "Las respuestas empiezan antes: Vunemi da al modelo solo las herramientas que necesita cada petición, y un mensaje de seguimiento ya no espera a que se vuelva a leer toda la conversación.",
-      "En un proyecto, Vunemi puede guardar notas de trabajo (una decisión, un hallazgo) y encontrarlas en conversaciones posteriores de ese proyecto. Las ves en las notas del proyecto y puedes eliminarlas.",
-      "Los resultados largos se guardan con su conversación, así que Vunemi puede seguir leyéndolos después de volver a abrir la app.",
-      "Vunemi ajusta el modelo a la memoria libre de tu Mac y cierra los modelos inactivos cuando a macOS le falta memoria. Ajustes › Modelo muestra qué hay en memoria en ese momento."
+      "Cuando Vunemi necesita que elijas, pregunta con botones. Puedes seguir escribiendo tu propia respuesta.",
+      "Las opciones para elegir, como vuelos, productos o lugares, llegan en forma de tarjetas. Marca dos o más para compararlas una al lado de la otra.",
+      "Cada dato de una tarjeta se comprueba con la página de la que se leyó y se señala cuando no se encontró allí. Las tarjetas hechas sin leer nada indican que son sugerencias propias de Vunemi.",
+      "Cmd+Q ahora siempre cierra Vunemi por completo, y la barra de menús muestra su nombre."
     ],
     "fr": [
-      "Les réponses commencent plus vite : Vunemi ne donne au modèle que les outils dont une demande a besoin, et un message de suivi n'attend plus la relecture de toute la conversation.",
-      "Dans un projet, Vunemi peut enregistrer des notes de travail (une décision, un constat) et les retrouver dans les conversations suivantes de ce projet. Vous les voyez dans les notes du projet et pouvez les supprimer.",
-      "Les longs résultats sont conservés avec leur conversation : Vunemi peut encore les lire après la réouverture de l'app.",
-      "Vunemi adapte le modèle à la mémoire libre de votre Mac et ferme les modèles inactifs quand macOS vient à en manquer. Réglages › Modèle indique ce qui est en mémoire à cet instant."
+      "Quand Vunemi a besoin que vous choisissiez, il pose la question avec des boutons. Vous pouvez toujours saisir votre propre réponse.",
+      "Les options à choisir, par exemple des vols, des produits ou des lieux, s'affichent sous forme de cartes. Cochez-en deux ou plus pour les comparer côte à côte.",
+      "Chaque information d'une carte est vérifiée sur la page où elle a été lue, et signalée lorsqu'elle n'y a pas été trouvée. Les cartes préparées sans rien lire indiquent qu'il s'agit des suggestions de Vunemi.",
+      "Cmd+Q quitte désormais toujours Vunemi complètement, et la barre des menus affiche son nom."
     ],
     "it": [
-      "Le risposte iniziano prima: Vunemi dà al modello solo gli strumenti che servono alla richiesta, e un messaggio successivo non aspetta più che l'intera conversazione venga riletta.",
-      "In un progetto, Vunemi può salvare note di lavoro (una decisione, un risultato) e ritrovarle nelle conversazioni successive di quel progetto. Le vedi nelle note del progetto e puoi eliminarle.",
-      "I risultati lunghi vengono conservati con la loro conversazione, così Vunemi può leggerli anche dopo aver riaperto l'app.",
-      "Vunemi adatta il modello alla memoria libera del tuo Mac e chiude i modelli inattivi quando macOS ne ha poca. Impostazioni › Modello mostra cosa c'è in memoria in quel momento."
+      "Quando Vunemi ha bisogno che tu scelga, lo chiede con dei pulsanti. Puoi sempre scrivere la tua risposta.",
+      "Le opzioni tra cui scegliere, come voli, prodotti o luoghi, arrivano sotto forma di schede. Selezionane due o più per confrontarle fianco a fianco.",
+      "Ogni dato di una scheda viene verificato sulla pagina da cui è stato letto e segnalato quando lì non è stato trovato. Le schede preparate senza leggere nulla indicano che sono suggerimenti di Vunemi.",
+      "Cmd+Q ora chiude sempre Vunemi del tutto, e la barra dei menu mostra il suo nome."
     ],
     "tr": [
-      "Yanıtlar daha çabuk başlıyor: Vunemi modele yalnız isteğin gerektirdiği araçları veriyor ve takip mesajında konuşmanın tamamı yeniden okunmuyor.",
-      "Bir projede Vunemi iş notu kaydedebilir (bir karar, bir bulgu) ve o projenin sonraki konuşmalarında bulur. Notları projenin notlarında görür, silebilirsin.",
-      "Uzun sonuçlar konuşmasıyla birlikte saklanır; uygulamayı yeniden açtıktan sonra da Vunemi onları okuyabilir.",
-      "Vunemi modeli Mac'indeki boş belleğe göre açar ve macOS'ta bellek daralınca boştaki modelleri kapatır. Ayarlar › Model, o an bellekte ne olduğunu gösterir."
+      "Vunemi senden bir seçim istediğinde artık düğmelerle soruyor. İstersen kendi cevabını yine yazabilirsin.",
+      "Uçuş, ürün ya da mekân gibi seçenekler kart olarak geliyor. İki veya daha fazlasını işaretleyip yan yana karşılaştırabilirsin.",
+      "Karttaki her bilgi, okunduğu sayfayla karşılaştırılıyor; sayfada bulunamayan bilgi işaretleniyor. Hiçbir şey okunmadan hazırlanan kartlar, Vunemi'nin kendi önerisi olduğunu söylüyor.",
+      "Cmd+Q artık Vunemi'yi her zaman tamamen kapatıyor; menü çubuğunda da Vunemi'nin adı görünüyor."
     ],
     "pt": [
-      "As respostas começam mais cedo: o Vunemi dá ao modelo apenas as ferramentas de que o pedido precisa, e uma mensagem seguinte já não espera que a conversa inteira seja lida de novo.",
-      "Em um projeto, o Vunemi pode salvar notas de trabalho (uma decisão, uma descoberta) e encontrá-las em conversas posteriores desse projeto. Você as vê nas notas do projeto e pode apagá-las.",
-      "Resultados longos ficam guardados com a conversa, e o Vunemi ainda consegue lê-los depois que você reabre o app.",
-      "O Vunemi ajusta o modelo à memória livre do seu Mac e fecha modelos ociosos quando o macOS fica com pouca memória. Ajustes › Modelo mostra o que está na memória naquele momento."
+      "Quando o Vunemi precisa que você escolha, ele pergunta com botões. Você ainda pode digitar sua própria resposta.",
+      "As opções para escolher, como voos, produtos ou lugares, chegam em forma de cartões. Marque dois ou mais para compará-los lado a lado.",
+      "Cada informação de um cartão é conferida com a página de onde foi lida e sinalizada quando não foi encontrada lá. Os cartões feitos sem ler nada avisam que são sugestões do próprio Vunemi.",
+      "Cmd+Q agora sempre encerra o Vunemi por completo, e a barra de menus mostra o nome dele."
     ],
     "ru": [
-      "Ответы начинаются быстрее: Vunemi даёт модели только те инструменты, которые нужны для запроса, а следующее сообщение больше не ждёт, пока весь разговор будет прочитан заново.",
-      "В проекте Vunemi может сохранять рабочие заметки (решение, вывод) и находить их в следующих разговорах этого проекта. Они видны в заметках проекта, и их можно удалить.",
-      "Длинные результаты хранятся вместе с разговором, и Vunemi может прочитать их даже после перезапуска приложения.",
-      "Vunemi подбирает параметры модели под свободную память вашего Mac и закрывает простаивающие модели, когда macOS не хватает памяти. В разделе «Настройки › Модель» видно, что сейчас находится в памяти."
+      "Когда нужно сделать выбор, Vunemi теперь спрашивает с помощью кнопок. Свой ответ по-прежнему можно ввести вручную.",
+      "Варианты на выбор, например рейсы, товары или места, показываются карточками. Отметьте две или больше, чтобы сравнить их рядом.",
+      "Каждый факт на карточке сверяется со страницей, с которой он прочитан, и помечается, если там его не нашлось. Карточки, составленные без чтения источников, сообщают, что это собственные предложения Vunemi.",
+      "Cmd+Q теперь всегда полностью завершает Vunemi, а в строке меню показано его название."
     ],
     "zh": [
-      "回复开始得更快：Vunemi 只把请求所需的工具交给模型，后续消息也不必再等整段对话重新读取。",
-      "在项目中，Vunemi 可以保存工作笔记（一项决定、一个发现），并在该项目之后的对话中找到它们。你可以在项目的笔记里查看并删除。",
-      "较长的结果会随对话一起保存，重新打开应用后 Vunemi 仍然可以读取。",
-      "Vunemi 会根据 Mac 的可用内存来加载模型，并在 macOS 内存不足时关闭空闲的模型。“设置 › 模型”会显示当前内存中的内容。"
+      "需要你做选择时，Vunemi 现在会用按钮提问。你仍然可以输入自己的回答。",
+      "可供选择的选项（如航班、商品或地点）会以卡片呈现。勾选两张或更多即可并排比较。",
+      "卡片上的每条信息都会与读取它的页面核对，未在页面上找到的会被标出。未读取任何内容而生成的卡片会注明这是 Vunemi 自己的建议。",
+      "Cmd+Q 现在总能完全退出 Vunemi，菜单栏也会显示它的名称。"
     ],
     "ja": [
-      "返答が早く始まるようになりました。Vunemi は依頼に必要なツールだけをモデルに渡し、続けて送ったメッセージで会話全体を読み直すことがなくなりました。",
-      "プロジェクトでは、Vunemi が作業メモ（決定事項や分かったこと）を保存し、同じプロジェクトの後の会話で参照できます。メモはプロジェクトのメモ一覧で確認でき、削除もできます。",
-      "長い結果は会話と一緒に保存されるため、アプリを開き直したあとも Vunemi が読むことができます。",
-      "Vunemi は Mac の空きメモリに合わせてモデルを開き、macOS のメモリが不足すると使っていないモデルを閉じます。「設定 › モデル」で、いまメモリにあるものを確認できます。"
+      "選択が必要なとき、Vunemi はボタンで質問するようになりました。自分で回答を入力することもできます。",
+      "フライト、商品、場所などの選択肢はカードで表示されます。2 つ以上にチェックを入れると、並べて比較できます。",
+      "カードの各情報は読み取ったページと照合され、ページで見つからなかったものには印が付きます。何も読まずに作られたカードには、Vunemi 自身の提案であることが表示されます。",
+      "Cmd+Q で Vunemi が常に完全に終了するようになり、メニューバーには Vunemi の名前が表示されます。"
     ],
     "ko": [
-      "응답이 더 빨리 시작됩니다. Vunemi는 요청에 필요한 도구만 모델에 전달하고, 이어지는 메시지에서 대화 전체를 다시 읽지 않습니다.",
-      "프로젝트에서 Vunemi는 작업 메모(결정 사항, 알아낸 내용)를 저장하고 같은 프로젝트의 이후 대화에서 다시 찾을 수 있습니다. 메모는 프로젝트의 메모에서 확인하고 삭제할 수 있습니다.",
-      "긴 결과는 해당 대화와 함께 보관되어, 앱을 다시 연 뒤에도 Vunemi가 읽을 수 있습니다.",
-      "Vunemi는 Mac의 여유 메모리에 맞춰 모델을 열고, macOS의 메모리가 부족해지면 사용하지 않는 모델을 닫습니다. 설정 › 모델에서 지금 메모리에 있는 항목을 볼 수 있습니다."
+      "선택이 필요할 때 Vunemi가 이제 버튼으로 묻습니다. 직접 답을 입력할 수도 있습니다.",
+      "항공편, 상품, 장소 같은 선택지는 카드로 표시됩니다. 두 개 이상을 선택하면 나란히 비교할 수 있습니다.",
+      "카드의 각 정보는 읽어 온 페이지와 대조되며, 페이지에서 찾지 못한 정보는 표시됩니다. 아무것도 읽지 않고 만든 카드에는 Vunemi 자체 제안이라고 표시됩니다.",
+      "Cmd+Q가 이제 항상 Vunemi를 완전히 종료하며, 메뉴 막대에 Vunemi 이름이 표시됩니다."
     ]
   }
 }

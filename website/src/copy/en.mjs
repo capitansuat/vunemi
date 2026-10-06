@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.11 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.12 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.11 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.12 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.1.11 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.1.12 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -168,10 +168,10 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "Replies start sooner: Vunemi gives the model only the tools a request needs, and a follow-up no longer waits for the whole conversation to be read again.",
-      "In a project, Vunemi can save work notes (a decision, a finding) and find them in later conversations of that project. You see them under the project's notes and can delete them.",
-      "Long results are kept with their conversation, so Vunemi can still read them after you reopen the app.",
-      "Vunemi fits the model to the memory your Mac has free and closes idle models when macOS runs short. Settings › Model shows what is in memory now.",
+      "When Vunemi needs you to choose, it asks with buttons. You can still type your own answer.",
+      "Options to pick from, such as flights, products or places, come as cards. Tick two or more to compare them side by side.",
+      "Each fact on a card is checked against the page it was read from, and marked when it was not found there. Cards made without reading anything say they are Vunemi's own suggestions.",
+      "Cmd+Q now always quits Vunemi completely, and the menu bar shows its name.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],
