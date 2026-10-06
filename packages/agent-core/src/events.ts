@@ -83,7 +83,8 @@ export type AgentEvent =
   | { type: "handoff.required"; runId: string; callId: string; reason: string; at: number }
   | { type: "handoff.resolved"; runId: string; callId: string; outcome: HandoffOutcome }
   /** A bounded, read-only decision inside an ordinary chat turn. */
-  | { type: "choice.asked"; runId: string; stepId: string; callId: string; card: ChoiceCard; at: number }
+  // `replaces`: the step whose text these cards stand in for, so it is not shown twice.
+  | { type: "choice.asked"; runId: string; stepId: string; callId: string; card: ChoiceCard; replaces?: string; at: number }
   | { type: "choice.answered"; runId: string; callId: string; text: string; index?: number; at: number }
   /** Intent preview: what the agent means to do, before it starts. */
   | { type: "plan.proposed"; runId: string; steps: string[]; at: number }

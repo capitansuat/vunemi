@@ -470,6 +470,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let planEchoNudged = false;
   let workNudged = false;
   let comparisonNudged = false;
+  /** The step that listed options in plain text, for the cards that take its place. */
+  let draftStep: string | null = null;
   /** Questions written as lists that were turned into choice cards in this task: two at most, as the model is told for ask_choice. */
   let listsAsked = 0;
   let approvedPlan: string[] | null = null;
@@ -589,6 +591,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") && opts.requestChoice &&
             !comparisonNudged && index < maxSteps - 1 && asksForCards(opts.goal) && tableChoiceInput(result.text) === null) {
           comparisonNudged = true;
+          draftStep = stepId;
           convo.push({ role: "user", content: "[Vunemi check, not from the user] The user asked for option cards, and you answered in plain text. Call present_options now with the 2 to 6 options you just described: a title each, and the facts as label and value. Use only what you already wrote; give sourceUrl only for a page you actually read." });
           continue;
         }
@@ -597,6 +600,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           const items = tableChoiceInput(result.text);
           if (items && opts.requestChoice && index < maxSteps - 1) {
             const call: ToolCall = { id: `${stepId}.table`, name: "present_options", argumentsText: JSON.stringify(items) };
+            draftStep = stepId;
             convo.push({ role: "assistant", content: "", toolCalls: [call] });
             checkpoint();
             called.add(call.name);
@@ -608,6 +612,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           }
           if (!comparisonNudged && index < maxSteps - 1) {
             comparisonNudged = true;
+            draftStep = stepId;
             convo.push({ role: "user", content: "[Vunemi check, not from the user] You compared multiple options in a plain text table. Call present_options now with 2 to 6 options, using only facts observed in this run. Give sourceUrl only for a page you actually read. Never infer a child fare from an adult fare. Wait for the user's selection; do not book anything." });
             continue;
           }
@@ -956,7 +961,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       if ("error" in prepared) return fail(call, prepared.error, false);
       if (!opts.requestChoice) return fail(call, "Interactive choices are unavailable in this run.", false);
       const card = prepared.card;
-      emit({ type: "choice.asked", runId, stepId, callId: call.id, card, at: now() });
+      const replaces = card.kind === "options" ? draftStep : null;
+      draftStep = null;
+      emit({ type: "choice.asked", runId, stepId, callId: call.id, card, ...(replaces && { replaces }), at: now() });
       checkpoint();
       const answer = await Promise.race([opts.requestChoice({ callId: call.id, card }), abortPromise(signal)]);
       const selected = answer.index === undefined ? undefined : card.kind === "choice" ? card.options[answer.index] : card.items[answer.index]?.title;

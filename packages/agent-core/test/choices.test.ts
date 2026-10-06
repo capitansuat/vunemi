@@ -78,6 +78,32 @@ describe("choice card data", () => {
     expect(result.card.items[1]!.sourceUrl).toBeUndefined();
   });
 
+  it("finds a value written as several, when each part was on the page", () => {
+    const city = { url: "https://example.org/lisbon", text: "Lisbon is located in Portugal\nCapital city and municipality\t658,236\n3,353,000 within the metropolis (metro)\nView of the Tagus riverfront" };
+    const result = prepareChoice("present_options", { items: [
+      { title: "Lisbon", facts: [
+        { label: "Population", value: "658 236 (city) / 3 353 000 (metro)" },
+        { label: "River", value: "Tagus (Tejo)" },
+        { label: "Area", value: "100 km2; 3 015 km2" },
+      ], sourceUrl: city.url },
+      { title: "Porto", facts: [{ label: "Country", value: "Portugal" }], sourceUrl: city.url },
+    ] }, { pages: [city], local: [] });
+    if (!("card" in result) || result.card.kind !== "options") throw new Error("card not made");
+    // Both numbers and both notes are on the page; "Tejo" and the areas are not.
+    expect(result.card.items[0]!.facts.map((fact) => fact.status)).toEqual(["page", "unverified", "unverified"]);
+  });
+
+  it("shows a price given as a fact as the card's price", () => {
+    const result = prepareChoice("present_options", { items: [
+      { title: "Skillet", facts: [{ label: "Price", value: "~£45" }, { label: "Brand", value: "Acme" }] },
+      { title: "Scissors", price: "£20", facts: [{ label: "Fiyat", value: "£22" }] },
+    ] }, { pages: [], local: [] });
+    if (!("card" in result) || result.card.kind !== "options") throw new Error("card not made");
+    expect(result.card.items[0]).toMatchObject({ price: { value: "~£45" }, facts: [{ label: "Brand", value: "Acme" }] });
+    // A price already given stays; the fact is then the model's own second figure.
+    expect(result.card.items[1]).toMatchObject({ price: { value: "£20" }, facts: [{ label: "Fiyat", value: "£22" }] });
+  });
+
   it("treats card strings as plain text and trims facts", () => {
     const result = prepareChoice("present_options", { items: [
       { title: "<b>One</b>", view: "[buy](https://bad.example)", facts: Array.from({ length: 9 }, (_, i) => ({ label: `L${i}`, value: `V${i}` })) },
@@ -171,6 +197,10 @@ describe("choice run", () => {
     const result = await runAgent({ goal: "Two dinner ideas as option cards", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
     expect(seen[1]!.messages.at(-1)!.content).toContain("asked for option cards");
     expect(events).toContainEqual(expect.objectContaining({ type: "choice.asked", card: expect.objectContaining({ kind: "options", unchecked: true }) }));
+    // The cards say which step's text they stand in for, so it is not shown twice.
+    const first = events.find((event) => event.type === "step.started");
+    const asked = events.find((event) => event.type === "choice.asked");
+    expect(first?.type === "step.started" && asked?.type === "choice.asked" && asked.replaces === first.stepId && asked.stepId !== first.stepId).toBe(true);
     expect(result).toMatchObject({ status: "done", detail: "Mantı it is." });
     // A request that names no cards is left as it was answered.
     const plain = model([{ text: "1. Mantı: about an hour.\n2. Köfte: 45 minutes.\n\nEnjoy." }]);

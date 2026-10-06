@@ -11,7 +11,8 @@ export interface ChoiceEvidence {
   local: string[];
 }
 
-/** A plain comparison table can become cards without another model round trip. */
+const PRICE_LABEL = /^(?:price|fiyat|ücret|fare|cost)$/iu;
+
 /**
  * A question the model wrote out as a plain list instead of calling
  * ask_choice: 2 to 5 short list items with a question right before or
@@ -49,6 +50,7 @@ export function listChoiceInput(text: string): { question: string; options: stri
   return { question, options, allowOther: true };
 }
 
+/** A plain comparison table can become cards without another model round trip. */
 export function tableChoiceInput(text: string): { items: { title: string; price?: string; facts: { label: string; value: string }[] }[] } | null {
   const lines = text.split("\n");
   const cells = (line: string): string[] => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
@@ -71,7 +73,7 @@ export function tableChoiceInput(text: string): { items: { title: string; price?
       for (let col = 1; col < headers.length; col++) {
         const value = row[col]!;
         if (!value || value === "—" || value === "-") continue;
-        if (/^(?:price|fiyat|ücret|fare|cost)$/iu.test(headers[col]!) && !price) price = value;
+        if (PRICE_LABEL.test(headers[col]!) && !price) price = value;
         else facts.push({ label: headers[col]!, value });
       }
       return { title: row[0]!, ...(price && { price }), facts };
@@ -111,6 +113,17 @@ export function valueSeen(value: string, output: string): boolean {
   return false;
 }
 
+/**
+ * A fact that gives several values at once ("658 236 (city) / 3 353 000
+ * (metro)") was read when each part was. Live, a model merged two figures
+ * it had just read into one line, and the line as a whole was on no page.
+ */
+function seen(value: string, output: string): boolean {
+  if (valueSeen(value, output)) return true;
+  const parts = value.split(/\s*[;|·()]\s*(?:\/\s+)?|\s+\/\s+/u).filter(Boolean);
+  return parts.length > 1 && parts.every((part) => valueSeen(part, output));
+}
+
 function source(raw: unknown, evidence: ChoiceEvidence): string | undefined {
   if (typeof raw !== "string" || raw.length > 2048) return undefined;
   try {
@@ -138,8 +151,8 @@ function readSource(item: Record<string, unknown>, evidence: ChoiceEvidence): st
     .map((value) => string(value, 80)).filter(Boolean);
   let best: { url: string; seen: number } | undefined;
   for (const page of evidence.pages) {
-    const seen = values.filter((value) => valueSeen(value, page.text)).length;
-    if (seen > 0 && (!best || seen >= best.seen)) best = { url: page.url, seen };
+    const count = values.filter((value) => seen(value, page.text)).length;
+    if (count > 0 && (!best || count >= best.seen)) best = { url: page.url, seen: count };
   }
   return best && source(best.url, evidence);
 }
@@ -149,10 +162,10 @@ function fact(label: string, value: string, sourceUrl: string | undefined, evide
     try {
       const url = new URL(entry.url);
       url.hash = "";
-      return url.href === sourceUrl && valueSeen(value, entry.text);
+      return url.href === sourceUrl && seen(value, entry.text);
     } catch { return false; }
   });
-  return { label, value, status: page ? "page" : evidence.local.some((text) => valueSeen(value, text)) ? "local" : "unverified" };
+  return { label, value, status: page ? "page" : evidence.local.some((text) => seen(value, text)) ? "local" : "unverified" };
 }
 
 /** Validate once in the agent, before any card or wait is created. */
@@ -176,15 +189,17 @@ export function prepareChoice(name: string, input: unknown, evidence: ChoiceEvid
     // A card that names no source is checked against the pages read in this run.
     const sourceUrl = item.sourceUrl === undefined || item.sourceUrl === "" ? readSource(item, evidence) : source(item.sourceUrl, evidence);
     const facts: VerifiedFact[] = [];
+    let price = string(item.price, 80);
     if (item.facts !== undefined && !Array.isArray(item.facts)) return { error: "Facts must be an array." };
     for (const rawFact of (item.facts as unknown[] | undefined ?? []).slice(0, 6)) {
       const entry = object(rawFact);
       const label = string(entry?.label, 30);
       const value = string(entry?.value, 80);
       if (!label || !value) return { error: "Each fact needs a label and value." };
-      facts.push(fact(label, value, sourceUrl, evidence));
+      // A price filed under the facts is still the card's price; shown twice, it was compared twice.
+      if (!price && PRICE_LABEL.test(label)) price = value;
+      else facts.push(fact(label, value, sourceUrl, evidence));
     }
-    const price = string(item.price, 80);
     const view = string(item.view, 200);
     items.push({ title, facts, ...(price && { price: fact("price", price, sourceUrl, evidence) }), ...(view && { view }), ...(sourceUrl && { sourceUrl }) });
   }
@@ -208,7 +223,7 @@ export function choiceTools(): ToolDef[] {
     },
     {
       name: "present_options",
-      description: "Show 2 to 6 compared options as cards, then wait for the user. Facts must be values you read. Put your judgement only in view.",
+      description: "Show 2 to 6 compared options as cards, then wait for the user. Each fact: one value you read, as written. Put your judgement only in view.",
       actionClass: "read",
       parameters: { type: "object", properties: {
         intro: { type: "string" },
