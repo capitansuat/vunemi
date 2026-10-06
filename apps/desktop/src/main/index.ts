@@ -14,6 +14,7 @@ import { CH, EMERGENCY_STOP_ACCELERATOR, type Appearance, type ArtefactView, typ
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
+import { within } from "./shutdown.js";
 import { VaultHost } from "./vault-host.js";
 import { projectInstructions, ProjectStore } from "./projects.js";
 import { ActivityLog } from "./activity.js";
@@ -93,6 +94,8 @@ if (app.isPackaged) app.setPath("userData", join(app.getPath("appData"), "Vunemi
 // this profile. Two processes must never read or write it at the same time.
 if (!app.requestSingleInstanceLock()) app.exit(0);
 app.on("second-instance", () => {
+  // Opened again while closing: that launch has already given way to this one.
+  if (quitting) return reopenAfterQuit();
   // The first launch creates its window after the vault startup check. A
   // second launch during that check must not create an extra window early.
   if (win && !win.isDestroyed()) showWindow();
@@ -123,6 +126,8 @@ if (debugPortOpen) {
 
 let win: BrowserWindow | null = null;
 let quitting = false;
+/** Asked to open again while closing: a new Vunemi starts once this one is gone. */
+let reopening = false;
 /** Squirrel is closing the windows to install an update: they must really close, or it waits forever. */
 let updating = false;
 
@@ -663,6 +668,9 @@ function sourceOf(tool: string): string {
 
 /** Brings the window back, creating it again if the user closed it. */
 function showWindow(): void {
+  // Closing: the task, the model and the memory are already let go, so a
+  // window now would sit on a Vunemi that can no longer do anything.
+  if (quitting) return;
   if (!win || win.isDestroyed()) {
     createWindow();
     return;
@@ -1680,7 +1688,7 @@ void app.whenReady().then(async () => {
     console.error(`[vunemi] could not register the emergency stop shortcut ${EMERGENCY_STOP_ACCELERATOR}`);
   }
   // The menu bar keeps Vunemi alive with no window, so runs continue.
-  app.on("activate", () => showWindow());
+  app.on("activate", () => (quitting ? reopenAfterQuit() : showWindow()));
   // Scheduled tasks: checked every half minute, and straight after the Mac wakes.
   setInterval(() => scheduler.tick(), 30_000);
   powerMonitor.on("resume", () => scheduler.tick());
@@ -1696,6 +1704,29 @@ void app.whenReady().then(async () => {
   }
 });
 
+/** How long closing waits for the pages, the outbox and the model servers to let go. */
+const CLOSE_STEPS_MS = 6_000;
+/** How long the windows get to close after that, before Vunemi ends regardless. */
+const CLOSE_WINDOWS_MS = 3_000;
+
+function reopenAfterQuit(): void {
+  // An update restarts Vunemi itself, from the new copy.
+  if (reopening || updating) return;
+  reopening = true;
+  app.relaunch();
+}
+
+let helpersReleased = false;
+function releaseHelpers(): void {
+  if (helpersReleased) return;
+  helpersReleased = true;
+  globalShortcut.unregisterAll();
+  presence.dispose();
+  voice.dispose();
+  helper.dispose();
+  vaultHost.stop();
+}
+
 app.on("before-quit", (e) => {
   if (quitting) return;
   // Let go of the pages cleanly before the window goes.
@@ -1704,19 +1735,26 @@ app.on("before-quit", (e) => {
   session.stop();
   // The recorder keeps what it wrote; the next launch finishes the meeting.
   meetings.dispose();
-  void Promise.allSettled([browser.dispose(), mailOutbox.settle(), engine.dispose(), meaning.stop()]).finally(() => {
-    memory.close();
-    app.quit();
+  const steps = Promise.allSettled([browser.dispose(), mailOutbox.settle(), engine.dispose(), meaning.stop()]);
+  void within(steps, CLOSE_STEPS_MS).then(() => {
+    try {
+      memory.close();
+    } finally {
+      // On a later turn, never from inside the quit being held back: with
+      // nothing to wait for, this ran within that first quit, and Electron
+      // then forgot it was quitting once the window had closed.
+      setImmediate(() => app.quit());
+      // Nothing above can be taken back, so this process must not stay
+      // behind, whatever keeps the quit from finishing.
+      setTimeout(() => {
+        releaseHelpers();
+        app.exit(0);
+      }, CLOSE_WINDOWS_MS);
+    }
   });
 });
 
-app.on("will-quit", () => {
-  globalShortcut.unregisterAll();
-  presence.dispose();
-  voice.dispose();
-  helper.dispose();
-  vaultHost.stop();
-});
+app.on("will-quit", releaseHelpers);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
