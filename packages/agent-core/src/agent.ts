@@ -474,6 +474,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let draftStep: string | null = null;
   /** Questions written as lists that were turned into choice cards in this task: two at most, as the model is told for ask_choice. */
   let listsAsked = 0;
+  /** What this task has already put to the user on a card: a list of the same is a recap, not a question. */
+  const offered = new Set<string>();
   let approvedPlan: string[] | null = null;
   /** Groups a tool opened in this task, such as app_guide's: opened to be used. */
   const guided = new Set<string>();
@@ -575,7 +577,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         // A question written out as a list is asked with buttons, as ask_choice would have.
         const asked = toolSpecs.some((tool) => tool.name === "ask_choice") && opts.requestChoice && listsAsked < 2 && index < maxSteps - 1
           ? listChoiceInput(result.text) : null;
-        if (asked) {
+        // Live, a model summed up the cards the user had just chosen from, then asked
+        // whether to look further: the three cards came back as the buttons of a yes-or-no question.
+        if (asked && !asked.options.every((option) => offered.has(option.toLocaleLowerCase()))) {
           listsAsked++;
           const call: ToolCall = { id: `${stepId}.list`, name: "ask_choice", argumentsText: JSON.stringify(asked) };
           convo.push({ role: "assistant", content: "", toolCalls: [call] });
@@ -961,6 +965,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       if ("error" in prepared) return fail(call, prepared.error, false);
       if (!opts.requestChoice) return fail(call, "Interactive choices are unavailable in this run.", false);
       const card = prepared.card;
+      for (const label of card.kind === "options" ? card.items.map((item) => item.title) : card.options) offered.add(label.toLocaleLowerCase());
       const replaces = card.kind === "options" ? draftStep : null;
       draftStep = null;
       emit({ type: "choice.asked", runId, stepId, callId: call.id, card, ...(replaces && { replaces }), at: now() });

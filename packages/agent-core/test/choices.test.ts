@@ -102,6 +102,30 @@ describe("choice card data", () => {
     expect(result.card.items[0]).toMatchObject({ price: { value: "~£45" }, facts: [{ label: "Brand", value: "Acme" }] });
     // A price already given stays; the fact is then the model's own second figure.
     expect(result.card.items[1]).toMatchObject({ price: { value: "£20" }, facts: [{ label: "Fiyat", value: "£22" }] });
+    const ranges = prepareChoice("present_options", { items: [
+      { title: "Oven", facts: [{ label: "Price range", value: "£50–£120" }] },
+      { title: "Fırın", facts: [{ label: "Tahmini fiyat", value: "2.000 TL" }, { label: "Price per night", value: "£90" }] },
+    ] }, { pages: [], local: [] });
+    if (!("card" in ranges) || ranges.card.kind !== "options") throw new Error("card not made");
+    expect(ranges.card.items.map((item) => item.price?.value)).toEqual(["£50–£120", "2.000 TL"]);
+    expect(ranges.card.items[1]!.facts).toEqual([expect.objectContaining({ label: "Price per night" })]);
+  });
+
+  it("marks where a long text was cut, and still checks all of it", () => {
+    const long = "A high-carbon steel kitchen knife with a flat blade edge, great for chopping, slicing and dicing";
+    const page = { url: "https://example.org/knife", text: `Santoku\n${long}\nSteel: VG-10` };
+    const result = prepareChoice("present_options", { items: [
+      { title: "Santoku", facts: [{ label: "What it is", value: long }, { label: "Steel", value: "VG-10" }], view: "v".repeat(250), sourceUrl: page.url },
+      { title: "Other", facts: [{ label: "What it is", value: long.replace("chopping", "carving") }], sourceUrl: page.url },
+    ] }, { pages: [page], local: [] });
+    if (!("card" in result) || result.card.kind !== "options") throw new Error("card not made");
+    const [shown, other] = [result.card.items[0]!.facts[0]!, result.card.items[1]!.facts[0]!];
+    expect(shown.value.length).toBeLessThanOrEqual(80);
+    expect(shown.value.endsWith("…") && long.startsWith(shown.value.slice(0, -1))).toBe(true);
+    // The whole sentence was on the page; the one that differs past the cut was not.
+    expect([shown.status, other.status]).toEqual(["page", "unverified"]);
+    expect(result.card.items[0]!.facts[1]!.value).toBe("VG-10");
+    expect(result.card.items[0]!.view).toMatch(/^v{199}…$/);
   });
 
   it("treats card strings as plain text and trims facts", () => {
@@ -182,6 +206,19 @@ describe("choice run", () => {
     expect(seen[1]!.messages.at(-1)).toMatchObject({ role: "tool", content: expect.stringContaining('The user chose: "Japanese"') });
     // The third list stays an answer: the user picks from it by writing.
     expect(result).toMatchObject({ status: "done", detail: expect.stringContaining("Which drink?") });
+  });
+
+  it("does not ask again, with buttons, about options the user has just chosen from", async () => {
+    const cards = '{"items":[{"title":"Chef\'s Knife","facts":[{"label":"Use","value":"daily"}]},{"title":"Spice Box","facts":[{"label":"Use","value":"monthly"}]}]}';
+    const recap = "Here's a summary:\n\n1. **Chef's Knife** — a hand-forged knife.\n2. **Spice Box** — a monthly delivery.\n\nYou chose the **Chef's Knife**. Would you like me to look up retailers for that?";
+    const { chat, seen } = model([{ calls: [{ name: "present_options", argumentsText: cards }] }, { text: recap }]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "Gift ideas", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(events.filter((event) => event.type === "choice.asked")).toHaveLength(1);
+    expect(seen).toHaveLength(2);
+    expect(result).toMatchObject({ status: "done", detail: recap });
   });
 
   it("asks once for cards when the request named them and the answer was prose", async () => {

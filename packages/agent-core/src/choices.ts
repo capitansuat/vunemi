@@ -11,7 +11,7 @@ export interface ChoiceEvidence {
   local: string[];
 }
 
-const PRICE_LABEL = /^(?:price|fiyat|ücret|fare|cost)$/iu;
+const PRICE_LABEL = /^(?:(?:approx\.?|estimated|tahmini|yaklaşık)\s+)?(?:price|fiyat|ücret|fare|cost)(?:\s+(?:range|aralığı))?$/iu;
 
 /**
  * A question the model wrote out as a plain list instead of calling
@@ -83,13 +83,18 @@ export function tableChoiceInput(text: string): { items: { title: string; price?
   return null;
 }
 
-const string = (value: unknown, limit: number): string => {
-  if (typeof value !== "string") return "";
-  // Cards are data, never markup or model-authored UI.
-  const plain = value.replace(/<[^>]*>/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
-  return Array.from(plain).slice(0, limit).join("");
+/** Cards are data, never markup or model-authored UI. */
+const plain = (value: unknown): string => typeof value !== "string" ? "" : Array.from(
+  value.replace(/<[^>]*>/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim()).slice(0, 400).join("");
+
+/** Cut to fit a card, with a mark where: a sentence that just stops reads as a mistake. */
+const clip = (text: string, limit: number): string => {
+  const chars = Array.from(text);
+  return chars.length <= limit ? text : `${chars.slice(0, limit - 1).join("").trimEnd()}…`;
 };
+
+const string = (value: unknown, limit: number): string => clip(plain(value), limit);
 
 function object(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -148,7 +153,7 @@ function source(raw: unknown, evidence: ChoiceEvidence): string | undefined {
  */
 function readSource(item: Record<string, unknown>, evidence: ChoiceEvidence): string | undefined {
   const values = [item.price, ...(Array.isArray(item.facts) ? item.facts.map((f) => object(f)?.value) : [])]
-    .map((value) => string(value, 80)).filter(Boolean);
+    .map(plain).filter(Boolean);
   let best: { url: string; seen: number } | undefined;
   for (const page of evidence.pages) {
     const count = values.filter((value) => seen(value, page.text)).length;
@@ -157,6 +162,7 @@ function readSource(item: Record<string, unknown>, evidence: ChoiceEvidence): st
   return best && source(best.url, evidence);
 }
 
+/** Checked as written in full; shown cut to fit. */
 function fact(label: string, value: string, sourceUrl: string | undefined, evidence: ChoiceEvidence): VerifiedFact {
   const page = sourceUrl && evidence.pages.some((entry) => {
     try {
@@ -165,7 +171,7 @@ function fact(label: string, value: string, sourceUrl: string | undefined, evide
       return url.href === sourceUrl && seen(value, entry.text);
     } catch { return false; }
   });
-  return { label, value, status: page ? "page" : evidence.local.some((text) => seen(value, text)) ? "local" : "unverified" };
+  return { label, value: clip(value, 80), status: page ? "page" : evidence.local.some((text) => seen(value, text)) ? "local" : "unverified" };
 }
 
 /** Validate once in the agent, before any card or wait is created. */
@@ -189,12 +195,12 @@ export function prepareChoice(name: string, input: unknown, evidence: ChoiceEvid
     // A card that names no source is checked against the pages read in this run.
     const sourceUrl = item.sourceUrl === undefined || item.sourceUrl === "" ? readSource(item, evidence) : source(item.sourceUrl, evidence);
     const facts: VerifiedFact[] = [];
-    let price = string(item.price, 80);
+    let price = plain(item.price);
     if (item.facts !== undefined && !Array.isArray(item.facts)) return { error: "Facts must be an array." };
     for (const rawFact of (item.facts as unknown[] | undefined ?? []).slice(0, 6)) {
       const entry = object(rawFact);
       const label = string(entry?.label, 30);
-      const value = string(entry?.value, 80);
+      const value = plain(entry?.value);
       if (!label || !value) return { error: "Each fact needs a label and value." };
       // A price filed under the facts is still the card's price; shown twice, it was compared twice.
       if (!price && PRICE_LABEL.test(label)) price = value;
