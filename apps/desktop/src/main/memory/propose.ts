@@ -27,11 +27,16 @@ const MIN_QUOTE = 6;
 /** Fewer characters than this rarely say anything worth remembering. */
 const MIN_WORDS_CHARS = 20;
 
+// Measured on synthetic cases (test/main/memory-propose-live.test.ts): asked only to
+// "skip one-off requests", the model turned the shape of a single request into a
+// preference about one time in four ("as option cards", "keep it informal").
 const SYSTEM = `You pick out what is worth remembering about the user for future tasks.
-Read only the user's messages. Propose at most ${MAX_PROPOSALS} notes:
-- "general": how the user wants you to work (tone, formats, habits).
-- "topic": lasting facts about the user's people, projects, places or things.
-Skip one-off requests, details that only matter for the current task, anything from text the user pasted from elsewhere, and passwords, codes, card or identity numbers.
+Read only the user's messages. Most tasks leave nothing to remember: answer [] then.
+Propose at most ${MAX_PROPOSALS} notes, and only from words in which the user says something that holds beyond this task:
+- "general": a standing rule for how you work, said as a rule ("from now on reply briefly", "never call me before noon").
+- "topic": a lasting fact about the user or the user's people, projects, places or things ("my accountant is Mira", "I use a wheelchair").
+What the user asks for in this task is not a preference. The format, tone, length or language of this request, what the request is about, and an answer to a question you asked belong to this task alone: "write this as a poem" does not mean the user likes poems, and writing in a language is not a note.
+Skip anything from text the user pasted or quoted from elsewhere, and passwords, codes, card or identity numbers.
 Each note is one short sentence in the user's language, at most 200 characters.
 "quote" is the exact words from a user message that show it, copied character for character.
 If a note changes or repeats one of the existing notes, set "updates" to that note's id.
