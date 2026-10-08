@@ -4,6 +4,7 @@ import { Mochi } from "./Mochi.js";
 import { draftText, runStats, type CompactionView, type RunView, type StepView } from "../lib/fold.js";
 import { formatMs, formatTokens, runStatusLabel, shortModelName } from "../lib/labels.js";
 import { CallCard } from "./CallCard.js";
+import { MentionIcon } from "./MentionMenu.js";
 import { ChoiceCard } from "./ChoiceCard.js";
 import { PlanCard } from "./PlanCard.js";
 import { MemoryNotice, MemoryProposals } from "./MemoryNotes.js";
@@ -22,9 +23,15 @@ export function Turn({ run }: { run: RunView }) {
   return (
     <section className="space-y-4">
       <div className="flex flex-col items-end gap-1.5">
-        {run.attachments && (
+        {(run.attachments || run.mentions) && (
           <ul className="flex max-w-[80%] flex-wrap justify-end gap-1.5">
-            {run.attachments.map((path) => (
+            {run.mentions?.map((m) => (
+              <li key={`${m.kind}:${m.id}`} title={m.title} className="flex max-w-[260px] items-center gap-1.5 rounded-lg border border-line bg-surface px-2 py-1 text-[12px] text-muted">
+                <MentionIcon kind={m.kind} />
+                <span className="truncate">{m.title}</span>
+              </li>
+            ))}
+            {run.attachments?.map((path) => (
               <li key={path} title={path} className="flex max-w-[260px] items-center gap-1.5 rounded-lg border border-line bg-surface px-2 py-1 text-[12px] text-muted">
                 <FileText size={13} className="shrink-0" />
                 <span className="truncate">{path.split("/").pop()}</span>

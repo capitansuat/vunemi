@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUp, AudioLines, Download, FileText, ListPlus, Mic, Paperclip, Pause, Play, Square, X } from "lucide-react";
 import { useStore } from "../store.js";
 import { Queue } from "./Queue.js";
 import { VoiceBar } from "./VoiceBar.js";
-import { t } from "@vunemi/i18n";
+import { MentionIcon, MentionMenu, type MenuItem } from "./MentionMenu.js";
+import { filterMentions, insertMention, mentionName, mentionQuery } from "../lib/mention.js";
+import type { MentionItem } from "../../../shared/ipc.js";
+import { formatDate, lower, t } from "@vunemi/i18n";
 
 /**
  * Voice chat (Vunemi answering out loud, then listening again) stays off
@@ -12,9 +15,20 @@ import { t } from "@vunemi/i18n";
  */
 const VOICE_CHAT = false;
 
+/** A message brings in this many conversations and meetings at most; the main process holds the same line. */
+const MAX_MENTIONS = 5;
+
 export function Composer() {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<string[]>([]);
+  // What "@" brought in. The chips decide what is sent; the names in the text are only text.
+  const [mentions, setMentions] = useState<MenuItem[]>([]);
+  const [caret, setCaret] = useState(0);
+  /** What can be brought in, asked for each time the menu opens. */
+  const [mentionable, setMentionable] = useState<MentionItem[] | null>(null);
+  const [active, setActive] = useState(0);
+  /** Where the "@" sits that the user closed the menu on with Esc. */
+  const [closed, setClosed] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -47,6 +61,57 @@ export function Composer() {
     setText(suggested);
     ref.current?.focus();
   }, [suggested]);
+
+  const typing = mentionQuery(text, caret, mentions.map((m) => m.name));
+  const query = typing && typing.start !== closed ? typing : null;
+  const searching = typing !== null;
+  useEffect(() => {
+    if (!searching) {
+      setClosed(null);
+      return;
+    }
+    let stale = false;
+    void window.vunemi
+      .listMentions()
+      .then((items) => !stale && setMentionable(items))
+      .catch(() => !stale && setMentionable([]));
+    return () => {
+      stale = true;
+    };
+  }, [searching]);
+  useEffect(() => setActive(0), [query?.query]);
+  const named = useMemo<MenuItem[]>(
+    () =>
+      (mentionable ?? []).map((item) => ({
+        ...item,
+        name: mentionName(
+          item.title ||
+            (item.kind === "meeting"
+              ? t("meetings.untitled", { date: formatDate(item.at, { dateStyle: "medium", timeStyle: "short" }) })
+              : t("app.sessions.untitled")),
+        ),
+      })),
+    [mentionable],
+  );
+  const full = mentions.length >= MAX_MENTIONS;
+  const offered = query
+    ? filterMentions(named.filter((item) => !mentions.some((m) => m.kind === item.kind && m.id === item.id)), query.query, lower)
+    : [];
+  // Nothing matches and there is a space in it: a sentence that starts with "@", not a search.
+  const menuOpen = query !== null && mentionable !== null && (offered.length > 0 || !/\s/.test(query.query));
+  const pickable = menuOpen && !full && offered.length > 0;
+
+  const pick = (item: MenuItem) => {
+    if (!query || full) return;
+    const next = insertMention(text, query.start, caret, item.name);
+    setText(next.text);
+    setCaret(next.caret);
+    setMentions((current) => [...current, item]);
+    requestAnimationFrame(() => {
+      ref.current?.focus();
+      ref.current?.setSelectionRange(next.caret, next.caret);
+    });
+  };
 
   // Grow with content, up to a cap.
   useEffect(() => {
@@ -96,7 +161,8 @@ export function Composer() {
   // Esc: drop the microphone first, then stop a run.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
+      // Esc on the "@" menu closes the menu, and nothing else.
+      if (e.key !== "Escape" || e.defaultPrevented) return;
       const state = useStore.getState();
       // Esc always gets you out of whatever voice state you're in first.
       if (state.voice.state !== "off") state.cancelListening();
@@ -116,12 +182,14 @@ export function Composer() {
     // A message with only files in it asks the obvious thing.
     const goal = text.trim() || t("composer.filesOnly");
     const attached = files;
+    const brought = mentions.map(({ kind, id, name }) => ({ kind, id, title: name }));
     setError(null);
     // Cleared only once it went: a refused attachment should still be there to fix.
-    (now && running ? steer(goal, attached) : send(goal, attached))
+    (now && running ? steer(goal, attached, brought) : send(goal, attached, brought))
       .then(() => {
         setText("");
         setFiles([]);
+        setMentions([]);
       })
       .catch((err: unknown) => setError(String(err instanceof Error ? err.message : err).replace(/^.*Error: /, "")));
   };
@@ -146,13 +214,28 @@ export function Composer() {
       {voice.error && <p className="mb-2 px-1 text-[11.5px] text-danger">{voice.error}</p>}
       {error && <p className="mb-2 px-1 text-[11.5px] text-danger">{error}</p>}
       <div
-        className={`rounded-2xl border bg-surface shadow-[0_1px_0_rgba(0,0,0,0.02),0_8px_24px_-12px_rgba(0,0,0,0.25)] transition-colors focus-within:border-line-strong ${
+        className={`relative rounded-2xl border bg-surface shadow-[0_1px_0_rgba(0,0,0,0.02),0_8px_24px_-12px_rgba(0,0,0,0.25)] transition-colors focus-within:border-line-strong ${
           dragging ? "border-ember border-dashed bg-ember-soft/40" : "border-line"
         }`}
       >
+        {menuOpen && <MentionMenu items={offered} active={active} full={full} onPick={pick} onHover={setActive} />}
         {dragging && <p className="px-4 pt-3 text-[12px] text-ember">{t("composer.drop")}</p>}
-        {files.length > 0 && (
+        {(files.length > 0 || mentions.length > 0) && (
           <ul className="flex flex-wrap gap-1.5 px-3 pt-3">
+            {mentions.map((m) => (
+              <li key={`${m.kind}:${m.id}`} title={m.title || m.name} className="flex max-w-[260px] items-center gap-1.5 rounded-lg border border-line bg-surface-2 py-1 pr-1 pl-2 text-[12px] text-fg">
+                <span className="text-muted"><MentionIcon kind={m.kind} /></span>
+                <span className="truncate">{m.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setMentions((current) => current.filter((x) => x !== m))}
+                  aria-label={t("composer.mention.remove", { name: m.name })}
+                  className="grid size-5 shrink-0 place-items-center rounded text-faint hover:bg-surface-3 hover:text-fg"
+                >
+                  <X size={12} />
+                </button>
+              </li>
+            ))}
             {files.map((path) => (
               <li key={path} title={path} className="flex max-w-[260px] items-center gap-1.5 rounded-lg border border-line bg-surface-2 py-1 pr-1 pl-2 text-[12px] text-fg">
                 <FileText size={13} className="shrink-0 text-muted" />
@@ -174,8 +257,29 @@ export function Composer() {
           value={text}
           rows={1}
           autoFocus
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            setCaret(e.target.selectionStart);
+          }}
+          onSelect={(e) => setCaret(e.currentTarget.selectionStart)}
           onKeyDown={(e) => {
+            if (menuOpen && !e.nativeEvent.isComposing) {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                setClosed(query.start);
+                return;
+              }
+              if (pickable && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+                e.preventDefault();
+                setActive((current) => (current + (e.key === "ArrowDown" ? 1 : offered.length - 1)) % offered.length);
+                return;
+              }
+              if (pickable && (e.key === "Tab" || (e.key === "Enter" && !e.shiftKey))) {
+                e.preventDefault();
+                pick(offered[active] ?? offered[0]!);
+                return;
+              }
+            }
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
               submit(e.metaKey || e.ctrlKey);

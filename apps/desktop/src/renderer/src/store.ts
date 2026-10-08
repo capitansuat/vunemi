@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { AgentEvent, ApprovalDecision, HandoffOutcome, PlanDecision } from "@vunemi/agent-core";
-import type { ActivityEntry, ContextInfo, EmbeddedState, EngineView, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
+import type { ActivityEntry, ContextInfo, EmbeddedState, EngineView, MentionRef, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
 import { earcon, record, type Recorder } from "./lib/audio.js";
 import { foldEvent, replyText, type RunView } from "./lib/fold.js";
 import { getLocale, setLocale as setI18nLocale, t, type Locale } from "@vunemi/i18n";
@@ -156,9 +156,9 @@ interface State {
   refreshContext(): Promise<void>;
   /** Condenses the earlier part of the conversation now. */
   compactNow(): Promise<void>;
-  send(goal: string, attachments?: string[]): Promise<void>;
+  send(goal: string, attachments?: string[], mentions?: MentionRef[]): Promise<void>;
   /** Stop the running task and hand it this message instead. */
-  steer(goal: string, attachments?: string[]): Promise<void>;
+  steer(goal: string, attachments?: string[], mentions?: MentionRef[]): Promise<void>;
   dropQueued(id: string): Promise<void>;
   /** A waiting message that can't wait: stops the current task and does this now. */
   interruptQueued(id: string): Promise<void>;
@@ -310,7 +310,7 @@ export const useStore = create<State>((set, get) => ({
     await get().refreshContext();
   },
 
-  async send(goal, attachments = []) {
+  async send(goal, attachments = [], mentions = []) {
     const { model } = get();
     if (!model || !goal.trim()) return;
     // Never refused for being busy: main decides whether this starts now or
@@ -318,18 +318,18 @@ export const useStore = create<State>((set, get) => ({
     const pending = !get().running && !get().pendingStart ? { goal: goal.trim(), attachments } : null;
     set({ view: "chat", ...(pending && { pendingStart: pending }) });
     try {
-      await window.vunemi.startRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }) });
+      await window.vunemi.startRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }), ...(mentions.length > 0 && { mentions }) });
     } catch (error) {
       if (pending && get().pendingStart === pending) set({ pendingStart: null });
       throw error;
     }
   },
 
-  async steer(goal, attachments = []) {
+  async steer(goal, attachments = [], mentions = []) {
     const { model } = get();
     if (!model || !goal.trim()) return;
     set({ view: "chat" });
-    await window.vunemi.steerRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }) });
+    await window.vunemi.steerRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }), ...(mentions.length > 0 && { mentions }) });
   },
 
   async dropQueued(id) {
