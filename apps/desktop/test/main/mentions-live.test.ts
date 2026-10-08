@@ -7,10 +7,15 @@
  * picks "tuning", "holdout" or all the cases, and VUNEMI_LIVE_IDS only the
  * ones it names. A measurement, not a gate: it prints rates and, with
  * VUNEMI_LIVE_OUT, writes every answer to that file.
+ *
+ * It also measures the plan made before a run: none of these requests needs
+ * one, since each is answered from what was brought in, while work that goes
+ * beyond it should still get its plan. VUNEMI_LIVE_PLAN_NOTE=off gives the
+ * planner the request alone, as it was before, for a baseline.
  */
 import { writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { createModel, DEFAULT_CHARS_PER_TOKEN, runAgent, ToolRegistry, type RunMention } from "@vunemi/agent-core";
+import { createModel, DEFAULT_CHARS_PER_TOKEN, mentionParts, proposePlan, runAgent, ToolRegistry, worthPlanning, type RunMention } from "@vunemi/agent-core";
 import { conversationTasks, meetingParts, MENTION_SHARE, mentionTexts, type MentionSource } from "../../src/main/mentions.js";
 import { MENTION_CASES, type MentionCase } from "./mentions-cases.js";
 
@@ -98,4 +103,46 @@ describe.skipIf(!baseUrl || !modelName)("answers from mentions, live", () => {
     if (process.env.VUNEMI_LIVE_OUT) writeFileSync(process.env.VUNEMI_LIVE_OUT, JSON.stringify({ model: modelName, set: set ?? "all", runs, summary, medianMs, results }, null, 2), { mode: 0o600 });
     expect(all.length).toBe(cases.length * runs);
   }, 3 * 60 * 60_000);
+});
+
+describe.skipIf(!baseUrl || !modelName)("plans for requests with mentions, live", () => {
+  it("measures how often a plan is made, and what for", async () => {
+    const model = createModel(`llamacpp:${modelName}`, { baseUrl: baseUrl! });
+    const told = process.env.VUNEMI_LIVE_PLAN_NOTE !== "off";
+    // What runAgent hands the planner after the request.
+    const about = (c: MentionCase): string => {
+      if (!told) return "";
+      const parts = mentionParts(mentionsOf(c));
+      return parts.list + parts.blocks;
+    };
+    let plans = 0;
+    let asked = 0;
+    for (const c of cases.filter((c) => worthPlanning(c.goal))) {
+      const row: string[] = [];
+      for (let i = 0; i < runs; i++) {
+        const planned = await proposePlan(model, c.goal + about(c), { signal: AbortSignal.timeout(240_000) });
+        asked++;
+        if (Array.isArray(planned)) plans++;
+        row.push(Array.isArray(planned) ? planned.join(" / ") : String(planned));
+      }
+      process.stdout.write(`${c.id.padEnd(20)} ${row.map((r) => (r === "null" ? "–" : "P")).join("")}  ${row.filter((r) => r !== "null").map((r) => r.slice(0, 140)).join(" | ")}\n`);
+    }
+    // Work that goes beyond what was brought in should still get its plan.
+    const work: [id: string, goal: string][] = [
+      ["hotel-en", "Take the hotel from @Rome trip, then find its phone number on the web, and draft an email asking about late check-in"],
+      ["otel-tr", "@Kapadokya gezisi'ndeki oteli haritada bul, sonra oraya en yakın üç restoranı ara ve bir liste hazırla"],
+      ["meeting-summary-en", "From @Monday sync take the new launch date, then add it to my calendar and write a short note for the team"],
+    ];
+    let workPlans = 0;
+    for (const [id, goal] of work) {
+      const c = MENTION_CASES.find((x) => x.id === id)!;
+      for (let i = 0; i < runs; i++) {
+        const planned = await proposePlan(model, goal + about(c), { signal: AbortSignal.timeout(240_000) });
+        if (Array.isArray(planned)) workPlans++;
+        process.stdout.write(`work ${id.padEnd(20)} ${Array.isArray(planned) ? planned.join(" / ").slice(0, 200) : String(planned)}\n`);
+      }
+    }
+    process.stdout.write(`${JSON.stringify({ told, plans, of: asked, workPlans, workOf: work.length * runs })}\n`);
+    expect(asked).toBeGreaterThan(0);
+  }, 60 * 60_000);
 });

@@ -509,7 +509,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     // A plan is a whole model call before anything happens; a one-step
     // request doesn't earn one (see worthPlanning).
     if (opts.requestPlanApproval && !opts.unattended && (opts.planEveryTask || worthPlanning(opts.goal))) {
-      const planned = await proposePlan(model, opts.goal, { signal, allowSingle: opts.planEveryTask === true, ...(opts.history && { context: opts.history }) });
+      // The planner reads what "@" brought in too. Given the request alone it took "@Rome trip" for
+      // somewhere to search, and planned steps to find what was already in front of the model.
+      const planned = await proposePlan(model, opts.goal + brought.list + brought.blocks, { signal, allowSingle: opts.planEveryTask === true, ...(opts.history && { context: opts.history }) });
       if (signal.aborted) return finish("stopped", "Stopped by user.");
       // A plan that ran over budget is optional — unless the user asked to
       // approve every task, and then they approve the task as they wrote it.

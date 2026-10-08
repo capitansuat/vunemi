@@ -88,3 +88,31 @@ describe("a run with mentions", () => {
     expect(JSON.stringify(started)).not.toContain("Hotel Aurora");
   });
 });
+
+describe("the plan for a request with mentions", () => {
+  it("is made with what was brought in, not from the request alone", async () => {
+    const asked: string[] = [];
+    const model: ChatModel = {
+      id: "fake:planner",
+      async chat(req, onChunk) {
+        asked.push(req.messages.at(-1)!.content as string);
+        const text = String(req.messages[0]!.content).includes("short plan") ? "NONE" : "Hotel Aurora";
+        onChunk({ kind: "text", text });
+        return { text, toolCalls: [], usage: { promptTokens: 1, completionTokens: 1, ttftMs: 1, tokensPerSec: 1 } };
+      },
+    };
+    await runAgent({
+      goal: "Which hotel, and which date, in @Rome trip?",
+      model,
+      tools: new ToolRegistry(),
+      emit: () => {},
+      requestApproval: async () => ({ kind: "approve" }),
+      requestPlanApproval: async (steps) => ({ kind: "go", steps }),
+      mentions: [rome],
+    });
+    expect(asked[0]!.startsWith("Which hotel, and which date, in @Rome trip?")).toBe(true);
+    expect(asked[0]).toContain('- conversation "Rome trip" (2026-10-03)');
+    expect(asked[0]).toContain('<untrusted_content source="mentioned_conversation">');
+    expect(asked[0]).toContain("Vunemi: Hotel Aurora");
+  });
+});
