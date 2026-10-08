@@ -32,8 +32,15 @@ export interface VerifiedFact {
   status: "page" | "local" | "unverified";
 }
 
+/** A conversation or meeting the user brought into a request with "@". The title is the name they saw. */
+export interface MentionRef {
+  kind: "conversation" | "meeting";
+  id: string;
+  title: string;
+}
+
 export type AgentEvent =
-  | { type: "run.started"; runId: string; goal: string; attachments?: string[]; model: string; at: number }
+  | { type: "run.started"; runId: string; goal: string; attachments?: string[]; mentions?: MentionRef[]; model: string; at: number }
   | { type: "step.started"; runId: string; stepId: string; index: number; at: number }
   /** Model reasoning, streamed. UIs should render it demoted and collapsible. */
   | { type: "thought.delta"; runId: string; stepId: string; text: string }

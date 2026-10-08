@@ -1,6 +1,7 @@
 export * from "./events.js";
 export * from "./choices.js";
 export * from "./guard.js";
+export * from "./mentions.js";
 export * from "./tools.js";
 export * from "./provider.js";
 export * from "./plan.js";

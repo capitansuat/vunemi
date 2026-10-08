@@ -9,6 +9,7 @@ import { bareQuestion, comparisonTable, listChoiceInput, prepareChoice, tableCho
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
 import { GUARD_NOTE, suspectInstructions } from "./guard.js";
+import { mentionParts, mentionSource, type RunMention } from "./mentions.js";
 import { maskSecrets } from "./secrets.js";
 import type { ChatMessage, ChatModel, ChatResult, ImageData, ToolCall, ToolSpec } from "./provider.js";
 import type { ActionClass, ToolDef, ToolRegistry } from "./tools.js";
@@ -74,6 +75,11 @@ export interface RunOptions {
   notesIndex?: string;
   /** Files the user attached to the message, as absolute paths the file tools will read. */
   attachments?: string[];
+  /**
+   * Conversations and meetings the user brought in with "@". They are named
+   * in the request and their content follows it as data (see mentions.ts).
+   */
+  mentions?: RunMention[];
   /**
    * The page showing in Vunemi's browser as the request is sent. Without it
    * the model opened an offer the user had just opened, a second time.
@@ -381,7 +387,11 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       toolsNote = [...wanted].map(deliver).filter(Boolean).join("\n\n");
     }
   }
-  const request = userRequest(opts.goal, attached.listed, attached.note + undone + memory + notes + page, sentAt(new Date((opts.now ?? Date.now)())))
+  const brought = mentionParts(opts.mentions ?? []);
+  // Tracked like a page that was read: an old answer may hold a page's words.
+  for (const m of opts.mentions ?? []) if (m.text !== null) opts.onUntrustedOutput?.(m.text, mentionSource(m.kind));
+  const request = userRequest(opts.goal, attached.listed, attached.note + brought.list + undone + memory + notes + page, sentAt(new Date((opts.now ?? Date.now)())))
+    + brought.blocks
     + (opts.openPage ? `\n\n<untrusted_content source="open_page">\n${defuseTags(opts.openPage.title)} — ${defuseTags(opts.openPage.url)}\n</untrusted_content>` : "")
     + (toolsNote ? `\n\n[Vunemi, not from the user] This request may need tools that are not in your list.\n${toolsNote}` : "");
   const convo: ChatMessage[] = capImages([
@@ -434,6 +444,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     runId,
     goal: opts.goal,
     ...(opts.attachments?.length && { attachments: opts.attachments }),
+    ...(opts.mentions?.length && { mentions: opts.mentions.map(({ kind, id, title }) => ({ kind, id, title })) }),
     model: model.id,
     at: now(),
   });
