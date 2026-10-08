@@ -61,7 +61,8 @@ export const CLOSED_MID_CALL = "[Vunemi closed before this tool reported back. I
 /** Ends a transcript that Vunemi's closing cut short. For the model. */
 export const CLOSED_MID_TASK = "[Vunemi closed here, before this task was finished.]";
 
-const ID = /^s_[a-z0-9]{6,40}$/;
+/** A conversation's id; anything else is not a file of ours. */
+export const SESSION_ID = /^s_[a-z0-9]{6,40}$/;
 /** A tool's raw output is for the model; the timeline shows a glimpse of it. */
 const MAX_STORED_OUTPUT = 20_000;
 const TITLE_CHARS = 80;
@@ -164,16 +165,22 @@ export class SessionStore {
 
   /** Makes a stored conversation current, and hands back what it needs to be shown and continued. */
   open(id: string): { history: ChatMessage[]; events: AgentEvent[] } {
-    const stored = ID.test(id) ? this.read(id) : null;
+    const stored = SESSION_ID.test(id) ? this.read(id) : null;
     if (!stored) throw new Error(t("sessions.notFound"));
     this.current = stored;
     return { history: stored.history, events: stored.events };
   }
 
+  /** A stored conversation's name, date and timeline, without making it current. */
+  peek(id: string): { title: string; updatedAt: number; events: AgentEvent[] } | null {
+    const s = id === this.current.id ? this.current : SESSION_ID.test(id) ? this.read(id) : null;
+    return s ? { title: s.title, updatedAt: s.updatedAt, events: s.events } : null;
+  }
+
   /** The user's own name for a conversation. An empty one changes nothing. */
   rename(id: string, title: string): void {
     const name = title.replace(/\s+/g, " ").trim().slice(0, TITLE_CHARS);
-    if (!name || !ID.test(id)) return;
+    if (!name || !SESSION_ID.test(id)) return;
     const s = id === this.current.id ? this.current : this.read(id);
     if (!s) throw new Error(t("sessions.notFound"));
     s.title = name;
@@ -183,7 +190,7 @@ export class SessionStore {
 
   /** Forgets one conversation. Forgetting the current one starts a fresh one. */
   remove(id: string): void {
-    if (!ID.test(id)) return;
+    if (!SESSION_ID.test(id)) return;
     rmSync(join(this.dir, `${id}.json`), { force: true });
     rmSync(this.checkpointFile(id), { force: true });
     this.summaries.delete(id);
@@ -226,7 +233,7 @@ export class SessionStore {
    * An unreadable checkpoint is left where it is.
    */
   private recover(id: string): void {
-    if (!ID.test(id)) return;
+    if (!SESSION_ID.test(id)) return;
     let point: Checkpoint;
     try {
       point = JSON.parse(readFileSync(this.checkpointFile(id), "utf8")) as Checkpoint;

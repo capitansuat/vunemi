@@ -229,3 +229,22 @@ describe("renaming", () => {
     expect(() => store.rename("s_nothere", "x")).toThrow();
   });
 });
+
+describe("peek", () => {
+  it("reads a stored conversation without making it current", () => {
+    const store = new SessionStore(dir);
+    const first = store.currentId;
+    run(store, "r1", "Roma için otel bul", "Hotel Aurora");
+    const second = store.create();
+    const kept = store.peek(first);
+    expect(kept?.title).toBe("Roma için otel bul");
+    expect(kept?.events.some((e) => e.type === "run.started")).toBe(true);
+    expect(store.currentId).toBe(second);
+  });
+
+  it("has nothing for an id that is not one of ours", () => {
+    const store = new SessionStore(dir);
+    expect(store.peek("s_nothere1")).toBeNull();
+    expect(store.peek("../etc/passwd")).toBeNull();
+  });
+});

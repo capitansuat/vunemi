@@ -3,12 +3,19 @@
  * imports these so a channel can't drift out of sync with its handler.
  */
 
-import type { ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, ChoiceAnswer, HandoffOutcome, PlanDecision, Produced, ProviderKind } from "@vunemi/agent-core";
+import type { ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, ChoiceAnswer, HandoffOutcome, MentionRef, PlanDecision, Produced, ProviderKind } from "@vunemi/agent-core";
 import type { ConnectorView, PrivacyPane } from "@vunemi/connectors";
 import type { OutboxEvent, Pending, UncertainSend } from "@vunemi/mail";
 import type { Locale } from "@vunemi/i18n";
 
 export type { ConnectorView, PrivacyPane };
+export type { MentionRef };
+
+/** Something "@" can bring into a message, as the menu lists it. An untitled meeting has an empty title. */
+export interface MentionItem extends MentionRef {
+  /** When it was last worked on, or held. */
+  at: number;
+}
 
 /** What the connections screen collects before a server can be added. */
 export interface NewMcpServer {

@@ -28,7 +28,8 @@ export interface Meeting {
 
 export type MeetingSummary = Omit<Meeting, "lines">;
 
-const ID = /^[0-9a-f-]{36}$/;
+/** A meeting's id, and its folder's name. */
+export const MEETING_ID = /^[0-9a-f-]{36}$/;
 const AUDIO = ["mic.pcm", "system.pcm"];
 
 export class MeetingStore {
@@ -49,7 +50,7 @@ export class MeetingStore {
 
   /** The meeting's folder. Refuses anything that is not one of our ids. */
   folder(id: string): string {
-    if (!ID.test(id)) throw new Error("bad meeting id");
+    if (!MEETING_ID.test(id)) throw new Error("bad meeting id");
     return join(this.dir, id);
   }
 
@@ -112,6 +113,6 @@ export class MeetingStore {
     } catch {
       return [];
     }
-    return names.filter((n) => ID.test(n)).flatMap((n) => this.get(n) ?? []);
+    return names.filter((n) => MEETING_ID.test(n)).flatMap((n) => this.get(n) ?? []);
   }
 }
