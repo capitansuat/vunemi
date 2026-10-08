@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.13 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.14 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.13，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.14，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.1.13：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.1.14：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -164,7 +164,10 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "Vunemi 现在更少提议记住内容：你为某一次任务提出的格式、语气或长度，不再被当作偏好来提议。对于你明确说明长期有效的规则或事实，它仍会提议记下。",
+      "Vunemi 向你提问时会更可靠地附上按钮，最多八个选项；在继续任务之前最多连续问两个问题。",
+      "比较内容会以正确的方向变成选项卡片，即使表格把各项特性写在行里也一样。",
+      "当网页、文件或邮件中有像是写给助手的指令的文字时，Vunemi 会察觉。它会向你显示发现的内容，把它当作数据处理，并在下一个可能向外发送内容的操作之前先询问你。",
+      "更多类型的机密会在模型看到之前被隐藏：JSON 中的密钥、登录令牌以及地址中的密码。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un assistente personale che funziona sul tuo Mac", description: "Vunemi aiuta nelle attività quotidiane. L’IA funziona sul tuo Mac, senza account cloud Vunemi. Scegli tu quali servizi esterni collegare." },
-    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.13." },
+    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.14." },
     screens: { title: "Schermate di Vunemi", description: "Schermate reali dell'app Vunemi per Mac, catturate con dati di esempio." },
-    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.13 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
+    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.14 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
   },
   hero: {
     eyebrow: "Assistente personale per Mac",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Tutto ciò che Vunemi sa fare",
-    intro: "Vunemi 0.1.13 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
+    intro: "Vunemi 0.1.14 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
     chatTitle: "Lavorare con Vunemi",
     chat: [
       { title: "Prima il piano", body: "Per un'attività con più passaggi, Vunemi può mostrarti prima il piano. Vai avanti, modifica i passaggi o annulla." },
@@ -164,7 +164,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
-      "Vunemi ora propone di ricordare meno cose: il modo in cui chiedi una singola attività (un formato, un tono, una lunghezza) non viene più proposto come preferenza. Continua a proporre una nota per ciò che indichi come regola fissa o fatto duraturo.",
+      "Le domande che Vunemi ti fa arrivano con i pulsanti in modo più affidabile, con fino a otto scelte, e ne fa al massimo due di fila prima di proseguire con l'attività.",
+      "Un confronto diventa schede di opzioni nel verso giusto, anche quando la tabella elenca le caratteristiche nelle righe.",
+      "Vunemi si accorge quando una pagina, un file o un'e-mail contiene un testo scritto come istruzioni per l'assistente. Ti mostra che cosa ha trovato, lo tratta come dati e ti chiede prima della prossima azione che potrebbe inviare qualcosa all'esterno.",
+      "Più tipi di segreti vengono nascosti prima che il modello li veda: chiavi in JSON, token di accesso e password dentro gli indirizzi.",
     ],
     title: "Scarica Vunemi",
     intro: "Gratuito e open source. Per Mac con Apple Silicon e macOS 14 o successivo.",

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.13의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.14의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.13을 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.14를 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.1.13 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.1.14 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -164,7 +164,10 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "Vunemi가 기억을 제안하는 경우가 줄었습니다. 한 번의 작업에서 요청한 형식, 말투, 길이는 더 이상 선호 사항으로 제안되지 않습니다. 계속 적용할 규칙이나 변하지 않는 사실로 말한 내용에는 여전히 메모를 제안합니다.",
+      "Vunemi가 묻는 질문이 더 안정적으로 버튼과 함께 표시됩니다(선택지는 최대 8개). 작업을 진행하기 전에 연속으로 묻는 질문은 최대 두 개입니다.",
+      "비교 내용은 표가 특징을 행에 나열한 경우에도 올바른 방향으로 선택지 카드가 됩니다.",
+      "페이지, 파일, 메일에 어시스턴트에게 내리는 지시처럼 쓰인 텍스트가 있으면 Vunemi가 알아챕니다. 찾은 내용을 보여 주고, 데이터로 취급하며, 무언가를 외부로 보낼 수 있는 다음 작업 전에 물어봅니다.",
+      "더 많은 종류의 비밀 정보가 모델이 보기 전에 가려집니다. JSON 안의 키, 로그인 토큰, 주소 안의 비밀번호입니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",

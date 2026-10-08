@@ -1,51 +1,84 @@
 {
-  "currentRelease": "0.1.13",
+  "currentRelease": "0.1.14",
   "releases": [
     {
-      "version": "0.1.13",
+      "version": "0.1.14",
       "updateTo": {
-        "version": "0.1.13",
-        "name": "Vunemi 0.1.13",
+        "version": "0.1.14",
+        "name": "Vunemi 0.1.14",
         "pub_date": "2026-10-08T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.13/Vunemi-0.1.13-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.14/Vunemi-0.1.14-arm64.zip"
       }
     }
   ],
   "sizeMb": 135,
   "notes": {
     "en": [
-      "Vunemi now offers to remember less: the way you ask for one task (a format, a tone, a length) is no longer suggested as a preference. It still offers a note for what you say as a standing rule or a lasting fact."
+      "Questions Vunemi asks you come with buttons more reliably, with up to eight choices, and it asks at most two in a row before getting on with the task.",
+      "A comparison becomes option cards the right way round, also when the table lists features in rows.",
+      "Vunemi notices when a page, a file or a mail has text written as instructions to the assistant. It shows you what it found, treats it as data, and asks before the next action that could send something out.",
+      "More kinds of secrets are hidden before the model sees them: keys in JSON, sign-in tokens and passwords inside addresses."
     ],
     "de": [
-      "Vunemi schlägt jetzt seltener vor, sich etwas zu merken: Wie du eine einzelne Aufgabe formulierst (Format, Ton, Länge), wird nicht mehr als Vorliebe vorgeschlagen. Für dauerhafte Regeln und Fakten bietet Vunemi weiterhin eine Notiz an."
+      "Fragen, die Vunemi dir stellt, kommen zuverlässiger mit Schaltflächen, mit bis zu acht Auswahlmöglichkeiten, und es stellt höchstens zwei hintereinander, bevor es mit der Aufgabe weitermacht.",
+      "Ein Vergleich wird richtig herum zu Optionskarten, auch wenn die Tabelle Merkmale in Zeilen aufführt.",
+      "Vunemi bemerkt, wenn eine Seite, eine Datei oder eine E-Mail Text enthält, der als Anweisung an den Assistenten geschrieben ist. Es zeigt dir, was es gefunden hat, behandelt ihn als Daten und fragt vor der nächsten Aktion, die etwas nach außen senden könnte.",
+      "Mehr Arten von Geheimnissen werden verborgen, bevor das Modell sie sieht: Schlüssel in JSON, Anmeldetoken und Passwörter in Adressen."
     ],
     "es": [
-      "Vunemi ahora propone recordar menos: la forma en que pides una tarea concreta (un formato, un tono, una extensión) ya no se sugiere como preferencia. Sigue proponiendo una nota para lo que dices como regla permanente o dato duradero."
+      "Las preguntas que Vunemi te hace llegan con botones de forma más fiable, con hasta ocho opciones, y hace como máximo dos seguidas antes de continuar con la tarea.",
+      "Una comparación se convierte en tarjetas de opciones en el sentido correcto, también cuando la tabla pone las características en filas.",
+      "Vunemi detecta cuando una página, un archivo o un correo tiene un texto escrito como instrucciones para el asistente. Te muestra lo que encontró, lo trata como datos y te pregunta antes de la siguiente acción que podría enviar algo fuera.",
+      "Se ocultan más tipos de secretos antes de que el modelo los vea: claves en JSON, tokens de inicio de sesión y contraseñas dentro de direcciones."
     ],
     "fr": [
-      "Vunemi propose désormais moins souvent de mémoriser : la façon dont vous demandez une tâche (un format, un ton, une longueur) n'est plus proposée comme préférence. Il propose toujours une note pour ce que vous énoncez comme une règle durable ou un fait qui reste vrai."
+      "Les questions que Vunemi vous pose arrivent plus sûrement avec des boutons, jusqu'à huit choix, et il en pose au plus deux de suite avant de poursuivre la tâche.",
+      "Une comparaison devient des cartes d'options dans le bon sens, même lorsque le tableau présente les caractéristiques en lignes.",
+      "Vunemi remarque quand une page, un fichier ou un e-mail contient un texte rédigé comme des instructions à l'assistant. Il vous montre ce qu'il a trouvé, le traite comme une donnée et vous demande avant la prochaine action qui pourrait envoyer quelque chose à l'extérieur.",
+      "Davantage de types de secrets sont masqués avant que le modèle ne les voie : clés dans du JSON, jetons de connexion et mots de passe dans les adresses."
     ],
     "it": [
-      "Vunemi ora propone di ricordare meno cose: il modo in cui chiedi una singola attività (un formato, un tono, una lunghezza) non viene più proposto come preferenza. Continua a proporre una nota per ciò che indichi come regola fissa o fatto duraturo."
+      "Le domande che Vunemi ti fa arrivano con i pulsanti in modo più affidabile, con fino a otto scelte, e ne fa al massimo due di fila prima di proseguire con l'attività.",
+      "Un confronto diventa schede di opzioni nel verso giusto, anche quando la tabella elenca le caratteristiche nelle righe.",
+      "Vunemi si accorge quando una pagina, un file o un'e-mail contiene un testo scritto come istruzioni per l'assistente. Ti mostra che cosa ha trovato, lo tratta come dati e ti chiede prima della prossima azione che potrebbe inviare qualcosa all'esterno.",
+      "Più tipi di segreti vengono nascosti prima che il modello li veda: chiavi in JSON, token di accesso e password dentro gli indirizzi."
     ],
     "tr": [
-      "Vunemi artık daha az şey hatırlamayı öneriyor: tek bir iş için istediğin biçim, ton ya da uzunluk tercih olarak önerilmiyor. Kalıcı bir kural ya da bilgi olarak söylediklerin için not önermeye devam ediyor."
+      "Vunemi'nin sana sorduğu sorular artık daha güvenilir biçimde düğmelerle geliyor; sekiz seçeneğe kadar. İşe koyulmadan önce art arda en çok iki soru soruyor.",
+      "Karşılaştırmalar, tablo özellikleri satırlara yazdığında da doğru seçenek kartlarına dönüşüyor.",
+      "Vunemi bir sayfada, dosyada ya da e-postada asistana talimat gibi yazılmış bir metin olduğunu fark ediyor. Ne bulduğunu sana gösteriyor, onu veri sayıyor ve dışarıya bir şey gönderebilecek bir sonraki eylemden önce sana soruyor.",
+      "Daha fazla türde gizli bilgi, model görmeden önce gizleniyor: JSON içindeki anahtarlar, oturum belirteçleri ve adreslerin içindeki parolalar."
     ],
     "pt": [
-      "O Vunemi agora propõe lembrar menos coisas: a forma como você pede uma tarefa (um formato, um tom, um tamanho) não é mais sugerida como preferência. Ele continua propondo uma nota para o que você diz como regra permanente ou fato duradouro."
+      "As perguntas que o Vunemi faz a você chegam com botões de forma mais confiável, com até oito opções, e ele faz no máximo duas seguidas antes de continuar a tarefa.",
+      "Uma comparação vira cartões de opções no sentido certo, mesmo quando a tabela lista as características em linhas.",
+      "O Vunemi percebe quando uma página, um arquivo ou um e-mail tem um texto escrito como instruções para o assistente. Ele mostra o que encontrou, trata isso como dado e pergunta antes da próxima ação que poderia enviar algo para fora.",
+      "Mais tipos de segredos são ocultados antes que o modelo os veja: chaves em JSON, tokens de login e senhas dentro de endereços."
     ],
     "ru": [
-      "Vunemi теперь реже предлагает что-то запомнить: то, как вы сформулировали одну задачу (формат, тон, объём), больше не предлагается как предпочтение. Заметка по-прежнему предлагается для того, что вы называете постоянным правилом или неизменным фактом."
+      "Вопросы, которые задаёт Vunemi, надёжнее приходят с кнопками, до восьми вариантов, и он задаёт не больше двух подряд, прежде чем продолжить задачу.",
+      "Сравнение превращается в карточки вариантов правильно, даже если в таблице характеристики расположены по строкам.",
+      "Vunemi замечает, когда на странице, в файле или письме есть текст, написанный как инструкции для ассистента. Он показывает, что нашёл, считает это данными и спрашивает перед следующим действием, которое может отправить что-то наружу.",
+      "Больше видов секретов скрывается до того, как их увидит модель: ключи в JSON, токены входа и пароли внутри адресов."
     ],
     "zh": [
-      "Vunemi 现在更少提议记住内容：你为某一次任务提出的格式、语气或长度，不再被当作偏好来提议。对于你明确说明长期有效的规则或事实，它仍会提议记下。"
+      "Vunemi 向你提问时会更可靠地附上按钮，最多八个选项；在继续任务之前最多连续问两个问题。",
+      "比较内容会以正确的方向变成选项卡片，即使表格把各项特性写在行里也一样。",
+      "当网页、文件或邮件中有像是写给助手的指令的文字时，Vunemi 会察觉。它会向你显示发现的内容，把它当作数据处理，并在下一个可能向外发送内容的操作之前先询问你。",
+      "更多类型的机密会在模型看到之前被隐藏：JSON 中的密钥、登录令牌以及地址中的密码。"
     ],
     "ja": [
-      "Vunemi が覚えることを提案する場面が減りました。1 回の依頼で指定した形式・口調・長さは、好みとして提案されなくなりました。今後も続くルールや事実として伝えた内容には、これまでどおりメモを提案します。"
+      "Vunemi からの質問が、より確実にボタン付きで表示されるようになりました（選択肢は最大 8 個）。作業に進む前に続けて尋ねる質問は 2 つまでです。",
+      "比較は、表が特徴を行に並べている場合でも、正しい向きで選択肢カードになります。",
+      "ページ、ファイル、メールにアシスタントへの指示のように書かれたテキストがあると、Vunemi が気づきます。見つけた内容を表示し、データとして扱い、外部に何かを送る可能性のある次の操作の前に確認します。",
+      "モデルが見る前に隠される秘密情報の種類が増えました。JSON 内のキー、サインイン用トークン、アドレスに含まれるパスワードです。"
     ],
     "ko": [
-      "Vunemi가 기억을 제안하는 경우가 줄었습니다. 한 번의 작업에서 요청한 형식, 말투, 길이는 더 이상 선호 사항으로 제안되지 않습니다. 계속 적용할 규칙이나 변하지 않는 사실로 말한 내용에는 여전히 메모를 제안합니다."
+      "Vunemi가 묻는 질문이 더 안정적으로 버튼과 함께 표시됩니다(선택지는 최대 8개). 작업을 진행하기 전에 연속으로 묻는 질문은 최대 두 개입니다.",
+      "비교 내용은 표가 특징을 행에 나열한 경우에도 올바른 방향으로 선택지 카드가 됩니다.",
+      "페이지, 파일, 메일에 어시스턴트에게 내리는 지시처럼 쓰인 텍스트가 있으면 Vunemi가 알아챕니다. 찾은 내용을 보여 주고, 데이터로 취급하며, 무언가를 외부로 보낼 수 있는 다음 작업 전에 물어봅니다.",
+      "더 많은 종류의 비밀 정보가 모델이 보기 전에 가려집니다. JSON 안의 키, 로그인 토큰, 주소 안의 비밀번호입니다."
     ]
   }
 }

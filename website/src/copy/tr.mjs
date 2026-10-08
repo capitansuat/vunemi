@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.13'ün yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.14'ün yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.13'ü Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.14'ü Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.1.13: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.1.14: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -166,7 +166,10 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Vunemi artık daha az şey hatırlamayı öneriyor: tek bir iş için istediğin biçim, ton ya da uzunluk tercih olarak önerilmiyor. Kalıcı bir kural ya da bilgi olarak söylediklerin için not önermeye devam ediyor.",
+      "Vunemi'nin sana sorduğu sorular artık daha güvenilir biçimde düğmelerle geliyor; sekiz seçeneğe kadar. İşe koyulmadan önce art arda en çok iki soru soruyor.",
+      "Karşılaştırmalar, tablo özellikleri satırlara yazdığında da doğru seçenek kartlarına dönüşüyor.",
+      "Vunemi bir sayfada, dosyada ya da e-postada asistana talimat gibi yazılmış bir metin olduğunu fark ediyor. Ne bulduğunu sana gösteriyor, onu veri sayıyor ve dışarıya bir şey gönderebilecek bir sonraki eylemden önce sana soruyor.",
+      "Daha fazla türde gizli bilgi, model görmeden önce gizleniyor: JSON içindeki anahtarlar, oturum belirteçleri ve adreslerin içindeki parolalar.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],
