@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un assistente personale che funziona sul tuo Mac", description: "Vunemi aiuta nelle attività quotidiane. L’IA funziona sul tuo Mac, senza account cloud Vunemi. Scegli tu quali servizi esterni collegare." },
-    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.14." },
+    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.15." },
     screens: { title: "Schermate di Vunemi", description: "Schermate reali dell'app Vunemi per Mac, catturate con dati di esempio." },
-    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.14 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
+    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.15 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
   },
   hero: {
     eyebrow: "Assistente personale per Mac",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Tutto ciò che Vunemi sa fare",
-    intro: "Vunemi 0.1.14 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
+    intro: "Vunemi 0.1.15 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
     chatTitle: "Lavorare con Vunemi",
     chat: [
       { title: "Prima il piano", body: "Per un'attività con più passaggi, Vunemi può mostrarti prima il piano. Vai avanti, modifica i passaggi o annulla." },
@@ -125,6 +125,7 @@ export default {
       { title: "Riprende da dove si era fermato", body: "Se Vunemi si chiude a metà di un'attività, ti dice fin dove è arrivato e propone di continuare, chiedendo prima di ogni passaggio che modifica o invia." },
       { title: "Progetti", body: "Trasforma una cartella in progetto: Vunemi tiene lì i file di quel lavoro, e ogni modifica si può annullare." },
       { title: "Memoria", body: "Note tratte dalle tue parole, salvate solo quando dici di sì. Un'attività riceve solo le note che le servono, e la risposta dice quante ne ha ricevute." },
+      { title: "Riprendi il lavoro precedente", body: "Scrivi @ e scegli una sessione precedente o una riunione. Le sue domande e risposte, o il riepilogo della riunione, accompagnano il tuo messaggio; fino a cinque alla volta." },
     ],
     connTitle: "Connessioni",
     connIntro: "Ogni connessione resta spenta finché non la attivi. Una connessione spenta è invisibile al modello: i suoi strumenti non si possono proprio usare. Molte hanno interruttori separati per leggere e per modificare.",
@@ -164,10 +165,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
-      "Le domande che Vunemi ti fa arrivano con i pulsanti in modo più affidabile, con fino a otto scelte, e ne fa al massimo due di fila prima di proseguire con l'attività.",
-      "Un confronto diventa schede di opzioni nel verso giusto, anche quando la tabella elenca le caratteristiche nelle righe.",
-      "Vunemi si accorge quando una pagina, un file o un'e-mail contiene un testo scritto come istruzioni per l'assistente. Ti mostra che cosa ha trovato, lo tratta come dati e ti chiede prima della prossima azione che potrebbe inviare qualcosa all'esterno.",
-      "Più tipi di segreti vengono nascosti prima che il modello li veda: chiavi in JSON, token di accesso e password dentro gli indirizzi.",
+      "Scrivi @ nel campo del messaggio per portare una sessione precedente o una riunione nel tuo messaggio. Vunemi ne legge le domande e le risposte, oppure il riepilogo della riunione e, se c'è spazio, la trascrizione. Fino a cinque alla volta.",
+      "Ciò che porti vale come documento, non come istruzioni: Vunemi ti chiede conferma prima di un'azione che ne porterebbe altrove un lungo passaggio.",
     ],
     title: "Scarica Vunemi",
     intro: "Gratuito e open source. Per Mac con Apple Silicon e macOS 14 o successivo.",

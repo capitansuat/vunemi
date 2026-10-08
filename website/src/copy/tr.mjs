@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.14'ün yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.15'in yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.14'ü Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.15'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.1.14: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.1.15: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -125,6 +125,7 @@ export default {
       { title: "Kaldığı yerden devam", body: "Vunemi bir görevin ortasında kapanırsa nereye kadar geldiğini söyler ve devam etmeyi önerir; değiştiren veya gönderen her adımdan önce sorar." },
       { title: "Projeler", body: "Bir klasörü proje yap: Vunemi o işin dosyalarını orada tutar ve her değişiklik geri alınabilir." },
       { title: "Hafıza", body: "Senin sözlerinden notlar; yalnız onay verdiğinde kaydedilir. Bir göreve yalnız ona uyan notlar verilir ve yanıt kaç not verildiğini söyler." },
+      { title: "Önceki işi getir", body: "@ yazıp önceki bir oturumu ya da toplantıyı seç. Oturumun soruları ve yanıtları ya da toplantının özeti mesajınla birlikte gider; bir mesaja en çok beş tane." },
     ],
     connTitle: "Bağlantılar",
     connIntro: "Her bağlantı sen açana kadar kapalıdır. Kapalı bir bağlantı modele görünmez; araçları hiç çağrılamaz. Birçoğunda okuma ve değiştirme için ayrı anahtarlar var.",
@@ -166,10 +167,8 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Vunemi'nin sana sorduğu sorular artık daha güvenilir biçimde düğmelerle geliyor; sekiz seçeneğe kadar. İşe koyulmadan önce art arda en çok iki soru soruyor.",
-      "Karşılaştırmalar, tablo özellikleri satırlara yazdığında da doğru seçenek kartlarına dönüşüyor.",
-      "Vunemi bir sayfada, dosyada ya da e-postada asistana talimat gibi yazılmış bir metin olduğunu fark ediyor. Ne bulduğunu sana gösteriyor, onu veri sayıyor ve dışarıya bir şey gönderebilecek bir sonraki eylemden önce sana soruyor.",
-      "Daha fazla türde gizli bilgi, model görmeden önce gizleniyor: JSON içindeki anahtarlar, oturum belirteçleri ve adreslerin içindeki parolalar.",
+      "Yazma kutusunda @ yazarak önceki bir oturumu ya da toplantıyı mesajına getirebilirsin. Vunemi oturumun sorularını ve yanıtlarını, toplantının özetini ve yer varsa dökümünü okur. Bir mesaja en çok beş tane.",
+      "Getirdiğin içerik talimat değil, kayıt sayılır: Vunemi, ondan uzun bir parçayı başka bir yere taşıyacak eylemden önce sana sorar.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

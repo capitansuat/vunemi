@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.14 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.15 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.14 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.15 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.1.14 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.1.15 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -125,6 +125,7 @@ export default {
       { title: "Macht dort weiter, wo es war", body: "Schließt sich Vunemi mitten in einer Aufgabe, sagt es dir, wie weit es gekommen ist, und bietet an weiterzumachen – mit Rückfrage vor jedem Schritt, der etwas ändert oder sendet." },
       { title: "Projekte", body: "Mach einen Ordner zum Projekt: Vunemi legt die Dateien dieser Arbeit dort ab, und jede Änderung lässt sich rückgängig machen." },
       { title: "Gedächtnis", body: "Notizen aus deinen eigenen Worten, gespeichert nur mit deiner Zustimmung. Eine Aufgabe bekommt nur die Notizen, die zu ihr passen, und die Antwort sagt, wie viele es waren." },
+      { title: "Frühere Arbeit dazuholen", body: "Tippe @ und wähle eine frühere Sitzung oder eine Besprechung. Ihre Fragen und Antworten oder die Zusammenfassung der Besprechung gehen mit deiner Nachricht mit; bis zu fünf auf einmal." },
     ],
     connTitle: "Verbindungen",
     connIntro: "Jede Verbindung ist aus, bis du sie einschaltest. Eine ausgeschaltete Verbindung ist für das Modell unsichtbar: Ihre Werkzeuge lassen sich gar nicht aufrufen. Viele haben getrennte Schalter fürs Lesen und fürs Ändern.",
@@ -164,10 +165,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Fragen, die Vunemi dir stellt, kommen zuverlässiger mit Schaltflächen, mit bis zu acht Auswahlmöglichkeiten, und es stellt höchstens zwei hintereinander, bevor es mit der Aufgabe weitermacht.",
-      "Ein Vergleich wird richtig herum zu Optionskarten, auch wenn die Tabelle Merkmale in Zeilen aufführt.",
-      "Vunemi bemerkt, wenn eine Seite, eine Datei oder eine E-Mail Text enthält, der als Anweisung an den Assistenten geschrieben ist. Es zeigt dir, was es gefunden hat, behandelt ihn als Daten und fragt vor der nächsten Aktion, die etwas nach außen senden könnte.",
-      "Mehr Arten von Geheimnissen werden verborgen, bevor das Modell sie sieht: Schlüssel in JSON, Anmeldetoken und Passwörter in Adressen.",
+      "Tippe @ ins Nachrichtenfeld, um eine frühere Sitzung oder eine Besprechung in deine Nachricht zu holen. Vunemi liest ihre Fragen und Antworten oder die Zusammenfassung der Besprechung und, wenn Platz ist, ihr Transkript. Bis zu fünf auf einmal.",
+      "Was du dazuholst, gilt als Aufzeichnung, nicht als Anweisung: Vunemi fragt dich vor einer Aktion, die einen längeren Abschnitt daraus woandershin tragen würde.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

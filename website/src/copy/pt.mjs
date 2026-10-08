@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: um assistente pessoal que roda no seu Mac", description: "O Vunemi ajuda nas tarefas do dia a dia. A IA roda no seu Mac, sem conta na nuvem do Vunemi. Você escolhe quais serviços externos conectar." },
-    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.1.14 faz." },
+    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.1.15 faz." },
     screens: { title: "Telas do Vunemi", description: "Telas reais do app Vunemi para Mac, capturadas com dados de exemplo." },
-    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.1.14 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
+    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.1.15 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
   },
   hero: {
     eyebrow: "Assistente pessoal para Mac",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Tudo o que o Vunemi faz",
-    intro: "O Vunemi 0.1.14 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
+    intro: "O Vunemi 0.1.15 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
     chatTitle: "Trabalhando com o Vunemi",
     chat: [
       { title: "Primeiro o plano", body: "Numa tarefa com vários passos, o Vunemi pode mostrar o plano antes. Siga em frente, edite os passos ou cancele." },
@@ -125,6 +125,7 @@ export default {
       { title: "Continua de onde parou", body: "Se o Vunemi fechar no meio de uma tarefa, ele conta até onde chegou e oferece continuar, perguntando antes de qualquer passo que mude ou envie algo." },
       { title: "Projetos", body: "Transforme uma pasta em projeto: o Vunemi guarda ali os arquivos daquele trabalho, e toda mudança pode ser desfeita." },
       { title: "Memória", body: "Notas com suas próprias palavras, salvas só quando você aprova. Uma tarefa recebe só as notas que servem para ela, e a resposta diz quantas recebeu." },
+      { title: "Traga trabalho anterior", body: "Digite @ e escolha uma sessão anterior ou uma reunião. As perguntas e respostas dela, ou o resumo da reunião, vão junto com a sua mensagem; até cinco por vez." },
     ],
     connTitle: "Conexões",
     connIntro: "Cada conexão fica desligada até você ligá-la. Uma conexão desligada é invisível para o modelo: suas ferramentas nem podem ser chamadas. Muitas têm chaves separadas para ler e para alterar.",
@@ -164,10 +165,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Novidades desta versão",
     highlights: [
-      "As perguntas que o Vunemi faz a você chegam com botões de forma mais confiável, com até oito opções, e ele faz no máximo duas seguidas antes de continuar a tarefa.",
-      "Uma comparação vira cartões de opções no sentido certo, mesmo quando a tabela lista as características em linhas.",
-      "O Vunemi percebe quando uma página, um arquivo ou um e-mail tem um texto escrito como instruções para o assistente. Ele mostra o que encontrou, trata isso como dado e pergunta antes da próxima ação que poderia enviar algo para fora.",
-      "Mais tipos de segredos são ocultados antes que o modelo os veja: chaves em JSON, tokens de login e senhas dentro de endereços.",
+      "Digite @ na caixa de mensagem para trazer uma sessão anterior ou uma reunião para a sua mensagem. O Vunemi lê as perguntas e respostas dela, ou o resumo da reunião e, se couber, a transcrição. Até cinco por vez.",
+      "O que você traz conta como registro, não como instrução: o Vunemi pergunta antes de uma ação que levaria um trecho longo para outro lugar.",
     ],
     title: "Baixe o Vunemi",
     intro: "Gratuito e de código aberto. Para Macs com Apple Silicon e macOS 14 ou posterior.",
