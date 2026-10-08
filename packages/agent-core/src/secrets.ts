@@ -20,15 +20,19 @@ const KEYS: RegExp[] = [
   /\bgithub_pat_[A-Za-z0-9_]{22,}/g,
   /\bxox[abposr]-[A-Za-z0-9-]{10,}/g, // Slack
   /\bAIza[0-9A-Za-z_-]{35}\b/g, // Google API key
+  /\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, // a signed token (JWT)
 ];
 
 /** A label, then the value: the label stays so the text still reads. */
 const BEARER = /\b(Bearer)[ \t]+[A-Za-z0-9._~+/-]{16,}=*/gi;
-const ASSIGNMENT = /\b(api[_-]?key|access[_-]?token|token|secret|password|passwd)\b(\s*[:=]\s*)(["']?)[^\s"']{8,}/gi;
+// In JSON the key's closing quote comes before the colon.
+const ASSIGNMENT = /\b(api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|token|secret|password|passwd)\b(["']?\s*[:=]\s*)(["']?)[^\s"']{8,}/gi;
+/** The password in scheme://user:password@host; who and where stay readable. */
+const ADDRESS = /\b([a-z][a-z0-9+.-]{1,20}:\/\/[^\s:/@]{1,64}:)[^\s:/@]{3,}(@)/gi;
 
 export function maskSecrets(text: string): string {
   let out = text;
   for (const key of KEYS) out = out.replace(key, SECRET_MASK);
-  out = out.replace(BEARER, `$1 ${SECRET_MASK}`);
+  out = out.replace(BEARER, `$1 ${SECRET_MASK}`).replace(ADDRESS, `$1${SECRET_MASK}$2`);
   return out.replace(ASSIGNMENT, `$1$2$3${SECRET_MASK}`);
 }

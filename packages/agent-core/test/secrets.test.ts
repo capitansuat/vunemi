@@ -28,6 +28,20 @@ describe("maskSecrets", () => {
     expect(maskSecrets("token=abcdefgh12345678")).toBe(`token=${SECRET_MASK}`);
   });
 
+  it("hides secrets in the shapes a config file, a log or an address gives them", () => {
+    // In JSON the key is quoted, so the colon does not follow it directly.
+    expect(maskSecrets('{"api_key": "a1b2c3d4e5f6g7h8", "name": "demo"}')).toBe(`{"api_key": "${SECRET_MASK}", "name": "demo"}`);
+    expect(maskSecrets("{'password': 'correct-horse-battery'}")).toBe(`{'password': '${SECRET_MASK}'}`);
+    // A signed session token: three base64url parts, the first two JSON.
+    const jwt = ["eyJhbGciOiJIUzI1NiJ9", "eyJzdWIiOiIxMjM0NTY3ODkwIn0", "dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"].join(".");
+    expect(maskSecrets(`cookie session=${jwt}; path=/`)).toBe(`cookie session=${SECRET_MASK}; path=/`);
+    // The password inside an address; who and where stay readable.
+    expect(maskSecrets("postgresql://app:s3cretPassw0rd@db.example.com:5432/main")).toBe(`postgresql://app:${SECRET_MASK}@db.example.com:5432/main`);
+    expect(maskSecrets("see https://deploy:hunter2hunter2@example.com/path")).toBe(`see https://deploy:${SECRET_MASK}@example.com/path`);
+    // A port is not a password, and neither is the rest of a mail address.
+    expect(maskSecrets("http://localhost:8080/users/me@example.com")).toBe("http://localhost:8080/users/me@example.com");
+  });
+
   it("hides a private key block whole", () => {
     const pem = "-----BEGIN RSA PRIVATE KEY-----\nMIIEow\nIBAAKC\n-----END RSA PRIVATE KEY-----";
     expect(maskSecrets(`x\n${pem}\ny`)).toBe(`x\n${SECRET_MASK}\ny`);
