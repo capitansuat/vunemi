@@ -1,84 +1,51 @@
 {
-  "currentRelease": "0.1.12",
+  "currentRelease": "0.1.13",
   "releases": [
     {
-      "version": "0.1.12",
+      "version": "0.1.13",
       "updateTo": {
-        "version": "0.1.12",
-        "name": "Vunemi 0.1.12",
-        "pub_date": "2026-10-06T00:00:00Z",
+        "version": "0.1.13",
+        "name": "Vunemi 0.1.13",
+        "pub_date": "2026-10-08T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.12/Vunemi-0.1.12-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.13/Vunemi-0.1.13-arm64.zip"
       }
     }
   ],
   "sizeMb": 135,
   "notes": {
     "en": [
-      "When Vunemi needs you to choose, it asks with buttons. You can still type your own answer.",
-      "Options to pick from, such as flights, products or places, come as cards. Tick two or more to compare them side by side.",
-      "Each fact on a card is checked against the page it was read from, and marked when it was not found there. Cards made without reading anything say they are Vunemi's own suggestions.",
-      "Cmd+Q now always quits Vunemi completely, and the menu bar shows its name."
+      "Vunemi now offers to remember less: the way you ask for one task (a format, a tone, a length) is no longer suggested as a preference. It still offers a note for what you say as a standing rule or a lasting fact."
     ],
     "de": [
-      "Wenn du etwas auswählen sollst, fragt Vunemi jetzt mit Schaltflächen. Du kannst weiterhin eine eigene Antwort eintippen.",
-      "Optionen zur Auswahl, etwa Flüge, Produkte oder Orte, erscheinen als Karten. Markiere zwei oder mehr, um sie nebeneinander zu vergleichen.",
-      "Jede Angabe auf einer Karte wird mit der Seite abgeglichen, von der sie stammt, und gekennzeichnet, wenn sie dort nicht gefunden wurde. Karten, für die nichts gelesen wurde, weisen sich als Vunemis eigene Vorschläge aus.",
-      "Cmd+Q beendet Vunemi jetzt immer vollständig, und die Menüleiste zeigt den Namen Vunemi."
+      "Vunemi schlägt jetzt seltener vor, sich etwas zu merken: Wie du eine einzelne Aufgabe formulierst (Format, Ton, Länge), wird nicht mehr als Vorliebe vorgeschlagen. Für dauerhafte Regeln und Fakten bietet Vunemi weiterhin eine Notiz an."
     ],
     "es": [
-      "Cuando Vunemi necesita que elijas, pregunta con botones. Puedes seguir escribiendo tu propia respuesta.",
-      "Las opciones para elegir, como vuelos, productos o lugares, llegan en forma de tarjetas. Marca dos o más para compararlas una al lado de la otra.",
-      "Cada dato de una tarjeta se comprueba con la página de la que se leyó y se señala cuando no se encontró allí. Las tarjetas hechas sin leer nada indican que son sugerencias propias de Vunemi.",
-      "Cmd+Q ahora siempre cierra Vunemi por completo, y la barra de menús muestra su nombre."
+      "Vunemi ahora propone recordar menos: la forma en que pides una tarea concreta (un formato, un tono, una extensión) ya no se sugiere como preferencia. Sigue proponiendo una nota para lo que dices como regla permanente o dato duradero."
     ],
     "fr": [
-      "Quand Vunemi a besoin que vous choisissiez, il pose la question avec des boutons. Vous pouvez toujours saisir votre propre réponse.",
-      "Les options à choisir, par exemple des vols, des produits ou des lieux, s'affichent sous forme de cartes. Cochez-en deux ou plus pour les comparer côte à côte.",
-      "Chaque information d'une carte est vérifiée sur la page où elle a été lue, et signalée lorsqu'elle n'y a pas été trouvée. Les cartes préparées sans rien lire indiquent qu'il s'agit des suggestions de Vunemi.",
-      "Cmd+Q quitte désormais toujours Vunemi complètement, et la barre des menus affiche son nom."
+      "Vunemi propose désormais moins souvent de mémoriser : la façon dont vous demandez une tâche (un format, un ton, une longueur) n'est plus proposée comme préférence. Il propose toujours une note pour ce que vous énoncez comme une règle durable ou un fait qui reste vrai."
     ],
     "it": [
-      "Quando Vunemi ha bisogno che tu scelga, lo chiede con dei pulsanti. Puoi sempre scrivere la tua risposta.",
-      "Le opzioni tra cui scegliere, come voli, prodotti o luoghi, arrivano sotto forma di schede. Selezionane due o più per confrontarle fianco a fianco.",
-      "Ogni dato di una scheda viene verificato sulla pagina da cui è stato letto e segnalato quando lì non è stato trovato. Le schede preparate senza leggere nulla indicano che sono suggerimenti di Vunemi.",
-      "Cmd+Q ora chiude sempre Vunemi del tutto, e la barra dei menu mostra il suo nome."
+      "Vunemi ora propone di ricordare meno cose: il modo in cui chiedi una singola attività (un formato, un tono, una lunghezza) non viene più proposto come preferenza. Continua a proporre una nota per ciò che indichi come regola fissa o fatto duraturo."
     ],
     "tr": [
-      "Vunemi senden bir seçim istediğinde artık düğmelerle soruyor. İstersen kendi cevabını yine yazabilirsin.",
-      "Uçuş, ürün ya da mekân gibi seçenekler kart olarak geliyor. İki veya daha fazlasını işaretleyip yan yana karşılaştırabilirsin.",
-      "Karttaki her bilgi, okunduğu sayfayla karşılaştırılıyor; sayfada bulunamayan bilgi işaretleniyor. Hiçbir şey okunmadan hazırlanan kartlar, Vunemi'nin kendi önerisi olduğunu söylüyor.",
-      "Cmd+Q artık Vunemi'yi her zaman tamamen kapatıyor; menü çubuğunda da Vunemi'nin adı görünüyor."
+      "Vunemi artık daha az şey hatırlamayı öneriyor: tek bir iş için istediğin biçim, ton ya da uzunluk tercih olarak önerilmiyor. Kalıcı bir kural ya da bilgi olarak söylediklerin için not önermeye devam ediyor."
     ],
     "pt": [
-      "Quando o Vunemi precisa que você escolha, ele pergunta com botões. Você ainda pode digitar sua própria resposta.",
-      "As opções para escolher, como voos, produtos ou lugares, chegam em forma de cartões. Marque dois ou mais para compará-los lado a lado.",
-      "Cada informação de um cartão é conferida com a página de onde foi lida e sinalizada quando não foi encontrada lá. Os cartões feitos sem ler nada avisam que são sugestões do próprio Vunemi.",
-      "Cmd+Q agora sempre encerra o Vunemi por completo, e a barra de menus mostra o nome dele."
+      "O Vunemi agora propõe lembrar menos coisas: a forma como você pede uma tarefa (um formato, um tom, um tamanho) não é mais sugerida como preferência. Ele continua propondo uma nota para o que você diz como regra permanente ou fato duradouro."
     ],
     "ru": [
-      "Когда нужно сделать выбор, Vunemi теперь спрашивает с помощью кнопок. Свой ответ по-прежнему можно ввести вручную.",
-      "Варианты на выбор, например рейсы, товары или места, показываются карточками. Отметьте две или больше, чтобы сравнить их рядом.",
-      "Каждый факт на карточке сверяется со страницей, с которой он прочитан, и помечается, если там его не нашлось. Карточки, составленные без чтения источников, сообщают, что это собственные предложения Vunemi.",
-      "Cmd+Q теперь всегда полностью завершает Vunemi, а в строке меню показано его название."
+      "Vunemi теперь реже предлагает что-то запомнить: то, как вы сформулировали одну задачу (формат, тон, объём), больше не предлагается как предпочтение. Заметка по-прежнему предлагается для того, что вы называете постоянным правилом или неизменным фактом."
     ],
     "zh": [
-      "需要你做选择时，Vunemi 现在会用按钮提问。你仍然可以输入自己的回答。",
-      "可供选择的选项（如航班、商品或地点）会以卡片呈现。勾选两张或更多即可并排比较。",
-      "卡片上的每条信息都会与读取它的页面核对，未在页面上找到的会被标出。未读取任何内容而生成的卡片会注明这是 Vunemi 自己的建议。",
-      "Cmd+Q 现在总能完全退出 Vunemi，菜单栏也会显示它的名称。"
+      "Vunemi 现在更少提议记住内容：你为某一次任务提出的格式、语气或长度，不再被当作偏好来提议。对于你明确说明长期有效的规则或事实，它仍会提议记下。"
     ],
     "ja": [
-      "選択が必要なとき、Vunemi はボタンで質問するようになりました。自分で回答を入力することもできます。",
-      "フライト、商品、場所などの選択肢はカードで表示されます。2 つ以上にチェックを入れると、並べて比較できます。",
-      "カードの各情報は読み取ったページと照合され、ページで見つからなかったものには印が付きます。何も読まずに作られたカードには、Vunemi 自身の提案であることが表示されます。",
-      "Cmd+Q で Vunemi が常に完全に終了するようになり、メニューバーには Vunemi の名前が表示されます。"
+      "Vunemi が覚えることを提案する場面が減りました。1 回の依頼で指定した形式・口調・長さは、好みとして提案されなくなりました。今後も続くルールや事実として伝えた内容には、これまでどおりメモを提案します。"
     ],
     "ko": [
-      "선택이 필요할 때 Vunemi가 이제 버튼으로 묻습니다. 직접 답을 입력할 수도 있습니다.",
-      "항공편, 상품, 장소 같은 선택지는 카드로 표시됩니다. 두 개 이상을 선택하면 나란히 비교할 수 있습니다.",
-      "카드의 각 정보는 읽어 온 페이지와 대조되며, 페이지에서 찾지 못한 정보는 표시됩니다. 아무것도 읽지 않고 만든 카드에는 Vunemi 자체 제안이라고 표시됩니다.",
-      "Cmd+Q가 이제 항상 Vunemi를 완전히 종료하며, 메뉴 막대에 Vunemi 이름이 표시됩니다."
+      "Vunemi가 기억을 제안하는 경우가 줄었습니다. 한 번의 작업에서 요청한 형식, 말투, 길이는 더 이상 선호 사항으로 제안되지 않습니다. 계속 적용할 규칙이나 변하지 않는 사실로 말한 내용에는 여전히 메모를 제안합니다."
     ]
   }
 }

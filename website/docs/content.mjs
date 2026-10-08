@@ -1,15 +1,15 @@
 // Public copy is reviewed against the application at the commit below.
 export const review = {
-  date: "2026-10-06",
-  commit: "e50683b8d3bb434feb22a64e631a81cb9ed3a8c1",
-  appVersion: "0.1.12",
+  date: "2026-10-08",
+  commit: "c3055fd6faa8e0771768fc5959cf87f25aba7527",
+  appVersion: "0.1.13",
 };
 
 export const translations = {
   tr: {
     home: "Ana sayfa", docs: "Dokümantasyon", language: "Dil",
-    title: "Vunemi rehberi", intro: "Vunemi, yerel modellerle çalışan kişisel bir asistandır. İlk macOS sürümü yayımlandı; geliştirme sürüyor. Bu rehber 0.1.12 sürümünü anlatır; özellikler sonraki sürümlerde değişebilir.",
-    statusTitle: "Yayın durumu", statusBody: "Vunemi 0.1.12, Apple Silicon ve macOS 14 veya sonrası için GitHub'da yayımlandı. Paket imzalıdır, ancak henüz Apple tarafından noterlenmemiştir. Kurulum adımları ve SHA-256 değeri sürüm sayfasındadır.",
+    title: "Vunemi rehberi", intro: "Vunemi, yerel modellerle çalışan kişisel bir asistandır. İlk macOS sürümü yayımlandı; geliştirme sürüyor. Bu rehber 0.1.13 sürümünü anlatır; özellikler sonraki sürümlerde değişebilir.",
+    statusTitle: "Yayın durumu", statusBody: "Vunemi 0.1.13, Apple Silicon ve macOS 14 veya sonrası için GitHub'da yayımlandı. Paket imzalıdır, ancak henüz Apple tarafından noterlenmemiştir. Kurulum adımları ve SHA-256 değeri sürüm sayfasındadır.",
     modelTitle: "Modelle başla", modelBody: "Uygulamada bir model seç. Desteklenen Mac'lerde gömülü motoru veya LM Studio, Ollama ya da llama.cpp ile çalışan yerel bir modeli kullanabilirsin. Modelin kullanılabilirliği Mac'ine ve kurulu modellere bağlıdır. Yanıt hızı, görsel anlama ve karmaşık görevlerdeki sonuçlar seçtiğin modele ve bilgisayarının özelliklerine göre değişebilir.",
     permissionsTitle: "Bağlantıları aç", permissionsBody: "Bağlantılar varsayılan olarak kapalıdır. Ayarlar › Bağlantılar'dan yalnız gerekenleri aç. Okuma ve işlem izinleri ayrı olabilir; macOS da kendi izin penceresini gösterebilir. Bu kararları sen verirsin.",
     privacyTitle: "Veriler ve gizlilik", privacyBody: "Yerel model seçtiğinde model işlemleri Mac'inde yürür. Bir çevrimiçi hizmete bağlandığında o işlem için gereken veriler ilgili hizmete gidebilir. Bağlantıyı açmadan önce kapsamını incele.",
@@ -21,8 +21,8 @@ export const translations = {
   },
   en: {
     home: "Home", docs: "Documentation", language: "Language",
-    title: "Vunemi guide", intro: "Vunemi is a personal assistant built for local models. Its first macOS release is available, and development continues. This guide describes version 0.1.12; features may change in later releases.",
-    statusTitle: "Release status", statusBody: "Vunemi 0.1.12 is available on GitHub for Apple Silicon Macs running macOS 14 or later. The app is signed but not yet notarized by Apple. The release page has installation steps and the SHA-256 checksum.",
+    title: "Vunemi guide", intro: "Vunemi is a personal assistant built for local models. Its first macOS release is available, and development continues. This guide describes version 0.1.13; features may change in later releases.",
+    statusTitle: "Release status", statusBody: "Vunemi 0.1.13 is available on GitHub for Apple Silicon Macs running macOS 14 or later. The app is signed but not yet notarized by Apple. The release page has installation steps and the SHA-256 checksum.",
     modelTitle: "Choose a model", modelBody: "Select a model in the app. On supported Macs, you can use the built-in engine or a local model served by LM Studio, Ollama or llama.cpp. Availability depends on your Mac and installed models. Response speed, image understanding and results on complex tasks can vary with the model and your computer's specifications.",
     permissionsTitle: "Open connections", permissionsBody: "Connections start off. Open only what you need in Settings › Connections. Reading and actions can have separate approvals, and macOS may show its own permission prompt. You make those decisions.",
     privacyTitle: "Data and privacy", privacyBody: "With a local model, model inference runs on your Mac. When you connect an online service, the data needed for that action may go to that service. Check its scope before connecting.",
@@ -34,8 +34,8 @@ export const translations = {
   },
   de: {
     home: "Startseite", docs: "Dokumentation", language: "Sprache",
-    title: "Vunemi-Leitfaden", intro: "Vunemi ist ein persönlicher Assistent für lokale Modelle. Die erste macOS-Version ist veröffentlicht, und die Entwicklung geht weiter. Dieser Leitfaden beschreibt Version 0.1.12; Funktionen können sich in späteren Versionen ändern.",
-    statusTitle: "Veröffentlichungsstatus", statusBody: "Vunemi 0.1.12 ist auf GitHub für Macs mit Apple Silicon und macOS 14 oder neuer verfügbar. Die App ist signiert, aber noch nicht von Apple notarisiert. Installationsschritte und SHA-256-Prüfsumme stehen auf der Versionsseite.",
+    title: "Vunemi-Leitfaden", intro: "Vunemi ist ein persönlicher Assistent für lokale Modelle. Die erste macOS-Version ist veröffentlicht, und die Entwicklung geht weiter. Dieser Leitfaden beschreibt Version 0.1.13; Funktionen können sich in späteren Versionen ändern.",
+    statusTitle: "Veröffentlichungsstatus", statusBody: "Vunemi 0.1.13 ist auf GitHub für Macs mit Apple Silicon und macOS 14 oder neuer verfügbar. Die App ist signiert, aber noch nicht von Apple notarisiert. Installationsschritte und SHA-256-Prüfsumme stehen auf der Versionsseite.",
     modelTitle: "Modell auswählen", modelBody: "Wähle in der App ein Modell. Auf unterstützten Macs kannst du die integrierte Engine oder ein lokales Modell über LM Studio, Ollama oder llama.cpp nutzen. Die Verfügbarkeit hängt von Mac und installierten Modellen ab. Antwortgeschwindigkeit, Bilderkennung und Ergebnisse bei komplexen Aufgaben können je nach Modell und Ausstattung deines Computers variieren.",
     permissionsTitle: "Verbindungen öffnen", permissionsBody: "Verbindungen sind anfangs aus. Aktiviere unter Einstellungen › Verbindungen nur das Nötige. Lesen und Aktionen können getrennte Freigaben brauchen; macOS kann zusätzlich um Erlaubnis fragen. Du entscheidest.",
     privacyTitle: "Daten und Datenschutz", privacyBody: "Mit einem lokalen Modell läuft die Modellverarbeitung auf deinem Mac. Bei einem verbundenen Onlinedienst können die für die Aktion nötigen Daten an diesen Dienst gehen. Prüfe vorher den Umfang.",
@@ -47,8 +47,8 @@ export const translations = {
   },
   fr: {
     home: "Accueil", docs: "Documentation", language: "Langue",
-    title: "Guide Vunemi", intro: "Vunemi est un assistant personnel conçu pour les modèles locaux. Sa première version macOS est disponible et son développement se poursuit. Ce guide décrit la version 0.1.12; les fonctions peuvent évoluer par la suite.",
-    statusTitle: "État de la sortie", statusBody: "Vunemi 0.1.12 est disponible sur GitHub pour les Mac Apple Silicon sous macOS 14 ou version ultérieure. L'app est signée mais pas encore notarisée par Apple. La page de version contient les étapes d'installation et l'empreinte SHA-256.",
+    title: "Guide Vunemi", intro: "Vunemi est un assistant personnel conçu pour les modèles locaux. Sa première version macOS est disponible et son développement se poursuit. Ce guide décrit la version 0.1.13; les fonctions peuvent évoluer par la suite.",
+    statusTitle: "État de la sortie", statusBody: "Vunemi 0.1.13 est disponible sur GitHub pour les Mac Apple Silicon sous macOS 14 ou version ultérieure. L'app est signée mais pas encore notarisée par Apple. La page de version contient les étapes d'installation et l'empreinte SHA-256.",
     modelTitle: "Choisir un modèle", modelBody: "Choisissez un modèle dans l'application. Sur les Mac compatibles, utilisez le moteur intégré ou un modèle local servi par LM Studio, Ollama ou llama.cpp. Cela dépend de votre Mac et des modèles installés. La rapidité des réponses, la compréhension des images et les résultats des tâches complexes peuvent varier selon le modèle et la configuration de votre ordinateur.",
     permissionsTitle: "Activer les connexions", permissionsBody: "Les connexions sont désactivées au départ. N'activez que celles nécessaires dans Réglages › Connexions. La lecture et les actions peuvent demander des accords distincts; macOS peut aussi demander une autorisation. Vous décidez.",
     privacyTitle: "Données et confidentialité", privacyBody: "Avec un modèle local, l'inférence s'exécute sur votre Mac. Si vous reliez un service en ligne, les données nécessaires à l'action peuvent lui être envoyées. Vérifiez la portée de la connexion.",
@@ -60,8 +60,8 @@ export const translations = {
   },
   es: {
     home: "Inicio", docs: "Documentación", language: "Idioma",
-    title: "Guía de Vunemi", intro: "Vunemi es un asistente personal diseñado para modelos locales. Su primera versión para macOS ya está disponible y el desarrollo continúa. Esta guía describe la versión 0.1.12; las funciones pueden cambiar en futuras versiones.",
-    statusTitle: "Estado del lanzamiento", statusBody: "Vunemi 0.1.12 está disponible en GitHub para Mac con Apple Silicon y macOS 14 o posterior. La app está firmada, pero aún no cuenta con la notarización de Apple. La página de la versión incluye los pasos de instalación y la suma SHA-256.",
+    title: "Guía de Vunemi", intro: "Vunemi es un asistente personal diseñado para modelos locales. Su primera versión para macOS ya está disponible y el desarrollo continúa. Esta guía describe la versión 0.1.13; las funciones pueden cambiar en futuras versiones.",
+    statusTitle: "Estado del lanzamiento", statusBody: "Vunemi 0.1.13 está disponible en GitHub para Mac con Apple Silicon y macOS 14 o posterior. La app está firmada, pero aún no cuenta con la notarización de Apple. La página de la versión incluye los pasos de instalación y la suma SHA-256.",
     modelTitle: "Elegir un modelo", modelBody: "Selecciona un modelo en la aplicación. En Mac compatibles puedes usar el motor integrado o un modelo local servido por LM Studio, Ollama o llama.cpp. Depende del Mac y de los modelos instalados. La velocidad de respuesta, la comprensión de imágenes y los resultados de tareas complejas pueden variar según el modelo y las características del ordenador.",
     permissionsTitle: "Activar conexiones", permissionsBody: "Las conexiones comienzan desactivadas. Activa solo las necesarias en Ajustes › Conexiones. La lectura y las acciones pueden requerir permisos distintos; macOS también puede pedir permiso. Tú decides.",
     privacyTitle: "Datos y privacidad", privacyBody: "Con un modelo local, la inferencia se ejecuta en tu Mac. Al conectar un servicio en línea, los datos necesarios para la acción pueden enviarse a ese servicio. Revisa su alcance antes de conectarlo.",
@@ -73,8 +73,8 @@ export const translations = {
   },
   it: {
     home: "Home", docs: "Documentazione", language: "Lingua",
-    title: "Guida a Vunemi", intro: "Vunemi è un assistente personale progettato per modelli locali. La prima versione macOS è disponibile e lo sviluppo continua. Questa guida descrive la versione 0.1.12; le funzioni possono cambiare nelle versioni successive.",
-    statusTitle: "Stato del rilascio", statusBody: "Vunemi 0.1.12 è disponibile su GitHub per Mac con Apple Silicon e macOS 14 o successivo. L'app è firmata ma non ancora notarizzata da Apple. La pagina della versione contiene le istruzioni e la verifica SHA-256.",
+    title: "Guida a Vunemi", intro: "Vunemi è un assistente personale progettato per modelli locali. La prima versione macOS è disponibile e lo sviluppo continua. Questa guida descrive la versione 0.1.13; le funzioni possono cambiare nelle versioni successive.",
+    statusTitle: "Stato del rilascio", statusBody: "Vunemi 0.1.13 è disponibile su GitHub per Mac con Apple Silicon e macOS 14 o successivo. L'app è firmata ma non ancora notarizzata da Apple. La pagina della versione contiene le istruzioni e la verifica SHA-256.",
     modelTitle: "Scegliere un modello", modelBody: "Seleziona un modello nell'app. Sui Mac supportati puoi usare il motore integrato o un modello locale servito da LM Studio, Ollama o llama.cpp. Dipende dal Mac e dai modelli installati. Velocità delle risposte, comprensione delle immagini e risultati delle attività complesse possono variare in base al modello e alle caratteristiche del computer.",
     permissionsTitle: "Attivare le connessioni", permissionsBody: "Le connessioni sono inizialmente disattivate. Attiva solo quelle necessarie in Impostazioni › Connessioni. Lettura e azioni possono richiedere approvazioni separate; anche macOS può chiedere un permesso. Decidi tu.",
     privacyTitle: "Dati e privacy", privacyBody: "Con un modello locale, l'inferenza avviene sul Mac. Quando colleghi un servizio online, i dati necessari all'azione possono essere inviati a quel servizio. Controlla prima l'ambito della connessione.",
@@ -86,8 +86,8 @@ export const translations = {
   },
   pt: {
     home: "Início", docs: "Documentação", language: "Idioma",
-    title: "Guia do Vunemi", intro: "O Vunemi é um assistente pessoal criado para modelos locais. A primeira versão para macOS está disponível, e o desenvolvimento continua. Este guia descreve a versão 0.1.12; os recursos podem mudar nas próximas versões.",
-    statusTitle: "Estado do lançamento", statusBody: "O Vunemi 0.1.12 está disponível no GitHub para Macs com Apple Silicon e macOS 14 ou posterior. O app é assinado, mas ainda não foi notarizado pela Apple. A página da versão traz instruções de instalação e o código SHA-256.",
+    title: "Guia do Vunemi", intro: "O Vunemi é um assistente pessoal criado para modelos locais. A primeira versão para macOS está disponível, e o desenvolvimento continua. Este guia descreve a versão 0.1.13; os recursos podem mudar nas próximas versões.",
+    statusTitle: "Estado do lançamento", statusBody: "O Vunemi 0.1.13 está disponível no GitHub para Macs com Apple Silicon e macOS 14 ou posterior. O app é assinado, mas ainda não foi notarizado pela Apple. A página da versão traz instruções de instalação e o código SHA-256.",
     modelTitle: "Escolher um modelo", modelBody: "Selecione um modelo no app. Em Macs compatíveis, use o motor integrado ou um modelo local servido por LM Studio, Ollama ou llama.cpp. A disponibilidade depende do Mac e dos modelos instalados. A velocidade das respostas, a compreensão de imagens e os resultados em tarefas complexas podem variar conforme o modelo e as especificações do computador.",
     permissionsTitle: "Ativar conexões", permissionsBody: "As conexões começam desligadas. Ative somente as necessárias em Ajustes › Conexões. Leitura e ações podem exigir aprovações separadas; o macOS também pode pedir permissão. Você decide.",
     privacyTitle: "Dados e privacidade", privacyBody: "Com um modelo local, a inferência acontece no seu Mac. Ao conectar um serviço online, os dados necessários para a ação podem ser enviados a ele. Confira o escopo antes de conectar.",
@@ -99,8 +99,8 @@ export const translations = {
   },
   ru: {
     home: "Главная", docs: "Документация", language: "Язык",
-    title: "Руководство Vunemi", intro: "Vunemi — персональный помощник для работы с локальными моделями. Первая версия для macOS уже доступна, а разработка продолжается. Руководство описывает версию 0.1.12; функции могут измениться в будущих выпусках.",
-    statusTitle: "Статус выпуска", statusBody: "Vunemi 0.1.12 доступен на GitHub для Mac с Apple Silicon и macOS 14 или новее. Приложение подписано, но пока не прошло нотариальное заверение Apple. На странице выпуска есть инструкция по установке и контрольная сумма SHA-256.",
+    title: "Руководство Vunemi", intro: "Vunemi — персональный помощник для работы с локальными моделями. Первая версия для macOS уже доступна, а разработка продолжается. Руководство описывает версию 0.1.13; функции могут измениться в будущих выпусках.",
+    statusTitle: "Статус выпуска", statusBody: "Vunemi 0.1.13 доступен на GitHub для Mac с Apple Silicon и macOS 14 или новее. Приложение подписано, но пока не прошло нотариальное заверение Apple. На странице выпуска есть инструкция по установке и контрольная сумма SHA-256.",
     modelTitle: "Выбор модели", modelBody: "Выберите модель в приложении. На поддерживаемых Mac можно использовать встроенный движок или локальную модель через LM Studio, Ollama либо llama.cpp. Доступность зависит от Mac и установленных моделей. Скорость ответа, понимание изображений и результаты сложных задач могут зависеть от модели и характеристик компьютера.",
     permissionsTitle: "Включение подключений", permissionsBody: "Подключения изначально выключены. В Настройках › Подключения включайте только нужные. Для чтения и действий могут требоваться разные разрешения; macOS тоже может запросить доступ. Решение за вами.",
     privacyTitle: "Данные и конфиденциальность", privacyBody: "При локальной модели вычисления выполняются на вашем Mac. Если подключить онлайн-сервис, нужные для действия данные могут быть отправлены ему. Проверьте область доступа перед подключением.",
@@ -112,8 +112,8 @@ export const translations = {
   },
   zh: {
     home: "首页", docs: "文档", language: "语言",
-    title: "Vunemi 使用指南", intro: "Vunemi 是面向本地模型的个人助手。首个 macOS 版本现已发布，开发仍在继续。本指南介绍 0.1.12 版本；功能可能在后续版本中变化。",
-    statusTitle: "发布状态", statusBody: "Vunemi 0.1.12 已在 GitHub 发布，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。应用已签名，但尚未通过 Apple 公证。安装步骤和 SHA-256 校验值见版本页面。",
+    title: "Vunemi 使用指南", intro: "Vunemi 是面向本地模型的个人助手。首个 macOS 版本现已发布，开发仍在继续。本指南介绍 0.1.13 版本；功能可能在后续版本中变化。",
+    statusTitle: "发布状态", statusBody: "Vunemi 0.1.13 已在 GitHub 发布，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。应用已签名，但尚未通过 Apple 公证。安装步骤和 SHA-256 校验值见版本页面。",
     modelTitle: "选择模型", modelBody: "在应用中选择模型。受支持的 Mac 可使用内置引擎，或由 LM Studio、Ollama、llama.cpp 提供的本地模型。可用性取决于设备和已安装的模型。回复速度、图像理解能力以及复杂任务的完成效果，可能因所选模型和电脑配置而异。",
     permissionsTitle: "开启连接", permissionsBody: "连接默认关闭。请在“设置 › 连接”中仅开启所需连接。读取和执行操作可能分别需要批准；macOS 也可能显示自己的权限提示。决定权在你。",
     privacyTitle: "数据与隐私", privacyBody: "使用本地模型时，模型推理在你的 Mac 上进行。连接在线服务后，执行操作所需的数据可能发送给该服务。连接前请查看其访问范围。",
@@ -125,8 +125,8 @@ export const translations = {
   },
   ja: {
     home: "ホーム", docs: "ドキュメント", language: "言語",
-    title: "Vunemi ガイド", intro: "Vunemiはローカルモデルを使うパーソナルアシスタントです。初回macOS版は公開され、開発は続いています。このガイドはバージョン0.1.12を説明します。今後の版で機能が変わる場合があります。",
-    statusTitle: "公開状況", statusBody: "Vunemi 0.1.12は、Apple Silicon搭載でmacOS 14以降のMac向けにGitHubで公開中です。アプリは署名済みですが、Appleの公証はまだ受けていません。インストール方法とSHA-256の値はリリースページにあります。",
+    title: "Vunemi ガイド", intro: "Vunemiはローカルモデルを使うパーソナルアシスタントです。初回macOS版は公開され、開発は続いています。このガイドはバージョン0.1.13を説明します。今後の版で機能が変わる場合があります。",
+    statusTitle: "公開状況", statusBody: "Vunemi 0.1.13は、Apple Silicon搭載でmacOS 14以降のMac向けにGitHubで公開中です。アプリは署名済みですが、Appleの公証はまだ受けていません。インストール方法とSHA-256の値はリリースページにあります。",
     modelTitle: "モデルを選ぶ", modelBody: "アプリでモデルを選択します。対応するMacでは内蔵エンジン、またはLM Studio、Ollama、llama.cppで動くローカルモデルを利用できます。利用可否はMacとインストール済みモデルによります。応答速度や画像を理解する力、複雑な作業の結果は、選ぶモデルやパソコンの性能によって変わる場合があります。",
     permissionsTitle: "接続を有効にする", permissionsBody: "接続は初期状態でオフです。設定 › 接続で必要なものだけを有効にしてください。読み取りと操作で別々の承認が必要な場合があり、macOSも許可を求めることがあります。判断はあなたが行います。",
     privacyTitle: "データとプライバシー", privacyBody: "ローカルモデルを使う場合、推論はMac上で行われます。オンラインサービスを接続すると、操作に必要なデータがそのサービスへ送られる場合があります。接続前に範囲を確認してください。",
@@ -138,8 +138,8 @@ export const translations = {
   },
   ko: {
     home: "홈", docs: "문서", language: "언어",
-    title: "Vunemi 안내서", intro: "Vunemi는 로컬 모델을 사용하는 개인 비서입니다. 첫 macOS 버전이 공개되었으며 개발은 계속됩니다. 이 문서는 0.1.12 버전을 설명하며 이후 버전에서 기능이 바뀔 수 있습니다.",
-    statusTitle: "출시 상태", statusBody: "Vunemi 0.1.12가 Apple Silicon 및 macOS 14 이상 Mac용으로 GitHub에 공개되었습니다. 앱은 서명되었지만 아직 Apple 공증을 받지 않았습니다. 설치 방법과 SHA-256 값은 릴리스 페이지에 있습니다.",
+    title: "Vunemi 안내서", intro: "Vunemi는 로컬 모델을 사용하는 개인 비서입니다. 첫 macOS 버전이 공개되었으며 개발은 계속됩니다. 이 문서는 0.1.13 버전을 설명하며 이후 버전에서 기능이 바뀔 수 있습니다.",
+    statusTitle: "출시 상태", statusBody: "Vunemi 0.1.13이 Apple Silicon 및 macOS 14 이상 Mac용으로 GitHub에 공개되었습니다. 앱은 서명되었지만 아직 Apple 공증을 받지 않았습니다. 설치 방법과 SHA-256 값은 릴리스 페이지에 있습니다.",
     modelTitle: "모델 선택", modelBody: "앱에서 모델을 선택하세요. 지원되는 Mac에서는 내장 엔진이나 LM Studio, Ollama, llama.cpp로 제공하는 로컬 모델을 사용할 수 있습니다. 사용 가능 여부는 Mac과 설치된 모델에 따라 다릅니다. 응답 속도와 이미지 이해 능력, 복잡한 작업의 결과는 선택한 모델과 컴퓨터 사양에 따라 달라질 수 있습니다.",
     permissionsTitle: "연결 켜기", permissionsBody: "연결은 기본적으로 꺼져 있습니다. 설정 › 연결에서 필요한 것만 켜세요. 읽기와 작업은 별도 승인이 필요할 수 있고 macOS도 권한을 요청할 수 있습니다. 결정은 사용자가 합니다.",
     privacyTitle: "데이터와 개인정보", privacyBody: "로컬 모델을 쓰면 모델 추론이 Mac에서 실행됩니다. 온라인 서비스를 연결하면 작업에 필요한 데이터가 해당 서비스로 전송될 수 있습니다. 연결 전에 범위를 확인하세요.",

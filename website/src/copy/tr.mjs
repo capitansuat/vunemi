@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.12'nin yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.13'ün yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.12'yi Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.13'ü Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.1.12: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.1.13: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -166,10 +166,7 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Vunemi senden bir seçim istediğinde artık düğmelerle soruyor. İstersen kendi cevabını yine yazabilirsin.",
-      "Uçuş, ürün ya da mekân gibi seçenekler kart olarak geliyor. İki veya daha fazlasını işaretleyip yan yana karşılaştırabilirsin.",
-      "Karttaki her bilgi, okunduğu sayfayla karşılaştırılıyor; sayfada bulunamayan bilgi işaretleniyor. Hiçbir şey okunmadan hazırlanan kartlar, Vunemi'nin kendi önerisi olduğunu söylüyor.",
-      "Cmd+Q artık Vunemi'yi her zaman tamamen kapatıyor; menü çubuğunda da Vunemi'nin adı görünüyor.",
+      "Vunemi artık daha az şey hatırlamayı öneriyor: tek bir iş için istediğin biçim, ton ya da uzunluk tercih olarak önerilmiyor. Kalıcı bir kural ya da bilgi olarak söylediklerin için not önermeye devam ediyor.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

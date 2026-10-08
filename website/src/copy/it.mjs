@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un assistente personale che funziona sul tuo Mac", description: "Vunemi aiuta nelle attività quotidiane. L’IA funziona sul tuo Mac, senza account cloud Vunemi. Scegli tu quali servizi esterni collegare." },
-    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.12." },
+    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.13." },
     screens: { title: "Schermate di Vunemi", description: "Schermate reali dell'app Vunemi per Mac, catturate con dati di esempio." },
-    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.12 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
+    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.13 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
   },
   hero: {
     eyebrow: "Assistente personale per Mac",
@@ -115,7 +115,7 @@ export default {
   },
   featuresPage: {
     title: "Tutto ciò che Vunemi sa fare",
-    intro: "Vunemi 0.1.12 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
+    intro: "Vunemi 0.1.13 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
     chatTitle: "Lavorare con Vunemi",
     chat: [
       { title: "Prima il piano", body: "Per un'attività con più passaggi, Vunemi può mostrarti prima il piano. Vai avanti, modifica i passaggi o annulla." },
@@ -164,10 +164,7 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
-      "Quando Vunemi ha bisogno che tu scelga, lo chiede con dei pulsanti. Puoi sempre scrivere la tua risposta.",
-      "Le opzioni tra cui scegliere, come voli, prodotti o luoghi, arrivano sotto forma di schede. Selezionane due o più per confrontarle fianco a fianco.",
-      "Ogni dato di una scheda viene verificato sulla pagina da cui è stato letto e segnalato quando lì non è stato trovato. Le schede preparate senza leggere nulla indicano che sono suggerimenti di Vunemi.",
-      "Cmd+Q ora chiude sempre Vunemi del tutto, e la barra dei menu mostra il suo nome.",
+      "Vunemi ora propone di ricordare meno cose: il modo in cui chiedi una singola attività (un formato, un tono, una lunghezza) non viene più proposto come preferenza. Continua a proporre una nota per ciò che indichi come regola fissa o fatto duraturo.",
     ],
     title: "Scarica Vunemi",
     intro: "Gratuito e open source. Per Mac con Apple Silicon e macOS 14 o successivo.",
