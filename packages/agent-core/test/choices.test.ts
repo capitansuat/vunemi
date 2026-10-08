@@ -38,6 +38,26 @@ describe("choice card data", () => {
     expect(listChoiceInput(`1. Ramen\n2. Tacos\nWould you like more on either? ${"I can go deeper. ".repeat(8)}`)).toBeNull();
   });
 
+  it("takes a question under a list only when it asks which of them", () => {
+    const list = "Here are three:\n\n1. **Golden Crumb** – warm and rustic.\n2. **The Daily Rise** – fresh every morning.\n3. **Flour & Hearth** – cozy.\n\n";
+    const names = ["Golden Crumb", "The Daily Rise", "Flour & Hearth"];
+    // As the model asked it live, under names it had been told the user would pick from.
+    for (const question of ["Which one do you like best?", "Which of these would you like to try?", "Which one do you like, or would you like me to suggest a different style (e.g. more modern, punny)?", "Hangisine başlamak istersin? Ya da başka bir dil aklında mı var?", "Hangisini tercih edersin?"]) {
+      expect(listChoiceInput(list + question), question).toEqual({ question, options: names, allowOther: true });
+    }
+    // An offer under an answer, also live: its answers are yes and no, not the items above it.
+    for (const offer of ["Want me to adjust the tone or try more?", "Would you like suggestions for a specific dietary preference (e.g., vegan, low-carb, high-protein)?", "Want me to flesh one out with a step-by-step plan?", "Daha fazlasını ister misin?", "İstersen daha fazla öneri vereyim mi?", "Shall I go on?"]) {
+      expect(listChoiceInput(list + offer), offer).toBeNull();
+    }
+    // The other languages the app speaks.
+    for (const question of ["Welches gefällt dir am besten?", "Lequel préférez-vous ?", "¿Cuál prefieres?", "Quale preferisci?", "Qual você prefere?", "Какой вам больше нравится?", "你喜欢哪一个？", "どれがいいですか？", "어느 것이 마음에 드세요?"]) {
+      expect(listChoiceInput(list + question)?.options, question).toEqual(names);
+    }
+    for (const offer of ["Soll ich mehr vorschlagen?", "Voulez-vous d'autres idées ?", "¿Quieres más opciones?", "Vuoi altre idee?", "Quer mais opções?", "Хотите ещё варианты?", "需要更多建议吗？", "もっと提案しましょうか？", "더 추천해 드릴까요?"]) {
+      expect(listChoiceInput(list + offer), offer).toBeNull();
+    }
+  });
+
   it("bounds content and rejects incomplete choices", () => {
     expect(prepareChoice("ask_choice", { question: "?", options: ["one"] }, evidence)).toHaveProperty("error");
     const result = prepareChoice("ask_choice", { question: "Q".repeat(210), options: ["A".repeat(90), "B", "C", "D", "E", "F", "G", "H", "I", "J"] }, evidence);

@@ -44,6 +44,27 @@ export const CHOICE_CASES: ChoiceCase[] = [
   { id: "remote-en", want: "none", goal: "What are the pros and cons of working from home?" },
   { id: "tea-coffee-tr", want: "none", goal: "Kahve mi çay mı daha sağlıklı, kısaca açıkla" },
 
+  // The answer is a list, and the model often puts a question under it: an offer of more, which is not a card.
+  { id: "rainy-en", want: "none", goal: "Give me three ideas for a rainy Sunday" },
+  { id: "novels-en", want: "none", goal: "Name four classic novels worth reading" },
+  { id: "dinner-tr", want: "none", goal: "Akşam yemeği için üç kolay yemek öner" },
+  { id: "istanbul-tr", want: "none", goal: "İstanbul'da gezilecek beş yer söyle" },
+  { id: "podcast-en", want: "none", goal: "Suggest three podcasts about history" },
+  { id: "focus-tr", want: "none", goal: "Daha iyi odaklanmak için üç öneri ver" },
+  { id: "games-en", want: "none", goal: "Recommend a few board games for two players" },
+  { id: "houseplants-en", want: "none", goal: "What are some good houseplants for beginners?" },
+  { id: "books-tr", want: "none", goal: "Yaz tatili için dört kitap öner" },
+  { id: "exercise-tr", want: "none", goal: "Evde yapılabilecek üç egzersiz say" },
+  { id: "snacks-en", want: "none", goal: "List five healthy snacks" },
+  // The same list, and the user will pick from it.
+  { id: "cat-en", want: "either", goal: "Suggest three names for my cat and let me pick one" },
+  { id: "film-tr", want: "either", goal: "Bana üç film öner, birini seçeyim" },
+  { id: "hobby-en", want: "either", goal: "I need a hobby. Give me a few options and ask which I'd like to try" },
+  { id: "language-tr", want: "either", goal: "Yeni bir dil öğrenmek istiyorum; birkaç seçenek sun ve hangisini istediğimi sor" },
+  { id: "puppy-en", want: "either", goal: "Give me three names for a puppy; I'll choose one" },
+  { id: "holiday-tr", want: "either", goal: "Üç tatil yeri öner, hangisini istediğimi sor" },
+  { id: "colours-en", want: "either", goal: "Offer a few colour schemes for a living room and ask me which I prefer" },
+
   // Held out.
   { id: "h-sport-en", want: "buttons", holdout: true, goal: "Recommend a sport for me to take up. First ask whether I prefer team or solo sports" },
   { id: "h-pet-tr", want: "buttons", holdout: true, goal: "Bana uygun bir evcil hayvan öner. Önce evde mi apartmanda mı yaşadığımı sor" },
@@ -57,4 +78,13 @@ export const CHOICE_CASES: ChoiceCase[] = [
   { id: "h-slogan-en", want: "none", holdout: true, goal: "Write a one-line slogan for a bakery, phrased as a question" },
   { id: "h-interview-en", want: "none", holdout: true, goal: "Give me five questions to ask in a job interview" },
   { id: "h-packing-tr", want: "none", holdout: true, goal: "Kış tatili için bavula ne koymalıyım?" },
+  { id: "h-slogans-en", want: "none", holdout: true, goal: "Give me three slogans for a coffee shop" },
+  { id: "h-groceries-en", want: "none", holdout: true, goal: "List four ways to save money on groceries" },
+  { id: "h-stretches-en", want: "none", holdout: true, goal: "What are three good stretches for a stiff back?" },
+  { id: "h-kahvalti-tr", want: "none", holdout: true, goal: "Bana üç kahvaltı fikri ver" },
+  { id: "h-verim-tr", want: "none", holdout: true, goal: "Verimli çalışmak için dört ipucu yaz" },
+  { id: "h-sehir-tr", want: "none", holdout: true, goal: "Hafta sonu gidilebilecek üç şehir öner" },
+  { id: "h-taglines-en", want: "either", holdout: true, goal: "Give me three taglines for a bike shop and I'll choose one" },
+  { id: "h-hediye-tr", want: "either", holdout: true, goal: "Bana üç doğum günü hediyesi fikri ver, birini seçeceğim" },
+  { id: "h-weekend-en", want: "either", holdout: true, goal: "Suggest a few weekend activities and ask which one I want" },
 ];

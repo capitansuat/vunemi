@@ -17,6 +17,13 @@ const PRICE_LABEL = /^(?:(?:approx\.?|estimated|tahmini|yaklaşık)\s+)?(?:price
 const MAX_OPTIONS = 8;
 
 /**
+ * A question that asks which of several things, in the languages the app
+ * speaks. Under a list it tells a question about the items from an offer,
+ * whose answers are yes and no.
+ */
+const WHICH = /(?<!\p{L})(?:which|hangi\p{L}*|welche[rsnm]?|(?:le|la|les)?quel(?:le)?s?|cu[aá]l(?:es)?|qual[ei]?|quais|как(?:ой|ая|ое|ие|ую|ого|им|ом|ими|их)|котор\p{L}+)(?!\p{L})|哪|どれ|どちら|どの(?!よう|くらい|ぐらい)|어느|어떤/iu;
+
+/**
  * A question the model wrote out as a plain list instead of calling
  * ask_choice: short list items with a question right before or right after
  * them. Live, the same request gave buttons once and a numbered list the
@@ -24,9 +31,11 @@ const MAX_OPTIONS = 8;
  * button; its description stays in the text above. An item that only says
  * "something else" becomes the free answer the card already allows.
  *
- * A question after the list is taken as before: one short line, five
- * options at most, since a list that ends in a question is as often an
- * answer with an offer under it. A question before the list is the task
+ * A question after the list is taken more narrowly: one short line, five
+ * options at most, and it has to ask which of them, since a list that ends
+ * in a question is as often an answer with an offer under it. Measured
+ * live, "Want me to try more?" under three slogans made the slogans its
+ * buttons, and the task waited on them. A question before the list is the task
  * asking, and measured live it came in more shapes than that: up to seven
  * options, a lead-in between the question and the list ("For example:"),
  * the lead-in on the question's own line, and a sentence or two after.
@@ -53,7 +62,7 @@ export function listChoiceInput(text: string): { question: string; options: stri
   if (end - start < 2) return null;
   // More than a sentence or two before the list is an answer, not a question.
   if (before.join(" ").length > 300) return null;
-  const closes = after.length === 1 && after[0]!.length <= 120 && asks(after[0]!);
+  const closes = after.length === 1 && after[0]!.length <= 120 && asks(after[0]!) && WHICH.test(plain(after[0]!));
   /** The question a line asks: all of it, or what comes before a lead-in such as "My options:". */
   const asked = (line: string | undefined): string => {
     if (!line) return "";
