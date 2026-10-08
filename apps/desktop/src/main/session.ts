@@ -31,6 +31,8 @@ import {
   type ChatModel,
   type HandoffOutcome,
   type MemoryNote,
+  type MentionRef,
+  type RunMention,
   type RunStatus,
   type PlanDecision,
   type ChatMessage,
@@ -44,6 +46,7 @@ import {
 } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import type { PreparedModel } from "./engine/service.js";
+import { MENTION_SHARE } from "./mentions.js";
 
 export interface SessionOptions {
   tools: ToolRegistry;
@@ -91,6 +94,11 @@ export interface SessionOptions {
   onCheckpoint?: RunOptions["onCheckpoint"];
   /** The notes from memory a request is given; an error only means none. */
   recall?: (goal: string) => Promise<{ notes: MemoryNote[]; topic: string[] }>;
+  /**
+   * Reads what the user brought in with "@", within this many characters
+   * between them (see mentions.ts).
+   */
+  readMentions?: (refs: MentionRef[], totalChars: number) => RunMention[];
   /** The page showing in Vunemi's browser, if any, read as each request is sent. */
   openPage?: () => { title: string; url: string } | null;
   /**
@@ -111,6 +119,8 @@ export interface QueuedMessage {
   text: string;
   /** Files attached to it, already granted for reading. */
   attachments: string[];
+  /** Conversations and meetings brought in with "@"; read when its turn comes. */
+  mentions: MentionRef[];
   model: string;
   at: number;
 }
@@ -209,18 +219,19 @@ export class AgentSession {
    * The ordinary way in. Starts straight away when the agent is idle, and
    * otherwise waits its turn — the caller never has to ask which.
    */
-  submit(text: string, model: string, attachments: string[] = []): QueuedMessage | null {
+  submit(text: string, model: string, attachments: string[] = [], mentions: MentionRef[] = []): QueuedMessage | null {
     const goal = text.trim();
     if (!goal) return null;
-    if (this.active && attachments.length === 0) {
+    // A message that brings something with it is a request of its own, not a card's answer.
+    if (this.active && attachments.length === 0 && mentions.length === 0) {
       const waiting = [...this.choices].findLast(([, entry]) => entry.card.kind === "choice" && entry.card.allowOther);
       if (waiting && this.runId && this.resolveChoice(this.runId, waiting[0], { text: goal })) return null;
     }
     if (!this.active) {
-      void this.start(goal, model, attachments).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
+      void this.start(goal, model, attachments, { mentions }).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
       return null;
     }
-    const message: QueuedMessage = { id: `q${this.nextQueueId++}`, text: goal, attachments, model, at: Date.now() };
+    const message: QueuedMessage = { id: `q${this.nextQueueId++}`, text: goal, attachments, mentions, model, at: Date.now() };
     this.queue.push(message);
     this.announce();
     return message;
@@ -230,14 +241,14 @@ export class AgentSession {
    * "Stop what you're doing and read this." The message goes to the front and
    * the current run is cut; draining then picks it up.
    */
-  steer(text: string, model: string, attachments: string[] = []): void {
+  steer(text: string, model: string, attachments: string[] = [], mentions: MentionRef[] = []): void {
     const goal = text.trim();
     if (!goal) return;
     if (!this.active) {
-      void this.start(goal, model, attachments).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
+      void this.start(goal, model, attachments, { mentions }).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
       return;
     }
-    this.queue.unshift({ id: `q${this.nextQueueId++}`, text: goal, attachments, model, at: Date.now() });
+    this.queue.unshift({ id: `q${this.nextQueueId++}`, text: goal, attachments, mentions, model, at: Date.now() });
     this.announce();
     this.stop();
   }
@@ -281,7 +292,7 @@ export class AgentSession {
     const next = this.queue.shift();
     if (!next) return;
     this.announce();
-    void this.start(next.text, next.model, next.attachments).catch((err: unknown) => {
+    void this.start(next.text, next.model, next.attachments, { mentions: next.mentions }).catch((err: unknown) => {
       console.error("[vunemi] queued run failed to start:", err);
     });
   }
@@ -295,7 +306,7 @@ export class AgentSession {
     goal: string,
     modelSpec: string,
     attachments: string[] = [],
-    run: { unattended?: boolean; askBeyondRead?: boolean; waitLimitMs?: number; onlySources?: readonly string[] } = {},
+    run: { unattended?: boolean; askBeyondRead?: boolean; waitLimitMs?: number; onlySources?: readonly string[]; mentions?: readonly MentionRef[] } = {},
   ): Promise<RunStatus | null> {
     if (this.active) throw new Error("A run is already in progress.");
     const ctrl = new AbortController();
@@ -326,6 +337,10 @@ export class AgentSession {
       const memory = recalled?.topic.filter((text) => !this.remembered.has(text)) ?? [];
       this.given = recalled?.notes.length ? recalled.notes : null;
       const openPage = this.opts.openPage?.() ?? null;
+      // Read now, not when picked: a queued message brings the item as it is when its turn comes.
+      const mentions = run.mentions?.length
+        ? this.opts.readMentions?.([...run.mentions], Math.floor(window * this.charsPerToken * MENTION_SHARE))
+        : undefined;
       // Only a conversation's first request: added later, it would sit in the middle of the history.
       const notesIndex = this.history.length === 0 ? (this.opts.notesIndex?.() ?? null) : null;
       const result = await runAgent({
@@ -335,6 +350,7 @@ export class AgentSession {
         ...(memory.length > 0 && { memory }),
         ...(notesIndex && { notesIndex }),
         ...(attachments.length > 0 && { attachments }),
+        ...(mentions?.length && { mentions }),
         model,
         contextWindow: window,
         charsPerToken: this.charsPerToken,

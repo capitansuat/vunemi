@@ -213,6 +213,12 @@ export const messages: Catalogue = {
     filesOnly: "Guarda i file che ho allegato.",
     drop: "Rilascia: il file viene allegato al messaggio e l’agente può leggere solo quello.",
     removeFile: "Rimuovi l’allegato {name}",
+    mention: {
+      label: "Aggiungi una sessione o una riunione",
+      none: "Nessuna sessione o riunione corrisponde",
+      full: "Al massimo 5 per messaggio",
+      remove: "Rimuovi {name}",
+    },
     attach: "Allega un file",
     attachHint: "Allega un file, oppure trascinalo nella finestra",
     placeholder: {
@@ -223,7 +229,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ mette in coda · ⌘↵ interrompe · Esc ferma",
       listening: "Esc annulla · la tua voce non lascia questo Mac",
-      idle: "↵ invia · ⇧↵ nuova riga",
+      idle: "↵ invia · ⇧↵ nuova riga · @ aggiunge una sessione o una riunione",
     },
     steer: "Interrompi",
     steerHint: "Interrompi: ferma l’attività in corso e fa questo al suo posto (⌘↵)",
@@ -763,6 +769,8 @@ export const messages: Catalogue = {
       window: "la finestra di un’altra app",
       page: "la pagina aperta",
       notes: "note di lavoro precedenti",
+      conversation: "una sessione aggiunta con @",
+      meeting: "una riunione aggiunta con @",
     },
     attach: {
       filesOff: "Per allegare file, attiva File in Connessioni.",

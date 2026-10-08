@@ -213,6 +213,12 @@ export const messages: Catalogue = {
     filesOnly: "添付したファイルを見てください。",
     drop: "ドロップ：ファイルがメッセージに添付され、エージェントはそのファイルだけを読めます。",
     removeFile: "添付ファイル {name} を削除",
+    mention: {
+      label: "セッションや会議を取り込む",
+      none: "一致するセッションや会議がありません",
+      full: "1 つのメッセージに 5 つまで",
+      remove: "{name} を削除",
+    },
     attach: "ファイルを添付",
     attachHint: "ファイルを添付、またはウインドウにドラッグ",
     placeholder: {
@@ -223,7 +229,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ キューに追加 · ⌘↵ 割り込み · Esc 停止",
       listening: "Esc キャンセル · 音声はこの Mac から出ません",
-      idle: "↵ 送信 · ⇧↵ 改行",
+      idle: "↵ 送信 · ⇧↵ 改行 · @ でセッションや会議を取り込む",
     },
     steer: "割り込む",
     steerHint: "割り込む：実行中のタスクを止めて、代わりにこれを実行します（⌘↵）",
@@ -763,6 +769,8 @@ export const messages: Catalogue = {
       window: "ほかのアプリのウインドウ",
       page: "開いているページ",
       notes: "以前の作業メモ",
+      conversation: "@ で取り込んだセッション",
+      meeting: "@ で取り込んだ会議",
     },
     attach: {
       filesOff: "ファイルを添付するには、「接続」で「ファイル」をオンにしてください。",

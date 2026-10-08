@@ -213,6 +213,12 @@ export const messages: Catalogue = {
     filesOnly: "Mira los archivos que adjunté.",
     drop: "Suelta: el archivo se adjunta al mensaje y el agente solo puede leer ese archivo.",
     removeFile: "Quitar el adjunto {name}",
+    mention: {
+      label: "Traer una sesión o reunión",
+      none: "Ninguna sesión o reunión coincide",
+      full: "Como máximo 5 por mensaje",
+      remove: "Quitar {name}",
+    },
     attach: "Adjuntar un archivo",
     attachHint: "Adjuntar un archivo, o arrástralo a la ventana",
     placeholder: {
@@ -223,7 +229,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ pone en cola · ⌘↵ interrumpe · Esc detiene",
       listening: "Esc cancela · tu voz no sale de este Mac",
-      idle: "↵ enviar · ⇧↵ nueva línea",
+      idle: "↵ enviar · ⇧↵ nueva línea · @ trae una sesión o reunión",
     },
     steer: "Interrumpir",
     steerHint: "Interrumpir: detiene la tarea en curso y hace esto en su lugar (⌘↵)",
@@ -763,6 +769,8 @@ export const messages: Catalogue = {
       window: "la ventana de otra app",
       page: "la página abierta",
       notes: "notas de trabajo anteriores",
+      conversation: "una sesión traída con @",
+      meeting: "una reunión traída con @",
     },
     attach: {
       filesOff: "Para adjuntar archivos, activa Archivos en Conexiones.",

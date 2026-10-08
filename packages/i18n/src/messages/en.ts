@@ -213,6 +213,12 @@ export const messages: Catalogue = {
     filesOnly: "Look at the files I attached.",
     drop: "Drop: the file is attached to the message, and the agent can read only that file.",
     removeFile: "Remove the attachment {name}",
+    mention: {
+      label: "Bring in a session or meeting",
+      none: "No session or meeting matches",
+      full: "A message can bring in 5 at most",
+      remove: "Remove {name}",
+    },
     attach: "Attach a file",
     attachHint: "Attach a file — or drag it onto the window",
     placeholder: {
@@ -223,7 +229,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ queues · ⌘↵ interrupts · Esc stops",
       listening: "Esc cancels · your voice never leaves this Mac",
-      idle: "↵ send · ⇧↵ new line",
+      idle: "↵ send · ⇧↵ new line · @ brings in a session or meeting",
     },
     steer: "Interrupt",
     steerHint: "Interrupt: stops the current task and does this instead (⌘↵)",
@@ -763,6 +769,8 @@ export const messages: Catalogue = {
       window: "another app's window",
       page: "the open page",
       notes: "earlier work notes",
+      conversation: "a session brought in with @",
+      meeting: "a meeting brought in with @",
     },
     attach: {
       filesOff: "To attach files, turn on Files under Connections.",

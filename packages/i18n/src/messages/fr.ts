@@ -213,6 +213,12 @@ export const messages: Catalogue = {
     filesOnly: "Regarde les fichiers que j’ai joints.",
     drop: "Déposez : le fichier est joint au message, et l’agent ne peut lire que lui.",
     removeFile: "Retirer la pièce jointe {name}",
+    mention: {
+      label: "Ajouter une session ou une réunion",
+      none: "Aucune session ni réunion ne correspond",
+      full: "5 au maximum par message",
+      remove: "Retirer {name}",
+    },
     attach: "Joindre un fichier",
     attachHint: "Joindre un fichier — ou le glisser dans la fenêtre",
     placeholder: {
@@ -223,7 +229,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ met en file · ⌘↵ interrompt · Échap arrête",
       listening: "Échap annule · votre voix ne quitte pas ce Mac",
-      idle: "↵ envoyer · ⇧↵ nouvelle ligne",
+      idle: "↵ envoyer · ⇧↵ nouvelle ligne · @ ajoute une session ou une réunion",
     },
     steer: "Interrompre",
     steerHint: "Interrompre : arrête la tâche en cours et fait ceci à la place (⌘↵)",
@@ -763,6 +769,8 @@ export const messages: Catalogue = {
       window: "la fenêtre d’une autre app",
       page: "la page ouverte",
       notes: "des notes de travail antérieures",
+      conversation: "une session ajoutée avec @",
+      meeting: "une réunion ajoutée avec @",
     },
     attach: {
       filesOff: "Pour joindre des fichiers, activez Fichiers dans Connexions.",

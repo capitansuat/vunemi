@@ -42,6 +42,7 @@ import { checkAgentModel, modelConfig, probeProviders } from "./providers.js";
 import { forgetOldPictures, loadImage, readImageText } from "./images.js";
 import { AgentSession } from "./session.js";
 import { SessionStore } from "./sessions.js";
+import { conversationTasks, meetingParts, mentionable, mentionRefs, mentionTexts } from "./mentions.js";
 import { MemoryStore } from "./memory/store.js";
 import { ModelManager } from "./models/manager.js";
 import { macMemory } from "./models/memory.js";
@@ -639,6 +640,18 @@ const session: AgentSession = new AgentSession({
   onUndoOffered: (u) => activity.offerUndo(u.callId, u.label, u.undo),
   recall: (goal) => recall(memory, meaning, goal),
   openPage: () => (connectors.isOn("browser") ? embedded.openPage() : null),
+  readMentions: (refs, total) => {
+    const read = refs.map((ref) => {
+      if (ref.kind === "conversation") {
+        const kept = conversations.peek(ref.id);
+        return kept && { at: kept.updatedAt, source: { kind: "conversation" as const, tasks: conversationTasks(kept.events) } };
+      }
+      const meeting = meetingStore.get(ref.id);
+      return meeting && { at: meeting.startedAt, source: { kind: "meeting" as const, ...meetingParts(meeting) } };
+    });
+    const texts = mentionTexts(read.map((r) => r?.source ?? null), total);
+    return refs.map((ref, i) => ({ ...ref, date: new Date(read[i]?.at ?? Date.now()).toISOString().slice(0, 10), text: texts[i] ?? null }));
+  },
   notesIndex: () => (work ? notesIndex(work, currentProject()?.id) : null),
   afterRun: ({ runId, model, words }) => {
     const conversation = conversations.currentId;
@@ -658,6 +671,8 @@ function sourceOf(tool: string): string {
   if (tool === "files_read") return t("main.source.file");
   if (tool.startsWith("desktop_")) return t("main.source.window");
   if (tool.startsWith("worknote_")) return t("main.source.notes");
+  if (tool === "mentioned_conversation") return t("main.source.conversation");
+  if (tool === "mentioned_meeting") return t("main.source.meeting");
   if (!tool.startsWith("page_") && !tool.startsWith("tabs_")) return tool;
   const url = embedded.state.tabs.find((t) => t.id === embedded.state.activeId)?.url;
   try {
@@ -795,12 +810,12 @@ function downloadRequest(req: unknown): DownloadRequest {
 // call's result. Whether the message runs now or waits its turn is the
 // session's business, not the renderer's.
 handle(CH.startRun, (_e, req: StartRunRequest) => {
-  session.submit(String(req.goal), String(req.model), attach(req.attachments));
+  session.submit(String(req.goal), String(req.model), attach(req.attachments), mentionRefs(req.mentions));
   automations.setModel(String(req.model));
 });
 
 handle(CH.steerRun, (_e, req: StartRunRequest) => {
-  session.steer(String(req.goal), String(req.model), attach(req.attachments));
+  session.steer(String(req.goal), String(req.model), attach(req.attachments), mentionRefs(req.mentions));
   automations.setModel(String(req.model));
 });
 
@@ -1194,6 +1209,7 @@ const meetingCall = async <T>(work: () => Promise<T>): Promise<T> => {
   }
 };
 handle(CH.meetingsList, (_e, query: unknown) => meetingList(query));
+handle(CH.mentionsList, () => mentionable(sessionList().sessions, meetingStore.list(), conversations.currentId));
 handle(CH.meetingsGet, (_e, id: unknown) => {
   if (typeof id !== "string") return null;
   const m = meetingStore.get(id);

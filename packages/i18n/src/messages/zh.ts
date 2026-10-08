@@ -213,6 +213,12 @@ export const messages: Catalogue = {
     filesOnly: "看看我附上的文件。",
     drop: "松开：文件会附到消息中，代理只能读取这个文件。",
     removeFile: "移除附件 {name}",
+    mention: {
+      label: "引入会话或会议",
+      none: "没有匹配的会话或会议",
+      full: "每条消息最多 5 个",
+      remove: "移除 {name}",
+    },
     attach: "附加文件",
     attachHint: "附加文件，或拖到窗口中",
     placeholder: {
@@ -223,7 +229,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ 加入队列 · ⌘↵ 插队 · Esc 停止",
       listening: "Esc 取消 · 你的声音不会离开这台 Mac",
-      idle: "↵ 发送 · ⇧↵ 换行",
+      idle: "↵ 发送 · ⇧↵ 换行 · @ 引入会话或会议",
     },
     steer: "插队",
     steerHint: "插队：停止当前任务，改做这件事（⌘↵）",
@@ -763,6 +769,8 @@ export const messages: Catalogue = {
       window: "另一个应用的窗口",
       page: "打开的页面",
       notes: "之前的工作笔记",
+      conversation: "用 @ 引入的会话",
+      meeting: "用 @ 引入的会议",
     },
     attach: {
       filesOff: "要附加文件，请在“连接”中开启“文件”。",

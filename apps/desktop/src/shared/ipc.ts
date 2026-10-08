@@ -216,6 +216,8 @@ export interface StartRunRequest {
   model: string;
   /** Files the user attached: dropped on the window or picked. */
   attachments?: string[];
+  /** Conversations and meetings brought in with "@". */
+  mentions?: MentionRef[];
 }
 
 export interface EmbeddedTab {
@@ -256,6 +258,7 @@ export interface QueuedMessage {
   id: string;
   text: string;
   attachments: string[];
+  mentions: MentionRef[];
   model: string;
   at: number;
 }
@@ -457,6 +460,8 @@ export interface VunemiApi {
   /** Condenses the earlier part of the conversation now; `runId` is the run the row goes under. */
   compactNow(model: string, runId: string): Promise<void>;
   listSessions(): Promise<SessionList>;
+  /** What "@" can bring into a message: earlier conversations and meetings, newest first. */
+  listMentions(): Promise<MentionItem[]>;
   /** A fresh conversation, in a project if one is given; the current one stays in the list. */
   newSession(projectId?: string): Promise<SessionList>;
   /** The user picks a folder for a new project; null when they cancel. Starts a conversation in it. */
@@ -675,6 +680,7 @@ export const CH = {
   contextGet: "context:get",
   contextCompact: "context:compact",
   sessionsList: "sessions:list",
+  mentionsList: "mentions:list",
   sessionsNew: "sessions:new",
   projectsAdd: "projects:add",
   projectsRemove: "projects:remove",

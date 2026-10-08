@@ -213,6 +213,12 @@ export const messages: Catalogue = {
     filesOnly: "Sieh dir die angehängten Dateien an.",
     drop: "Loslassen: Die Datei wird an die Nachricht angehängt, und der Agent kann nur sie lesen.",
     removeFile: "Anhang {name} entfernen",
+    mention: {
+      label: "Sitzung oder Besprechung einfügen",
+      none: "Keine passende Sitzung oder Besprechung",
+      full: "Pro Nachricht höchstens 5",
+      remove: "{name} entfernen",
+    },
     attach: "Datei anhängen",
     attachHint: "Datei anhängen – oder ins Fenster ziehen",
     placeholder: {
@@ -223,7 +229,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ reiht ein · ⌘↵ unterbricht · Esc stoppt",
       listening: "Esc bricht ab · deine Stimme verlässt diesen Mac nicht",
-      idle: "↵ senden · ⇧↵ neue Zeile",
+      idle: "↵ senden · ⇧↵ neue Zeile · @ fügt eine Sitzung oder Besprechung ein",
     },
     steer: "Unterbrechen",
     steerHint: "Unterbrechen: stoppt die laufende Aufgabe und macht stattdessen das (⌘↵)",
@@ -763,6 +769,8 @@ export const messages: Catalogue = {
       window: "dem Fenster einer anderen App",
       page: "der offenen Seite",
       notes: "früheren Arbeitsnotizen",
+      conversation: "einer per @ eingefügten Sitzung",
+      meeting: "einer per @ eingefügten Besprechung",
     },
     attach: {
       filesOff: "Um Dateien anzuhängen, schalte unter Verbindungen „Dateien“ ein.",

@@ -35,6 +35,7 @@ const api: VunemiApi = {
   getContext: (model) => ipcRenderer.invoke(CH.contextGet, model),
   compactNow: (model, runId) => ipcRenderer.invoke(CH.contextCompact, model, runId),
   listSessions: () => ipcRenderer.invoke(CH.sessionsList),
+  listMentions: () => ipcRenderer.invoke(CH.mentionsList),
   newSession: (projectId) => ipcRenderer.invoke(CH.sessionsNew, projectId),
   addProject: () => ipcRenderer.invoke(CH.projectsAdd),
   removeProject: (id) => ipcRenderer.invoke(CH.projectsRemove, id),

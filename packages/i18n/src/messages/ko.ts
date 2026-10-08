@@ -213,6 +213,12 @@ export const messages: Catalogue = {
     filesOnly: "첨부한 파일을 봐 줘.",
     drop: "놓기: 파일이 메시지에 첨부되며, 에이전트는 그 파일만 읽을 수 있습니다.",
     removeFile: "첨부 파일 {name} 제거",
+    mention: {
+      label: "세션이나 회의 가져오기",
+      none: "일치하는 세션이나 회의가 없습니다",
+      full: "메시지 하나에 최대 5개",
+      remove: "{name} 제거",
+    },
     attach: "파일 첨부",
     attachHint: "파일을 첨부하거나 윈도우로 드래그하십시오",
     placeholder: {
@@ -223,7 +229,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ 대기열에 추가 · ⌘↵ 끼어들기 · Esc 중단",
       listening: "Esc 취소 · 음성은 이 Mac 밖으로 나가지 않습니다",
-      idle: "↵ 보내기 · ⇧↵ 줄 바꿈",
+      idle: "↵ 보내기 · ⇧↵ 줄 바꿈 · @ 세션이나 회의 가져오기",
     },
     steer: "끼어들기",
     steerHint: "끼어들기: 실행 중인 작업을 멈추고 이것을 대신 합니다(⌘↵)",
@@ -763,6 +769,8 @@ export const messages: Catalogue = {
       window: "다른 앱의 윈도우",
       page: "열려 있는 페이지",
       notes: "이전 작업 메모",
+      conversation: "@로 가져온 세션",
+      meeting: "@로 가져온 회의",
     },
     attach: {
       filesOff: "파일을 첨부하려면 '연결'에서 '파일'을 켜십시오.",

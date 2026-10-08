@@ -217,6 +217,12 @@ export const messages = {
     filesOnly: "Eklediğim dosyalara bak.",
     drop: "Bırak: dosya mesaja eklenir, ajan yalnızca onu okuyabilir.",
     removeFile: "{name} ekini kaldır",
+    mention: {
+      label: "Oturum ya da toplantı getir",
+      none: "Eşleşen oturum ya da toplantı yok",
+      full: "Bir mesaja en çok 5 tane getirilebilir",
+      remove: "{name} öğesini kaldır",
+    },
     attach: "Dosya ekle",
     attachHint: "Dosya ekle — ya da pencereye sürükleyip bırak",
     placeholder: {
@@ -227,7 +233,7 @@ export const messages = {
     hint: {
       running: "↵ sıraya ekler · ⌘↵ araya girer · Esc durdurur",
       listening: "Esc vazgeçer · ses bu Mac'ten çıkmıyor",
-      idle: "↵ gönder · ⇧↵ yeni satır",
+      idle: "↵ gönder · ⇧↵ yeni satır · @ oturum ya da toplantı getirir",
     },
     steer: "Araya gir",
     steerHint: "Araya gir: çalışan işi durdurur ve bunu yapar (⌘↵)",
@@ -767,6 +773,8 @@ export const messages = {
       window: "başka bir uygulamanın penceresi",
       page: "açık sayfa",
       notes: "önceki çalışma notları",
+      conversation: "@ ile getirdiğin oturum",
+      meeting: "@ ile getirdiğin toplantı",
     },
     attach: {
       filesOff: "Dosya eklemek için Bağlantılar'da Dosyalar'ı aç.",
