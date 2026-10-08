@@ -21,6 +21,8 @@ export interface CallView {
   reason?: string;
   /** The reason is a warning to read, not routine policy. */
   alert?: boolean;
+  /** Text in what the call read that was written as instructions to the assistant. */
+  flagged?: string;
   /** "Always allow" does not apply to this call. */
   alwaysAsk?: boolean;
   /** The tool is switched off; this is its connection and part, and the card offers to switch it on. */
@@ -199,6 +201,7 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
         status: c.status === "rejected" ? "rejected" : e.ok ? "ok" : "error",
         // What the model was given may be shorter; the user sees all of it.
         output: e.display ?? e.output,
+        ...(e.flagged && { flagged: e.flagged }),
         ...(e.artifact && { artifact: e.artifact }),
         ...(e.gallery?.length && { gallery: e.gallery }),
         ...(e.ok && e.produced && { files: producedFiles(e.callId, e.produced) }),

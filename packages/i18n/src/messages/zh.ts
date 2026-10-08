@@ -265,6 +265,7 @@ export const messages: Catalogue = {
   },
 
   call: {
+    flagged: "此内容中有一段像是写给助手的指令：\"{text}\"。Vunemi 将其视为数据，不会照做。",
     tool: "工具",
     class: "类别",
     output: "输出",
@@ -919,6 +920,7 @@ export const messages: Catalogue = {
     financial: "Vunemi 不处理钱款。付款或转账需要你自己完成。",
     classDenied: "此类操作（{actionClass}）已关闭。这需要用户自己来做。",
     carries: "此操作携带了从{source}读取的文本：“{text}”。如果不是你要求的，请拒绝。",
+    suspect: "在本次对话中，从{source}读取的内容里有像是写给助手的指令的文字。批准前请检查此操作；如果不是你要求的，请拒绝。",
     class: {
       read: "读取信息",
       "write-local": "更改这台电脑上的内容",

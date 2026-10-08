@@ -8,6 +8,7 @@ import type { Artifact, ApprovalDecision, ChoiceCard, Produced, EmitFn, HandoffO
 import { bareQuestion, comparisonTable, listChoiceInput, prepareChoice, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
+import { GUARD_NOTE, suspectInstructions } from "./guard.js";
 import { maskSecrets } from "./secrets.js";
 import type { ChatMessage, ChatModel, ChatResult, ImageData, ToolCall, ToolSpec } from "./provider.js";
 import type { ActionClass, ToolDef, ToolRegistry } from "./tools.js";
@@ -1051,6 +1052,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       }
       let output = shapeOutput(keepLong(modelCopy(raw, tool), tool), tool, maxOut) + takeOwed();
       const display = tool.forModel ? shapeOutput(raw, tool, maxOut) : undefined;
+      // Said right under the content, where a small model still has it in view.
+      const flagged = tool.untrustedOutput ? suspectInstructions(raw) : null;
+      if (flagged) output += `\n${GUARD_NOTE}`;
       if (artifact?.kind === "image") output += await imageFor(tool.name, artifact);
       if (call.name === "calendar_events") {
         calendarReadSucceeded = true;
@@ -1066,6 +1070,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         ok: true,
         output,
         ...(display !== undefined && display !== output && { display }),
+        ...(flagged && { flagged }),
         ...(artifact && { artifact }),
         ...(pictures.length > 0 && { gallery: pictures }),
         ...(made.length > 0 && { produced: made }),

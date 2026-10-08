@@ -265,6 +265,7 @@ export const messages: Catalogue = {
   },
 
   call: {
+    flagged: "Dieser Inhalt enthält Text, der sich wie Anweisungen an den Assistenten liest: \"{text}\". Vunemi behandelt ihn als Daten und befolgt ihn nicht.",
     tool: "Werkzeug",
     class: "Klasse",
     output: "Ausgabe",
@@ -919,6 +920,7 @@ export const messages: Catalogue = {
     financial: "Vunemi führt keine Geldgeschäfte aus. Zahlungen oder Überweisungen musst du selbst vornehmen.",
     classDenied: "Aktionen dieser Klasse ({actionClass}) sind ausgeschaltet. Das muss der Benutzer selbst tun.",
     carries: "Diese Aktion trägt Text aus {source}: „{text}“. Lehne sie ab, wenn du das nicht wolltest.",
+    suspect: "In dieser Unterhaltung enthielt ein aus {source} gelesener Inhalt Text, der als Anweisung an den Assistenten geschrieben war. Prüfe diese Aktion vor dem Genehmigen; lehne sie ab, wenn du sie nicht verlangt hast.",
     class: {
       read: "liest Informationen",
       "write-local": "ändert etwas auf diesem Computer",

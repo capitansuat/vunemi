@@ -18,7 +18,7 @@
  *     user's blocklist is enforced here rather than trusted to the model.
  */
 
-import type { ActionClass, AutonomyPolicy } from "@vunemi/agent-core";
+import { suspectInstructions, type ActionClass, type AutonomyPolicy } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 
 export type Verdict =
@@ -69,6 +69,8 @@ function sealed(policy: AutonomyPolicy): AutonomyPolicy {
 export class Sentinel {
   private tainted: { text: string; source: string }[] = [];
   private size = 0;
+  /** Where content written as instructions to the assistant was read in this conversation, if anywhere. */
+  private suspect: string | null = null;
   private policy: AutonomyPolicy;
 
   constructor(private readonly opts: SentinelOptions) {
@@ -91,6 +93,7 @@ export class Sentinel {
   /** Remembers text the agent read from somewhere it doesn't control. */
   noteUntrusted(text: string, source: string): void {
     if (!text) return;
+    if (suspectInstructions(text)) this.suspect = source;
     this.tainted.push({ text: normalise(text), source });
     this.size += text.length;
     const budget = this.opts.taintBudget ?? TAINT_BUDGET;
@@ -106,6 +109,7 @@ export class Sentinel {
 
   /** Starts a fresh conversation: nothing read, nothing granted. */
   reset(): void {
+    this.suspect = null;
     this.tainted = [];
     this.size = 0;
     this.opts.grants.clear();
@@ -138,6 +142,10 @@ export class Sentinel {
           reason: t("sentinel.carries", { source: carried.source, text: ellipsis(carried.text, 60) }),
         };
       }
+      // Something read in this conversation was written to steer the assistant. What it
+      // asked for need not be in the arguments word for word (an address is shorter than
+      // any taint match), so until the conversation ends every such action is the user's call.
+      if (this.suspect) return { kind: "ask", alert: true, reason: t("sentinel.suspect", { source: this.suspect }) };
     }
 
     if (!req.alwaysAsk && (mode === "auto" || this.opts.grants.has(req.tool))) return { kind: "allow" };

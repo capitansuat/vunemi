@@ -269,6 +269,7 @@ export const messages = {
   },
 
   call: {
+    flagged: "Bu içerikte asistana talimat gibi yazılmış bir metin var: \"{text}\". Vunemi bunu veri sayar, uygulamaz.",
     tool: "Araç",
     class: "Sınıf",
     output: "Çıktı",
@@ -923,6 +924,7 @@ export const messages = {
     financial: "Vunemi para işlemi yapmaz. Ödemeyi ya da aktarımı kendin yapmalısın.",
     classDenied: "Bu sınıftaki eylemler ({actionClass}) kapalı. Bunu kullanıcı kendisi yapmalı.",
     carries: "Bu eylem, {source} kaynağından okunan bir metni taşıyor: \"{text}\". Sen istemediysen reddet.",
+    suspect: "Bu konuşmada {source} kaynağından okunan içerikte asistana talimat gibi yazılmış bir metin vardı. Onaylamadan önce bu eyleme bak; sen istemediysen reddet.",
     class: {
       read: "bilgi okuyor",
       "write-local": "bu bilgisayarda bir şey değiştiriyor",

@@ -265,6 +265,7 @@ export const messages: Catalogue = {
   },
 
   call: {
+    flagged: "This content has text that reads like instructions to the assistant: \"{text}\". Vunemi treats it as data and does not follow it.",
     tool: "Tool",
     class: "Class",
     output: "Output",
@@ -919,6 +920,7 @@ export const messages: Catalogue = {
     financial: "Vunemi doesn't handle money. You have to make the payment or transfer yourself.",
     classDenied: "Actions of this class ({actionClass}) are off. The user has to do this themselves.",
     carries: "This action carries text read from {source}: \"{text}\". Reject it if you didn't ask for this.",
+    suspect: "Content read from {source} in this conversation had text written as instructions to the assistant. Check this action before approving; reject it if you didn't ask for it.",
     class: {
       read: "reads information",
       "write-local": "changes something on this computer",

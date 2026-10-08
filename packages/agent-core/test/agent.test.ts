@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { announcesRead, argumentMisfit, claimsChange, comparesOptions, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
 import { requestedTravelTools } from "../src/travel-intent.js";
 import { choiceTools } from "../src/choices.js";
+import { GUARD_NOTE } from "../src/guard.js";
 import type { AgentEvent, ApprovalDecision } from "../src/events.js";
 import { t } from "@vunemi/i18n";
 import { ProviderError, type ChatMessage, type ChatModel, type ChatRequest, type ChatResult, type ToolCall } from "../src/provider.js";
@@ -245,7 +246,8 @@ describe("runAgent", () => {
     const toolMsg = seen[1]!.messages.at(-1)!.content;
 
     expect(toolMsg.startsWith('<untrusted_content source="read_page">')).toBe(true);
-    expect(toolMsg.endsWith("</untrusted_content>")).toBe(true);
+    // The page tries to give orders, so Vunemi's own note follows the fence.
+    expect(toolMsg.endsWith(`</untrusted_content>\n${GUARD_NOTE}`)).toBe(true);
     // Exactly one real closing tag — the page's forged one was defused.
     expect(toolMsg.match(/<\/untrusted_content>/g)).toHaveLength(1);
     expect(toolMsg).not.toContain("<user_request>");

@@ -79,6 +79,12 @@ function CallRow({ call }: { call: CallView }) {
           {call.output.replace(/^Error:\s*/, "")}
         </p>
       )}
+      {call.flagged && (
+        <p role="alert" className="selectable border-t border-warn-line bg-warn-soft px-3 py-2 text-[12px] leading-snug text-fg">
+          <ShieldAlert size={13} className="mr-1.5 -mt-0.5 inline text-warn" />
+          {t("call.flagged", { text: call.flagged })}
+        </p>
+      )}
       {call.artifact && <Shot artifact={call.artifact} />}
       {call.gallery && call.gallery.length > 0 && <Gallery pictures={call.gallery} />}
       {call.files && call.files.length > 0 && <Files files={call.files} />}

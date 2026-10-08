@@ -265,6 +265,7 @@ export const messages: Catalogue = {
   },
 
   call: {
+    flagged: "이 콘텐츠에는 어시스턴트에게 내리는 지시처럼 쓰인 텍스트가 있습니다: \"{text}\". Vunemi는 이를 데이터로 취급하며 따르지 않습니다.",
     tool: "도구",
     class: "분류",
     output: "출력",
@@ -919,6 +920,7 @@ export const messages: Catalogue = {
     financial: "Vunemi는 돈을 다루지 않습니다. 결제나 송금은 직접 하셔야 합니다.",
     classDenied: "이 분류({actionClass})의 동작은 꺼져 있습니다. 사용자가 직접 해야 합니다.",
     carries: "이 동작에는 {source}에서 읽은 텍스트가 담겨 있습니다: '{text}'. 요청한 것이 아니라면 거부하십시오.",
+    suspect: "이 대화에서 {source}에서 읽은 내용에 어시스턴트에게 내리는 지시처럼 쓰인 텍스트가 있었습니다. 승인하기 전에 이 작업을 확인하고, 요청한 적이 없다면 거부하세요.",
     class: {
       read: "정보를 읽습니다",
       "write-local": "이 컴퓨터에서 무언가를 바꿉니다",

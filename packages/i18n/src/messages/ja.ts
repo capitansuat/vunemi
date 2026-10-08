@@ -265,6 +265,7 @@ export const messages: Catalogue = {
   },
 
   call: {
+    flagged: "このコンテンツには、アシスタントへの指示のように書かれたテキストがあります：\"{text}\"。Vunemi はこれをデータとして扱い、従いません。",
     tool: "ツール",
     class: "クラス",
     output: "出力",
@@ -919,6 +920,7 @@ export const messages: Catalogue = {
     financial: "Vunemi はお金を扱いません。支払いや送金はご自身で行ってください。",
     classDenied: "このクラス（{actionClass}）の操作はオフになっています。ユーザが自分で行う必要があります。",
     carries: "この操作は、{source}から読み取ったテキストを含んでいます：「{text}」。頼んでいないなら拒否してください。",
+    suspect: "この会話で {source} から読み取った内容に、アシスタントへの指示のように書かれたテキストがありました。承認する前にこの操作を確認し、依頼していない場合は拒否してください。",
     class: {
       read: "情報を読み取ります",
       "write-local": "このコンピュータ上で何かを変更します",
