@@ -93,7 +93,7 @@ function CallRow({ call }: { call: CallView }) {
         <div className="selectable space-y-2.5 border-t border-line bg-surface-2/60 px-3 py-2.5">
           <Meta label={t("call.tool")} value={<span className="font-mono">{call.tool}</span>} />
           <Meta label={t("call.class")} value={actionClassLabel(call.actionClass)} />
-          {hasArgs(call.args) && <Block label="Girdi" text={JSON.stringify(call.args, null, 2)} />}
+          {hasArgs(call.args) && <Block label={t("call.input")} text={JSON.stringify(call.args, null, 2)} />}
           {call.output && <Block label={t("call.output")} text={call.output} />}
         </div>
       )}

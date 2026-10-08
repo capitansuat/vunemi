@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
 import { appMenuTemplate } from "./app-menu.js";
+import { followLanguage } from "./system-language.js";
 import { toolAreas } from "./areas.js";
 import { choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
 import { BrowserController, checkNavigation, trustableHost } from "@vunemi/browser";
@@ -203,6 +204,12 @@ nativeTheme.themeSource = settings.appearance;
 // The language before anything says a word. Someone who never chose one gets
 // their Mac's, if Vunemi speaks it, and English if it does not.
 setLocale(settings.language ?? matchLocale(app.getPreferredSystemLanguages()) ?? "en");
+// A chosen language is macOS's too, for the words it adds to the menus. Pages
+// keep being asked for in the Mac's own language, as before.
+if (process.platform === "darwin" && settings.language) {
+  const own = followLanguage(settings.language, systemPreferences);
+  if (own) app.commandLine.appendSwitch("lang", own);
+}
 
 // The optional lock, off unless the user turned it on. macOS asks, in its
 // own dialog, through a helper process of its own — so a Touch ID prompt
@@ -1404,6 +1411,7 @@ handle(CH.languageSet, (_e, next: unknown): Locale => {
   if (!isLocale(next)) throw new Error(t("main.badLanguage"));
   settings.setLanguage(next);
   setLocale(next);
+  if (process.platform === "darwin") followLanguage(next, systemPreferences);
   setAppMenu();
   void vault.call("locale", [next]).catch(() => undefined);
   send(CH.languageChanged, next);

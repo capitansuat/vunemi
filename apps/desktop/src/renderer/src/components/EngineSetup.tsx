@@ -120,7 +120,7 @@ export function EngineSetup({ showInstalled = false, intro = true }: { showInsta
             <p className="mt-4 flex items-center gap-1.5 text-[12px] text-faint"><Loader2 size={12} className="animate-spin" /> {t("engine.popular.loading")}</p>
           ) : popular.length > 0 && (
             <>
-              <div className="mt-4 text-[11.5px] font-medium uppercase tracking-wide text-faint">{t("engine.popular.title")}</div>
+              <div className="mt-4 text-[11.5px] font-medium uppercase tracking-wide text-faint">{ownLetters(t("engine.popular.title"), "Hugging Face")}</div>
               <div className="mt-2 space-y-2">
                 {(expanded ? popular : popular.slice(0, 3)).map((p) => (
                   <Offer key={p.repo} name={p.name}
@@ -170,6 +170,16 @@ export function EngineSetup({ showInstalled = false, intro = true }: { showInsta
     if (minutes === null) return "";
     return minutes <= 1 ? t("engine.download.etaSoon") : t("engine.download.eta", { minutes });
   }
+}
+
+/**
+ * A heading shown in capitals takes them by the app language's rules, and
+ * Turkish would write "HUGGİNG FACE". A name from elsewhere keeps its own letters.
+ */
+function ownLetters(text: string, name: string): ReactNode {
+  const at = text.indexOf(name);
+  if (at < 0) return text;
+  return <>{text.slice(0, at)}<span lang="en">{name}</span>{text.slice(at + name.length)}</>;
 }
 
 function Offer({ name, detail, badge, primary = false, have = false, onDownload, onClose }: {

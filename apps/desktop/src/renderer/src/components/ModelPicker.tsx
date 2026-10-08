@@ -42,7 +42,8 @@ export function ModelPicker() {
           {providers?.map((p) => (
             <Menu.Group key={p.kind} className="py-1">
               <Menu.Label className="flex items-center justify-between px-2.5 pt-1 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">
-                {PROVIDER_LABEL[p.kind] ?? p.kind}
+                {/* A product's name: capitals by its own letters, not the app language's ("LM STUDIO", not "LM STUDİO"). */}
+                <span lang="en">{PROVIDER_LABEL[p.kind] ?? p.kind}</span>
                 <span className={`normal-case tracking-normal ${p.reachable ? "text-ok" : "text-faint"}`}>
                   {p.kind === "vunemi" && engine
                     ? t(`engine.state.${engine.engine.state}`)
