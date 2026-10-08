@@ -3,7 +3,7 @@
  * same view out, so the timeline can be rebuilt from a recorded log.
  */
 
-import { ledgerTotals, type ActionClass, type AgentEvent, type ApprovalDecision, type Artifact, type ChoiceCard, type LedgerKind, type MemoryNote, type MemoryProposal, type Produced, type RunStatus } from "@vunemi/agent-core";
+import { ledgerTotals, type ActionClass, type AgentEvent, type ApprovalDecision, type Artifact, type ChoiceCard, type LedgerKind, type MemoryNote, type MemoryProposal, type MentionRef, type Produced, type RunStatus } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 
 export type CallStatus = "proposed" | "awaiting" | "running" | "ok" | "error" | "rejected";
@@ -82,6 +82,8 @@ export interface RunView {
   goal: string;
   /** Files the user attached to the message. */
   attachments?: string[];
+  /** Conversations and meetings the user brought in with "@". */
+  mentions?: MentionRef[];
   model: string;
   status: "running" | RunStatus;
   detail?: string;
@@ -113,6 +115,7 @@ export function foldEvent(runs: RunView[], e: AgentEvent): RunView[] {
         runId: e.runId,
         goal: e.goal,
         ...(e.attachments?.length && { attachments: e.attachments }),
+        ...(e.mentions?.length && { mentions: e.mentions }),
         model: e.model,
         status: "running",
         startedAt: e.at,

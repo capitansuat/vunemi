@@ -19,6 +19,13 @@ const start: AgentEvent[] = [
 ];
 
 describe("foldEvent", () => {
+  it("keeps what a request brought in with @", () => {
+    const mentions = [{ kind: "conversation" as const, id: "s_abc123", title: "Rome trip" }];
+    const [run] = fold([{ type: "run.started", runId: "r", goal: "g", mentions, model: "m", at: 0 }]);
+    expect(run!.mentions).toEqual(mentions);
+    expect(fold(start)[0]!.mentions).toBeUndefined();
+  });
+
   it("rebuilds answered and expired choice cards from stored events", () => {
     const card = { kind: "choice" as const, question: "When?", options: ["Friday", "Saturday"], allowOther: true };
     const asked: AgentEvent = { type: "choice.asked", runId: "r", stepId: "s0", callId: "c1", card, at: 2 };
