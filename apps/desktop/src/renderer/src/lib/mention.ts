@@ -42,9 +42,13 @@ export function filterMentions<T extends { name: string }>(items: readonly T[], 
     .slice(0, MENU_SIZE);
 }
 
-/** A title as it is written into the text: one line, cut when long. */
+/**
+ * A title as it is written into the text: one line, cut when long. A
+ * conversation that began with a mention is titled "@Rome trip …"; its own
+ * "@" marks are dropped, or picking it would write "@@Rome trip".
+ */
 export function mentionName(title: string): string {
-  const line = title.replace(/\s+/g, " ").trim();
+  const line = title.replace(/(^|\s)@+/g, "$1").replace(/\s+/g, " ").trim();
   return line.length > NAME_CHARS ? `${line.slice(0, NAME_CHARS - 1).trimEnd()}…` : line;
 }
 

@@ -68,6 +68,11 @@ describe("mentionName", () => {
     expect(long).toHaveLength(40);
     expect(long.endsWith("…")).toBe(true);
   });
+
+  it("drops the @ of a title that itself began with a mention", () => {
+    expect(mentionName("@Rome trip and @Monday sync, which date?")).toBe("Rome trip and Monday sync, which date?");
+    expect(mentionName("mail a@b.com")).toBe("mail a@b.com");
+  });
 });
 
 describe("insertMention", () => {
