@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { choiceTools, listChoiceInput, prepareChoice, tableChoiceInput, valueSeen } from "../src/choices.js";
+import { bareQuestion, choiceTools, comparisonTable, listChoiceInput, prepareChoice, tableChoiceInput, valueSeen } from "../src/choices.js";
 import { runAgent } from "../src/agent.js";
 import { ToolRegistry } from "../src/tools.js";
 import type { AgentEvent } from "../src/events.js";
@@ -219,6 +219,99 @@ describe("choice run", () => {
     expect(events.filter((event) => event.type === "choice.asked")).toHaveLength(1);
     expect(seen).toHaveLength(2);
     expect(result).toMatchObject({ status: "done", detail: recap });
+  });
+
+  it("reads a table with a row per feature by its columns", async () => {
+    const features = "| Feature | 13-inch | 15-inch |\n|---|---|---|\n| **Weight** | 1.2 kg | 1.8 kg |\n| Price | £900 | £1,100 |";
+    // Read row by row, this table's options would be Weight and Price.
+    expect(tableChoiceInput(features)).toEqual({ items: [
+      { title: "13-inch", price: "£900", facts: [{ label: "Weight", value: "1.2 kg" }] },
+      { title: "15-inch", price: "£1,100", facts: [{ label: "Weight", value: "1.8 kg" }] },
+    ] });
+    const { chat, seen } = model([{ text: features }, { text: "The 13-inch it is." }]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "Compare two laptops", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(result.status).toBe("done");
+    expect(seen).toHaveLength(2);
+    expect(events.filter((event) => event.type === "choice.asked")).toMatchObject([{ card: { kind: "options", items: [{ title: "13-inch" }, { title: "15-inch" }] } }]);
+  });
+
+  it("tells which way round a table runs from the request, and asks the model when nothing says", async () => {
+    const byColumn = "| | Tea | Coffee |\n|---|---|---|\n| Caffeine | Less | More |\n| Taste | Mild | Strong |";
+    expect(tableChoiceInput(byColumn)?.items.map((item) => item.title)).toEqual(["Tea", "Coffee"]);
+    const unsaid = "| Drink | Caffeine | Taste |\n|---|---|---|\n| Tea | Less | Mild |\n| Coffee | More | Strong |";
+    expect(tableChoiceInput(unsaid)).toBeNull();
+    expect(tableChoiceInput(unsaid, "Compare tea and coffee")?.items.map((item) => item.title)).toEqual(["Tea", "Coffee"]);
+    expect(tableChoiceInput("| Aspect | Tea | Coffee |\n|---|---|---|\n| Caffeine | Less | More |\n| Taste | Mild | Strong |", "Compare tea and coffee")?.items.map((item) => item.title)).toEqual(["Tea", "Coffee"]);
+    expect(comparisonTable(unsaid)).toBe(true);
+    const cards = '{"items":[{"title":"Tea","facts":[{"label":"Taste","value":"Mild"}]},{"title":"Coffee","facts":[{"label":"Taste","value":"Strong"}]}]}';
+    const { chat, seen } = model([{ text: unsaid }, { calls: [{ name: "present_options", argumentsText: cards }] }, { text: "Tea it is." }]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    await runAgent({ goal: "Compare two hot drinks", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(seen[1]!.messages.at(-1)!.content).toContain("plain text table");
+    expect(events.filter((event) => event.type === "choice.asked")).toHaveLength(1);
+  });
+
+  it("lets a compared table stand when the model, asked once, still makes no cards", async () => {
+    const features = "| Drink | Caffeine | Taste |\n|---|---|---|\n| Tea | Less | Mild |\n| Coffee | More | Strong |";
+    const { chat } = model([{ text: features }, { text: features }]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const result = await runAgent({ goal: "Compare two hot drinks", model: chat, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(result).toMatchObject({ status: "done", detail: features });
+  });
+
+  it("knows a turn that is only a short question", () => {
+    expect(bareQuestion("Sure! What kind of cuisine would you like for your dinner?")).toBe(true);
+    expect(bareQuestion("Merhaba!\n\nNe kadarlık bir hediye düşünüyorsun?")).toBe(true);
+    expect(bareQuestion("Canberra.")).toBe(false);
+    expect(bareQuestion("Which cuisine?\n1. Italian\n2. Japanese\nWhich one?")).toBe(false);
+    expect(bareQuestion(`${"Here are four tips for better sleep. ".repeat(8)}Would you like more?`)).toBe(false);
+  });
+
+  it("asks once for buttons when the task opens with a plain question", async () => {
+    const { chat, seen } = model([
+      { text: "Sure! What kind of cuisine would you like?" },
+      { calls: [{ name: "ask_choice", argumentsText: '{"question":"Which cuisine?","options":["Italian","Japanese"]}' }] },
+      { text: "Here is a pasta recipe." },
+    ]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "A dinner recipe; ask me the cuisine first", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(result.status).toBe("done");
+    expect(seen[1]!.messages.at(-1)!.content).toContain("question in plain text");
+    // The buttons stand in for the question written before them.
+    const first = events.find((event) => event.type === "step.started");
+    const asked = events.find((event) => event.type === "choice.asked");
+    expect(first?.type === "step.started" && asked?.type === "choice.asked" && asked.card.kind === "choice" && asked.replaces === first.stepId).toBe(true);
+  });
+
+  it("keeps a plain question that has no short answers, and asks about it only once", async () => {
+    const { chat, seen } = model([{ text: "What is the recipient's address?" }, { text: "What is the recipient's address?" }]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "Send a card to my aunt", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(result).toMatchObject({ status: "done", detail: "What is the recipient's address?" });
+    expect(seen).toHaveLength(2);
+    expect(events.some((event) => event.type === "choice.asked")).toBe(false);
+  });
+
+  it("refuses a third question in a row, and counts again after other work", async () => {
+    const ask = (question: string) => ({ calls: [{ name: "ask_choice", argumentsText: JSON.stringify({ question, options: ["A", "B"] }) }] });
+    const { chat, seen } = model([ask("Where?"), ask("When?"), ask("How many?"), { calls: [{ name: "lookup", argumentsText: "{}" }] }, ask("Which one?"), { text: "Done." }]);
+    const registry = new ToolRegistry().register({ name: "lookup", description: "look up", parameters: { type: "object", properties: {} }, actionClass: "read", run: async () => "found" });
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ goal: "Lunch options", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(result.status).toBe("done");
+    expect(events.filter((event) => event.type === "choice.asked").map((event) => event.type === "choice.asked" && event.card.kind === "choice" && event.card.question)).toEqual(["Where?", "When?", "Which one?"]);
+    expect(seen[3]!.messages.at(-1)).toMatchObject({ role: "tool", content: expect.stringContaining("Do not ask another") });
   });
 
   it("asks once for cards when the request named them and the answer was prose", async () => {

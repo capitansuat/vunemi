@@ -50,37 +50,96 @@ export function listChoiceInput(text: string): { question: string; options: stri
   return { question, options, allowOther: true };
 }
 
-/** A plain comparison table can become cards without another model round trip. */
-export function tableChoiceInput(text: string): { items: { title: string; price?: string; facts: { label: string; value: string }[] }[] } | null {
+/** The first Markdown table in a text: its header cells and its rows of the same width. */
+function firstTable(text: string): { headers: string[]; rows: string[][] } | null {
   const lines = text.split("\n");
   const cells = (line: string): string[] => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
   for (let at = 0; at < lines.length - 3; at++) {
     if (!/^\s*\|/.test(lines[at] ?? "")) continue;
     const headers = cells(lines[at]!);
-    if (headers.length < 2 || headers.length > 8 || headers.some((cell) => !cell)) continue;
+    if (headers.length < 2 || headers.length > 8 || headers.slice(1).some((cell) => !cell)) continue;
     const separator = cells(lines[at + 1] ?? "");
     if (separator.length !== headers.length || !separator.every((cell) => /^:?-{3,}:?$/.test(cell))) continue;
     const rows: string[][] = [];
-    for (let row = at + 2; row < lines.length && /^\s*\|/.test(lines[row]!) && rows.length < 7; row++) {
+    for (let row = at + 2; row < lines.length && /^\s*\|/.test(lines[row]!) && rows.length < 20; row++) {
       const values = cells(lines[row]!);
       if (values.length !== headers.length || !values[0]) break;
       rows.push(values);
     }
-    if (rows.length < 2 || rows.length > 6 || new Set(rows.map((row) => row[0])).size !== rows.length) continue;
-    const items = rows.map((row) => {
+    if (rows.length >= 2) return { headers, rows };
+  }
+  return null;
+}
+
+/** The text lays options out in a table, whichever way round. */
+export function comparisonTable(text: string): boolean {
+  return firstTable(text) !== null;
+}
+
+/** What the first column of a table is called when its rows are features and its columns the options. */
+const FEATURE_LABEL = /^(?:features?|criteri(?:a|on)|aspects?|factors?|attributes?|propert(?:y|ies)|specs?|categor(?:y|ies)|özellik(?:ler)?|kriter(?:ler)?|ölçüt(?:ler)?|kategori)$/iu;
+
+/**
+ * A plain comparison table can become cards without another model round
+ * trip, when it is certain which way round it runs. Rows are the options
+ * when a column is the price, or when the request names them. Columns are
+ * the options when the first column is headed as the features, or the
+ * request names the columns. Measured live, "| Feature | 13-inch | 15-inch |"
+ * read row by row came out as cards named Weight and Closed depth; a table
+ * that says neither goes back to the model.
+ */
+export function tableChoiceInput(text: string, goal = ""): { items: { title: string; price?: string; facts: { label: string; value: string }[] }[] } | null {
+  const table = firstTable(text);
+  if (!table) return null;
+  const bare = (cell: string): string => cell.replace(/\*\*|__|`/g, "").trim();
+  const headers = table.headers.map(bare);
+  const rows = table.rows.map((row) => row.map(bare));
+  const distinct = (names: string[]): boolean => names.every(Boolean) && new Set(names).size === names.length;
+  const asked = goal.toLocaleLowerCase();
+  const named = (names: string[]): boolean => names.filter((name) => asked.includes(name.toLocaleLowerCase())).length >= 2;
+  const across = headers.slice(1);
+  const down = rows.map((row) => row[0]!);
+  const byRow = Boolean(headers[0]) && rows.length <= 6 && distinct(down);
+  const byColumn = across.length >= 2 && across.length <= 6 && rows.length <= 12 && distinct(across);
+  const empty = (value: string | undefined): boolean => !value || value === "—" || value === "-";
+  if (byRow && (headers.some((header) => PRICE_LABEL.test(header)) || (named(down) && !named(across)))) {
+    return { items: rows.map((row) => {
       const facts: { label: string; value: string }[] = [];
       let price: string | undefined;
       for (let col = 1; col < headers.length; col++) {
-        const value = row[col]!;
-        if (!value || value === "—" || value === "-") continue;
+        const value = row[col];
+        if (empty(value)) continue;
         if (PRICE_LABEL.test(headers[col]!) && !price) price = value;
-        else facts.push({ label: headers[col]!, value });
+        else facts.push({ label: headers[col]!, value: value! });
       }
       return { title: row[0]!, ...(price && { price }), facts };
-    });
-    return { items };
+    }) };
+  }
+  if (byColumn && (!headers[0] || FEATURE_LABEL.test(headers[0]) || named(across))) {
+    return { items: across.map((title, at) => {
+      const facts: { label: string; value: string }[] = [];
+      let price: string | undefined;
+      for (const row of rows) {
+        const value = row[at + 1];
+        if (empty(value)) continue;
+        if (PRICE_LABEL.test(row[0]!) && !price) price = value;
+        else facts.push({ label: row[0]!, value: value! });
+      }
+      return { title, ...(price && { price }), facts };
+    }) };
   }
   return null;
+}
+
+/**
+ * A turn that is only a short question to the user, with no answers
+ * written out. Measured live, one question in seven that the user had
+ * asked for came this way, without buttons.
+ */
+export function bareQuestion(text: string): boolean {
+  const said = text.replace(/\*\*|__|`/g, "").trim();
+  if (said.length < 8 || said.length > 240 || !/[?？]$/.test(said)) return false;
+  return !said.split("\n").some((line) => /^\s*(?:\d{1,2}[.)]|[-*•]|\|)\s*\S/.test(line));
 }
 
 /** Cards are data, never markup or model-authored UI. */

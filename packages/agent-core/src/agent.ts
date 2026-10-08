@@ -5,7 +5,7 @@
  */
 
 import type { Artifact, ApprovalDecision, ChoiceCard, Produced, EmitFn, HandoffOutcome, PlanDecision, RunStatus } from "./events.js";
-import { listChoiceInput, prepareChoice, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
+import { bareQuestion, comparisonTable, listChoiceInput, prepareChoice, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
 import { maskSecrets } from "./secrets.js";
@@ -472,6 +472,15 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let comparisonNudged = false;
   /** The step that listed options in plain text, for the cards that take its place. */
   let draftStep: string | null = null;
+  /** The step whose plain question the model was asked to put on buttons. */
+  let questionStep: string | null = null;
+  /**
+   * Questions put to the user one after another, with no other work between.
+   * The model is told to stop at two; measured live, it asked five before
+   * showing three lunch options.
+   */
+  let asksInRow = 0;
+  let questionUsed = false;
   /** Questions written as lists that were turned into choice cards in this task: two at most, as the model is told for ask_choice. */
   let listsAsked = 0;
   /** What this task has already put to the user on a card: a list of the same is a recap, not a question. */
@@ -575,8 +584,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           return finish("failed", "The model promised to research but did not use a tool. No current information was verified.");
         }
         // A question written out as a list is asked with buttons, as ask_choice would have.
-        const asked = toolSpecs.some((tool) => tool.name === "ask_choice") && opts.requestChoice && listsAsked < 2 && index < maxSteps - 1
-          ? listChoiceInput(result.text) : null;
+        const canAsk = toolSpecs.some((tool) => tool.name === "ask_choice") && opts.requestChoice && asksInRow < MAX_ASKS && index < maxSteps - 1;
+        const asked = canAsk && listsAsked < 2 ? listChoiceInput(result.text) : null;
         // Live, a model summed up the cards the user had just chosen from, then asked
         // whether to look further: the three cards came back as the buttons of a yes-or-no question.
         if (asked && !asked.options.every((option) => offered.has(option.toLocaleLowerCase()))) {
@@ -591,9 +600,17 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           if (signal.aborted) return finish("stopped", "Stopped by user.");
           continue;
         }
+        // A question with nothing to click: one more turn to give it answers. Only as
+        // the task's first words, where a short text ending in "?" is a question to
+        // the user and not the answer they asked for.
+        if (canAsk && !asked && questionStep === null && index === 0 && bareQuestion(result.text)) {
+          questionStep = stepId;
+          convo.push({ role: "user", content: "[Vunemi check, not from the user] You asked the user a question in plain text. Ask it with ask_choice and 2 to 5 short answers to pick from; the user can still type their own. If no short answers fit, ask the same question again as text." });
+          continue;
+        }
         // The user asked for cards in so many words and got prose: one more turn to make them.
         if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") && opts.requestChoice &&
-            !comparisonNudged && index < maxSteps - 1 && asksForCards(opts.goal) && tableChoiceInput(result.text) === null) {
+            !comparisonNudged && index < maxSteps - 1 && asksForCards(opts.goal) && tableChoiceInput(result.text, opts.goal) === null) {
           comparisonNudged = true;
           draftStep = stepId;
           convo.push({ role: "user", content: "[Vunemi check, not from the user] The user asked for option cards, and you answered in plain text. Call present_options now with the 2 to 6 options you just described: a title each, and the facts as label and value. Use only what you already wrote; give sourceUrl only for a page you actually read." });
@@ -601,7 +618,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         }
         if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") &&
             comparesOptions(opts.goal, result.text)) {
-          const items = tableChoiceInput(result.text);
+          const items = tableChoiceInput(result.text, opts.goal);
           if (items && opts.requestChoice && index < maxSteps - 1) {
             const call: ToolCall = { id: `${stepId}.table`, name: "present_options", argumentsText: JSON.stringify(items) };
             draftStep = stepId;
@@ -614,13 +631,14 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
             if (signal.aborted) return finish("stopped", "Stopped by user.");
             continue;
           }
-          if (!comparisonNudged && index < maxSteps - 1) {
+          if (!comparisonNudged && opts.requestChoice && index < maxSteps - 1) {
             comparisonNudged = true;
             draftStep = stepId;
             convo.push({ role: "user", content: "[Vunemi check, not from the user] You compared multiple options in a plain text table. Call present_options now with 2 to 6 options, using only facts observed in this run. Give sourceUrl only for a page you actually read. Never infer a child fare from an adult fare. Wait for the user's selection; do not book anything." });
             continue;
           }
-          return finish("failed", "The model listed options but did not create option cards. No option was selected or booked.");
+          // Priced options the user never got to pick from. Any other table is an answer as it stands.
+          if (items) return finish("failed", "The model listed options but did not create option cards. No option was selected or booked.");
         }
         if (calendarReadError && !calendarReadSucceeded) {
           const honest = t("agent.calendarUnread", { error: calendarReadError });
@@ -965,8 +983,14 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       if ("error" in prepared) return fail(call, prepared.error, false);
       if (!opts.requestChoice) return fail(call, "Interactive choices are unavailable in this run.", false);
       const card = prepared.card;
+      if (card.kind === "choice" && asksInRow >= MAX_ASKS) {
+        return fail(call, `You have asked the user ${MAX_ASKS} questions in a row. Do not ask another: go on with what you know, and say what you assumed.`, false);
+      }
+      asksInRow = card.kind === "choice" ? asksInRow + 1 : 0;
       for (const label of card.kind === "options" ? card.items.map((item) => item.title) : card.options) offered.add(label.toLocaleLowerCase());
-      const replaces = card.kind === "options" ? draftStep : null;
+      // Only the turn right after the check stands in for the question it was asked about.
+      const replaces = card.kind === "options" ? draftStep : questionStep !== null && questionStep !== stepId && !questionUsed ? questionStep : null;
+      if (card.kind === "choice" && questionStep !== null) questionUsed = true;
       draftStep = null;
       emit({ type: "choice.asked", runId, stepId, callId: call.id, card, ...(replaces && { replaces }), at: now() });
       checkpoint();
@@ -980,6 +1004,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       return output;
     }
 
+    asksInRow = 0;
     const gate = offer
       ? await switchOnCard(tool, call, parsed.value, stepId, preview, actionClass, offer.label)
       : await authorize(tool, call, parsed.value, stepId, preview, actionClass);
@@ -1368,6 +1393,9 @@ const callNudge = (name: string): string =>
 const guideNudge = (group: string): string =>
   `[Vunemi check, not from the user] You opened the ${group} tools but called none of them. If the user's request needs one, call it now. Otherwise answer the user plainly, and don't say you checked or did anything you didn't.`;
 
+/** Questions in a row before the model has to get on with it. */
+const MAX_ASKS = 2;
+
 const travelNudge = (name: string): string =>
   `[Vunemi check, not from the user] The user asked for travel options, but you ended the task without calling ${name}. Call it now with the requested place and date. If a detail is unspecified, use the tool's documented default. Do not claim to be searching and then stop. If the tool cannot be used, say plainly that no live search happened.`;
 
@@ -1385,7 +1413,7 @@ export function asksForCards(goal: string): boolean {
 /** A researched product or travel comparison belongs in option cards. */
 export function comparesOptions(goal: string, text: string): boolean {
   if (!/(?:uçuş|uçak|bilet|flight|ticket|laptop|otel|hotel|product|ürün|compare|comparison|karşılaştır|seçenek)/iu.test(goal)) return false;
-  return tableChoiceInput(text) !== null;
+  return comparisonTable(text);
 }
 
 /**
