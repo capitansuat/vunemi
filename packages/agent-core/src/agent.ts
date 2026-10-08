@@ -605,7 +605,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         // the user and not the answer they asked for.
         if (canAsk && !asked && questionStep === null && index === 0 && bareQuestion(result.text)) {
           questionStep = stepId;
-          convo.push({ role: "user", content: "[Vunemi check, not from the user] You asked the user a question in plain text. Ask it with ask_choice and 2 to 5 short answers to pick from; the user can still type their own. If no short answers fit, ask the same question again as text." });
+          convo.push({ role: "user", content: "[Vunemi check, not from the user] If you just asked the user a question, ask it with ask_choice and 2 to 5 short answers to pick from; the user can still type their own. If that text was your answer to the request, or no short answers fit, write it again unchanged." });
           continue;
         }
         // The user asked for cards in so many words and got prose: one more turn to make them.
@@ -634,7 +634,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           if (!comparisonNudged && opts.requestChoice && index < maxSteps - 1) {
             comparisonNudged = true;
             draftStep = stepId;
-            convo.push({ role: "user", content: "[Vunemi check, not from the user] You compared multiple options in a plain text table. Call present_options now with 2 to 6 options, using only facts observed in this run. Give sourceUrl only for a page you actually read. Never infer a child fare from an adult fare. Wait for the user's selection; do not book anything." });
+            convo.push({ role: "user", content: "[Vunemi check, not from the user] You compared multiple options in a plain text table. Call present_options now with the 2 to 6 options you compared: a title each, and the facts as label and value. Use only what you already wrote or read in this run; give sourceUrl only for a page you actually read. Never infer a child fare from an adult fare. Wait for the user's selection; do not book anything." });
             continue;
           }
           // Priced options the user never got to pick from. Any other table is an answer as it stands.
@@ -1412,7 +1412,8 @@ export function asksForCards(goal: string): boolean {
 
 /** A researched product or travel comparison belongs in option cards. */
 export function comparesOptions(goal: string, text: string): boolean {
-  if (!/(?:uçuş|uçak|bilet|flight|ticket|laptop|otel|hotel|product|ürün|compare|comparison|karşılaştır|seçenek)/iu.test(goal)) return false;
+  // A request for cards answered with a table is a comparison whatever it is about.
+  if (!asksForCards(goal) && !/(?:uçuş|uçak|bilet|flight|ticket|laptop|otel|hotel|product|ürün|compare|comparison|karşılaştır|seçenek)/iu.test(goal)) return false;
   return comparisonTable(text);
 }
 

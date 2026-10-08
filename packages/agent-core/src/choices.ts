@@ -13,40 +13,67 @@ export interface ChoiceEvidence {
 
 const PRICE_LABEL = /^(?:(?:approx\.?|estimated|tahmini|yaklaşık)\s+)?(?:price|fiyat|ücret|fare|cost)(?:\s+(?:range|aralığı))?$/iu;
 
+/** Buttons the card holds. The model is told five; live it wrote out seven, and dropping two unsaid is worse than a longer row. */
+const MAX_OPTIONS = 8;
+
 /**
  * A question the model wrote out as a plain list instead of calling
- * ask_choice: 2 to 5 short list items with a question right before or
- * right after them. Live, the same request gave buttons once and a
- * numbered list the next time. An item that opens in bold gives only
- * that name to its button; its description stays in the text above. An
- * item that only says "something else" becomes the free answer the card
- * already allows.
+ * ask_choice: short list items with a question right before or right after
+ * them. Live, the same request gave buttons once and a numbered list the
+ * next time. An item that opens in bold gives only that name to its
+ * button; its description stays in the text above. An item that only says
+ * "something else" becomes the free answer the card already allows.
+ *
+ * A question after the list is taken as before: one short line, five
+ * options at most, since a list that ends in a question is as often an
+ * answer with an offer under it. A question before the list is the task
+ * asking, and measured live it came in more shapes than that: up to seven
+ * options, a lead-in between the question and the list ("For example:"),
+ * the lead-in on the question's own line, and a sentence or two after.
  */
 export function listChoiceInput(text: string): { question: string; options: string[]; allowOther: boolean } | null {
   const plain = (line: string): string => line.replace(/\*\*|__|`/g, "").trim();
   const asks = (line: string): boolean => /[?？]\s*$/.test(plain(line));
-  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
-  const item = /^(?:\d{1,2}[.)]|[-*•])\s+(.+)$/;
+  // "1.", "-", and the lettered "A)" or "**A)**" of a quiz.
+  const item = /^(?:\d{1,2}[.)]|[-*•]|(?:\*\*)?[A-Ha-h][.)](?:\*\*)?)\s+(.+)$/;
+  const lines: string[] = [];
+  for (const line of text.split("\n")) {
+    const said = line.trim();
+    if (!said) continue;
+    // An indented line under an item is the rest of that item.
+    if (/^(?: {2,}|\t)/.test(line) && !item.test(said) && lines.length > 0 && item.test(lines.at(-1)!)) continue;
+    lines.push(said);
+  }
   let end = lines.length;
-  // One line may follow the list: the question itself, or "or tell me your own".
-  const closing = end > 0 && !item.test(lines[end - 1]!) && lines[end - 1]!.length <= 120 ? lines[--end]! : null;
+  while (end > 0 && !item.test(lines[end - 1]!)) end--;
   let start = end;
   while (start > 0 && item.test(lines[start - 1]!)) start--;
-  if (end - start < 2 || end - start > 6) return null;
-  const before = start > 0 ? lines[start - 1]! : "";
-  const question = plain(closing && asks(closing) ? closing : asks(before) ? before : "");
-  if (!question || question.length > 200) return null;
+  const before = lines.slice(0, start);
+  const after = lines.slice(end);
+  if (end - start < 2) return null;
   // More than a sentence or two before the list is an answer, not a question.
-  if (lines.slice(0, start).join(" ").length > 300) return null;
+  if (before.join(" ").length > 300) return null;
+  const closes = after.length === 1 && after[0]!.length <= 120 && asks(after[0]!);
+  /** The question a line asks: all of it, or what comes before a lead-in such as "My options:". */
+  const asked = (line: string | undefined): string => {
+    if (!line) return "";
+    const said = plain(line);
+    return asks(said) ? said : /^(.*[?？])[^?？]{0,40}:$/.exec(said)?.[1] ?? "";
+  };
+  const above = before.at(-1);
+  const leadIn = above !== undefined && plain(above).length <= 60 && /:$/.test(plain(above));
+  const question = closes ? plain(after[0]!) : after.length <= 3 && after.join(" ").length <= 400 ? asked(above) || (leadIn ? asked(before.at(-2)) : "") : "";
+  if (!question || question.length > 200) return null;
   const label = (line: string): string => {
     const body = item.exec(line)![1]!;
     const bold = /^(?:\*\*|__)(.+?)(?:\*\*|__)/.exec(body);
-    return plain(bold ? bold[1]! : body);
+    return plain(bold ? bold[1]! : body).replace(/\s*:$/, "");
   };
   const all = lines.slice(start, end).map(label);
-  const other = /^(?:something else|other|another|none of these|başka(?: bir şey)?|diğer|hiçbiri)\b/iu;
-  const options = all.filter((option) => !other.test(option));
-  if (options.length < 2 || options.length > 5 || options.some((option) => !option || option.length > 80) || new Set(options).size !== options.length) return null;
+  // "🤖 Other" is still the other.
+  const other = /^(?:something else|other|another|none of these|not sure|başka(?: bir (?:şey|tür))?|diğer|hiçbiri|emin değilim)\b/iu;
+  const options = all.filter((option) => !other.test(option.replace(/^[^\p{L}\p{N}]+/u, "")));
+  if (options.length < 2 || options.length > (closes ? 5 : MAX_OPTIONS) || options.some((option) => !option || option.length > 80) || new Set(options).size !== options.length) return null;
   return { question, options, allowOther: true };
 }
 
@@ -92,8 +119,10 @@ export function tableChoiceInput(text: string, goal = ""): { items: { title: str
   const table = firstTable(text);
   if (!table) return null;
   const bare = (cell: string): string => cell.replace(/\*\*|__|`/g, "").trim();
-  const headers = table.headers.map(bare);
-  const rows = table.rows.map((row) => row.map(bare));
+  // A column that only counts the rows ("#", 1, 2, 3) names nothing.
+  const counted = /^(?:#|no\.?|№)$/i.test(bare(table.headers[0]!)) && table.headers.length > 2 && table.rows.every((row, at) => bare(row[0]!) === String(at + 1));
+  const headers = table.headers.slice(counted ? 1 : 0).map(bare);
+  const rows = table.rows.map((row) => row.slice(counted ? 1 : 0).map(bare));
   const distinct = (names: string[]): boolean => names.every(Boolean) && new Set(names).size === names.length;
   const asked = goal.toLocaleLowerCase();
   const named = (names: string[]): boolean => names.filter((name) => asked.includes(name.toLocaleLowerCase())).length >= 2;
@@ -239,8 +268,8 @@ export function prepareChoice(name: string, input: unknown, evidence: ChoiceEvid
   if (!args) return { error: "Expected a JSON object." };
   if (name === "ask_choice") {
     const question = string(args.question, 200);
-    const options = Array.isArray(args.options) ? args.options.slice(0, 5).map((value) => string(value, 80)).filter(Boolean) : [];
-    if (!question || options.length < 2 || new Set(options).size !== options.length) return { error: "Give a question and 2 to 5 distinct nonempty choices." };
+    const options = Array.isArray(args.options) ? args.options.slice(0, MAX_OPTIONS).map((value) => string(value, 80)).filter(Boolean) : [];
+    if (!question || options.length < 2 || new Set(options).size !== options.length) return { error: `Give a question and 2 to ${MAX_OPTIONS} distinct nonempty choices.` };
     return { card: { kind: "choice", question, options, allowOther: args.allowOther !== false } };
   }
   if (name !== "present_options") return { error: "Unknown choice tool." };

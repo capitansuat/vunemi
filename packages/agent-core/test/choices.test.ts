@@ -32,14 +32,17 @@ describe("choice card data", () => {
     expect(listChoiceInput("Which one?\n1. Ramen")).toBeNull();
     expect(listChoiceInput(`Which one?\n1. ${"a".repeat(90)}\n2. b`)).toBeNull();
     expect(listChoiceInput(`${"I looked into it. ".repeat(20)}\nWhich one?\n1. Ramen\n2. Tacos`)).toBeNull();
-    expect(listChoiceInput("Which one?\n1. a\n2. b\n3. c\n4. d\n5. e\n6. f")).toBeNull();
+    expect(listChoiceInput("Which one?\n1. a\n2. b\n3. c\n4. d\n5. e\n6. f\n7. g\n8. h\n9. i")).toBeNull();
+    // After the list, a question is as often an offer under an answer: five at most, and one short line.
+    expect(listChoiceInput("1. a\n2. b\n3. c\n4. d\n5. e\n6. f\nWhich one?")).toBeNull();
+    expect(listChoiceInput(`1. Ramen\n2. Tacos\nWould you like more on either? ${"I can go deeper. ".repeat(8)}`)).toBeNull();
   });
 
   it("bounds content and rejects incomplete choices", () => {
     expect(prepareChoice("ask_choice", { question: "?", options: ["one"] }, evidence)).toHaveProperty("error");
-    const result = prepareChoice("ask_choice", { question: "Q".repeat(210), options: ["A".repeat(90), "B", "C", "D", "E", "F"] }, evidence);
+    const result = prepareChoice("ask_choice", { question: "Q".repeat(210), options: ["A".repeat(90), "B", "C", "D", "E", "F", "G", "H", "I", "J"] }, evidence);
     expect("card" in result && result.card.kind === "choice" && result.card.question.length).toBe(200);
-    expect("card" in result && result.card.kind === "choice" && result.card.options).toHaveLength(5);
+    expect("card" in result && result.card.kind === "choice" && result.card.options).toHaveLength(8);
   });
 
   it("says so when nothing was read, instead of marking every value as not found", () => {
@@ -238,6 +241,21 @@ describe("choice run", () => {
     expect(events.filter((event) => event.type === "choice.asked")).toMatchObject([{ card: { kind: "options", items: [{ title: "13-inch" }, { title: "15-inch" }] } }]);
   });
 
+  it("makes cards from a priced table that numbers its rows, when the request asked for cards", async () => {
+    const table = "| # | Title | Price | Use |\n|---|---|---|---|\n| 1 | **Dutch oven** | £130 | Stews |\n| 2 | Knife | £90 | Daily |";
+    expect(tableChoiceInput(table)?.items).toEqual([
+      { title: "Dutch oven", price: "£130", facts: [{ label: "Use", value: "Stews" }] },
+      { title: "Knife", price: "£90", facts: [{ label: "Use", value: "Daily" }] },
+    ]);
+    const { chat, seen } = model([{ text: table }, { text: "The Dutch oven it is." }]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    await runAgent({ goal: "Two gift ideas for a cook as option cards", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(seen).toHaveLength(2);
+    expect(events.filter((event) => event.type === "choice.asked")).toMatchObject([{ card: { kind: "options", items: [{ title: "Dutch oven" }, { title: "Knife" }] } }]);
+  });
+
   it("tells which way round a table runs from the request, and asks the model when nothing says", async () => {
     const byColumn = "| | Tea | Coffee |\n|---|---|---|\n| Caffeine | Less | More |\n| Taste | Mild | Strong |";
     expect(tableChoiceInput(byColumn)?.items.map((item) => item.title)).toEqual(["Tea", "Coffee"]);
@@ -265,6 +283,22 @@ describe("choice run", () => {
     expect(result).toMatchObject({ status: "done", detail: features });
   });
 
+  it("takes a question before its list in the shapes the model wrote it", () => {
+    // Seven options, the lead-in on the question's own line, an "other" behind an emoji.
+    expect(listChoiceInput("Hangi tür kitaplar ilgini çeker? Seçeneklerim:\n\n- Roman\n- Bilim kurgu\n- Gizem\n- Tarih\n- Felsefe\n- Mizah\n- Şiir\n- 🤖 Başka bir tür"))
+      .toEqual({ question: "Hangi tür kitaplar ilgini çeker?", options: ["Roman", "Bilim kurgu", "Gizem", "Tarih", "Felsefe", "Mizah", "Şiir"], allowOther: true });
+    // A lead-in between the question and the list, and a sentence after it.
+    expect(listChoiceInput("Önce sorayım: **Bütçeniz ne kadar?**\n\nÖrneğin:\n- 100₺ – 500₺\n- 500₺ – 1.000₺\n\nYa da tam bir rakam yazabilirsiniz. Sonra ilgi alanlarına göre öneririm."))
+      .toEqual({ question: "Önce sorayım: Bütçeniz ne kadar?", options: ["100₺ – 500₺", "500₺ – 1.000₺"], allowOther: true });
+    // Each option explained under it, its name ending in a colon.
+    expect(listChoiceInput("Evde mi, apartmanda mı yaşıyorsun?\n\nNeden önemli:\n\n- **Evde:** daha geniş alan\n  bahçe de olabilir\n- **Apartmanda:** alan kısıtlı")?.options).toEqual(["Evde", "Apartmanda"]);
+    // Lettered like a quiz.
+    expect(listChoiceInput("Şu an nasıl bir ruh halindesin?\n\n**A)** Rahatlamak istiyorum\n**B)** Heyecan arıyorum\nC) Düşünmek istiyorum")?.options).toEqual(["Rahatlamak istiyorum", "Heyecan arıyorum", "Düşünmek istiyorum"]);
+    // A page of text after the list is an answer going on, not a question.
+    expect(listChoiceInput(`Which one?\n- Ramen\n- Tacos\n${"Here is more about each of them. ".repeat(15)}`)).toBeNull();
+    expect(listChoiceInput("The benefits are:\n- Health\n- Mood\n\nWalking is easy to start.")).toBeNull();
+  });
+
   it("knows a turn that is only a short question", () => {
     expect(bareQuestion("Sure! What kind of cuisine would you like for your dinner?")).toBe(true);
     expect(bareQuestion("Merhaba!\n\nNe kadarlık bir hediye düşünüyorsun?")).toBe(true);
@@ -284,7 +318,7 @@ describe("choice run", () => {
     const events: AgentEvent[] = [];
     const result = await runAgent({ goal: "A dinner recipe; ask me the cuisine first", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
     expect(result.status).toBe("done");
-    expect(seen[1]!.messages.at(-1)!.content).toContain("question in plain text");
+    expect(seen[1]!.messages.at(-1)!.content).toContain("ask it with ask_choice");
     // The buttons stand in for the question written before them.
     const first = events.find((event) => event.type === "step.started");
     const asked = events.find((event) => event.type === "choice.asked");

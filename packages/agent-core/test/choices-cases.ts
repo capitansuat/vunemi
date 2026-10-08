@@ -40,6 +40,9 @@ export const CHOICE_CASES: ChoiceCase[] = [
   // The answer is itself a short question.
   { id: "translate-q-en", want: "none", goal: "Translate into German: where is the station?" },
   { id: "riddle-tr", want: "none", goal: "Bana bir bilmece sor" },
+  // The answer is likely a list, with a question near it.
+  { id: "remote-en", want: "none", goal: "What are the pros and cons of working from home?" },
+  { id: "tea-coffee-tr", want: "none", goal: "Kahve mi çay mı daha sağlıklı, kısaca açıkla" },
 
   // Held out.
   { id: "h-sport-en", want: "buttons", holdout: true, goal: "Recommend a sport for me to take up. First ask whether I prefer team or solo sports" },
@@ -52,4 +55,6 @@ export const CHOICE_CASES: ChoiceCase[] = [
   { id: "h-steps-tr", want: "none", holdout: true, goal: "Çay demlemenin adımlarını sırala" },
   { id: "h-tips-en", want: "none", holdout: true, goal: "Give me four tips for better sleep" },
   { id: "h-slogan-en", want: "none", holdout: true, goal: "Write a one-line slogan for a bakery, phrased as a question" },
+  { id: "h-interview-en", want: "none", holdout: true, goal: "Give me five questions to ask in a job interview" },
+  { id: "h-packing-tr", want: "none", holdout: true, goal: "Kış tatili için bavula ne koymalıyım?" },
 ];
