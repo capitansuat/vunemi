@@ -64,6 +64,7 @@ export default {
       { title: "Zeig ihm ein Bild", body: "Häng einen Screenshot oder ein Foto an. Modelle, die Bilder sehen können, beschreiben es; bei anderen liest Vunemi den Text darin trotzdem auf deinem Mac.", example: "Was bedeutet der Fehler in diesem Screenshot?" },
       { title: "Merkt sich, was du sagst", body: "Sag, wie du gern arbeitest oder wer wer ist, und Vunemi notiert es in deinen Worten, sobald du zustimmst. Jede Antwort zeigt, welche Notizen sie bekam; in den Einstellungen kannst du sie bearbeiten oder löschen.", example: "Merk dir: Berichte bitte als PDF." },
       { title: "Besprechung aufzeichnen", body: "Mit Aufnahme werden Mikrofon und Mac-Ton erfasst. Vunemi erstellt Transkript und Zusammenfassung auf diesem Mac; nach erfolgreicher Zusammenfassung wandert das Audio in den Papierkorb. Erfordert macOS 14.2 oder neuer.", example: "Diese Besprechung aufzeichnen." },
+      { title: "Frühere Arbeit dazuholen", body: "Tippe @ und wähle eine frühere Sitzung oder eine Besprechung. Ihre Fragen und Antworten oder die Zusammenfassung der Besprechung gehen mit deiner Nachricht mit; bis zu fünf auf einmal.", example: "Welches Hotel haben wir in @Rom-Reise ausgewählt?" },
     ],
   },
   screens: {
@@ -74,6 +75,7 @@ export default {
       home: "Starte eine Aufgabe mit deinen eigenen Worten",
       plan: "Prüfe den Plan, bevor etwas passiert",
       browser: "Liest eine Webseite in seinem eigenen Browser und antwortet",
+      mention: "Mit @ eine frühere Sitzung oder Besprechung in die Nachricht holen",
       permissions: "Bestimme, wann Vunemi vorher fragt",
       connections: "Jede Verbindung ist anfangs aus",
       scheduled: "Geplante Aufgaben, die nur lesen",

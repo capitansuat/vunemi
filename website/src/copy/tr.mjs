@@ -64,6 +64,7 @@ export default {
       { title: "Bir resim göster", body: "Ekran görüntüsü veya fotoğraf ekle. Görsel görebilen modeller onu anlatır; diğer modellerde de Vunemi içindeki yazıyı Mac'inde okur.", example: "Bu ekran görüntüsündeki hata ne anlama geliyor?" },
       { title: "Söylediklerini hatırlar", body: "Nasıl çalışmayı sevdiğini ya da kimin kim olduğunu söyle; onay verdiğinde bunu kendi sözlerinle not eder. Her yanıt hangi notların verildiğini gösterir; notları Ayarlar'da düzenleyip silebilirsin.", example: "Hatırla: raporları PDF olarak isterim." },
       { title: "Toplantıyı kaydet", body: "Kaydet düğmesi mikrofonunu ve Mac sesini kaydeder. Vunemi dökümü ve özeti bu Mac’te oluşturur; özet başarıyla tamamlanınca ses dosyalarını Çöp’e taşır. macOS 14.2 veya sonrası gerekir.", example: "Bu toplantıyı kaydet." },
+      { title: "Önceki işi getir", body: "@ yazıp önceki bir oturumu ya da toplantıyı seç. Oturumun soruları ve yanıtları ya da toplantının özeti mesajınla birlikte gider; bir mesaja en çok beş tane.", example: "@Roma gezisi'nde hangi oteli seçmiştik?" },
     ],
   },
   screens: {
@@ -74,6 +75,7 @@ export default {
       home: "Bir görevi kendi kelimelerinle başlat",
       plan: "Bir şey olmadan önce planı gör",
       browser: "Kendi tarayıcısında bir sayfayı okur ve yanıtlar",
+      mention: "@ ile önceki bir oturumu ya da toplantıyı mesaja getir",
       permissions: "Vunemi'nin ne zaman önce soracağını seç",
       connections: "Her bağlantı kapalı başlar",
       scheduled: "Sadece okuyan zamanlanmış işler",

@@ -13,7 +13,8 @@ src = site / "assets/screenshots"
 out = site / "public"
 app = site.parent
 shots = ["01-home", "02-permissions", "03-connections", "05-vault",
-         "06-scheduled-tasks", "07-model", "08-browser", "09-plan-card"]
+         "06-scheduled-tasks", "07-model", "08-browser", "09-plan-card",
+         "10-mention"]
 
 (out / "screenshots").mkdir(parents=True, exist_ok=True)
 for name in shots:

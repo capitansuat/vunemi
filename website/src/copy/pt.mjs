@@ -64,6 +64,7 @@ export default {
       { title: "Mostre uma imagem", body: "Anexe uma captura de tela ou foto. Modelos que enxergam imagens a descrevem; com outros modelos, o Vunemi ainda lê o texto dela no seu Mac.", example: "O que significa o erro nesta captura de tela?" },
       { title: "Lembra o que você diz", body: "Diga como você gosta de trabalhar, ou quem é quem, e ele anota com suas próprias palavras depois que você aprova. Cada resposta mostra quais notas recebeu; edite ou apague em Ajustes.", example: "Lembre: quero os relatórios em PDF." },
       { title: "Gravar uma reunião", body: "Clique em Gravar para captar o microfone e o som do Mac. O Vunemi cria a transcrição e o resumo neste Mac; após concluir o resumo, move o áudio para o Lixo. Requer macOS 14.2 ou posterior.", example: "Gravar esta reunião." },
+      { title: "Traga trabalho anterior", body: "Digite @ e escolha uma sessão anterior ou uma reunião. As perguntas e respostas dela, ou o resumo da reunião, vão junto com a sua mensagem; até cinco por vez.", example: "Qual hotel escolhemos em @Viagem a Roma?" },
     ],
   },
   screens: {
@@ -74,6 +75,7 @@ export default {
       home: "Comece uma tarefa com suas próprias palavras",
       plan: "Confira o plano antes que algo aconteça",
       browser: "Lê uma página no próprio navegador e responde",
+      mention: "Traga uma sessão anterior ou uma reunião para a mensagem com @",
       permissions: "Escolha quando o Vunemi pergunta antes",
       connections: "Toda conexão começa desligada",
       scheduled: "Tarefas agendadas que só leem",

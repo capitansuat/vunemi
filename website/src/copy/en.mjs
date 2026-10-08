@@ -66,6 +66,7 @@ export default {
       { title: "Show it a picture", body: "Attach a screenshot or a photo. Models that can see images describe them; with other models, Vunemi still reads the text in them on your Mac.", example: "What does the error in this screenshot mean?" },
       { title: "Remembers what you tell it", body: "Tell it how you like to work, or who is who, and it keeps a note in your own words once you say yes. Each answer says which notes it was given; edit or delete them in Settings.", example: "Remember: I want reports as PDF." },
       { title: "Record a meeting", body: "Press Record to capture your microphone and the sound from your Mac. Vunemi writes a transcript and summary on this Mac; after a successful summary, it moves the audio to the Trash. Requires macOS 14.2 or later.", example: "Record this meeting." },
+      { title: "Bring in earlier work", body: "Type @ to pick an earlier session or a meeting. Its questions and answers, or the meeting's summary, go with your message; up to five at a time.", example: "Which hotel did we choose in @Rome trip?" },
     ],
   },
   screens: {
@@ -76,6 +77,7 @@ export default {
       home: "Start a task in your own words",
       plan: "Check the plan before anything happens",
       browser: "Reads a web page and answers, in its own browser",
+      mention: "Bring an earlier session or meeting into a message with @",
       permissions: "Choose when Vunemi asks first",
       connections: "Every connection starts switched off",
       scheduled: "Scheduled tasks that only read",

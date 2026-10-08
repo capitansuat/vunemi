@@ -17,7 +17,7 @@ export const pagePath = (lang, page) => `/${lang}/${paths[page]}`;
 
 // Screenshots shown on the site, in gallery order; captions come from copy.screens.captions.
 const shots = [
-  ["plan", "09-plan-card.png"], ["browser", "08-browser.png"], ["home", "01-home.png"], ["permissions", "02-permissions.png"],
+  ["plan", "09-plan-card.png"], ["browser", "08-browser.png"], ["mention", "10-mention.png"], ["home", "01-home.png"], ["permissions", "02-permissions.png"],
   ["connections", "03-connections.png"], ["scheduled", "06-scheduled-tasks.png"], ["vault", "05-vault.png"], ["model", "07-model.png"],
 ];
 export const shotFiles = shots.map(([, file]) => file);
@@ -33,6 +33,7 @@ const icons = [
   '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 8"/>',
   '<path d="M12 20c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8Z"/><path d="M9 9h6M9 12h6M9 15h4"/>',
   '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>',
+  '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>',
 ];
 const svg = (paths, size = 24) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 const lockIcon = '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>';
