@@ -28,16 +28,23 @@ const LIMITS = {
   tool: 800,
   /** One connection's instructions (largest 1,999, apps). */
   guide: 2_000,
-  /** System prompt, every connection's instructions and every tool shown, all switched on (39,037 with ask_choice and present_options). */
-  total: 39_100,
+  /**
+   * System prompt, every connection's instructions and every tool shown, all
+   * switched on (40,045; 39,037 before the History connection, which is off
+   * until the user switches it on).
+   */
+  total: 40_100,
   /**
    * With areas: a conversation's first prompt with one area picked, the
    * largest (13,171, browser). Was 11,743 before the browser's rule on
    * handing sign-in and passenger forms to the user grew in 0.1.9, and
    * 12,025 before ask_choice and present_options, which every
-   * conversation lists (about 280 tokens).
+   * conversation lists (about 280 tokens), and 13,171 before the History
+   * connection: switched on, its two tools and its guide are in every
+   * conversation (about 300 tokens), since a request at any point of one may
+   * come with lines that name an earlier conversation to open.
    */
-  oneArea: 13_200,
+  oneArea: 14_300,
 };
 
 async function compose() {
@@ -46,8 +53,11 @@ async function compose() {
   const { ScriptableCatalog } = await import("@vunemi/apps");
   const { buildConnectors } = await import("../../src/main/connectors.js");
   const { AutomationStore } = await import("../../src/main/automations.js");
+  const { Library } = await import("../../src/main/library/library.js");
+  const { LibraryStore } = await import("../../src/main/library/store.js");
   const dir = mkdtempSync(join(tmpdir(), "vunemi-budget-"));
   const tools = new ToolRegistry();
+  const sources = { conversations: () => [], conversation: () => null, meetings: () => [], meeting: () => null };
   // As in main: tools that read long output kept whole.
   for (const tool of keptOutputTools(new KeptOutputs())) tools.register(tool);
   for (const tool of choiceTools()) tools.register(tool);
@@ -55,7 +65,10 @@ async function compose() {
     tools, browser: {} as never, roots: { list: () => [] } as never, appCatalog: new ScriptableCatalog(join(dir, "apps")),
     shadowDir: join(dir, "shadow"), helper: {} as never, shotDir: join(dir, "shots"),
     automations: new AutomationStore(join(dir, "automations.json")), mailAccounts: [],
+    library: { library: new Library(new LibraryStore(dir), sources), sources, current: () => "" },
   });
+  // Off until the user switches it on, and then its two tools are there.
+  const history = { offAtFirst: !connectors.isOn("history"), hiddenWhileOff: tools.get("library_open") === undefined };
   // Everything switched on: the most a user can carry.
   for (const view of await connectors.list()) {
     connectors.setOn(view.id, true);
@@ -70,18 +83,19 @@ async function compose() {
   const specs = shown.map((s) => ({ name: s.name, chars: JSON.stringify(s).length }));
   const onDemand = toolSpecsOf(tools).filter((s) => !shown.some((x) => x.name === s.name)).map((s) => ({ name: s.name, chars: JSON.stringify(s).length }));
   const instructions = connectors.instructions().length;
-  // As a conversation starts with areas: built-in tools, automation_create,
-  // and one picked area; each area tried, the largest kept.
+  // As a conversation starts with areas: built-in tools, the few every
+  // conversation lists, and one picked area; each area tried, the largest kept.
   const areas = toolAreas(connectors.reachable());
+  const always = new Set(areas.flatMap((a) => a.alwaysShown ?? []));
   const shared = connectors.instructions({ guides: false });
   const listedFor = (area: string) => {
-    const names = new Set(shown.filter((s) => { const def = tools.getAny(s.name); const a = def ? areaOf(tools, def) : undefined; return a === undefined || a === area || s.name === "automation_create"; }).map((s) => s.name));
+    const names = new Set(shown.filter((s) => { const def = tools.getAny(s.name); const a = def ? areaOf(tools, def) : undefined; return a === undefined || a === area || always.has(s.name); }).map((s) => s.name));
     const r = listedRequest(tools, areas, names, shared);
     return { area, chars: r.system.length + JSON.stringify(r.tools).length };
   };
   const perArea = areas.filter((a) => a.routed !== false).map((a) => listedFor(a.id)).sort((a, b) => b.chars - a.chars);
   const none = listedFor("");
-  return { perArea, none, core: SYSTEM_PROMPT.length, guides, specs, onDemand, instructions, total: SYSTEM_PROMPT.length + instructions + specs.reduce((n, s) => n + s.chars, 0) };
+  return { history, always: [...always].sort(), shownWhenOn: tools.get("library_open") !== undefined, perArea, none, core: SYSTEM_PROMPT.length, guides, specs, onDemand, instructions, total: SYSTEM_PROMPT.length + instructions + specs.reduce((n, s) => n + s.chars, 0) };
 }
 
 describe("prompt budget", async () => {
@@ -98,6 +112,12 @@ describe("prompt budget", async () => {
     ];
     process.stdout.write(`\n${lines.join("\n")}\n`);
   }
+
+  it("offers earlier conversations and meetings only once the user switched that on", () => {
+    expect(c.history).toEqual({ offAtFirst: true, hiddenWhileOff: true });
+    expect(c.shownWhenOn).toBe(true);
+    expect(c.always).toEqual(["automation_create", "library_open", "library_search"]);
+  });
 
   it("keeps the system prompt within its budget", () => {
     expect(c.core).toBeLessThanOrEqual(LIMITS.core);

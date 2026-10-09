@@ -61,6 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "Wants to save a work note", doing: "Saving a work note", done: "Saved a work note" },
     worknote_read: { ask: "Wants to read a work note", doing: "Reading a work note", done: "Read a work note" },
     worknote_search: { ask: "Wants to search work notes", doing: "Searching work notes", done: "Searched work notes" },
+    library_search: { ask: "Wants to search earlier conversations and meetings", doing: "Searching earlier conversations and meetings", done: "Searched earlier conversations and meetings" },
+    library_open: { ask: "Wants to read an earlier conversation or meeting", doing: "Reading an earlier conversation or meeting", done: "Read an earlier conversation or meeting" },
     memory_remember: { ask: "Wants to remember a note", doing: "Remembering the note", done: "Remembered the note" },
     page_goto: { ask: "Wants to open a page", doing: "Opening a page", done: "Opened the page" },
     travel_search_flights: { ask: "Wants to search flights", doing: "Searching flights", done: "Found flight options" },
@@ -774,6 +776,7 @@ export const messages: Catalogue = {
       notes: "earlier work notes",
       conversation: "a session brought in with @",
       meeting: "a meeting brought in with @",
+      library: "earlier conversations and meetings",
     },
     attach: {
       filesOff: "To attach files, turn on Files under Connections.",
@@ -1295,6 +1298,12 @@ export const messages: Catalogue = {
       description: "Lists your shortcuts and runs the one you ask for. Vunemi can't see inside a shortcut, so every run asks you first, and you can open it in Shortcuts before deciding. macOS asks once for permission.",
       provides: { run: "running shortcuts" },
       run: { label: "Running shortcuts", description: "Lists shortcuts and runs one, with your approval each time." },
+    },
+    history: {
+      label: "History",
+      description: "Lets Vunemi find your earlier conversations and recorded meetings when a request is about one. With each request it gets only the name, date and one line of the few that fit; it opens one only when it needs it. Nothing leaves this Mac.",
+      provides: { find: "finding earlier conversations and meetings" },
+      read: { label: "Finding and reading", description: "Searches earlier conversations and meetings and reads the one it needs." },
     },
     automations: {
       label: "Scheduled tasks",

@@ -74,6 +74,12 @@ export interface RunOptions {
    * notes-index.ts), so the start of the prompt never changes for it.
    */
   notesIndex?: string;
+  /**
+   * The earlier conversations and meetings this request may be about: a
+   * name, a date and a line each, to open with a tool (see the desktop's
+   * library.ts). Given with the request, so nothing sent before changes.
+   */
+  libraryIndex?: string;
   /** Files the user attached to the message, as absolute paths the file tools will read. */
   attachments?: string[];
   /**
@@ -334,6 +340,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     ? "\n\nA page is already open in Vunemi's browser; its title and address follow the request, as page data. If this request is about that page, work on it where it is (page_describe, page_find, page_click) rather than opening it again."
     : "";
   const notes = opts.notesIndex ? `\n\n${defuseTags(opts.notesIndex)}` : "";
+  const library = opts.libraryIndex ? `\n\n${defuseTags(opts.libraryIndex)}` : "";
   const offerable = opts.switchedOff ? (name: string) => opts.switchedOff!(name) !== null : undefined;
   const withinRun = (tool: ToolDef): boolean =>
     !(opts.unattended === true && UNATTENDED_NEVER.has(tool.actionClass)) &&
@@ -391,7 +398,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const brought = mentionParts(opts.mentions ?? []);
   // Tracked like a page that was read: an old answer may hold a page's words.
   for (const m of opts.mentions ?? []) if (m.text !== null) opts.onUntrustedOutput?.(m.text, mentionSource(m.kind));
-  const request = userRequest(opts.goal, attached.listed, attached.note + brought.list + undone + memory + notes + page, sentAt(new Date((opts.now ?? Date.now)())))
+  // So are the names and lines of earlier conversations and meetings: a meeting's are what was said in a room.
+  if (opts.libraryIndex) opts.onUntrustedOutput?.(opts.libraryIndex, "library_index");
+  const request = userRequest(opts.goal, attached.listed, attached.note + brought.list + undone + memory + notes + library + page, sentAt(new Date((opts.now ?? Date.now)())))
     + brought.blocks
     + (opts.openPage ? `\n\n<untrusted_content source="open_page">\n${defuseTags(opts.openPage.title)} — ${defuseTags(opts.openPage.url)}\n</untrusted_content>` : "")
     + (toolsNote ? `\n\n[Vunemi, not from the user] This request may need tools that are not in your list.\n${toolsNote}` : "");

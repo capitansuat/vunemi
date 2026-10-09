@@ -64,6 +64,8 @@ import { supportUrl } from "./support.js";
 import { createNoteTools, noteWhere } from "./work/notes-tools.js";
 import { ArchivedOutputs } from "./work/outputs.js";
 import { notesIndex } from "./work/notes-index.js";
+import { Library, type LibrarySources } from "./library/library.js";
+import { LibraryStore } from "./library/store.js";
 import { conversationScope, openWorkStore, projectScope } from "./work/store.js";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -396,8 +398,21 @@ const appCatalog = new ScriptableCatalog(join(app.getPath("userData"), "apps"));
 // Tasks the user scheduled from chat (see automations.ts).
 const automations = new AutomationStore(join(app.getPath("userData"), "automations.json"));
 
+// Earlier conversations and meetings, for the model to find when the user has
+// switched that on (see library/library.ts). The stores it reads are made further down.
+const librarySources: LibrarySources = {
+  conversations: () => conversations.list(),
+  conversation: (id) => conversations.peek(id),
+  meetings: () => meetingStore.list(),
+  meeting: (id) => meetingStore.get(id),
+};
+const library = new Library(new LibraryStore(app.getPath("userData")), librarySources, meaning);
+/** Meetings are read from disk to be indexed: once, and again after one changed. */
+let meetingsIndexed = false;
+
 const connectors = buildConnectors({
   automations,
+  library: { library, sources: librarySources, current: () => conversations.currentId },
   tools,
   browser,
   roots,
@@ -660,6 +675,12 @@ const session: AgentSession = new AgentSession({
     return refs.map((ref, i) => ({ ...ref, date: new Date(read[i]?.at ?? Date.now()).toISOString().slice(0, 10), text: texts[i] ?? null }));
   },
   notesIndex: () => (work ? notesIndex(work, currentProject()?.id) : null),
+  libraryIndex: async (goal, given) => {
+    if (!connectors.isOn("history")) return null;
+    library.sync({ meetings: !meetingsIndexed });
+    meetingsIndexed = true;
+    return library.index(goal, new Set([...given, conversations.currentId]));
+  },
   afterRun: ({ runId, model, words }) => {
     const conversation = conversations.currentId;
     void propose({ model, messages: words, store: memory, meaning, signal: AbortSignal.timeout(120_000), sessionId: conversation })
@@ -680,6 +701,7 @@ function sourceOf(tool: string): string {
   if (tool.startsWith("worknote_")) return t("main.source.notes");
   if (tool === "mentioned_conversation") return t("main.source.conversation");
   if (tool === "mentioned_meeting") return t("main.source.meeting");
+  if (tool.startsWith("library_")) return t("main.source.library");
   if (!tool.startsWith("page_") && !tool.startsWith("tabs_")) return tool;
   const url = embedded.state.tabs.find((t) => t.id === embedded.state.activeId)?.url;
   try {
@@ -988,6 +1010,7 @@ function forgetConversation(id: string): SessionList {
   if (current) switchConversation([]);
   conversations.remove(id);
   work?.forgetConversation(id);
+  library.forget(id);
   return listAfterSwitch();
 }
 
@@ -1163,6 +1186,7 @@ const meetings: MeetingService = new MeetingService({
   words: meetingWords,
   blocked: (): MeetingBlock | null => (!tapsSupported() ? "macos" : !recorder.available() ? "recorder" : !voice.status().canHear ? "voice" : null),
   onChange: (status) => {
+    meetingsIndexed = false;
     presence.setRecording(status.recording ? () => void meetings.stop(meetingModel) : null);
     send(CH.meetingsChanged, meetingStatusView(status));
   },
@@ -1249,10 +1273,14 @@ handle(CH.meetingsRecover, (_e, model: unknown) => {
 });
 handle(CH.meetingsRename, (_e, id: unknown, title: unknown) => {
   if (typeof id === "string" && typeof title === "string") meetings.rename(id, title);
+  meetingsIndexed = false;
   return meetingList();
 });
 handle(CH.meetingsDelete, async (_e, id: unknown) => {
-  if (typeof id === "string" && meetings.status().recording?.id !== id) await meetingStore.remove(id);
+  if (typeof id === "string" && meetings.status().recording?.id !== id) {
+    await meetingStore.remove(id);
+    library.forget(id);
+  }
   return meetingList();
 });
 handle(CH.meetingsExport, async (_e, id: unknown) => {
@@ -1338,6 +1366,7 @@ handle(CH.forgetEverything, async () => {
   await artefacts.clear();
   await vault.clear();
   memory.clear();
+  library.clear();
   work?.clear();
   proposals.clear();
   settings.reset();

@@ -30,6 +30,7 @@ import { renderOfficePdf } from "./office-pdf.js";
 import { travelConnectors } from "./travel.js";
 import type { FetchPage } from "./flights/search.js";
 import { AUTOMATION_INSTRUCTIONS, createAutomationTools, type AutomationStore } from "./automations.js";
+import { createLibraryTools, LIBRARY_INSTRUCTIONS, type LibraryToolsOptions } from "./library/tools.js";
 import { authorizeOutlook, OUTLOOK_TOKEN_TARGET, outlookAddress } from "./outlook-oauth.js";
 import { authorizeGoogle, GOOGLE_TOKEN_TARGET, googleAddress } from "./google-oauth.js";
 import { OAUTH_CLIENTS, type OAuthClients } from "./oauth-clients.js";
@@ -63,6 +64,8 @@ export interface CatalogueOptions {
   oauthClients?: OAuthClients;
   /** Scheduled tasks; without it the connection is not offered. */
   automations?: AutomationStore;
+  /** Earlier conversations and meetings; without it the connection is not offered. */
+  library?: LibraryToolsOptions;
   /** Replaced in tests: the osascript the Mail app accounts run through. */
   osascript?: string;
   /** Country from macOS regional settings, independent of conversation language. */
@@ -209,6 +212,24 @@ function automationsConnector(store: AutomationStore): Connector {
   };
 }
 
+/** Off until the user switches it on: until then no earlier conversation or meeting reaches the model. */
+function historyConnector(library: LibraryToolsOptions): Connector {
+  return {
+    id: "history",
+    get label() { return t("connectors.history.label"); },
+    group: "computer",
+    get description() { return t("connectors.history.description"); },
+    get provides() { return [t("connectors.history.provides.find")]; },
+    capabilities: [part("connectors.history.read", { id: "read", tools: ["library_search", "library_open"], defaultOn: true })],
+    needs: { kind: "none" },
+    defaultOn: false,
+    origin: "builtin",
+    instructions: LIBRARY_INSTRUCTIONS,
+    status: async () => ({ state: "ready" }),
+    tools: () => createLibraryTools(library),
+  };
+}
+
 export function buildConnectors(opts: CatalogueOptions): Connectors {
   const connectors = new Connectors({
     tools: opts.tools,
@@ -318,6 +339,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
     shortcutsConnector(),
 
     ...(opts.automations ? [automationsConnector(opts.automations)] : []),
+    ...(opts.library ? [historyConnector(opts.library)] : []),
 
     {
       id: "calendar",

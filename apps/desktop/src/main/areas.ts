@@ -14,11 +14,24 @@ const SUMMARIES: Record<string, string> = {
   apps: "Apple Notes, the Finder selection, and other Mac apps: music, messages, contacts, photos, Word, Excel, PowerPoint",
   shortcuts: "the user's own Shortcuts",
   automations: "tasks that run later or repeatedly on a schedule",
+  history: "the user's earlier conversations with you and their recorded meetings",
   calendar: "the user's calendar events",
   reminders: "the user's reminders",
   mail: "the user's mailbox: find, read, draft, send, organize emails",
   "travel-flights": "flight search",
   "travel-hotels": "hotel search",
+};
+
+/**
+ * Tools listed in every conversation, whichever areas its first request
+ * needed. A schedule is asked for in passing ("every morning, summarise…"),
+ * so the one tool that sets it up is always there. So are the two that read
+ * earlier conversations and meetings: a request is given lines that name
+ * them at any point of a conversation, to be opened in one call.
+ */
+const ALWAYS_SHOWN: Record<string, string[]> = {
+  automations: ["automation_create"],
+  history: ["library_search", "library_open"],
 };
 
 export function toolAreas(connections: readonly { id: string; label: string; instructions?: string }[], groups: readonly AppGroup[] = APP_GROUPS): ToolArea[] {
@@ -27,9 +40,7 @@ export function toolAreas(connections: readonly { id: string; label: string; ins
       id: c.id,
       summary: SUMMARIES[c.id] ?? c.label,
       ...(c.instructions && { guide: c.instructions }),
-      // A schedule is asked for in passing ("every morning, summarise…"):
-      // the one tool that sets it up is always there.
-      ...(c.id === "automations" && { alwaysShown: ["automation_create"] }),
+      ...(ALWAYS_SHOWN[c.id] && { alwaysShown: ALWAYS_SHOWN[c.id] }),
     })),
     ...groups.map((g) => ({ id: g.id, summary: g.covers, guide: g.guide, routed: false })),
   ];

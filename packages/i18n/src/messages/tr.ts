@@ -65,6 +65,8 @@ export const messages = {
     worknote_write: { ask: "Bir çalışma notu kaydetmek istiyor", doing: "Çalışma notunu kaydediyor", done: "Çalışma notunu kaydetti" },
     worknote_read: { ask: "Bir çalışma notunu okumak istiyor", doing: "Çalışma notunu okuyor", done: "Çalışma notunu okudu" },
     worknote_search: { ask: "Çalışma notlarında aramak istiyor", doing: "Çalışma notlarında arıyor", done: "Çalışma notlarında aradı" },
+    library_search: { ask: "Eski sohbet ve toplantılarda aramak istiyor", doing: "Eski sohbet ve toplantılarda arıyor", done: "Eski sohbet ve toplantılarda aradı" },
+    library_open: { ask: "Eski bir sohbeti ya da toplantıyı okumak istiyor", doing: "Eski bir sohbeti ya da toplantıyı okuyor", done: "Eski bir sohbeti ya da toplantıyı okudu" },
     memory_remember: { ask: "Bir not hatırlamak istiyor", doing: "Not hatırlanıyor", done: "Not hatırlandı" },
     page_goto: { ask: "Sayfa açmak istiyor", doing: "Sayfa açıyor", done: "Sayfayı açtı" },
     travel_search_flights: { ask: "Uçuş aramak istiyor", doing: "Uçuş arıyor", done: "Uçuş seçeneklerini buldu" },
@@ -778,6 +780,7 @@ export const messages = {
       notes: "önceki çalışma notları",
       conversation: "@ ile getirdiğin oturum",
       meeting: "@ ile getirdiğin toplantı",
+      library: "eski sohbet ve toplantılar",
     },
     attach: {
       filesOff: "Dosya eklemek için Bağlantılar'da Dosyalar'ı aç.",
@@ -1300,6 +1303,12 @@ export const messages = {
       description: "Kısayollarını listeler ve istediğini çalıştırır. Vunemi bir kısayolun içini göremez; bu yüzden her çalıştırma önce sana sorar, karar vermeden Kısayollar'da açıp bakabilirsin. macOS bir kez izin ister.",
       provides: { run: "kısayol çalıştırma" },
       run: { label: "Kısayol çalıştırma", description: "Kısayolları listeler, her seferinde onayınla birini çalıştırır." },
+    },
+    history: {
+      label: "Geçmiş",
+      description: "Bir istek eski bir sohbetle ya da kayıtlı bir toplantıyla ilgiliyse Vunemi'nin onu bulmasını sağlar. Her istekle yalnız en uygun birkaçının adı, tarihi ve tek satırı gider; gerekirse birini açar. Hiçbir şey bu Mac'ten çıkmaz.",
+      provides: { find: "eski sohbet ve toplantıları bulma" },
+      read: { label: "Bulma ve okuma", description: "Eski sohbetlerde ve toplantılarda arar, gerekeni okur." },
     },
     automations: {
       label: "Zamanlanmış görevler",

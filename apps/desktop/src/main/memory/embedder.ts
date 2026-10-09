@@ -119,14 +119,15 @@ export class Embedder {
   }
 
   /** One unit-length vector per text; a query carries its task, as the model was trained. */
-  async embed(texts: string[], as: "query" | "passage"): Promise<Float32Array[]> {
+  /** `task` says what a query is looking for, when it is not notes about the user. */
+  async embed(texts: string[], as: "query" | "passage", task: string = QUERY_TASK): Promise<Float32Array[]> {
     if (!this.available()) throw new Error("The meaning model is not downloaded.");
     if (texts.length === 0) return [];
     this.inflight++;
     try {
       // The last token (llama.cpp appends <|endoftext|>) stands for the text.
       const endpoint = await this.engine.ensure({ id: EMBED_MODEL_ID, path: this.path, context: CONTEXT, pooling: "last" });
-      const input = texts.map((text) => (as === "query" ? `Instruct: ${QUERY_TASK}\nQuery: ${text.slice(0, MAX_QUERY_CHARS)}` : text));
+      const input = texts.map((text) => (as === "query" ? `Instruct: ${task}\nQuery: ${text.slice(0, MAX_QUERY_CHARS)}` : text));
       const res = await fetch(`${endpoint.baseUrl}/embeddings`, {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${endpoint.apiKey}` },

@@ -61,6 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "Quiere guardar una nota de trabajo", doing: "Guardando una nota de trabajo", done: "Guardó una nota de trabajo" },
     worknote_read: { ask: "Quiere leer una nota de trabajo", doing: "Leyendo una nota de trabajo", done: "Leyó una nota de trabajo" },
     worknote_search: { ask: "Quiere buscar en las notas de trabajo", doing: "Buscando en las notas de trabajo", done: "Buscó en las notas de trabajo" },
+    library_search: { ask: "Quiere buscar en conversaciones y reuniones anteriores", doing: "Buscando en conversaciones y reuniones anteriores", done: "Buscó en conversaciones y reuniones anteriores" },
+    library_open: { ask: "Quiere leer una conversación o reunión anterior", doing: "Leyendo una conversación o reunión anterior", done: "Leyó una conversación o reunión anterior" },
     memory_remember: { ask: "Quiere recordar una nota", doing: "Recordando la nota", done: "Nota recordada" },
     page_goto: { ask: "Quiere abrir una página", doing: "Abriendo una página", done: "Abrió la página" },
     travel_search_flights: { ask: "Quiere buscar vuelos", doing: "Buscando vuelos", done: "Encontró opciones de vuelo" },
@@ -774,6 +776,7 @@ export const messages: Catalogue = {
       notes: "notas de trabajo anteriores",
       conversation: "una sesión traída con @",
       meeting: "una reunión traída con @",
+      library: "conversaciones y reuniones anteriores",
     },
     attach: {
       filesOff: "Para adjuntar archivos, activa Archivos en Conexiones.",
@@ -1295,6 +1298,12 @@ export const messages: Catalogue = {
       description: "Lista tus atajos y ejecuta el que pidas. Vunemi no ve el interior de un atajo, así que cada ejecución te pregunta antes y puedes abrirlo en Atajos antes de decidir. macOS pide permiso una vez.",
       provides: { run: "ejecutar atajos" },
       run: { label: "Ejecutar atajos", description: "Lista los atajos y ejecuta uno, con tu aprobación cada vez." },
+    },
+    history: {
+      label: "Historial",
+      description: "Permite a Vunemi encontrar tus conversaciones anteriores y reuniones grabadas cuando una petición trata de alguna. Con cada petición recibe solo el nombre, la fecha y una línea de las pocas que encajan; abre una solo si la necesita. Nada sale de este Mac.",
+      provides: { find: "encontrar conversaciones y reuniones anteriores" },
+      read: { label: "Buscar y leer", description: "Busca en conversaciones y reuniones anteriores y lee la que necesita." },
     },
     automations: {
       label: "Tareas programadas",

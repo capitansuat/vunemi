@@ -61,6 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "Vuole salvare una nota di lavoro", doing: "Salva una nota di lavoro", done: "Ha salvato una nota di lavoro" },
     worknote_read: { ask: "Vuole leggere una nota di lavoro", doing: "Legge una nota di lavoro", done: "Ha letto una nota di lavoro" },
     worknote_search: { ask: "Vuole cercare nelle note di lavoro", doing: "Cerca nelle note di lavoro", done: "Ha cercato nelle note di lavoro" },
+    library_search: { ask: "Vuole cercare nelle conversazioni e riunioni precedenti", doing: "Cerca nelle conversazioni e riunioni precedenti", done: "Ha cercato nelle conversazioni e riunioni precedenti" },
+    library_open: { ask: "Vuole leggere una conversazione o riunione precedente", doing: "Legge una conversazione o riunione precedente", done: "Ha letto una conversazione o riunione precedente" },
     memory_remember: { ask: "Vuole ricordare una nota", doing: "Memorizzazione della nota", done: "Nota ricordata" },
     page_goto: { ask: "Vuole aprire una pagina", doing: "Apre una pagina", done: "Ha aperto la pagina" },
     travel_search_flights: { ask: "Vuole cercare voli", doing: "Cerca voli", done: "Ha trovato opzioni di volo" },
@@ -774,6 +776,7 @@ export const messages: Catalogue = {
       notes: "note di lavoro precedenti",
       conversation: "una sessione aggiunta con @",
       meeting: "una riunione aggiunta con @",
+      library: "conversazioni e riunioni precedenti",
     },
     attach: {
       filesOff: "Per allegare file, attiva File in Connessioni.",
@@ -1295,6 +1298,12 @@ export const messages: Catalogue = {
       description: "Elenca i tuoi comandi rapidi ed esegue quello che chiedi. Vunemi non vede cosa contiene un comando rapido, quindi ogni esecuzione ti chiede prima conferma e puoi aprirlo in Comandi Rapidi prima di decidere. macOS chiede il permesso una volta.",
       provides: { run: "eseguire comandi rapidi" },
       run: { label: "Esecuzione dei comandi rapidi", description: "Elenca i comandi rapidi e ne esegue uno, ogni volta con la tua approvazione." },
+    },
+    history: {
+      label: "Cronologia",
+      description: "Permette a Vunemi di trovare le conversazioni precedenti e le riunioni registrate quando una richiesta ne riguarda una. Con ogni richiesta riceve solo nome, data e una riga delle poche pertinenti; ne apre una solo se serve. Nulla lascia questo Mac.",
+      provides: { find: "trovare conversazioni e riunioni precedenti" },
+      read: { label: "Ricerca e lettura", description: "Cerca nelle conversazioni e riunioni precedenti e legge quella che serve." },
     },
     automations: {
       label: "Attività pianificate",

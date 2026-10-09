@@ -61,6 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "作業メモを保存しようとしています", doing: "作業メモを保存しています", done: "作業メモを保存しました" },
     worknote_read: { ask: "作業メモを読もうとしています", doing: "作業メモを読んでいます", done: "作業メモを読みました" },
     worknote_search: { ask: "作業メモを検索しようとしています", doing: "作業メモを検索しています", done: "作業メモを検索しました" },
+    library_search: { ask: "以前の会話と会議を検索しようとしています", doing: "以前の会話と会議を検索中", done: "以前の会話と会議を検索しました" },
+    library_open: { ask: "以前の会話または会議を読もうとしています", doing: "以前の会話または会議を読んでいます", done: "以前の会話または会議を読みました" },
     memory_remember: { ask: "メモを覚えようとしています", doing: "メモを覚えています", done: "メモを覚えました" },
     page_goto: { ask: "ページを開こうとしています", doing: "ページを開いています", done: "ページを開きました" },
     travel_search_flights: { ask: "フライトを検索しようとしています", doing: "フライトを検索しています", done: "フライトの候補が見つかりました" },
@@ -774,6 +776,7 @@ export const messages: Catalogue = {
       notes: "以前の作業メモ",
       conversation: "@ で取り込んだセッション",
       meeting: "@ で取り込んだ会議",
+      library: "以前の会話と会議",
     },
     attach: {
       filesOff: "ファイルを添付するには、「接続」で「ファイル」をオンにしてください。",
@@ -1295,6 +1298,12 @@ export const messages: Catalogue = {
       description: "ショートカットを一覧にし、頼まれたものを実行します。Vunemi にはショートカットの中身が見えないため、実行のたびに先に確認し、決める前に「ショートカット」で開いて確かめられます。macOS が一度だけ許可を求めます。",
       provides: { run: "ショートカットの実行" },
       run: { label: "ショートカットの実行", description: "ショートカットを一覧にし、毎回あなたの承認を得て1つ実行します。" },
+    },
+    history: {
+      label: "履歴",
+      description: "依頼が以前の会話や録音した会議に関するとき、Vunemi がそれを見つけられるようにします。依頼ごとに渡されるのは、合いそうな数件の名前・日付・1行だけで、必要なときにだけ1件を開きます。この Mac の外には何も出ません。",
+      provides: { find: "以前の会話と会議を見つける" },
+      read: { label: "検索と閲覧", description: "以前の会話と会議を検索し、必要なものを読みます。" },
     },
     automations: {
       label: "予定されたタスク",

@@ -61,6 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "Veut enregistrer une note de travail", doing: "Enregistre une note de travail", done: "A enregistré une note de travail" },
     worknote_read: { ask: "Veut lire une note de travail", doing: "Lit une note de travail", done: "A lu une note de travail" },
     worknote_search: { ask: "Veut chercher dans les notes de travail", doing: "Cherche dans les notes de travail", done: "A cherché dans les notes de travail" },
+    library_search: { ask: "Veut chercher dans les conversations et réunions passées", doing: "Cherche dans les conversations et réunions passées", done: "A cherché dans les conversations et réunions passées" },
+    library_open: { ask: "Veut lire une conversation ou une réunion passée", doing: "Lit une conversation ou une réunion passée", done: "A lu une conversation ou une réunion passée" },
     memory_remember: { ask: "Veut mémoriser une note", doing: "Mémorisation de la note", done: "Note mémorisée" },
     page_goto: { ask: "Veut ouvrir une page", doing: "Ouvre une page", done: "A ouvert la page" },
     travel_search_flights: { ask: "Veut chercher des vols", doing: "Cherche des vols", done: "A trouvé des vols" },
@@ -774,6 +776,7 @@ export const messages: Catalogue = {
       notes: "des notes de travail antérieures",
       conversation: "une session ajoutée avec @",
       meeting: "une réunion ajoutée avec @",
+      library: "des conversations et réunions passées",
     },
     attach: {
       filesOff: "Pour joindre des fichiers, activez Fichiers dans Connexions.",
@@ -1295,6 +1298,12 @@ export const messages: Catalogue = {
       description: "Liste vos raccourcis et exécute celui que vous demandez. Vunemi ne voit pas l'intérieur d'un raccourci : chaque exécution vous est d'abord soumise, et vous pouvez l'ouvrir dans Raccourcis avant de décider. macOS demande l'autorisation une fois.",
       provides: { run: "exécuter des raccourcis" },
       run: { label: "Exécution de raccourcis", description: "Liste les raccourcis et en exécute un, avec votre accord à chaque fois." },
+    },
+    history: {
+      label: "Historique",
+      description: "Permet à Vunemi de retrouver vos conversations passées et vos réunions enregistrées quand une demande en concerne une. Avec chaque demande, il ne reçoit que le nom, la date et une ligne des quelques-unes qui correspondent ; il n'en ouvre une que s'il en a besoin. Rien ne quitte ce Mac.",
+      provides: { find: "retrouver les conversations et réunions passées" },
+      read: { label: "Recherche et lecture", description: "Cherche dans les conversations et réunions passées et lit celle dont il a besoin." },
     },
     automations: {
       label: "Tâches planifiées",

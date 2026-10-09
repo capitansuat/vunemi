@@ -107,6 +107,13 @@ export interface SessionOptions {
    */
   notesIndex?: () => string | null;
   /**
+   * The earlier conversations and meetings a request may be about, as lines
+   * for the model, and their ids; none of them in `given` (what this
+   * conversation was told of before). Null when there are none, or the user
+   * has not switched this on.
+   */
+  libraryIndex?: (goal: string, given: ReadonlySet<string>) => Promise<{ text: string; ids: string[] } | null>;
+  /**
    * After a finished task the user watched: what they wrote lately, and the
    * model that did it, so memory can propose notes from their own words.
    */
@@ -163,6 +170,8 @@ export class AgentSession {
   private words: string[] = [];
   /** Notes from memory already in the history; not sent again. */
   private readonly remembered = new Set<string>();
+  /** The earlier conversations and meetings this one was already told of: not listed twice. */
+  private readonly libraryGiven = new Set<string>();
   /** Notes to announce once the run has its id. */
   private given: MemoryNote[] | null = null;
   /** A shorter context the last launch had to take; told to the run once it has an id. */
@@ -343,12 +352,15 @@ export class AgentSession {
         : undefined;
       // Only a conversation's first request: added later, it would sit in the middle of the history.
       const notesIndex = this.history.length === 0 ? (this.opts.notesIndex?.() ?? null) : null;
+      // Not for a scheduled task (nobody asked it about the past), nor beside what the user brought in themselves.
+      const library = run.unattended || run.mentions?.length ? null : await this.opts.libraryIndex?.(goal, this.libraryGiven).catch(() => null) ?? null;
       const result = await runAgent({
         goal,
         ...(openPage && { openPage }),
         ...(undone.length > 0 && { undone }),
         ...(memory.length > 0 && { memory }),
         ...(notesIndex && { notesIndex }),
+        ...(library && { libraryIndex: library.text }),
         ...(attachments.length > 0 && { attachments }),
         ...(mentions?.length && { mentions }),
         model,
@@ -399,6 +411,7 @@ export class AgentSession {
       if (result.status === "done") this.history = result.messages;
       else if (result.status === "stopped" || result.status === "max_steps") this.history = sealInterrupted(result.messages, INTERRUPTED);
       if (result.status !== "failed") for (const text of memory) this.remembered.add(text);
+      if (result.status !== "failed") for (const id of library?.ids ?? []) this.libraryGiven.add(id);
       this.opts.onHistory?.(this.history);
       if (result.status !== "failed") {
         // The run is over: nothing may pause it now, and the queue waits on compaction instead.
@@ -533,7 +546,10 @@ export class AgentSession {
       if (result.kind === "none" && !announced && !opts.force) return;
       this.history = result.history;
       // A summary may have left out the notes it was given: they may be sent again.
-      if (result.kind === "summarized") this.remembered.clear();
+      if (result.kind === "summarized") {
+        this.remembered.clear();
+        this.libraryGiven.clear();
+      }
       const redact = this.opts.redact ?? ((text: string) => text);
       this.opts.emit({
         type: "context.compacted",
@@ -620,6 +636,7 @@ export class AgentSession {
     this.shownTools.clear();
     this.words = [];
     this.remembered.clear();
+    this.libraryGiven.clear();
     // A notice from a load in the previous conversation is not this one's.
     this.lowered = null;
   }
