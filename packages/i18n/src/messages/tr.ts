@@ -1447,6 +1447,24 @@ export const messages = {
   },
 
   automations: {
+    recipe: {
+      morning: { body: "Bugünün toplantıları ve yanıtını bekleyen e-postalar, tek özette." },
+      awaiting: { body: "Son bir haftada sana yazılan ve henüz yanıtlamadığın e-postalar." },
+      today: { title: "Bugünün planı", body: "Bugünün etkinlikleri ve günü gelen ya da geciken anımsatıcılar.", task: "Bugünkü takvimime ve günü gelen ya da geciken anımsatıcılarıma bak. Gün için kısa bir plan yaz: önce saat sırasıyla etkinlikler, sonra anımsatıcılar. Yalnız oku; hiçbir şeyi değiştirme." },
+      nextWeek: { title: "Gelecek haftanın toplantıları", body: "Her cuma: gelecek haftanın toplantıları, gün gün.", task: "Gelecek haftanın takvimine bak, pazartesiden pazara. Toplantıları gün gün, saatleriyle listele ve en yoğun günü söyle. Yalnız oku; hiçbir şeyi değiştirme." },
+      mailNotes: { title: "E-posta özeti Notlar'a", body: "Günün e-postaları birkaç satırda, Notlar'da bir nota yazılır.", task: "Bugün aldığım e-postaları oku. En çok on satırlık bir özet yaz: kim yazdı, ne istiyor. Sonra Notlar'da başlığı \"E-posta özeti\" ve bugünün tarihi olan bir not oluştur, özeti içine yaz. Hiçbir e-postayı yanıtlama, taşıma ya da silme." },
+      downloads: { title: "İndirilenler'i düzenle", body: "İndirilenler'deki dosyaları türüne göre klasörlere ayırır. Her taşıma geri alınabilir.", task: "İndirilenler klasörümün doğrudan içindeki dosyalara bak. Her birini türüne göre İndirilenler'in bir alt klasörüne taşı: Görseller, Belgeler, Ses ve video, Arşivler, Diğer. Alt klasörü yalnız gerekince oluştur. Klasörleri taşıma, dosyaların adını değiştirme ve hiçbir şeyi silme." },
+    },
+    category: { morning: "Sabah", work: "İş", files: "Dosyalar" },
+    summary: {
+      reads: "Okur: {what}",
+      changes: "Değiştirebilir: {what}",
+      notifies: "Sonucu bildirim olarak gösterir",
+      never: "Kimseye bir şey göndermez, hiçbir şeyi silmez, ödeme yapmaz",
+      unknown: "Bu görev Vunemi'de olmayan bir bağlantıyı anıyor ({source}).",
+      notAllowed: "Zamanlanmış bir görev {name} bağlantısını bu şekilde kullanamaz.",
+      off: "{name} kapalı. Bunun çalışması için Ayarlar › Bağlantılar'dan aç.",
+    },
     suggest: {
       heading: "Öneri",
       add: "Ekle",

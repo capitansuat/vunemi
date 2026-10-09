@@ -1441,6 +1441,24 @@ export const messages: Catalogue = {
   },
 
   automations: {
+    recipe: {
+      morning: { body: "Las reuniones de hoy y los correos que esperan tu respuesta, en un solo resumen." },
+      awaiting: { body: "Correos de la última semana que te han enviado y aún no has respondido." },
+      today: { title: "Plan de hoy", body: "Los eventos de hoy y los recordatorios que vencen hoy o están atrasados.", task: "Mira mi calendario de hoy y mis recordatorios atrasados o que vencen hoy. Escribe un plan breve para el día: primero los eventos por orden de hora y después los recordatorios. Solo lee; no cambies nada." },
+      nextWeek: { title: "Reuniones de la próxima semana", body: "Cada viernes: las reuniones de la semana siguiente, día por día.", task: "Mira mi calendario de la próxima semana, de lunes a domingo. Enumera las reuniones día por día con sus horas y di qué día es el más cargado. Solo lee; no cambies nada." },
+      mailNotes: { title: "Resumen del correo en Notas", body: "Los correos del día en unas pocas líneas, escritos en una nota de Notas.", task: "Lee los correos que he recibido hoy. Escribe un resumen de diez líneas como máximo: quién escribió y qué quiere. Después crea en Notas una nota titulada «Resumen del correo» con la fecha de hoy y ese resumen. No respondas, muevas ni elimines ningún correo." },
+      downloads: { title: "Ordenar Descargas", body: "Ordena los archivos de Descargas en carpetas por tipo. Cada movimiento se puede deshacer.", task: "Mira los archivos que están directamente en mi carpeta Descargas. Mueve cada uno a una subcarpeta de Descargas según su tipo: Imágenes, Documentos, Audio y vídeo, Archivos comprimidos, Otros. Crea una subcarpeta solo cuando haga falta. No muevas carpetas, no cambies el nombre de los archivos y no elimines nada." },
+    },
+    category: { morning: "Mañana", work: "Trabajo", files: "Archivos" },
+    summary: {
+      reads: "Lee: {what}",
+      changes: "Puede cambiar: {what}",
+      notifies: "Muestra el resultado como notificación",
+      never: "No envía nada a nadie, no elimina nada, no paga nada",
+      unknown: "Esta tarea nombra una conexión que Vunemi no tiene ({source}).",
+      notAllowed: "Una tarea programada no puede usar {name} de esta forma.",
+      off: "{name} está desactivado. Actívalo en Ajustes › Conexiones para que esto funcione.",
+    },
     suggest: {
       heading: "Sugerencia",
       add: "Añadir",

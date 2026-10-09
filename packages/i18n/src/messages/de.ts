@@ -1441,6 +1441,24 @@ export const messages: Catalogue = {
   },
 
   automations: {
+    recipe: {
+      morning: { body: "Die heutigen Termine und die Mails, die auf deine Antwort warten, in einer Zusammenfassung." },
+      awaiting: { body: "Mails der letzten Woche, die man dir geschrieben hat und die du noch nicht beantwortet hast." },
+      today: { title: "Plan für heute", body: "Die heutigen Termine und die fälligen oder überfälligen Erinnerungen.", task: "Sieh dir meinen Kalender für heute und meine heute fälligen oder überfälligen Erinnerungen an. Schreibe einen kurzen Plan für den Tag: zuerst die Termine in zeitlicher Reihenfolge, dann die Erinnerungen. Nur lesen; nichts ändern." },
+      nextWeek: { title: "Besprechungen der nächsten Woche", body: "Jeden Freitag: die Besprechungen der nächsten Woche, Tag für Tag.", task: "Sieh dir meinen Kalender für die nächste Woche an, Montag bis Sonntag. Liste die Besprechungen Tag für Tag mit Uhrzeit auf und sage, welcher Tag am vollsten ist. Nur lesen; nichts ändern." },
+      mailNotes: { title: "Mail-Zusammenfassung in Notizen", body: "Die Mails des Tages in wenigen Zeilen, in eine Notiz in Notizen geschrieben.", task: "Lies die E-Mails, die ich heute erhalten habe. Schreibe eine Zusammenfassung von höchstens zehn Zeilen: wer geschrieben hat und was gewünscht wird. Erstelle dann in Notizen eine Notiz mit dem Titel „Mail-Zusammenfassung“ und dem heutigen Datum und schreibe die Zusammenfassung hinein. Keine E-Mail beantworten, verschieben oder löschen." },
+      downloads: { title: "Downloads aufräumen", body: "Sortiert die Dateien in Downloads nach Art in Ordner. Jedes Verschieben lässt sich rückgängig machen.", task: "Sieh dir die Dateien direkt in meinem Ordner Downloads an. Verschiebe jede nach ihrer Art in einen Unterordner von Downloads: Bilder, Dokumente, Audio und Video, Archive, Sonstiges. Lege einen Unterordner nur an, wenn er gebraucht wird. Keine Ordner verschieben, keine Dateien umbenennen und nichts löschen." },
+    },
+    category: { morning: "Morgen", work: "Arbeit", files: "Dateien" },
+    summary: {
+      reads: "Liest: {what}",
+      changes: "Kann ändern: {what}",
+      notifies: "Zeigt das Ergebnis als Mitteilung",
+      never: "Sendet niemandem etwas, löscht nichts, bezahlt nichts",
+      unknown: "Diese Aufgabe nennt eine Verbindung, die Vunemi nicht hat ({source}).",
+      notAllowed: "Eine geplante Aufgabe kann {name} so nicht verwenden.",
+      off: "{name} ist aus. Schalte es unter Einstellungen › Verbindungen ein, damit das funktioniert.",
+    },
     suggest: {
       heading: "Vorschlag",
       add: "Hinzufügen",

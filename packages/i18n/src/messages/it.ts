@@ -1441,6 +1441,24 @@ export const messages: Catalogue = {
   },
 
   automations: {
+    recipe: {
+      morning: { body: "Le riunioni di oggi e le email che aspettano una tua risposta, in un unico riepilogo." },
+      awaiting: { body: "Le email dell'ultima settimana che ti hanno scritto e a cui non hai ancora risposto." },
+      today: { title: "Piano di oggi", body: "Gli eventi di oggi e i promemoria in scadenza o scaduti.", task: "Guarda il mio calendario di oggi e i miei promemoria scaduti o in scadenza oggi. Scrivi un breve piano della giornata: prima gli eventi in ordine di orario, poi i promemoria. Solo lettura; non modificare nulla." },
+      nextWeek: { title: "Riunioni della prossima settimana", body: "Ogni venerdì: le riunioni della settimana successiva, giorno per giorno.", task: "Guarda il mio calendario della prossima settimana, da lunedì a domenica. Elenca le riunioni giorno per giorno con gli orari e di' qual è il giorno più pieno. Solo lettura; non modificare nulla." },
+      mailNotes: { title: "Riepilogo email in Note", body: "Le email del giorno in poche righe, scritte in una nota di Note.", task: "Leggi le email che ho ricevuto oggi. Scrivi un riepilogo di dieci righe al massimo: chi ha scritto e che cosa chiede. Poi crea in Note una nota intitolata “Riepilogo email” con la data di oggi e quel riepilogo. Non rispondere, spostare o eliminare nessuna email." },
+      downloads: { title: "Riordina Download", body: "Ordina i file di Download in cartelle per tipo. Ogni spostamento si può annullare.", task: "Guarda i file che si trovano direttamente nella mia cartella Download. Sposta ciascuno in una sottocartella di Download in base al tipo: Immagini, Documenti, Audio e video, Archivi, Altro. Crea una sottocartella solo quando serve. Non spostare cartelle, non rinominare file e non eliminare nulla." },
+    },
+    category: { morning: "Mattina", work: "Lavoro", files: "File" },
+    summary: {
+      reads: "Legge: {what}",
+      changes: "Può modificare: {what}",
+      notifies: "Mostra il risultato come notifica",
+      never: "Non invia nulla a nessuno, non elimina nulla, non paga nulla",
+      unknown: "Questa attività cita una connessione che Vunemi non ha ({source}).",
+      notAllowed: "Un'attività pianificata non può usare {name} in questo modo.",
+      off: "{name} è disattivato. Attivalo in Impostazioni › Connessioni perché funzioni.",
+    },
     suggest: {
       heading: "Suggerimento",
       add: "Aggiungi",

@@ -1441,6 +1441,24 @@ export const messages: Catalogue = {
   },
 
   automations: {
+    recipe: {
+      morning: { body: "As reuniões de hoje e os e-mails que aguardam sua resposta, em um único resumo." },
+      awaiting: { body: "E-mails da última semana que enviaram a você e que você ainda não respondeu." },
+      today: { title: "Plano de hoje", body: "Os eventos de hoje e os lembretes que vencem hoje ou estão atrasados.", task: "Veja meu calendário de hoje e meus lembretes atrasados ou que vencem hoje. Escreva um plano curto para o dia: primeiro os eventos em ordem de horário, depois os lembretes. Apenas leia; não altere nada." },
+      nextWeek: { title: "Reuniões da próxima semana", body: "Toda sexta-feira: as reuniões da semana seguinte, dia a dia.", task: "Veja meu calendário da próxima semana, de segunda a domingo. Liste as reuniões dia a dia com os horários e diga qual é o dia mais cheio. Apenas leia; não altere nada." },
+      mailNotes: { title: "Resumo dos e-mails no Notas", body: "Os e-mails do dia em poucas linhas, escritos em uma nota no Notas.", task: "Leia os e-mails que recebi hoje. Escreva um resumo de no máximo dez linhas: quem escreveu e o que quer. Depois crie no Notas uma nota com o título “Resumo dos e-mails” e a data de hoje, com esse resumo. Não responda, mova nem apague nenhum e-mail." },
+      downloads: { title: "Organizar Downloads", body: "Organiza os arquivos de Downloads em pastas por tipo. Cada movimentação pode ser desfeita.", task: "Veja os arquivos que estão diretamente na minha pasta Downloads. Mova cada um para uma subpasta de Downloads conforme o tipo: Imagens, Documentos, Áudio e vídeo, Compactados, Outros. Crie uma subpasta só quando for necessária. Não mova pastas, não renomeie arquivos e não apague nada." },
+    },
+    category: { morning: "Manhã", work: "Trabalho", files: "Arquivos" },
+    summary: {
+      reads: "Lê: {what}",
+      changes: "Pode alterar: {what}",
+      notifies: "Mostra o resultado como notificação",
+      never: "Não envia nada a ninguém, não apaga nada, não paga nada",
+      unknown: "Esta tarefa cita uma conexão que o Vunemi não tem ({source}).",
+      notAllowed: "Uma tarefa agendada não pode usar {name} dessa forma.",
+      off: "{name} está desligado. Ative em Ajustes › Conexões para isto funcionar.",
+    },
     suggest: {
       heading: "Sugestão",
       add: "Adicionar",

@@ -1441,6 +1441,24 @@ export const messages: Catalogue = {
   },
 
   automations: {
+    recipe: {
+      morning: { body: "Les réunions du jour et les e-mails qui attendent votre réponse, en un seul résumé." },
+      awaiting: { body: "Les e-mails de la semaine écoulée qu'on vous a envoyés et auxquels vous n'avez pas répondu." },
+      today: { title: "Programme du jour", body: "Les événements du jour et les rappels arrivés à échéance ou en retard.", task: "Regarde mon calendrier d'aujourd'hui et mes rappels en retard ou à échéance aujourd'hui. Écris un court programme de la journée : d'abord les événements par ordre horaire, puis les rappels. Lecture seule ; ne modifie rien." },
+      nextWeek: { title: "Réunions de la semaine prochaine", body: "Chaque vendredi : les réunions de la semaine suivante, jour par jour.", task: "Regarde mon calendrier de la semaine prochaine, du lundi au dimanche. Liste les réunions jour par jour avec leurs horaires et dis quel jour est le plus chargé. Lecture seule ; ne modifie rien." },
+      mailNotes: { title: "Résumé des e-mails dans Notes", body: "Les e-mails du jour en quelques lignes, écrits dans une note de Notes.", task: "Lis les e-mails que j'ai reçus aujourd'hui. Écris un résumé de dix lignes au plus : qui a écrit et ce qu'il demande. Crée ensuite dans Notes une note intitulée « Résumé des e-mails » avec la date du jour et ce résumé. Ne réponds à aucun e-mail, n'en déplace et n'en supprime aucun." },
+      downloads: { title: "Ranger Téléchargements", body: "Range les fichiers de Téléchargements dans des dossiers par type. Chaque déplacement peut être annulé.", task: "Regarde les fichiers placés directement dans mon dossier Téléchargements. Déplace chacun dans un sous-dossier de Téléchargements selon son type : Images, Documents, Audio et vidéo, Archives, Autres. Ne crée un sous-dossier que s'il est nécessaire. Ne déplace pas de dossiers, ne renomme pas de fichiers et ne supprime rien." },
+    },
+    category: { morning: "Matin", work: "Travail", files: "Fichiers" },
+    summary: {
+      reads: "Lit : {what}",
+      changes: "Peut modifier : {what}",
+      notifies: "Affiche le résultat dans une notification",
+      never: "N'envoie rien à personne, ne supprime rien, ne paie rien",
+      unknown: "Cette tâche cite une connexion que Vunemi n'a pas ({source}).",
+      notAllowed: "Une tâche planifiée ne peut pas utiliser {name} de cette façon.",
+      off: "{name} est désactivé. Activez-le dans Réglages › Connexions pour que cela fonctionne.",
+    },
     suggest: {
       heading: "Suggestion",
       add: "Ajouter",

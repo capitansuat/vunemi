@@ -1441,6 +1441,24 @@ export const messages: Catalogue = {
   },
 
   automations: {
+    recipe: {
+      morning: { body: "Today's meetings and the mail waiting for your reply, in one summary." },
+      awaiting: { body: "Mail from the last week that people sent you and you haven't answered." },
+      today: { title: "Today's plan", body: "Today's events and the reminders that are due or overdue.", task: "Look at my calendar for today and at my reminders that are overdue or due today. Write a short plan for the day: events in time order, then the reminders. Only read; don't change anything." },
+      nextWeek: { title: "Next week's meetings", body: "Every Friday: next week's meetings, day by day.", task: "Look at my calendar for next week, Monday to Sunday. List the meetings day by day with their times, and say which day is the busiest. Only read; don't change anything." },
+      mailNotes: { title: "Mail summary to Notes", body: "The day's mail in a few lines, written to a note in Notes.", task: "Read the emails I received today. Write a summary of at most ten lines: who wrote and what they want. Then create a note in Notes titled \"Mail summary\" with today's date and that summary. Don't reply to, move or delete any email." },
+      downloads: { title: "Tidy Downloads", body: "Sorts the files in Downloads into folders by kind. Every move can be undone.", task: "Look at the files directly inside my Downloads folder. Move each one into a subfolder of Downloads by its kind: Images, Documents, Audio and video, Archives, Other. Create a subfolder only when it is needed. Don't move folders, don't rename files and don't delete anything." },
+    },
+    category: { morning: "Morning", work: "Work", files: "Files" },
+    summary: {
+      reads: "Reads: {what}",
+      changes: "Can change: {what}",
+      notifies: "Shows the result as a notification",
+      never: "Sends nothing to anyone, deletes nothing, pays for nothing",
+      unknown: "This task names a connection Vunemi doesn't have ({source}).",
+      notAllowed: "A scheduled task can't use {name} this way.",
+      off: "{name} is off. Switch it on in Settings › Connections for this to work.",
+    },
     suggest: {
       heading: "Suggested",
       add: "Add",
