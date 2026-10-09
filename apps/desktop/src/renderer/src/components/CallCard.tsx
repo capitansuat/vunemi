@@ -23,6 +23,8 @@ import type { CallView } from "../lib/fold.js";
 import { actionClassLabel, callDetail, callStatusLabel, formatMs, toolLabel } from "../lib/labels.js";
 import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
+import type { SetupView } from "../../../shared/ipc.js";
+import { SetupSummary } from "./AutomationSetup.js";
 import { TravelOptionsCard } from "./TravelOptionsCard.js";
 
 const CLASS_ICON: Record<ActionClass, LucideIcon> = {
@@ -42,7 +44,7 @@ const CLASS_TONE: Record<ActionClass, string> = {
 };
 
 export function CallCard({ call }: { call: CallView }) {
-  if (call.status === "awaiting") return <ApprovalCard call={call} />;
+  if (call.status === "awaiting") return call.tool === "automation_create" ? <AutomationSetupCard call={call} /> : <ApprovalCard call={call} />;
   if (call.handoff) return <HandoffCard call={call} reason={call.handoff} />;
   return <CallRow call={call} />;
 }
@@ -97,6 +99,62 @@ function CallRow({ call }: { call: CallView }) {
           {call.output && <Block label={t("call.output")} text={call.output} />}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * A scheduled task the model wants to set up. With the automation library on
+ * the user approves it on the summary made from its scope, not on a card of
+ * the model's own words; without it, or if the summary can't be had, on the
+ * card as before.
+ */
+function AutomationSetupCard({ call }: { call: CallView }) {
+  const decide = useStore((s) => s.decide);
+  // undefined while it is asked for; null when there is none.
+  const [view, setView] = useState<SetupView | null | undefined>(undefined);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    void window.vunemi.summarizeAutomation(call.args).then(
+      (next) => live && setView(next),
+      () => live && setView(null),
+    );
+    return () => {
+      live = false;
+    };
+  }, [call.args]);
+
+  if (view === undefined) return null;
+  if (view === null) return <ApprovalCard call={call} />;
+
+  const install = async (when?: { time: string; days: number[] }) => {
+    setBusy(true);
+    setError(null);
+    try {
+      // Kept by the main process and used when the approved call runs.
+      if (when) await window.vunemi.adjustAutomation(call.args, when);
+      await decide(call.callId, { kind: "approve" });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div role="alert" className="rounded-xl border border-warn-line bg-surface p-4">
+      <SetupSummary
+        view={view}
+        error={error}
+        busy={busy}
+        onInstall={(when) => void install(when)}
+        onCancel={() => {
+          setBusy(true);
+          void decide(call.callId, { kind: "reject" });
+        }}
+      />
     </div>
   );
 }

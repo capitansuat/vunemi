@@ -11,8 +11,8 @@
  */
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import type { RecipeView } from "../shared/ipc.js";
-import { describeSchedule, validSchedule, type Schedule } from "./automations.js";
+import type { RecipeView, SetupView } from "../shared/ipc.js";
+import { describeSchedule, validSchedule, validScope, type Schedule } from "./automations.js";
 
 export type RecipeCategory = "morning" | "work" | "files";
 
@@ -49,9 +49,14 @@ export function recipeTask(id: string): { title: string; task: string; schedule:
  * recipe's: the window chooses when, not what.
  */
 export function recipeSchedule(recipe: Recipe, blanks: unknown): Schedule {
+  return withWhen(recipe.schedule, blanks);
+}
+
+/** A daily schedule with the time and days the user chose on the summary; any other schedule as it is. */
+export function withWhen(schedule: Schedule, blanks: unknown): Schedule {
   const b = (blanks ?? {}) as { time?: unknown; days?: unknown };
-  if (recipe.schedule.kind !== "daily" || (b.time === undefined && b.days === undefined)) return recipe.schedule;
-  return validSchedule({ kind: "daily", time: b.time ?? recipe.schedule.time, days: b.days ?? recipe.schedule.days });
+  if (schedule.kind !== "daily" || (b.time === undefined && b.days === undefined)) return schedule;
+  return validSchedule({ kind: "daily", time: b.time ?? schedule.time, days: b.days ?? schedule.days });
 }
 
 /** One part of a connection, as the app knows it now. */
@@ -82,6 +87,24 @@ export interface ScopeSummary {
   refused: string | null;
 }
 
+/** Whether a scheduled task may have a part: no part that reaches anything, and none whose tools all send, delete or pay. */
+const allowed = (source: string, part: ScopePart): boolean =>
+  !NEVER_IN_SCOPE.some((never) => source === never || source.startsWith(`${never}:`)) && (part.reads || part.changes);
+
+/**
+ * Why a scheduled task can't have a scope, in words for the model that
+ * proposed it; null when it can.
+ */
+export function scopeRefusal(scope: readonly string[], look: (source: string) => ScopePart | null): string | null {
+  const hint = 'Name only the parts the task needs, such as "calendar:read", "reminders:read", "mail:read", "apps:notes", "files:read", "files:write" or "browser:read".';
+  for (const source of scope) {
+    const part = look(source);
+    if (!part) return `"${source}" is not a connection part here. ${hint}`;
+    if (!allowed(source, part)) return `A scheduled task can't have "${source}": it never sends, deletes, pays, clicks on websites or runs shortcuts. If the task needs that, tell the user it can't be scheduled. ${hint}`;
+  }
+  return null;
+}
+
 /** What a scope lets a scheduled task do, for the summary the user approves. */
 export function summarizeScope(scope: readonly string[], look: (source: string) => ScopePart | null): ScopeSummary {
   const out: ScopeSummary = { reads: [], changes: [], off: [], refused: null };
@@ -89,7 +112,7 @@ export function summarizeScope(scope: readonly string[], look: (source: string) 
   for (const source of scope) {
     const part = look(source);
     if (!part) return { ...out, refused: t("automations.summary.unknown", { source }) };
-    if (NEVER_IN_SCOPE.some((never) => source === never || source.startsWith(`${never}:`)) || (!part.reads && !part.changes)) {
+    if (!allowed(source, part)) {
       return { ...out, refused: t("automations.summary.notAllowed", { name: part.connection }) };
     }
     if (part.reads) add(out.reads, part.connection);
@@ -158,3 +181,31 @@ export function recipeViews(look: (source: string) => ScopePart | null): RecipeV
     };
   });
 }
+
+/**
+ * The summary of a task the model wants to set up from chat, made from the
+ * call's own arguments. Its lines come from the scope, as a recipe's do; the
+ * model's description is carried beside them and decides nothing.
+ */
+export function setupView(args: unknown, look: (source: string) => ScopePart | null): SetupView {
+  const a = (args ?? {}) as Record<string, unknown>;
+  const text = (value: unknown, max: number): string => String(value ?? "").trim().slice(0, max);
+  const view: SetupView = { title: text(a.title, 80), body: text(a.task, 400), when: "", time: null, days: null, lines: [], off: [], refused: null };
+  const explanation = text(a.explanation, 400);
+  try {
+    const schedule = validSchedule(a.schedule);
+    const summary = summarizeScope(validScope(a.scope) ?? [], look);
+    return {
+      ...view,
+      when: describeSchedule(schedule),
+      time: schedule.kind === "daily" ? schedule.time : null,
+      days: schedule.kind === "daily" ? (schedule.days ?? null) : null,
+      lines: summaryLines(summary), off: summary.off.map((name) => t("automations.summary.off", { name })), refused: summary.refused,
+      ...(explanation && { explanation }),
+    };
+  } catch {
+    // The run will refuse it too; the summary says so and offers no way to set it up.
+    return { ...view, when: t("automations.badSchedule"), refused: t("automations.badSchedule") };
+  }
+}
+

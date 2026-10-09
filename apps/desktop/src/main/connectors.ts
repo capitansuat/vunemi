@@ -29,7 +29,7 @@ import { vaultMcpIO } from "./remote-mcp.js";
 import { renderOfficePdf } from "./office-pdf.js";
 import { travelConnectors } from "./travel.js";
 import type { FetchPage } from "./flights/search.js";
-import { AUTOMATION_INSTRUCTIONS, createAutomationTools, type AutomationStore } from "./automations.js";
+import { AUTOMATION_INSTRUCTIONS, createAutomationTools, type AutomationSetup, type AutomationStore } from "./automations.js";
 import { createLibraryTools, LIBRARY_INSTRUCTIONS, type LibraryToolsOptions } from "./library/tools.js";
 import { authorizeOutlook, OUTLOOK_TOKEN_TARGET, outlookAddress } from "./outlook-oauth.js";
 import { authorizeGoogle, GOOGLE_TOKEN_TARGET, googleAddress } from "./google-oauth.js";
@@ -64,6 +64,8 @@ export interface CatalogueOptions {
   oauthClients?: OAuthClients;
   /** Scheduled tasks; without it the connection is not offered. */
   automations?: AutomationStore;
+  /** With the automation library on: what setting a task up from chat is checked with. */
+  automationSetup?: () => AutomationSetup;
   /** Earlier conversations and meetings; without it the connection is not offered. */
   library?: LibraryToolsOptions;
   /** Replaced in tests: the osascript the Mail app accounts run through. */
@@ -195,7 +197,7 @@ export function shortcutsConnector(opts: { osascript?: string } = {}): Connector
 }
 
 /** Tasks the user asked to run later; setting one up is a card every time. */
-function automationsConnector(store: AutomationStore): Connector {
+function automationsConnector(store: AutomationStore, setup?: () => AutomationSetup): Connector {
   return {
     id: "automations",
     get label() { return t("connectors.automations.label"); },
@@ -208,7 +210,7 @@ function automationsConnector(store: AutomationStore): Connector {
     origin: "builtin",
     instructions: AUTOMATION_INSTRUCTIONS,
     status: async () => ({ state: "ready" }),
-    tools: () => createAutomationTools(store),
+    tools: () => createAutomationTools(store, Date.now, setup),
   };
 }
 
@@ -338,7 +340,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
 
     shortcutsConnector(),
 
-    ...(opts.automations ? [automationsConnector(opts.automations)] : []),
+    ...(opts.automations ? [automationsConnector(opts.automations, opts.automationSetup)] : []),
     ...(opts.library ? [historyConnector(opts.library)] : []),
 
     {

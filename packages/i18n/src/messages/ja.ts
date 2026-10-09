@@ -1467,6 +1467,7 @@ export const messages: Catalogue = {
       never: "決して行わないこと",
       openConnections: "接続を開く",
       seeAll: "すべて見る",
+      explained: "モデルの説明",
       moved: "予定されたタスクは「オートメーション」ページに移りました。",
       open: "オートメーションを開く",
     },

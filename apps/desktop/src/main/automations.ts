@@ -332,7 +332,29 @@ export function scheduledGoal(item: Pick<Automation, "title" | "task" | "created
  */
 const IN_SCHEDULED_RUN = new RegExp(`^${SCHEDULED_RUN}`);
 
-export function createAutomationTools(store: AutomationStore, now: () => number = Date.now): ToolDef[] {
+/**
+ * What setting a task up from chat needs once the automation library is on:
+ * the task names the connection parts its runs may use, and code decides
+ * whether a scheduled task may have them.
+ */
+export interface AutomationSetup {
+  /** Why a scheduled task can't have this scope, in words for the model; null when it can. */
+  refuse(scope: string[]): string | null;
+  /** The schedule to save: the one asked for, or with the time and days the user chose on the summary. */
+  schedule(args: Record<string, unknown>, asked: Schedule): Schedule;
+}
+
+/** With `setup`, a task is set up with a scope and the user approves it on a summary made from that scope. */
+export function createAutomationTools(store: AutomationStore, now: () => number = Date.now, setup?: () => AutomationSetup): ToolDef[] {
+  /** The scope a call names; it has to name one when the library is on. */
+  const scopeOf = (a: Record<string, unknown>): string[] | undefined => {
+    if (!setup) return undefined;
+    const scope = validScope(a.scope);
+    if (!scope) throw new Error('scope is needed: the connection parts the task uses, e.g. ["calendar:read"].');
+    const refused = setup().refuse(scope);
+    if (refused) throw new Error(refused);
+    return scope;
+  };
   return [
     {
       name: "automation_create",
@@ -347,11 +369,28 @@ export function createAutomationTools(store: AutomationStore, now: () => number 
             type: "object",
             description: 'One of {"kind":"once","at":"2026-09-26T09:00"}, {"kind":"daily","time":"09:00","days":[1,2,3,4,5]} (0 = Sunday, days optional), {"kind":"hourly","every":3}',
           },
+          ...(setup && {
+            scope: {
+              type: "array",
+              items: { type: "string" },
+              description: 'The connection parts each run may use, and no more, e.g. ["calendar:read","mail:read"]. Parts: calendar:read, reminders:read, mail:read, apps:notes, files:read, files:write, browser:read.',
+            },
+            explanation: { type: "string", description: "One or two plain sentences for the user, in their language: what it does each time and what it touches." },
+          }),
         },
-        required: ["title", "task", "schedule"],
+        required: ["title", "task", "schedule", ...(setup ? ["scope"] : [])],
       },
       actionClass: "write-local",
       alwaysAsk: true,
+      // A scope a scheduled task may not have is refused before the user is asked anything.
+      check: (a) => {
+        try {
+          scopeOf(a);
+          return null;
+        } catch (e) {
+          return (e as Error).message;
+        }
+      },
       preview: async (a) => {
         let when: string;
         try {
@@ -367,11 +406,14 @@ export function createAutomationTools(store: AutomationStore, now: () => number 
         const task = String(a.task ?? "").trim();
         if (!title || title.length > 80) throw new Error("title must be 1 to 80 characters.");
         if (!task || task.length > 2000) throw new Error("task must be 1 to 2000 characters.");
-        const schedule = validSchedule(a.schedule);
+        // Checked again here: the summary shows the scope, it does not decide.
+        const scope = scopeOf(a);
+        const asked = validSchedule(a.schedule);
+        const schedule = setup ? setup().schedule(a, asked) : asked;
         const created = now();
         const next = nextSlot(schedule, created, created);
         if (next === null) throw new Error("That time has already passed; give a time in the future.");
-        const item = store.add({ title, task, schedule }, created);
+        const item = store.add({ title, task, schedule, ...(scope && { scope }) }, created);
         return `Scheduled "${item.title}" (${JSON.stringify(schedule)}). Next run: ${new Date(next).toString()}. It runs while Vunemi is open and can't send, delete or pay; if the task needs that, tell the user that part won't be done.`;
       },
     },

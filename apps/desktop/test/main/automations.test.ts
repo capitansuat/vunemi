@@ -172,6 +172,37 @@ describe("the automation tools", () => {
     expect(await list.run({}, ctx)).toContain("Summarise my calendar");
   });
 
+  it("with the library on, needs a scope a scheduled task may have, and saves the time the user chose", async () => {
+    const store = new AutomationStore(join(dir, "automations.json"));
+    const chosen: unknown[] = [];
+    const [create] = createAutomationTools(store, () => at(2026, 9, 25, 8), () => ({
+      refuse: (scope) => (scope.includes("mail:send") ? 'A scheduled task can\'t have "mail:send".' : null),
+      schedule: (args, asked) => (chosen.push(args.title), { ...asked, time: "07:15" } as typeof asked),
+    }));
+    const call = { title: "Morning", task: "Summarise my calendar", schedule: { kind: "daily", time: "09:00" }, scope: ["calendar:read"] };
+    expect((create!.parameters as { required: string[] }).required).toContain("scope");
+    // Refused before the user is asked anything.
+    expect(await create!.check!({ ...call, scope: undefined })).toMatch(/scope is needed/);
+    expect(await create!.check!({ ...call, scope: ["mail:send"] })).toMatch(/mail:send/);
+    expect(await create!.check!(call)).toBeNull();
+    await expect(create!.run({ ...call, scope: ["mail:send"] }, {} as never)).rejects.toThrow(/mail:send/);
+    expect(store.list()).toHaveLength(0);
+
+    const said = await create!.run(call, {} as never) as string;
+    expect(store.list()[0]).toMatchObject({ title: "Morning", scope: ["calendar:read"], schedule: { kind: "daily", time: "07:15" } });
+    expect(said).toContain("07:15");
+    expect(chosen).toEqual(["Morning"]);
+  });
+
+  it("without the library, asks for no scope and saves none", async () => {
+    const { store, create } = tools();
+    expect((create.parameters as { required: string[]; properties: object }).required).toEqual(["title", "task", "schedule"]);
+    expect(Object.keys((create.parameters as { properties: object }).properties)).toEqual(["title", "task", "schedule"]);
+    expect(await create.check!({ title: "Morning", task: "Summarise", schedule: { kind: "daily", time: "09:00" } })).toBeNull();
+    await create.run({ title: "Morning", task: "Summarise my calendar", schedule: { kind: "daily", time: "09:00" }, scope: ["mail:send"] }, {} as never);
+    expect(store.list()[0]!.scope).toBeUndefined();
+  });
+
   it("switches one off and deletes one on a card, and undoes both", async () => {
     const store = new AutomationStore(join(dir, "automations.json"));
     const [, list, set, remove] = createAutomationTools(store, () => at(2026, 9, 25, 8));

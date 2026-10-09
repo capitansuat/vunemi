@@ -186,6 +186,8 @@ const api: VunemiApi = {
   automationLibrary: () => ipcRenderer.invoke(CH.automationsLibrary),
   installRecipe: (id, when) => ipcRenderer.invoke(CH.automationsInstall, id, when),
   undoDeleteAutomation: () => ipcRenderer.invoke(CH.automationsUndoDelete),
+  summarizeAutomation: (args) => ipcRenderer.invoke(CH.automationsSummarize, args),
+  adjustAutomation: (args, when) => ipcRenderer.invoke(CH.automationsAdjust, args, when),
   onAutomations: (listener) => {
     const handler = (_e: IpcRendererEvent, rows: AutomationView[]) => listener(rows);
     ipcRenderer.on(CH.automationsChanged, handler);

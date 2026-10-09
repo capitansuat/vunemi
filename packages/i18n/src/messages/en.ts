@@ -1467,6 +1467,7 @@ export const messages: Catalogue = {
       never: "Never does",
       openConnections: "Open Connections",
       seeAll: "See all",
+      explained: "The model's description",
       moved: "Scheduled tasks are on the Automations page now.",
       open: "Open Automations",
     },

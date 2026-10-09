@@ -1467,6 +1467,7 @@ export const messages: Catalogue = {
       never: "绝不会做",
       openConnections: "打开连接",
       seeAll: "查看全部",
+      explained: "模型的说明",
       moved: "计划任务现在位于“自动化”页面。",
       open: "打开自动化",
     },

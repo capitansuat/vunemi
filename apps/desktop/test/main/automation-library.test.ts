@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { validSchedule, validScope } from "../../src/main/automations.js";
-import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, summarizeScope, summaryLines, type ScopePart } from "../../src/main/automation-library.js";
+import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRefusal, setupView, summarizeScope, summaryLines, withWhen, type ScopePart } from "../../src/main/automation-library.js";
 
 /** The parts as the app would describe them, all switched on unless named. */
 const parts: Record<string, ScopePart> = {
@@ -144,3 +144,42 @@ describe("a scope read from the app", () => {
     expect(views.every((v) => v.lines.at(-1)!.does === false && v.title && v.body && v.when)).toBe(true);
   });
 });
+
+describe("a task set up from chat", () => {
+  const args = { title: "Mail to Notes", task: "Summarise today's mail into a note", schedule: { kind: "daily", time: "18:00", days: [1, 2, 3, 4, 5] }, scope: ["mail:read", "apps:notes"], explanation: "Reads today's mail and writes a note." };
+
+  it("is summarised from its own scope, with the model's words beside the lines and not in them", () => {
+    const view = setupView({ ...args, explanation: "It only reads. It never changes anything." }, look);
+    expect(view).toMatchObject({ title: "Mail to Notes", body: "Summarise today's mail into a note", time: "18:00", days: [1, 2, 3, 4, 5], refused: null, off: [] });
+    // The lines say it can change Notes, whatever the model said.
+    expect(view.lines.map((l) => l.text).join("\n")).toContain("Mac apps");
+    expect(view.lines.filter((l) => l.does)).toHaveLength(3);
+    expect(view.lines.at(-1)!.does).toBe(false);
+    expect(view.explanation).toBe("It only reads. It never changes anything.");
+  });
+
+  it("offers no setup when the scope or the time can't be had", () => {
+    expect(setupView({ ...args, scope: ["mail:send"] }, look).refused).toContain("Mail");
+    expect(setupView({ ...args, schedule: { kind: "daily", time: "25:00" } }, look).refused).not.toBeNull();
+    expect(setupView({ ...args, scope: "everything" }, look).refused).not.toBeNull();
+    expect(setupView(null, look).refused).not.toBeNull();
+    // A time once, or by the hour, is not changed on the summary.
+    expect(setupView({ ...args, schedule: { kind: "hourly", every: 3 } }, look)).toMatchObject({ time: null, days: null, refused: null });
+  });
+
+  it("tells the model why a scope is refused, and lets a good one through", () => {
+    expect(scopeRefusal(["calendar:read", "apps:notes"], look)).toBeNull();
+    expect(scopeRefusal(["mail:send"], look)).toMatch(/can't have "mail:send"/);
+    expect(scopeRefusal(["browser:act"], look)).toMatch(/can't have "browser:act"/);
+    expect(scopeRefusal(["shortcuts:run"], look)).toMatch(/can't have/);
+    expect(scopeRefusal(["weather:read"], look)).toMatch(/not a connection part/);
+  });
+
+  it("takes the user's time and days for a daily task only", () => {
+    expect(withWhen({ kind: "daily", time: "18:00", days: [1] }, { time: "07:15", days: [0, 6] })).toEqual({ kind: "daily", time: "07:15", days: [0, 6] });
+    expect(withWhen({ kind: "daily", time: "18:00" }, undefined)).toEqual({ kind: "daily", time: "18:00" });
+    expect(withWhen({ kind: "hourly", every: 3 }, { time: "07:15" })).toEqual({ kind: "hourly", every: 3 });
+    expect(() => withWhen({ kind: "daily", time: "18:00" }, { time: "late" })).toThrow();
+  });
+});
+

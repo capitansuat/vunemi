@@ -1473,6 +1473,7 @@ export const messages = {
       never: "Yapmaz",
       openConnections: "Bağlantıları aç",
       seeAll: "Tümünü gör",
+      explained: "Modelin açıklaması",
       moved: "Zamanlanmış görevler artık Otomasyonlar sayfasında.",
       open: "Otomasyonlar'ı aç",
     },

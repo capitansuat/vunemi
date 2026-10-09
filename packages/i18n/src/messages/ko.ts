@@ -1467,6 +1467,7 @@ export const messages: Catalogue = {
       never: "절대 하지 않는 일",
       openConnections: "연결 열기",
       seeAll: "모두 보기",
+      explained: "모델의 설명",
       moved: "예약된 작업은 이제 자동화 페이지에 있습니다.",
       open: "자동화 열기",
     },

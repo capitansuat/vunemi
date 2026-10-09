@@ -52,8 +52,8 @@ import { generalInstructions, recall } from "./memory/recall.js";
 import { propose, type Proposal } from "./memory/propose.js";
 import { memoryRememberTool } from "./memory/tool.js";
 import { Soul, SOUL_MAX, soulInstructions } from "./soul.js";
-import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, summaryLine, SUGGESTIONS, type Automation, type AutomationStatus } from "./automations.js";
-import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, summarizeScope } from "./automation-library.js";
+import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, summaryLine, SUGGESTIONS, validSchedule, type Automation, type AutomationSetup, type AutomationStatus } from "./automations.js";
+import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRefusal, setupView, summarizeScope, withWhen } from "./automation-library.js";
 import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t, tIn, type Locale } from "@vunemi/i18n";
 import { Recorder, recorderBinary } from "./meetings/recorder.js";
 import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
@@ -417,6 +417,8 @@ let meetingsIndexed = false;
 
 const connectors = buildConnectors({
   automations,
+  // Set up further down, beside the scope lookup it needs; a tool asks for it only when it is called.
+  ...(settings.automationLibrary && { automationSetup: () => automationSetup }),
   library: { library, sources: librarySources, current: () => conversations.currentId },
   tools,
   browser,
@@ -912,6 +914,32 @@ const lookScope = scopeLookup({
   isOn: (id) => connectors.isOn(id),
   isPartOn: (id, part) => connectors.isPartOn(id, part),
   tool: (name) => tools.getAny(name),
+});
+/**
+ * The time and days the user chose on the summary of a setup from chat, kept
+ * until that call runs. The call is known by its arguments: the summary was
+ * made from them, and the tool is run with the same ones.
+ */
+let adjustedSetup: { key: string; when: unknown } | null = null;
+const setupKey = (args: unknown): string => {
+  const a = (args ?? {}) as Record<string, unknown>;
+  return JSON.stringify([a.title, a.task, a.schedule]);
+};
+const automationSetup: AutomationSetup = {
+  refuse: (scope) => scopeRefusal(scope, lookScope),
+  schedule(args, asked) {
+    const chosen = adjustedSetup?.key === setupKey(args) ? adjustedSetup.when : undefined;
+    adjustedSetup = null;
+    return withWhen(asked, chosen);
+  },
+};
+handle(CH.automationsSummarize, (_e, args: unknown) => (settings.automationLibrary ? setupView(args, lookScope) : null));
+handle(CH.automationsAdjust, (_e, args: unknown, when: unknown) => {
+  if (!settings.automationLibrary) return;
+  // Checked now, so a time that can't be read is refused here and not after the user approved.
+  const a = (args ?? {}) as Record<string, unknown>;
+  withWhen(validSchedule(a.schedule), when);
+  adjustedSetup = { key: setupKey(args), when };
 });
 /** The task deleted last from the list, for putting back. */
 let deletedAutomation: Automation | null = null;

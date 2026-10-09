@@ -1467,6 +1467,7 @@ export const messages: Catalogue = {
       never: "Ne fait jamais",
       openConnections: "Ouvrir Connexions",
       seeAll: "Tout voir",
+      explained: "Description du modèle",
       moved: "Les tâches planifiées se trouvent désormais sur la page Automatisations.",
       open: "Ouvrir Automatisations",
     },

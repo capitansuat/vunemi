@@ -66,10 +66,8 @@ export interface AutomationView {
   lastStatus?: "done" | "stopped" | "error" | "missed" | "noModel";
 }
 
-/** A task Vunemi offers to schedule, with the summary shown before it is set up. */
-export interface RecipeView {
-  id: string;
-  category: "morning" | "work" | "files";
+/** What the user is shown before a scheduled task is set up, from the gallery or from chat. */
+export interface SetupView {
   title: string;
   body: string;
   when: string;
@@ -82,6 +80,14 @@ export interface RecipeView {
   off: string[];
   /** Why it can't be set up; null when it can. */
   refused: string | null;
+  /** How the model describes a task set up from chat. Its words, not checked: the lines above are. */
+  explanation?: string;
+}
+
+/** A task Vunemi offers to schedule, with the summary shown before it is set up. */
+export interface RecipeView extends SetupView {
+  id: string;
+  category: "morning" | "work" | "files";
 }
 
 /** The automation library; `enabled` is false while it is switched off in this build. */
@@ -653,6 +659,10 @@ export interface VunemiApi {
   installRecipe(id: string, when?: { time?: string; days?: number[] }): Promise<AutomationView[]>;
   /** Puts back the task deleted last from the list, if there is one. */
   undoDeleteAutomation(): Promise<AutomationView[]>;
+  /** The summary of a task the model asks to set up, from the call's arguments; null while the library is off. */
+  summarizeAutomation(args: unknown): Promise<SetupView | null>;
+  /** The time and days chosen on that summary; the setup about to be approved is saved with them. */
+  adjustAutomation(args: unknown, when: { time?: string; days?: number[] }): Promise<void>;
   onAutomations(listener: (rows: AutomationView[]) => void): () => void;
 
   listArtefacts(): Promise<ArtefactView[]>;
@@ -853,6 +863,8 @@ export const CH = {
   automationsLibrary: "automations:library",
   automationsInstall: "automations:install",
   automationsUndoDelete: "automations:undo-delete",
+  automationsSummarize: "automations:summarize",
+  automationsAdjust: "automations:adjust",
   automationsChanged: "automations:changed",
   readImage: "artifact:image",
   voiceStatus: "voice:status",
