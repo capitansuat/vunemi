@@ -36,6 +36,18 @@ describe("foldEvent", () => {
     expect(expired[0]!.steps[0]!.choices[0]!.status).toBe("expired");
   });
 
+  it("shows an answer once when the model was made to write it again", () => {
+    const runs = fold([
+      ...start,
+      { type: "message.delta", runId: "r", stepId: "s0", text: "How are you?" },
+      { type: "step.started", runId: "r", stepId: "s1", index: 1, at: 2 },
+      { type: "message.delta", runId: "r", stepId: "s1", text: "How are you?" },
+      { type: "step.superseded", runId: "r", stepId: "s0", at: 3 },
+      { type: "run.finished", runId: "r", status: "done", detail: "How are you?", at: 4 },
+    ]);
+    expect(runs[0]!.steps.map((step) => step.text)).toEqual(["", "How are you?"]);
+  });
+
   it("keeps the replies an answer ends on with its step, and waits on nothing", () => {
     const runs = fold([
       ...start,

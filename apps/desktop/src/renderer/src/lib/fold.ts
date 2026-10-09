@@ -195,6 +195,8 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
       const asked = updateStep(run, e.stepId, (s) => ({ ...s, choices: [...s.choices, { runId: e.runId, callId: e.callId, card: e.card, status: "awaiting" }] }));
       return e.replaces ? updateStep(asked, e.replaces, (s) => ({ ...s, replaced: true })) : asked;
     }
+    case "step.superseded":
+      return updateStep(run, e.stepId, (s) => ({ ...s, text: "" }));
     case "replies.offered":
       return updateStep(run, e.stepId, (s) => ({ ...s, replies: e.options }));
     case "choice.answered":

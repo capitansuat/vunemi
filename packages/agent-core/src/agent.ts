@@ -619,6 +619,12 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           if (signal.aborted) return finish("stopped", "Stopped by user.");
           continue;
         }
+        // The turn that check gave came back as text: the answer was a short question
+        // (a translation, a slogan) and is now written a second time. The first goes.
+        if (questionStep !== null && questionStep !== stepId && !questionUsed) {
+          questionUsed = true;
+          emit({ type: "step.superseded", runId, stepId: questionStep, at: now() });
+        }
         // A question with nothing to click: one more turn to give it answers. Only as
         // the task's first words, where a short text ending in "?" is a question to
         // the user and not the answer they asked for.

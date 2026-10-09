@@ -93,6 +93,8 @@ export type AgentEvent =
   // `replaces`: the step whose text these cards stand in for, so it is not shown twice.
   | { type: "choice.asked"; runId: string; stepId: string; callId: string; card: ChoiceCard; replaces?: string; at: number }
   | { type: "choice.answered"; runId: string; callId: string; text: string; index?: number; at: number }
+  /** A later step wrote this step's text again (see the question check in agent.ts): it is not shown twice. */
+  | { type: "step.superseded"; runId: string; stepId: string; at: number }
   /** Short answers to the question an answer ends on. Nothing waits for them: picking one is the user's next message. */
   | { type: "replies.offered"; runId: string; stepId: string; options: string[]; at: number }
   /** Intent preview: what the agent means to do, before it starts. */

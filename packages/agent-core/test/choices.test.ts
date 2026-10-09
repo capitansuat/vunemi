@@ -445,6 +445,9 @@ describe("choice run", () => {
     expect(result).toMatchObject({ status: "done", detail: "What is the recipient's address?" });
     expect(seen).toHaveLength(2);
     expect(events.some((event) => event.type === "choice.asked")).toBe(false);
+    // Written a second time: the first writing is marked, so the text is not shown twice.
+    const steps = events.filter((event) => event.type === "step.started").map((event) => event.type === "step.started" && event.stepId);
+    expect(events.filter((event) => event.type === "step.superseded")).toEqual([expect.objectContaining({ stepId: steps[0] })]);
   });
 
   it("refuses a third question in a row, and counts again after other work", async () => {
