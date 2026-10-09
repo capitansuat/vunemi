@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { find, outline } from "@vunemi/perception";
 import type { BrowserBackend, TabInfo } from "./backend.js";
 import { detectChallenge } from "./challenge.js";
-import { PageActionError, PageDriver, type PointerEvent } from "./page.js";
+import { PageActionError, PageDriver, type OwnerField, type PointerEvent } from "./page.js";
 import type { TrustedSites } from "./url-policy.js";
 
 export interface TabView {
@@ -195,6 +195,12 @@ export class BrowserController {
   /** The outline line for a ref, as the model last saw it. For approval previews. */
   lineFor(ref: number): string | undefined {
     return this.current ? this.snapshots.get(this.current)?.lines.get(ref) : undefined;
+  }
+
+  /** Whether the element is a field only the user fills in (see PageDriver.ownerField); null when it is not, or is gone. */
+  async ownerField(ref: number): Promise<OwnerField | null> {
+    const { driver } = await this.page();
+    return driver.ownerField(ref).catch(() => null);
   }
 
   // -- acting --------------------------------------------------------------

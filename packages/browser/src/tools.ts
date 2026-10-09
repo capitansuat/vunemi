@@ -9,7 +9,7 @@
 
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import type { BrowserController } from "./controller.js";
-import { PageActionError } from "./page.js";
+import { OWNER_REFUSAL, PageActionError } from "./page.js";
 import { checkNavigation } from "./url-policy.js";
 import { t } from "@vunemi/i18n";
 
@@ -78,6 +78,15 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
   const previewRef = (ref: unknown) => {
     const line = typeof ref === "number" ? browser.lineFor(ref) : undefined;
     return line ?? `element [${String(ref)}]`;
+  };
+  // A sign-in form, a passenger's details, a one-time code: the user's to fill in.
+  // Refused before any card, so the user is never asked to approve it; the
+  // refusal sends the model to user_takeover.
+  const ownerCheck = async (ref: unknown): Promise<string | null> => {
+    if (browser.kind === null) return null;
+    const n = typeof ref === "string" ? Number(ref.replace(/[[\]*]/g, "")) : Number(ref);
+    const owner = Number.isInteger(n) ? await browser.ownerField(n).catch(() => null) : null;
+    return owner && OWNER_REFUSAL[owner];
   };
 
   const tools: ToolDef[] = [
@@ -199,6 +208,7 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       },
       actionClass: "outbound",
       untrustedOutput: true,
+      check: (a) => ownerCheck(a.ref),
       preview: async (a) => `"${String(a.text)}" → ${previewRef(a.ref)}${a.submit === true ? " ⏎" : ""}`,
       run: (a, ctx) =>
         guarded(browser, ctx, () =>
@@ -217,6 +227,7 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       },
       actionClass: "outbound",
       untrustedOutput: true,
+      check: (a) => ownerCheck(a.ref),
       preview: async (a) => `"${String(a.option)}" → ${previewRef(a.ref)}`,
       // The same wall check as the other page actions: a sign-in or payment step is the user's.
       run: (a, ctx) =>

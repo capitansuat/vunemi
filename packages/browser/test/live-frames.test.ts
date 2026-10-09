@@ -31,8 +31,8 @@ const widget = (port: number) => `<!doctype html>
   <p id="echo"></p>
   <button onclick="document.getElementById('said').textContent='Code applied'">Apply code</button>
   <p id="said"></p>
-  <label>Card number <input autocomplete="cc-number"></label>
-  <label>Password <input type="password"></label>
+  <form><label>Card number <input autocomplete="cc-number"></label>
+  <label>Password <input type="password"></label></form>
   <button style="position:absolute;left:20px;top:330px">Under the banner</button>
   <iframe title="Deep" src="/deep" style="position:absolute;left:260px;top:10px;width:220px;height:90px;border:0"></iframe>
   <iframe title="Leaf" src="http://127.0.0.1:${port}/leaf" style="position:absolute;left:260px;top:110px;width:220px;height:90px;border:2px solid #999"></iframe>

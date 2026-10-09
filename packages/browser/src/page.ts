@@ -435,22 +435,25 @@ export class PageDriver {
     await this.s.send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
   }
 
+  /**
+   * Whether a field is one only the user fills in, and which kind: a
+   * password, a payment card, a one-time code, the rest of a sign-in form,
+   * or personal details (see OWNER_FIELD). Null for any other element.
+   */
+  async ownerField(ref: number): Promise<OwnerField | null> {
+    return this.callOn<OwnerField | null>(ref, OWNER_FIELD).catch((e: unknown) => {
+      // A ref that is gone is the action's own error to give; nothing else hides a refusal.
+      if (e instanceof PageActionError) throw e;
+      return null;
+    });
+  }
+
   async type(ref: number, text: string, opts: { submit?: boolean; clear?: boolean } = {}): Promise<void> {
     const info = await this.describe(ref);
-    if (info.inputType === "password") {
-      throw new PageActionError(
-        "This is a password field. Passwords are entered by the user, never by the assistant. Ask the user to type it themselves.",
-      );
-    }
+    // The tools refuse these before any card is shown; this is the same rule for every other caller.
+    const owner = info.inputType === "password" ? "password" : await this.ownerField(ref);
+    if (owner) throw new PageActionError(OWNER_REFUSAL[owner]);
     if (info.inputType === "hidden") throw new PageActionError(`Element [${ref}] is a hidden input and cannot be typed into.`);
-    // A payment form is often a frame from the payment company; with those
-    // readable, a card field is within reach, and it is the user's to fill.
-    const card = await this.callOn<boolean>(ref, "function() { return ((this.getAttribute && this.getAttribute('autocomplete')) || '').trim().toLowerCase().startsWith('cc-'); }").catch(() => false);
-    if (card) {
-      throw new PageActionError(
-        "This is a payment card field. Card details are entered by the user, never by the assistant. Call user_takeover so the user can fill them in.",
-      );
-    }
 
     // A field with no box of its own (some editors keep one off-screen) is
     // still typed into; one with a box must be the one the user can see.
@@ -509,6 +512,9 @@ export class PageDriver {
   }
 
   async select(ref: number, option: string): Promise<string> {
+    // A title, a day of birth, a country of issue: a dropdown can ask for the user's details too.
+    const owner = await this.ownerField(ref);
+    if (owner) throw new PageActionError(OWNER_REFUSAL[owner]);
     const r = await this.callOn<{ ok: boolean; chosen?: string; options?: string[] }>(
       ref,
       `function(wanted) {
@@ -637,6 +643,57 @@ interface FrameTree {
   frame: { id: string };
   childFrames?: FrameTree[];
 }
+
+/** A field only the user fills in: what it asks for. */
+export type OwnerField = "password" | "card" | "code" | "sign-in" | "personal";
+
+/** What the model is told when it reaches for one. */
+export const OWNER_REFUSAL: Record<OwnerField, string> = {
+  password: "This is a password field. Passwords are entered by the user, never by the assistant. Ask the user to type it themselves.",
+  card: "This is a payment card field. Card details are entered by the user, never by the assistant. Call user_takeover so the user can fill them in.",
+  code: "This field takes a one-time code. Codes are entered by the user, never by the assistant. Call user_takeover so the user can enter it. Nothing was typed.",
+  "sign-in": "This field is part of a sign-in or account form. Signing in is done by the user, never by the assistant. Call user_takeover with a short reason in the user's language that names the choices on the page (sign in, or continue as a guest if the page offers it). Nothing was typed.",
+  personal: "This field asks for the user's personal details (name, contact, date of birth, address or an ID). Those are entered by the user, never by the assistant, even when the user wrote them in the chat. Call user_takeover with a short reason in the user's language so the user can fill in the form. Nothing was typed.",
+};
+
+/**
+ * Says which kind of field an element is, when it is one only the user
+ * fills in. What a field asks for is read from what the page declares
+ * (its type and autocomplete), and for personal details also from how the
+ * field is named and labelled, since most passenger forms declare nothing.
+ * The words are the well-known ones, not every language's: a form that
+ * slips through is still covered by the rule the model is given
+ * (BROWSER_INSTRUCTIONS).
+ *
+ * A field is part of a sign-in form when its form holds a password field
+ * that is shown; with no form around it, when the page shows a password
+ * field that has no form either and the field is not a search box.
+ */
+const OWNER_FIELD = `function() {
+  const el = this;
+  if (!el || el.nodeType !== 1 || !/^(?:INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return null;
+  const attr = (name) => (el.getAttribute(name) || '').trim().toLowerCase();
+  const type = el.tagName === 'INPUT' ? (attr('type') || 'text') : el.tagName.toLowerCase();
+  if (/^(?:hidden|submit|button|reset|image|file|checkbox|radio|range|color)$/.test(type)) return null;
+  const auto = attr('autocomplete').split(/\\s+/);
+  const has = (re) => auto.some((token) => re.test(token));
+  if (type === 'password' || has(/^(?:current|new)-password$/)) return 'password';
+  if (has(/^cc-/)) return 'card';
+  if (has(/^one-time-code$/)) return 'code';
+  const labels = el.labels ? [...el.labels].map((label) => label.textContent || '') : [];
+  const said = [attr('name'), attr('id'), attr('aria-label'), attr('placeholder'), ...labels].join(' ').toLowerCase().slice(0, 600);
+  // "Search by name or e-mail" asks for nobody's details.
+  const search = type === 'search' || /^(?:searchbox|combobox)$/.test(attr('role')) || /search|\\bara\\b|\\bbul\\b|suche|buscar|cerca|recherch|pesquis/.test(said);
+  const form = el.closest('form');
+  // With no form around the field, only a password field that has none either is its neighbour.
+  const passwords = [...(form || el.ownerDocument).querySelectorAll('input[type=password]')].filter((field) => field.getClientRects().length > 0 && (form || !field.closest('form')));
+  if (has(/^(?:username|webauthn)$/) || (passwords.length > 0 && (form ? true : !search && /^(?:text|email|tel)$/.test(type)))) return 'sign-in';
+  if (has(/^(?:name|given-name|additional-name|family-name|honorific-prefix|honorific-suffix|nickname|email|tel|tel-.+|bday|bday-.+|sex|street-address|address-line[123])$/)) return 'personal';
+  if (search) return null;
+  if (type === 'email') return 'personal';
+  const words = /(?:first|given|fore|middle|last|family|sur|full)[\\s_-]?name|vorname|nachname|pr[ée]nom|nom de famille|apellido|cognome|sobrenome|soyad|ad[ıi]n[ıi]z|ad[ıi]?\\s+soyad|birth|\\bdob\\b|do[ğg]um|geburt|naissance|nacimiento|nascita|nascimento|passport|pasaport|reisepass|passeport|pasaporte|passaporto|national[\\s_-]?id|identity[\\s_-]?(?:number|card|no)|kimlik|\\bssn\\b|social[\\s_-]?security|e-?mail|e-?posta|correo electr|phone|telefon|t[ée]l[ée]phone|tel[ée]fono|cellulare|celular|\\bmobile\\b|\\bcep\\b/;
+  return words.test(said) ? 'personal' : null;
+}`;
 
 /** A frame from another site: it runs in a process of its own and is reached through a session of its own. */
 interface OuterFrame {
