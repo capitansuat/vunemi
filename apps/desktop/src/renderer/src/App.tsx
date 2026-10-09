@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, Bug, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Bug, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, CalendarClock, Trash2, Users } from "lucide-react";
 import { ArtefactsView } from "./components/ArtefactsView.js";
+import { AutomationsView } from "./components/AutomationsView.js";
 import { MeetingsView } from "./components/MeetingsView.js";
 import { ProjectNotesView } from "./components/WorkNotes.js";
 import { BackgroundBrowsing, BrowserPane } from "./components/BrowserPane.js";
@@ -52,6 +53,7 @@ export function App() {
     });
     const offSessions = window.vunemi.onSessions(setSessions);
     void refreshEngine();
+    void useStore.getState().refreshLibrary();
     const offEngine = window.vunemi.onEngine(setEngine);
     return () => {
       offEngine();
@@ -72,6 +74,8 @@ export function App() {
           <ArtefactsView />
         ) : view === "meetings" ? (
           <MeetingsView />
+        ) : view === "automations" ? (
+          <AutomationsView />
         ) : view === "notes" ? (
           <ProjectNotesView />
         ) : view === "settings" ? (
@@ -115,6 +119,8 @@ function DebugPortWarning() {
  */
 function Sidebar() {
   const { newSession, running, navFolded, setNavFolded } = useStore();
+  // The Automations page exists only in a build with the library switched on.
+  const library = useStore((s) => s.library?.enabled === true);
   if (navFolded) {
     return (
       <aside className="drag flex w-[60px] shrink-0 flex-col items-center border-r border-line bg-surface">
@@ -126,6 +132,7 @@ function Sidebar() {
           <ViewButton view="chat" label={t("app.nav.chat")} icon={MessageSquare} folded />
           <ViewButton view="artefacts" label={t("app.nav.artefacts")} icon={Package} folded />
           <ViewButton view="meetings" label={t("app.nav.meetings")} icon={Users} folded />
+          {library && <ViewButton view="automations" label={t("app.nav.automations")} icon={CalendarClock} folded />}
         </div>
         <div className="no-drag mt-auto flex flex-col items-center gap-1 pb-4">
           <IconButton label={t("app.reportProblem")} icon={Bug} onClick={() => void window.vunemi.reportProblem()} />
@@ -164,6 +171,7 @@ function Sidebar() {
         <ViewButton view="chat" label={t("app.nav.chat")} icon={MessageSquare} />
         <ViewButton view="artefacts" label={t("app.nav.artefacts")} icon={Package} />
         <ViewButton view="meetings" label={t("app.nav.meetings")} icon={Users} />
+        {library && <ViewButton view="automations" label={t("app.nav.automations")} icon={CalendarClock} />}
       </div>
 
       <SessionsNav />
@@ -468,7 +476,8 @@ function Interrupted() {
 }
 
 function Empty() {
-  const { send, suggest, model, providers, engine, sessions, openConnection } = useStore();
+  const { send, suggest, model, providers, engine, sessions, openConnection, openAutomations } = useStore();
+  const library = useStore((s) => s.library);
   const project = sessions.projects.find((p) => p.id === sessions.project) ?? null;
   // Which connections are switched on; suggestions that need one wait for it.
   const [ready, setReady] = useState<Set<string> | null>(null);
@@ -485,6 +494,8 @@ function Empty() {
   const goals = available(project ? PROJECT_GOALS : GOALS, ready);
   const ideas = available(project ? PROJECT_IDEAS : IDEAS, ready);
   const discover = project ? [] : switchable(ready);
+  // One recipe of each kind; the page has the rest.
+  const recipes = project || !library?.enabled ? [] : library.recipes.filter((r, i, all) => all.findIndex((o) => o.category === r.category) === i).slice(0, 3);
   // No model anywhere: getting one is the only useful thing on this screen.
   const setup = providers !== null && providers.every((p) => p.models.length === 0) && engine?.available === true;
   return (
@@ -545,6 +556,29 @@ function Empty() {
             ))}
           </div>
         </section>
+        {recipes.length > 0 && (
+          <section aria-labelledby="empty-recipes">
+            <h2 id="empty-recipes" className="text-center text-[12px] font-medium text-muted">{t("automations.page.title")}</h2>
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              {recipes.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => openAutomations(r.id)}
+                  className="flex items-start gap-2 rounded-xl border border-line bg-surface px-3 py-2.5 text-left text-[12.5px] leading-snug text-muted transition-colors hover:border-line-strong hover:text-fg"
+                >
+                  <CalendarClock size={15} className="mt-px shrink-0 text-ember" />
+                  <span>{r.title}</span>
+                </button>
+              ))}
+            </div>
+            <div className="mt-1.5 text-center">
+              <button type="button" onClick={() => openAutomations()} className="rounded-md px-2 py-0.5 text-[12px] text-faint hover:text-fg">
+                {t("automations.page.seeAll")}
+              </button>
+            </div>
+          </section>
+        )}
         {discover.length > 0 && (
           <section aria-labelledby="empty-discover">
             <h2 id="empty-discover" className="text-center text-[12px] font-medium text-muted">{t("app.discover.title")}</h2>

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { AgentEvent, ApprovalDecision, HandoffOutcome, PlanDecision } from "@vunemi/agent-core";
-import type { ActivityEntry, ContextInfo, EmbeddedState, EngineView, MentionRef, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
+import type { ActivityEntry, AutomationLibraryView, ContextInfo, EmbeddedState, EngineView, MentionRef, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
 import { earcon, record, type Recorder } from "./lib/audio.js";
 import { foldEvent, replyText, type RunView } from "./lib/fold.js";
 import { getLocale, setLocale as setI18nLocale, t, type Locale } from "@vunemi/i18n";
@@ -89,7 +89,7 @@ function storeModel(spec: string | null): void {
  * user should never have to guess whether Vunemi is still listening.
  */
 /** Which view fills the main column. */
-export type View = "chat" | "artefacts" | "meetings" | "settings" | "notes";
+export type View = "chat" | "artefacts" | "meetings" | "automations" | "settings" | "notes";
 
 /** Settings keeps everything besides the conversation and what it made, so the sidebar stays short. */
 export type SettingsSection = "permissions" | "security" | "connections" | "vault" | "outbox" | "automations" | "activity" | "model" | "language" | "appearance" | "memory" | "soul" | "data" | "updates";
@@ -141,6 +141,10 @@ interface State {
   notesProject: string | null;
   /** A connection to open and show when Connections next appears. */
   connectionFocus: string | null;
+  /** The automation library, null until the main process says whether this build has it. */
+  library: AutomationLibraryView | null;
+  /** A recipe whose setup screen the Automations page opens with. */
+  recipeFocus: string | null;
   /** The sidebar folded to icons. */
   navFolded: boolean;
   voice: Voice;
@@ -200,6 +204,9 @@ interface State {
   openProjectNotes(projectId: string): void;
   /** Settings › Connections, with this one opened. */
   openConnection(id: string | null): void;
+  refreshLibrary(): Promise<void>;
+  /** The Automations page, on this recipe's setup screen when one is named. */
+  openAutomations(recipe?: string | null): void;
   setNavFolded(folded: boolean): void;
   setEngine(view: EngineView): void;
   refreshEngine(): Promise<void>;
@@ -250,6 +257,8 @@ export const useStore = create<State>((set, get) => ({
   settingsSection: "permissions",
   notesProject: null,
   connectionFocus: null,
+  library: null,
+  recipeFocus: null,
   navFolded: readFolded(),
   voice: { status: null, state: "off", partial: "", level: 0, handsFree: false, turn: false, error: null },
   dictated: null,
@@ -632,6 +641,16 @@ export const useStore = create<State>((set, get) => ({
 
   openConnection(id) {
     set(id === null ? { connectionFocus: null } : { view: "settings", settingsSection: "connections", connectionFocus: id });
+  },
+
+  async refreshLibrary() {
+    // A build without the library answers "off"; an older main process doesn't answer at all.
+    const library = await window.vunemi.automationLibrary().catch(() => null);
+    set({ library });
+  },
+
+  openAutomations(recipe = null) {
+    set({ view: "automations", recipeFocus: recipe });
   },
 
   setNavFolded(folded) {

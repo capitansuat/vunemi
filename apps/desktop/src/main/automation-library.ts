@@ -118,11 +118,14 @@ export function summaryLines(summary: ScopeSummary): SummaryLine[] {
 
 /** What the app knows of its connections and tools, as far as a scope needs. */
 export interface ScopeWorld {
-  connector(id: string): { label: string; capabilities?: readonly { id: string; tools: readonly string[] }[] } | undefined;
+  connector(id: string): { label: string; capabilities?: readonly { id: string; label: string; tools: readonly string[] }[] } | undefined;
   isOn(id: string): boolean;
   isPartOn(id: string, part: string): boolean;
   tool(name: string): Pick<ToolDef, "actionClass" | "saves"> | undefined;
 }
+
+/** Connections whose parts are different apps: the summary names the app ("Notes"), not the connection. */
+const NAMED_BY_PART = ["apps"];
 
 /** Describes a scope's parts from the connections and tools the app has now. */
 export function scopeLookup(world: ScopeWorld): (source: string) => ScopePart | null {
@@ -133,7 +136,7 @@ export function scopeLookup(world: ScopeWorld): (source: string) => ScopePart | 
     if (!connector || parts.length === 0) return null;
     const tools = parts.flatMap((part) => part.tools.flatMap((name) => world.tool(name) ?? []));
     return {
-      connection: connector.label,
+      connection: partId !== undefined && NAMED_BY_PART.includes(id) ? parts[0]!.label : connector.label,
       reads: tools.some((tool) => tool.actionClass === "read" && !tool.saves),
       // Sending, deleting and paying are not counted: a scheduled run never gets those tools.
       changes: tools.some((tool) => tool.actionClass === "write-local" || (tool.actionClass === "read" && tool.saves === true)),

@@ -99,13 +99,15 @@ describe("a recipe's schedule", () => {
 describe("a scope read from the app", () => {
   const tools: Record<string, { actionClass: "read" | "write-local" | "destructive" | "outbound"; saves?: boolean }> = {
     calendar_events: { actionClass: "read" }, calendar_create: { actionClass: "write-local" }, calendar_delete: { actionClass: "destructive" },
+    notes_read: { actionClass: "read" }, notes_create: { actionClass: "write-local" }, finder_selection: { actionClass: "read" },
     mail_read: { actionClass: "read" }, mail_send: { actionClass: "outbound" }, files_download: { actionClass: "read", saves: true },
   };
   const look = scopeLookup({
     connector: (id) => ({
-      calendar: { label: "Calendar", capabilities: [{ id: "read", tools: ["calendar_events"] }, { id: "write", tools: ["calendar_create", "calendar_delete"] }] },
-      mail: { label: "Mail", capabilities: [{ id: "read", tools: ["mail_read"] }, { id: "send", tools: ["mail_send"] }] },
-      files: { label: "Files", capabilities: [{ id: "get", tools: ["files_download", "gone_tool"] }] },
+      calendar: { label: "Calendar", capabilities: [{ id: "read", label: "Reading", tools: ["calendar_events"] }, { id: "write", label: "Adding", tools: ["calendar_create", "calendar_delete"] }] },
+      mail: { label: "Mail", capabilities: [{ id: "read", label: "Reading", tools: ["mail_read"] }, { id: "send", label: "Sending", tools: ["mail_send"] }] },
+      files: { label: "Files", capabilities: [{ id: "get", label: "Downloading", tools: ["files_download", "gone_tool"] }] },
+      apps: { label: "Mac apps", capabilities: [{ id: "notes", label: "Notes", tools: ["notes_read", "notes_create"] }, { id: "finder", label: "Finder", tools: ["finder_selection"] }] },
     })[id],
     isOn: (id) => id !== "mail",
     isPartOn: (_id, part) => part !== "write",
@@ -118,6 +120,11 @@ describe("a scope read from the app", () => {
     expect(look("mail:send")).toEqual({ connection: "Mail", reads: false, changes: false, on: false });
     // A tool that reads and saves a file changes the Mac.
     expect(look("files:get")).toEqual({ connection: "Files", reads: false, changes: true, on: true });
+  });
+
+  it("names an app by its own name, where the parts of a connection are different apps", () => {
+    expect(look("apps:notes")).toEqual({ connection: "Notes", reads: true, changes: true, on: true });
+    expect(look("apps")?.connection).toBe("Mac apps");
   });
 
   it("takes a whole connection as all its parts, and knows nothing of what is not there", () => {
