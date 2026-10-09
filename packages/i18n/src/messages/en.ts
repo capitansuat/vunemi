@@ -528,6 +528,14 @@ export const messages: Catalogue = {
 
   workNotes: { saved: "Note saved: {title}", delete: "Delete note", title: "Notes · {name}", open: "Notes of {name}", empty: "No notes yet. Vunemi notes decisions and findings here that later conversations in this project should know.", outside: "Saw outside content: {sources}" },
   modelsMemory: { title: "Now in memory", chat: "Chat model", meaning: "Meaning search", voice: "Speech recognition", notLoaded: "not loaded", unmeasured: "could not be measured", summary: "This Mac: {total} · available now: {available}", unloaded: "{time} · memory ran short; unloaded: {names}", lowered: "{time} · context lowered to {context}" },
+  soul: {
+    description: "Write in your own words how Vunemi should talk to you: how it addresses you, how long, how formal, how playful. It is for tone and style only and doesn't change what Vunemi may do. Only you write this; Vunemi can't change it.",
+    placeholder: "For example:\nKeep answers short; give the result first and the detail if I ask.\nBe plain and direct, no pleasantries.\nA dry joke now and then is fine.",
+    saved: "Saved.",
+    applies: "It applies from your next request. Empty the box and save to remove it.",
+    tooLong: "At most {max} characters.",
+    label: "Personality text",
+  },
   memory: {
     title: "Memory",
     description: "What Vunemi has learned from you, each note with the words it came from. Only the notes that fit a task are given to it.",
@@ -586,6 +594,7 @@ export const messages: Catalogue = {
       appearance: "Appearance",
       updates: "Updates",
       memory: "Memory",
+      soul: "Personality",
       data: "Data controls",
       vault: "Vault",
       outbox: "Outbox",

@@ -528,6 +528,14 @@ export const messages: Catalogue = {
 
   workNotes: { saved: "已保存笔记：{title}", delete: "删除笔记", title: "笔记 · {name}", open: "{name} 的笔记", empty: "还没有笔记。Vunemi 会在这里记下本项目后续对话需要知道的决定和发现。", outside: "看过外部内容：{sources}" },
   modelsMemory: { title: "当前内存中", chat: "聊天模型", meaning: "语义搜索", voice: "语音识别", notLoaded: "未加载", unmeasured: "无法测量", summary: "这台 Mac：{total} · 当前可用：{available}", unloaded: "{time} · 内存不足；已卸载：{names}", lowered: "{time} · 上下文已降至 {context}" },
+  soul: {
+    description: "用你自己的话写下 Vunemi 该怎样和你说话：称呼、篇幅、正式程度、幽默感。它只关乎语气和风格，不改变 Vunemi 能做什么。只有你能写这段文字，Vunemi 无法更改。",
+    placeholder: "例如：\n回答要简短；先说结果，我问了再讲细节。\n直截了当，不要客套。\n偶尔开个玩笑也可以。",
+    saved: "已保存。",
+    applies: "从你的下一个请求起生效。清空并保存即可移除。",
+    tooLong: "最多 {max} 个字符。",
+    label: "个性文字",
+  },
   memory: {
     title: "记忆",
     description: "Vunemi 从你这里学到的内容，每条笔记都附有它来自的你的原话。每个任务只会收到与之相关的笔记。",
@@ -586,6 +594,7 @@ export const messages: Catalogue = {
       appearance: "外观",
       updates: "更新",
       memory: "记忆",
+      soul: "个性",
       data: "数据控制",
       vault: "保险箱",
       outbox: "发件箱",

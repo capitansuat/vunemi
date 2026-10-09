@@ -528,6 +528,14 @@ export const messages: Catalogue = {
 
   workNotes: { saved: "Nota salva: {title}", delete: "Excluir nota", title: "Notas · {name}", open: "Notas de {name}", empty: "Ainda não há notas. O Vunemi anota aqui as decisões e descobertas que as próximas conversas deste projeto devem conhecer.", outside: "Viu conteúdo externo: {sources}" },
   modelsMemory: { title: "Na memória agora", chat: "Modelo de conversa", meaning: "Busca por significado", voice: "Reconhecimento de voz", notLoaded: "não carregado", unmeasured: "não foi possível medir", summary: "Este Mac: {total} · livre agora: {available}", unloaded: "{time} · faltou memória; descarregado: {names}", lowered: "{time} · contexto reduzido para {context}" },
+  soul: {
+    description: "Escreva com suas palavras como o Vunemi deve falar com você: o tratamento, o tamanho das respostas, a formalidade, o humor. Vale só para tom e estilo; não muda o que o Vunemi pode fazer. Só você escreve isto; o Vunemi não pode alterar.",
+    placeholder: "Por exemplo:\nMe trate por \"você\".\nEscreva curto; primeiro o resultado, os detalhes se eu pedir.\nSeja simples e direto, sem rodeios.",
+    saved: "Salvo.",
+    applies: "Vale a partir do seu próximo pedido. Esvazie a caixa e salve para remover.",
+    tooLong: "No máximo {max} caracteres.",
+    label: "Texto da personalidade",
+  },
   memory: {
     title: "Memória",
     description: "O que o Vunemi aprendeu com você, cada nota com as palavras de onde veio. Cada tarefa recebe só as notas que lhe dizem respeito.",
@@ -586,6 +594,7 @@ export const messages: Catalogue = {
       appearance: "Aparência",
       updates: "Atualizações",
       memory: "Memória",
+      soul: "Personalidade",
       data: "Controle de dados",
       vault: "Cofre",
       outbox: "Caixa de saída",

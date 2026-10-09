@@ -528,6 +528,14 @@ export const messages: Catalogue = {
 
   workNotes: { saved: "Notiz gespeichert: {title}", delete: "Notiz löschen", title: "Notizen · {name}", open: "Notizen von {name}", empty: "Noch keine Notizen. Vunemi notiert hier Entscheidungen und Ergebnisse, die spätere Unterhaltungen in diesem Projekt kennen sollten.", outside: "Hat fremde Inhalte gesehen: {sources}" },
   modelsMemory: { title: "Jetzt im Speicher", chat: "Chatmodell", meaning: "Bedeutungssuche", voice: "Spracherkennung", notLoaded: "nicht geladen", unmeasured: "nicht messbar", summary: "Dieser Mac: {total} · jetzt frei: {available}", unloaded: "{time} · Speicher wurde knapp; entladen: {names}", lowered: "{time} · Kontext auf {context} gesenkt" },
+  soul: {
+    description: "Schreiben Sie in eigenen Worten, wie Vunemi mit Ihnen sprechen soll: Anrede, Länge, Förmlichkeit, Humor. Es geht nur um Ton und Stil; was Vunemi tun darf, ändert sich dadurch nicht. Nur Sie schreiben das; Vunemi kann es nicht ändern.",
+    placeholder: "Zum Beispiel:\nDuze mich.\nSchreib kurz; zuerst das Ergebnis, Einzelheiten nur auf Nachfrage.\nSachlich und direkt, ohne Floskeln.",
+    saved: "Gespeichert.",
+    applies: "Gilt ab Ihrer nächsten Anfrage. Leeren Sie das Feld und speichern Sie, um die Persönlichkeit zu entfernen.",
+    tooLong: "Höchstens {max} Zeichen.",
+    label: "Text der Persönlichkeit",
+  },
   memory: {
     title: "Gedächtnis",
     description: "Was Vunemi von dir gelernt hat, jede Notiz mit den Worten, aus denen sie stammt. Eine Aufgabe erhält nur die Notizen, die zu ihr passen.",
@@ -586,6 +594,7 @@ export const messages: Catalogue = {
       appearance: "Erscheinungsbild",
       updates: "Updates",
       memory: "Gedächtnis",
+      soul: "Persönlichkeit",
       data: "Datenkontrolle",
       vault: "Tresor",
       outbox: "Postausgang",

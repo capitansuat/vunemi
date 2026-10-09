@@ -528,6 +528,14 @@ export const messages: Catalogue = {
 
   workNotes: { saved: "メモを保存しました：{title}", delete: "メモを削除", title: "メモ · {name}", open: "{name} のメモ", empty: "まだメモはありません。Vunemi は、このプロジェクトの今後の会話が知っておくべき決定や発見をここに記録します。", outside: "外部のコンテンツを参照：{sources}" },
   modelsMemory: { title: "現在メモリ上", chat: "チャットモデル", meaning: "意味検索", voice: "音声認識", notLoaded: "未読み込み", unmeasured: "測定できません", summary: "この Mac：{total} · 現在の空き：{available}", unloaded: "{time} · メモリ不足のため解放：{names}", lowered: "{time} · コンテキストを {context} に縮小" },
+  soul: {
+    description: "Vunemi にどう話してほしいかを自分の言葉で書いてください：呼び方、長さ、丁寧さ、ユーモア。口調と文体だけのためのもので、Vunemi にできることは変わりません。これを書けるのはあなただけで、Vunemi は変更できません。",
+    placeholder: "例：\n答えは短く。まず結論、詳しいことは聞いたときだけ。\n率直に、前置きなしで。\nたまに軽い冗談があってもよい。",
+    saved: "保存しました。",
+    applies: "次の依頼から反映されます。空にして保存すると削除されます。",
+    tooLong: "最大 {max} 文字です。",
+    label: "パーソナリティの文章",
+  },
   memory: {
     title: "メモリ",
     description: "Vunemi があなたから学んだこと。各メモには、その元になったあなたの言葉が付いています。タスクには関係するメモだけが渡されます。",
@@ -586,6 +594,7 @@ export const messages: Catalogue = {
       appearance: "外観",
       updates: "アップデート",
       memory: "メモリ",
+      soul: "パーソナリティ",
       data: "データの管理",
       vault: "金庫",
       outbox: "送信トレイ",

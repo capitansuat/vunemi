@@ -483,6 +483,10 @@ export interface VunemiApi {
   updateMemory(id: string, text: string): Promise<MemoryNoteView[]>;
   deleteMemory(id: string): Promise<MemoryNoteView[]>;
   forgetMemory(): Promise<MemoryNoteView[]>;
+  /** The personality file: how the user wants Vunemi to write to them, and how long it may be. */
+  getSoul(): Promise<{ text: string; max: number }>;
+  /** Saves it and returns it as kept; an empty text removes it. Only the window calls this. */
+  setSoul(text: string): Promise<string>;
   listWorkNotes(scope: { projectId?: string; conversationId?: string }): Promise<WorkNoteView[]>;
   deleteWorkNote(id: string, scope: { projectId?: string; conversationId?: string }): Promise<WorkNoteView[]>;
   /** What the local models hold now (models/manager.ts); measured on each call. */
@@ -770,6 +774,8 @@ export const CH = {
   sessionsDismiss: "sessions:dismiss",
   artefactsUndo: "artefacts:undo",
   artefactsChanged: "artefacts:changed",
+  soulGet: "soul:get",
+  soulSet: "soul:set",
   automationsList: "automations:list",
   automationsSet: "automations:set",
   automationsSuggest: "automations:suggest",

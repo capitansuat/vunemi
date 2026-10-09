@@ -532,6 +532,14 @@ export const messages = {
 
   workNotes: { saved: "Not alındı: {title}", delete: "Notu sil", title: "Notlar · {name}", open: "{name} notları", empty: "Henüz not yok. Vunemi bu projede sonraki konuşmaların bilmesi gereken bir karar ya da bulgu olduğunda buraya not alır.", outside: "Dış içerik görmüş: {sources}" },
   modelsMemory: { title: "Şu an bellekte", chat: "Sohbet modeli", meaning: "Anlam araması", voice: "Ses tanıma", notLoaded: "kapalı", unmeasured: "ölçülemedi", summary: "Bu Mac: {total} · şu an boş: {available}", unloaded: "{time} · bellek daraldı; boşaltıldı: {names}", lowered: "{time} · bağlam {context} değerine indirildi" },
+  soul: {
+    description: "Vunemi'nin seninle nasıl konuşacağını kendi sözlerinle yaz: hitap, uzunluk, resmiyet, mizah. Yalnız ton ve üslup içindir; Vunemi'nin neyi yapabileceğini değiştirmez. Bunu yalnız sen yazarsın, Vunemi değiştiremez.",
+    placeholder: "Örnek:\nBana \"sen\" diye hitap et.\nKısa yaz; önce sonucu söyle, ayrıntıyı sorarsam ver.\nResmî olma, ama laubali de olma.",
+    saved: "Kaydedildi.",
+    applies: "Bir sonraki isteğinden itibaren geçerli olur. Kutuyu boşaltıp kaydedersen kişilik kaldırılır.",
+    tooLong: "En çok {max} karakter.",
+    label: "Kişilik metni",
+  },
   memory: {
     title: "Hafıza",
     description: "Vunemi'nin senden öğrendikleri; her not, geldiği sözlerinle birlikte. Bir göreve yalnızca ona uyan notlar verilir.",
@@ -590,6 +598,7 @@ export const messages = {
       appearance: "Görünüm",
       updates: "Güncellemeler",
       memory: "Hafıza",
+      soul: "Kişilik",
       data: "Veri denetimleri",
       vault: "Kasa",
       outbox: "Gönderim kutusu",

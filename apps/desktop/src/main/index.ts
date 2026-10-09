@@ -51,6 +51,7 @@ import { Embedder } from "./memory/embedder.js";
 import { generalInstructions, recall } from "./memory/recall.js";
 import { propose, type Proposal } from "./memory/propose.js";
 import { memoryRememberTool } from "./memory/tool.js";
+import { Soul, SOUL_MAX, soulInstructions } from "./soul.js";
 import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, suggestion, summaryLine, type AutomationStatus } from "./automations.js";
 import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t, tIn, type Locale } from "@vunemi/i18n";
 import { Recorder, recorderBinary } from "./meetings/recorder.js";
@@ -315,6 +316,8 @@ async function redactOrThrow(text: string): Promise<string> {
 const llamaServer = engineBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir() });
 // What Vunemi remembers about the user; Preferences move in on first start.
 const memory = new MemoryStore(app.getPath("userData"), redact);
+/** How the user wants to be written to; only the window's Settings page writes it. */
+const soul = new Soul(app.getPath("userData"));
 void vaultReady.then(() => memory.check());
 const meaning = new Embedder({
   binary: llamaServer,
@@ -642,7 +645,8 @@ const session: AgentSession = new AgentSession({
   // Read per run: a connection switched off mid-session stops being
   // described as well as stopping working.
   instructions: () =>
-    [languageInstructions(), generalInstructions(memory), connectors.instructions({ guides: false }), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write"))]
+    // The personality comes last: when the user rewrites it, what a local server has cached before it still holds.
+    [languageInstructions(), generalInstructions(memory), connectors.instructions({ guides: false }), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write")), soulInstructions(soul.read())]
       .filter(Boolean)
       .join("\n\n"),
   planBeforeRun: () => settings.planBeforeRun,
@@ -1083,6 +1087,8 @@ handle(CH.memoryForget, () => {
   proposals.clear();
   return memory.list();
 });
+handle(CH.soulGet, () => ({ text: soul.read(), max: SOUL_MAX }));
+handle(CH.soulSet, (_e, text: unknown) => soul.write(text));
 /** A project's notes, or a conversation's own; the scope is checked here, never trusted as given. */
 function workScope(scope: unknown): string | null {
   const s = (scope ?? {}) as { projectId?: unknown; conversationId?: unknown };
@@ -1366,6 +1372,7 @@ handle(CH.forgetEverything, async () => {
   await artefacts.clear();
   await vault.clear();
   memory.clear();
+  soul.clear();
   library.clear();
   work?.clear();
   proposals.clear();

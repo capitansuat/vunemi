@@ -528,6 +528,14 @@ export const messages: Catalogue = {
 
   workNotes: { saved: "Note enregistrée : {title}", delete: "Supprimer la note", title: "Notes · {name}", open: "Notes de {name}", empty: "Pas encore de notes. Vunemi note ici les décisions et les trouvailles que les conversations suivantes de ce projet doivent connaître.", outside: "A vu du contenu extérieur : {sources}" },
   modelsMemory: { title: "En mémoire", chat: "Modèle de discussion", meaning: "Recherche par le sens", voice: "Reconnaissance vocale", notLoaded: "non chargé", unmeasured: "mesure impossible", summary: "Ce Mac : {total} · disponible : {available}", unloaded: "{time} · mémoire insuffisante ; déchargé : {names}", lowered: "{time} · contexte réduit à {context}" },
+  soul: {
+    description: "Écrivez avec vos mots comment Vunemi doit vous parler : tutoiement ou vouvoiement, longueur, formalité, humour. Cela ne concerne que le ton et le style ; ce que Vunemi peut faire ne change pas. Vous seul écrivez ce texte ; Vunemi ne peut pas le modifier.",
+    placeholder: "Par exemple :\nTutoie-moi.\nRéponds brièvement ; d'abord le résultat, les détails si je les demande.\nSois simple et direct, sans formules de politesse.",
+    saved: "Enregistré.",
+    applies: "S'applique dès votre prochaine demande. Videz le champ et enregistrez pour la supprimer.",
+    tooLong: "{max} caractères au maximum.",
+    label: "Texte de la personnalité",
+  },
   memory: {
     title: "Mémoire",
     description: "Ce que Vunemi a appris de vous, chaque note avec les mots d'où elle vient. Une tâche ne reçoit que les notes qui la concernent.",
@@ -586,6 +594,7 @@ export const messages: Catalogue = {
       appearance: "Apparence",
       updates: "Mises à jour",
       memory: "Mémoire",
+      soul: "Personnalité",
       data: "Contrôle des données",
       vault: "Coffre",
       outbox: "Boîte d’envoi",

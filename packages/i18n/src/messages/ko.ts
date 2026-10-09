@@ -528,6 +528,14 @@ export const messages: Catalogue = {
 
   workNotes: { saved: "메모 저장됨: {title}", delete: "메모 삭제", title: "메모 · {name}", open: "{name} 메모", empty: "아직 메모가 없습니다. Vunemi는 이 프로젝트의 다음 대화가 알아야 할 결정과 발견을 여기에 기록합니다.", outside: "외부 콘텐츠를 봄: {sources}" },
   modelsMemory: { title: "현재 메모리", chat: "채팅 모델", meaning: "의미 검색", voice: "음성 인식", notLoaded: "로드 안 됨", unmeasured: "측정할 수 없음", summary: "이 Mac: {total} · 현재 사용 가능: {available}", unloaded: "{time} · 메모리 부족으로 해제: {names}", lowered: "{time} · 컨텍스트를 {context}(으)로 줄임" },
+  soul: {
+    description: "Vunemi가 어떻게 말하면 좋을지 직접 적어 주세요: 호칭, 길이, 격식, 유머. 말투와 문체에만 쓰이며 Vunemi가 할 수 있는 일은 바뀌지 않습니다. 이 글은 사용자만 쓸 수 있고 Vunemi는 바꿀 수 없습니다.",
+    placeholder: "예:\n답은 짧게, 결과를 먼저 말하고 자세한 내용은 물어보면 알려 줘.\n꾸밈없이 바로 말해 줘.\n가끔 가벼운 농담은 괜찮아.",
+    saved: "저장했습니다.",
+    applies: "다음 요청부터 적용됩니다. 칸을 비우고 저장하면 삭제됩니다.",
+    tooLong: "최대 {max}자입니다.",
+    label: "성격 글",
+  },
   memory: {
     title: "메모리",
     description: "Vunemi가 당신에게서 배운 것. 각 메모에는 그 출처인 당신의 말이 함께 있습니다. 작업에는 관련된 메모만 전달됩니다.",
@@ -586,6 +594,7 @@ export const messages: Catalogue = {
       appearance: "화면 모드",
       updates: "업데이트",
       memory: "메모리",
+      soul: "성격",
       data: "데이터 관리",
       vault: "금고",
       outbox: "보낼 편지함",
