@@ -37,7 +37,9 @@ const PAGES: Record<string, string> = {
     <input aria-label="Cep telefonu">
     <input autocomplete="address-line1" aria-label="Line one">
     <select autocomplete="honorific-prefix" aria-label="Title"><option>Mr</option><option>Ms</option></select>
-    <select aria-label="Doğum yılı"><option>1990</option><option>1991</option></select>`,
+    <select aria-label="Doğum yılı"><option>1990</option><option>1991</option></select>
+    <label>Customer name: <input name="custname"></label>
+    <form><label>Name * <input name="n"></label><input type="tel" aria-label="Reach me on"><label>Town <input name="city"></label><label>ZIP <input name="z"></label></form>`,
   "/open": `<title>Open</title>
     <input aria-label="From city">
     <input aria-label="Search by name or email">
@@ -45,7 +47,8 @@ const PAGES: Record<string, string> = {
     <textarea aria-label="Message"></textarea>
     <input aria-label="Playlist name">
     <input autocomplete="postal-code" aria-label="Store near">
-    <select aria-label="Cabin class"><option>Economy</option><option>Business</option></select>`,
+    <select aria-label="Cabin class"><option>Economy</option><option>Business</option></select>
+    <form><label>Name <input name="list"></label><textarea aria-label="What it is for"></textarea><label>Leaving from <input name="city"></label><label>Street <input name="st"></label></form>`,
 };
 
 const live = process.env.VUNEMI_LIVE_BROWSER === "1";
@@ -96,12 +99,12 @@ describe.skipIf(!live)("fields only the user fills in, in live Chrome", () => {
   });
 
   it("knows a passenger form by what it declares and by how its fields are named", { timeout: 60_000 }, async () => {
-    const got = await kinds("/passenger", ["Given", "Surname", "Date of birth", "Pasaport numarası", "E-posta adresiniz", "Contact", "Cep telefonu", "Line one", "Title", "Doğum yılı"]);
+    const got = await kinds("/passenger", ["Given", "Surname", "Date of birth", "Pasaport numarası", "E-posta adresiniz", "Contact", "Cep telefonu", "Line one", "Title", "Doğum yılı", "Customer name:", "Name *", "Reach me on", "Town", "ZIP"]);
     expect(Object.values(got).every((kind) => kind === "personal"), JSON.stringify(got)).toBe(true);
   });
 
   it("leaves a search, a message and a route alone", { timeout: 60_000 }, async () => {
-    const got = await kinds("/open", ["From city", "Search by name or email", "Mail", "Message", "Playlist name", "Store near", "Cabin class"]);
+    const got = await kinds("/open", ["From city", "Search by name or email", "Mail", "Message", "Playlist name", "Store near", "Cabin class", "Name", "What it is for", "Leaving from", "Street"]);
     expect(Object.values(got).every((kind) => kind === null), JSON.stringify(got)).toBe(true);
   });
 

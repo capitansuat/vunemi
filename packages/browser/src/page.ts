@@ -660,7 +660,9 @@ export const OWNER_REFUSAL: Record<OwnerField, string> = {
  * Says which kind of field an element is, when it is one only the user
  * fills in. What a field asks for is read from what the page declares
  * (its type and autocomplete), and for personal details also from how the
- * field is named and labelled, since most passenger forms declare nothing.
+ * field is named and labelled, since most passenger forms declare nothing;
+ * a field labelled just "Name", or asking for an address, counts when its
+ * form asks for contact details as well.
  * The words are the well-known ones, not every language's: a form that
  * slips through is still covered by the rule the model is given
  * (BROWSER_INSTRUCTIONS).
@@ -680,8 +682,9 @@ const OWNER_FIELD = `function() {
   if (type === 'password' || has(/^(?:current|new)-password$/)) return 'password';
   if (has(/^cc-/)) return 'card';
   if (has(/^one-time-code$/)) return 'code';
-  const labels = el.labels ? [...el.labels].map((label) => label.textContent || '') : [];
-  const said = [attr('name'), attr('id'), attr('aria-label'), attr('placeholder'), ...labels].join(' ').toLowerCase().slice(0, 600);
+  const labelsOf = (field) => (field.labels ? [...field.labels].map((label) => label.textContent || '') : []);
+  const saidOf = (field) => ['name', 'id', 'aria-label', 'placeholder'].map((name) => field.getAttribute(name) || '').concat(labelsOf(field)).join(' ').toLowerCase().slice(0, 600);
+  const said = saidOf(el);
   // "Search by name or e-mail" asks for nobody's details.
   const search = type === 'search' || /^(?:searchbox|combobox)$/.test(attr('role')) || /search|\\bara\\b|\\bbul\\b|suche|buscar|cerca|recherch|pesquis/.test(said);
   const form = el.closest('form');
@@ -690,9 +693,14 @@ const OWNER_FIELD = `function() {
   if (has(/^(?:username|webauthn)$/) || (passwords.length > 0 && (form ? true : !search && /^(?:text|email|tel)$/.test(type)))) return 'sign-in';
   if (has(/^(?:name|given-name|additional-name|family-name|honorific-prefix|honorific-suffix|nickname|email|tel|tel-.+|bday|bday-.+|sex|street-address|address-line[123])$/)) return 'personal';
   if (search) return null;
-  if (type === 'email') return 'personal';
-  const words = /(?:first|given|fore|middle|last|family|sur|full)[\\s_-]?name|vorname|nachname|pr[ée]nom|nom de famille|apellido|cognome|sobrenome|soyad|ad[ıi]n[ıi]z|ad[ıi]?\\s+soyad|birth|\\bdob\\b|do[ğg]um|geburt|naissance|nacimiento|nascita|nascimento|passport|pasaport|reisepass|passeport|pasaporte|passaporto|national[\\s_-]?id|identity[\\s_-]?(?:number|card|no)|kimlik|\\bssn\\b|social[\\s_-]?security|e-?mail|e-?posta|correo electr|phone|telefon|t[ée]l[ée]phone|tel[ée]fono|cellulare|celular|\\bmobile\\b|\\bcep\\b/;
-  return words.test(said) ? 'personal' : null;
+  if (type === 'email' || type === 'tel') return 'personal';
+  const words = /(?:first|given|fore|middle|last|family|sur|full|customer|your|contact|passenger|guest|travell?er|recipient|billing|shipping|card[\\s_-]?holder)[\\s_-]?name|vorname|nachname|pr[ée]nom|nom de famille|apellido|cognome|sobrenome|soyad|ad[ıi]n[ıi]z|ad[ıi]?\\s+soyad|birth|\\bdob\\b|do[ğg]um|geburt|naissance|nacimiento|nascita|nascimento|passport|pasaport|reisepass|passeport|pasaporte|passaporto|national[\\s_-]?id|identity[\\s_-]?(?:number|card|no)|kimlik|\\bssn\\b|social[\\s_-]?security|e-?mail|e-?posta|correo electr|phone|telefon|t[ée]l[ée]phone|tel[ée]fono|cellulare|celular|\\bmobile\\b|\\bcep\\b/;
+  if (words.test(said)) return 'personal';
+  // "Name" alone may be a playlist's and "City" a route's; in a form that asks for contact details too, they are a person's.
+  const label = (labelsOf(el).join(' ') || attr('aria-label') || attr('placeholder')).replace(/[*:\\s]+/g, ' ').trim().toLowerCase();
+  const others = form ? [...form.querySelectorAll('input, select, textarea')].filter((field) => field !== el) : [];
+  const unsure = /^(?:name|ad|ad[ıi]|isim|nombre|nome|nom)$/.test(label) || /\\b(?:address|adres|adresse|direcci[oó]n|indirizzo|endere[cç]o|street|city|zip|postal|postcode)\\b/.test(said);
+  return unsure && others.some((field) => field.type === 'email' || field.type === 'tel' || words.test(saidOf(field))) ? 'personal' : null;
 }`;
 
 /** A frame from another site: it runs in a process of its own and is reached through a session of its own. */
