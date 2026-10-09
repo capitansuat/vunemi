@@ -1,73 +1,95 @@
 {
-  "currentRelease": "0.1.16",
+  "currentRelease": "0.1.17",
   "releases": [
     {
-      "version": "0.1.16",
+      "version": "0.1.17",
       "updateTo": {
-        "version": "0.1.16",
-        "name": "Vunemi 0.1.16",
+        "version": "0.1.17",
+        "name": "Vunemi 0.1.17",
         "pub_date": "2026-10-09T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.16/Vunemi-0.1.16-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.17/Vunemi-0.1.17-arm64.zip"
       }
     }
   ],
   "sizeMb": 135,
   "notes": {
     "en": [
-      "The menu bar is in Vunemi's language: every item of File, Edit, View and Window. The items macOS adds itself follow the next time you open Vunemi.",
-      "When an answer ends on “which one?”, the task no longer waits. The options sit under the answer: click one, or write something else.",
-      "An offer under a list, such as “want more?”, is no longer turned into buttons."
+      "New connection: History. With it on, Vunemi finds your earlier sessions and recorded meetings when a request is about one, and reads the one it needs. It is off until you turn it on in Settings › Connections.",
+      "Vunemi now reads and works in content a page embeds from another site, such as a map or a booking form. CAPTCHA and ad frames stay closed to it.",
+      "The app itself now refuses to type into sign-in, password, card and personal-detail fields on websites; Vunemi hands those to you.",
+      "A link Vunemi wrote without having seen it during the task is marked “unverified”.",
+      "An answer that was written twice is shown once, and options written under headings become cards."
     ],
     "de": [
-      "Die Menüleiste ist in der Sprache von Vunemi: jeder Eintrag in Ablage, Bearbeiten, Darstellung und Fenster. Die Einträge, die macOS selbst hinzufügt, folgen beim nächsten Öffnen von Vunemi.",
-      "Endet eine Antwort mit „Welches?“, wartet die Aufgabe nicht mehr. Die Optionen stehen unter der Antwort: Klicke eine an oder schreibe etwas anderes.",
-      "Ein Angebot unter einer Liste, etwa „Mehr davon?“, wird nicht mehr zu Schaltflächen."
+      "Neue Verbindung: Verlauf. Ist sie an, findet Vunemi deine früheren Sitzungen und aufgezeichneten Besprechungen, wenn eine Anfrage sich auf eine bezieht, und liest die benötigte. Sie bleibt aus, bis du sie unter Einstellungen › Verbindungen einschaltest.",
+      "Vunemi liest und arbeitet jetzt auch in Inhalten, die eine Seite von einer anderen Website einbettet, etwa einer Karte oder einem Buchungsformular. CAPTCHA- und Werbe-Frames bleiben verschlossen.",
+      "Die App selbst lehnt es jetzt ab, auf Websites in Anmelde-, Passwort-, Karten- und Personendatenfelder zu schreiben; Vunemi überlässt sie dir.",
+      "Ein Link, den Vunemi geschrieben hat, ohne ihn während der Aufgabe gesehen zu haben, wird als „ungeprüft“ markiert.",
+      "Eine doppelt geschriebene Antwort wird einmal angezeigt, und unter Überschriften geschriebene Optionen werden zu Karten."
     ],
     "es": [
-      "La barra de menús está en el idioma de Vunemi: cada elemento de Archivo, Edición, Visualización y Ventana. Los elementos que macOS añade por su cuenta cambian la próxima vez que abras Vunemi.",
-      "Cuando una respuesta termina en «¿cuál?», la tarea ya no espera. Las opciones quedan bajo la respuesta: pulsa una o escribe otra cosa.",
-      "Un ofrecimiento bajo una lista, como «¿quieres más?», ya no se convierte en botones."
+      "Nueva conexión: Historial. Activada, Vunemi encuentra tus sesiones anteriores y reuniones grabadas cuando una petición trata de alguna, y lee la que necesita. Está desactivada hasta que la actives en Ajustes › Conexiones.",
+      "Vunemi ahora lee y actúa en el contenido que una página incrusta desde otro sitio, como un mapa o un formulario de reserva. Los marcos de CAPTCHA y de anuncios siguen cerrados.",
+      "La propia app se niega ahora a escribir en campos de inicio de sesión, contraseña, tarjeta y datos personales de los sitios web; Vunemi te los deja a ti.",
+      "Un enlace que Vunemi escribió sin haberlo visto durante la tarea se marca como «sin verificar».",
+      "Una respuesta escrita dos veces se muestra una sola vez, y las opciones escritas bajo títulos se convierten en tarjetas."
     ],
     "fr": [
-      "La barre des menus est dans la langue de Vunemi : chaque élément de Fichier, Édition, Présentation et Fenêtre. Les éléments que macOS ajoute lui-même suivent à la prochaine ouverture de Vunemi.",
-      "Quand une réponse se termine par « lequel ? », la tâche n'attend plus. Les options restent sous la réponse : cliquez sur l'une d'elles ou écrivez autre chose.",
-      "Une proposition sous une liste, comme « en voulez-vous d'autres ? », n'est plus transformée en boutons."
+      "Nouvelle connexion : Historique. Activée, elle permet à Vunemi de retrouver vos sessions passées et vos réunions enregistrées quand une demande en concerne une, et de lire celle dont il a besoin. Elle reste désactivée tant que vous ne l'activez pas dans Réglages › Connexions.",
+      "Vunemi lit et agit désormais dans le contenu qu'une page intègre depuis un autre site, comme une carte ou un formulaire de réservation. Les cadres de CAPTCHA et de publicité lui restent fermés.",
+      "L'app refuse désormais elle-même de saisir dans les champs de connexion, de mot de passe, de carte et de données personnelles des sites web ; Vunemi vous les laisse.",
+      "Un lien que Vunemi a écrit sans l'avoir vu pendant la tâche est marqué « non vérifié ».",
+      "Une réponse écrite deux fois n'est affichée qu'une fois, et les options écrites sous des titres deviennent des cartes."
     ],
     "it": [
-      "La barra dei menu è nella lingua di Vunemi: ogni voce di File, Modifica, Vista e Finestra. Le voci che macOS aggiunge da sé cambiano alla prossima apertura di Vunemi.",
-      "Quando una risposta finisce con «quale?», l'attività non resta più in attesa. Le opzioni stanno sotto la risposta: fai clic su una o scrivi altro.",
-      "Un'offerta sotto un elenco, come «ne vuoi altre?», non diventa più pulsanti."
+      "Nuova connessione: Cronologia. Quando è attiva, Vunemi trova le tue sessioni precedenti e le riunioni registrate se una richiesta ne riguarda una, e legge quella che serve. Resta disattivata finché non la attivi in Impostazioni › Connessioni.",
+      "Vunemi ora legge e agisce nei contenuti che una pagina incorpora da un altro sito, come una mappa o un modulo di prenotazione. I riquadri di CAPTCHA e pubblicità restano chiusi.",
+      "Ora è l'app stessa a rifiutare di scrivere nei campi di accesso, password, carta e dati personali dei siti web; Vunemi li lascia a te.",
+      "Un link che Vunemi ha scritto senza averlo visto durante l'attività è contrassegnato come “non verificato”.",
+      "Una risposta scritta due volte viene mostrata una volta sola, e le opzioni scritte sotto dei titoli diventano schede."
     ],
     "tr": [
-      "Menü çubuğu Vunemi'nin dilinde: Dosya, Düzen, Görüntü ve Pencere menülerinin her satırı. macOS'un kendi eklediği satırlar Vunemi'yi bir sonraki açışında uyar.",
-      "Cevap “hangisi?” diye bittiğinde iş artık beklemiyor. Seçenekler cevabın altında durur: birine bas ya da başka bir şey yaz.",
-      "Bir listenin altındaki “daha fazla ister misin?” gibi teklifler artık düğmeye çevrilmiyor."
+      "Yeni bağlantı: Geçmiş. Açıkken Vunemi, bir istek eski bir oturumla ya da kayıtlı bir toplantıyla ilgiliyse onu bulur ve gerekeni okur. Sen Ayarlar › Bağlantılar'dan açana kadar kapalıdır.",
+      "Vunemi artık bir sayfanın başka bir siteden gömdüğü içeriği de okur ve orada çalışır: harita ya da rezervasyon formu gibi. CAPTCHA ve reklam çerçeveleri ona kapalıdır.",
+      "Web sitelerindeki giriş, parola, kart ve kişisel bilgi alanlarına yazmayı artık uygulamanın kendisi reddeder; Vunemi bunları sana bırakır.",
+      "Vunemi'nin görev sırasında görmeden yazdığı bağlantılar “doğrulanmadı” diye işaretlenir.",
+      "İki kez yazılan cevap bir kez gösterilir; başlıklar altında yazılan seçenekler karta dönüşür."
     ],
     "pt": [
-      "A barra de menus está no idioma do Vunemi: cada item de Arquivo, Editar, Visualizar e Janela. Os itens que o próprio macOS adiciona mudam na próxima vez que você abrir o Vunemi.",
-      "Quando uma resposta termina em “qual?”, a tarefa não fica mais esperando. As opções ficam abaixo da resposta: clique em uma ou escreva outra coisa.",
-      "Uma oferta abaixo de uma lista, como “quer mais?”, não vira mais botões."
+      "Nova conexão: Histórico. Ativada, o Vunemi encontra suas sessões anteriores e reuniões gravadas quando um pedido trata de uma delas, e lê a que precisa. Fica desligada até você ativá-la em Ajustes › Conexões.",
+      "O Vunemi agora lê e age no conteúdo que uma página incorpora de outro site, como um mapa ou um formulário de reserva. Quadros de CAPTCHA e de anúncios continuam fechados.",
+      "O próprio app agora se recusa a digitar em campos de login, senha, cartão e dados pessoais nos sites; o Vunemi deixa esses com você.",
+      "Um link que o Vunemi escreveu sem tê-lo visto durante a tarefa é marcado como “não verificado”.",
+      "Uma resposta escrita duas vezes é mostrada uma vez só, e opções escritas sob títulos viram cartões."
     ],
     "ru": [
-      "Строка меню теперь на языке Vunemi: каждый пункт в меню «Файл», «Правка», «Вид» и «Окно». Пункты, которые добавляет сама macOS, меняются при следующем запуске Vunemi.",
-      "Когда ответ заканчивается вопросом «какой?», задача больше не ждёт. Варианты стоят под ответом: нажмите на один или напишите что-то другое.",
-      "Предложение под списком, например «показать ещё?», больше не превращается в кнопки."
+      "Новое подключение: История. Когда оно включено, Vunemi находит ваши прежние сеансы и записанные встречи, если запрос касается одного из них, и читает нужное. Оно выключено, пока вы не включите его в Настройках › Подключения.",
+      "Vunemi теперь читает и работает в содержимом, которое страница встраивает с другого сайта, например в карте или форме бронирования. Фреймы CAPTCHA и рекламы остаются закрытыми.",
+      "Теперь само приложение отказывается вводить текст в поля входа, пароля, карты и личных данных на сайтах; Vunemi оставляет их вам.",
+      "Ссылка, которую Vunemi написал, не увидев её в ходе задачи, помечается «не проверено».",
+      "Ответ, написанный дважды, показывается один раз, а варианты, написанные под заголовками, становятся карточками."
     ],
     "zh": [
-      "菜单栏现在使用 Vunemi 的语言：“文件”“编辑”“显示”和“窗口”中的每一项。macOS 自行添加的项目会在下次打开 Vunemi 时切换。",
-      "回答以“哪一个？”结尾时，任务不再等待。选项显示在回答下方：点击其中一个，或输入别的内容。",
-      "列表下方的提议（例如“还需要更多吗？”）不再变成按钮。"
+      "新连接：历史记录。开启后，当请求涉及以前的会话或已录制的会议时，Vunemi 会找到它并阅读需要的那一项。在你到“设置 › 连接”中开启之前，它保持关闭。",
+      "Vunemi 现在可以读取并操作页面从其他网站嵌入的内容，例如地图或预订表单。验证码和广告框架仍对它关闭。",
+      "现在由应用本身拒绝在网站的登录、密码、银行卡和个人信息栏中输入；Vunemi 会把这些交给你。",
+      "Vunemi 在任务中没有见过却写出的链接会标记为“未核实”。",
+      "写了两遍的回答只显示一次；写在标题下的选项会变成卡片。"
     ],
     "ja": [
-      "メニューバーがVunemiの言語になりました。「ファイル」「編集」「表示」「ウインドウ」の各項目です。macOSが自動で追加する項目は、次にVunemiを開いたときから切り替わります。",
-      "回答が「どれにしますか？」で終わっても、タスクは待機しなくなりました。選択肢は回答の下に表示されます。クリックするか、別の内容を入力してください。",
-      "リストの下の「もっと必要ですか？」のような提案は、ボタンに変換されなくなりました。"
+      "新しい接続：履歴。オンにすると、依頼が以前のセッションや録音した会議に関するとき、Vunemi がそれを見つけて必要なものを読みます。「設定 › 接続」でオンにするまではオフです。",
+      "Vunemi は、地図や予約フォームなど、ページが別のサイトから埋め込んだコンテンツも読み取り、操作できるようになりました。CAPTCHA と広告のフレームは閉じたままです。",
+      "ウェブサイトのログイン、パスワード、カード、個人情報の欄への入力は、アプリ自体が拒否するようになりました。Vunemi はそれらをあなたに任せます。",
+      "Vunemi がタスク中に見ていないのに書いたリンクには「未確認」と表示されます。",
+      "二度書かれた回答は一度だけ表示され、見出しの下に書かれた選択肢はカードになります。"
     ],
     "ko": [
-      "메뉴 막대가 Vunemi의 언어로 표시됩니다. 파일, 편집, 보기, 윈도우의 모든 항목입니다. macOS가 직접 추가하는 항목은 Vunemi를 다음에 열 때부터 바뀝니다.",
-      "답변이 “어느 것?”으로 끝나도 작업이 더 이상 기다리지 않습니다. 선택지는 답변 아래에 표시됩니다. 하나를 클릭하거나 다른 내용을 입력하세요.",
-      "목록 아래의 “더 필요하세요?” 같은 제안은 더 이상 버튼으로 바뀌지 않습니다."
+      "새 연결: 기록. 켜면 요청이 이전 세션이나 녹음된 회의에 관한 것일 때 Vunemi가 그것을 찾아 필요한 것을 읽습니다. 설정 › 연결에서 켜기 전까지는 꺼져 있습니다.",
+      "Vunemi가 이제 지도나 예약 양식처럼 페이지가 다른 사이트에서 가져와 넣은 콘텐츠도 읽고 그 안에서 작업합니다. CAPTCHA와 광고 프레임은 계속 닫혀 있습니다.",
+      "웹사이트의 로그인, 비밀번호, 카드, 개인 정보 입력란에 입력하는 것은 이제 앱 자체가 거부합니다. Vunemi는 이를 사용자에게 맡깁니다.",
+      "Vunemi가 작업 중에 보지 않고 쓴 링크에는 “확인되지 않음” 표시가 붙습니다.",
+      "두 번 쓰인 답변은 한 번만 표시되고, 제목 아래에 쓰인 선택지는 카드가 됩니다."
     ]
   }
 }

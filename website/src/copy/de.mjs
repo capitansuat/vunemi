@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.16 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.17 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.16 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.17 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.1.16 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.1.17 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -143,6 +143,7 @@ export default {
       { name: "Kurzbefehle", body: "Listet deine Apple-Kurzbefehle auf und führt den gewünschten aus.", parts: "Fragt vor jeder Ausführung" },
       { name: "Schreibtisch", body: "Liest App-Fenster und klickt und tippt, wenn du es erlaubst. Terminal, Passwortmanager und Systemeinstellungen sind immer tabu.", parts: "Lesen · Steuern" },
       { name: "Geplante Aufgaben", body: "Aufgaben, die du im Chat einrichtest und die zu festen Zeiten laufen, solange Vunemi geöffnet ist. Sie senden, löschen oder bezahlen nie.", parts: "Einrichten und verwalten" },
+      { name: "Verlauf", body: "Findet deine früheren Sitzungen und aufgezeichneten Besprechungen, wenn eine Anfrage sich auf eine bezieht. Jede Anfrage enthält nur Name, Datum und eine Zeile der wenigen passenden; Vunemi liest eine nur bei Bedarf. Nichts verlässt deinen Mac.", parts: "Finden und Lesen" },
       { name: "Eigene Verbindungen", body: "Füge einen beliebigen MCP-Server per Befehl oder Adresse hinzu. Seine Schlüssel liegen im Tresor.", parts: "Ein Schalter pro Verbindung" },
     ],
     safetyTitle: "Sicherheit und Kontrolle",
@@ -167,9 +168,11 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Die Menüleiste ist in der Sprache von Vunemi: jeder Eintrag in Ablage, Bearbeiten, Darstellung und Fenster. Die Einträge, die macOS selbst hinzufügt, folgen beim nächsten Öffnen von Vunemi.",
-      "Endet eine Antwort mit „Welches?“, wartet die Aufgabe nicht mehr. Die Optionen stehen unter der Antwort: Klicke eine an oder schreibe etwas anderes.",
-      "Ein Angebot unter einer Liste, etwa „Mehr davon?“, wird nicht mehr zu Schaltflächen.",
+      "Neue Verbindung: Verlauf. Ist sie an, findet Vunemi deine früheren Sitzungen und aufgezeichneten Besprechungen, wenn eine Anfrage sich auf eine bezieht, und liest die benötigte. Sie bleibt aus, bis du sie unter Einstellungen › Verbindungen einschaltest.",
+      "Vunemi liest und arbeitet jetzt auch in Inhalten, die eine Seite von einer anderen Website einbettet, etwa einer Karte oder einem Buchungsformular. CAPTCHA- und Werbe-Frames bleiben verschlossen.",
+      "Die App selbst lehnt es jetzt ab, auf Websites in Anmelde-, Passwort-, Karten- und Personendatenfelder zu schreiben; Vunemi überlässt sie dir.",
+      "Ein Link, den Vunemi geschrieben hat, ohne ihn während der Aufgabe gesehen zu haben, wird als „ungeprüft“ markiert.",
+      "Eine doppelt geschriebene Antwort wird einmal angezeigt, und unter Überschriften geschriebene Optionen werden zu Karten.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

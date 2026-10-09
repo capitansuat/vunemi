@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi : un assistant personnel qui fonctionne sur votre Mac", description: "Vunemi aide au quotidien. Son IA fonctionne sur votre Mac, sans compte cloud Vunemi. Vous choisissez les services externes à connecter." },
-    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.1.16." },
+    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.1.17." },
     screens: { title: "Captures de Vunemi", description: "De vraies captures de l'app Vunemi pour Mac, réalisées avec des données d'exemple." },
-    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.1.16 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
+    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.1.17 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
   },
   hero: {
     eyebrow: "Assistant personnel pour Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Tout ce que Vunemi sait faire",
-    intro: "Vunemi 0.1.16 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
+    intro: "Vunemi 0.1.17 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
     chatTitle: "Travailler avec Vunemi",
     chat: [
       { title: "D'abord le plan", body: "Pour une tâche en plusieurs étapes, Vunemi peut d'abord présenter son plan. Lancez-le, modifiez les étapes ou annulez." },
@@ -143,6 +143,7 @@ export default {
       { name: "Raccourcis", body: "Liste vos Raccourcis Apple et exécute celui que vous demandez.", parts: "Demande avant chaque exécution" },
       { name: "Bureau", body: "Lit les fenêtres des apps et, si vous l'autorisez, clique et tape. Terminal, gestionnaires de mots de passe et Réglages Système sont toujours exclus.", parts: "Lecture · Contrôle" },
       { name: "Tâches planifiées", body: "Des tâches créées dans le chat, qui s'exécutent à heure fixe tant que Vunemi est ouvert. Elles n'envoient, ne suppriment et ne paient jamais rien.", parts: "Création et gestion" },
+      { name: "Historique", body: "Retrouve vos sessions passées et vos réunions enregistrées quand une demande en concerne une. Chaque demande ne contient que le nom, la date et une ligne des quelques-unes qui correspondent ; Vunemi n'en lit une que s'il en a besoin. Rien ne quitte votre Mac.", parts: "Recherche et lecture" },
       { name: "Vos propres connexions", body: "Ajoutez n'importe quel serveur MCP par commande ou par adresse. Ses clés sont conservées dans le Coffre.", parts: "Un interrupteur par connexion" },
     ],
     safetyTitle: "Sécurité et contrôle",
@@ -167,9 +168,11 @@ export default {
   downloadPage: {
     highlightsTitle: "Nouveautés de cette version",
     highlights: [
-      "La barre des menus est dans la langue de Vunemi : chaque élément de Fichier, Édition, Présentation et Fenêtre. Les éléments que macOS ajoute lui-même suivent à la prochaine ouverture de Vunemi.",
-      "Quand une réponse se termine par « lequel ? », la tâche n'attend plus. Les options restent sous la réponse : cliquez sur l'une d'elles ou écrivez autre chose.",
-      "Une proposition sous une liste, comme « en voulez-vous d'autres ? », n'est plus transformée en boutons.",
+      "Nouvelle connexion : Historique. Activée, elle permet à Vunemi de retrouver vos sessions passées et vos réunions enregistrées quand une demande en concerne une, et de lire celle dont il a besoin. Elle reste désactivée tant que vous ne l'activez pas dans Réglages › Connexions.",
+      "Vunemi lit et agit désormais dans le contenu qu'une page intègre depuis un autre site, comme une carte ou un formulaire de réservation. Les cadres de CAPTCHA et de publicité lui restent fermés.",
+      "L'app refuse désormais elle-même de saisir dans les champs de connexion, de mot de passe, de carte et de données personnelles des sites web ; Vunemi vous les laisse.",
+      "Un lien que Vunemi a écrit sans l'avoir vu pendant la tâche est marqué « non vérifié ».",
+      "Une réponse écrite deux fois n'est affichée qu'une fois, et les options écrites sous des titres deviennent des cartes.",
     ],
     title: "Télécharger Vunemi",
     intro: "Gratuit et open source. Pour les Mac avec puce Apple et macOS 14 ou ultérieur.",

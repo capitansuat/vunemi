@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: um assistente pessoal que roda no seu Mac", description: "O Vunemi ajuda nas tarefas do dia a dia. A IA roda no seu Mac, sem conta na nuvem do Vunemi. Você escolhe quais serviços externos conectar." },
-    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.1.16 faz." },
+    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.1.17 faz." },
     screens: { title: "Telas do Vunemi", description: "Telas reais do app Vunemi para Mac, capturadas com dados de exemplo." },
-    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.1.16 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
+    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.1.17 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
   },
   hero: {
     eyebrow: "Assistente pessoal para Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Tudo o que o Vunemi faz",
-    intro: "O Vunemi 0.1.16 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
+    intro: "O Vunemi 0.1.17 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
     chatTitle: "Trabalhando com o Vunemi",
     chat: [
       { title: "Primeiro o plano", body: "Numa tarefa com vários passos, o Vunemi pode mostrar o plano antes. Siga em frente, edite os passos ou cancele." },
@@ -143,6 +143,7 @@ export default {
       { name: "Atalhos", body: "Lista seus Atalhos da Apple e executa o que você pedir.", parts: "Pergunta antes de cada execução" },
       { name: "Área de trabalho", body: "Lê janelas de apps e, se você permitir, clica e digita. Terminal, gerenciadores de senhas e Ajustes do Sistema ficam sempre de fora.", parts: "Leitura · Controle" },
       { name: "Tarefas agendadas", body: "Tarefas criadas no chat que rodam em horários fixos enquanto o Vunemi está aberto. Nunca enviam, apagam ou pagam nada.", parts: "Criação e gerenciamento" },
+      { name: "Histórico", body: "Encontra suas sessões anteriores e reuniões gravadas quando um pedido trata de uma delas. Cada pedido leva apenas o nome, a data e uma linha das poucas que se encaixam; o Vunemi só lê uma quando precisa. Nada sai do seu Mac.", parts: "Buscar e ler" },
       { name: "Suas próprias conexões", body: "Adicione qualquer servidor MCP por comando ou endereço. As chaves dele ficam no Cofre.", parts: "Uma chave por conexão" },
     ],
     safetyTitle: "Segurança e controle",
@@ -167,9 +168,11 @@ export default {
   downloadPage: {
     highlightsTitle: "Novidades desta versão",
     highlights: [
-      "A barra de menus está no idioma do Vunemi: cada item de Arquivo, Editar, Visualizar e Janela. Os itens que o próprio macOS adiciona mudam na próxima vez que você abrir o Vunemi.",
-      "Quando uma resposta termina em “qual?”, a tarefa não fica mais esperando. As opções ficam abaixo da resposta: clique em uma ou escreva outra coisa.",
-      "Uma oferta abaixo de uma lista, como “quer mais?”, não vira mais botões.",
+      "Nova conexão: Histórico. Ativada, o Vunemi encontra suas sessões anteriores e reuniões gravadas quando um pedido trata de uma delas, e lê a que precisa. Fica desligada até você ativá-la em Ajustes › Conexões.",
+      "O Vunemi agora lê e age no conteúdo que uma página incorpora de outro site, como um mapa ou um formulário de reserva. Quadros de CAPTCHA e de anúncios continuam fechados.",
+      "O próprio app agora se recusa a digitar em campos de login, senha, cartão e dados pessoais nos sites; o Vunemi deixa esses com você.",
+      "Um link que o Vunemi escreveu sem tê-lo visto durante a tarefa é marcado como “não verificado”.",
+      "Uma resposta escrita duas vezes é mostrada uma vez só, e opções escritas sob títulos viram cartões.",
     ],
     title: "Baixe o Vunemi",
     intro: "Gratuito e de código aberto. Para Macs com Apple Silicon e macOS 14 ou posterior.",

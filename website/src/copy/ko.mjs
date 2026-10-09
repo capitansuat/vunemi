@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.16의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.17의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.16를 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.17를 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.1.16 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.1.17 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -143,6 +143,7 @@ export default {
       { name: "단축어", body: "Apple 단축어 목록을 보여 주고 요청한 단축어를 실행합니다.", parts: "실행할 때마다 먼저 묻기" },
       { name: "데스크탑", body: "앱 창을 읽고, 허락하면 클릭하고 입력합니다. 터미널, 비밀번호 관리 앱, 시스템 설정은 항상 제외됩니다.", parts: "읽기 · 조작" },
       { name: "예약된 작업", body: "채팅에서 설정해 Vunemi가 열려 있는 동안 정해진 시간에 실행되는 작업. 보내기·삭제·결제는 절대 하지 않습니다.", parts: "설정과 관리" },
+      { name: "기록", body: "요청이 이전 세션이나 녹음된 회의에 관한 것일 때 그것을 찾습니다. 요청마다 가장 관련 있는 몇 개의 이름, 날짜, 한 줄만 전달되며, Vunemi는 필요할 때만 하나를 읽습니다. 어떤 것도 Mac 밖으로 나가지 않습니다.", parts: "찾기와 읽기" },
       { name: "나만의 연결", body: "명령어나 주소로 원하는 MCP 서버를 추가하세요. 해당 키는 금고에 보관됩니다.", parts: "연결마다 스위치" },
     ],
     safetyTitle: "안전과 제어",
@@ -167,9 +168,11 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "메뉴 막대가 Vunemi의 언어로 표시됩니다. 파일, 편집, 보기, 윈도우의 모든 항목입니다. macOS가 직접 추가하는 항목은 Vunemi를 다음에 열 때부터 바뀝니다.",
-      "답변이 “어느 것?”으로 끝나도 작업이 더 이상 기다리지 않습니다. 선택지는 답변 아래에 표시됩니다. 하나를 클릭하거나 다른 내용을 입력하세요.",
-      "목록 아래의 “더 필요하세요?” 같은 제안은 더 이상 버튼으로 바뀌지 않습니다.",
+      "새 연결: 기록. 켜면 요청이 이전 세션이나 녹음된 회의에 관한 것일 때 Vunemi가 그것을 찾아 필요한 것을 읽습니다. 설정 › 연결에서 켜기 전까지는 꺼져 있습니다.",
+      "Vunemi가 이제 지도나 예약 양식처럼 페이지가 다른 사이트에서 가져와 넣은 콘텐츠도 읽고 그 안에서 작업합니다. CAPTCHA와 광고 프레임은 계속 닫혀 있습니다.",
+      "웹사이트의 로그인, 비밀번호, 카드, 개인 정보 입력란에 입력하는 것은 이제 앱 자체가 거부합니다. Vunemi는 이를 사용자에게 맡깁니다.",
+      "Vunemi가 작업 중에 보지 않고 쓴 링크에는 “확인되지 않음” 표시가 붙습니다.",
+      "두 번 쓰인 답변은 한 번만 표시되고, 제목 아래에 쓰인 선택지는 카드가 됩니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",

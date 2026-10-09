@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un assistente personale che funziona sul tuo Mac", description: "Vunemi aiuta nelle attività quotidiane. L’IA funziona sul tuo Mac, senza account cloud Vunemi. Scegli tu quali servizi esterni collegare." },
-    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.16." },
+    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.17." },
     screens: { title: "Schermate di Vunemi", description: "Schermate reali dell'app Vunemi per Mac, catturate con dati di esempio." },
-    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.16 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
+    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.17 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
   },
   hero: {
     eyebrow: "Assistente personale per Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Tutto ciò che Vunemi sa fare",
-    intro: "Vunemi 0.1.16 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
+    intro: "Vunemi 0.1.17 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
     chatTitle: "Lavorare con Vunemi",
     chat: [
       { title: "Prima il piano", body: "Per un'attività con più passaggi, Vunemi può mostrarti prima il piano. Vai avanti, modifica i passaggi o annulla." },
@@ -143,6 +143,7 @@ export default {
       { name: "Comandi rapidi", body: "Elenca i tuoi Comandi rapidi di Apple ed esegue quello che chiedi.", parts: "Chiede prima di ogni esecuzione" },
       { name: "Scrivania", body: "Legge le finestre delle app e, se lo permetti, fa clic e digita. Terminale, gestori di password e Impostazioni di Sistema sono sempre esclusi.", parts: "Lettura · Controllo" },
       { name: "Attività programmate", body: "Attività impostate in chat che partono a orari fissi mentre Vunemi è aperto. Non inviano, eliminano né pagano mai.", parts: "Impostazione e gestione" },
+      { name: "Cronologia", body: "Trova le tue sessioni precedenti e le riunioni registrate quando una richiesta ne riguarda una. Ogni richiesta porta solo nome, data e una riga delle poche pertinenti; Vunemi ne legge una solo se serve. Nulla lascia il tuo Mac.", parts: "Ricerca e lettura" },
       { name: "Connessioni tue", body: "Aggiungi qualsiasi server MCP tramite comando o indirizzo. Le sue chiavi sono conservate nella Cassaforte.", parts: "Un interruttore per connessione" },
     ],
     safetyTitle: "Sicurezza e controllo",
@@ -167,9 +168,11 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
-      "La barra dei menu è nella lingua di Vunemi: ogni voce di File, Modifica, Vista e Finestra. Le voci che macOS aggiunge da sé cambiano alla prossima apertura di Vunemi.",
-      "Quando una risposta finisce con «quale?», l'attività non resta più in attesa. Le opzioni stanno sotto la risposta: fai clic su una o scrivi altro.",
-      "Un'offerta sotto un elenco, come «ne vuoi altre?», non diventa più pulsanti.",
+      "Nuova connessione: Cronologia. Quando è attiva, Vunemi trova le tue sessioni precedenti e le riunioni registrate se una richiesta ne riguarda una, e legge quella che serve. Resta disattivata finché non la attivi in Impostazioni › Connessioni.",
+      "Vunemi ora legge e agisce nei contenuti che una pagina incorpora da un altro sito, come una mappa o un modulo di prenotazione. I riquadri di CAPTCHA e pubblicità restano chiusi.",
+      "Ora è l'app stessa a rifiutare di scrivere nei campi di accesso, password, carta e dati personali dei siti web; Vunemi li lascia a te.",
+      "Un link che Vunemi ha scritto senza averlo visto durante l'attività è contrassegnato come “non verificato”.",
+      "Una risposta scritta due volte viene mostrata una volta sola, e le opzioni scritte sotto dei titoli diventano schede.",
     ],
     title: "Scarica Vunemi",
     intro: "Gratuito e open source. Per Mac con Apple Silicon e macOS 14 o successivo.",

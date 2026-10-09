@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.16'in yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.17'in yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.16'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.17'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.1.16: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.1.17: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -143,6 +143,7 @@ export default {
       { name: "Kestirmeler", body: "Apple Kestirmeler'ini listeler ve istediğini çalıştırır.", parts: "Her çalıştırmadan önce sorar" },
       { name: "Masaüstü", body: "Uygulama pencerelerini okur ve izin verirsen tıklar, yazar. Terminal, parola yöneticileri ve Sistem Ayarları her zaman yasaktır.", parts: "Okuma · Kontrol" },
       { name: "Zamanlanmış işler", body: "Sohbette kurduğun, Vunemi açıkken belirli saatlerde çalışan işler. Asla gönderim, silme veya ödeme yapmaz.", parts: "Kurma ve yönetme" },
+      { name: "Geçmiş", body: "Bir istek eski bir oturumla ya da kayıtlı bir toplantıyla ilgiliyse onu bulur. Her istekle yalnız en uygun birkaçının adı, tarihi ve tek satırı gider; Vunemi gerekirse birini okur. Hiçbir şey Mac'inden çıkmaz.", parts: "Bulma ve okuma" },
       { name: "Kendi bağlantıların", body: "Komutla veya adresle istediğin MCP sunucusunu ekle. Anahtarları Kasa'da tutulur.", parts: "Her bağlantı için ayrı anahtar" },
     ],
     safetyTitle: "Güvenlik ve kontrol",
@@ -169,9 +170,11 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Menü çubuğu Vunemi'nin dilinde: Dosya, Düzen, Görüntü ve Pencere menülerinin her satırı. macOS'un kendi eklediği satırlar Vunemi'yi bir sonraki açışında uyar.",
-      "Cevap “hangisi?” diye bittiğinde iş artık beklemiyor. Seçenekler cevabın altında durur: birine bas ya da başka bir şey yaz.",
-      "Bir listenin altındaki “daha fazla ister misin?” gibi teklifler artık düğmeye çevrilmiyor.",
+      "Yeni bağlantı: Geçmiş. Açıkken Vunemi, bir istek eski bir oturumla ya da kayıtlı bir toplantıyla ilgiliyse onu bulur ve gerekeni okur. Sen Ayarlar › Bağlantılar'dan açana kadar kapalıdır.",
+      "Vunemi artık bir sayfanın başka bir siteden gömdüğü içeriği de okur ve orada çalışır: harita ya da rezervasyon formu gibi. CAPTCHA ve reklam çerçeveleri ona kapalıdır.",
+      "Web sitelerindeki giriş, parola, kart ve kişisel bilgi alanlarına yazmayı artık uygulamanın kendisi reddeder; Vunemi bunları sana bırakır.",
+      "Vunemi'nin görev sırasında görmeden yazdığı bağlantılar “doğrulanmadı” diye işaretlenir.",
+      "İki kez yazılan cevap bir kez gösterilir; başlıklar altında yazılan seçenekler karta dönüşür.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

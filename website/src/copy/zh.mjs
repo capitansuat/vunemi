@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.16 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.17 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.16，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.17，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.1.16：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.1.17：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -143,6 +143,7 @@ export default {
       { name: "快捷指令", body: "列出你的 Apple 快捷指令，并运行你指定的那一个。", parts: "每次运行前都会询问" },
       { name: "桌面", body: "读取应用窗口，经你允许后可以点击和输入。终端、密码管理器和系统设置始终禁止操作。", parts: "读取 · 控制" },
       { name: "定时任务", body: "在对话中设置、在 Vunemi 打开时按时运行的任务。绝不会发送、删除或付款。", parts: "设置与管理" },
+      { name: "历史记录", body: "当请求涉及以前的会话或已录制的会议时找到它。每次请求只附上最相关的几项的名称、日期和一行说明；Vunemi 只在需要时阅读其中一项。任何内容都不会离开你的 Mac。", parts: "查找和阅读" },
       { name: "自定义连接", body: "通过命令或地址添加任意 MCP 服务器。它的密钥保存在保险库中。", parts: "每个连接一个开关" },
     ],
     safetyTitle: "安全与掌控",
@@ -167,9 +168,11 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "菜单栏现在使用 Vunemi 的语言：“文件”“编辑”“显示”和“窗口”中的每一项。macOS 自行添加的项目会在下次打开 Vunemi 时切换。",
-      "回答以“哪一个？”结尾时，任务不再等待。选项显示在回答下方：点击其中一个，或输入别的内容。",
-      "列表下方的提议（例如“还需要更多吗？”）不再变成按钮。",
+      "新连接：历史记录。开启后，当请求涉及以前的会话或已录制的会议时，Vunemi 会找到它并阅读需要的那一项。在你到“设置 › 连接”中开启之前，它保持关闭。",
+      "Vunemi 现在可以读取并操作页面从其他网站嵌入的内容，例如地图或预订表单。验证码和广告框架仍对它关闭。",
+      "现在由应用本身拒绝在网站的登录、密码、银行卡和个人信息栏中输入；Vunemi 会把这些交给你。",
+      "Vunemi 在任务中没有见过却写出的链接会标记为“未核实”。",
+      "写了两遍的回答只显示一次；写在标题下的选项会变成卡片。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

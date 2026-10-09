@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.16 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.17 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.16 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.17 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -119,7 +119,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.1.16 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.1.17 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -145,6 +145,7 @@ export default {
       { name: "Shortcuts", body: "Lists your Apple Shortcuts and runs the one you ask for.", parts: "Every run asks first" },
       { name: "Desktop", body: "Reads app windows and, if you allow it, clicks and types. Terminal, password managers and System Settings are always off limits.", parts: "Reading · Control" },
       { name: "Scheduled tasks", body: "Tasks you set up in chat that run at set times while Vunemi is open. They never send, delete or pay.", parts: "Setting up and managing" },
+      { name: "History", body: "Finds your earlier sessions and recorded meetings when a request is about one. Each request carries only the name, date and one line of the few that fit; Vunemi reads one only when it needs it. Nothing leaves your Mac.", parts: "Finding and reading" },
       { name: "Your own connections", body: "Add any MCP server by command or address. Its keys are kept in the Vault.", parts: "One switch per connection" },
     ],
     safetyTitle: "Safety and control",
@@ -171,9 +172,11 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "The menu bar is in Vunemi's language: every item of File, Edit, View and Window. The items macOS adds itself follow the next time you open Vunemi.",
-      "When an answer ends on “which one?”, the task no longer waits. The options sit under the answer: click one, or write something else.",
-      "An offer under a list, such as “want more?”, is no longer turned into buttons.",
+      "New connection: History. With it on, Vunemi finds your earlier sessions and recorded meetings when a request is about one, and reads the one it needs. It is off until you turn it on in Settings › Connections.",
+      "Vunemi now reads and works in content a page embeds from another site, such as a map or a booking form. CAPTCHA and ad frames stay closed to it.",
+      "The app itself now refuses to type into sign-in, password, card and personal-detail fields on websites; Vunemi hands those to you.",
+      "A link Vunemi wrote without having seen it during the task is marked “unverified”.",
+      "An answer that was written twice is shown once, and options written under headings become cards.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],
