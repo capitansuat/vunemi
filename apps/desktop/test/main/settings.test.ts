@@ -149,6 +149,8 @@ describe("update checks", () => {
   it("are on until turned off, stay off through a reset, and read only a boolean", () => {
     const { dir, settings } = store();
     expect(settings.updatesCheck).toBe(true);
+    // The automation library has no switch yet: off unless the file says so.
+    expect(settings.automationLibrary).toBe(false);
     settings.setUpdatesCheck(false);
     expect(new SettingsStore(dir).updatesCheck).toBe(false);
     settings.reset();

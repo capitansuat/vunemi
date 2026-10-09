@@ -66,6 +66,30 @@ export interface AutomationView {
   lastStatus?: "done" | "stopped" | "error" | "missed" | "noModel";
 }
 
+/** A task Vunemi offers to schedule, with the summary shown before it is set up. */
+export interface RecipeView {
+  id: string;
+  category: "morning" | "work" | "files";
+  title: string;
+  body: string;
+  when: string;
+  /** The time and weekdays (0 = Sunday) the setup form starts from; null where they can't be changed. */
+  time: string | null;
+  days: number[] | null;
+  /** What it does and what it never does, made from what its runs are allowed to use. */
+  lines: { does: boolean; text: string }[];
+  /** Connections that have to be switched on first, one line each. */
+  off: string[];
+  /** Why it can't be set up; null when it can. */
+  refused: string | null;
+}
+
+/** The automation library; `enabled` is false while it is switched off in this build. */
+export interface AutomationLibraryView {
+  enabled: boolean;
+  recipes: RecipeView[];
+}
+
 export interface SessionList {
   /** The conversation new tasks go into. May not be listed yet: an empty one is not kept. */
   current: string;
@@ -624,6 +648,11 @@ export interface VunemiApi {
   deleteAutomation(id: string): Promise<AutomationView[]>;
   /** False when it can't start now (a task is running, Vunemi is locked, no model yet). */
   runAutomation(id: string): Promise<boolean>;
+  automationLibrary(): Promise<AutomationLibraryView>;
+  /** Sets up one of the library's tasks, at the time and on the weekdays the user chose. */
+  installRecipe(id: string, when?: { time?: string; days?: number[] }): Promise<AutomationView[]>;
+  /** Puts back the task deleted last from the list, if there is one. */
+  undoDeleteAutomation(): Promise<AutomationView[]>;
   onAutomations(listener: (rows: AutomationView[]) => void): () => void;
 
   listArtefacts(): Promise<ArtefactView[]>;
@@ -821,6 +850,9 @@ export const CH = {
   automationsSuggest: "automations:suggest",
   automationsDelete: "automations:delete",
   automationsRun: "automations:run",
+  automationsLibrary: "automations:library",
+  automationsInstall: "automations:install",
+  automationsUndoDelete: "automations:undo-delete",
   automationsChanged: "automations:changed",
   readImage: "artifact:image",
   voiceStatus: "voice:status",

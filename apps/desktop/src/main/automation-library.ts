@@ -9,15 +9,17 @@
  * here, in code, and the lines of the summary are made from the same scope:
  * they stay true whatever a model says about the task.
  */
+import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import type { Schedule } from "./automations.js";
+import type { RecipeView } from "../shared/ipc.js";
+import { describeSchedule, validSchedule, type Schedule } from "./automations.js";
 
 export type RecipeCategory = "morning" | "work" | "files";
 
 export interface Recipe {
   id: string;
   /** Its line in the gallery is automations.recipe.<key>.body. */
-  key: string;
+  key: "morning" | "awaiting" | "today" | "nextWeek" | "mailNotes" | "downloads";
   /** Where its title and task are; the first two were offered before there was a library. */
   texts: `automations.suggest.${"morning" | "awaiting"}` | `automations.recipe.${"today" | "nextWeek" | "mailNotes" | "downloads"}`;
   category: RecipeCategory;
@@ -40,6 +42,16 @@ export function recipeTask(id: string): { title: string; task: string; schedule:
   const recipe = RECIPES.find((r) => r.id === id);
   if (!recipe) throw new Error(t("automations.suggest.unknown"));
   return { title: t(`${recipe.texts}.title`), task: t(`${recipe.texts}.task`), schedule: recipe.schedule, scope: [...recipe.scope] };
+}
+
+/**
+ * A recipe's schedule with the user's own time and days. The kind stays the
+ * recipe's: the window chooses when, not what.
+ */
+export function recipeSchedule(recipe: Recipe, blanks: unknown): Schedule {
+  const b = (blanks ?? {}) as { time?: unknown; days?: unknown };
+  if (recipe.schedule.kind !== "daily" || (b.time === undefined && b.days === undefined)) return recipe.schedule;
+  return validSchedule({ kind: "daily", time: b.time ?? recipe.schedule.time, days: b.days ?? recipe.schedule.days });
 }
 
 /** One part of a connection, as the app knows it now. */
@@ -102,4 +114,44 @@ export function summaryLines(summary: ScopeSummary): SummaryLine[] {
     { does: true, text: t("automations.summary.notifies") },
     { does: false, text: t("automations.summary.never") },
   ];
+}
+
+/** What the app knows of its connections and tools, as far as a scope needs. */
+export interface ScopeWorld {
+  connector(id: string): { label: string; capabilities?: readonly { id: string; tools: readonly string[] }[] } | undefined;
+  isOn(id: string): boolean;
+  isPartOn(id: string, part: string): boolean;
+  tool(name: string): Pick<ToolDef, "actionClass" | "saves"> | undefined;
+}
+
+/** Describes a scope's parts from the connections and tools the app has now. */
+export function scopeLookup(world: ScopeWorld): (source: string) => ScopePart | null {
+  return (source) => {
+    const [id, partId] = source.split(":") as [string, string | undefined];
+    const connector = world.connector(id);
+    const parts = (connector?.capabilities ?? []).filter((part) => partId === undefined || part.id === partId);
+    if (!connector || parts.length === 0) return null;
+    const tools = parts.flatMap((part) => part.tools.flatMap((name) => world.tool(name) ?? []));
+    return {
+      connection: connector.label,
+      reads: tools.some((tool) => tool.actionClass === "read" && !tool.saves),
+      // Sending, deleting and paying are not counted: a scheduled run never gets those tools.
+      changes: tools.some((tool) => tool.actionClass === "write-local" || (tool.actionClass === "read" && tool.saves === true)),
+      on: world.isOn(id) && parts.every((part) => world.isPartOn(id, part.id)),
+    };
+  };
+}
+
+/** The recipes as the gallery shows them, in the user's language. */
+export function recipeViews(look: (source: string) => ScopePart | null): RecipeView[] {
+  return RECIPES.map((recipe) => {
+    const summary = summarizeScope(recipe.scope, look);
+    return {
+      id: recipe.id, category: recipe.category, title: t(`${recipe.texts}.title`), body: t(`automations.recipe.${recipe.key}.body`),
+      when: describeSchedule(recipe.schedule),
+      time: recipe.schedule.kind === "daily" ? recipe.schedule.time : null,
+      days: recipe.schedule.kind === "daily" ? (recipe.schedule.days ?? null) : null,
+      lines: summaryLines(summary), off: summary.off.map((name) => t("automations.summary.off", { name })), refused: summary.refused,
+    };
+  });
 }

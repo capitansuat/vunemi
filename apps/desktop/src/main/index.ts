@@ -52,7 +52,8 @@ import { generalInstructions, recall } from "./memory/recall.js";
 import { propose, type Proposal } from "./memory/propose.js";
 import { memoryRememberTool } from "./memory/tool.js";
 import { Soul, SOUL_MAX, soulInstructions } from "./soul.js";
-import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, suggestion, summaryLine, type AutomationStatus } from "./automations.js";
+import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, summaryLine, SUGGESTIONS, type Automation, type AutomationStatus } from "./automations.js";
+import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, summarizeScope } from "./automation-library.js";
 import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t, tIn, type Locale } from "@vunemi/i18n";
 import { Recorder, recorderBinary } from "./meetings/recorder.js";
 import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
@@ -905,12 +906,40 @@ handle(CH.automationsSet, (_e, id: string, enabled: boolean) => {
   automations.update(String(id), { enabled: enabled === true });
   return automationViews();
 });
+/** What a scope's parts are, from the connections and tools as they are now. */
+const lookScope = scopeLookup({
+  connector: (id) => connectors.get(id),
+  isOn: (id) => connectors.isOn(id),
+  isPartOn: (id, part) => connectors.isPartOn(id, part),
+  tool: (name) => tools.getAny(name),
+});
+/** The task deleted last from the list, for putting back. */
+let deletedAutomation: Automation | null = null;
+
 handle(CH.automationsSuggest, (_e, id: string) => {
-  automations.add(suggestion(String(id)), Date.now());
+  // The two offered before there was a library; now with the scope their words promised.
+  if (!Object.hasOwn(SUGGESTIONS, String(id))) throw new Error(t("automations.suggest.unknown"));
+  automations.add(recipeTask(String(id)), Date.now());
+  return automationViews();
+});
+handle(CH.automationsLibrary, () => (settings.automationLibrary ? { enabled: true, recipes: recipeViews(lookScope) } : { enabled: false, recipes: [] }));
+handle(CH.automationsInstall, (_e, id: unknown, when: unknown) => {
+  const recipe = RECIPES.find((r) => r.id === id);
+  if (!settings.automationLibrary || !recipe) throw new Error(t("automations.suggest.unknown"));
+  // Checked again here: the window shows the summary, it does not decide.
+  const refused = summarizeScope(recipe.scope, lookScope).refused;
+  if (refused) throw new Error(refused);
+  automations.add({ ...recipeTask(recipe.id), schedule: recipeSchedule(recipe, when) }, Date.now());
   return automationViews();
 });
 handle(CH.automationsDelete, (_e, id: string) => {
+  deletedAutomation = automations.get(String(id)) ?? null;
   automations.remove(String(id));
+  return automationViews();
+});
+handle(CH.automationsUndoDelete, () => {
+  if (deletedAutomation) automations.restore(deletedAutomation);
+  deletedAutomation = null;
   return automationViews();
 });
 handle(CH.automationsRun, (_e, id: string) => scheduler.runNow(String(id)));

@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { validSchedule, validScope } from "../../src/main/automations.js";
-import { RECIPES, recipeTask, summarizeScope, summaryLines, type ScopePart } from "../../src/main/automation-library.js";
+import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, summarizeScope, summaryLines, type ScopePart } from "../../src/main/automation-library.js";
 
 /** The parts as the app would describe them, all switched on unless named. */
 const parts: Record<string, ScopePart> = {
@@ -76,5 +76,64 @@ describe("the summary of a scope", () => {
     expect(lines[1]!.text).not.toContain("Calendar");
     const readOnly = summaryLines(summarizeScope(["mail:read"], look));
     expect(readOnly.map((l) => l.does)).toEqual([true, true, false]);
+  });
+});
+
+describe("a recipe's schedule", () => {
+  const morning = RECIPES.find((r) => r.id === "morning-brief")!;
+  const friday = RECIPES.find((r) => r.id === "next-week")!;
+
+  it("takes the user's time and days, and keeps its own where none are given", () => {
+    expect(recipeSchedule(morning, undefined)).toEqual({ kind: "daily", time: "08:00" });
+    expect(recipeSchedule(morning, { time: "07:15", days: [1, 2, 3, 4, 5] })).toEqual({ kind: "daily", time: "07:15", days: [1, 2, 3, 4, 5] });
+    expect(recipeSchedule(friday, { time: "17:00" })).toEqual({ kind: "daily", time: "17:00", days: [5] });
+  });
+
+  it("refuses a time or days that are not ones", () => {
+    expect(() => recipeSchedule(morning, { time: "25:00" })).toThrow();
+    expect(() => recipeSchedule(morning, { days: [9] })).toThrow();
+    expect(() => recipeSchedule(morning, { time: "08:00\nevery minute" })).toThrow();
+  });
+});
+
+describe("a scope read from the app", () => {
+  const tools: Record<string, { actionClass: "read" | "write-local" | "destructive" | "outbound"; saves?: boolean }> = {
+    calendar_events: { actionClass: "read" }, calendar_create: { actionClass: "write-local" }, calendar_delete: { actionClass: "destructive" },
+    mail_read: { actionClass: "read" }, mail_send: { actionClass: "outbound" }, files_download: { actionClass: "read", saves: true },
+  };
+  const look = scopeLookup({
+    connector: (id) => ({
+      calendar: { label: "Calendar", capabilities: [{ id: "read", tools: ["calendar_events"] }, { id: "write", tools: ["calendar_create", "calendar_delete"] }] },
+      mail: { label: "Mail", capabilities: [{ id: "read", tools: ["mail_read"] }, { id: "send", tools: ["mail_send"] }] },
+      files: { label: "Files", capabilities: [{ id: "get", tools: ["files_download", "gone_tool"] }] },
+    })[id],
+    isOn: (id) => id !== "mail",
+    isPartOn: (_id, part) => part !== "write",
+    tool: (name) => tools[name],
+  });
+
+  it("tells reading from changing by the tools of the part, and counts neither sending nor deleting", () => {
+    expect(look("calendar:read")).toEqual({ connection: "Calendar", reads: true, changes: false, on: true });
+    expect(look("calendar:write")).toEqual({ connection: "Calendar", reads: false, changes: true, on: false });
+    expect(look("mail:send")).toEqual({ connection: "Mail", reads: false, changes: false, on: false });
+    // A tool that reads and saves a file changes the Mac.
+    expect(look("files:get")).toEqual({ connection: "Files", reads: false, changes: true, on: true });
+  });
+
+  it("takes a whole connection as all its parts, and knows nothing of what is not there", () => {
+    expect(look("calendar")).toEqual({ connection: "Calendar", reads: true, changes: true, on: false });
+    expect(look("calendar:share")).toBeNull();
+    expect(look("weather:read")).toBeNull();
+  });
+
+  it("gives the gallery every recipe with its lines, and what has to be switched on", () => {
+    const views = recipeViews((source) => parts[source] ?? null);
+    expect(views.map((v) => v.id)).toEqual(RECIPES.map((r) => r.id));
+    const plan = views.find((v) => v.id === "today-plan")!;
+    expect(plan).toMatchObject({ category: "morning", time: "07:30", days: null, refused: null });
+    expect(plan.off).toHaveLength(1);
+    expect(plan.off[0]).toContain("Reminders");
+    expect(views.find((v) => v.id === "next-week")!.days).toEqual([5]);
+    expect(views.every((v) => v.lines.at(-1)!.does === false && v.title && v.body && v.when)).toBe(true);
   });
 });

@@ -89,6 +89,12 @@ export interface Settings {
   updatesCheck: boolean;
   /** Tell the others in a meeting apart by voice once it is over. Off unless the user turns it on. */
   meetingSpeakers: boolean;
+  /**
+   * The automation library (its page, the recipes, the summary before a
+   * task is set up). Off, with no switch in the window yet: it is turned on
+   * in the file, for trying it out.
+   */
+  automationLibrary: boolean;
 }
 
 const APPEARANCES = new Set<unknown>(["system", "light", "dark"]);
@@ -108,7 +114,7 @@ function cleanSites(value: unknown): string[] {
   return [...new Set(hosts)].slice(0, MAX_TRUSTED_SITES);
 }
 
-const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false, trustedSites: [], appearance: "system", updatesCheck: true, meetingSpeakers: false };
+const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false, trustedSites: [], appearance: "system", updatesCheck: true, meetingSpeakers: false, automationLibrary: false };
 
 /**
  * Settings that exist but can't be read. Everything falls back to its
@@ -225,6 +231,10 @@ export class SettingsStore {
     this.replace({ ...this.current, appearance });
   }
 
+  get automationLibrary(): boolean {
+    return this.current.automationLibrary;
+  }
+
   get updatesCheck(): boolean {
     return this.current.updatesCheck;
   }
@@ -260,7 +270,7 @@ export class SettingsStore {
    * to read, nor stopped wanting the door shut.
    */
   reset(): void {
-    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck, meetingSpeakers: false });
+    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck, meetingSpeakers: false, automationLibrary: this.current.automationLibrary });
   }
 
   private replace(next: Settings): void {
@@ -318,7 +328,7 @@ export class SettingsStore {
       // Vunemi in Turkish, the only language it had; keep them there.
       const stored = (parsed as Settings).language;
       const language = stored === undefined ? "tr" : isLocale(stored) ? stored : null;
-      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false, meetingSpeakers: (parsed as Settings).meetingSpeakers === true };
+      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false, meetingSpeakers: (parsed as Settings).meetingSpeakers === true, automationLibrary: (parsed as Settings).automationLibrary === true };
     } catch (err) {
       // No file yet is a first launch. A file that can't be read is not.
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { ...EMPTY };
