@@ -496,6 +496,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let changedSomething = false;
   /** Whether the model was already asked to back up a claim with a tool. */
   let claimNudged = false;
+  /** Records of the past read in this task: what an answer repeats from them is not a claim. */
+  const records: string[] = [...(opts.mentions ?? []).flatMap((m) => m.text ?? []), ...(opts.libraryIndex ? [opts.libraryIndex] : [])];
   let callNudged = false;
   let guideNudged = false;
   const travelNudged = new Set<string>();
@@ -712,7 +714,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         }
         // "I've added it" after nothing but reads is the worst thing a small
         // model says: the user believes it. What ran decides, not the words.
-        if (!changedSomething && claimsChange(result.text)) {
+        if (!changedSomething && claimsChange(result.text, records)) {
           // First time: one more turn to do it, or to take it back. A small
           // model said "switched it off" after only listing, and did it once asked.
           if (!claimNudged && index < maxSteps - 1) {
@@ -1110,6 +1112,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         calendarReadError = null;
       }
       if (actionClass !== "read" || tool.saves) changedSomething = true;
+      if (tool.record) records.push(raw);
       if (call.name.startsWith("travel_search_") && raw.includes('"kind":"travel-options"')) travelShown = true;
       if (tool.untrustedOutput) opts.onUntrustedOutput?.(raw, tool.name);
       emit({
@@ -1480,11 +1483,43 @@ export function namedTool(text: string, names: readonly string[]): string | null
   return names.find((name) => name.includes("_") && new RegExp(`(?<![\\w.-])${name.replace(/[.*+?^${}()|[\]\\-]/g, "\\$&")}(?![\\w-])`).test(text)) ?? null;
 }
 
-export function claimsChange(text: string): boolean {
+/**
+ * Whether `text` says the assistant changed something. `records` are records
+ * of the past read in this task (an earlier conversation, a meeting): a
+ * sentence that repeats one ("the launch was moved to 17 November") reports
+ * what happened then and claims nothing.
+ */
+export function claimsChange(text: string, records: readonly string[] = []): boolean {
   // Quoted words are someone else's: a model quoting a failed write's error
   // ("unknown whether the change was saved") claims nothing.
   const own = text.replace(/"[^"\n]*"|“[^”\n]*”|„[^“”\n]*[“”]|«[^»\n]*»|「[^」\n]*」|`[^`\n]*`/g, " ");
-  return CHANGE_CLAIMS.some((pattern) => pattern.test(own));
+  if (!CHANGE_CLAIMS.some((pattern) => pattern.test(own))) return false;
+  if (records.length === 0) return true;
+  const known = new Set(records.flatMap(stems));
+  return own.split(/(?<=[.!?。！？])\s+|\n+/).some((sentence) => CHANGE_CLAIMS.some((pattern) => pattern.test(sentence)) && !repeats(sentence, known));
+}
+
+/** What the assistant says of itself is its own claim, whatever the record says. */
+const OWN_ACT = /\bI(?:'ve|'m)?\b|(?:d[ıiuü]m|t[ıiuü]m)(?![a-zçğıöşü])/;
+/** Words that carry no content of their own, as `stems` cuts them. */
+const FILLER = new Set(["been", "have", "were", "with", "from", "that", "this", "your", "they", "them", "thei", "then", "than", "also", "into", "için", "olar", "daha", "kada"]);
+const REPEAT_WORDS = 4;
+const REPEAT_SHARE = 0.7;
+
+/** The start of each word that says something: numbers, and words of four letters or more. */
+function stems(text: string): string[] {
+  return (text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
+    .filter((word) => /\p{N}/u.test(word) || [...word].length >= 4)
+    .map((word) => [...word].slice(0, 4).join(""))
+    .filter((stem) => !FILLER.has(stem));
+}
+
+/** Whether a sentence is made of a record's words: most of what it says, and at least a few words of it. */
+function repeats(sentence: string, known: ReadonlySet<string>): boolean {
+  if (OWN_ACT.test(sentence)) return false;
+  const said = [...new Set(stems(sentence))];
+  const shared = said.filter((stem) => known.has(stem)).length;
+  return shared >= REPEAT_WORDS && shared >= said.length * REPEAT_SHARE;
 }
 
 /**

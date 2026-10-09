@@ -127,6 +127,12 @@ export interface ToolDef<Args = Record<string, unknown>> {
    */
   untrustedOutput?: boolean;
   /**
+   * Output is a record of the past (an earlier conversation, a meeting):
+   * an answer that says "the launch was moved" after reading one repeats
+   * the record, and is not taken for a claim that the assistant moved it.
+   */
+  record?: boolean;
+  /**
    * Output describes a moment in time (a page snapshot). Only the latest such
    * output is kept verbatim in the conversation; older ones are replaced by a
    * short note when the context window runs short.

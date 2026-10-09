@@ -40,6 +40,7 @@ export function createLibraryTools(opts: LibraryToolsOptions): ToolDef[] {
       },
       actionClass: "read",
       untrustedOutput: true,
+      record: true,
       run: async (a) => {
         opts.library.sync();
         const kind = a.kind === "conversation" || a.kind === "meeting" ? a.kind : null;
@@ -60,6 +61,7 @@ export function createLibraryTools(opts: LibraryToolsOptions): ToolDef[] {
       },
       actionClass: "read",
       untrustedOutput: true,
+      record: true,
       run: async (a) => {
         const item = opts.library.byRef(String(a.id ?? ""));
         if (!item || item.id === opts.current()) return `There is no earlier conversation or meeting with the id ${JSON.stringify(String(a.id ?? ""))}. Use an id as listed, or library_search.`;

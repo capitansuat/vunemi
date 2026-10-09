@@ -1182,6 +1182,50 @@ describe("claims of a change that didn't happen", () => {
   });
 });
 
+describe("an answer that repeats a record of the past", () => {
+  const record = "Summary:\n- The launch moves from 3 November to 17 November because the payment provider's review is late.\n- Mira updates the press list.";
+  const kayit = "Özet:\n- Lansman 3 Kasım'dan 17 Kasım'a taşındı, çünkü ödeme sağlayıcısının incelemesi gecikti.\n- Basın listesini Mira güncelleyecek.";
+
+  it("is a report, not a claim", () => {
+    expect(claimsChange("The launch was moved from 3 November to 17 November because the provider's review was late.", [record])).toBe(false);
+    expect(claimsChange("Lansman 17 Kasım'a taşındı; ödeme sağlayıcısının incelemesi gecikmişti.", [kayit])).toBe(false);
+    // Without the record it is what it always was.
+    expect(claimsChange("The launch was moved from 3 November to 17 November because the provider's review was late.")).toBe(true);
+  });
+
+  it("is still a claim when the assistant says it did it, or says something the record does not", () => {
+    expect(claimsChange("I've moved the launch from 3 November to 17 November.", [record])).toBe(true);
+    expect(claimsChange("Lansmanı 3 Kasım'dan 17 Kasım'a taşıdım.", [kayit])).toBe(true);
+    expect(claimsChange("The email has been sent to Mira.", [record])).toBe(true);
+    expect(claimsChange("The press list was updated and the invite was sent to the whole team.", [record])).toBe(true);
+    // One sentence from the record does not cover another that is not.
+    expect(claimsChange("The launch was moved from 3 November to 17 November because of the provider's review. The event has been added to your calendar.", [record])).toBe(true);
+  });
+
+  it("is left alone in a task that read the record, and checked in one that did not", async () => {
+    const answer = "The launch was moved from 3 November to 17 November because the payment provider's review is late.";
+    const told = scripted([{ text: answer }]);
+    const withRecord = await runAgent({
+      goal: "When did we move the launch to?", model: told.model, tools: new ToolRegistry(), emit: () => {}, requestApproval: async () => ({ kind: "approve" }),
+      mentions: [{ kind: "meeting", id: "m", title: "Launch sync", date: "2026-09-18", text: record }],
+    });
+    expect(withRecord.detail).toBe(answer);
+    expect(told.seen).toHaveLength(1);
+
+    const reader = new ToolRegistry().register({
+      name: "library_open", description: "Read one.", parameters: { type: "object", properties: {} }, actionClass: "read", untrustedOutput: true, record: true,
+      run: async () => record,
+    });
+    const opened = scripted([{ calls: [{ name: "library_open", argumentsText: "{}" }] }, { text: answer }]);
+    expect((await runAgent({ goal: "When did we move the launch to?", model: opened.model, tools: reader, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) })).detail).toBe(answer);
+    expect(opened.seen).toHaveLength(2);
+
+    const alone = scripted([{ text: answer }, { text: "Nothing was changed." }]);
+    await runAgent({ goal: "When did we move the launch to?", model: alone.model, tools: new ToolRegistry(), emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(alone.seen).toHaveLength(2);
+  });
+});
+
 describe("a tool that saves without approval", () => {
   it("makes \"I've saved it\" true: no second turn, no note that nothing changed", async () => {
     const registry = new ToolRegistry().register({
