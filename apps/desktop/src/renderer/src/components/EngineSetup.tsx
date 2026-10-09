@@ -159,6 +159,7 @@ export function EngineSetup({ showInstalled = false, intro = true }: { showInsta
             </button>
           </div>
           <ModelSearch onPick={setPicked} />
+          <p className="mt-3 text-[11.5px] leading-snug text-faint">{t("engine.setup.varies")}</p>
         </div>
       )}
       {error && <p className="text-[12.5px] text-danger">{error}</p>}

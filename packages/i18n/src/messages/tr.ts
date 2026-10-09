@@ -1452,6 +1452,7 @@ export const messages = {
     setup: {
       title: "Bu Mac için bir model",
       body: "Vunemi'nin düşünmesi için bu Mac'e bir yapay zekâ modeli gerekiyor. Model bu Mac'te çalışır; yazdıkların dışarı gitmez.",
+      varies: "Vunemi'nin ne kadar iyi çalıştığı seçtiğin modele bağlıdır: aynı iş bir modelde iyi, başka birinde zayıf sonuç verebilir.",
       download: "İndir",
       badge: "Önerilen",
       have: "İndirildi",

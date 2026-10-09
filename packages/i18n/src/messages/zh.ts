@@ -1446,6 +1446,7 @@ export const messages: Catalogue = {
     setup: {
       title: "适合这台 Mac 的模型",
       body: "Vunemi 需要在这台 Mac 上有一个 AI 模型才能思考。模型在这台 Mac 上运行，你写的内容不会离开这里。",
+      varies: "Vunemi 的表现取决于你选择的模型：同一项任务，用一个模型可能做得很好，换一个可能较差。",
       download: "下载",
       badge: "推荐",
       have: "已下载",

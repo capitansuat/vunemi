@@ -1446,6 +1446,7 @@ export const messages: Catalogue = {
     setup: {
       title: "이 Mac을 위한 모델",
       body: "Vunemi가 생각하려면 이 Mac에 AI 모델이 필요합니다. 모델은 이 Mac에서 실행되며, 작성한 내용은 밖으로 나가지 않습니다.",
+      varies: "Vunemi의 성능은 선택한 모델에 따라 달라집니다. 같은 작업도 모델에 따라 잘될 수도, 덜 잘될 수도 있습니다.",
       download: "다운로드",
       badge: "추천",
       have: "다운로드됨",
