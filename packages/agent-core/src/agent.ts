@@ -5,6 +5,7 @@
  */
 
 import type { Artifact, ApprovalDecision, ChoiceCard, Produced, EmitFn, HandoffOutcome, PlanDecision, RunStatus } from "./events.js";
+import { addressesIn, unseenLinks } from "./links.js";
 import { bareQuestion, comparisonTable, listChoiceInput, prepareChoice, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
@@ -398,6 +399,16 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     ...(opts.history ?? []),
     { role: "user", content: request, ...(attached.images.length > 0 && { images: attached.images }) },
   ]);
+  // Every address the conversation has held: what the user wrote and what tools
+  // returned. A link in an answer to any other address was written from memory.
+  const addresses = new Set<string>();
+  for (const message of convo) {
+    if (message.role !== "assistant" && typeof message.content === "string") for (const address of addressesIn(message.content)) addresses.add(address);
+  }
+  const flagLinks = (stepId: string, text: string): void => {
+    const urls = unseenLinks(text, addresses);
+    if (urls.length > 0) emit({ type: "links.unverified", runId, stepId, urls, at: now() });
+  };
   /** Images tools attached during the current step, shown to the model after it. */
   let stepImages: { tool: string; label?: string; image: ImageData }[] = [];
   // What the model is sent. Earlier messages are never edited between
@@ -686,6 +697,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           const note = `\n\n${t("agent.travelNotSearched")}`;
           convo[convo.length - 1] = { role: "assistant", content: result.text + note };
           emit({ type: "message.delta", runId, stepId, text: note });
+          flagLinks(stepId, result.text);
           return finish("done", (result.text + note).trim());
         }
         // "I've added it" after nothing but reads is the worst thing a small
@@ -702,6 +714,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           const note = `\n\n${t("agent.nothingChanged")}`;
           convo[convo.length - 1] = { role: "assistant", content: result.text + note };
           emit({ type: "message.delta", runId, stepId, text: note });
+          flagLinks(stepId, result.text);
           return finish("done", (result.text + note).trim());
         }
         // "I will use the mail_archive tool", and the answer ends there: a
@@ -726,6 +739,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           convo.push({ role: "user", content: guideNudge(unused) });
           continue;
         }
+        flagLinks(stepId, result.text);
         return finish("done", result.text.trim());
       }
       // Before any tool runs: a crash from here on leaves a record of what was asked.
@@ -1067,6 +1081,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         openTools(group);
       };
       const raw = await redact(await tool.run(parsed.value as Record<string, unknown>, { signal, userGoal: opts.goal, runId, handoff, offerUndo, attach, gallery, produced, openTools: opened }));
+      for (const address of addressesIn(raw)) addresses.add(address);
       if (tool.name.startsWith("page_")) {
         const url = /^\[tab \d+\] [^\n]* — (https?:\/\/\S+)/m.exec(raw)?.[1];
         const bodyStart = raw.indexOf("\n");

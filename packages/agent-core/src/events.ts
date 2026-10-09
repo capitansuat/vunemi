@@ -95,6 +95,8 @@ export type AgentEvent =
   | { type: "choice.answered"; runId: string; callId: string; text: string; index?: number; at: number }
   /** A later step wrote this step's text again (see the question check in agent.ts): it is not shown twice. */
   | { type: "step.superseded"; runId: string; stepId: string; at: number }
+  /** Links in this step's answer whose address nothing in the conversation showed: written from memory (see links.ts). */
+  | { type: "links.unverified"; runId: string; stepId: string; urls: string[]; at: number }
   /** Short answers to the question an answer ends on. Nothing waits for them: picking one is the user's next message. */
   | { type: "replies.offered"; runId: string; stepId: string; options: string[]; at: number }
   /** Intent preview: what the agent means to do, before it starts. */

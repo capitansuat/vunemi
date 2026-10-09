@@ -268,6 +268,8 @@ export const messages: Catalogue = {
     tools: { other: "{count} 个工具" },
     tokensPerSec: "{n} token/秒",
     firstToken: "首个 token {time}",
+    linkUnverified: "未核实",
+    linkUnverifiedWhy: "Vunemi 在本次对话中没有见过这个地址：它是模型凭记忆写出的，可能不正确。",
   },
 
   call: {

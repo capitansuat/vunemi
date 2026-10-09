@@ -5,11 +5,12 @@
  */
 
 import { Fragment, type ReactNode } from "react";
+import { t } from "@vunemi/i18n";
 import { parseBlocks, plainMath } from "../lib/markdown";
 
 const INLINE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*\s][^*]*\*)|(\[[^\]]+\]\([^)\s]+\))/g;
 
-function inline(text: string): ReactNode[] {
+function inlineNodes(text: string, unverified?: readonly string[]): ReactNode[] {
   const out: ReactNode[] = [];
   let last = 0;
   let key = 0;
@@ -31,9 +32,17 @@ function inline(text: string): ReactNode[] {
       // Only https links, opened by the main process in the real browser.
       out.push(
         href!.startsWith("https://") ? (
-          <a key={key++} href={href} target="_blank" rel="noreferrer" className="text-ember underline decoration-ember-line underline-offset-2">
-            {label}
-          </a>
+          <Fragment key={key++}>
+            <a href={href} target="_blank" rel="noreferrer" className="text-ember underline decoration-ember-line underline-offset-2">
+              {label}
+            </a>
+            {/* An address the conversation never held: the model wrote it from memory. */}
+            {unverified?.includes(href!) && (
+              <span title={t("turn.linkUnverifiedWhy")} className="ml-1 cursor-help text-[0.8em] text-faint">
+                {t("turn.linkUnverified")}
+              </span>
+            )}
+          </Fragment>
         ) : (
           <span key={key++}>{label}</span>
         ),
@@ -45,7 +54,8 @@ function inline(text: string): ReactNode[] {
   return out;
 }
 
-export function Markdown({ text }: { text: string }) {
+export function Markdown({ text, unverified }: { text: string; unverified?: readonly string[] }) {
+  const inline = (part: string): ReactNode[] => inlineNodes(part, unverified);
   return (
     <div className="selectable space-y-2.5 text-[14.5px] leading-[1.65] text-fg">
       {parseBlocks(text).map((b, i) => {

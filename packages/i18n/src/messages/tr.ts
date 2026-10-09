@@ -272,6 +272,8 @@ export const messages = {
     tools: { other: "{count} araç" },
     tokensPerSec: "{n} tok/sn",
     firstToken: "ilk token {time}",
+    linkUnverified: "doğrulanmadı",
+    linkUnverifiedWhy: "Vunemi bu adresi bu konuşmada görmedi: model ezberden yazdı, yanlış olabilir.",
   },
 
   call: {

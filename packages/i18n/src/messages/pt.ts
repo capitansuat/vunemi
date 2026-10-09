@@ -268,6 +268,8 @@ export const messages: Catalogue = {
     tools: { one: "{count} ferramenta", other: "{count} ferramentas" },
     tokensPerSec: "{n} tok/s",
     firstToken: "primeiro token {time}",
+    linkUnverified: "não verificado",
+    linkUnverifiedWhy: "O Vunemi não viu este endereço nesta conversa: o modelo o escreveu de memória e ele pode estar errado.",
   },
 
   call: {

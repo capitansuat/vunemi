@@ -143,7 +143,7 @@ function Step({ step, streaming, isAnswer }: { step: StepView; streaming: boolea
         <Draft text={step.text} />
       ) : step.text.trim() !== "" &&
         (isAnswer || (streaming && step.calls.length === 0) ? (
-          <Markdown text={step.text} />
+          <Markdown text={step.text} {...(step.unverifiedLinks && { unverified: step.unverifiedLinks })} />
         ) : (
           <p className="selectable whitespace-pre-wrap text-[13.5px] text-muted">{step.text.trim()}</p>
         ))}

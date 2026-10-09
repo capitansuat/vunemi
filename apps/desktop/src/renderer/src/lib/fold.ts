@@ -56,6 +56,8 @@ export interface StepView {
   choices: ChoiceView[];
   /** Short answers to the question this text ends on; picking one is the next message. */
   replies?: string[];
+  /** Links in the text that nothing in the conversation showed: the model wrote them from memory. */
+  unverifiedLinks?: string[];
   /** Option cards in a later step show what this text listed. */
   replaced?: boolean;
   usage?: UsageView;
@@ -195,6 +197,8 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
       const asked = updateStep(run, e.stepId, (s) => ({ ...s, choices: [...s.choices, { runId: e.runId, callId: e.callId, card: e.card, status: "awaiting" }] }));
       return e.replaces ? updateStep(asked, e.replaces, (s) => ({ ...s, replaced: true })) : asked;
     }
+    case "links.unverified":
+      return updateStep(run, e.stepId, (s) => ({ ...s, unverifiedLinks: e.urls }));
     case "step.superseded":
       return updateStep(run, e.stepId, (s) => ({ ...s, text: "" }));
     case "replies.offered":

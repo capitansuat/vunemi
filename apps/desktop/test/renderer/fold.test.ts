@@ -36,6 +36,16 @@ describe("foldEvent", () => {
     expect(expired[0]!.steps[0]!.choices[0]!.status).toBe("expired");
   });
 
+  it("keeps with an answer the links nothing in the conversation showed", () => {
+    const runs = fold([
+      ...start,
+      { type: "message.delta", runId: "r", stepId: "s0", text: "See [the maker](https://maker.example/specs)." },
+      { type: "links.unverified", runId: "r", stepId: "s0", urls: ["https://maker.example/specs"], at: 2 },
+      { type: "run.finished", runId: "r", status: "done", detail: "ok", at: 3 },
+    ]);
+    expect(runs[0]!.steps[0]!.unverifiedLinks).toEqual(["https://maker.example/specs"]);
+  });
+
   it("shows an answer once when the model was made to write it again", () => {
     const runs = fold([
       ...start,
