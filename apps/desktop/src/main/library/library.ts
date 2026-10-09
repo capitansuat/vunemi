@@ -15,7 +15,7 @@ import type { AgentEvent } from "@vunemi/agent-core";
 import { cosine, EMBED_MODEL_ID, type Embedder } from "../memory/embedder.js";
 import { fuse } from "../memory/recall.js";
 import type { Meeting, MeetingSummary } from "../meetings/store.js";
-import { conversationItem, conversationStamp, meetingItem } from "./items.js";
+import { conversationItem, conversationStamp, meetingItem, whereSaid } from "./items.js";
 import type { Item, ItemKind, LibraryStore } from "./store.js";
 
 /** What finding by meaning needs; tests pass a stand-in. */
@@ -72,9 +72,10 @@ function passage(item: Pick<Item, "title" | "line" | "text">): string {
   return `${item.title}\n${item.line}\n${item.text}`.slice(0, PASSAGE_CHARS);
 }
 
-export function indexLine(item: Pick<Item, "ref" | "kind" | "title" | "at" | "line">): string {
+/** One item as a line; `said` is where its words hold what was asked for (see whereSaid). */
+export function indexLine(item: Pick<Item, "ref" | "kind" | "title" | "at" | "line">, said: string | null = null): string {
   // Titles and lines are words from conversations and meetings: quoted, so none reads as a line of ours.
-  return `- ${item.ref} · ${item.kind} · ${new Date(item.at).toISOString().slice(0, 10)} · ${JSON.stringify(item.title)}${item.line ? `: ${JSON.stringify(item.line)}` : ""}`;
+  return `- ${item.ref} · ${item.kind} · ${new Date(item.at).toISOString().slice(0, 10)} · ${JSON.stringify(item.title)}${item.line ? `: ${JSON.stringify(item.line)}` : ""}${said ? ` · in it: ${JSON.stringify(said)}` : ""}`;
 }
 
 export class Library {
@@ -124,7 +125,7 @@ export class Library {
   async index(request: string, skip: ReadonlySet<string>): Promise<{ text: string; ids: string[] } | null> {
     const items = (await this.find(request, INDEX_LETTERS, true)).filter((item) => !skip.has(item.id)).slice(0, INDEX_ITEMS);
     if (items.length === 0) return null;
-    return { text: [`[Vunemi, not from the user] ${LIBRARY_RULE}`, ...items.map(indexLine)].join("\n"), ids: items.map((item) => item.id) };
+    return { text: [`[Vunemi, not from the user] ${LIBRARY_RULE}`, ...this.lines(items, request, INDEX_LETTERS)].join("\n"), ids: items.map((item) => item.id) };
   }
 
   /** What a search by the model gets: by words and meaning, or the newest when it names nothing. */
@@ -159,6 +160,12 @@ export class Library {
         if (now && passage(now) === passage(item)) this.store.setVector(item.id, EMBED_MODEL_ID, vectors[i]!);
       });
     }
+  }
+
+  /** The items as lines, each with where its words hold what `request` asks about. */
+  lines(items: readonly Item[], request: string, minLetters = 2): string[] {
+    const stems = this.store.tellingStems(request, minLetters);
+    return items.map((item) => indexLine(item, whereSaid(item, stems)));
   }
 
   /** A conversation or meeting the user deleted: gone from here at once, not at the next sync. */

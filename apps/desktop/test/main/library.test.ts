@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { suspectInstructions, type AgentEvent } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { conversationItem, meetingItem } from "../../src/main/library/items.js";
+import { conversationItem, meetingItem, whereSaid } from "../../src/main/library/items.js";
 import { INDEX_ITEMS, Library, LIBRARY_RULE, type LibrarySources, type Meaning } from "../../src/main/library/library.js";
 import { LibraryStore } from "../../src/main/library/store.js";
 import { EMBED_MODEL_ID } from "../../src/main/memory/embedder.js";
@@ -95,6 +95,33 @@ describe("what is kept of a conversation or a meeting", () => {
     const a = conversationItem({ id: "s_a", title: "One", updatedAt: 5, events: task("r1", "x y z", "ok") })!;
     const b = conversationItem({ id: "s_a", title: "Two", updatedAt: 5, events: task("r1", "x y z", "ok") })!;
     expect(a.stamp).not.toBe(b.stamp);
+  });
+});
+
+describe("where an item says what was asked for", () => {
+  const thesis = { title: "Thesis chapter order", line: "Help me order my thesis chapters", text: "User: Help me order my thesis chapters\n\nVunemi: Introduction, Methods, three case studies, Discussion. The committee meeting is on 9 December." };
+
+  it("is the sentence holding the words its name and line do not show", () => {
+    expect(whereSaid(thesis, ["disse", "commi", "meet"])).toBe("The committee meeting is on 9 December.");
+  });
+
+  it("is nothing when the name and line show the words already, or when none is there", () => {
+    expect(whereSaid(thesis, ["thesi", "chapt"])).toBeNull();
+    expect(whereSaid(thesis, ["zeppe"])).toBeNull();
+    expect(whereSaid(thesis, [])).toBeNull();
+  });
+
+  it("compares without accents or case, and takes the stretch with the most of the words", () => {
+    const cake = { title: "Doğum günü pastası", line: "12 kişilik pasta tarifi ver", text: `Çikolata sevmeyenler için vanilyalı da olur. ${"Fırını önceden ısıt. ".repeat(10)}\nGanaj için 300 gram bitter çikolata, İstanbul'dan alınan kalıpta.` };
+    expect(whereSaid(cake, ["çikol", "ganaj", "istan"])).toBe("Ganaj için 300 gram bitter çikolata, İstanbul'dan alınan kalıpta.");
+  });
+
+  it("cuts a long stretch short, and says so when it starts mid-sentence", () => {
+    const long = { title: "Notes", line: "", text: `${"word ".repeat(40)}zeppelin ${"more ".repeat(60)}` };
+    const said = whereSaid(long, ["zeppe"])!;
+    expect(said.startsWith("…zeppelin more")).toBe(true);
+    expect(said.endsWith("…")).toBe(true);
+    expect(said.length).toBeLessThanOrEqual(161);
   });
 });
 
@@ -226,6 +253,8 @@ describe("Library", () => {
       `- ${store.get("s_hotel")!.ref} · conversation · 1970-01-01 · "Lisbon hotels": "Find me a hotel in Lisbon near the river"`,
     ]);
     expect((await library.index("what did the budget meeting decide about marketing?", new Set()))!.ids).toEqual(["m1"]);
+    // What was asked for is said further in than the name and the line: the line shows where.
+    expect((await library.index("which receipts, rent and insurance, did you say to keep?", new Set()))!.text).toContain('"Which receipts do I need for the tax return?" · in it: "Vunemi: Keep the rent and insurance receipts."');
     // A request about nothing earlier gets no lines.
     expect(await library.index("what is the capital of Peru?", new Set())).toBeNull();
     // One shared word in the body is not enough.
@@ -345,6 +374,7 @@ describe("library tools", () => {
     const out = await run("library_search", { query: "risotto" });
     expect(out).toContain(`- ${store.get("s_rice")!.ref} · conversation`);
     expect(out).toContain("library_open");
+    expect(await run("library_search", { query: "eighteen minutes" })).toContain('"How long does risotto rice cook?" · in it: "Vunemi: About eighteen minutes."');
     expect(await run("library_search", { query: "zeppelin" })).toMatch(/Nothing earlier matches "zeppelin"/);
   });
 

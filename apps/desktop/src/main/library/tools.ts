@@ -7,7 +7,7 @@
  */
 import type { ToolDef } from "@vunemi/agent-core";
 import { conversationTasks, meetingParts, mentionTexts, type MentionSource } from "../mentions.js";
-import { indexLine, type Library, type LibrarySources } from "./library.js";
+import type { Library, LibrarySources } from "./library.js";
 
 /** As much of one item as is opened at once; a long conversation gives its newest tasks. */
 const OPEN_CHARS = 24_000;
@@ -47,7 +47,7 @@ export function createLibraryTools(opts: LibraryToolsOptions): ToolDef[] {
         const query = typeof a.query === "string" ? a.query : "";
         const found = await opts.library.search(query, kind, skip());
         if (found.length === 0) return query.trim() ? `Nothing earlier matches "${query.trim()}". Try other words, or an empty query for the newest.` : "There are no earlier conversations or meetings yet.";
-        return [query.trim() ? `Earlier conversations and meetings for "${query.trim()}", best first:` : "The newest conversations and meetings:", ...found.map(indexLine), "Read one with library_open."].join("\n");
+        return [query.trim() ? `Earlier conversations and meetings for "${query.trim()}", best first:` : "The newest conversations and meetings:", ...opts.library.lines(found, query), "Read one with library_open."].join("\n");
       },
     },
     {

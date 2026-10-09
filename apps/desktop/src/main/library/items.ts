@@ -62,3 +62,39 @@ export function meetingItem(m: Meeting): ItemInput | null {
     stamp: hash(`${m.title}\n${m.state}\n${summary}`) * 1000 + (words.length % 1000),
   };
 }
+
+/** As much of an item as a line shows of where it says something: a sentence or two. */
+const SAID_CHARS = 160;
+/** As the store compares words: without accents or case. */
+const fold = (text: string): string => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+/**
+ * Where an item's words say what a request asks about: the stretch with
+ * the most of the request's words that its name and line do not show.
+ * A conversation is named by what was first asked, and what the user wants
+ * back is often said further in. Null when the name and line show them all
+ * already, or when none is there (it was found by meaning). `stems` are
+ * what the request's telling words begin with (LibraryStore.tellingStems).
+ */
+export function whereSaid(item: { title: string; line: string; text: string }, stems: readonly string[]): string | null {
+  const shown = fold(`${item.title} ${item.line}`).match(/[\p{L}\p{N}]+/gu) ?? [];
+  const wanted = stems.map(fold).filter((stem) => !shown.some((word) => word.startsWith(stem)));
+  if (wanted.length === 0) return null;
+  const hits: { at: number; stem: string }[] = [];
+  for (const word of item.text.matchAll(/[\p{L}\p{N}]+/gu)) {
+    const folded = fold(word[0]);
+    const stem = wanted.find((s) => folded.startsWith(s));
+    if (stem) hits.push({ at: word.index, stem });
+  }
+  let best: { at: number; stems: number } | null = null;
+  for (const hit of hits) {
+    const within = new Set(hits.filter((other) => other.at >= hit.at && other.at < hit.at + SAID_CHARS).map((other) => other.stem)).size;
+    if (!best || within > best.stems) best = { at: hit.at, stems: within };
+  }
+  if (!best) return null;
+  // From the start of its sentence when that is near, so it reads as said.
+  const before = item.text.slice(Math.max(0, best.at - 60), best.at);
+  const start = [...before.matchAll(/[.!?]\s+|\n+/g)].at(-1) ?? (best.at <= 60 ? { index: 0, 0: "" } : undefined);
+  const from = start ? best.at - before.length + start.index + start[0].length : best.at;
+  return `${start ? "" : "…"}${oneLine(item.text.slice(from, from + SAID_CHARS * 2), SAID_CHARS)}`;
+}

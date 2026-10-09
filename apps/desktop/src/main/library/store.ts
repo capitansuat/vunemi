@@ -148,11 +148,8 @@ export class LibraryStore {
    */
   telling(request: string, limit: number, minLetters: number): { id: string; words: number; of: number; inTitle: boolean; score: number }[] {
     const fold = (text: string): string => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-    const stems = [...new Set((request.normalize("NFC").toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
-      .filter((word) => [...word].length >= minLetters).map((word) => [...word].slice(0, 5).join("")))].slice(0, 20);
-    const total = this.count();
     const held = this.db.prepare("SELECT count(*) AS n FROM items_fts WHERE items_fts MATCH ?");
-    const rare = stems.filter((stem) => total < 6 || (held.get(`"${stem}"*`) as { n: number }).n <= Math.max(1, Math.floor(total / 2)));
+    const rare = this.tellingStems(request, minLetters);
     if (rare.length === 0) return [];
     const rows = this.db.prepare(
       "SELECT i.id AS id, i.title AS title, i.text AS text, -bm25(items_fts, 4.0, 1.0) AS score FROM items_fts JOIN items i ON i.n = items_fts.rowid WHERE items_fts MATCH ? ORDER BY bm25(items_fts, 4.0, 1.0) LIMIT ?",
@@ -174,6 +171,15 @@ export class LibraryStore {
       const named = (own.length > 0 ? own : titleWords).map((word) => starts.some((re, i) => naming[i] && re.test(word)));
       return { id: row.id, words: starts.filter((re) => re.test(title) || re.test(text)).length, of: rare.length, inTitle: named.filter(Boolean).length * 2 > named.length, score: row.score };
     });
+  }
+
+  /** What the telling words of a request begin with: those of `minLetters` or more that less than half the library has. */
+  tellingStems(request: string, minLetters: number): string[] {
+    const stems = [...new Set((request.normalize("NFC").toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
+      .filter((word) => [...word].length >= minLetters).map((word) => [...word].slice(0, 5).join("")))].slice(0, 20);
+    const total = this.count();
+    const held = this.db.prepare("SELECT count(*) AS n FROM items_fts WHERE items_fts MATCH ?");
+    return stems.filter((stem) => total < 6 || (held.get(`"${stem}"*`) as { n: number }).n <= Math.max(1, Math.floor(total / 2)));
   }
 
   /** The newest items, for a search that names nothing. */
