@@ -21,6 +21,8 @@ const modelName = process.env.VUNEMI_LIVE_CHAT_MODEL;
 const runs = Number(process.env.VUNEMI_LIVE_RUNS ?? 3);
 const set = process.env.VUNEMI_LIVE_SET;
 const ids = process.env.VUNEMI_LIVE_IDS?.split(",");
+/** Answers are written out cut to their two ends; VUNEMI_LIVE_WHOLE=1 keeps all of each. */
+const whole = process.env.VUNEMI_LIVE_WHOLE === "1";
 const cases = CHOICE_CASES.filter((c) => (set === "holdout" ? c.holdout : set === "tuning" ? !c.holdout : true) && (!ids || ids.includes(c.id)));
 
 /** What the user ended up looking at first, and who made it: the model's own call, or the runtime turning its text into a card. */
@@ -117,7 +119,7 @@ describe.skipIf(!baseUrl || !modelName)("buttons and cards, live", () => {
         const shown = events.flatMap((event) => event.type !== "choice.asked" ? [] : [event.card.kind === "choice" ? `${event.card.question} [${event.card.options.join(" | ")}]` : `cards: ${event.card.items.map((item) => item.title).join(" | ")}`]);
         // What happened, in order: a second step with no card between is a check the runtime sent.
         const trace = events.flatMap((event) => (event.type === "step.started" ? ["step"] : event.type === "tool.proposed" ? [event.tool] : event.type === "tool.finished" && !event.ok ? ["refused"] : [])).join(" ");
-        row.push({ ...got, pass: passes(c, got.outcome, got.items), ms: Date.now() - started, trace, shown, answer: answer.length > 400 ? `${answer.slice(0, 200)} … ${answer.slice(-200)}` : answer });
+        row.push({ ...got, pass: passes(c, got.outcome, got.items), ms: Date.now() - started, trace, shown, answer: answer.length > 400 && !whole ? `${answer.slice(0, 200)} … ${answer.slice(-200)}` : answer });
       }
       results.push({ id: c.id, want: c.want, runs: row });
       process.stdout.write(`${c.id.padEnd(16)} ${c.want.padEnd(8)} ${row.map((r) => (r.pass ? "✓" : "✗")).join("")}  ${row.map((r) => `${r.outcome}${r.by === "runtime" ? "*" : ""}`).join(", ")}\n`);

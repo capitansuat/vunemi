@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bareQuestion, choiceTools, comparisonTable, listChoiceInput, prepareChoice, tableChoiceInput, valueSeen } from "../src/choices.js";
+import { bareQuestion, choiceTools, comparisonTable, listChoiceInput, prepareChoice, sectionChoiceInput, tableChoiceInput, valueSeen } from "../src/choices.js";
 import { runAgent } from "../src/agent.js";
 import { ToolRegistry } from "../src/tools.js";
 import type { AgentEvent } from "../src/events.js";
@@ -31,7 +31,9 @@ describe("choice card data", () => {
     expect(listChoiceInput("Here are three ideas:\n1. Ramen\n2. Tacos\nEnjoy your dinner.")).toBeNull();
     expect(listChoiceInput("Which one?\n1. Ramen")).toBeNull();
     expect(listChoiceInput(`Which one?\n1. ${"a".repeat(90)}\n2. b`)).toBeNull();
-    expect(listChoiceInput(`${"I looked into it. ".repeat(20)}\nWhich one?\n1. Ramen\n2. Tacos`)).toBeNull();
+    // A page of answer, then the question with its own list: replies under it, and nothing waits.
+    expect(listChoiceInput(`${"I looked into it. ".repeat(20)}\nWhich one?\n1. Ramen\n2. Tacos`)).toEqual({ question: "Which one?", options: ["Ramen", "Tacos"], allowOther: true, closing: true });
+    expect(listChoiceInput(`${"I looked into it. ".repeat(20)}\nShall I go on?\n1. Ramen\n2. Tacos`)).toBeNull();
     expect(listChoiceInput("Which one?\n1. a\n2. b\n3. c\n4. d\n5. e\n6. f\n7. g\n8. h\n9. i")).toBeNull();
     // After the list, a question is as often an offer under an answer: five at most, and one short line.
     expect(listChoiceInput("1. a\n2. b\n3. c\n4. d\n5. e\n6. f\nWhich one?")).toBeNull();
@@ -460,6 +462,103 @@ describe("choice run", () => {
     expect(result.status).toBe("done");
     expect(events.filter((event) => event.type === "choice.asked").map((event) => event.type === "choice.asked" && event.card.kind === "choice" && event.card.question)).toEqual(["Where?", "When?", "Which one?"]);
     expect(seen[3]!.messages.at(-1)).toMatchObject({ role: "tool", content: expect.stringContaining("Do not ask another") });
+  });
+
+  it("reads options written one under the other, each a heading with its facts", () => {
+    // As the model wrote it, live.
+    const lunch = [
+      "Here are three common team-lunch formats, with their trade-offs:", "", "---", "",
+      "**1. Neighbourhood pub (e.g. a gastropub in your area)**",
+      "- **Pros:** Easy reservation for 5, casual atmosphere.",
+      "- **Cons:** Food can be hit-or-miss; noisy.",
+      "- **Typical cost:** £25–35 per person.", "",
+      "**2. Indian restaurant with a group menu**",
+      "- **Pros:** Great for sharing, lots of variety.",
+      "- **Cons:** Can be loud.",
+      "- **Typical cost:** £20–30 per person.", "",
+      "**3. Sushi restaurant**",
+      "- **Pros:** Light, fresh, quick.",
+      "- **Cons:** Can be pricey.",
+      "- **Typical cost:** £35–50 per person.", "", "---", "",
+      "**Quick tip:** For a group of 5, always call ahead.", "",
+      "Want me to narrow this down?",
+    ].join("\n");
+    expect(sectionChoiceInput(lunch)).toEqual({ items: [
+      { title: "Neighbourhood pub (e.g. a gastropub in your area)", price: "£25–35 per person.", facts: [{ label: "Pros", value: "Easy reservation for 5, casual atmosphere." }, { label: "Cons", value: "Food can be hit-or-miss; noisy." }] },
+      { title: "Indian restaurant with a group menu", price: "£20–30 per person.", facts: [{ label: "Pros", value: "Great for sharing, lots of variety." }, { label: "Cons", value: "Can be loud." }] },
+      { title: "Sushi restaurant", price: "£35–50 per person.", facts: [{ label: "Pros", value: "Light, fresh, quick." }, { label: "Cons", value: "Can be pricey." }] },
+    ] });
+    // The other ways a heading and a fact are written.
+    expect(sectionChoiceInput("## Option 1: Filtre\n* Fiyat: 900 TL\n* Hız: yavaş\n\n## Option 2: Espresso\n* Fiyat: 4.000 TL\n* Hız: hızlı")?.items)
+      .toEqual([{ title: "Filtre", price: "900 TL", facts: [{ label: "Hız", value: "yavaş" }] }, { title: "Espresso", price: "4.000 TL", facts: [{ label: "Hız", value: "hızlı" }] }]);
+    // As the model wrote it, live: each option's facts in a small table of its own.
+    const tables = "## 1. **Bocca** (Shoreditch)\n\n| | |\n|---|---|\n| **Cuisine** | Italian |\n| **Price** | ~£20–35 pp |\n\n## 2. **Padella** (Borough)\n\n| Feature | Detail |\n|---|---|\n| **Cuisine** | Pasta |\n| **Price** | ~£15–25 pp |";
+    expect(sectionChoiceInput(tables)?.items).toEqual([
+      { title: "Bocca (Shoreditch)", price: "~£20–35 pp", facts: [{ label: "Cuisine", value: "Italian" }] },
+      { title: "Padella (Borough)", price: "~£15–25 pp", facts: [{ label: "Cuisine", value: "Pasta" }] },
+    ]);
+    // No price and no word for a fact among the labels: the request has to name the options.
+    const bikes = "1. **City bike**\n- **Weight**: 14 kg\n\n2. **Folding bike**\n- **Weight**: 11 kg";
+    expect(sectionChoiceInput(bikes)).toBeNull();
+    expect(sectionChoiceInput(bikes, "Compare a city bike and a folding bike")?.items.map((item) => item.title)).toEqual(["City bike", "Folding bike"]);
+  });
+
+  it("reads them the other way round when the headings are the facts", () => {
+    // As the model wrote it, live: read by heading, the cards were named Portability and Battery life.
+    const laptops = "## 13-inch vs 15-inch\n\n### Portability\n- **13-inch:** 1.2 kg, fits any bag\n- **15-inch:** 1.9 kg, needs a larger bag\n\n### Battery life\n- **13-inch:** 14 hours\n- **15-inch:** 12 hours\n\n### Price\n- **13-inch:** £999\n- **15-inch:** £1,299\n\n### Verdict\n- **Best for travel:** the 13-inch";
+    expect(sectionChoiceInput(laptops, "Compare a 13-inch and a 15-inch laptop for travel")).toEqual({ items: [
+      { title: "13-inch", price: "£999", facts: [{ label: "Portability", value: "1.2 kg, fits any bag" }, { label: "Battery life", value: "14 hours" }] },
+      { title: "15-inch", price: "£1,299", facts: [{ label: "Portability", value: "1.9 kg, needs a larger bag" }, { label: "Battery life", value: "12 hours" }] },
+    ] });
+    // A request that names neither leaves it unsaid which are the options.
+    expect(sectionChoiceInput(laptops, "Which should I take on a trip?")).toBeNull();
+  });
+
+  it("offers as replies the list under a which-question that follows a long answer", () => {
+    // As the model wrote it, live: each hobby with its paragraph, then the question and the names again.
+    const hobbies = [
+      "Here are a few hobby options that are low-commitment to get started:", "",
+      `**1. Urban sketching** — ${"Carry a small notebook and draw what you see. ".repeat(3)}`, "",
+      `**2. Indoor herb gardening** — ${"Grow rosemary, mint or basil on a windowsill. ".repeat(3)}`, "",
+      `**3. Birdwatching** — ${"Grab binoculars and a free app. ".repeat(3)}`, "",
+      "Which one would you like to try?", "1. Urban sketching", "2. Indoor herb gardening", "3. Birdwatching",
+    ].join("\n");
+    expect(listChoiceInput(hobbies)).toEqual({ question: "Which one would you like to try?", options: ["Urban sketching", "Indoor herb gardening", "Birdwatching"], allowOther: true, closing: true });
+  });
+
+  it("makes one card of an option given twice", () => {
+    const item = (title: string) => ({ title, facts: [{ label: "Use", value: "Daily" }] });
+    const made = prepareChoice("present_options", { items: [item("Knife"), item("Dutch oven"), item("dutch oven"), item("Pizza oven")] }, { pages: [], local: [] });
+    expect("card" in made && made.card.kind === "options" && made.card.items.map((card) => card.title)).toEqual(["Knife", "Dutch oven", "Pizza oven"]);
+    expect(prepareChoice("present_options", { items: [item("Knife"), item("Knife")] }, { pages: [], local: [] })).toEqual({ error: "Give 2 to 6 different option cards." });
+  });
+
+  it("makes cards from options written under headings, with no turn in between", async () => {
+    const prose = "**1. Pub**\n- **Pros:** easy to book\n- **Typical cost:** £30\n\n**2. Sushi**\n- **Pros:** light\n- **Typical cost:** £45\n\nWant me to narrow this down?";
+    const { chat, seen } = model([{ text: prose }, { text: "The pub it is." }]);
+    const registry = new ToolRegistry();
+    for (const tool of choiceTools()) registry.register(tool);
+    const events: AgentEvent[] = [];
+    await runAgent({ goal: "Give me two options for a team lunch so I can choose", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(seen).toHaveLength(2);
+    const first = events.find((event) => event.type === "step.started");
+    // The cards stand in for the text they were made from.
+    expect(events.filter((event) => event.type === "choice.asked")).toMatchObject([{ replaces: first?.type === "step.started" ? first.stepId : "", card: { kind: "options", items: [{ title: "Pub", price: { value: "£30" } }, { title: "Sushi", price: { value: "£45" } }] } }]);
+    // The same answer to a request that is about no options stays an answer.
+    const plain = model([{ text: prose }]);
+    const quiet: AgentEvent[] = [];
+    await runAgent({ goal: "Where did the team eat last year?", model: plain.chat, tools: registry, emit: (event) => quiet.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => ({ text: "", index: 0 }) });
+    expect(quiet.some((event) => event.type === "choice.asked")).toBe(false);
+  });
+
+  it("leaves the sections of one answer as they are", () => {
+    // No label comes back under every heading: parts of a recipe, not options.
+    expect(sectionChoiceInput("**Ingredients**\n- Flour: 200 g\n- Sugar: 50 g\n\n**Method**\n- Oven: 180 °C\n- Time: 25 min")).toBeNull();
+    // One option is nothing to choose from; neither are headings with plain lists under them.
+    expect(sectionChoiceInput("**Pub**\n- Pros: easy\n- Cons: loud\n\n**Tip:** call ahead.")).toBeNull();
+    expect(sectionChoiceInput("## Monday\n- Swim\n- Read\n\n## Tuesday\n- Run\n- Cook")).toBeNull();
+    expect(sectionChoiceInput("**Pub**\n- Pros: easy\n\n**Pub**\n- Pros: near")).toBeNull();
+    expect(sectionChoiceInput("Canberra is the capital.")).toBeNull();
   });
 
   it("asks once for cards when the request named them and the answer was prose", async () => {

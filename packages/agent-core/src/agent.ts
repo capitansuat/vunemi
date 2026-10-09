@@ -6,7 +6,7 @@
 
 import type { Artifact, ApprovalDecision, ChoiceCard, Produced, EmitFn, HandoffOutcome, PlanDecision, RunStatus } from "./events.js";
 import { addressesIn, unseenLinks } from "./links.js";
-import { bareQuestion, comparisonTable, listChoiceInput, prepareChoice, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
+import { bareQuestion, comparisonTable, listChoiceInput, prepareChoice, sectionChoiceInput, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
 import { GUARD_NOTE, suspectInstructions } from "./guard.js";
@@ -646,7 +646,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         }
         // The user asked for cards in so many words and got prose: one more turn to make them.
         if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") && opts.requestChoice &&
-            !comparisonNudged && index < maxSteps - 1 && asksForCards(opts.goal) && tableChoiceInput(result.text, opts.goal) === null) {
+            !comparisonNudged && index < maxSteps - 1 && asksForCards(opts.goal) && tableChoiceInput(result.text, opts.goal) === null && sectionChoiceInput(result.text, opts.goal) === null) {
           comparisonNudged = true;
           draftStep = stepId;
           convo.push({ role: "user", content: "[Vunemi check, not from the user] The user asked for option cards, and you answered in plain text. Call present_options now with the 2 to 6 options you just described: a title each, and the facts as label and value. Use only what you already wrote; give sourceUrl only for a page you actually read." });
@@ -654,7 +654,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         }
         if (toolSpecs.some((tool) => tool.name === "present_options") && !called.has("present_options") &&
             comparesOptions(opts.goal, result.text)) {
-          const items = tableChoiceInput(result.text, opts.goal);
+          // A table, or the options one under the other with their facts: cards without another turn.
+          const items = tableChoiceInput(result.text, opts.goal) ?? sectionChoiceInput(result.text, opts.goal);
           if (items && opts.requestChoice && index < maxSteps - 1) {
             const call: ToolCall = { id: `${stepId}.table`, name: "present_options", argumentsText: JSON.stringify(items) };
             draftStep = stepId;
@@ -1457,8 +1458,8 @@ export function asksForCards(goal: string): boolean {
 /** A researched product or travel comparison belongs in option cards. */
 export function comparesOptions(goal: string, text: string): boolean {
   // A request for cards answered with a table is a comparison whatever it is about.
-  if (!asksForCards(goal) && !/(?:uçuş|uçak|bilet|flight|ticket|laptop|otel|hotel|product|ürün|compare|comparison|karşılaştır|seçenek)/iu.test(goal)) return false;
-  return comparisonTable(text);
+  if (!asksForCards(goal) && !/(?:uçuş|uçak|bilet|flight|ticket|laptop|otel|hotel|product|ürün|compare|comparison|karşılaştır|seçenek|\boptions?\b)/iu.test(goal)) return false;
+  return comparisonTable(text) || sectionChoiceInput(text, goal) !== null;
 }
 
 /**

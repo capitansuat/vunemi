@@ -11,7 +11,7 @@ export interface ChoiceEvidence {
   local: string[];
 }
 
-const PRICE_LABEL = /^(?:(?:approx\.?|estimated|tahmini|yaklaşık)\s+)?(?:price|fiyat|ücret|fare|cost)(?:\s+(?:range|aralığı))?$/iu;
+const PRICE_LABEL = /^(?:(?:approx\.?|estimated|typical|average|tahmini|yaklaşık|ortalama)\s+)?(?:price|fiyat|ücret|fare|cost|maliyet)(?:\s+(?:range|aralığı))?$/iu;
 
 /** Buttons the card holds. The model is told five; live it wrote out seven, and dropping two unsaid is worse than a longer row. */
 const MAX_OPTIONS = 8;
@@ -151,8 +151,11 @@ function listed(text: string): ListChoice | null {
   const closes = closing !== "";
   // A list earlier in the text: the answer came first, and the question with its own options after it.
   const answered = before.some((line) => item.test(line));
-  // More than a sentence or two before the list is an answer, not a question.
-  if (!closes && !answered && before.join(" ").length > 300) return null;
+  // More than a sentence or two before the list is an answer, not a question: unless the
+  // line right above the list asks which of them. Live, four hobbies came each with a
+  // paragraph, then "Which one would you like to try?" and their names again as a list.
+  const lengthy = !closes && !answered && before.join(" ").length > 300;
+  if (lengthy && !whichQuestion(unmarked(before.at(-1) ?? ""))) return null;
   /** The question a line asks: all of it, or what comes before a lead-in such as "My options:". */
   const asked = (line: string | undefined): string => {
     if (!line) return "";
@@ -169,7 +172,7 @@ function listed(text: string): ListChoice | null {
     return unmarked(bold ? bold[1]! : body).replace(/\s*:$/, "");
   };
   const options = buttons(lines.slice(start, end).map(label), closes ? MAX_REPLIES : MAX_OPTIONS);
-  return options && { question, options, allowOther: true, ...((closes || answered) && { closing: true as const }) };
+  return options && { question, options, allowOther: true, ...((closes || answered || lengthy) && { closing: true as const }) };
 }
 
 /**
@@ -272,6 +275,98 @@ export function tableChoiceInput(text: string, goal = ""): { items: { title: str
     }) };
   }
   return null;
+}
+
+/** What a fact of an option is called, whatever the options are: a heading over lines so named is one of the options. */
+const ATTRIBUTE_LABEL = /^(?:pros?|cons?|advantages?|disadvantages?|drawbacks?|downsides?|upsides?|trade-?offs?|best for|good for|ideal for|artı(?:lar)?ı?|eksi(?:ler)?i?|avantaj(?:lar)?ı?|dezavantaj(?:lar)?ı?|kimler? için|kime uygun)$/iu;
+
+/**
+ * Options written under headings, with "Label: value" lines below each,
+ * instead of a table or the cards the model was offered. Measured live
+ * (two runs in sixty of the card cases), both ways round:
+ *
+ *   **1. Neighbourhood pub**            ### Portability
+ *   - **Pros:** easy to book            - **13-inch:** 1.2 kg
+ *   - **Typical cost:** £25–35          - **15-inch:** 1.9 kg
+ *
+ * The same labels have to come back under every heading: a recipe's
+ * "Ingredients" and "Method" share none. Which of the two are the options
+ * has to be certain, as with a table (tableChoiceInput): the headings, when
+ * a label is the price or a word for a fact ("Pros"), or the request names
+ * them; the labels, when the request names those. The facts may also come
+ * as a two-column table under each heading. Read the wrong way round,
+ * a comparison of two laptops came out as cards named Portability and
+ * Battery life. The same shape as tableChoiceInput gives, or null.
+ */
+export function sectionChoiceInput(text: string, goal = ""): { items: { title: string; price?: string; facts: { label: string; value: string }[] }[] } | null {
+  // "## Name", "**Name**", "**1. Name**", "1. **Name**", "### Option 2: Name".
+  const heading = (line: string): string | null => {
+    const said = line.trim();
+    const found = /^#{1,6}\s+(.+)$/.exec(said) ?? /^(?:\d{1,2}[.)]\s+)?(?:\*\*|__)(.+?)(?:\*\*|__):?$/.exec(said);
+    if (!found) return null;
+    const name = unmarked(found[1]!).replace(/^\d{1,2}[.)]\s+/, "").replace(/^(?:option|choice|seçenek)\s+\d{1,2}\s*[:.–—-]\s*/iu, "").replace(/\s*:$/, "").trim();
+    return name && name.length <= 80 ? name : null;
+  };
+  // "- **Pros:** easy to book", "* Pros: easy to book", "- **Pros**: easy to book".
+  const fact = (line: string): { label: string; value: string } | null => {
+    const found = /^\s*[-*•]\s+(?:\*\*|__)?([^:*_]{2,30}?)(?:\*\*|__)?\s*:(?:\*\*|__)?\s+(\S.*)$/.exec(line);
+    return found ? { label: found[1]!.trim(), value: unmarked(found[2]!) } : null;
+  };
+  type Section = { title: string; facts: { label: string; value: string }[] };
+  const sections: Section[] = [];
+  let open: Section | null = null;
+  // "| Cuisine | Italian |": the same facts as a small table under the heading. Its header row, the one over the rule, is not one.
+  const row = (line: string, next: string | undefined): { label: string; value: string } | null => {
+    if (!/^\s*\|.*\|\s*$/.test(line) || /^\s*\|[\s:|-]+\|\s*$/.test(line) || /^\s*\|[\s:|-]+\|\s*$/.test(next ?? "")) return null;
+    const cells = line.trim().slice(1, -1).split("|").map(unmarked);
+    return cells.length === 2 && cells[0] && cells[0].length <= 30 && cells[1] ? { label: cells[0].replace(/\s*:$/, ""), value: cells[1] } : null;
+  };
+  const lines = text.split("\n");
+  lines.forEach((line, at) => {
+    const title = heading(line);
+    if (title !== null) {
+      open = { title, facts: [] };
+      sections.push(open);
+      return;
+    }
+    const found = open ? fact(line) ?? row(line, lines[at + 1]) : null;
+    if (found) open!.facts.push(found);
+  });
+  const lower = (name: string): string => name.toLocaleLowerCase();
+  const asked = lower(goal);
+  const named = (names: string[]): boolean => names.filter((name) => asked.includes(lower(name))).length >= 2;
+  const read = (parts: Section[]): ReturnType<typeof sectionChoiceInput> => {
+    if (parts.length < 2 || new Set(parts.map((part) => lower(part.title))).size !== parts.length) return null;
+    const shared = parts[0]!.facts.map((entry) => entry.label).filter((label, at, all) =>
+      all.findIndex((other) => lower(other) === lower(label)) === at && parts.every((part) => part.facts.some((entry) => lower(entry.label) === lower(label))));
+    if (shared.length === 0) return null;
+    const titles = parts.map((part) => part.title);
+    // The headings are the options.
+    if (parts.length <= 6 && (shared.some((label) => PRICE_LABEL.test(label) || ATTRIBUTE_LABEL.test(label)) || (named(titles) && !named(shared)))) {
+      return { items: parts.map((part) => {
+        const price = part.facts.find((entry) => PRICE_LABEL.test(entry.label));
+        return { title: part.title, ...(price && { price: price.value }), facts: part.facts.filter((entry) => entry !== price).slice(0, 6) };
+      }) };
+    }
+    // The labels are, and each heading is a fact about them.
+    if (shared.length >= 2 && shared.length <= 6 && named(shared) && !named(titles)) {
+      return { items: shared.map((title) => {
+        const facts: { label: string; value: string }[] = [];
+        let price: string | undefined;
+        for (const part of parts) {
+          const value = part.facts.find((entry) => lower(entry.label) === lower(title))!.value;
+          if (PRICE_LABEL.test(part.title) && !price) price = value;
+          else if (facts.length < 6) facts.push({ label: part.title, value });
+        }
+        return { title, ...(price && { price }), facts };
+      }) };
+    }
+    return null;
+  };
+  // A heading with nothing of the kind under it ("Quick tip") is no part of the comparison;
+  // a last one with facts of its own ("Verdict") may be left out of it.
+  const parts = sections.filter((section) => section.facts.length > 0);
+  return read(parts) ?? read(parts.slice(0, -1));
 }
 
 /**
@@ -394,6 +489,8 @@ export function prepareChoice(name: string, input: unknown, evidence: ChoiceEvid
     if (!item) return { error: "Each card must be an object." };
     const title = string(item.title, 80);
     if (!title) return { error: "Each card needs a title." };
+    // The same option written out twice (seen live, with the same facts) is one card.
+    if (items.some((made) => made.title.toLocaleLowerCase() === title.toLocaleLowerCase())) continue;
     // A card that names no source is checked against the pages read in this run.
     const sourceUrl = item.sourceUrl === undefined || item.sourceUrl === "" ? readSource(item, evidence) : source(item.sourceUrl, evidence);
     const facts: VerifiedFact[] = [];
@@ -411,6 +508,7 @@ export function prepareChoice(name: string, input: unknown, evidence: ChoiceEvid
     const view = string(item.view, 200);
     items.push({ title, facts, ...(price && { price: fact("price", price, sourceUrl, evidence) }), ...(view && { view }), ...(sourceUrl && { sourceUrl }) });
   }
+  if (items.length < 2) return { error: "Give 2 to 6 different option cards." };
   const intro = string(args.intro, 200);
   // Dinner ideas, names for a project: nothing to match them against, and "not found on the page" under each would be untrue.
   const unchecked = evidence.pages.length === 0 && evidence.local.length === 0;
