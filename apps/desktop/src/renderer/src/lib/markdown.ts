@@ -133,3 +133,24 @@ export function plainMath(text: string): string {
     return /[\\_^{}]/.test(tex) ? mathToText(tex) : whole;
   });
 }
+
+/**
+ * Plain text cut after each address the conversation never held, so a note
+ * can follow it. `unverified` has the addresses as the answer wrote them
+ * (see unseenLinks); an address that only begins like one of them is left.
+ */
+export function cutAtUnverified(text: string, unverified: readonly string[]): { text: string; unverified: boolean }[] {
+  const pieces: { text: string; unverified: boolean }[] = [];
+  let last = 0;
+  for (const match of text.matchAll(/https?:\/\/[^\s<>"'`\\|]+/g)) {
+    const written = unverified
+      .filter((address) => match[0].startsWith(address) && /^[.,;:!?…*_)\]}]*$/u.test(match[0].slice(address.length)))
+      .sort((a, b) => b.length - a.length)[0];
+    if (written === undefined) continue;
+    const end = match.index + written.length;
+    pieces.push({ text: text.slice(last, end), unverified: true });
+    last = end;
+  }
+  if (last < text.length || pieces.length === 0) pieces.push({ text: text.slice(last), unverified: false });
+  return pieces;
+}

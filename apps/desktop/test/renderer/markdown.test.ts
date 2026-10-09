@@ -4,7 +4,7 @@
  * chat showed the raw pipes.
  */
 import { describe, expect, it } from "vitest";
-import { parseBlocks, plainMath } from "../../src/renderer/src/lib/markdown";
+import { cutAtUnverified, parseBlocks, plainMath } from "../../src/renderer/src/lib/markdown";
 
 describe("parseBlocks — tables", () => {
   it("reads the table a model actually wrote", () => {
@@ -78,3 +78,20 @@ describe("plainMath", () => {
   });
 });
 
+describe("cutAtUnverified", () => {
+  const unverified = ["https://maker.example/air", "http://maker.example/b"];
+
+  it("cuts the text after each address the conversation never held", () => {
+    expect(cutAtUnverified("Go to https://maker.example/air. Or (http://maker.example/b), then stop.", unverified)).toEqual([
+      { text: "Go to https://maker.example/air", unverified: true },
+      { text: ". Or (http://maker.example/b", unverified: true },
+      { text: "), then stop.", unverified: false },
+    ]);
+  });
+
+  it("leaves an address that only begins like one, and text without any", () => {
+    expect(cutAtUnverified("See https://maker.example/air-15 and https://shop.example/x", unverified)).toEqual([{ text: "See https://maker.example/air-15 and https://shop.example/x", unverified: false }]);
+    expect(cutAtUnverified("Nothing here", unverified)).toEqual([{ text: "Nothing here", unverified: false }]);
+    expect(cutAtUnverified("https://maker.example/air", unverified)).toEqual([{ text: "https://maker.example/air", unverified: true }]);
+  });
+});

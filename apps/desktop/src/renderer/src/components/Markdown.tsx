@@ -6,27 +6,48 @@
 
 import { Fragment, type ReactNode } from "react";
 import { t } from "@vunemi/i18n";
-import { parseBlocks, plainMath } from "../lib/markdown";
+import { cutAtUnverified, parseBlocks, plainMath } from "../lib/markdown";
 
 const INLINE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*\s][^*]*\*)|(\[[^\]]+\]\([^)\s]+\))/g;
+
+/** An address the conversation never held: the model wrote it from memory. */
+function Unverified() {
+  return (
+    <span title={t("turn.linkUnverifiedWhy")} className="ml-1 cursor-help text-[0.8em] font-normal not-italic text-faint">
+      {t("turn.linkUnverified")}
+    </span>
+  );
+}
+
+/** Plain text, with the note after each address written out that the conversation never held. */
+function plain(text: string, unverified?: readonly string[]): ReactNode {
+  if (!unverified?.length) return plainMath(text);
+  return cutAtUnverified(text, unverified).map((piece, i) => (
+    <Fragment key={i}>
+      {plainMath(piece.text)}
+      {piece.unverified && <Unverified />}
+    </Fragment>
+  ));
+}
 
 function inlineNodes(text: string, unverified?: readonly string[]): ReactNode[] {
   const out: ReactNode[] = [];
   let last = 0;
   let key = 0;
   for (const m of text.matchAll(INLINE)) {
-    if (m.index > last) out.push(plainMath(text.slice(last, m.index)));
+    if (m.index > last) out.push(<Fragment key={key++}>{plain(text.slice(last, m.index), unverified)}</Fragment>);
     const tok = m[0];
     if (tok.startsWith("`")) {
       out.push(
-        <code key={key++} className="rounded bg-surface-2 px-1 py-px font-mono text-[0.88em]">
-          {tok.slice(1, -1)}
-        </code>,
+        <Fragment key={key++}>
+          <code className="rounded bg-surface-2 px-1 py-px font-mono text-[0.88em]">{tok.slice(1, -1)}</code>
+          {unverified?.includes(tok.slice(1, -1)) && <Unverified />}
+        </Fragment>,
       );
     } else if (tok.startsWith("**")) {
-      out.push(<strong key={key++} className="font-semibold">{plainMath(tok.slice(2, -2))}</strong>);
+      out.push(<strong key={key++} className="font-semibold">{plain(tok.slice(2, -2), unverified)}</strong>);
     } else if (tok.startsWith("*")) {
-      out.push(<em key={key++}>{plainMath(tok.slice(1, -1))}</em>);
+      out.push(<em key={key++}>{plain(tok.slice(1, -1), unverified)}</em>);
     } else {
       const [, label, href] = tok.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/)!;
       // Only https links, opened by the main process in the real browser.
@@ -36,12 +57,7 @@ function inlineNodes(text: string, unverified?: readonly string[]): ReactNode[] 
             <a href={href} target="_blank" rel="noreferrer" className="text-ember underline decoration-ember-line underline-offset-2">
               {label}
             </a>
-            {/* An address the conversation never held: the model wrote it from memory. */}
-            {unverified?.includes(href!) && (
-              <span title={t("turn.linkUnverifiedWhy")} className="ml-1 cursor-help text-[0.8em] text-faint">
-                {t("turn.linkUnverified")}
-              </span>
-            )}
+            {unverified?.includes(href!) && <Unverified />}
           </Fragment>
         ) : (
           <span key={key++}>{label}</span>
@@ -50,7 +66,7 @@ function inlineNodes(text: string, unverified?: readonly string[]): ReactNode[] 
     }
     last = m.index + tok.length;
   }
-  if (last < text.length) out.push(plainMath(text.slice(last)));
+  if (last < text.length) out.push(<Fragment key={key++}>{plain(text.slice(last), unverified)}</Fragment>);
   return out;
 }
 

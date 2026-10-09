@@ -27,8 +27,13 @@ describe("links an answer makes", () => {
     expect(unseenLinks("[The shop](https://shop.example/) and [another](https://other.example)", seen)).toEqual(["https://other.example"]);
   });
 
-  it("looks only at what the user can click", () => {
-    expect(unseenLinks("Plain https://maker.example/x and [not https](http://maker.example/y)", seen)).toEqual([]);
+  it("counts an address written out in the text, which the user can copy, and not one the answer never shows", () => {
+    expect(unseenLinks("Plain https://maker.example/x and [not https](http://maker.example/y)", seen)).toEqual(["https://maker.example/x"]);
+    expect(unseenLinks("Go to **https://maker.example/air**. Or (http://maker.example/b), or `https://maker.example/c`.", seen)).toEqual(["https://maker.example/air", "http://maker.example/b", "https://maker.example/c"]);
+    // Written out and seen: the page itself, and the front page of its site.
+    expect(unseenLinks("It is at https://shop.example/laptops/air-13. The shop: https://shop.example", seen)).toEqual([]);
+    // A link's own address is counted once, as the link.
+    expect(unseenLinks("[https://maker.example/a](https://maker.example/a)", seen)).toEqual(["https://maker.example/a"]);
   });
 });
 
