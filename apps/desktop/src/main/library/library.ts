@@ -50,6 +50,13 @@ const WORDS_NEAR = 0.6;
  * 0.21 or more above the middle; requests about nothing earlier scored their
  * nearest item 0.24 to 0.40 and at most 0.17 above it, but for one that
  * names the same city as an earlier conversation.
+ *
+ * On requests written afterwards (the holdout of library-cases.ts) the item
+ * a request was about still came first every time, but a request that only
+ * shares a subject with an earlier item (camping, a currency amount) scored
+ * it 0.45 to 0.56, as high as requests that were about one: this model does
+ * not tell the two apart, and no value of these numbers does. Such a line is
+ * left to the chat model, which is told that most requests need none.
  */
 const MEANING_MIN = 0.4;
 const MEANING_MARGIN = 0.18;

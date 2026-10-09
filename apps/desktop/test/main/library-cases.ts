@@ -85,3 +85,55 @@ export const LIBRARY_CASES: LibraryCase[] = [
   { id: "poem-tr", goal: "Sonbahar hakkında dört satırlık bir şiir yaz", about: null },
   { id: "budget-new-tr", goal: "Aylık ev bütçesi için basit bir tablo şablonu hazırla", about: null },
 ];
+
+/**
+ * A second history and its requests, written after the thresholds were
+ * chosen and never used to choose them: what the first set says about the
+ * selection is checked here. VUNEMI_LIVE_SET=holdout measures these, among
+ * the first set's items.
+ */
+export const HOLDOUT_CONVERSATIONS: KeptConversation[] = [
+  { id: "s_h_tent", title: "Kamp çadırı", updatedAt: day(20), events: task("p1", "İki kişilik, üç mevsimlik bir çadır öner", "MSR Elixir 2 ya da Naturehike Cloud Up 2. Hafif olduğu için Cloud Up'ı seçtin.") },
+  { id: "s_h_piano", title: "Piano lessons", updatedAt: day(21), events: task("q1", "Find a weekly piano lesson slot for my daughter", "Thursdays at 17:00 with Ms. Okafor, 40 pounds a lesson, starting 5 October.") },
+  { id: "s_h_paint", title: "Salon boyası", updatedAt: day(22), events: task("r1", "Salon duvarı için açık bir renk öner", "Kırık beyaz (Marshall Kumsal 15) ya da açık gri. Kumsal'da karar verdin, iki kutu yetiyor.") },
+  { id: "s_h_invoice", title: "Invoice template", updatedAt: day(23), events: task("s1", "Draft payment terms for my freelance invoices", "Net 14 days, a 2% late fee per month, bank transfer only.") },
+  { id: "s_h_dog", title: "Köpek maması", updatedAt: day(24), events: task("t1", "Yavru golden için hangi mama, günde kaç öğün?", "Günde üç öğün, toplam 320 gram; kuzu etli yavru maması. Veteriner kontrolü 3 Kasım'da.") },
+  { id: "s_h_nas", title: "Home NAS backup", updatedAt: day(25), events: task("u1", "How should I back up my NAS?", "Nightly at 02:00 to the external drive, and a weekly encrypted copy to Backblaze on Sundays.") },
+  { id: "s_h_cake", title: "Doğum günü pastası", updatedAt: day(26), events: task("v1", "12 kişilik çikolatalı pasta tarifi ver", "26 cm kalıpta, 180 derecede 35 dakika; ganaj için 300 gram bitter çikolata.") },
+  { id: "s_h_thesis", title: "Thesis chapter order", updatedAt: day(27), events: task("w1", "Help me order my thesis chapters", "Introduction, Methods, three case studies, Discussion. The committee meeting is on 9 December.") },
+  { id: "s_h_tyre", title: "Araba lastiği", updatedAt: day(28), events: task("x1", "Kış lastiği ne zaman takılmalı, hangi ebat?", "205/55 R16, 1 Aralık'tan önce. Michelin Alpin 6'yı seçtik.") },
+  { id: "s_h_herbs", title: "Balcony herbs", updatedAt: day(29), events: task("y1", "Which herbs grow on a north-facing balcony?", "Mint, parsley and chives; water every three days. Basil needs more sun.") },
+];
+
+export const HOLDOUT_MEETINGS: Meeting[] = [
+  meeting("mt_h_site", "Şantiye toplantısı", 30, "## Özet\n\n- Zemin dökümü 28 Ekim'e ertelendi; elektrik projesi onaylandı.\n\n## Kararlar\n\n- Asansör firması değişiyor.", [
+    "Beton gecikti, zemin dökümünü yirmi sekiz Ekim'e alıyoruz.", "Elektrik projesi onaylandı.", "Asansör için başka bir firmayla anlaşacağız.",
+  ]),
+  meeting("mt_h_board", "Board review", 30, "## Summary\n\n- The board approved 240 thousand for the new warehouse.\n\n## Actions\n\n- Hire two drivers in January.", [
+    "We need two hundred and forty thousand for the warehouse.", "Approved.", "And two more drivers from January.",
+  ]),
+];
+
+export const HOLDOUT_CASES: LibraryCase[] = [
+  // In the item's own words.
+  { id: "h-tent-tr", goal: "Kamp çadırı için hangisini seçmiştim?", about: "s_h_tent", expect: [/Cloud Up/i] },
+  { id: "h-piano-en", goal: "What time are the piano lessons and who teaches them?", about: "s_h_piano", expect: [/17/, /Okafor/i] },
+  { id: "h-invoice-en", goal: "What late fee did we put in the invoice payment terms?", about: "s_h_invoice", expect: [/2\s*%/] },
+  { id: "h-site-tr", goal: "Şantiye toplantısında zemin dökümü hangi tarihe ertelendi?", about: "mt_h_site", expect: [/28\s*Ekim/i] },
+  { id: "h-tyre-tr", goal: "Kış lastiği için hangi ebadı konuşmuştuk?", about: "s_h_tyre", expect: [/205\/55/] },
+  { id: "h-board-en", goal: "How much did the board review approve for the warehouse?", about: "mt_h_board", expect: [/240/] },
+  // In other words than its own.
+  { id: "h-wall-tr", goal: "Oturma odasının duvarları için hangi tonda karar vermiştim?", about: "s_h_paint", expect: [/Kumsal/i] },
+  { id: "h-puppy-tr", goal: "Yavrunun veteriner randevusu ne zamandı?", about: "s_h_dog", expect: [/3\s*Kasım/i] },
+  { id: "h-cloud-en", goal: "When does the copy of my home server to the cloud run?", about: "s_h_nas", expect: [/Sunday/i] },
+  { id: "h-defence-en", goal: "Remind me when I meet my dissertation committee", about: "s_h_thesis", expect: [/9\s*December|December\s*9/i] },
+  // About nothing earlier, most of them sharing a word with something that is.
+  { id: "h-n-camp-tr", goal: "Kapadokya'da kamp yapılacak yerler nereler?", about: null },
+  { id: "h-n-sonata-en", goal: "Who composed the Moonlight Sonata?", about: null },
+  { id: "h-n-choc-tr", goal: "Çikolata köpekler için zararlı mı?", about: null },
+  { id: "h-n-regex-en", goal: "Write a regex that matches a UK postcode", about: null },
+  { id: "h-n-convert-en", goal: "Convert 240 dollars to euros", about: null },
+  { id: "h-n-polite-tr", goal: "Bu cümleyi daha kibar yaz: toplantıya geç kalacağım", about: null },
+  { id: "h-n-basil-en", goal: "Is basil a perennial?", about: null },
+  { id: "h-n-river-tr", goal: "Türkiye'nin en uzun nehri hangisi?", about: null },
+];

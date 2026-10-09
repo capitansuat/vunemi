@@ -138,9 +138,22 @@ describe("LibraryStore", () => {
   it("finds by the telling words of a request, with the accents folded and the endings loose", () => {
     store.upsert({ id: "s_a", kind: "conversation", title: "Bütçe toplantısı", at: 1, line: "", text: "Pazarlama bütçesi yüzde on azalacak", stamp: 1 });
     store.upsert({ id: "s_b", kind: "conversation", title: "Risotto", at: 1, line: "", text: "rice cooks in eighteen minutes", stamp: 1 });
-    expect(store.telling("butceyi ne yaptik", 5, 4)).toEqual([{ id: "s_a", words: 1, of: 2, inTitle: true, score: expect.any(Number) }]);
+    expect(store.telling("butceyi ne yaptik", 5, 4)).toEqual([{ id: "s_a", words: 1, of: 2, inTitle: false, score: expect.any(Number) }]);
+    // A title is named by more than half of its words; one word of two is not it.
+    expect(store.telling("butce toplantisinda ne dendi", 5, 4)[0]).toMatchObject({ id: "s_a", inTitle: true });
+    expect(store.telling("risotto ne kadar pisiyor", 5, 4)[0]).toMatchObject({ id: "s_b", inTitle: true });
     expect(store.telling("ne ve bu", 5, 4)).toEqual([]);
     expect(store.telling('rice" OR title:*', 5, 2).map((h) => h.id)).toEqual(["s_b"]);
+  });
+
+  it("takes a word that many titles share as naming none of them", () => {
+    for (const [id, title] of [["m_a", "Bütçe toplantısı"], ["m_b", "Veli toplantısı"], ["m_c", "Şantiye toplantısı"]] as const) {
+      store.upsert({ id, kind: "meeting", title, at: 1, line: "", text: "kararlar", stamp: 1 });
+    }
+    for (const id of ["s_a", "s_b", "s_c", "s_d"]) store.upsert({ id, kind: "conversation", title: "Risotto", at: 1, line: "", text: "rice cooks in eighteen minutes", stamp: 1 });
+    // "toplantı" is in three titles: it finds them, and says of none that the request names it.
+    expect(store.telling("toplantıya geç kalacağım", 5, 4).map((h) => [h.id, h.inTitle]).sort()).toEqual([["m_a", false], ["m_b", false], ["m_c", false]]);
+    expect(store.telling("veli toplantısında ne dendi", 5, 4).find((h) => h.id === "m_b")?.inTitle).toBe(true);
   });
 
   it("empties on clear", () => {

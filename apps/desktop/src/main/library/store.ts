@@ -81,6 +81,9 @@ interface Row {
 
 const REF = /^([cm])(\d{1,9})$/;
 
+/** A word in more titles than this picks none of them out. */
+const TITLE_FEW = 2;
+
 export class LibraryStore {
   private readonly db: DatabaseSync;
 
@@ -136,9 +139,12 @@ export class LibraryStore {
 
   /**
    * Items a request is about, by its telling words: best first (BM25; a word in the title counts for more), each with
-   * how many of those words it has and whether one is in its title. A word
-   * that half the library has ("today", "nasıl") tells nothing and is left
-   * out; so are words shorter than `minLetters`.
+   * how many of those words it has and whether the request names it by its
+   * title. A word that half the library has ("today", "nasıl") tells nothing
+   * and is left out; so are words shorter than `minLetters`. A title is
+   * named when the request has more than half of its words: one word of
+   * "Camping tent" is not the tent. A word in the titles of more than
+   * TITLE_FEW items ("meeting", "toplantısı") names none of them.
    */
   telling(request: string, limit: number, minLetters: number): { id: string; words: number; of: number; inTitle: boolean; score: number }[] {
     const fold = (text: string): string => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -152,10 +158,21 @@ export class LibraryStore {
       "SELECT i.id AS id, i.title AS title, i.text AS text, -bm25(items_fts, 4.0, 1.0) AS score FROM items_fts JOIN items i ON i.n = items_fts.rowid WHERE items_fts MATCH ? ORDER BY bm25(items_fts, 4.0, 1.0) LIMIT ?",
     ).all(rare.map((stem) => `"${stem}"*`).join(" OR "), limit) as { id: string; title: string; text: string; score: number }[];
     const starts = rare.map((stem) => new RegExp(`(?<![\\p{L}\\p{N}])${fold(stem)}`, "u"));
+    const titles = new Map<string, boolean>();
+    /** Whether few titles have a word that begins so. */
+    const names = (stem: string): boolean => {
+      if (!titles.has(stem)) titles.set(stem, (held.get(`title : "${stem}"*`) as { n: number }).n <= TITLE_FEW);
+      return titles.get(stem)!;
+    };
+    const naming = rare.map(names);
     return rows.map((row) => {
       const title = fold(row.title);
       const text = fold(row.text);
-      return { id: row.id, words: starts.filter((re) => re.test(title) || re.test(text)).length, of: rare.length, inTitle: starts.some((re) => re.test(title)), score: row.score };
+      // The title's own words: not the short ones, and not those many titles share.
+      const titleWords = title.match(/[\p{L}\p{N}]+/gu) ?? [];
+      const own = titleWords.filter((word) => [...word].length >= minLetters && names([...word].slice(0, 5).join("")));
+      const named = (own.length > 0 ? own : titleWords).map((word) => starts.some((re, i) => naming[i] && re.test(word)));
+      return { id: row.id, words: starts.filter((re) => re.test(title) || re.test(text)).length, of: rare.length, inTitle: named.filter(Boolean).length * 2 > named.length, score: row.score };
     });
   }
 

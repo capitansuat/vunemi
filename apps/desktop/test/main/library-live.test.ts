@@ -12,7 +12,8 @@
  * same index, tools and runAgent the app uses. A request about something
  * earlier should have the model answer from it, after reading it or from
  * its line when that already says it; one about nothing earlier should have
- * it read nothing. VUNEMI_LIVE_IDS picks cases.
+ * it read nothing. VUNEMI_LIVE_IDS picks cases; VUNEMI_LIVE_SET=holdout
+ * measures the requests the thresholds were not chosen with.
  * A measurement, not a gate: it prints rates and, with VUNEMI_LIVE_OUT,
  * writes every answer to that file.
  */
@@ -25,7 +26,8 @@ import { Library, type LibrarySources } from "../../src/main/library/library.js"
 import { LibraryStore } from "../../src/main/library/store.js";
 import { createLibraryTools } from "../../src/main/library/tools.js";
 import { Embedder } from "../../src/main/memory/embedder.js";
-import { CONVERSATIONS, LIBRARY_CASES, MEETINGS, type LibraryCase } from "./library-cases.js";
+import * as written from "./library-cases.js";
+import type { LibraryCase } from "./library-cases.js";
 
 const baseUrl = process.env.VUNEMI_LIVE_CHAT;
 const modelName = process.env.VUNEMI_LIVE_CHAT_MODEL;
@@ -33,6 +35,11 @@ const embedDir = process.env.VUNEMI_LIVE_EMBED;
 const binary = process.env.VUNEMI_LIVE_ENGINE ?? null;
 const runs = Number(process.env.VUNEMI_LIVE_RUNS ?? 3);
 const ids = process.env.VUNEMI_LIVE_IDS?.split(",");
+const holdout = process.env.VUNEMI_LIVE_SET === "holdout";
+// The holdout's items sit among the first set's: a longer history, as a real one is.
+const CONVERSATIONS = holdout ? [...written.CONVERSATIONS, ...written.HOLDOUT_CONVERSATIONS] : written.CONVERSATIONS;
+const MEETINGS = holdout ? [...written.MEETINGS, ...written.HOLDOUT_MEETINGS] : written.MEETINGS;
+const LIBRARY_CASES = holdout ? written.HOLDOUT_CASES : written.LIBRARY_CASES;
 const cases = LIBRARY_CASES.filter((c) => !ids || ids.includes(c.id));
 
 const sources: LibrarySources = {
@@ -91,8 +98,8 @@ describe("the cases", () => {
   it("are found by their words where they share them, and words alone bring little that is stray", async () => {
     const byWords = await selection(new Library(store, sources));
     process.stdout.write(`words only\n${byWords.rows.join("\n")}\n${JSON.stringify({ ...byWords, rows: undefined })}\n`);
-    // The eight that use the item's own words.
-    expect(byWords.found).toBeGreaterThanOrEqual(Math.min(8, byWords.of));
+    // The eight that use the item's own words; the holdout is measured, not held to a number.
+    if (!holdout) expect(byWords.found).toBeGreaterThanOrEqual(Math.min(8, byWords.of));
   });
 });
 
