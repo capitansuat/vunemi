@@ -4,6 +4,7 @@ import {
   awaitingChoice,
   draftText,
   foldEvent,
+  openReplies,
   pendingApprovals,
   pendingHandoff,
   runStats,
@@ -33,6 +34,31 @@ describe("foldEvent", () => {
     expect(answered[0]!.steps[0]!.choices[0]).toMatchObject({ status: "answered", answer: "Friday", index: 0 });
     const expired = fold([...start, asked, { type: "run.finished", runId: "r", status: "stopped", detail: "", at: 4 }]);
     expect(expired[0]!.steps[0]!.choices[0]!.status).toBe("expired");
+  });
+
+  it("keeps the replies an answer ends on with its step, and waits on nothing", () => {
+    const runs = fold([
+      ...start,
+      { type: "message.delta", runId: "r", stepId: "s0", text: "1. A\n2. B\nWhich one?" },
+      { type: "replies.offered", runId: "r", stepId: "s0", options: ["A", "B"], at: 2 },
+      { type: "run.finished", runId: "r", status: "done", detail: "ok", at: 3 },
+    ]);
+    expect(runs[0]!.steps[0]!.replies).toEqual(["A", "B"]);
+    expect(runs[0]!.steps[0]!.choices).toEqual([]);
+    expect(awaitingChoice(runs)).toBe(false);
+  });
+
+  it("offers replies only under the last answer of the conversation", () => {
+    const offered: AgentEvent = { type: "replies.offered", runId: "r", stepId: "s0", options: ["A", "B"], at: 2 };
+    const done: AgentEvent = { type: "run.finished", runId: "r", status: "done", detail: "ok", at: 3 };
+    expect(openReplies(fold([...start, offered, done]))).toEqual({ runId: "r", options: ["A", "B"] });
+    // Still running, stopped, or gone on to another step: the text they were under is not the answer.
+    expect(openReplies(fold([...start, offered]))).toBeNull();
+    expect(openReplies(fold([...start, offered, { ...done, status: "stopped" }]))).toBeNull();
+    expect(openReplies(fold([...start, offered, { type: "step.started", runId: "r", stepId: "s1", index: 1, at: 3 }, done]))).toBeNull();
+    // Something was said after it.
+    expect(openReplies(fold([...start, offered, done, { type: "run.started", runId: "r2", goal: "A", model: "m", at: 4 }]))).toBeNull();
+    expect(openReplies([])).toBeNull();
   });
 
   it("marks the text that option cards stand in for, and awaits the choice", () => {

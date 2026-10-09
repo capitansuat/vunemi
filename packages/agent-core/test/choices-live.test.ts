@@ -24,7 +24,7 @@ const ids = process.env.VUNEMI_LIVE_IDS?.split(",");
 const cases = CHOICE_CASES.filter((c) => (set === "holdout" ? c.holdout : set === "tuning" ? !c.holdout : true) && (!ids || ids.includes(c.id)));
 
 /** What the user ended up looking at first, and who made it: the model's own call, or the runtime turning its text into a card. */
-export type Outcome = "buttons" | "cards" | "plain-question" | "answered" | "error";
+export type Outcome = "buttons" | "cards" | "replies" | "plain-question" | "answered" | "error";
 
 export function outcome(events: AgentEvent[], answer: string, want?: ChoiceCase["want"]): { outcome: Outcome; by?: "model" | "runtime"; items?: number } {
   const cards = events.filter((event) => event.type === "choice.asked");
@@ -34,14 +34,17 @@ export function outcome(events: AgentEvent[], answer: string, want?: ChoiceCase[
     const by = /\.(?:list|table)$/.test(asked.callId) ? "runtime" : "model";
     return asked.card.kind === "choice" ? { outcome: "buttons", by } : { outcome: "cards", by, items: asked.card.items.length };
   }
+  // An answer that ended on "which one?", its items offered as replies: nothing waited.
+  const lastStep = events.findLast((event) => event.type === "step.started");
+  if (events.some((event) => event.type === "replies.offered" && lastStep?.type === "step.started" && event.stepId === lastStep.stepId)) return { outcome: "replies", by: "runtime" };
   return { outcome: /[?？]/.test(answer.trim().slice(-200)) ? "plain-question" : "answered" };
 }
 
 export function passes(c: ChoiceCase, got: Outcome, items?: number): boolean {
   if (c.want === "cards" && c.count !== undefined && got === "cards" && items !== c.count) return false;
   // A closing "anything else?" is not a card: only a card fails a request with nothing to choose.
-  if (c.want === "none") return got === "answered" || got === "plain-question";
-  if (c.want === "either") return got === "buttons" || got === "cards";
+  if (c.want === "none") return got === "answered" || got === "plain-question" || got === "replies";
+  if (c.want === "either") return got === "buttons" || got === "cards" || got === "replies";
   return got === c.want;
 }
 
@@ -61,6 +64,14 @@ describe("scoring", () => {
     expect(passes({ id: "x", want: "either", goal: "" }, "cards")).toBe(true);
     expect(passes({ id: "x", want: "none", goal: "" }, "plain-question")).toBe(true);
     expect(passes({ id: "x", want: "none", goal: "" }, "buttons")).toBe(false);
+    const step: AgentEvent = { type: "step.started", runId: "r", stepId: "s", index: 0, at: 0 };
+    const replies: AgentEvent = { type: "replies.offered", runId: "r", stepId: "s", options: ["A", "B"], at: 0 };
+    expect(outcome([step, replies], "1. A\n2. B\nWhich one?")).toEqual({ outcome: "replies", by: "runtime" });
+    // Offered on a step the run went on from: not what the user ended up looking at.
+    expect(outcome([step, replies, { ...step, stepId: "s2", index: 1 }], "Done.").outcome).toBe("answered");
+    expect(passes({ id: "x", want: "none", goal: "" }, "replies")).toBe(true);
+    expect(passes({ id: "x", want: "either", goal: "" }, "replies")).toBe(true);
+    expect(passes({ id: "x", want: "buttons", goal: "" }, "replies")).toBe(false);
   });
 });
 
@@ -115,7 +126,7 @@ describe.skipIf(!baseUrl || !modelName)("buttons and cards, live", () => {
       const all = results.filter((r) => r.want === want).flatMap((r) => r.runs);
       const count = (o: Outcome) => all.filter((r) => r.outcome === o).length;
       const questions = all.map((r) => r.shown.filter((card) => !card.startsWith("cards:")).length);
-      return [want, { mostQuestions: Math.max(...questions), passed: all.filter((r) => r.pass).length, of: all.length, byRuntime: all.filter((r) => r.by === "runtime").length, plainQuestion: count("plain-question"), answered: count("answered"), errors: count("error") }];
+      return [want, { mostQuestions: Math.max(...questions), passed: all.filter((r) => r.pass).length, of: all.length, byRuntime: all.filter((r) => r.by === "runtime").length, replies: count("replies"), plainQuestion: count("plain-question"), answered: count("answered"), errors: count("error") }];
     }));
     const all = results.flatMap((r) => r.runs);
     const medianMs = all.map((r) => r.ms).sort((a, b) => a - b)[Math.floor(all.length / 2)];

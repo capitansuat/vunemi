@@ -13,7 +13,7 @@ import { Mochi } from "./components/Mochi.js";
 import { SessionsNav } from "./components/SessionsNav.js";
 import { SettingsView } from "./components/SettingsView.js";
 import { Turn } from "./components/Turn.js";
-import { runStats } from "./lib/fold.js";
+import { openReplies, runStats } from "./lib/fold.js";
 import type { LedgerKind } from "@vunemi/agent-core";
 import { available, GOALS, IDEAS, PROJECT_GOALS, PROJECT_IDEAS, switchable } from "./lib/suggestions.js";
 import { ICONS } from "./components/ConnectionsView.js";
@@ -378,6 +378,7 @@ function ContextMeter({ used, budget, known, parts }: { used: number; budget: nu
 
 function Conversation() {
   const runs = useStore((s) => s.runs);
+  const replies = openReplies(runs);
   const pendingStart = useStore((s) => s.pendingStart);
   const stop = useStore((s) => s.stop);
   const scroller = useRef<HTMLDivElement>(null);
@@ -400,7 +401,7 @@ function Conversation() {
     >
       <div className="mx-auto max-w-[760px] space-y-9 px-6 pt-8 pb-10">
         {runs.map((r) => (
-          <Turn key={r.runId} run={r} />
+          <Turn key={r.runId} run={r} {...(replies?.runId === r.runId && { replies: replies.options })} />
         ))}
         {pendingStart && <section className="space-y-4">
           <div className="flex justify-end">

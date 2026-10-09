@@ -54,6 +54,8 @@ export interface StepView {
   text: string;
   calls: CallView[];
   choices: ChoiceView[];
+  /** Short answers to the question this text ends on; picking one is the next message. */
+  replies?: string[];
   /** Option cards in a later step show what this text listed. */
   replaced?: boolean;
   usage?: UsageView;
@@ -193,6 +195,8 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
       const asked = updateStep(run, e.stepId, (s) => ({ ...s, choices: [...s.choices, { runId: e.runId, callId: e.callId, card: e.card, status: "awaiting" }] }));
       return e.replaces ? updateStep(asked, e.replaces, (s) => ({ ...s, replaced: true })) : asked;
     }
+    case "replies.offered":
+      return updateStep(run, e.stepId, (s) => ({ ...s, replies: e.options }));
     case "choice.answered":
       return { ...run, steps: run.steps.map((s) => ({ ...s, choices: s.choices.map((c) => c.callId === e.callId ? { ...c, status: "answered" as const, answer: e.text, ...(e.index !== undefined && { index: e.index }) } : c) })) };
     case "tool.started":
@@ -339,6 +343,16 @@ export function pendingHandoff(runs: readonly RunView[]): { callId: string; reas
     }
   }
   return null;
+}
+
+/**
+ * The replies to offer under the conversation's last answer: those its final
+ * step ended on, while the task is done and nothing has been said since.
+ */
+export function openReplies(runs: readonly RunView[]): { runId: string; options: string[] } | null {
+  const last = runs.at(-1);
+  const options = last?.status === "done" ? last.steps.at(-1)?.replies : undefined;
+  return last && options && options.length > 0 ? { runId: last.runId, options } : null;
 }
 
 /** True while a question or option cards wait for the user's pick. */

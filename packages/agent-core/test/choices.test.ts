@@ -25,7 +25,7 @@ describe("choice card data", () => {
       .toEqual({ question: "Tarih esnek mi?", options: ["Yalnız Cuma", "±2 gün"], allowOther: true });
     // The question after the list, each item a name in bold and a long description.
     expect(listChoiceInput(`Friday dinner — Turkish:\n\n1. **Köfte + pilav** — ${"grilled patties with rice ".repeat(5)}\n2. **Karnıyarık** — baked eggplant.\n\nWhich one?`))
-      .toEqual({ question: "Which one?", options: ["Köfte + pilav", "Karnıyarık"], allowOther: true });
+      .toEqual({ question: "Which one?", options: ["Köfte + pilav", "Karnıyarık"], allowOther: true, closing: true });
     // An answer that lists things, a list with one item, long items, a long lead-in, too many.
     expect(listChoiceInput("Here are three ideas:\n1. Ramen\n2. Tacos\n3. Curry")).toBeNull();
     expect(listChoiceInput("Here are three ideas:\n1. Ramen\n2. Tacos\nEnjoy your dinner.")).toBeNull();
@@ -42,8 +42,8 @@ describe("choice card data", () => {
     const list = "Here are three:\n\n1. **Golden Crumb** – warm and rustic.\n2. **The Daily Rise** – fresh every morning.\n3. **Flour & Hearth** – cozy.\n\n";
     const names = ["Golden Crumb", "The Daily Rise", "Flour & Hearth"];
     // As the model asked it live, under names it had been told the user would pick from.
-    for (const question of ["Which one do you like best?", "Which of these would you like to try?", "Which one do you like, or would you like me to suggest a different style (e.g. more modern, punny)?", "Hangisine başlamak istersin? Ya da başka bir dil aklında mı var?", "Hangisini tercih edersin?"]) {
-      expect(listChoiceInput(list + question), question).toEqual({ question, options: names, allowOther: true });
+    for (const question of ["Which one do you like best?", "Which of these would you like to try?", "Which one do you like, or would you like me to suggest a different style (e.g. more modern, punny)?", "Hangisini tercih edersin?"]) {
+      expect(listChoiceInput(list + question), question).toEqual({ question, options: names, allowOther: true, closing: true });
     }
     // An offer under an answer, also live: its answers are yes and no, not the items above it.
     for (const offer of ["Want me to adjust the tone or try more?", "Would you like suggestions for a specific dietary preference (e.g., vegan, low-carb, high-protein)?", "Want me to flesh one out with a step-by-step plan?", "Daha fazlasını ister misin?", "İstersen daha fazla öneri vereyim mi?", "Shall I go on?"]) {
@@ -56,6 +56,72 @@ describe("choice card data", () => {
     for (const offer of ["Soll ich mehr vorschlagen?", "Voulez-vous d'autres idées ?", "¿Quieres más opciones?", "Vuoi altre idee?", "Quer mais opções?", "Хотите ещё варианты?", "需要更多建议吗？", "もっと提案しましょうか？", "더 추천해 드릴까요?"]) {
       expect(listChoiceInput(list + offer), offer).toBeNull();
     }
+  });
+
+  it("finds the question under a list among the sentences around it", () => {
+    const list = "1. **Golden Crumb** – warm and rustic.\n2. **The Daily Rise** – fresh every morning.\n\n";
+    const asked = (tail: string): string | undefined => listChoiceInput(list + tail)?.question;
+    // As the model wrote them live.
+    expect(asked("Hangisini izlemek istersin? Sadece numarasını söylemen yeterli, detaylı bilgi vereyim.")).toBe("Hangisini izlemek istersin?");
+    expect(asked("Which one interests you? Pick one and I’ll help you get started.")).toBe("Which one interests you?");
+    expect(asked("Each one leans into the rainy mood rather than fighting it. Which one sounds most appealing?")).toBe("Which one sounds most appealing?");
+    expect(asked("Which one calls to you? 🍳")).toBe("Which one calls to you?");
+    expect(asked("Hangisine başlamak istersin? Ya da başka bir dil aklında mı var?")).toBe("Hangisine başlamak istersin?");
+    expect(asked("All three are easy to say.\nWhich of these (or a variation) do you lean towards? I can refine it once you pick.")).toBe("Which of these (or a variation) do you lean towards?");
+    // A long introduction is an answer's, and the question under the list still stands.
+    expect(listChoiceInput(`${"These names came from the street the shop is on. ".repeat(8)}\n${list}Which one?`)).toMatchObject({ question: "Which one?", closing: true });
+    // "Which" in a statement, a question a sentence later; a page of text; no question mark.
+    expect(asked("Which one is best depends on your budget. Want details?")).toBeUndefined();
+    expect(asked(`Which one? ${"I can say more about each of them. ".repeat(10)}`)).toBeUndefined();
+    expect(asked("Tell me which one you like and I will go on.")).toBeUndefined();
+    // A few short lines between the list and the question are the answer rounding off.
+    expect(asked("They differ in tone.\nBoth are short.\nWhich one?")).toBe("Which one?");
+    // The question before the list is the task asking: not a closing one.
+    expect(listChoiceInput("Which cuisine?\n1. Italian\n2. Japanese")?.closing).toBeUndefined();
+  });
+
+  it("reads numbered parts and a table that end on which one, as the model wrote them", () => {
+    // A name in bold with its number, and a paragraph under each.
+    expect(listChoiceInput("Here are three bakery names:\n\n**1. Golden Crumb**\nA warm, inviting name, which works well for branding.\n\n**2. Flour & Vine**\nGreat if you want a craft-focused vibe.\n\n**3. The Daily Loaf**\nFriendly and everyday, which makes it feel like part of the morning. Easy to say.\n\nWhich one do you prefer?"))
+      .toEqual({ question: "Which one do you prefer?", options: ["Golden Crumb", "Flour & Vine", "The Daily Loaf"], allowOther: true, closing: true });
+    // The name and its description on one line.
+    expect(listChoiceInput("**1. Pottery** – Shaping clay into mugs and bowls. Very hands-on and meditative, and you take something home.\n\n**2. Beekeeping** – Keeping a small hive.\n\nWhich one would you like to try?")?.options).toEqual(["Pottery", "Beekeeping"]);
+    // A list under each part: the parts are the options, never the last part's list.
+    const films = "**1. Interstellar (2014)**\n- Tür: Bilim kurgu\n- Neden: Kozmik bir yolculuk\n\n**2. Parasite (2019)**\n- Tür: Gerilim\n- Neden: Gerginlik\n\nHangisi seni çekiyor? Ya da farklı bir türde filmler istersen söyleyebilirim.";
+    expect(listChoiceInput(films)).toEqual({ question: "Hangisi seni çekiyor?", options: ["Interstellar (2014)", "Parasite (2019)"], allowOther: true, closing: true });
+    expect(listChoiceInput(films.replace("Interstellar (2014)", "A".repeat(90)))).toBeNull();
+    // Headings.
+    expect(listChoiceInput("### 1. Kapadokya\nPeri bacaları.\n\n### 2. Bodrum\nDeniz.\n\nHangisini tercih edersin?")?.options).toEqual(["Kapadokya", "Bodrum"]);
+    // A table, with a column that only counts and without.
+    expect(listChoiceInput("| # | Name | Vibe |\n|---|------|------|\n| 1 | **The Daily Crumb** | Cozy |\n| 2 | **Rise & Flour** | Modern |\n\nWhich one appeals to you most? Just let me know the number."))
+      .toEqual({ question: "Which one appeals to you most?", options: ["The Daily Crumb", "Rise & Flour"], allowOther: true, closing: true });
+    expect(listChoiceInput("| Film | Tür |\n|---|---|\n| **Interstellar** (2014) | Bilim kurgu |\n| Parasite | Gerilim |\n\nHangi filmi izlemek istersin?")?.options).toEqual(["Interstellar (2014)", "Parasite"]);
+    // The same answers with an offer under them, and with nothing.
+    expect(listChoiceInput(films.replace(/Hangisi seni.*$/, "Daha fazla öneri ister misin?"))).toBeNull();
+    expect(listChoiceInput("| Film | Tür |\n|---|---|\n| A | x |\n| B | y |\n\nWant more like these?")).toBeNull();
+    expect(listChoiceInput("**1. Pottery** – clay.\n**2. Beekeeping** – bees.")).toBeNull();
+    // Numbers that do not run from one: not parts of one answer.
+    expect(listChoiceInput("**2. Pottery**\nClay.\n\n**5. Beekeeping**\nBees.\n\nWhich one?")).toBeNull();
+    // A page of other things after the last part.
+    expect(listChoiceInput(`**1. Pottery**\nClay.\n\n**2. Beekeeping**\nBees.\n\n${"Hobbies are good for you in many ways, as studies say. ".repeat(14)}\nMore could be said.\nWhich one?`)).toBeNull();
+  });
+
+  it("does not wait on a question that comes after the answer, with options of its own", () => {
+    // Live: three kinds of music as asked, then a question nobody asked for.
+    const answer = "Çalışırken şunlar iyi gider:\n\n1. **Lo-fi** – hafif ve akışkan.\n2. **Ambient** – sessiz ve sakin.\n3. **Minimal klasik** – derin ve odaklı.\n\n";
+    expect(listChoiceInput(`${answer}Hangi tarz senin çalışmanla daha iyi uyum sağlar?\n\n- Daha hafif: Lo-fi\n- Daha sakin: Ambient`))
+      .toEqual({ question: "Hangi tarz senin çalışmanla daha iyi uyum sağlar?", options: ["Daha hafif: Lo-fi", "Daha sakin: Ambient"], allowOther: true, closing: true });
+    // However long the answer was.
+    expect(listChoiceInput(`${"Bir not: müzik zevki kişiden kişiye değişir. ".repeat(8)}\n${answer}Hangisinden başlayalım?\n- Lo-fi\n- Ambient`)?.closing).toBe(true);
+    // With no list before it, the question is the task asking, and that waits.
+    expect(listChoiceInput("Önce sorayım: hangi tarzı seversin?\n- Lo-fi\n- Ambient")).toEqual({ question: "Önce sorayım: hangi tarzı seversin?", options: ["Lo-fi", "Ambient"], allowOther: true });
+  });
+
+  it("reads an item with a list of its own under it as one item", () => {
+    const text = "Üç fikir:\n\n1. **Kahve seti**\n   - Günlük kullanışlı\n   - Fiyat: ~400 TL\n2. **Plak**\n   - Müziksever için\n\nHangisi sana daha yakın geliyor? Seçtiğini söyle, detaylandırayım.";
+    expect(listChoiceInput(text)).toEqual({ question: "Hangisi sana daha yakın geliyor?", options: ["Kahve seti", "Plak"], allowOther: true, closing: true });
+    // A list that is indented as a whole is still a list.
+    expect(listChoiceInput("Evde mi apartmanda mı?\n  - Evde\n  - Apartmanda")?.options).toEqual(["Evde", "Apartmanda"]);
   });
 
   it("bounds content and rejects incomplete choices", () => {
@@ -194,6 +260,31 @@ describe("choice run", () => {
     expect(asked.card.items[0]).toMatchObject({ sourceUrl: page.url, price: { status: "page" }, facts: [{ status: "page" }] });
     expect(asked.card.items[1]).toMatchObject({ price: { status: "unverified" } });
     expect(asked.card.items[1]!.sourceUrl).toBeUndefined();
+  });
+
+  it("ends on a list with a question under it, and offers the items as replies", async () => {
+    const text = "Three names:\n\n1. **Golden Crumb** – warm.\n2. **The Daily Rise** – fresh.\n3. **Flour & Hearth** – cozy.\n\nWhich one do you like? I can refine it.";
+    const run = async (said: string) => {
+      const { chat, seen } = model([{ text: said }, { text: "unreached" }]);
+      const registry = new ToolRegistry();
+      for (const tool of choiceTools()) registry.register(tool);
+      const events: AgentEvent[] = [];
+      let asked = 0;
+      const result = await runAgent({ goal: "Suggest three names for a bakery", model: chat, tools: registry, emit: (event) => events.push(event), requestApproval: async () => ({ kind: "approve" }), requestChoice: async () => { asked++; return { text: "", index: 0 }; } });
+      return { result, events, asked, requests: seen.length };
+    };
+    const closing = await run(text);
+    // The answer stands as written, in one request, and nothing waited on a pick.
+    expect(closing.result).toMatchObject({ status: "done", detail: text });
+    expect(closing.requests).toBe(1);
+    expect(closing.asked).toBe(0);
+    expect(closing.events.some((event) => event.type === "choice.asked")).toBe(false);
+    const step = closing.events.find((event) => event.type === "step.started");
+    expect(closing.events).toContainEqual(expect.objectContaining({ type: "replies.offered", stepId: step?.type === "step.started" && step.stepId, options: ["Golden Crumb", "The Daily Rise", "Flour & Hearth"] }));
+    // An offer under the same list: an answer, and nothing to click.
+    const offer = await run(text.replace("Which one do you like? I can refine it.", "Want me to try more?"));
+    expect(offer.result.status).toBe("done");
+    expect(offer.events.some((event) => event.type === "replies.offered" || event.type === "choice.asked")).toBe(false);
   });
 
   it("waits for a decision and returns it to the model as untrusted tool data", async () => {

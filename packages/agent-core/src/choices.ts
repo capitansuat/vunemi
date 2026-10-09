@@ -31,26 +31,113 @@ const WHICH = /(?<!\p{L})(?:which|hangi\p{L}*|welche[rsnm]?|(?:le|la|les)?quel(?
  * button; its description stays in the text above. An item that only says
  * "something else" becomes the free answer the card already allows.
  *
- * A question after the list is taken more narrowly: one short line, five
- * options at most, and it has to ask which of them, since a list that ends
- * in a question is as often an answer with an offer under it. Measured
- * live, "Want me to try more?" under three slogans made the slogans its
- * buttons, and the task waited on them. A question before the list is the task
- * asking, and measured live it came in more shapes than that: up to seven
- * options, a lead-in between the question and the list ("For example:"),
- * the lead-in on the question's own line, and a sentence or two after.
+ * A question before the list is the task asking, and measured live it came
+ * in more shapes than one: up to seven options, a lead-in between the
+ * question and the list ("For example:"), the lead-in on the question's own
+ * line, and a sentence or two after.
+ *
+ * A question after the list is another thing, marked `closing`: the list is
+ * the answer and the question comes under it. It has to ask which of them,
+ * since a list that ends in a question is as often an answer with an offer
+ * under it: measured live, "Want me to try more?" under three slogans made
+ * the slogans its buttons. The question may have a sentence before or after
+ * it ("Which one? Pick one and I'll go on."). Nothing waits on it: the
+ * caller offers the items as replies under the answer. The same goes for a
+ * question with its own options that comes after a list: the answer was
+ * given first. Measured live, such
+ * an answer was as often numbered headings with a paragraph or a list under
+ * each, or a table, as a plain list; those are read too.
  */
-export function listChoiceInput(text: string): { question: string; options: string[]; allowOther: boolean } | null {
-  const plain = (line: string): string => line.replace(/\*\*|__|`/g, "").trim();
-  const asks = (line: string): boolean => /[?？]\s*$/.test(plain(line));
+export function listChoiceInput(text: string): ListChoice | null {
+  const numbered = numberedReplies(text);
+  return numbered !== undefined ? numbered : listed(text) ?? tableReplies(text);
+}
+
+export interface ListChoice { question: string; options: string[]; allowOther: boolean; closing?: true }
+
+const unmarked = (line: string): string => line.replace(/\*\*|__|`/g, "").trim();
+// "🤖 Other" is still the other.
+const OTHER = /^(?:something else|other|another|none of these|not sure|başka(?: bir (?:şey|tür))?|diğer|hiçbiri|emin değilim)\b/iu;
+
+/** The options as buttons: without "something else", and null when they are too few, too many, too long or the same. */
+function buttons(labels: string[], most: number): string[] | null {
+  const options = labels.filter((option) => !OTHER.test(option.replace(/^[^\p{L}\p{N}]+/u, "")));
+  return options.length < 2 || options.length > most || options.some((option) => !option || option.length > 80) || new Set(options).size !== options.length ? null : options;
+}
+
+/** Replies a closing question may offer: more of them read as a menu under an answer. */
+const MAX_REPLIES = 5;
+const NUMBERED = /^(?:#{1,6}\s+)?(\*\*|__)?(\d{1,2})[.)]\s+(.+)$/;
+const ITEM = /^(?:[-*•]|(?:\*\*)?[A-Ha-h][.)](?:\*\*)?)\s+\S/;
+
+/**
+ * The question an answer ends on, and the lines above it: the last line or
+ * two, when neither is an item or a table row and one asks which.
+ */
+function ending(text: string): { question: string; body: string[] } | null {
+  const lines = text.split("\n").filter((line) => line.trim());
+  let tail = 0;
+  while (tail < 2 && tail < lines.length) {
+    const said = lines[lines.length - 1 - tail]!.trim();
+    if (NUMBERED.test(said) || ITEM.test(said) || said.startsWith("|")) break;
+    tail++;
+  }
+  const question = tail > 0 ? whichQuestion(lines.slice(lines.length - tail).map(unmarked).join(" ")) : "";
+  return question ? { question, body: lines.slice(0, lines.length - tail) } : null;
+}
+
+/**
+ * An answer in numbered parts ("**1. Golden Crumb**" and a paragraph, "2. …")
+ * that ends on "which one?": the parts' names. Undefined when the text is not
+ * that; null when it is and the names will not do as replies, so that a list
+ * inside the last part is not taken for the options.
+ */
+function numberedReplies(text: string): ListChoice | null | undefined {
+  const end = ending(text);
+  if (!end) return undefined;
+  const parts: { at: number; n: number; name: string }[] = [];
+  end.body.forEach((line, at) => {
+    const found = line.length - line.trimStart().length < 2 ? NUMBERED.exec(line.trim()) : null;
+    if (!found) return;
+    const [, mark, n, rest] = found;
+    // The name is what is in bold, whether the number is inside it or before it.
+    const bold = mark ? /^(.+?)(?:\*\*|__)/.exec(rest!) : /^(?:\*\*|__)(.+?)(?:\*\*|__)/.exec(rest!);
+    parts.push({ at, n: Number(n), name: unmarked(bold ? bold[1]! : rest!).replace(/\s*:$/, "") });
+  });
+  const first = parts.findLastIndex((part) => part.n === 1);
+  const run = first < 0 ? [] : parts.slice(first);
+  if (run.length < 2 || run.some((part, i) => part.n !== i + 1)) return undefined;
+  // A page between the last part and the question: the question is about something else by then.
+  if (end.body.slice(run.at(-1)!.at + 1).join(" ").length > 600) return null;
+  const options = buttons(run.map((part) => part.name), MAX_REPLIES);
+  return options && { question: end.question, options, allowOther: true, closing: true };
+}
+
+/** A table that ends on "which one?": its first column. */
+function tableReplies(text: string): ListChoice | null {
+  const end = ending(text);
+  const table = end && end.body.at(-1)?.trim().startsWith("|") ? firstTable(end.body.join("\n")) : null;
+  if (!end || !table) return null;
+  const counted = /^(?:#|no\.?|№)$/i.test(unmarked(table.headers[0]!)) && table.headers.length > 2;
+  const options = buttons(table.rows.map((row) => unmarked(row[counted ? 1 : 0]!)), MAX_REPLIES);
+  return options && { question: end.question, options, allowOther: true, closing: true };
+}
+
+/** A question right before or right after a run of list items. */
+function listed(text: string): ListChoice | null {
+  const asks = (line: string): boolean => /[?？]\s*$/.test(unmarked(line));
   // "1.", "-", and the lettered "A)" or "**A)**" of a quiz.
   const item = /^(?:\d{1,2}[.)]|[-*•]|(?:\*\*)?[A-Ha-h][.)](?:\*\*)?)\s+(.+)$/;
   const lines: string[] = [];
+  /** How far in the last item kept starts. */
+  let depth = 0;
   for (const line of text.split("\n")) {
     const said = line.trim();
     if (!said) continue;
-    // An indented line under an item is the rest of that item.
-    if (/^(?: {2,}|\t)/.test(line) && !item.test(said) && lines.length > 0 && item.test(lines.at(-1)!)) continue;
+    const indent = line.length - line.trimStart().length;
+    // An indented line under an item is the rest of that item, a list of its own included.
+    if (lines.length > 0 && item.test(lines.at(-1)!) && (item.test(said) ? indent >= depth + 2 : /^(?: {2,}|\t)/.test(line))) continue;
+    if (item.test(said)) depth = indent;
     lines.push(said);
   }
   let end = lines.length;
@@ -60,30 +147,48 @@ export function listChoiceInput(text: string): { question: string; options: stri
   const before = lines.slice(0, start);
   const after = lines.slice(end);
   if (end - start < 2) return null;
+  const closing = after.length >= 1 && after.length <= 2 ? whichQuestion(after.map(unmarked).join(" ")) : "";
+  const closes = closing !== "";
+  // A list earlier in the text: the answer came first, and the question with its own options after it.
+  const answered = before.some((line) => item.test(line));
   // More than a sentence or two before the list is an answer, not a question.
-  if (before.join(" ").length > 300) return null;
-  const closes = after.length === 1 && after[0]!.length <= 120 && asks(after[0]!) && WHICH.test(plain(after[0]!));
+  if (!closes && !answered && before.join(" ").length > 300) return null;
   /** The question a line asks: all of it, or what comes before a lead-in such as "My options:". */
   const asked = (line: string | undefined): string => {
     if (!line) return "";
-    const said = plain(line);
+    const said = unmarked(line);
     return asks(said) ? said : /^(.*[?？])[^?？]{0,40}:$/.exec(said)?.[1] ?? "";
   };
   const above = before.at(-1);
-  const leadIn = above !== undefined && plain(above).length <= 60 && /:$/.test(plain(above));
-  const question = closes ? plain(after[0]!) : after.length <= 3 && after.join(" ").length <= 400 ? asked(above) || (leadIn ? asked(before.at(-2)) : "") : "";
+  const leadIn = above !== undefined && unmarked(above).length <= 60 && /:$/.test(unmarked(above));
+  const question = closes ? closing : after.length <= 3 && after.join(" ").length <= 400 ? asked(above) || (leadIn ? asked(before.at(-2)) : "") : "";
   if (!question || question.length > 200) return null;
   const label = (line: string): string => {
     const body = item.exec(line)![1]!;
     const bold = /^(?:\*\*|__)(.+?)(?:\*\*|__)/.exec(body);
-    return plain(bold ? bold[1]! : body).replace(/\s*:$/, "");
+    return unmarked(bold ? bold[1]! : body).replace(/\s*:$/, "");
   };
-  const all = lines.slice(start, end).map(label);
-  // "🤖 Other" is still the other.
-  const other = /^(?:something else|other|another|none of these|not sure|başka(?: bir (?:şey|tür))?|diğer|hiçbiri|emin değilim)\b/iu;
-  const options = all.filter((option) => !other.test(option.replace(/^[^\p{L}\p{N}]+/u, "")));
-  if (options.length < 2 || options.length > (closes ? 5 : MAX_OPTIONS) || options.some((option) => !option || option.length > 80) || new Set(options).size !== options.length) return null;
-  return { question, options, allowOther: true };
+  const options = buttons(lines.slice(start, end).map(label), closes ? MAX_REPLIES : MAX_OPTIONS);
+  return options && { question, options, allowOther: true, ...((closes || answered) && { closing: true as const }) };
+}
+
+/**
+ * The sentence in a short text that asks which: from where it starts to its
+ * question mark. Empty when there is none, or when a sentence ends between
+ * the word and the mark ("Which is best depends on you. Want more?").
+ */
+function whichQuestion(text: string): string {
+  if (text.length > 300) return "";
+  for (const which of text.matchAll(new RegExp(WHICH.source, "giu"))) {
+    const rest = text.slice(which.index);
+    const mark = rest.search(/[?？]/);
+    if (mark < 0) return "";
+    if (/[.!。！]\s+\p{Lu}/u.test(rest.slice(0, mark))) continue;
+    const head = text.slice(0, which.index);
+    const starts = Math.max(...[...head.matchAll(/[.!?。！？:]\s+/g)].map((m) => m.index + m[0].length), 0);
+    return text.slice(starts, which.index + mark + 1).trim();
+  }
+  return "";
 }
 
 /** The first Markdown table in a text: its header cells and its rows of the same width. */

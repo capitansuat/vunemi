@@ -599,10 +599,15 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         }
         // A question written out as a list is asked with buttons, as ask_choice would have.
         const canAsk = toolSpecs.some((tool) => tool.name === "ask_choice") && opts.requestChoice && asksInRow < MAX_ASKS && index < maxSteps - 1;
-        const asked = canAsk && listsAsked < 2 ? listChoiceInput(result.text) : null;
+        const listed = toolSpecs.some((tool) => tool.name === "ask_choice") && opts.requestChoice ? listChoiceInput(result.text) : null;
         // Live, a model summed up the cards the user had just chosen from, then asked
         // whether to look further: the three cards came back as the buttons of a yes-or-no question.
-        if (asked && !asked.options.every((option) => offered.has(option.toLocaleLowerCase()))) {
+        const fresh = listed && !listed.options.every((option) => offered.has(option.toLocaleLowerCase())) ? listed : null;
+        // A list that is the answer, with "which one?" under it: the task does not wait on
+        // that. The items go along as replies to click, shown if the answer stands as the last word.
+        if (fresh?.closing) emit({ type: "replies.offered", runId, stepId, options: fresh.options, at: now() });
+        const asked = fresh && !fresh.closing && canAsk && listsAsked < 2 ? fresh : null;
+        if (asked) {
           listsAsked++;
           const call: ToolCall = { id: `${stepId}.list`, name: "ask_choice", argumentsText: JSON.stringify(asked) };
           convo.push({ role: "assistant", content: "", toolCalls: [call] });

@@ -10,10 +10,11 @@ import { PlanCard } from "./PlanCard.js";
 import { MemoryNotice, MemoryProposals } from "./MemoryNotes.js";
 import { SavedNotes } from "./WorkNotes.js";
 import { Markdown } from "./Markdown.js";
+import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
 
 /** One exchange: what the user asked, and everything the agent did about it. */
-export function Turn({ run }: { run: RunView }) {
+export function Turn({ run, replies }: { run: RunView; replies?: string[] }) {
   const live = run.status === "running";
   const last = run.steps.at(-1);
   // The answer is the final step's text; earlier steps' text is narration.
@@ -66,6 +67,7 @@ export function Turn({ run }: { run: RunView }) {
           />
         )}
         {!live && run.status !== "done" && <Ending run={run} />}
+        {replies && <Replies options={replies} />}
       </div>
 
       {!live && <Footer run={run} />}
@@ -75,6 +77,26 @@ export function Turn({ run }: { run: RunView }) {
       {run.notes && run.notes.length > 0 && <SavedNotes notes={run.notes} />}
       {run.compaction && <Compaction c={run.compaction} />}
     </section>
+  );
+}
+
+/**
+ * The answer ended on "which one?": its items, to answer with a click.
+ * Nothing waits on them. They are there while the answer is the last word
+ * of the conversation, and a click sends the item as the next message.
+ */
+function Replies({ options }: { options: string[] }) {
+  const busy = useStore((s) => s.running || s.pendingStart !== null);
+  const send = useStore((s) => s.send);
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((option, index) => (
+        <button key={index} type="button" disabled={busy} onClick={() => void send(option).catch(() => undefined)}
+          className="rounded-lg border border-line-strong bg-surface-2 px-3 py-1.5 text-[13px] text-fg hover:border-ember hover:bg-ember/10 disabled:cursor-default disabled:opacity-60">
+          {option}
+        </button>
+      ))}
+    </div>
   );
 }
 
