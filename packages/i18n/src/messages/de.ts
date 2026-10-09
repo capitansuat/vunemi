@@ -61,8 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "Möchte eine Arbeitsnotiz speichern", doing: "Speichert eine Arbeitsnotiz", done: "Hat eine Arbeitsnotiz gespeichert" },
     worknote_read: { ask: "Möchte eine Arbeitsnotiz lesen", doing: "Liest eine Arbeitsnotiz", done: "Hat eine Arbeitsnotiz gelesen" },
     worknote_search: { ask: "Möchte Arbeitsnotizen durchsuchen", doing: "Durchsucht Arbeitsnotizen", done: "Hat Arbeitsnotizen durchsucht" },
-    library_search: { ask: "Möchte frühere Unterhaltungen und Besprechungen durchsuchen", doing: "Durchsucht frühere Unterhaltungen und Besprechungen", done: "Hat frühere Unterhaltungen und Besprechungen durchsucht" },
-    library_open: { ask: "Möchte eine frühere Unterhaltung oder Besprechung lesen", doing: "Liest eine frühere Unterhaltung oder Besprechung", done: "Hat eine frühere Unterhaltung oder Besprechung gelesen" },
+    library_search: { ask: "Möchte frühere Sitzungen und Besprechungen durchsuchen", doing: "Durchsucht frühere Sitzungen und Besprechungen", done: "Hat frühere Sitzungen und Besprechungen durchsucht" },
+    library_open: { ask: "Möchte eine frühere Sitzung oder Besprechung lesen", doing: "Liest eine frühere Sitzung oder Besprechung", done: "Hat eine frühere Sitzung oder Besprechung gelesen" },
     memory_remember: { ask: "Möchte sich eine Notiz merken", doing: "Merkt sich die Notiz", done: "Notiz gemerkt" },
     page_goto: { ask: "Möchte eine Seite öffnen", doing: "Öffnet eine Seite", done: "Hat die Seite geöffnet" },
     travel_search_flights: { ask: "Möchte Flüge suchen", doing: "Sucht Flüge", done: "Hat Flugoptionen gefunden" },
@@ -776,7 +776,7 @@ export const messages: Catalogue = {
       notes: "früheren Arbeitsnotizen",
       conversation: "einer per @ eingefügten Sitzung",
       meeting: "einer per @ eingefügten Besprechung",
-      library: "frühere Unterhaltungen und Besprechungen",
+      library: "früheren Sitzungen und Besprechungen",
     },
     attach: {
       filesOff: "Um Dateien anzuhängen, schalte unter Verbindungen „Dateien“ ein.",
@@ -1301,9 +1301,9 @@ export const messages: Catalogue = {
     },
     history: {
       label: "Verlauf",
-      description: "Lässt Vunemi frühere Unterhaltungen und aufgezeichnete Besprechungen finden, wenn eine Anfrage sich auf eine bezieht. Mit jeder Anfrage erhält es nur Name, Datum und eine Zeile der wenigen passenden; es öffnet eine nur bei Bedarf. Nichts verlässt diesen Mac.",
-      provides: { find: "frühere Unterhaltungen und Besprechungen finden" },
-      read: { label: "Finden und Lesen", description: "Durchsucht frühere Unterhaltungen und Besprechungen und liest die benötigte." },
+      description: "Lässt Vunemi frühere Sitzungen und aufgezeichnete Besprechungen finden, wenn eine Anfrage sich auf eine bezieht. Mit jeder Anfrage erhält es nur Name, Datum und eine Zeile der wenigen passenden; es öffnet eine nur bei Bedarf. Nichts verlässt diesen Mac.",
+      provides: { find: "frühere Sitzungen und Besprechungen finden" },
+      read: { label: "Finden und Lesen", description: "Durchsucht frühere Sitzungen und Besprechungen und liest die benötigte." },
     },
     automations: {
       label: "Geplante Aufgaben",

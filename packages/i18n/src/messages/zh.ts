@@ -61,8 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "想要保存一条工作笔记", doing: "正在保存工作笔记", done: "已保存工作笔记" },
     worknote_read: { ask: "想要读取一条工作笔记", doing: "正在读取工作笔记", done: "已读取工作笔记" },
     worknote_search: { ask: "想要搜索工作笔记", doing: "正在搜索工作笔记", done: "已搜索工作笔记" },
-    library_search: { ask: "想搜索以前的对话和会议", doing: "正在搜索以前的对话和会议", done: "已搜索以前的对话和会议" },
-    library_open: { ask: "想阅读以前的一段对话或会议", doing: "正在阅读以前的一段对话或会议", done: "已阅读以前的一段对话或会议" },
+    library_search: { ask: "想搜索以前的会话和会议", doing: "正在搜索以前的会话和会议", done: "已搜索以前的会话和会议" },
+    library_open: { ask: "想阅读以前的一个会话或会议", doing: "正在阅读以前的一个会话或会议", done: "已阅读以前的一个会话或会议" },
     memory_remember: { ask: "想要记住一条笔记", doing: "正在记住笔记", done: "已记住笔记" },
     page_goto: { ask: "想要打开页面", doing: "正在打开页面", done: "已打开页面" },
     travel_search_flights: { ask: "想要搜索航班", doing: "正在搜索航班", done: "已找到航班选项" },
@@ -776,7 +776,7 @@ export const messages: Catalogue = {
       notes: "之前的工作笔记",
       conversation: "用 @ 引入的会话",
       meeting: "用 @ 引入的会议",
-      library: "以前的对话和会议",
+      library: "以前的会话和会议",
     },
     attach: {
       filesOff: "要附加文件，请在“连接”中开启“文件”。",
@@ -1301,9 +1301,9 @@ export const messages: Catalogue = {
     },
     history: {
       label: "历史记录",
-      description: "当请求涉及以前的对话或已录制的会议时，让 Vunemi 能找到它。每次请求只会附上最相关的几项的名称、日期和一行说明；只有需要时才会打开其中一项。任何内容都不会离开这台 Mac。",
-      provides: { find: "查找以前的对话和会议" },
-      read: { label: "查找和阅读", description: "搜索以前的对话和会议，并阅读需要的那一项。" },
+      description: "当请求涉及以前的会话或已录制的会议时，让 Vunemi 能找到它。每次请求只会附上最相关的几项的名称、日期和一行说明；只有需要时才会打开其中一项。任何内容都不会离开这台 Mac。",
+      provides: { find: "查找以前的会话和会议" },
+      read: { label: "查找和阅读", description: "搜索以前的会话和会议，并阅读需要的那一项。" },
     },
     automations: {
       label: "计划任务",

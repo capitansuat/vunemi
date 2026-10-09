@@ -61,8 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "작업 메모를 저장하려고 합니다", doing: "작업 메모 저장 중", done: "작업 메모를 저장했습니다" },
     worknote_read: { ask: "작업 메모를 읽으려고 합니다", doing: "작업 메모 읽는 중", done: "작업 메모를 읽었습니다" },
     worknote_search: { ask: "작업 메모를 검색하려고 합니다", doing: "작업 메모 검색 중", done: "작업 메모를 검색했습니다" },
-    library_search: { ask: "이전 대화와 회의를 검색하려고 합니다", doing: "이전 대화와 회의 검색 중", done: "이전 대화와 회의를 검색했습니다" },
-    library_open: { ask: "이전 대화나 회의를 읽으려고 합니다", doing: "이전 대화나 회의를 읽는 중", done: "이전 대화나 회의를 읽었습니다" },
+    library_search: { ask: "이전 세션과 회의를 검색하려고 합니다", doing: "이전 세션과 회의 검색 중", done: "이전 세션과 회의를 검색했습니다" },
+    library_open: { ask: "이전 세션이나 회의를 읽으려고 합니다", doing: "이전 세션이나 회의를 읽는 중", done: "이전 세션이나 회의를 읽었습니다" },
     memory_remember: { ask: "메모를 기억하려고 합니다", doing: "메모를 기억하는 중", done: "메모를 기억했습니다" },
     page_goto: { ask: "페이지를 열려고 합니다", doing: "페이지를 여는 중", done: "페이지를 열었습니다" },
     travel_search_flights: { ask: "항공편을 검색하려고 합니다", doing: "항공편을 검색하는 중", done: "항공편 옵션을 찾았습니다" },
@@ -776,7 +776,7 @@ export const messages: Catalogue = {
       notes: "이전 작업 메모",
       conversation: "@로 가져온 세션",
       meeting: "@로 가져온 회의",
-      library: "이전 대화와 회의",
+      library: "이전 세션과 회의",
     },
     attach: {
       filesOff: "파일을 첨부하려면 '연결'에서 '파일'을 켜십시오.",
@@ -1301,9 +1301,9 @@ export const messages: Catalogue = {
     },
     history: {
       label: "기록",
-      description: "요청이 이전 대화나 녹음된 회의에 관한 것일 때 Vunemi가 그것을 찾을 수 있게 합니다. 요청마다 가장 관련 있는 몇 개의 이름, 날짜, 한 줄만 전달되며, 필요할 때만 하나를 엽니다. 어떤 것도 이 Mac 밖으로 나가지 않습니다.",
-      provides: { find: "이전 대화와 회의 찾기" },
-      read: { label: "찾기와 읽기", description: "이전 대화와 회의를 검색하고 필요한 것을 읽습니다." },
+      description: "요청이 이전 세션이나 녹음된 회의에 관한 것일 때 Vunemi가 그것을 찾을 수 있게 합니다. 요청마다 가장 관련 있는 몇 개의 이름, 날짜, 한 줄만 전달되며, 필요할 때만 하나를 엽니다. 어떤 것도 이 Mac 밖으로 나가지 않습니다.",
+      provides: { find: "이전 세션과 회의 찾기" },
+      read: { label: "찾기와 읽기", description: "이전 세션과 회의를 검색하고 필요한 것을 읽습니다." },
     },
     automations: {
       label: "예약된 작업",

@@ -65,8 +65,8 @@ export const messages = {
     worknote_write: { ask: "Bir çalışma notu kaydetmek istiyor", doing: "Çalışma notunu kaydediyor", done: "Çalışma notunu kaydetti" },
     worknote_read: { ask: "Bir çalışma notunu okumak istiyor", doing: "Çalışma notunu okuyor", done: "Çalışma notunu okudu" },
     worknote_search: { ask: "Çalışma notlarında aramak istiyor", doing: "Çalışma notlarında arıyor", done: "Çalışma notlarında aradı" },
-    library_search: { ask: "Eski sohbet ve toplantılarda aramak istiyor", doing: "Eski sohbet ve toplantılarda arıyor", done: "Eski sohbet ve toplantılarda aradı" },
-    library_open: { ask: "Eski bir sohbeti ya da toplantıyı okumak istiyor", doing: "Eski bir sohbeti ya da toplantıyı okuyor", done: "Eski bir sohbeti ya da toplantıyı okudu" },
+    library_search: { ask: "Eski oturum ve toplantılarda aramak istiyor", doing: "Eski oturum ve toplantılarda arıyor", done: "Eski oturum ve toplantılarda aradı" },
+    library_open: { ask: "Eski bir oturumu ya da toplantıyı okumak istiyor", doing: "Eski bir oturumu ya da toplantıyı okuyor", done: "Eski bir oturumu ya da toplantıyı okudu" },
     memory_remember: { ask: "Bir not hatırlamak istiyor", doing: "Not hatırlanıyor", done: "Not hatırlandı" },
     page_goto: { ask: "Sayfa açmak istiyor", doing: "Sayfa açıyor", done: "Sayfayı açtı" },
     travel_search_flights: { ask: "Uçuş aramak istiyor", doing: "Uçuş arıyor", done: "Uçuş seçeneklerini buldu" },
@@ -780,7 +780,7 @@ export const messages = {
       notes: "önceki çalışma notları",
       conversation: "@ ile getirdiğin oturum",
       meeting: "@ ile getirdiğin toplantı",
-      library: "eski sohbet ve toplantılar",
+      library: "eski oturum ve toplantılar",
     },
     attach: {
       filesOff: "Dosya eklemek için Bağlantılar'da Dosyalar'ı aç.",
@@ -1306,9 +1306,9 @@ export const messages = {
     },
     history: {
       label: "Geçmiş",
-      description: "Bir istek eski bir sohbetle ya da kayıtlı bir toplantıyla ilgiliyse Vunemi'nin onu bulmasını sağlar. Her istekle yalnız en uygun birkaçının adı, tarihi ve tek satırı gider; gerekirse birini açar. Hiçbir şey bu Mac'ten çıkmaz.",
-      provides: { find: "eski sohbet ve toplantıları bulma" },
-      read: { label: "Bulma ve okuma", description: "Eski sohbetlerde ve toplantılarda arar, gerekeni okur." },
+      description: "Bir istek eski bir oturumla ya da kayıtlı bir toplantıyla ilgiliyse Vunemi'nin onu bulmasını sağlar. Her istekle yalnız en uygun birkaçının adı, tarihi ve tek satırı gider; gerekirse birini açar. Hiçbir şey bu Mac'ten çıkmaz.",
+      provides: { find: "eski oturum ve toplantıları bulma" },
+      read: { label: "Bulma ve okuma", description: "Eski oturumlarda ve toplantılarda arar, gerekeni okur." },
     },
     automations: {
       label: "Zamanlanmış görevler",

@@ -61,8 +61,8 @@ export const messages: Catalogue = {
     worknote_write: { ask: "Quer salvar uma nota de trabalho", doing: "Salvando uma nota de trabalho", done: "Salvou uma nota de trabalho" },
     worknote_read: { ask: "Quer ler uma nota de trabalho", doing: "Lendo uma nota de trabalho", done: "Leu uma nota de trabalho" },
     worknote_search: { ask: "Quer pesquisar nas notas de trabalho", doing: "Pesquisando nas notas de trabalho", done: "Pesquisou nas notas de trabalho" },
-    library_search: { ask: "Quer buscar em conversas e reuniões anteriores", doing: "Buscando em conversas e reuniões anteriores", done: "Buscou em conversas e reuniões anteriores" },
-    library_open: { ask: "Quer ler uma conversa ou reunião anterior", doing: "Lendo uma conversa ou reunião anterior", done: "Leu uma conversa ou reunião anterior" },
+    library_search: { ask: "Quer buscar em sessões e reuniões anteriores", doing: "Buscando em sessões e reuniões anteriores", done: "Buscou em sessões e reuniões anteriores" },
+    library_open: { ask: "Quer ler uma sessão ou reunião anterior", doing: "Lendo uma sessão ou reunião anterior", done: "Leu uma sessão ou reunião anterior" },
     memory_remember: { ask: "Quer lembrar uma nota", doing: "Lembrando a nota", done: "Nota lembrada" },
     page_goto: { ask: "Quer abrir uma página", doing: "Abrindo uma página", done: "Abriu a página" },
     travel_search_flights: { ask: "Quer pesquisar voos", doing: "Pesquisando voos", done: "Encontrou opções de voo" },
@@ -776,7 +776,7 @@ export const messages: Catalogue = {
       notes: "notas de trabalho anteriores",
       conversation: "uma sessão trazida com @",
       meeting: "uma reunião trazida com @",
-      library: "conversas e reuniões anteriores",
+      library: "sessões e reuniões anteriores",
     },
     attach: {
       filesOff: "Para anexar arquivos, ative Arquivos em Conexões.",
@@ -1301,9 +1301,9 @@ export const messages: Catalogue = {
     },
     history: {
       label: "Histórico",
-      description: "Permite que o Vunemi encontre suas conversas anteriores e reuniões gravadas quando um pedido trata de uma delas. A cada pedido ele recebe apenas o nome, a data e uma linha das poucas que se encaixam; só abre uma quando precisa. Nada sai deste Mac.",
-      provides: { find: "encontrar conversas e reuniões anteriores" },
-      read: { label: "Buscar e ler", description: "Busca em conversas e reuniões anteriores e lê a que precisa." },
+      description: "Permite que o Vunemi encontre suas sessões anteriores e reuniões gravadas quando um pedido trata de uma delas. A cada pedido ele recebe apenas o nome, a data e uma linha das poucas que se encaixam; só abre uma quando precisa. Nada sai deste Mac.",
+      provides: { find: "encontrar sessões e reuniões anteriores" },
+      read: { label: "Buscar e ler", description: "Busca em sessões e reuniões anteriores e lê a que precisa." },
     },
     automations: {
       label: "Tarefas agendadas",
