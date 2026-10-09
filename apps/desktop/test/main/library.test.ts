@@ -251,9 +251,56 @@ describe("Library", () => {
     const library = new Library(store, sources, meaning);
     fill();
     library.sync();
-    expect((await library.index("somewhere to stay, as we talked about", new Set()))!.ids).toEqual(["s_hotel"]);
+    await library.catchUp();
     expect(store.vectors(EMBED_MODEL_ID)).toHaveLength(6);
+    expect((await library.index("somewhere to stay, as we talked about", new Set()))!.ids).toEqual(["s_hotel"]);
     expect(await library.index("unrelated chatter here", new Set())).toBeNull();
+  });
+
+  it("makes no vector on the way to answering a request", async () => {
+    const asked: string[] = [];
+    const meaning: Meaning = { available: () => true, embed: async (texts, as) => (asked.push(as), texts.map(() => new Float32Array([1, 0, 0]))) };
+    const library = new Library(store, sources, meaning);
+    fill();
+    library.sync();
+    // Nothing has a vector yet: the words answer, and the meaning model is not even asked.
+    expect((await library.index("the Lisbon hotel we booked", new Set()))!.ids).toContain("s_hotel");
+    expect(asked).toEqual([]);
+    expect(store.vectors(EMBED_MODEL_ID)).toHaveLength(0);
+    await library.catchUp();
+    await library.index("the Lisbon hotel we booked", new Set());
+    expect(asked.filter((as) => as === "query")).toHaveLength(1);
+  });
+
+  it("steps aside when told to, and takes the rest up at the next call", async () => {
+    let batches = 0;
+    const meaning: Meaning = { available: () => true, embed: async (texts) => (batches++, texts.map(() => new Float32Array([1, 0, 0]))) };
+    const library = new Library(store, sources, meaning);
+    fill();
+    library.sync();
+    await library.catchUp(() => batches === 0);
+    const first = store.vectors(EMBED_MODEL_ID).length;
+    expect(first).toBeGreaterThan(0);
+    expect(first).toBeLessThan(6);
+    await library.catchUp();
+    expect(store.vectors(EMBED_MODEL_ID)).toHaveLength(6);
+  });
+
+  it("keeps no vector of words an item no longer has, and makes one at a time", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    let calls = 0;
+    const meaning: Meaning = { available: () => true, embed: async (texts) => (calls++ === 0 && (await gate), texts.map(() => new Float32Array([1, 0, 0]))) };
+    const library = new Library(store, sources, meaning);
+    store.upsert({ id: "s_a", kind: "conversation", title: "A", at: 1, line: "l", text: "words", stamp: 1 });
+    const running = library.catchUp();
+    expect(library.catchUp()).toBe(running);
+    store.upsert({ id: "s_a", kind: "conversation", title: "A", at: 2, line: "l", text: "other words", stamp: 2 });
+    release();
+    await running;
+    // The first answer was for the old words; the second round made the one that stands.
+    expect(calls).toBe(2);
+    expect(store.vectors(EMBED_MODEL_ID)).toHaveLength(1);
   });
 
   it("goes on by words when the meaning model fails", async () => {

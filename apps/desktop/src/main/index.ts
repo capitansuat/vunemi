@@ -686,6 +686,8 @@ const session: AgentSession = new AgentSession({
     return library.index(goal, new Set([...given, conversations.currentId]));
   },
   afterRun: ({ runId, model, words }) => {
+    // Once this run has let go: what it said is in the library before the next request.
+    setTimeout(tendLibrary, 0);
     const conversation = conversations.currentId;
     void propose({ model, messages: words, store: memory, meaning, signal: AbortSignal.timeout(120_000), sessionId: conversation })
       .then((found) => {
@@ -1277,6 +1279,20 @@ handle(CH.meetingsRecover, (_e, model: unknown) => {
   meetingModel = modelSpec(model) ?? meetingModel;
   void meetings.recover(meetingModel).catch((err: unknown) => console.error("[vunemi] meetings recovery:", err instanceof Error ? err.message : String(err)));
 });
+/**
+ * Brings the library in line with what exists and makes the vectors it lacks,
+ * while nothing else is at work: a request finds by what is ready and never
+ * waits for this. It steps aside for a run, a recording or a summary, and is
+ * taken up again after the next run.
+ */
+function tendLibrary(): void {
+  const idle = (): boolean => connectors.isOn("history") && !session.running && session.queued.length === 0 && !meetings.isRecording && !meetings.summarising;
+  if (!idle()) return;
+  library.sync({ meetings: !meetingsIndexed });
+  meetingsIndexed = true;
+  void library.catchUp(idle);
+}
+
 handle(CH.meetingsRename, (_e, id: unknown, title: unknown) => {
   if (typeof id === "string" && typeof title === "string") meetings.rename(id, title);
   meetingsIndexed = false;
@@ -1468,6 +1484,7 @@ handle(CH.connectionsOn, () => connectors.onIds());
 handle(CH.connectionsSet, async (_e, id: string, on: boolean) => {
   if (String(id) === "desktop" && on === true) await connectors.setOnIfReady("desktop");
   else connectors.setOn(String(id), on === true);
+  if (String(id) === "history") tendLibrary();
   return connectors.list();
 });
 
@@ -1743,6 +1760,7 @@ void app.whenReady().then(async () => {
   createWindow();
   setAppMenu();
   presence.start();
+  tendLibrary();
   // The Mac locking locks Vunemi too, when the user asked for a lock at all.
   powerMonitor.on("lock-screen", () => {
     macAway = true;

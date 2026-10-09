@@ -54,13 +54,15 @@ let store: LibraryStore;
 let embedder: Embedder | null = null;
 let library: Library;
 
-beforeAll(() => {
+beforeAll(async () => {
   dir = mkdtempSync(join(tmpdir(), "vunemi-library-live-"));
   store = new LibraryStore(dir);
   embedder = embedDir && binary ? new Embedder({ binary, dir: embedDir }) : null;
   library = new Library(store, sources, embedder);
   library.sync();
-});
+  // In the app this is done while nothing else runs; here before the first request.
+  await library.catchUp();
+}, 300_000);
 afterAll(async () => {
   await embedder?.stop();
   store.close();
