@@ -66,6 +66,41 @@ interface Tab {
   consent?: "decline" | "declined";
 }
 
+/** The part of Electron's debugger a tab's session is built on. */
+export interface DebuggerChannel {
+  sendCommand(method: string, params?: Record<string, unknown>, sessionId?: string): Promise<unknown>;
+  on(event: "message", listener: (event: unknown, method: string, params: unknown, sessionId?: string) => void): unknown;
+}
+
+/**
+ * A tab's session over its debugger. The one channel carries the page and,
+ * each under a session id of its own, the frames from other sites in it
+ * (they run in their own processes): `child` reaches one of those.
+ */
+export function debuggerSession(dbg: DebuggerChannel): CdpSession {
+  const handlers = new Map<string, Set<(p: unknown) => void>>();
+  dbg.on("message", (_e, method, params, sessionId) => {
+    const set = handlers.get(`${sessionId ?? ""} ${method}`);
+    if (set) for (const h of [...set]) h(params);
+  });
+  const session = (sessionId?: string): CdpSession => ({
+    send: <T>(method: string, params?: Record<string, unknown>) => dbg.sendCommand(method, params ?? {}, sessionId) as Promise<T>,
+    on: (event, handler) => {
+      const key = `${sessionId ?? ""} ${event}`;
+      let set = handlers.get(key);
+      if (!set) handlers.set(key, (set = new Set()));
+      set.add(handler);
+      return () => {
+        set.delete(handler);
+        // A page's frames come and go for as long as the tab is open.
+        if (set.size === 0 && handlers.get(key) === set) handlers.delete(key);
+      };
+    },
+    child: (id) => session(id),
+  });
+  return session();
+}
+
 /**
  * How a page opened into a new tab is loaded. A form posted to a new window
  * keeps its body and the page it came from: Google Flights' "Continue to
@@ -276,20 +311,7 @@ export class EmbeddedBrowser {
     if (tab.session) return tab.session;
     const dbg = tab.view.webContents.debugger;
     if (!dbg.isAttached()) dbg.attach("1.3");
-    const handlers = new Map<string, Set<(p: unknown) => void>>();
-    dbg.on("message", (_e, method, params) => {
-      const set = handlers.get(method);
-      if (set) for (const h of [...set]) h(params);
-    });
-    tab.session = {
-      send: (method, params) => dbg.sendCommand(method, params ?? {}),
-      on: (event, handler) => {
-        let set = handlers.get(event);
-        if (!set) handlers.set(event, (set = new Set()));
-        set.add(handler);
-        return () => set.delete(handler);
-      },
-    };
+    tab.session = debuggerSession(dbg);
     this.changed();
     return tab.session;
   }
