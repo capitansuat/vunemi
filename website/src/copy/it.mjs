@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un assistente personale che funziona sul tuo Mac", description: "Vunemi aiuta nelle attività quotidiane. L’IA funziona sul tuo Mac, senza account cloud Vunemi. Scegli tu quali servizi esterni collegare." },
-    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.15." },
+    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.1.16." },
     screens: { title: "Schermate di Vunemi", description: "Schermate reali dell'app Vunemi per Mac, catturate con dati di esempio." },
-    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.15 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
+    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.1.16 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
   },
   hero: {
     eyebrow: "Assistente personale per Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Tutto ciò che Vunemi sa fare",
-    intro: "Vunemi 0.1.15 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
+    intro: "Vunemi 0.1.16 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
     chatTitle: "Lavorare con Vunemi",
     chat: [
       { title: "Prima il piano", body: "Per un'attività con più passaggi, Vunemi può mostrarti prima il piano. Vai avanti, modifica i passaggi o annulla." },
@@ -167,8 +167,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
-      "Scrivi @ nel campo del messaggio per portare una sessione precedente o una riunione nel tuo messaggio. Vunemi ne legge le domande e le risposte, oppure il riepilogo della riunione e, se c'è spazio, la trascrizione. Fino a cinque alla volta.",
-      "Ciò che porti vale come documento, non come istruzioni: Vunemi ti chiede conferma prima di un'azione che ne porterebbe altrove un lungo passaggio.",
+      "La barra dei menu è nella lingua di Vunemi: ogni voce di File, Modifica, Vista e Finestra. Le voci che macOS aggiunge da sé cambiano alla prossima apertura di Vunemi.",
+      "Quando una risposta finisce con «quale?», l'attività non resta più in attesa. Le opzioni stanno sotto la risposta: fai clic su una o scrivi altro.",
+      "Un'offerta sotto un elenco, come «ne vuoi altre?», non diventa più pulsanti.",
     ],
     title: "Scarica Vunemi",
     intro: "Gratuito e open source. Per Mac con Apple Silicon e macOS 14 o successivo.",

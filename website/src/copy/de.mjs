@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.15 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.16 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.15 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.16 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.1.15 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.1.16 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -167,8 +167,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Tippe @ ins Nachrichtenfeld, um eine frühere Sitzung oder eine Besprechung in deine Nachricht zu holen. Vunemi liest ihre Fragen und Antworten oder die Zusammenfassung der Besprechung und, wenn Platz ist, ihr Transkript. Bis zu fünf auf einmal.",
-      "Was du dazuholst, gilt als Aufzeichnung, nicht als Anweisung: Vunemi fragt dich vor einer Aktion, die einen längeren Abschnitt daraus woandershin tragen würde.",
+      "Die Menüleiste ist in der Sprache von Vunemi: jeder Eintrag in Ablage, Bearbeiten, Darstellung und Fenster. Die Einträge, die macOS selbst hinzufügt, folgen beim nächsten Öffnen von Vunemi.",
+      "Endet eine Antwort mit „Welches?“, wartet die Aufgabe nicht mehr. Die Optionen stehen unter der Antwort: Klicke eine an oder schreibe etwas anderes.",
+      "Ein Angebot unter einer Liste, etwa „Mehr davon?“, wird nicht mehr zu Schaltflächen.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

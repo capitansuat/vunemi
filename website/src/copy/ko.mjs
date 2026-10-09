@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.15의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.1.16의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.15를 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.1.16를 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.1.15 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.1.16 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -167,8 +167,9 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "메시지 입력란에 @를 입력하면 이전 세션이나 회의를 메시지로 가져올 수 있습니다. Vunemi는 그 질문과 답변, 또는 회의 요약을 읽고, 여유가 있으면 대화록도 읽습니다. 메시지 하나에 최대 다섯 개입니다.",
-      "가져온 내용은 지시가 아니라 기록으로 취급됩니다. 그 안의 긴 문장을 다른 곳으로 내보내는 동작 전에 Vunemi가 먼저 묻습니다.",
+      "메뉴 막대가 Vunemi의 언어로 표시됩니다. 파일, 편집, 보기, 윈도우의 모든 항목입니다. macOS가 직접 추가하는 항목은 Vunemi를 다음에 열 때부터 바뀝니다.",
+      "답변이 “어느 것?”으로 끝나도 작업이 더 이상 기다리지 않습니다. 선택지는 답변 아래에 표시됩니다. 하나를 클릭하거나 다른 내용을 입력하세요.",
+      "목록 아래의 “더 필요하세요?” 같은 제안은 더 이상 버튼으로 바뀌지 않습니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",

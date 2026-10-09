@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.15 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.16 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.15，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.16，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.1.15：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.1.16：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -167,8 +167,9 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "在输入框中输入 @，即可把之前的会话或会议带入当前消息。Vunemi 会读取其中的提问和回答，或会议的摘要；空间足够时还会读取文字记录。每条消息最多五个。",
-      "带入的内容被视为记录，而不是指令：如果某个操作会把其中的长段文字带到别处，Vunemi 会先询问你。",
+      "菜单栏现在使用 Vunemi 的语言：“文件”“编辑”“显示”和“窗口”中的每一项。macOS 自行添加的项目会在下次打开 Vunemi 时切换。",
+      "回答以“哪一个？”结尾时，任务不再等待。选项显示在回答下方：点击其中一个，或输入别的内容。",
+      "列表下方的提议（例如“还需要更多吗？”）不再变成按钮。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

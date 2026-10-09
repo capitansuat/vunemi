@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：Mac の上で動くパーソナルアシスタント", description: "Vunemi は日々の作業を手伝います。AI は Mac 上で動作し、Vunemi のクラウドアカウントは不要です。外部サービスとの接続は自分で選べます。" },
-    features: { title: "Vunemi にできること", description: "メール、カレンダー、ファイル、Web、Mac のアプリ。承認カード、取り消し、はっきりした制限つき。Vunemi 0.1.15 の全機能です。" },
+    features: { title: "Vunemi にできること", description: "メール、カレンダー、ファイル、Web、Mac のアプリ。承認カード、取り消し、はっきりした制限つき。Vunemi 0.1.16 の全機能です。" },
     screens: { title: "Vunemi の画面", description: "Mac 版 Vunemi の実際の画面です。サンプルデータで撮影しています。" },
-    download: { title: "Mac 版 Vunemi をダウンロード", description: "Vunemi 0.1.15 をダウンロード。Apple シリコン搭載、macOS 14 以降の Mac 向け。無料でオープンソースです。" },
+    download: { title: "Mac 版 Vunemi をダウンロード", description: "Vunemi 0.1.16 をダウンロード。Apple シリコン搭載、macOS 14 以降の Mac 向け。無料でオープンソースです。" },
   },
   hero: {
     eyebrow: "Mac のためのパーソナルアシスタント",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi にできることのすべて",
-    intro: "Vunemi 0.1.15 の詳細です。使い方、接続できるもの、そしてあなたが主導権を保つしくみを紹介します。",
+    intro: "Vunemi 0.1.16 の詳細です。使い方、接続できるもの、そしてあなたが主導権を保つしくみを紹介します。",
     chatTitle: "Vunemi との作業",
     chat: [
       { title: "まず計画", body: "いくつかの手順が必要なタスクでは、Vunemi が先に計画を示せます。そのまま進める、手順を編集する、キャンセルする、から選べます。" },
@@ -167,8 +167,9 @@ export default {
   downloadPage: {
     highlightsTitle: "このバージョンの新機能",
     highlights: [
-      "メッセージ欄で @ を入力すると、以前のセッションや会議をメッセージに取り込めます。Vunemi はその質問と回答、または会議の要約を読み、余裕があれば文字起こしも読みます。1 つのメッセージに 5 つまでです。",
-      "取り込んだ内容は指示ではなく記録として扱われます。その中の長い文章をほかの場所へ持ち出す操作の前に、Vunemi はあなたに確認します。",
+      "メニューバーがVunemiの言語になりました。「ファイル」「編集」「表示」「ウインドウ」の各項目です。macOSが自動で追加する項目は、次にVunemiを開いたときから切り替わります。",
+      "回答が「どれにしますか？」で終わっても、タスクは待機しなくなりました。選択肢は回答の下に表示されます。クリックするか、別の内容を入力してください。",
+      "リストの下の「もっと必要ですか？」のような提案は、ボタンに変換されなくなりました。",
     ],
     title: "Vunemi をダウンロード",
     intro: "無料でオープンソース。Apple シリコン搭載、macOS 14 以降の Mac 向けです。",

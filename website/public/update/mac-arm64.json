@@ -1,62 +1,73 @@
 {
-  "currentRelease": "0.1.15",
+  "currentRelease": "0.1.16",
   "releases": [
     {
-      "version": "0.1.15",
+      "version": "0.1.16",
       "updateTo": {
-        "version": "0.1.15",
-        "name": "Vunemi 0.1.15",
-        "pub_date": "2026-10-08T00:00:00Z",
+        "version": "0.1.16",
+        "name": "Vunemi 0.1.16",
+        "pub_date": "2026-10-09T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.15/Vunemi-0.1.15-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.16/Vunemi-0.1.16-arm64.zip"
       }
     }
   ],
   "sizeMb": 135,
   "notes": {
     "en": [
-      "Type @ in the message box to bring an earlier session or a meeting into your message. Vunemi reads its questions and answers, or the meeting's summary and, when there is room, its transcript. Up to five at a time.",
-      "What you bring in counts as a record, not as instructions: Vunemi asks you before an action that would carry a long passage from it somewhere else."
+      "The menu bar is in Vunemi's language: every item of File, Edit, View and Window. The items macOS adds itself follow the next time you open Vunemi.",
+      "When an answer ends on “which one?”, the task no longer waits. The options sit under the answer: click one, or write something else.",
+      "An offer under a list, such as “want more?”, is no longer turned into buttons."
     ],
     "de": [
-      "Tippe @ ins Nachrichtenfeld, um eine frühere Sitzung oder eine Besprechung in deine Nachricht zu holen. Vunemi liest ihre Fragen und Antworten oder die Zusammenfassung der Besprechung und, wenn Platz ist, ihr Transkript. Bis zu fünf auf einmal.",
-      "Was du dazuholst, gilt als Aufzeichnung, nicht als Anweisung: Vunemi fragt dich vor einer Aktion, die einen längeren Abschnitt daraus woandershin tragen würde."
+      "Die Menüleiste ist in der Sprache von Vunemi: jeder Eintrag in Ablage, Bearbeiten, Darstellung und Fenster. Die Einträge, die macOS selbst hinzufügt, folgen beim nächsten Öffnen von Vunemi.",
+      "Endet eine Antwort mit „Welches?“, wartet die Aufgabe nicht mehr. Die Optionen stehen unter der Antwort: Klicke eine an oder schreibe etwas anderes.",
+      "Ein Angebot unter einer Liste, etwa „Mehr davon?“, wird nicht mehr zu Schaltflächen."
     ],
     "es": [
-      "Escribe @ en el cuadro de mensaje para traer una sesión anterior o una reunión a tu mensaje. Vunemi lee sus preguntas y respuestas, o el resumen de la reunión y, si cabe, su transcripción. Hasta cinco a la vez.",
-      "Lo que traes cuenta como un registro, no como instrucciones: Vunemi te pregunta antes de una acción que llevaría un pasaje largo a otro sitio."
+      "La barra de menús está en el idioma de Vunemi: cada elemento de Archivo, Edición, Visualización y Ventana. Los elementos que macOS añade por su cuenta cambian la próxima vez que abras Vunemi.",
+      "Cuando una respuesta termina en «¿cuál?», la tarea ya no espera. Las opciones quedan bajo la respuesta: pulsa una o escribe otra cosa.",
+      "Un ofrecimiento bajo una lista, como «¿quieres más?», ya no se convierte en botones."
     ],
     "fr": [
-      "Tapez @ dans la zone de message pour ajouter une session précédente ou une réunion à votre message. Vunemi lit ses questions et ses réponses, ou le résumé de la réunion et, s'il y a la place, sa transcription. Jusqu'à cinq à la fois.",
-      "Ce que vous ajoutez est traité comme un document, pas comme des instructions : Vunemi vous demande avant une action qui en transmettrait un long passage ailleurs."
+      "La barre des menus est dans la langue de Vunemi : chaque élément de Fichier, Édition, Présentation et Fenêtre. Les éléments que macOS ajoute lui-même suivent à la prochaine ouverture de Vunemi.",
+      "Quand une réponse se termine par « lequel ? », la tâche n'attend plus. Les options restent sous la réponse : cliquez sur l'une d'elles ou écrivez autre chose.",
+      "Une proposition sous une liste, comme « en voulez-vous d'autres ? », n'est plus transformée en boutons."
     ],
     "it": [
-      "Scrivi @ nel campo del messaggio per portare una sessione precedente o una riunione nel tuo messaggio. Vunemi ne legge le domande e le risposte, oppure il riepilogo della riunione e, se c'è spazio, la trascrizione. Fino a cinque alla volta.",
-      "Ciò che porti vale come documento, non come istruzioni: Vunemi ti chiede conferma prima di un'azione che ne porterebbe altrove un lungo passaggio."
+      "La barra dei menu è nella lingua di Vunemi: ogni voce di File, Modifica, Vista e Finestra. Le voci che macOS aggiunge da sé cambiano alla prossima apertura di Vunemi.",
+      "Quando una risposta finisce con «quale?», l'attività non resta più in attesa. Le opzioni stanno sotto la risposta: fai clic su una o scrivi altro.",
+      "Un'offerta sotto un elenco, come «ne vuoi altre?», non diventa più pulsanti."
     ],
     "tr": [
-      "Yazma kutusunda @ yazarak önceki bir oturumu ya da toplantıyı mesajına getirebilirsin. Vunemi oturumun sorularını ve yanıtlarını, toplantının özetini ve yer varsa dökümünü okur. Bir mesaja en çok beş tane.",
-      "Getirdiğin içerik talimat değil, kayıt sayılır: Vunemi, ondan uzun bir parçayı başka bir yere taşıyacak eylemden önce sana sorar."
+      "Menü çubuğu Vunemi'nin dilinde: Dosya, Düzen, Görüntü ve Pencere menülerinin her satırı. macOS'un kendi eklediği satırlar Vunemi'yi bir sonraki açışında uyar.",
+      "Cevap “hangisi?” diye bittiğinde iş artık beklemiyor. Seçenekler cevabın altında durur: birine bas ya da başka bir şey yaz.",
+      "Bir listenin altındaki “daha fazla ister misin?” gibi teklifler artık düğmeye çevrilmiyor."
     ],
     "pt": [
-      "Digite @ na caixa de mensagem para trazer uma sessão anterior ou uma reunião para a sua mensagem. O Vunemi lê as perguntas e respostas dela, ou o resumo da reunião e, se couber, a transcrição. Até cinco por vez.",
-      "O que você traz conta como registro, não como instrução: o Vunemi pergunta antes de uma ação que levaria um trecho longo para outro lugar."
+      "A barra de menus está no idioma do Vunemi: cada item de Arquivo, Editar, Visualizar e Janela. Os itens que o próprio macOS adiciona mudam na próxima vez que você abrir o Vunemi.",
+      "Quando uma resposta termina em “qual?”, a tarefa não fica mais esperando. As opções ficam abaixo da resposta: clique em uma ou escreva outra coisa.",
+      "Uma oferta abaixo de uma lista, como “quer mais?”, não vira mais botões."
     ],
     "ru": [
-      "Введите @ в поле сообщения, чтобы добавить в него прежний сеанс или встречу. Vunemi читает его вопросы и ответы либо сводку встречи и, если хватает места, её расшифровку. До пяти за раз.",
-      "Добавленное считается записью, а не указаниями: Vunemi спросит вас перед действием, которое вынесло бы оттуда длинный фрагмент куда-то ещё."
+      "Строка меню теперь на языке Vunemi: каждый пункт в меню «Файл», «Правка», «Вид» и «Окно». Пункты, которые добавляет сама macOS, меняются при следующем запуске Vunemi.",
+      "Когда ответ заканчивается вопросом «какой?», задача больше не ждёт. Варианты стоят под ответом: нажмите на один или напишите что-то другое.",
+      "Предложение под списком, например «показать ещё?», больше не превращается в кнопки."
     ],
     "zh": [
-      "在输入框中输入 @，即可把之前的会话或会议带入当前消息。Vunemi 会读取其中的提问和回答，或会议的摘要；空间足够时还会读取文字记录。每条消息最多五个。",
-      "带入的内容被视为记录，而不是指令：如果某个操作会把其中的长段文字带到别处，Vunemi 会先询问你。"
+      "菜单栏现在使用 Vunemi 的语言：“文件”“编辑”“显示”和“窗口”中的每一项。macOS 自行添加的项目会在下次打开 Vunemi 时切换。",
+      "回答以“哪一个？”结尾时，任务不再等待。选项显示在回答下方：点击其中一个，或输入别的内容。",
+      "列表下方的提议（例如“还需要更多吗？”）不再变成按钮。"
     ],
     "ja": [
-      "メッセージ欄で @ を入力すると、以前のセッションや会議をメッセージに取り込めます。Vunemi はその質問と回答、または会議の要約を読み、余裕があれば文字起こしも読みます。1 つのメッセージに 5 つまでです。",
-      "取り込んだ内容は指示ではなく記録として扱われます。その中の長い文章をほかの場所へ持ち出す操作の前に、Vunemi はあなたに確認します。"
+      "メニューバーがVunemiの言語になりました。「ファイル」「編集」「表示」「ウインドウ」の各項目です。macOSが自動で追加する項目は、次にVunemiを開いたときから切り替わります。",
+      "回答が「どれにしますか？」で終わっても、タスクは待機しなくなりました。選択肢は回答の下に表示されます。クリックするか、別の内容を入力してください。",
+      "リストの下の「もっと必要ですか？」のような提案は、ボタンに変換されなくなりました。"
     ],
     "ko": [
-      "메시지 입력란에 @를 입력하면 이전 세션이나 회의를 메시지로 가져올 수 있습니다. Vunemi는 그 질문과 답변, 또는 회의 요약을 읽고, 여유가 있으면 대화록도 읽습니다. 메시지 하나에 최대 다섯 개입니다.",
-      "가져온 내용은 지시가 아니라 기록으로 취급됩니다. 그 안의 긴 문장을 다른 곳으로 내보내는 동작 전에 Vunemi가 먼저 묻습니다."
+      "메뉴 막대가 Vunemi의 언어로 표시됩니다. 파일, 편집, 보기, 윈도우의 모든 항목입니다. macOS가 직접 추가하는 항목은 Vunemi를 다음에 열 때부터 바뀝니다.",
+      "답변이 “어느 것?”으로 끝나도 작업이 더 이상 기다리지 않습니다. 선택지는 답변 아래에 표시됩니다. 하나를 클릭하거나 다른 내용을 입력하세요.",
+      "목록 아래의 “더 필요하세요?” 같은 제안은 더 이상 버튼으로 바뀌지 않습니다."
     ]
   }
 }
