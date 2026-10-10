@@ -15,7 +15,7 @@
 import type { ToolDef, ToolRegistry } from "@vunemi/agent-core";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import { APP_GUIDE_INDEX, createEverydayTools, createWhatsAppTool, createShortcutTools, SHORTCUTS_INSTRUCTIONS, createFinderTools, createGuideTool, createNotesTools, createOfficeTools, createRunner, createGeneralTools, onDemand, ScriptableCatalog, FINDER_INSTRUCTIONS, NOTES_INSTRUCTIONS } from "@vunemi/apps";
+import { APP_GUIDE_INDEX, createEverydayTools, createWhatsAppTool, createShortcutTools, SHORTCUTS_INSTRUCTIONS, SHORTCUT_BUILD_INSTRUCTIONS, type ShortcutBuilt, type ShortcutDraft, createFinderTools, createGuideTool, createNotesTools, createOfficeTools, createRunner, createGeneralTools, onDemand, ScriptableCatalog, FINDER_INSTRUCTIONS, NOTES_INSTRUCTIONS } from "@vunemi/apps";
 import { BROWSER_INSTRUCTIONS, type BrowserController, createBrowserTools, type TrustedSites } from "@vunemi/browser";
 import { Connectors, type Capability, type Connector, type ConnectorStatus } from "@vunemi/connectors";
 import { createFileTools, FILE_INSTRUCTIONS, type Roots } from "@vunemi/files";
@@ -66,6 +66,8 @@ export interface CatalogueOptions {
   automations?: AutomationStore;
   /** With the automation library on: what setting a task up from chat is checked with. */
   automationSetup?: () => AutomationSetup;
+  /** With the automation library on: builds a shortcut from the block menu and has Shortcuts offer it to the user. */
+  shortcutBuild?: (draft: ShortcutDraft, signal: AbortSignal) => Promise<ShortcutBuilt>;
   /** Earlier conversations and meetings; without it the connection is not offered. */
   library?: LibraryToolsOptions;
   /** Replaced in tests: the osascript the Mail app accounts run through. */
@@ -170,7 +172,8 @@ export function appsConnector(opts: { roots: Roots; catalog: ScriptableCatalog; 
  * The user's shortcuts. Separate from Mac apps because a shortcut may do
  * anything its steps do, which Vunemi can't see: every run is a card.
  */
-export function shortcutsConnector(opts: { osascript?: string } = {}): Connector {
+export function shortcutsConnector(opts: { osascript?: string; build?: (draft: ShortcutDraft, signal: AbortSignal) => Promise<ShortcutBuilt> } = {}): Connector {
+  const build = opts.build;
   const denied = new Set<string>();
   const run = createRunner({
     ...(opts.osascript && { osascript: opts.osascript }),
@@ -182,17 +185,21 @@ export function shortcutsConnector(opts: { osascript?: string } = {}): Connector
     get label() { return t("connectors.shortcuts.label"); },
     group: "computer",
     get description() { return t("connectors.shortcuts.description"); },
-    get provides() { return [t("connectors.shortcuts.provides.run")]; },
-    capabilities: [part("connectors.shortcuts.run", { id: "run", tools: ["shortcuts_list", "shortcuts_run"], defaultOn: true })],
+    get provides() { return [t("connectors.shortcuts.provides.run"), ...(build ? [t("connectors.shortcuts.provides.create")] : [])]; },
+    capabilities: [
+      part("connectors.shortcuts.run", { id: "run", tools: ["shortcuts_list", "shortcuts_run"], defaultOn: true }),
+      // Building goes through the command line and Shortcuts' own window, not through the permission the rest needs.
+      ...(build ? [part("connectors.shortcuts.create", { id: "create", tools: ["shortcuts_create"], defaultOn: true })] : []),
+    ],
     needs: { kind: "permission", get what() { return t("connectors.pane.automation"); } },
     defaultOn: false,
     origin: "builtin",
-    instructions: SHORTCUTS_INSTRUCTIONS,
+    instructions: build ? `${SHORTCUTS_INSTRUCTIONS}\n${SHORTCUT_BUILD_INSTRUCTIONS}` : SHORTCUTS_INSTRUCTIONS,
     status: async () =>
       denied.size === 0
         ? { state: "ready" }
         : { state: "blocked", settings: "automation", reason: t("connectors.apps.denied", { apps: [...denied].join(", ") }) },
-    tools: () => createShortcutTools(run),
+    tools: () => createShortcutTools(run, build ? { build } : {}),
   };
 }
 
@@ -338,7 +345,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
 
     appsConnector({ roots: opts.roots, catalog: opts.appCatalog, shotDir: opts.shotDir, trusted: opts.browser.trusted }),
 
-    shortcutsConnector(),
+    shortcutsConnector(opts.shortcutBuild ? { build: opts.shortcutBuild } : {}),
 
     ...(opts.automations ? [automationsConnector(opts.automations, opts.automationSetup)] : []),
     ...(opts.library ? [historyConnector(opts.library)] : []),

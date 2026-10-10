@@ -9,6 +9,7 @@
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import type { ScriptRunner } from "./runner.js";
+import { describeSteps, SHORTCUT_MAX_STEPS, ShortcutRefused, validShortcut, type ShortcutDraft } from "./shortcut-builder.js";
 
 const APP = "Shortcuts";
 const MAX_LIST = 100;
@@ -56,6 +57,20 @@ export const SHORTCUTS_INSTRUCTIONS = `Shortcuts (the user's own, from the Short
 - shortcuts_list shows them: name, subtitle, number of steps, whether one takes input. Call it before running one and use the exact name.
 - shortcuts_run runs one, with optional text input. Only a shortcut the user asked for by name or clearly meant; never to get around a tool you don't have. It asks the user every time. You can't see what a shortcut does inside, so report only what it returned.`;
 
+/** How building one ended: the user adds it in Shortcuts themselves, or doesn't. */
+export type ShortcutBuilt = { state: "added" | "notAdded" | "exists"; name: string } | { state: "failed"; name: string; reason: string };
+
+/**
+ * For the model when it may build shortcuts. The blocks are all there is:
+ * the tool refuses anything else, so the list of what can't be done is here
+ * to save a try, not to hold the line.
+ */
+export const SHORTCUT_BUILD_INSTRUCTIONS = `- shortcuts_create builds a new shortcut from a fixed menu of blocks, for something the user wants to run themselves later (from Shortcuts, Siri or the menu bar). Steps run in order; a later step uses an earlier one's result by its number, as {1} inside a text or as "of": 1.
+  Blocks: ask {prompt} · input (the text the shortcut is given) · today · case {of, to: upper|lower|title} · combine {text} · replace {of, find, with} · addToDate {of, amount, unit: hours|days|weeks} · formatDate {of, style: short|medium|long} · events {day: today|tomorrow} · addEvent {title, start, minutes} · reminders · addReminder {title} · createNote {text} · appendNote {note, text} · show {text} · notify {text} · copy {text} · speak {text} · result {text}.
+  "of" and "start" of the date blocks must be a today or addToDate step. At most ${SHORTCUT_MAX_STEPS} steps.
+  There is no block that sends a message or mail, runs a script, opens or fetches a URL, deletes anything or changes a setting. If the user wants one of those in a shortcut, say it can't be built here and that they can add that step themselves in Shortcuts.
+  The user sees the steps before anything is built, and adds the shortcut themselves in the Shortcuts app; say whether it was added from what the tool returns.`;
+
 interface Listed {
   name: string;
   steps: number;
@@ -69,10 +84,12 @@ export function shortcutName(value: unknown): string {
   return name;
 }
 
-export function createShortcutTools(run: ScriptRunner): ToolDef[] {
+export function createShortcutTools(run: ScriptRunner, opts: { build?: (draft: ShortcutDraft, signal: AbortSignal) => Promise<ShortcutBuilt> } = {}): ToolDef[] {
   // What the last listing said, so the card can show a shortcut's size without asking macOS first.
   const seen = new Map<string, Listed>();
+  const build = opts.build;
   return [
+    ...(build ? [createTool(build)] : []),
     {
       name: "shortcuts_list",
       description: "List the user's shortcuts from the Shortcuts app: name, subtitle, number of steps, whether it takes input. Optionally only those whose name or subtitle contains a word.",
@@ -126,6 +143,50 @@ export function createShortcutTools(run: ScriptRunner): ToolDef[] {
       },
     },
   ];
+}
+
+/** A shortcut of the user's own, made from the block menu (shortcut-builder). */
+function createTool(build: (draft: ShortcutDraft, signal: AbortSignal) => Promise<ShortcutBuilt>): ToolDef {
+  return {
+    name: "shortcuts_create",
+    description: "Build a new shortcut for the user's Shortcuts app from a fixed menu of blocks. The user sees its steps first and adds it in Shortcuts themselves.",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "The shortcut's name, in the user's language" },
+        steps: {
+          type: "array",
+          description: 'In order, each {"block": ...} with that block\'s own fields, e.g. [{"block":"ask","prompt":"Remind me of what?"},{"block":"addReminder","title":"{1}"}]',
+          items: { type: "object", properties: { block: { type: "string" } }, required: ["block"] },
+        },
+      },
+      required: ["name", "steps"],
+    },
+    // It adds something of the user's own on this Mac, and only after they say so twice: on the card, and in Shortcuts.
+    actionClass: "write-local",
+    alwaysAsk: true,
+    check: (a) => {
+      try {
+        validShortcut(a);
+        return null;
+      } catch (err) {
+        if (err instanceof ShortcutRefused) return err.message;
+        throw err;
+      }
+    },
+    preview: async (a) => {
+      const draft = validShortcut(a);
+      const steps = describeSteps(draft).map((line, i) => `${i + 1}. ${line}`);
+      return [t("apps.shortcuts.create", { name: draft.name }), ...steps, t("automations.shortcut.never"), t("automations.shortcut.signed")].join("\n");
+    },
+    async run(a, ctx) {
+      const built = await build(validShortcut(a), ctx.signal);
+      if (built.state === "failed") return `The shortcut could not be built (${built.reason}). Shortcuts was opened on a new, empty shortcut instead; the user can add the steps by hand. Tell them the steps in plain words.`;
+      if (built.state === "added") return `The user added "${built.name}" to their shortcuts.`;
+      if (built.state === "exists") return `The user already has a shortcut named "${built.name}"; nothing was built. Offer another name.`;
+      return `Shortcuts asked the user to add "${built.name}" and they have not. Nothing was added; don't build it again unless they ask.`;
+    },
+  };
 }
 
 function bounded(value: unknown): string {

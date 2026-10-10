@@ -90,10 +90,26 @@ export interface RecipeView extends SetupView {
   category: "morning" | "work" | "files";
 }
 
+/** A shortcut Vunemi offers to build, with what is shown before it is. */
+export interface ShortcutRecipeView {
+  id: string;
+  title: string;
+  body: string;
+  /** Its steps in plain words, and what it does and never does; both made from its blocks. */
+  steps: string[];
+  lines: { does: boolean; text: string }[];
+  /** The user has a shortcut of this name. */
+  installed: boolean;
+}
+
+/** How building a shortcut ended. Vunemi opens it in Shortcuts; adding it is the user's answer there. */
+export type ShortcutInstallView = { state: "added" | "notAdded" | "exists"; name: string } | { state: "failed"; name: string; reason: string };
+
 /** The automation library; `enabled` is false while it is switched off in this build. */
 export interface AutomationLibraryView {
   enabled: boolean;
   recipes: RecipeView[];
+  shortcuts: ShortcutRecipeView[];
 }
 
 export interface SessionList {
@@ -657,6 +673,8 @@ export interface VunemiApi {
   automationLibrary(): Promise<AutomationLibraryView>;
   /** Sets up one of the library's tasks, at the time and on the weekdays the user chose. */
   installRecipe(id: string, when?: { time?: string; days?: number[] }): Promise<AutomationView[]>;
+  /** Builds one of the library's shortcuts and opens it in Shortcuts, which asks the user whether to add it. Answers when they have, or after a few minutes. */
+  installShortcut(id: string): Promise<ShortcutInstallView>;
   /** Puts back the task deleted last from the list, if there is one. */
   undoDeleteAutomation(): Promise<AutomationView[]>;
   /** The summary of a task the model asks to set up, from the call's arguments; null while the library is off. */
@@ -862,6 +880,7 @@ export const CH = {
   automationsRun: "automations:run",
   automationsLibrary: "automations:library",
   automationsInstall: "automations:install",
+  automationsShortcut: "automations:shortcut",
   automationsUndoDelete: "automations:undo-delete",
   automationsSummarize: "automations:summarize",
   automationsAdjust: "automations:adjust",

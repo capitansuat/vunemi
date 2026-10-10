@@ -53,7 +53,8 @@ import { propose, type Proposal } from "./memory/propose.js";
 import { memoryRememberTool } from "./memory/tool.js";
 import { Soul, SOUL_MAX, soulInstructions } from "./soul.js";
 import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, summaryLine, SUGGESTIONS, validSchedule, type Automation, type AutomationSetup, type AutomationStatus } from "./automations.js";
-import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRefusal, setupView, summarizeScope, withWhen } from "./automation-library.js";
+import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRefusal, setupView, shortcutDraft, shortcutViews, summarizeScope, withWhen } from "./automation-library.js";
+import { ShortcutInstaller } from "./shortcut-install.js";
 import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t, tIn, type Locale } from "@vunemi/i18n";
 import { Recorder, recorderBinary } from "./meetings/recorder.js";
 import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
@@ -402,6 +403,8 @@ const waitingForVault = new Set(settings.mcpServers.filter(unsealed).map((server
 const appCatalog = new ScriptableCatalog(join(app.getPath("userData"), "apps"));
 // Tasks the user scheduled from chat (see automations.ts).
 const automations = new AutomationStore(join(app.getPath("userData"), "automations.json"));
+/** Shortcuts built from the block menu: signed here, added by the user in Shortcuts. */
+const shortcutInstaller = new ShortcutInstaller({ dir: join(app.getPath("userData"), "shortcuts") });
 
 // Earlier conversations and meetings, for the model to find when the user has
 // switched that on (see library/library.ts). The stores it reads are made further down.
@@ -418,7 +421,7 @@ let meetingsIndexed = false;
 const connectors = buildConnectors({
   automations,
   // Set up further down, beside the scope lookup it needs; a tool asks for it only when it is called.
-  ...(settings.automationLibrary && { automationSetup: () => automationSetup }),
+  ...(settings.automationLibrary && { automationSetup: () => automationSetup, shortcutBuild: (draft, signal) => shortcutInstaller.install(draft, signal) }),
   library: { library, sources: librarySources, current: () => conversations.currentId },
   tools,
   browser,
@@ -950,7 +953,17 @@ handle(CH.automationsSuggest, (_e, id: string) => {
   automations.add(recipeTask(String(id)), Date.now());
   return automationViews();
 });
-handle(CH.automationsLibrary, () => (settings.automationLibrary ? { enabled: true, recipes: recipeViews(lookScope) } : { enabled: false, recipes: [] }));
+handle(CH.automationsLibrary, async () => {
+  if (!settings.automationLibrary) return { enabled: false, recipes: [], shortcuts: [] };
+  // Only to mark the recipes the user already has; the names go no further.
+  const have = await shortcutInstaller.names().catch((): string[] => []);
+  return { enabled: true, recipes: recipeViews(lookScope), shortcuts: shortcutViews(have) };
+});
+handle(CH.automationsShortcut, (_e, id: unknown) => {
+  if (!settings.automationLibrary) throw new Error(t("automations.suggest.unknown"));
+  // The window names a recipe; the steps are the library's own.
+  return shortcutInstaller.install(shortcutDraft(id));
+});
 handle(CH.automationsInstall, (_e, id: unknown, when: unknown) => {
   const recipe = RECIPES.find((r) => r.id === id);
   if (!settings.automationLibrary || !recipe) throw new Error(t("automations.suggest.unknown"));

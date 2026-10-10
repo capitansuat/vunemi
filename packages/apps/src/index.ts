@@ -8,4 +8,5 @@ export * from "./office.js";
 export * from "./everyday.js";
 export * from "./guides.js";
 export * from "./shortcuts.js";
+export * from "./shortcut-builder.js";
 export * from "./whatsapp.js";

@@ -6,12 +6,12 @@
  */
 
 import { useEffect, useState, type ReactNode } from "react";
-import { CalendarClock, Check, Clock } from "lucide-react";
+import { CalendarClock, Check, Clock, Workflow } from "lucide-react";
 import { t } from "@vunemi/i18n";
 import type { AutomationView, RecipeView } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
 import { AutomationRow, useAutomations } from "./AutomationsSection.js";
-import { SetupSummary } from "./AutomationSetup.js";
+import { SetupSummary, ShortcutSummary } from "./AutomationSetup.js";
 
 const CATEGORIES = ["morning", "work", "files"] as const;
 
@@ -22,6 +22,8 @@ export function AutomationsView() {
   // The recipe whose summary is on screen; the empty chat screen can open the page on one.
   const [setup, setSetup] = useState<string | null>(() => useStore.getState().recipeFocus);
   const [deleted, setDeleted] = useState<AutomationView | null>(null);
+  // The shortcut recipe whose summary is on screen.
+  const [shortcut, setShortcut] = useState<string | null>(null);
 
   useEffect(() => {
     useStore.setState({ recipeFocus: null });
@@ -32,6 +34,23 @@ export function AutomationsView() {
   const recipes = library?.recipes ?? [];
   const recipe = recipes.find((r) => r.id === setup);
   const has = (r: RecipeView) => rows?.some((row) => row.title === r.title) ?? false;
+  const shortcuts = library?.shortcuts ?? [];
+  const shortcutRecipe = shortcuts.find((r) => r.id === shortcut);
+
+  if (shortcutRecipe) {
+    return (
+      <Page>
+        <ShortcutSummary
+          view={shortcutRecipe}
+          onClose={() => {
+            setShortcut(null);
+            // It may be among the user's shortcuts now.
+            void refreshLibrary();
+          }}
+        />
+      </Page>
+    );
+  }
 
   if (recipe) {
     return (
@@ -96,7 +115,9 @@ export function AutomationsView() {
                   <div className="mt-2.5 flex items-center gap-2">
                     <span className="inline-flex min-w-0 flex-1 items-center gap-1 text-[11.5px] text-faint">
                       <Clock size={11} className="shrink-0" />
-                      <span className="truncate">{r.when}</span>
+                      <span className="truncate">
+                        {r.when} · {t("automations.badge.task")}
+                      </span>
                     </span>
                     {has(r) ? (
                       <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-faint">
@@ -114,6 +135,34 @@ export function AutomationsView() {
           </section>
         );
       })}
+      {shortcuts.length > 0 && (
+        <section aria-labelledby="recipes-shortcuts" className="mt-3">
+          <h3 id="recipes-shortcuts" className="text-[11.5px] text-faint">{t("automations.category.shortcuts")}</h3>
+          <ul className="mt-1.5 grid gap-2 sm:grid-cols-2">
+            {shortcuts.map((r) => (
+              <li key={r.id} className="flex flex-col rounded-xl border border-line bg-surface p-3">
+                <div className="text-[13.5px] font-medium text-fg">{r.title}</div>
+                <p className="mt-0.5 flex-1 text-[12.5px] leading-snug text-muted">{r.body}</p>
+                <div className="mt-2.5 flex items-center gap-2">
+                  <span className="inline-flex min-w-0 flex-1 items-center gap-1 text-[11.5px] text-faint">
+                    <Workflow size={11} className="shrink-0" />
+                    <span className="truncate">{t("automations.badge.shortcut")}</span>
+                  </span>
+                  {r.installed ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-faint">
+                      <Check size={12} /> {t("automations.page.installed")}
+                    </span>
+                  ) : (
+                    <button type="button" onClick={() => setShortcut(r.id)} className="shrink-0 rounded-md border border-line px-2.5 py-1 text-[12px] text-fg hover:bg-surface-2">
+                      {t("automations.page.install")}
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </Page>
   );
 }

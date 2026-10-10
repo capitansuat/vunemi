@@ -6,7 +6,7 @@ import { Roots } from "@vunemi/files";
 import { Connectors } from "@vunemi/connectors";
 import { overheadChars, ToolRegistry } from "@vunemi/agent-core";
 import { ScriptableCatalog } from "@vunemi/apps";
-import { appsConnector } from "../../src/main/connectors.js";
+import { appsConnector, shortcutsConnector } from "../../src/main/connectors.js";
 
 let dir: string;
 let fake: string;
@@ -79,5 +79,20 @@ describe("the Mac apps connection", () => {
     expect(idle).toBeLessThan(all * 0.6);
     expect(office).toBeGreaterThan(idle);
     expect(office).toBeLessThan(all);
+  });
+});
+
+describe("the Shortcuts connection", () => {
+  it("builds shortcuts only where the app was given a way to", async () => {
+    const plain = shortcutsConnector({ osascript: fake });
+    expect((await plain.tools()).map((tool) => tool.name)).toEqual(["shortcuts_list", "shortcuts_run"]);
+    expect(plain.capabilities?.map((cap) => cap.id)).toEqual(["run"]);
+    expect(plain.instructions).not.toContain("shortcuts_create");
+
+    const building = shortcutsConnector({ osascript: fake, build: async (draft) => ({ state: "added", name: draft.name }) });
+    expect((await building.tools()).map((tool) => tool.name)).toEqual(["shortcuts_create", "shortcuts_list", "shortcuts_run"]);
+    expect(building.capabilities?.find((cap) => cap.id === "create")).toMatchObject({ tools: ["shortcuts_create"], defaultOn: true });
+    expect(building.instructions).toContain("shortcuts_create");
+    expect(building.provides).toHaveLength(2);
   });
 });

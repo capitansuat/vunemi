@@ -10,8 +10,9 @@
  * they stay true whatever a model says about the task.
  */
 import type { ToolDef } from "@vunemi/agent-core";
+import { describeSteps, summarizeShortcut, validShortcut, type ShortcutDraft } from "@vunemi/apps";
 import { t } from "@vunemi/i18n";
-import type { RecipeView, SetupView } from "../shared/ipc.js";
+import type { RecipeView, SetupView, ShortcutRecipeView } from "../shared/ipc.js";
 import { describeSchedule, validSchedule, validScope, type Schedule } from "./automations.js";
 
 export type RecipeCategory = "morning" | "work" | "files";
@@ -178,6 +179,63 @@ export function recipeViews(look: (source: string) => ScopePart | null): RecipeV
       time: recipe.schedule.kind === "daily" ? recipe.schedule.time : null,
       days: recipe.schedule.kind === "daily" ? (recipe.schedule.days ?? null) : null,
       lines: summaryLines(summary), off: summary.off.map((name) => t("automations.summary.off", { name })), refused: summary.refused,
+    };
+  });
+}
+
+// -- shortcuts ---------------------------------------------------------------
+
+/**
+ * A shortcut the library offers: steps from the block menu, with the words
+ * the person running it will read in their own language. Unlike a task it
+ * is not Vunemi's to run: once added it is the user's, in Shortcuts.
+ */
+export interface ShortcutRecipe {
+  id: string;
+  key: "reminder" | "note" | "today" | "upper";
+  steps: () => ShortcutDraft["steps"];
+}
+
+export const SHORTCUT_RECIPES: readonly ShortcutRecipe[] = [
+  { id: "quick-reminder", key: "reminder", steps: () => [{ block: "ask", prompt: t("automations.shortcut.recipe.reminder.prompt") }, { block: "addReminder", title: "{1}" }] },
+  {
+    id: "meeting-note", key: "note",
+    steps: () => [{ block: "ask", prompt: t("automations.shortcut.recipe.note.prompt") }, { block: "today" }, { block: "formatDate", of: 2, style: "long" }, { block: "createNote", text: "{1}\n{3}\n\n" }],
+  },
+  { id: "whats-today", key: "today", steps: () => [{ block: "events", day: "today" }, { block: "show", text: "{1}" }] },
+  { id: "uppercase", key: "upper", steps: () => [{ block: "input" }, { block: "case", of: 1, to: "upper" }, { block: "result", text: "{2}" }] },
+];
+
+/** The draft a shortcut recipe builds, named and worded in the user's language. */
+export function shortcutDraft(id: unknown): ShortcutDraft {
+  const recipe = SHORTCUT_RECIPES.find((r) => r.id === id);
+  if (!recipe) throw new Error(t("automations.suggest.unknown"));
+  return validShortcut({ name: t(`automations.shortcut.recipe.${recipe.key}.title`), steps: recipe.steps() });
+}
+
+/**
+ * What a shortcut does and never does, for the summary: made from its
+ * blocks, like a task's lines from its scope. The last two are true of every
+ * shortcut built here, because the menu has no block that would make them
+ * false.
+ */
+export function shortcutLines(draft: ShortcutDraft): SummaryLine[] {
+  const summary = summarizeShortcut(draft);
+  return [
+    ...(summary.reads.length > 0 ? [{ does: true, text: t("automations.summary.reads", { what: summary.reads.join(", ") }) }] : []),
+    ...(summary.adds.length > 0 ? [{ does: true, text: t("automations.shortcut.adds", { what: summary.adds.join(", ") }) }] : []),
+    { does: true, text: t("automations.shortcut.signed") },
+    { does: false, text: t("automations.shortcut.never") },
+  ];
+}
+
+/** The shortcut recipes as the gallery shows them; `have` is the names of the shortcuts the user has. */
+export function shortcutViews(have: readonly string[] = []): ShortcutRecipeView[] {
+  return SHORTCUT_RECIPES.map((recipe) => {
+    const draft = shortcutDraft(recipe.id);
+    return {
+      id: recipe.id, title: draft.name, body: t(`automations.shortcut.recipe.${recipe.key}.body`),
+      steps: describeSteps(draft), lines: shortcutLines(draft), installed: have.includes(draft.name),
     };
   });
 }

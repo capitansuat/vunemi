@@ -3,9 +3,11 @@
  * that read or change locally, the summary lines come from the scope and
  * not from anyone's description, and a scope that reaches too far is refused.
  */
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { validSchedule, validScope } from "../../src/main/automations.js";
-import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRefusal, setupView, summarizeScope, summaryLines, withWhen, type ScopePart } from "../../src/main/automation-library.js";
+import { compileShortcut } from "@vunemi/apps";
+import { setLocale } from "@vunemi/i18n";
+import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRefusal, setupView, SHORTCUT_RECIPES, shortcutDraft, shortcutLines, shortcutViews, summarizeScope, summaryLines, withWhen, type ScopePart } from "../../src/main/automation-library.js";
 
 /** The parts as the app would describe them, all switched on unless named. */
 const parts: Record<string, ScopePart> = {
@@ -183,3 +185,43 @@ describe("a task set up from chat", () => {
   });
 });
 
+
+describe("shortcut recipes", () => {
+  afterEach(() => setLocale("en"));
+
+  it("are each a draft the menu lets through, in every language", () => {
+    expect(new Set(SHORTCUT_RECIPES.map((r) => r.id)).size).toBe(SHORTCUT_RECIPES.length);
+    for (const locale of ["en", "tr", "de", "fr", "es", "it", "pt", "ru", "zh", "ja", "ko"] as const) {
+      setLocale(locale);
+      const names = SHORTCUT_RECIPES.map((recipe) => {
+        const draft = shortcutDraft(recipe.id);
+        expect(() => compileShortcut(draft, () => "u"), `${locale} ${recipe.id}`).not.toThrow();
+        return draft.name;
+      });
+      // A shortcut is found again by its name.
+      expect(new Set(names).size, locale).toBe(names.length);
+    }
+  });
+
+  it("are named by the window, which cannot supply one of its own", () => {
+    expect(() => shortcutDraft("nope")).toThrow();
+    expect(() => shortcutDraft({ name: "x", steps: [{ block: "today" }] })).toThrow();
+  });
+
+  it("say what they read and add, from their blocks, then what is true of every one", () => {
+    expect(shortcutLines(shortcutDraft("quick-reminder"))).toEqual([
+      { does: true, text: "Adds to: Reminders" },
+      { does: true, text: "While it is set up, its steps are sent to Apple to be signed; none of your data goes with them" },
+      { does: false, text: "Sends nothing to anyone, deletes nothing, runs no script, fetches nothing from the internet" },
+    ]);
+    expect(shortcutLines(shortcutDraft("whats-today"))[0]).toEqual({ does: true, text: "Reads: Calendar" });
+    expect(shortcutLines(shortcutDraft("uppercase"))).toHaveLength(2);
+  });
+
+  it("are shown with their steps, and marked when the user has one by that name", () => {
+    const views = shortcutViews(["Capitals", "Something else"]);
+    expect(views.map((v) => [v.id, v.installed])).toEqual([["quick-reminder", false], ["meeting-note", false], ["whats-today", false], ["uppercase", true]]);
+    expect(views[1]).toMatchObject({ title: "Meeting note", steps: ["Asks: “What is the meeting's title?”", "Takes today's date", "Writes out the date of step 2", "Creates a new note: “[step 1] ↵ [step 3]”"] });
+    expect(shortcutViews().every((v) => !v.installed && v.body.length > 10)).toBe(true);
+  });
+});
