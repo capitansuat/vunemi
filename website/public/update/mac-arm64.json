@@ -1,95 +1,95 @@
 {
-  "currentRelease": "0.1.17",
+  "currentRelease": "0.1.18",
   "releases": [
     {
-      "version": "0.1.17",
+      "version": "0.1.18",
       "updateTo": {
-        "version": "0.1.17",
-        "name": "Vunemi 0.1.17",
-        "pub_date": "2026-10-09T00:00:00Z",
+        "version": "0.1.18",
+        "name": "Vunemi 0.1.18",
+        "pub_date": "2026-10-10T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.17/Vunemi-0.1.17-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.18/Vunemi-0.1.18-arm64.zip"
       }
     }
   ],
-  "sizeMb": 135,
+  "sizeMb": 142,
   "notes": {
     "en": [
-      "New connection: History. With it on, Vunemi finds your earlier sessions and recorded meetings when a request is about one, and reads the one it needs. It is off until you turn it on in Settings › Connections.",
-      "Vunemi now reads and works in content a page embeds from another site, such as a map or a booking form. CAPTCHA and ad frames stay closed to it.",
-      "The app itself now refuses to type into sign-in, password, card and personal-detail fields on websites; Vunemi hands those to you.",
-      "A link Vunemi wrote without having seen it during the task is marked “unverified”.",
-      "An answer that was written twice is shown once, and options written under headings become cards."
+      "Voice chat: the waveform button beside the microphone turns it on. Vunemi reads its answer aloud sentence by sentence, and you can speak over it. It listens by itself or only when you press the microphone; with other people in the room choose pressing, because a voice near you can be taken for yours.",
+      "Meetings can tell the people on a call apart: Person 1, Person 2… You name them and correct what is wrong. It is off until you turn it on in Meetings, needs a one-time download and runs on your Mac.",
+      "Personality: in Settings › Personality, write in your own words how Vunemi should talk to you. It changes tone and style only, never what Vunemi may do.",
+      "History shows the sentence that fits your request under each session or meeting it finds, and prepares new sessions in the background.",
+      "More fields on web forms count as personal details that Vunemi leaves to you: a plain name or address field next to contact details, and phone numbers. A web address written out in an answer gets the “unverified” note too."
     ],
     "de": [
-      "Neue Verbindung: Verlauf. Ist sie an, findet Vunemi deine früheren Sitzungen und aufgezeichneten Besprechungen, wenn eine Anfrage sich auf eine bezieht, und liest die benötigte. Sie bleibt aus, bis du sie unter Einstellungen › Verbindungen einschaltest.",
-      "Vunemi liest und arbeitet jetzt auch in Inhalten, die eine Seite von einer anderen Website einbettet, etwa einer Karte oder einem Buchungsformular. CAPTCHA- und Werbe-Frames bleiben verschlossen.",
-      "Die App selbst lehnt es jetzt ab, auf Websites in Anmelde-, Passwort-, Karten- und Personendatenfelder zu schreiben; Vunemi überlässt sie dir.",
-      "Ein Link, den Vunemi geschrieben hat, ohne ihn während der Aufgabe gesehen zu haben, wird als „ungeprüft“ markiert.",
-      "Eine doppelt geschriebene Antwort wird einmal angezeigt, und unter Überschriften geschriebene Optionen werden zu Karten."
+      "Sprachchat: Die Wellenform-Taste neben dem Mikrofon schaltet ihn ein. Vunemi liest seine Antwort Satz für Satz vor, und du kannst ihm ins Wort fallen. Er hört von selbst zu oder nur, wenn du das Mikrofon drückst; sind andere im Raum, wähle das Drücken, denn eine Stimme in deiner Nähe kann für deine gehalten werden.",
+      "Besprechungen können die Personen im Gespräch unterscheiden: Person 1, Person 2… Du gibst ihnen Namen und korrigierst, was nicht stimmt. Das bleibt aus, bis du es in Besprechungen einschaltest, braucht einen einmaligen Download und läuft auf deinem Mac.",
+      "Persönlichkeit: Schreib unter Einstellungen › Persönlichkeit in deinen eigenen Worten, wie Vunemi mit dir sprechen soll. Das ändert nur Ton und Stil, nie, was Vunemi tun darf.",
+      "Der Verlauf zeigt unter jeder gefundenen Sitzung oder Besprechung den Satz, der zu deiner Anfrage passt, und bereitet neue Sitzungen im Hintergrund vor.",
+      "Mehr Felder in Webformularen gelten als persönliche Angaben, die Vunemi dir überlässt: ein einfaches Namens- oder Adressfeld neben Kontaktdaten und Telefonnummern. Auch eine in einer Antwort ausgeschriebene Webadresse erhält den Hinweis „ungeprüft“."
     ],
     "es": [
-      "Nueva conexión: Historial. Activada, Vunemi encuentra tus sesiones anteriores y reuniones grabadas cuando una petición trata de alguna, y lee la que necesita. Está desactivada hasta que la actives en Ajustes › Conexiones.",
-      "Vunemi ahora lee y actúa en el contenido que una página incrusta desde otro sitio, como un mapa o un formulario de reserva. Los marcos de CAPTCHA y de anuncios siguen cerrados.",
-      "La propia app se niega ahora a escribir en campos de inicio de sesión, contraseña, tarjeta y datos personales de los sitios web; Vunemi te los deja a ti.",
-      "Un enlace que Vunemi escribió sin haberlo visto durante la tarea se marca como «sin verificar».",
-      "Una respuesta escrita dos veces se muestra una sola vez, y las opciones escritas bajo títulos se convierten en tarjetas."
+      "Chat por voz: lo activa el botón de onda junto al micrófono. Vunemi lee su respuesta en voz alta frase a frase, y puedes interrumpirlo hablando. Escucha por sí solo o solo cuando pulsas el micrófono; si hay más gente en la habitación, elige pulsar, porque una voz cercana puede tomarse por la tuya.",
+      "Las reuniones pueden distinguir a las personas de la llamada: Persona 1, Persona 2… Tú les pones nombre y corriges lo que esté mal. Está desactivado hasta que lo actives en Reuniones, necesita una descarga única y funciona en tu Mac.",
+      "Personalidad: en Ajustes › Personalidad, escribe con tus palabras cómo debe hablarte Vunemi. Solo cambia el tono y el estilo, nunca lo que Vunemi puede hacer.",
+      "El Historial muestra, bajo cada sesión o reunión que encuentra, la frase que encaja con tu petición, y prepara las sesiones nuevas en segundo plano.",
+      "Más campos de los formularios web cuentan como datos personales que Vunemi te deja a ti: un campo simple de nombre o dirección junto a datos de contacto, y los números de teléfono. Una dirección web escrita en una respuesta también recibe la nota «sin verificar»."
     ],
     "fr": [
-      "Nouvelle connexion : Historique. Activée, elle permet à Vunemi de retrouver vos sessions passées et vos réunions enregistrées quand une demande en concerne une, et de lire celle dont il a besoin. Elle reste désactivée tant que vous ne l'activez pas dans Réglages › Connexions.",
-      "Vunemi lit et agit désormais dans le contenu qu'une page intègre depuis un autre site, comme une carte ou un formulaire de réservation. Les cadres de CAPTCHA et de publicité lui restent fermés.",
-      "L'app refuse désormais elle-même de saisir dans les champs de connexion, de mot de passe, de carte et de données personnelles des sites web ; Vunemi vous les laisse.",
-      "Un lien que Vunemi a écrit sans l'avoir vu pendant la tâche est marqué « non vérifié ».",
-      "Une réponse écrite deux fois n'est affichée qu'une fois, et les options écrites sous des titres deviennent des cartes."
+      "Conversation vocale : le bouton en forme d'onde à côté du micro l'active. Vunemi lit sa réponse à voix haute phrase par phrase, et vous pouvez l'interrompre en parlant. Elle écoute d'elle-même ou seulement quand vous appuyez sur le micro ; s'il y a d'autres personnes dans la pièce, choisissez l'appui, car une voix proche peut être prise pour la vôtre.",
+      "Les réunions peuvent distinguer les personnes de l'appel : Personne 1, Personne 2… Vous leur donnez un nom et corrigez ce qui est faux. La fonction reste désactivée tant que vous ne l'activez pas dans Réunions, demande un téléchargement unique et fonctionne sur votre Mac.",
+      "Personnalité : dans Réglages › Personnalité, écrivez avec vos mots comment Vunemi doit vous parler. Cela ne change que le ton et le style, jamais ce que Vunemi a le droit de faire.",
+      "L'Historique montre, sous chaque session ou réunion trouvée, la phrase qui correspond à votre demande, et prépare les nouvelles sessions en arrière-plan.",
+      "Davantage de champs des formulaires web comptent comme des données personnelles que Vunemi vous laisse : un simple champ de nom ou d'adresse à côté de coordonnées, et les numéros de téléphone. Une adresse web écrite en toutes lettres dans une réponse reçoit aussi la mention « non vérifié »."
     ],
     "it": [
-      "Nuova connessione: Cronologia. Quando è attiva, Vunemi trova le tue sessioni precedenti e le riunioni registrate se una richiesta ne riguarda una, e legge quella che serve. Resta disattivata finché non la attivi in Impostazioni › Connessioni.",
-      "Vunemi ora legge e agisce nei contenuti che una pagina incorpora da un altro sito, come una mappa o un modulo di prenotazione. I riquadri di CAPTCHA e pubblicità restano chiusi.",
-      "Ora è l'app stessa a rifiutare di scrivere nei campi di accesso, password, carta e dati personali dei siti web; Vunemi li lascia a te.",
-      "Un link che Vunemi ha scritto senza averlo visto durante l'attività è contrassegnato come “non verificato”.",
-      "Una risposta scritta due volte viene mostrata una volta sola, e le opzioni scritte sotto dei titoli diventano schede."
+      "Chat vocale: la attiva il pulsante a forma d'onda accanto al microfono. Vunemi legge la risposta ad alta voce frase per frase, e puoi interromperlo parlando. Ascolta da sola o solo quando premi il microfono; se nella stanza ci sono altre persone scegli di premere, perché una voce vicina può essere scambiata per la tua.",
+      "Le riunioni possono distinguere le persone della chiamata: Persona 1, Persona 2… Tu dai loro un nome e correggi ciò che è sbagliato. Resta disattivato finché non lo attivi in Riunioni, richiede un download una tantum e funziona sul tuo Mac.",
+      "Personalità: in Impostazioni › Personalità scrivi con parole tue come Vunemi deve parlarti. Cambia solo tono e stile, mai ciò che Vunemi può fare.",
+      "La Cronologia mostra, sotto ogni sessione o riunione trovata, la frase che corrisponde alla tua richiesta, e prepara le nuove sessioni in background.",
+      "Più campi dei moduli web contano come dati personali che Vunemi lascia a te: un semplice campo nome o indirizzo accanto ai dati di contatto, e i numeri di telefono. Anche un indirizzo web scritto per esteso in una risposta riceve la nota “non verificato”."
     ],
     "tr": [
-      "Yeni bağlantı: Geçmiş. Açıkken Vunemi, bir istek eski bir oturumla ya da kayıtlı bir toplantıyla ilgiliyse onu bulur ve gerekeni okur. Sen Ayarlar › Bağlantılar'dan açana kadar kapalıdır.",
-      "Vunemi artık bir sayfanın başka bir siteden gömdüğü içeriği de okur ve orada çalışır: harita ya da rezervasyon formu gibi. CAPTCHA ve reklam çerçeveleri ona kapalıdır.",
-      "Web sitelerindeki giriş, parola, kart ve kişisel bilgi alanlarına yazmayı artık uygulamanın kendisi reddeder; Vunemi bunları sana bırakır.",
-      "Vunemi'nin görev sırasında görmeden yazdığı bağlantılar “doğrulanmadı” diye işaretlenir.",
-      "İki kez yazılan cevap bir kez gösterilir; başlıklar altında yazılan seçenekler karta dönüşür."
+      "Sesli sohbet: mikrofonun yanındaki dalga düğmesi açar. Vunemi cevabını cümle cümle sesli okur; o konuşurken araya girebilirsin. Kendiliğinden dinler ya da yalnız mikrofona bastığında; odada başkaları varsa basarak konuşmayı seç, çünkü yakınındaki bir ses senin sanılabilir.",
+      "Toplantılar görüşmedeki kişileri ayırabilir: Kişi 1, Kişi 2… Adlarını sen verirsin, yanlışı düzeltirsin. Sen Toplantılar'dan açana kadar kapalıdır; bir kerelik indirme gerekir ve Mac'inde çalışır.",
+      "Kişilik: Ayarlar › Kişilik'te Vunemi'nin seninle nasıl konuşacağını kendi sözlerinle yaz. Yalnız tonu ve üslubu değiştirir; Vunemi'nin neye izinli olduğunu değiştirmez.",
+      "Geçmiş, bulduğu her oturumun ya da toplantının altında isteğine uyan cümleyi gösterir ve yeni oturumları arka planda hazırlar.",
+      "Web formlarında daha çok alan Vunemi'nin sana bıraktığı kişisel bilgi sayılır: iletişim bilgilerinin yanındaki yalın ad ya da adres alanı ve telefon numaraları. Cevapta açık yazılan web adresi de “doğrulanmadı” notunu alır."
     ],
     "pt": [
-      "Nova conexão: Histórico. Ativada, o Vunemi encontra suas sessões anteriores e reuniões gravadas quando um pedido trata de uma delas, e lê a que precisa. Fica desligada até você ativá-la em Ajustes › Conexões.",
-      "O Vunemi agora lê e age no conteúdo que uma página incorpora de outro site, como um mapa ou um formulário de reserva. Quadros de CAPTCHA e de anúncios continuam fechados.",
-      "O próprio app agora se recusa a digitar em campos de login, senha, cartão e dados pessoais nos sites; o Vunemi deixa esses com você.",
-      "Um link que o Vunemi escreveu sem tê-lo visto durante a tarefa é marcado como “não verificado”.",
-      "Uma resposta escrita duas vezes é mostrada uma vez só, e opções escritas sob títulos viram cartões."
+      "Conversa por voz: o botão de onda ao lado do microfone a ativa. O Vunemi lê a resposta em voz alta frase por frase, e você pode interrompê-lo falando. Ela escuta sozinha ou só quando você pressiona o microfone; com outras pessoas no ambiente, prefira pressionar, porque uma voz próxima pode ser tomada pela sua.",
+      "As reuniões podem distinguir as pessoas da chamada: Pessoa 1, Pessoa 2… Você dá os nomes e corrige o que estiver errado. Fica desligado até você ativar em Reuniões, pede um download único e roda no seu Mac.",
+      "Personalidade: em Ajustes › Personalidade, escreva com suas palavras como o Vunemi deve falar com você. Muda só o tom e o estilo, nunca o que o Vunemi pode fazer.",
+      "O Histórico mostra, abaixo de cada sessão ou reunião encontrada, a frase que corresponde ao seu pedido, e prepara as novas sessões em segundo plano.",
+      "Mais campos de formulários web contam como dados pessoais que o Vunemi deixa para você: um campo simples de nome ou endereço ao lado de dados de contato, e números de telefone. Um endereço web escrito por extenso em uma resposta também recebe a nota “não verificado”."
     ],
     "ru": [
-      "Новое подключение: История. Когда оно включено, Vunemi находит ваши прежние сеансы и записанные встречи, если запрос касается одного из них, и читает нужное. Оно выключено, пока вы не включите его в Настройках › Подключения.",
-      "Vunemi теперь читает и работает в содержимом, которое страница встраивает с другого сайта, например в карте или форме бронирования. Фреймы CAPTCHA и рекламы остаются закрытыми.",
-      "Теперь само приложение отказывается вводить текст в поля входа, пароля, карты и личных данных на сайтах; Vunemi оставляет их вам.",
-      "Ссылка, которую Vunemi написал, не увидев её в ходе задачи, помечается «не проверено».",
-      "Ответ, написанный дважды, показывается один раз, а варианты, написанные под заголовками, становятся карточками."
+      "Голосовой чат: его включает кнопка с волной рядом с микрофоном. Vunemi читает ответ вслух предложение за предложением, и его можно перебить. Он слушает сам или только когда вы нажимаете на микрофон; если в комнате есть другие люди, выбирайте нажатие: голос рядом с вами может быть принят за ваш.",
+      "Встречи умеют различать участников звонка: Участник 1, Участник 2… Вы даёте им имена и исправляете ошибки. Функция выключена, пока вы не включите её во «Встречах», требует однократной загрузки и работает на вашем Mac.",
+      "Характер: в разделе «Настройки › Характер» напишите своими словами, как Vunemi должен с вами говорить. Это меняет только тон и стиль, но не то, что Vunemi разрешено делать.",
+      "История показывает под каждым найденным сеансом или встречей фразу, которая отвечает вашему запросу, и готовит новые сеансы в фоне.",
+      "Больше полей веб-форм считаются личными данными, которые Vunemi оставляет вам: простое поле имени или адреса рядом с контактными данными и номера телефонов. Веб-адрес, написанный в ответе текстом, тоже получает пометку «не проверено»."
     ],
     "zh": [
-      "新连接：历史记录。开启后，当请求涉及以前的会话或已录制的会议时，Vunemi 会找到它并阅读需要的那一项。在你到“设置 › 连接”中开启之前，它保持关闭。",
-      "Vunemi 现在可以读取并操作页面从其他网站嵌入的内容，例如地图或预订表单。验证码和广告框架仍对它关闭。",
-      "现在由应用本身拒绝在网站的登录、密码、银行卡和个人信息栏中输入；Vunemi 会把这些交给你。",
-      "Vunemi 在任务中没有见过却写出的链接会标记为“未核实”。",
-      "写了两遍的回答只显示一次；写在标题下的选项会变成卡片。"
+      "语音对话：点麦克风旁边的波形按钮即可开启。Vunemi 会逐句朗读回答，你可以随时开口打断。它可以自行聆听，也可以只在你按下麦克风时聆听；房间里有其他人时请选择按下，因为你身边的声音可能被当成你的。",
+      "会议可以区分通话中的人：人物 1、人物 2……由你为他们命名并更正错误。在你到“会议”中开启之前它保持关闭；需要一次性下载，并在你的 Mac 上运行。",
+      "个性：在“设置 › 个性”中用你自己的话写下 Vunemi 应该怎样和你说话。它只改变语气和风格，不会改变 Vunemi 可以做什么。",
+      "历史记录会在找到的每个会话或会议下方显示与你的请求相符的那句话，并在后台准备新的会话。",
+      "网页表单中有更多字段被视为由你自己填写的个人信息：联系方式旁边的普通姓名或地址字段，以及电话号码。回答中直接写出的网址同样会标记为“未核实”。"
     ],
     "ja": [
-      "新しい接続：履歴。オンにすると、依頼が以前のセッションや録音した会議に関するとき、Vunemi がそれを見つけて必要なものを読みます。「設定 › 接続」でオンにするまではオフです。",
-      "Vunemi は、地図や予約フォームなど、ページが別のサイトから埋め込んだコンテンツも読み取り、操作できるようになりました。CAPTCHA と広告のフレームは閉じたままです。",
-      "ウェブサイトのログイン、パスワード、カード、個人情報の欄への入力は、アプリ自体が拒否するようになりました。Vunemi はそれらをあなたに任せます。",
-      "Vunemi がタスク中に見ていないのに書いたリンクには「未確認」と表示されます。",
-      "二度書かれた回答は一度だけ表示され、見出しの下に書かれた選択肢はカードになります。"
+      "音声チャット：マイクの横にある波形ボタンでオンにします。Vunemi は答えを一文ずつ読み上げ、話しかけて途中でさえぎることもできます。自動で聞き取るか、マイクを押したときだけ聞き取るかを選べます。部屋にほかの人がいるときは押す方法を選んでください。近くの声があなたの声と取り違えられることがあります。",
+      "会議で通話中の人を区別できるようになりました：人物 1、人物 2… 名前を付けて、間違いを直せます。「会議」でオンにするまではオフで、一度だけダウンロードが必要です。処理は Mac 上で行われます。",
+      "パーソナリティ：「設定 › パーソナリティ」に、Vunemi にどう話してほしいかを自分の言葉で書けます。変わるのは口調と文体だけで、Vunemi にできることは変わりません。",
+      "履歴は、見つけたセッションや会議ごとに、依頼に合う一文を表示します。新しいセッションの準備はバックグラウンドで行います。",
+      "ウェブフォームで、Vunemi があなたに任せる個人情報として扱う欄が増えました：連絡先の横にある単純な名前欄や住所欄、電話番号です。回答に直接書かれたウェブアドレスにも「未確認」と表示されます。"
     ],
     "ko": [
-      "새 연결: 기록. 켜면 요청이 이전 세션이나 녹음된 회의에 관한 것일 때 Vunemi가 그것을 찾아 필요한 것을 읽습니다. 설정 › 연결에서 켜기 전까지는 꺼져 있습니다.",
-      "Vunemi가 이제 지도나 예약 양식처럼 페이지가 다른 사이트에서 가져와 넣은 콘텐츠도 읽고 그 안에서 작업합니다. CAPTCHA와 광고 프레임은 계속 닫혀 있습니다.",
-      "웹사이트의 로그인, 비밀번호, 카드, 개인 정보 입력란에 입력하는 것은 이제 앱 자체가 거부합니다. Vunemi는 이를 사용자에게 맡깁니다.",
-      "Vunemi가 작업 중에 보지 않고 쓴 링크에는 “확인되지 않음” 표시가 붙습니다.",
-      "두 번 쓰인 답변은 한 번만 표시되고, 제목 아래에 쓰인 선택지는 카드가 됩니다."
+      "음성 대화: 마이크 옆의 파형 버튼으로 켭니다. Vunemi가 답을 한 문장씩 소리 내어 읽으며, 말을 걸어 중간에 끊을 수 있습니다. 스스로 듣거나 마이크를 누를 때만 듣도록 고를 수 있습니다. 방에 다른 사람이 있으면 누르는 방식을 선택하세요. 가까이에서 나는 다른 사람의 목소리도 말로 받아들일 수 있습니다.",
+      "회의에서 통화 중인 사람들을 구분할 수 있습니다: 참석자 1, 참석자 2… 이름을 붙이고 틀린 부분을 고칠 수 있습니다. 회의에서 켜기 전까지는 꺼져 있으며, 한 번의 다운로드가 필요하고 Mac에서 실행됩니다.",
+      "성격: 설정 › 성격에서 Vunemi가 어떻게 말하면 좋을지 자신의 말로 적으세요. 말투와 문체만 바뀌며, Vunemi가 할 수 있는 일은 바뀌지 않습니다.",
+      "기록은 찾아낸 세션이나 회의마다 요청에 맞는 문장을 보여 주고, 새 세션은 백그라운드에서 준비합니다.",
+      "웹 양식에서 더 많은 입력란이 Vunemi가 직접 입력하지 않고 맡기는 개인 정보로 취급됩니다: 연락처 옆의 단순한 이름 또는 주소 입력란과 전화번호입니다. 답변에 그대로 적힌 웹 주소에도 “확인되지 않음” 표시가 붙습니다."
     ]
   }
 }

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.17'in yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.18'in yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.17'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.18'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -59,7 +59,7 @@ export default {
       { title: "Dosyaları bul ve düzenle", body: "Masaüstü, Belgeler ve İndirilenler'de arar, belgeleri okur, onayından sonra dosyaları taşır veya yeniden adlandırır. Her değişiklik geri alınabilir.", example: "Masaüstündeki faturaları bul ve tek klasörde topla." },
       { title: "Web'de araştır", body: "Sayfaları kendi tarayıcından ayrı, Vunemi'nin içindeki bir tarayıcıda açar. Okur, karşılaştırır, form doldurur; istediğin an Kontrolü al düğmesine basabilirsin.", example: "Bu üç müzenin açılış saatlerini karşılaştır." },
       { title: "Mac uygulamalarını kullan", body: "Notlar, Excel, Word, PowerPoint, Finder, Kişiler, Mesajlar ve daha fazlasıyla, ekranda tıklamadan çalışır. Her uygulamanın kendi anahtarı var.", example: "Bu Excel tablosundaki giderleri özetle." },
-      { title: "Yazmak yerine konuş", body: "Mac'inde çalışan bir konuşma modeliyle dikte et: sen konuşursun, sözlerin yazıya dönüşür. Sesli yanıt veren sesli sohbet sonraki sürümlerde gelecek.", example: "Bugünkü toplantılarımı göster." },
+      { title: "Yazmak yerine konuş", body: "Mac'inde çalışan bir konuşma modeliyle dikte et: sen konuşursun, sözlerin yazıya dönüşür. Sesli sohbette Vunemi cevabını Mac'inin kendi sesiyle okur; o konuşurken araya girebilirsin.", example: "Bugünkü toplantılarımı göster." },
       { title: "İşleri zamanla", body: "Sabah özeti ya da haftalık bir kontrol iste. Zamanlanmış işler Vunemi açıkken çalışır; asla gönderim, silme veya ödeme yapmaz.", example: "Her sabah 9'da takvimimi özetle." },
       { title: "Bir resim göster", body: "Ekran görüntüsü veya fotoğraf ekle. Görsel görebilen modeller onu anlatır; diğer modellerde de Vunemi içindeki yazıyı Mac'inde okur.", example: "Bu ekran görüntüsündeki hata ne anlama geliyor?" },
       { title: "Söylediklerini hatırlar", body: "Nasıl çalışmayı sevdiğini ya da kimin kim olduğunu söyle; onay verdiğinde bunu kendi sözlerinle not eder. Her yanıt hangi notların verildiğini gösterir; notları Ayarlar'da düzenleyip silebilirsin.", example: "Hatırla: raporları PDF olarak isterim." },
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.1.17: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.1.18: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -170,11 +170,11 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Yeni bağlantı: Geçmiş. Açıkken Vunemi, bir istek eski bir oturumla ya da kayıtlı bir toplantıyla ilgiliyse onu bulur ve gerekeni okur. Sen Ayarlar › Bağlantılar'dan açana kadar kapalıdır.",
-      "Vunemi artık bir sayfanın başka bir siteden gömdüğü içeriği de okur ve orada çalışır: harita ya da rezervasyon formu gibi. CAPTCHA ve reklam çerçeveleri ona kapalıdır.",
-      "Web sitelerindeki giriş, parola, kart ve kişisel bilgi alanlarına yazmayı artık uygulamanın kendisi reddeder; Vunemi bunları sana bırakır.",
-      "Vunemi'nin görev sırasında görmeden yazdığı bağlantılar “doğrulanmadı” diye işaretlenir.",
-      "İki kez yazılan cevap bir kez gösterilir; başlıklar altında yazılan seçenekler karta dönüşür.",
+      "Sesli sohbet: mikrofonun yanındaki dalga düğmesi açar. Vunemi cevabını cümle cümle sesli okur; o konuşurken araya girebilirsin. Kendiliğinden dinler ya da yalnız mikrofona bastığında; odada başkaları varsa basarak konuşmayı seç, çünkü yakınındaki bir ses senin sanılabilir.",
+      "Toplantılar görüşmedeki kişileri ayırabilir: Kişi 1, Kişi 2… Adlarını sen verirsin, yanlışı düzeltirsin. Sen Toplantılar'dan açana kadar kapalıdır; bir kerelik indirme gerekir ve Mac'inde çalışır.",
+      "Kişilik: Ayarlar › Kişilik'te Vunemi'nin seninle nasıl konuşacağını kendi sözlerinle yaz. Yalnız tonu ve üslubu değiştirir; Vunemi'nin neye izinli olduğunu değiştirmez.",
+      "Geçmiş, bulduğu her oturumun ya da toplantının altında isteğine uyan cümleyi gösterir ve yeni oturumları arka planda hazırlar.",
+      "Web formlarında daha çok alan Vunemi'nin sana bıraktığı kişisel bilgi sayılır: iletişim bilgilerinin yanındaki yalın ad ya da adres alanı ve telefon numaraları. Cevapta açık yazılan web adresi de “doğrulanmadı” notunu alır.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

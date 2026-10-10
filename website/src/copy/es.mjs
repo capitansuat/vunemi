@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un asistente personal que funciona en tu Mac", description: "Vunemi ayuda con las tareas diarias. La IA funciona en tu Mac, sin cuenta en la nube de Vunemi. Tú eliges qué servicios externos conectar." },
-    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.1.17." },
+    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.1.18." },
     screens: { title: "Pantallas de Vunemi", description: "Pantallas reales de la app Vunemi para Mac, capturadas con datos de ejemplo." },
-    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.1.17 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
+    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.1.18 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
   },
   hero: {
     eyebrow: "Asistente personal para Mac",
@@ -59,7 +59,7 @@ export default {
       { title: "Encuentra y ordena archivos", body: "Busca en tu Escritorio, Documentos y Descargas, lee documentos y mueve o renombra archivos cuando lo apruebas. Todos los cambios se pueden deshacer.", example: "Busca las facturas del Escritorio y ponlas en una carpeta." },
       { title: "Busca en la web", body: "Abre páginas en un navegador dentro de Vunemi, separado del tuyo. Lee, compara y rellena formularios, y puedes pulsar Tomar el control en cualquier momento.", example: "Compara el horario de estos tres museos." },
       { title: "Usa tus apps del Mac", body: "Trabaja con Notas, Excel, Word, PowerPoint, Finder, Contactos, Mensajes y más, sin hacer clic por la pantalla. Cada app tiene su propio interruptor.", example: "Resume los gastos de esta hoja de Excel." },
-      { title: "Habla en vez de escribir", body: "Dicta con un modelo de voz que funciona en tu Mac: hablas y tus palabras aparecen como texto. El chat de voz, con respuestas habladas, llegará en una próxima versión.", example: "Muéstrame las reuniones de hoy." },
+      { title: "Habla en vez de escribir", body: "Dicta con un modelo de voz que funciona en tu Mac: hablas y tus palabras aparecen como texto. En el chat por voz, Vunemi lee su respuesta con la voz de tu Mac, y puedes interrumpirlo hablando.", example: "Muéstrame las reuniones de hoy." },
       { title: "Tareas programadas", body: "Pide un resumen cada mañana o una revisión semanal. Las tareas programadas se ejecutan mientras Vunemi está abierto y nunca envían, borran ni pagan.", example: "Cada mañana a las 9, resume mi calendario." },
       { title: "Enséñale una imagen", body: "Adjunta una captura o una foto. Los modelos que ven imágenes la describen; con otros modelos, Vunemi igualmente lee el texto que contiene en tu Mac.", example: "¿Qué significa el error de esta captura?" },
       { title: "Recuerda lo que le dices", body: "Dile cómo te gusta trabajar, o quién es quién, y lo anota con tus propias palabras cuando das tu visto bueno. Cada respuesta indica qué notas recibió; puedes editarlas o borrarlas en Ajustes.", example: "Recuerda: quiero los informes en PDF." },
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Todo lo que puede hacer Vunemi",
-    intro: "Vunemi 0.1.17 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
+    intro: "Vunemi 0.1.18 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
     chatTitle: "Trabajar con Vunemi",
     chat: [
       { title: "Primero, el plan", body: "En una tarea de varios pasos, Vunemi puede mostrarte antes el plan. Adelante, edita los pasos o cancela." },
@@ -168,11 +168,11 @@ export default {
   downloadPage: {
     highlightsTitle: "Novedades de esta versión",
     highlights: [
-      "Nueva conexión: Historial. Activada, Vunemi encuentra tus sesiones anteriores y reuniones grabadas cuando una petición trata de alguna, y lee la que necesita. Está desactivada hasta que la actives en Ajustes › Conexiones.",
-      "Vunemi ahora lee y actúa en el contenido que una página incrusta desde otro sitio, como un mapa o un formulario de reserva. Los marcos de CAPTCHA y de anuncios siguen cerrados.",
-      "La propia app se niega ahora a escribir en campos de inicio de sesión, contraseña, tarjeta y datos personales de los sitios web; Vunemi te los deja a ti.",
-      "Un enlace que Vunemi escribió sin haberlo visto durante la tarea se marca como «sin verificar».",
-      "Una respuesta escrita dos veces se muestra una sola vez, y las opciones escritas bajo títulos se convierten en tarjetas.",
+      "Chat por voz: lo activa el botón de onda junto al micrófono. Vunemi lee su respuesta en voz alta frase a frase, y puedes interrumpirlo hablando. Escucha por sí solo o solo cuando pulsas el micrófono; si hay más gente en la habitación, elige pulsar, porque una voz cercana puede tomarse por la tuya.",
+      "Las reuniones pueden distinguir a las personas de la llamada: Persona 1, Persona 2… Tú les pones nombre y corriges lo que esté mal. Está desactivado hasta que lo actives en Reuniones, necesita una descarga única y funciona en tu Mac.",
+      "Personalidad: en Ajustes › Personalidad, escribe con tus palabras cómo debe hablarte Vunemi. Solo cambia el tono y el estilo, nunca lo que Vunemi puede hacer.",
+      "El Historial muestra, bajo cada sesión o reunión que encuentra, la frase que encaja con tu petición, y prepara las sesiones nuevas en segundo plano.",
+      "Más campos de los formularios web cuentan como datos personales que Vunemi te deja a ti: un campo simple de nombre o dirección junto a datos de contacto, y los números de teléfono. Una dirección web escrita en una respuesta también recibe la nota «sin verificar».",
     ],
     title: "Descarga Vunemi",
     intro: "Gratis y de código abierto. Para Mac con Apple Silicon y macOS 14 o posterior.",

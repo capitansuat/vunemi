@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi : un assistant personnel qui fonctionne sur votre Mac", description: "Vunemi aide au quotidien. Son IA fonctionne sur votre Mac, sans compte cloud Vunemi. Vous choisissez les services externes à connecter." },
-    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.1.17." },
+    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.1.18." },
     screens: { title: "Captures de Vunemi", description: "De vraies captures de l'app Vunemi pour Mac, réalisées avec des données d'exemple." },
-    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.1.17 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
+    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.1.18 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
   },
   hero: {
     eyebrow: "Assistant personnel pour Mac",
@@ -59,7 +59,7 @@ export default {
       { title: "Retrouver et ranger vos fichiers", body: "Cherche dans le Bureau, Documents et Téléchargements, lit les documents, puis déplace ou renomme des fichiers avec votre accord. Chaque changement peut être annulé.", example: "Trouvez les factures sur mon Bureau et rangez-les dans un dossier." },
       { title: "Chercher sur le web", body: "Ouvre des pages dans un navigateur intégré à Vunemi, distinct du vôtre. Il lit, compare et remplit des formulaires, et vous pouvez reprendre la main à tout moment.", example: "Comparez les horaires de ces trois musées." },
       { title: "Utiliser vos apps Mac", body: "Fonctionne avec Notes, Excel, Word, PowerPoint, Finder, Contacts, Messages et d'autres, sans cliquer partout à l'écran. Chaque app a son propre interrupteur.", example: "Résumez les dépenses de ce tableau Excel." },
-      { title: "Parler plutôt qu'écrire", body: "Dictez avec un modèle vocal qui fonctionne sur votre Mac : vous parlez, vos mots s'affichent en texte. Le chat vocal, avec des réponses parlées, arrivera dans une prochaine version.", example: "Montrez-moi les réunions d'aujourd'hui." },
+      { title: "Parler plutôt qu'écrire", body: "Dictez avec un modèle vocal qui fonctionne sur votre Mac : vous parlez, vos mots s'affichent en texte. En conversation vocale, Vunemi lit sa réponse avec la voix de votre Mac, et vous pouvez l'interrompre en parlant.", example: "Montrez-moi les réunions d'aujourd'hui." },
       { title: "Des tâches planifiées", body: "Demandez un résumé chaque matin ou un point hebdomadaire. Les tâches planifiées tournent tant que Vunemi est ouvert et n'envoient, ne suppriment et ne paient jamais rien.", example: "Chaque matin à 9 h, résumez mon calendrier." },
       { title: "Montrez-lui une image", body: "Joignez une capture ou une photo. Les modèles capables de voir les images la décrivent ; avec les autres, Vunemi lit quand même le texte qu'elle contient, sur votre Mac.", example: "Que signifie l'erreur sur cette capture ?" },
       { title: "Retient ce que vous lui dites", body: "Dites-lui comment vous aimez travailler, ou qui est qui : après votre accord, il le note avec vos propres mots. Chaque réponse indique les notes reçues ; modifiez-les ou supprimez-les dans les Réglages.", example: "Retiens : je veux les rapports en PDF." },
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Tout ce que Vunemi sait faire",
-    intro: "Vunemi 0.1.17 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
+    intro: "Vunemi 0.1.18 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
     chatTitle: "Travailler avec Vunemi",
     chat: [
       { title: "D'abord le plan", body: "Pour une tâche en plusieurs étapes, Vunemi peut d'abord présenter son plan. Lancez-le, modifiez les étapes ou annulez." },
@@ -168,11 +168,11 @@ export default {
   downloadPage: {
     highlightsTitle: "Nouveautés de cette version",
     highlights: [
-      "Nouvelle connexion : Historique. Activée, elle permet à Vunemi de retrouver vos sessions passées et vos réunions enregistrées quand une demande en concerne une, et de lire celle dont il a besoin. Elle reste désactivée tant que vous ne l'activez pas dans Réglages › Connexions.",
-      "Vunemi lit et agit désormais dans le contenu qu'une page intègre depuis un autre site, comme une carte ou un formulaire de réservation. Les cadres de CAPTCHA et de publicité lui restent fermés.",
-      "L'app refuse désormais elle-même de saisir dans les champs de connexion, de mot de passe, de carte et de données personnelles des sites web ; Vunemi vous les laisse.",
-      "Un lien que Vunemi a écrit sans l'avoir vu pendant la tâche est marqué « non vérifié ».",
-      "Une réponse écrite deux fois n'est affichée qu'une fois, et les options écrites sous des titres deviennent des cartes.",
+      "Conversation vocale : le bouton en forme d'onde à côté du micro l'active. Vunemi lit sa réponse à voix haute phrase par phrase, et vous pouvez l'interrompre en parlant. Elle écoute d'elle-même ou seulement quand vous appuyez sur le micro ; s'il y a d'autres personnes dans la pièce, choisissez l'appui, car une voix proche peut être prise pour la vôtre.",
+      "Les réunions peuvent distinguer les personnes de l'appel : Personne 1, Personne 2… Vous leur donnez un nom et corrigez ce qui est faux. La fonction reste désactivée tant que vous ne l'activez pas dans Réunions, demande un téléchargement unique et fonctionne sur votre Mac.",
+      "Personnalité : dans Réglages › Personnalité, écrivez avec vos mots comment Vunemi doit vous parler. Cela ne change que le ton et le style, jamais ce que Vunemi a le droit de faire.",
+      "L'Historique montre, sous chaque session ou réunion trouvée, la phrase qui correspond à votre demande, et prépare les nouvelles sessions en arrière-plan.",
+      "Davantage de champs des formulaires web comptent comme des données personnelles que Vunemi vous laisse : un simple champ de nom ou d'adresse à côté de coordonnées, et les numéros de téléphone. Une adresse web écrite en toutes lettres dans une réponse reçoit aussi la mention « non vérifié ».",
     ],
     title: "Télécharger Vunemi",
     intro: "Gratuit et open source. Pour les Mac avec puce Apple et macOS 14 ou ultérieur.",

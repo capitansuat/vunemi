@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.17 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.18 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.17 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.18 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -61,7 +61,7 @@ export default {
       { title: "Find and tidy files", body: "Searches your Desktop, Documents and Downloads, reads documents, and moves or renames files after you approve. Every change can be undone.", example: "Find the invoices on my Desktop and put them in one folder." },
       { title: "Look things up on the web", body: "Opens pages in a browser inside Vunemi, separate from your own. It reads, compares and fills in forms, and you can press Take control at any moment.", example: "Compare the opening hours of these three museums." },
       { title: "Use your Mac apps", body: "Works with Notes, Excel, Word, PowerPoint, Finder, Contacts, Messages and more, without clicking around your screen. Each app has its own switch.", example: "Sum up the expenses in this Excel sheet." },
-      { title: "Talk instead of typing", body: "Dictate with a speech model that runs on your Mac: you speak, your words appear as text. Voice chat, with spoken answers, is coming in a later release.", example: "Show me today's meetings." },
+      { title: "Talk instead of typing", body: "Dictate with a speech model that runs on your Mac: you speak, your words appear as text. In voice chat Vunemi reads its answer aloud in your Mac's own voice, and you can speak over it.", example: "Show me today's meetings." },
       { title: "Repeat tasks on a schedule", body: "Ask for a morning summary or a weekly check. Scheduled tasks run while Vunemi is open, and they never send, delete or pay.", example: "Every morning at 9, sum up my calendar." },
       { title: "Show it a picture", body: "Attach a screenshot or a photo. Models that can see images describe them; with other models, Vunemi still reads the text in them on your Mac.", example: "What does the error in this screenshot mean?" },
       { title: "Remembers what you tell it", body: "Tell it how you like to work, or who is who, and it keeps a note in your own words once you say yes. Each answer says which notes it was given; edit or delete them in Settings.", example: "Remember: I want reports as PDF." },
@@ -119,7 +119,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.1.17 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.1.18 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -172,11 +172,11 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "New connection: History. With it on, Vunemi finds your earlier sessions and recorded meetings when a request is about one, and reads the one it needs. It is off until you turn it on in Settings › Connections.",
-      "Vunemi now reads and works in content a page embeds from another site, such as a map or a booking form. CAPTCHA and ad frames stay closed to it.",
-      "The app itself now refuses to type into sign-in, password, card and personal-detail fields on websites; Vunemi hands those to you.",
-      "A link Vunemi wrote without having seen it during the task is marked “unverified”.",
-      "An answer that was written twice is shown once, and options written under headings become cards.",
+      "Voice chat: the waveform button beside the microphone turns it on. Vunemi reads its answer aloud sentence by sentence, and you can speak over it. It listens by itself or only when you press the microphone; with other people in the room choose pressing, because a voice near you can be taken for yours.",
+      "Meetings can tell the people on a call apart: Person 1, Person 2… You name them and correct what is wrong. It is off until you turn it on in Meetings, needs a one-time download and runs on your Mac.",
+      "Personality: in Settings › Personality, write in your own words how Vunemi should talk to you. It changes tone and style only, never what Vunemi may do.",
+      "History shows the sentence that fits your request under each session or meeting it finds, and prepares new sessions in the background.",
+      "More fields on web forms count as personal details that Vunemi leaves to you: a plain name or address field next to contact details, and phone numbers. A web address written out in an answer gets the “unverified” note too.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],
