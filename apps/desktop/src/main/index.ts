@@ -1,7 +1,7 @@
 import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
 import { appMenuTemplate } from "./app-menu.js";
@@ -1772,7 +1772,8 @@ handle(CH.artefactsUndo, async (_e, id: string) => {
  * and a path that isn't one of ours is simply refused.
  */
 handle(CH.readImage, (_e, path: string) => {
-  const file = String(path);
+  // Resolved first: "shots/../../x.png" begins with the folder's name too.
+  const file = resolve(String(path));
   if (!file.startsWith(shotDir + "/") || !file.endsWith(".png")) throw new Error(t("main.cannotShow"));
   return `data:image/png;base64,${readFileSync(file).toString("base64")}`;
 });
