@@ -172,6 +172,34 @@ function bucket(level: number): number {
   return Math.min(BUCKETS - 1, Math.max(0, at));
 }
 
+/** A press shorter than this is a tap: it starts a turn that the next press ends. */
+const TAP_MS = 300;
+
+/**
+ * The microphone button in voice chat that listens while it is held. Held, the
+ * turn lasts as long as the hold. Tapped, it lasts until the next press: a
+ * press from a screen reader has no length, and a quick tap would otherwise
+ * be a turn with nothing in it.
+ */
+export class HeldButton {
+  /** When the button went down to start a turn; 0 while it is up. */
+  private since = 0;
+
+  /** The button went down. `listening`: a turn is already being heard. */
+  down(listening: boolean, now: number): "start" | "end" {
+    if (listening) return "end";
+    this.since = now;
+    return "start";
+  }
+
+  /** The button came up, or the pointer left it. */
+  up(now: number): "end" | "stay" {
+    const since = this.since;
+    this.since = 0;
+    return since && now - since >= TAP_MS ? "end" : "stay";
+  }
+}
+
 /** Served from the renderer's own origin; see public/capture-worklet.js. */
 const WORKLET_URL = "capture-worklet.js";
 

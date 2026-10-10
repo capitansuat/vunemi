@@ -378,7 +378,7 @@ export function Composer() {
               </button>
               <button
                 type="button"
-                // Held, in voice chat that listens only then; a press from the keyboard still starts and ends a turn.
+                // Held, in voice chat that listens only then; a tap, or a press from the keyboard, starts a turn and the next one ends it.
                 onPointerDown={held ? () => holdStart() : undefined}
                 onPointerUp={held ? () => holdEnd() : undefined}
                 onPointerLeave={held ? () => holdEnd() : undefined}

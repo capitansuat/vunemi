@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { AgentEvent, ApprovalDecision, HandoffOutcome, PlanDecision } from "@vunemi/agent-core";
 import type { ActivityEntry, AutomationLibraryView, ContextInfo, EmbeddedState, EngineView, MentionRef, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
-import { earcon, record, type Recorder } from "./lib/audio.js";
+import { earcon, HeldButton, record, type Recorder } from "./lib/audio.js";
 import { foldEvent, replyText, type RunView } from "./lib/fold.js";
 import { SentenceCutter, SpeechPlayer } from "./lib/speech.js";
 import { getLocale, setLocale as setI18nLocale, t, type Locale } from "@vunemi/i18n";
@@ -255,8 +255,11 @@ let cutter: SentenceCutter | null = null;
 let spokenRun: string | null = null;
 /** The run the user spoke over or told to be quiet: no more of it is said. */
 let silenced: string | null = null;
-/** The button was let go before the microphone had opened. */
+/** The turn was ended before the microphone had opened. */
 let released = false;
+/** The microphone is being asked for: a second press must not open a second one. */
+let opening = false;
+const button = new HeldButton();
 /** Voice chat that listens by itself turns itself off when nobody speaks for this long. */
 const QUIET_OFF_MS = 45_000;
 let quiet: ReturnType<typeof setTimeout> | null = null;
@@ -494,10 +497,13 @@ export const useStore = create<State>((set, get) => ({
 
   async listen() {
     const { voice } = get();
-    if (voice.state !== "off") return;
+    if (voice.state !== "off" || opening) return;
+    opening = true;
     // macOS puts up its own dialog the first time; do it before the earcon,
     // so the sound doesn't promise a microphone the user hasn't allowed yet.
-    if (!(await window.vunemi.requestMic())) {
+    const allowed = await window.vunemi.requestMic().finally(() => (opening = false));
+    if (!allowed) {
+      released = false;
       set((s) => ({
         voice: { ...s.voice, error: t("mic.notGranted") },
       }));
@@ -524,6 +530,7 @@ export const useStore = create<State>((set, get) => ({
       }
     } catch (err) {
       recorder = null;
+      released = false;
       earcon("error");
       // Say which failure it was: a refused microphone and a broken audio
       // graph look identical to the user otherwise.
@@ -579,6 +586,7 @@ export const useStore = create<State>((set, get) => ({
   cancelListening() {
     recorder?.cancel();
     recorder = null;
+    released = false;
     stopFollowing();
     stayOn();
     // A transcription still in flight is abandoned rather than awaited: its
@@ -620,16 +628,15 @@ export const useStore = create<State>((set, get) => ({
   },
 
   holdStart() {
+    const press = button.down(get().voice.state === "listening", Date.now());
+    if (press === "end") return void endHeld(get);
     // Holding the button while Vunemi talks is how it is told to stop and listen.
     if (get().voice.state !== "off") get().cancelListening();
-    released = false;
     void get().listen();
   },
 
   holdEnd() {
-    if (get().voice.state !== "listening") return;
-    if (recorder) void get().finishListening(true);
-    else released = true;
+    if (button.up(Date.now()) === "end") endHeld(get);
   },
 
   suggest(text) {
@@ -873,4 +880,10 @@ function offWhenQuiet(set: Set, get: () => State): void {
 function stayOn(): void {
   if (quiet) clearTimeout(quiet);
   quiet = null;
+}
+
+/** The held turn is over: sent now, or as soon as the microphone that is still opening has opened. */
+function endHeld(get: () => State): void {
+  if (recorder) void get().finishListening(true);
+  else if (opening || get().voice.state === "listening") released = true;
 }

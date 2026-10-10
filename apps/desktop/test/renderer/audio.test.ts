@@ -3,7 +3,7 @@
  * sample, so a wrong byte here is silence that looks like a model problem.
  */
 import { describe, expect, it } from "vitest";
-import { encodeWav, SAMPLE_RATE, SpeechGate } from "../../src/renderer/src/lib/audio.js";
+import { encodeWav, HeldButton, SAMPLE_RATE, SpeechGate } from "../../src/renderer/src/lib/audio.js";
 
 const text = (view: DataView, at: number, length: number): string =>
   String.fromCharCode(...Array.from({ length }, (_, i) => view.getUint8(at + i)));
@@ -174,5 +174,35 @@ describe("SpeechGate", () => {
     expect(feed(gate, VOICE, 3_000)).toBe(false);
     expect(feed(gate, ROOM, 2_900)).toBe(false);
     expect(feed(gate, ROOM, 200)).toBe(true);
+  });
+});
+
+describe("HeldButton", () => {
+  it("ends the turn when a hold is let go", () => {
+    const button = new HeldButton();
+    expect(button.down(false, 1_000)).toBe("start");
+    expect(button.up(3_500)).toBe("end");
+  });
+
+  it("leaves a tap listening, and ends the turn at the next press", () => {
+    const button = new HeldButton();
+    expect(button.down(false, 1_000)).toBe("start");
+    expect(button.up(1_080)).toBe("stay");
+    expect(button.down(true, 6_000)).toBe("end");
+    // The press that ended the turn starts nothing when it comes up, however long it was.
+    expect(button.up(7_000)).toBe("stay");
+  });
+
+  it("takes a press with no length, as a screen reader makes it, for a tap", () => {
+    const button = new HeldButton();
+    expect(button.down(false, 1_000)).toBe("start");
+    expect(button.up(1_000)).toBe("stay");
+  });
+
+  it("ends a turn once: the pointer leaving after the button came up changes nothing", () => {
+    const button = new HeldButton();
+    button.down(false, 1_000);
+    expect(button.up(2_000)).toBe("end");
+    expect(button.up(2_010)).toBe("stay");
   });
 });
