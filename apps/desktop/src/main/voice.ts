@@ -160,6 +160,8 @@ export class Voice {
   private making: Promise<unknown> = Promise.resolve();
   /** Goes up when the talking is stopped: sentences still waiting to be made are not. */
   private spokenTurn = 0;
+  /** Sentences left behind by a Vunemi that quit while one was being made are removed once. */
+  private swept = false;
   private binary: string | null;
   private model: string | null;
   private downloading: { controller: AbortController; progress: DownloadProgress | null; done: Promise<string> } | null = null;
@@ -331,6 +333,8 @@ export class Voice {
     // the language the user just spoke, which the reply answers in.
     const voice = voiceFor(writtenIn(said) ?? this.heardLanguage ?? getLocale());
     const dir = join(this.userData, "speech");
+    if (!this.swept) rmSync(dir, { recursive: true, force: true });
+    this.swept = true;
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const file = join(dir, `${randomUUID()}.wav`);
     // Arguments, never a shell: this is model output and may contain anything.
