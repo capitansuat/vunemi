@@ -243,7 +243,6 @@ export function compileShortcut(raw: unknown, uuid: () => string): { name: strin
     const step = draft.steps[n - 1]!;
     return step.block === "input" ? { Type: "ExtensionInput" } : { Type: "ActionOutput", OutputUUID: ids[n - 1]!, OutputName: RESULT_NAME[step.block] ?? "Result" };
   };
-  const one = (n: number): Plist => ({ Value: result(n), WFSerializationType: "WFTextTokenAttachment" });
   /** A text with results in it. Places are counted in UTF-16 units, as Shortcuts counts them. */
   const text = (template: string): Plist => {
     const places: { [range: string]: Plist } = {};
@@ -279,7 +278,7 @@ export function compileShortcut(raw: unknown, uuid: () => string): { name: strin
         actions.push(action("is.workflow.actions.gettext", { UUID, WFTextActionText: text(step.text) }));
         break;
       case "replace":
-        actions.push(action("is.workflow.actions.text.replace", { UUID, WFInput: one(step.of), WFReplaceTextFind: step.find, WFReplaceTextReplace: step.with, WFReplaceTextCaseSensitive: true, WFReplaceTextRegularExpression: false }));
+        actions.push(action("is.workflow.actions.text.replace", { UUID, WFInput: text(`{${step.of}}`), WFReplaceTextFind: step.find, WFReplaceTextReplace: step.with, WFReplaceTextCaseSensitive: true, WFReplaceTextRegularExpression: false }));
         break;
       case "addToDate":
         actions.push(action("is.workflow.actions.adjustdate", {

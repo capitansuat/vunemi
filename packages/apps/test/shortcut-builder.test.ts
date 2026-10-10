@@ -179,7 +179,11 @@ describe("compileShortcut", () => {
     expect(by([{ block: "today" }, { block: "addToDate", of: 1, amount: 3, unit: "weeks" }])).toMatchObject({ WFDuration: { Value: { Unit: "weeks", Magnitude: "3" }, WFSerializationType: "WFQuantityFieldValue" } });
     expect(by([{ block: "today" }, { block: "formatDate", of: 1, style: "medium" }])).toMatchObject({ WFDateFormatStyle: "Medium", WFTimeFormatStyle: "None" });
     expect(by([{ block: "events", day: "today" }])).toEqual({ UUID: "ID-1", WFGetUpcomingItemCount: 20, WFDateSpecifier: "Today" });
-    expect(by([{ block: "ask", prompt: "p" }, { block: "replace", of: 1, find: "a", with: "" }])).toMatchObject({ WFReplaceTextFind: "a", WFReplaceTextReplace: "", WFReplaceTextRegularExpression: false });
+    // Given its text as a bare result and not inside a text, Shortcuts runs the step and hands back nothing.
+    expect(by([{ block: "ask", prompt: "p" }, { block: "replace", of: 1, find: "a", with: "" }])).toMatchObject({
+      WFReplaceTextFind: "a", WFReplaceTextReplace: "", WFReplaceTextRegularExpression: false,
+      WFInput: { Value: { string: "\ufffc", attachmentsByRange: { "{0, 1}": { Type: "ActionOutput", OutputUUID: "ID-1", OutputName: "Provided Input" } } }, WFSerializationType: "WFTextTokenString" },
+    });
     expect(by([{ block: "createNote", text: "Hi" }])).toEqual({ UUID: "ID-1", ShowWhenRun: false, WFCreateNoteInput: "Hi", OpenWhenRun: false, contents: "Hi" });
     expect(by([{ block: "notify", text: "Done" }])).toMatchObject({ WFNotificationActionBody: "Done", WFNotificationActionTitle: "Test" });
   });
