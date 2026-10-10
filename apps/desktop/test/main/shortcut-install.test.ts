@@ -4,9 +4,11 @@
  * Vunemi reads the user's answer from their shortcuts and never gives it, and
  * a file that can't be made ends in an empty shortcut rather than in nothing.
  */
+import { execFile } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ShortcutRefused } from "@vunemi/apps";
 import { ShortcutInstaller } from "../../src/main/shortcut-install.js";
@@ -97,4 +99,30 @@ describe("ShortcutInstaller", () => {
     lists = ["One\n  Two two \n\n"];
     expect(await installer().names()).toEqual(["One", "Two two"]);
   });
+});
+
+/**
+ * The same, with nothing replaced: Apple signs the file, Shortcuts opens on
+ * it, and whoever runs the test presses "Add Shortcut" within three minutes.
+ * Sends a three-step shortcut to Apple and leaves it among the user's
+ * shortcuts, so it runs only when asked for: VUNEMI_LIVE_SHORTCUTS=1.
+ */
+describe.skipIf(process.env.VUNEMI_LIVE_SHORTCUTS !== "1")("ShortcutInstaller, for real", () => {
+  it("has a shortcut signed, sees the user add it, and the shortcut runs", async () => {
+    const name = `Vunemi deneme ${String(Date.now()).slice(-5)}`;
+    const built = await new ShortcutInstaller({ dir }).install({
+      name,
+      steps: [{ block: "today" }, { block: "formatDate", of: 1, style: "long" }, { block: "result", text: "{2}" }],
+    });
+    expect(built).toEqual({ state: "added", name });
+    const out = join(dir, "out.txt");
+    const run = () => promisify(execFile)("/usr/bin/shortcuts", ["run", name, "--output-path", out], { timeout: 45_000 });
+    // Live, 10 Oct: the first run of a shortcut added a moment ago did not
+    // come back within a minute; run again, it answered at once.
+    await run().catch(run);
+    // Today's date, written out: the year is in it whatever the language.
+    expect(readFileSync(out, "utf8")).toContain(String(new Date().getFullYear()));
+    // A second one by the same name is not built over it.
+    expect(await new ShortcutInstaller({ dir }).install({ name, steps: [{ block: "today" }] })).toEqual({ state: "exists", name });
+  }, 300_000);
 });
