@@ -15,7 +15,7 @@
     "signing-identity": "bash scripts/signing-identity.sh"
   },
   "devDependencies": {
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "@types/node": "^26.6.2"
   }
 }

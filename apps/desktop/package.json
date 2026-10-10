@@ -38,12 +38,12 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "5.2.0",
-    "electron": "44.4.3",
+    "electron": "44.7.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "5.0.0",
     "tailwindcss": "4.3.3",
     "vite": "7.3.6",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   },
   "build": {
     "appId": "com.vunemi.app",

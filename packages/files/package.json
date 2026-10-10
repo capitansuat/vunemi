@@ -16,6 +16,6 @@
     "@vunemi/i18n": "workspace:*"
   },
   "devDependencies": {
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   }
 }

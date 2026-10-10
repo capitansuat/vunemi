@@ -12,6 +12,6 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   }
 }
