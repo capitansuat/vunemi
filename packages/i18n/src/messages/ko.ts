@@ -1133,6 +1133,7 @@ export const messages: Catalogue = {
       badDate: "'{value}'은(는) 읽을 수 있는 날짜가 아닙니다.",
       endBeforeStart: "종료는 시작보다 뒤여야 합니다.",
       duplicate: "“{title}”이(가) 이미 {when}에 캘린더에 있습니다. 아무것도 추가하지 않았습니다.",
+      sameName: "이름이 “{name}”인 캘린더가 여러 개 있습니다: {choices}. 아무것도 추가하지 않았습니다. 어느 것입니까?",
       undoCreate: "캘린더에서 '{title}' 삭제",
       undoDelete: "\"{title}\"을(를) 캘린더에 되돌리기",
       deleteMeeting: "“{title}”은(는) 참석자가 있는 회의입니다. 삭제하면 모두에게 취소 알림이 갑니다. 캘린더에서 직접 취소하세요. 아무것도 삭제되지 않았습니다.",
@@ -1159,6 +1160,7 @@ export const messages: Catalogue = {
       undoComplete: "'{title}' 다시 열기",
       undoReopen: "'{title}' 다시 완료하기",
       duplicate: "열린 미리 알림 “{title}”이(가) 이미 있습니다 ({list}). 아무것도 추가하지 않았습니다.",
+      sameName: "이름이 “{name}”인 목록이 여러 개 있습니다: {choices}. 아무것도 추가하지 않았습니다. 어느 것입니까?",
       preview: {
         list: "미리 알림 읽기: {list}",
         all: "미리 알림 읽기",

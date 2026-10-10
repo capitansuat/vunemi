@@ -1133,6 +1133,7 @@ export const messages: Catalogue = {
       badDate: "\"{value}\" isn't a readable date.",
       endBeforeStart: "The end must be after the start.",
       duplicate: "“{title}” is already in the calendar at {when}. Nothing was added.",
+      sameName: "More than one calendar is called “{name}”: {choices}. Nothing was added. Which one?",
       undoCreate: "Delete \"{title}\" from the calendar",
       undoDelete: "Put \"{title}\" back in the calendar",
       deleteMeeting: "“{title}” is a meeting with attendees; deleting it sends everyone a cancellation. Cancel it in Calendar yourself. Nothing was deleted.",
@@ -1159,6 +1160,7 @@ export const messages: Catalogue = {
       undoComplete: "Reopen \"{title}\"",
       undoReopen: "Complete \"{title}\" again",
       duplicate: "An open reminder “{title}” already exists ({list}). Nothing was added.",
+      sameName: "More than one list is called “{name}”: {choices}. Nothing was added. Which one?",
       preview: {
         list: "Read reminders: {list}",
         all: "Read reminders",

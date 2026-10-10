@@ -1133,6 +1133,7 @@ export const messages: Catalogue = {
       badDate: "„{value}“ ist kein lesbares Datum.",
       endBeforeStart: "Das Ende muss nach dem Beginn liegen.",
       duplicate: "„{title}“ steht bereits um {when} im Kalender. Es wurde nichts hinzugefügt.",
+      sameName: "Mehrere Kalender heißen „{name}“: {choices}. Es wurde nichts hinzugefügt. Welcher?",
       undoCreate: "„{title}“ aus dem Kalender löschen",
       undoDelete: "\"{title}\" wieder in den Kalender setzen",
       deleteMeeting: "„{title}“ ist ein Termin mit Teilnehmenden; Löschen schickt allen eine Absage. Sag ihn selbst im Kalender ab. Nichts wurde gelöscht.",
@@ -1159,6 +1160,7 @@ export const messages: Catalogue = {
       undoComplete: "„{title}“ wieder öffnen",
       undoReopen: "„{title}“ wieder abhaken",
       duplicate: "Eine offene Erinnerung „{title}“ gibt es schon ({list}). Es wurde nichts hinzugefügt.",
+      sameName: "Mehrere Listen heißen „{name}“: {choices}. Es wurde nichts hinzugefügt. Welche?",
       preview: {
         list: "Erinnerungen lesen: {list}",
         all: "Erinnerungen lesen",

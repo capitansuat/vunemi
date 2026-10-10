@@ -1133,6 +1133,7 @@ export const messages: Catalogue = {
       badDate: "「{value}」は読み取れる日付ではありません。",
       endBeforeStart: "終了は開始より後にしてください。",
       duplicate: "「{title}」はすでに {when} にカレンダーにあります。何も追加していません。",
+      sameName: "「{name}」という名前のカレンダーが複数あります：{choices}。何も追加していません。どれですか？",
       undoCreate: "「{title}」をカレンダーから削除",
       undoDelete: "「{title}」をカレンダーに戻す",
       deleteMeeting: "「{title}」は参加者のいる会議です。削除すると全員にキャンセルが送られます。カレンダーでご自身でキャンセルしてください。何も削除していません。",
@@ -1159,6 +1160,7 @@ export const messages: Catalogue = {
       undoComplete: "「{title}」を未完了に戻す",
       undoReopen: "「{title}」をもう一度完了にする",
       duplicate: "未完了のリマインダー「{title}」がすでにあります（{list}）。何も追加していません。",
+      sameName: "「{name}」という名前のリストが複数あります：{choices}。何も追加していません。どれですか？",
       preview: {
         list: "リマインダーを読む：{list}",
         all: "リマインダーを読む",

@@ -19,7 +19,7 @@ import { APP_GUIDE_INDEX, createEverydayTools, createWhatsAppTool, createShortcu
 import { BROWSER_INSTRUCTIONS, type BrowserController, createBrowserTools, type TrustedSites } from "@vunemi/browser";
 import { Connectors, type Capability, type Connector, type ConnectorStatus } from "@vunemi/connectors";
 import { createFileTools, FILE_INSTRUCTIONS, type Roots } from "@vunemi/files";
-import { CALENDAR_INSTRUCTIONS, createCalendarTools, createDesktopTools, DESKTOP_INSTRUCTIONS, type Helper } from "@vunemi/mac";
+import { CALENDAR_INSTRUCTIONS, calendarAccounts, createCalendarTools, createDesktopTools, DESKTOP_INSTRUCTIONS, type Helper } from "@vunemi/mac";
 import { createMailTools, MAIL_INSTRUCTIONS, MailAccounts, Outbox, gmailAppPassword, gmailConfig, mailTargets, validateMailConfig } from "@vunemi/mail";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { unsealed } from "./mcp-secrets.js";
@@ -371,12 +371,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
         // we hoped was.
         if (!opts.helper.installed) return [];
         try {
-          const found = (await opts.helper.call("calendars", {})) as { source?: string; sourceKind?: string }[];
-          const seen = new Map<string, string>();
-          for (const cal of found) {
-            if (cal.source && !seen.has(cal.source)) seen.set(cal.source, cal.sourceKind ?? "other");
-          }
-          return [...seen].map(([source, kind]) => ({
+          return (await calendarAccounts(opts.helper)).map(({ source, kind }) => ({
             id: source,
             label: source,
             provider: calendarProvider(source, kind),

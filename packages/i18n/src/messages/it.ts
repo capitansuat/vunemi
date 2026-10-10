@@ -1133,6 +1133,7 @@ export const messages: Catalogue = {
       badDate: "«{value}» non è una data leggibile.",
       endBeforeStart: "La fine deve essere dopo l’inizio.",
       duplicate: "«{title}» è già nel calendario alle {when}. Non è stato aggiunto nulla.",
+      sameName: "Più calendari si chiamano «{name}»: {choices}. Non è stato aggiunto nulla. Quale?",
       undoCreate: "Elimina «{title}» dal calendario",
       undoDelete: "Rimetti \"{title}\" nel calendario",
       deleteMeeting: "“{title}” è una riunione con partecipanti; eliminarla invia a tutti un annullamento. Annullala tu in Calendario. Non è stato eliminato nulla.",
@@ -1159,6 +1160,7 @@ export const messages: Catalogue = {
       undoComplete: "Riapri «{title}»",
       undoReopen: "Completa di nuovo «{title}»",
       duplicate: "Esiste già un promemoria aperto «{title}» ({list}). Non è stato aggiunto nulla.",
+      sameName: "Più elenchi si chiamano «{name}»: {choices}. Non è stato aggiunto nulla. Quale?",
       preview: {
         list: "Leggi i promemoria: {list}",
         all: "Leggi i promemoria",

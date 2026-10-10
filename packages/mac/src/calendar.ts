@@ -43,6 +43,7 @@ interface MacEvent {
   end?: string;
   allDay: boolean;
   calendar: string;
+  calendarId?: string;
   location?: string;
   notes?: string;
   attendees?: string[];
@@ -59,6 +60,7 @@ interface MacReminder {
   due?: string;
   completed: boolean;
   list: string;
+  listId?: string;
   notes?: string;
 }
 
@@ -66,6 +68,25 @@ interface MacReminder {
 const day = new Intl.DateTimeFormat("en-GB", { dateStyle: "full" });
 const stamp = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" });
 const clock = new Intl.DateTimeFormat("en-GB", { timeStyle: "short" });
+
+/** A calendar or a reminder list, and the account macOS has it from. */
+interface MacCalendar {
+  id: string;
+  title: string;
+  source: string;
+  sourceKind?: string;
+  writable: boolean;
+}
+
+/** The accounts this Mac's calendars come from, each once. */
+export async function calendarAccounts(helper: Helper): Promise<{ source: string; kind: string }[]> {
+  const { calendars = [] } = (await helper.call("calendars", {})) as { calendars?: MacCalendar[] };
+  const seen = new Map<string, string>();
+  for (const cal of calendars) {
+    if (cal.source && !seen.has(cal.source)) seen.set(cal.source, cal.sourceKind ?? "other");
+  }
+  return [...seen].map(([source, kind]) => ({ source, kind }));
+}
 
 export interface CalendarToolOptions {
   helper: Helper;
@@ -89,6 +110,35 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
     if (granted) return;
 
     throw new Error(t(kind === "event" ? "mac.calendar.noPermission" : "mac.calendar.noRemindersPermission"));
+  }
+
+  const withAccount = (c: MacCalendar) => `${c.title} (${c.source})`;
+
+  /**
+   * What the helper is told for the calendar or list the model named. Two
+   * accounts often have one of the same name, and the helper takes the first:
+   * a write then needs the account too, as "Work (iCloud)". A read by a
+   * shared name reads them all.
+   */
+  async function named(name: string, kind: "event" | "reminder", writing: boolean): Promise<string> {
+    let all: MacCalendar[];
+    try {
+      all = ((await helper.call("calendars", { kind })) as { calendars?: MacCalendar[] }).calendars ?? [];
+    } catch {
+      // The helper says what is wrong with the name in its own words.
+      return name;
+    }
+    if (writing) all = all.filter((c) => c.writable);
+    const exact = all.filter((c) => sameTitle(withAccount(c), name));
+    if (exact.length === 1) return exact[0]!.id;
+    if (!writing) return name;
+    const twins = all.filter((c) => sameTitle(c.title, name));
+    if (twins.length === 1) return twins[0]!.id;
+    if (new Set(twins.map((c) => c.source)).size > 1) {
+      const choices = twins.map(withAccount).join(", ");
+      throw new Error(t(kind === "event" ? "mac.calendar.sameName" : "mac.reminders.sameName", { name: twins[0]!.title, choices }));
+    }
+    return name;
   }
 
   return [
@@ -122,7 +172,7 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
         const { events: found } = (await helper.call("events", {
           start: start.toISOString(),
           end: end.toISOString(),
-          ...(args.calendar && { calendars: [args.calendar] }),
+          ...(args.calendar && { calendars: [await named(String(args.calendar), "event", false)] }),
         })) as { events: MacEvent[] };
         // EventKit also returns what ends exactly as the range begins, such
         // as yesterday's all-day events; "today" should not list them.
@@ -172,6 +222,7 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
         const end = args.end ? new Date(args.end) : new Date(start.getTime() + 60 * 60 * 1000);
         if (Number.isNaN(end.getTime())) throw new Error(t("mac.calendar.badDate", { value: String(args.end) }));
         if (args.allDay !== true && end <= start) throw new Error(t("mac.calendar.endBeforeStart"));
+        const calendar = args.calendar ? await named(String(args.calendar), "event", true) : undefined;
 
         // Look before adding: the same event twice is a retry, and a clash is worth saying.
         let around: MacEvent[] = [];
@@ -191,7 +242,7 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
           start: iso(start),
           end: iso(end),
           allDay: args.allDay === true,
-          ...(args.calendar && { calendar: args.calendar }),
+          ...(calendar && { calendar }),
           ...(args.location && { location: args.location }),
           ...(args.notes && { notes: args.notes }),
         })) as MacEvent;
@@ -243,7 +294,8 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
             start: gone.start,
             end: gone.end,
             allDay: gone.allDay,
-            ...(gone.calendar && { calendar: gone.calendar }),
+            // By its id: another account may have a calendar of the same name.
+            ...((gone.calendarId || gone.calendar) && { calendar: gone.calendarId || gone.calendar }),
             ...(gone.location && { location: gone.location }),
             ...(gone.notes && { notes: gone.notes }),
           });
@@ -312,7 +364,7 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
       async run(args: { list?: string; includeCompleted?: boolean }) {
         await ensure("reminder");
         const { reminders } = (await helper.call("reminders", {
-          ...(args.list && { list: args.list }),
+          ...(args.list && { list: await named(String(args.list), "reminder", false) }),
           includeCompleted: args.includeCompleted === true,
         })) as { reminders: MacReminder[] };
 
@@ -346,9 +398,10 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
       async run(args: { title: string; due?: string; list?: string; notes?: string }, ctx: ToolContext) {
         await ensure("reminder");
         if (args.due && Number.isNaN(new Date(args.due).getTime())) throw new Error(t("mac.calendar.badDate", { value: String(args.due) }));
+        const list = args.list ? await named(String(args.list), "reminder", true) : undefined;
         // An open reminder with the same title is a retry, not a second errand.
         const open = await helper
-          .call("reminders", { ...(args.list && { list: args.list }), includeCompleted: false })
+          .call("reminders", { ...(list && { list }), includeCompleted: false })
           .then((r) => (r as { reminders: MacReminder[] }).reminders ?? [])
           .catch(() => [] as MacReminder[]);
         const twin = open.find((r) => sameTitle(r.title, String(args.title)));
@@ -356,7 +409,7 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
         const made = (await helper.call("reminder_create", {
           title: String(args.title),
           ...(args.due && { due: args.due }),
-          ...(args.list && { list: args.list }),
+          ...(list && { list }),
           ...(args.notes && { notes: args.notes }),
         })) as MacReminder;
 
@@ -463,7 +516,7 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
           const made = (await helper.call("reminder_create", {
             title: gone.title,
             ...(gone.due && { due: gone.due }),
-            ...(gone.list && { list: gone.list }),
+            ...((gone.listId || gone.list) && { list: gone.listId || gone.list }),
             ...(gone.notes && { notes: gone.notes }),
           })) as MacReminder;
           if (gone.completed) await helper.call("reminder_complete", { id: made.id, completed: true });

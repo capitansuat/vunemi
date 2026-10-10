@@ -1143,6 +1143,7 @@ export const messages: Catalogue = {
       badDate: "«{value}» — не читаемая дата.",
       endBeforeStart: "Конец должен быть позже начала.",
       duplicate: "«{title}» уже есть в календаре на {when}. Ничего не добавлено.",
+      sameName: "Календарей с названием «{name}» несколько: {choices}. Ничего не добавлено. Какой из них?",
       undoCreate: "Удалить «{title}» из календаря",
       undoDelete: "Вернуть «{title}» в календарь",
       deleteMeeting: "«{title}» — встреча с участниками; удаление отправит всем отмену. Отмените её сами в Календаре. Ничего не удалено.",
@@ -1174,6 +1175,7 @@ export const messages: Catalogue = {
       undoComplete: "Снова открыть «{title}»",
       undoReopen: "Снова завершить «{title}»",
       duplicate: "Открытое напоминание «{title}» уже есть ({list}). Ничего не добавлено.",
+      sameName: "Списков с названием «{name}» несколько: {choices}. Ничего не добавлено. Какой из них?",
       preview: {
         list: "Прочитать напоминания: {list}",
         all: "Прочитать напоминания",

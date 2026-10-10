@@ -151,6 +151,8 @@ private func describe(_ event: EKEvent) -> JSON {
         "title": event.title ?? "",
         "allDay": event.isAllDay,
         "calendar": event.calendar?.title ?? "",
+        // The name alone does not say which: two accounts can share it.
+        "calendarId": event.calendar?.calendarIdentifier ?? "",
     ]
     if let start = event.startDate { json["start"] = iso.string(from: start) }
     if let end = event.endDate { json["end"] = iso.string(from: end) }
@@ -327,6 +329,7 @@ private func describe(_ reminder: EKReminder) -> JSON {
         "title": reminder.title ?? "",
         "completed": reminder.isCompleted,
         "list": reminder.calendar?.title ?? "",
+        "listId": reminder.calendar?.calendarIdentifier ?? "",
     ]
     if let date = reminder.dueDateComponents?.date { json["due"] = iso.string(from: date) }
     if let notes = reminder.notes, !notes.isEmpty { json["notes"] = notes }

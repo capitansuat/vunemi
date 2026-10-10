@@ -6,7 +6,7 @@
  */
 import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createCalendarTools, Helper } from "../src/index.js";
+import { calendarAccounts, createCalendarTools, Helper } from "../src/index.js";
 
 const undos: { label: string; run: () => Promise<void> | void }[] = [];
 
@@ -28,6 +28,8 @@ class FakeHelper extends Helper {
   granted = false;
   events: Record<string, unknown>[] = [];
   items: Record<string, unknown>[] = [];
+  /** The calendars, or the reminder lists, macOS has: one answer for both kinds. */
+  lists: Record<string, unknown>[] = [];
   eventsError: Error | null = null;
 
   constructor() {
@@ -86,6 +88,8 @@ class FakeHelper extends Helper {
       }
       case "reminders":
         return { reminders: this.items };
+      case "calendars":
+        return { calendars: this.lists };
       case "event_create":
         return { id: "EV-1", title: args.title, start: args.start, end: args.end, allDay: false, calendar: "İş" };
       case "reminder_create":
@@ -120,6 +124,60 @@ describe("calendar tools", () => {
     expect(await call("calendar_create", { title: "Kahve", start: "2026-10-02T14:00:00+03:00" })).toMatch(/overlaps with:[\s\S]*Toplantı/);
     await expect(call("calendar_create", { title: "Ters", start: "2026-10-02T14:00:00+03:00", end: "2026-10-02T13:00:00+03:00" })).rejects.toThrow();
     expect(helper.calls.filter((c) => c.op === "event_create")).toHaveLength(1);
+  });
+
+  it("asks which account when two have a calendar of the same name, and writes to the one named", async () => {
+    helper.lists = [
+      { id: "C-1", title: "İş", source: "iCloud", sourceKind: "icloud", writable: true },
+      { id: "C-2", title: "İş", source: "Google", sourceKind: "caldav", writable: true },
+      { id: "C-3", title: "Ev", source: "iCloud", sourceKind: "icloud", writable: true },
+      { id: "C-4", title: "Ev", source: "Abonelik", sourceKind: "subscribed", writable: false },
+    ];
+    const created = () => helper.calls.filter((c) => c.op === "event_create").map((c) => c.args.calendar);
+
+    await expect(call("calendar_create", { title: "Kahve", start: "2026-10-02T14:00", calendar: "İş" })).rejects.toThrow(/İş \(iCloud\).*İş \(Google\)/);
+    expect(created()).toEqual([]);
+
+    await call("calendar_create", { title: "Kahve", start: "2026-10-02T14:00", calendar: "İş (Google)" });
+    // One of the two can't be written to, so the name alone says which.
+    await call("calendar_create", { title: "Çay", start: "2026-10-02T16:00", calendar: "Ev" });
+    await call("calendar_create", { title: "Su", start: "2026-10-02T18:00", calendar: "Yok" });
+    expect(created()).toEqual(["C-2", "C-3", "Yok"]);
+
+    // Reading by a shared name reads them all; with the account, only that one.
+    await call("calendar_events", { days: 1, calendar: "İş" });
+    await call("calendar_events", { days: 1, calendar: "ev (abonelik)" });
+    expect(helper.calls.filter((c) => c.op === "events" && c.args.calendars).map((c) => c.args.calendars)).toEqual([["İş"], ["C-4"]]);
+  });
+
+  it("asks which account for a reminder list too", async () => {
+    helper.lists = [
+      { id: "L-1", title: "Alışveriş", source: "iCloud", sourceKind: "icloud", writable: true },
+      { id: "L-2", title: "Alışveriş", source: "Exchange", sourceKind: "exchange", writable: true },
+    ];
+    await expect(call("reminder_create", { title: "Süt", list: "Alışveriş" })).rejects.toThrow(/Alışveriş \(iCloud\).*Alışveriş \(Exchange\)/);
+    await call("reminder_create", { title: "Süt", list: "Alışveriş (Exchange)" });
+    expect(helper.calls.filter((c) => c.op === "reminder_create").map((c) => c.args.list)).toEqual(["L-2"]);
+    expect(helper.calls.filter((c) => c.op === "calendars").every((c) => c.args.kind === "reminder")).toBe(true);
+  });
+
+  it("puts a deleted event back in the calendar it came from, not one of the same name", async () => {
+    helper.events = [{ id: "E1", title: "Dişçi", start: "2026-10-02T10:00:00+03:00", end: "2026-10-02T11:00:00+03:00", allDay: false, calendar: "İş", calendarId: "C-2" }];
+    await call("calendar_delete", { id: "E1" });
+    await undos.at(-1)!.run();
+    expect(helper.calls.filter((c) => c.op === "event_create").at(-1)!.args.calendar).toBe("C-2");
+  });
+
+  it("lists the accounts the calendars come from, each once", async () => {
+    helper.lists = [
+      { id: "C-1", title: "İş", source: "iCloud", sourceKind: "icloud", writable: true },
+      { id: "C-2", title: "Ev", source: "iCloud", sourceKind: "icloud", writable: true },
+      { id: "C-3", title: "İş", source: "Google", sourceKind: "caldav", writable: true },
+    ];
+    expect(await calendarAccounts(helper)).toEqual([
+      { source: "iCloud", kind: "icloud" },
+      { source: "Google", kind: "caldav" },
+    ]);
   });
 
   it("leaves out what ended as the range began, like yesterday's all-day event", async () => {

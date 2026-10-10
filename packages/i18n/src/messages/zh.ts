@@ -1133,6 +1133,7 @@ export const messages: Catalogue = {
       badDate: "“{value}”不是可识别的日期。",
       endBeforeStart: "结束时间必须晚于开始时间。",
       duplicate: "“{title}”已在日历中（{when}）。未添加任何内容。",
+      sameName: "有多个名为“{name}”的日历：{choices}。未添加任何内容。是哪一个？",
       undoCreate: "从日历中删除“{title}”",
       undoDelete: "把“{title}”放回日历",
       deleteMeeting: "“{title}”是有参与者的会议；删除会向所有人发送取消通知。请你自己在日历中取消。未删除任何内容。",
@@ -1159,6 +1160,7 @@ export const messages: Catalogue = {
       undoComplete: "重新打开“{title}”",
       undoReopen: "再次完成“{title}”",
       duplicate: "已有未完成的提醒事项“{title}”（{list}）。未添加任何内容。",
+      sameName: "有多个名为“{name}”的列表：{choices}。未添加任何内容。是哪一个？",
       preview: {
         list: "读取提醒事项：{list}",
         all: "读取提醒事项",

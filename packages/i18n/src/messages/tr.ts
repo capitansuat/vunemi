@@ -1137,6 +1137,7 @@ export const messages = {
       badDate: "\"{value}\" okunabilir bir tarih değil.",
       endBeforeStart: "Bitiş, başlangıçtan sonra olmalı.",
       duplicate: "“{title}” takvimde zaten {when} saatinde var. Hiçbir şey eklenmedi.",
+      sameName: "“{name}” adında birden çok takvim var: {choices}. Hiçbir şey eklenmedi. Hangisi?",
       undoCreate: "\"{title}\" takvimden silinsin",
       undoDelete: "\"{title}\" takvime geri konsun",
       deleteMeeting: "“{title}” katılımcıları olan bir toplantı; silmek herkese iptal gönderir. Onu Takvim'de sen iptal et. Hiçbir şey silinmedi.",
@@ -1163,6 +1164,7 @@ export const messages = {
       undoComplete: "\"{title}\" yeniden açılsın",
       undoReopen: "\"{title}\" tekrar tamamlansın",
       duplicate: "“{title}” adlı açık bir anımsatıcı zaten var ({list}). Hiçbir şey eklenmedi.",
+      sameName: "“{name}” adında birden çok liste var: {choices}. Hiçbir şey eklenmedi. Hangisi?",
       preview: {
         list: "Anımsatıcıları oku: {list}",
         all: "Anımsatıcıları oku",

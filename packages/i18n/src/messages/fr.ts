@@ -1133,6 +1133,7 @@ export const messages: Catalogue = {
       badDate: "« {value} » n’est pas une date lisible.",
       endBeforeStart: "La fin doit être après le début.",
       duplicate: "« {title} » est déjà dans le calendrier à {when}. Rien n'a été ajouté.",
+      sameName: "Plusieurs calendriers s'appellent « {name} » : {choices}. Rien n'a été ajouté. Lequel ?",
       undoCreate: "Supprimer « {title} » du calendrier",
       undoDelete: "Remettre « {title} » dans le calendrier",
       deleteMeeting: "« {title} » est une réunion avec des participants ; la supprimer envoie une annulation à tous. Annulez-la vous-même dans Calendrier. Rien n'a été supprimé.",
@@ -1159,6 +1160,7 @@ export const messages: Catalogue = {
       undoComplete: "Rouvrir « {title} »",
       undoReopen: "Terminer à nouveau « {title} »",
       duplicate: "Un rappel ouvert « {title} » existe déjà ({list}). Rien n'a été ajouté.",
+      sameName: "Plusieurs listes s'appellent « {name} » : {choices}. Rien n'a été ajouté. Laquelle ?",
       preview: {
         list: "Lire les rappels : {list}",
         all: "Lire les rappels",
