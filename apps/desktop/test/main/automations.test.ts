@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -293,5 +293,27 @@ describe("scope and limits", () => {
   it("tells the model a scheduled task can't send, delete or pay", () => {
     expect(AUTOMATION_INSTRUCTIONS).toMatch(/can't send, delete or pay/);
     expect(AUTOMATION_INSTRUCTIONS).not.toMatch(/wait for the user's approval/);
+  });
+});
+
+describe("a damaged automations file", () => {
+  let folder: string;
+  beforeEach(() => (folder = mkdtempSync(join(tmpdir(), "vunemi-automations-"))));
+  afterEach(() => rmSync(folder, { recursive: true, force: true }));
+
+  it("does not keep Vunemi from starting, and is kept beside the new one", () => {
+    const file = join(folder, "automations.json");
+    for (const damaged of ['{"items": [{"id": "a"', "null", "[]"]) {
+      writeFileSync(file, damaged);
+      const store = new AutomationStore(file);
+      expect(store.list()).toEqual([]);
+    }
+    // Half a file is somebody's tasks: it is put aside, not written over.
+    writeFileSync(file, '{"items": [{"id": "a"');
+    const store = new AutomationStore(file);
+    store.add({ title: "Morning", task: "Sum up my day", schedule: { kind: "daily", time: "09:00" } }, 0);
+    expect(readFileSync(`${file}.unreadable`, "utf8")).toBe('{"items": [{"id": "a"');
+    expect(JSON.parse(readFileSync(file, "utf8")).items).toHaveLength(1);
+    expect(existsSync(`${file}.tmp`)).toBe(false);
   });
 });

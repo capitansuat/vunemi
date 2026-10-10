@@ -148,7 +148,7 @@ export class AutomationStore {
   private lastModel: string | null;
 
   constructor(private readonly file: string) {
-    const stored = existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as { items?: Automation[]; model?: string }) : {};
+    const stored = this.read();
     this.items = Array.isArray(stored.items) ? stored.items : [];
     this.lastModel = typeof stored.model === "string" ? normalizeModelSpec(stored.model) : null;
   }
@@ -202,6 +202,28 @@ export class AutomationStore {
 
   /** Told after every write, whoever made it: Settings, the scheduler or a tool. */
   onChange?: () => void;
+
+  /**
+   * What was stored. A file that cannot be read must not keep Vunemi from
+   * starting; it is put aside rather than written over, since it may be
+   * somebody's tasks with one byte wrong.
+   */
+  private read(): { items?: Automation[]; model?: string } {
+    if (!existsSync(this.file)) return {};
+    try {
+      const stored: unknown = JSON.parse(readFileSync(this.file, "utf8"));
+      if (stored && typeof stored === "object" && !Array.isArray(stored)) return stored;
+    } catch {
+      // Not JSON: handled below, like JSON that is not ours.
+    }
+    console.error("[vunemi] automations unreadable; kept as", `${this.file}.unreadable`);
+    try {
+      renameSync(this.file, `${this.file}.unreadable`);
+    } catch {
+      // It stays where it is, and is written over at the next change.
+    }
+    return {};
+  }
 
   /** Written whole to a new file, then renamed over the old: a crash leaves one or the other. */
   private save(): void {
