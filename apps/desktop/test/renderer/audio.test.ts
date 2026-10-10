@@ -96,10 +96,10 @@ describe("SpeechGate", () => {
     feed(gate, VOICE, 150);
     expect(gate.talking()).toBe(false);
     feed(gate, ROOM, 400);
-    feed(gate, VOICE, 250);
+    feed(gate, VOICE, 400);
     // Two short sounds with a silence between them are not one stretch of talking.
     expect(gate.talking()).toBe(false);
-    feed(gate, VOICE, 150);
+    feed(gate, VOICE, 250);
     expect(gate.talking()).toBe(true);
     // A syllable's gap does not end it; a pause does.
     feed(gate, ROOM, 100);
@@ -113,6 +113,46 @@ describe("SpeechGate", () => {
     expect(feed(gate, VOICE, 1_000)).toBe(false);
     expect(feed(gate, ROOM, 300)).toBe(false);
     expect(feed(gate, VOICE, 600)).toBe(false);
-    expect(feed(gate, ROOM, 1_300)).toBe(true);
+    expect(feed(gate, ROOM, 1_300)).toBe(false);
+    expect(feed(gate, ROOM, 300)).toBe(true);
+  });
+
+  it("knows where the voice begins and ends, so the room around it can be left out", () => {
+    const gate = new SpeechGate();
+    expect(gate.span()).toBeNull();
+    feed(gate, ROOM, 4_000); // the microphone was open before anyone spoke
+    feed(gate, VOICE, 1_000);
+    feed(gate, ROOM, 200);
+    feed(gate, VOICE, 500);
+    feed(gate, ROOM, 2_000);
+    const [first, last] = gate.span()!;
+    // Within a few frames of the edges: the level is smoothed.
+    expect(Math.abs(first * FRAME_MS - 4_000)).toBeLessThan(50);
+    expect(Math.abs(last * FRAME_MS - 5_700)).toBeLessThan(80);
+    const quiet = new SpeechGate();
+    feed(quiet, ROOM, 3_000);
+    expect(quiet.span()).toBeNull();
+  });
+
+  it("keeps hearing someone who talks on without a break", () => {
+    // Live, 10 Oct: a long turn was cut in the middle. The voice had become the
+    // quietest tenth of the clip, and so the room it was measured against.
+    const gate = new SpeechGate();
+    feed(gate, ROOM, 300);
+    expect(feed(gate, VOICE, 30_000)).toBe(false);
+    expect(feed(gate, VOICE * 0.4, 5_000)).toBe(false);
+    expect(gate.spoke()).toBe(true);
+    expect(feed(gate, ROOM, 3_100)).toBe(true);
+  });
+
+  it("waits longer for someone who has been talking for a while: they stop to think", () => {
+    const gate = new SpeechGate();
+    feed(gate, ROOM, 300);
+    expect(feed(gate, VOICE, 10_000)).toBe(false);
+    // A pause that would have ended a short turn.
+    expect(feed(gate, ROOM, 2_000)).toBe(false);
+    expect(feed(gate, VOICE, 3_000)).toBe(false);
+    expect(feed(gate, ROOM, 2_900)).toBe(false);
+    expect(feed(gate, ROOM, 200)).toBe(true);
   });
 });

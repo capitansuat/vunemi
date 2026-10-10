@@ -14,16 +14,27 @@ export const SAMPLE_RATE = 16_000;
 const FLOOR = 0.015;
 /** Speech has to stand this far above the room's own noise to count. */
 const OVER_NOISE = 3.5;
-/** How long the room has to stay quiet before a hands-free turn ends. */
-const SILENCE_MS = 1_100;
+/** How long the room has to stay quiet before a hands-free turn ends, after a few words… */
+const SILENCE_MS = 1_300;
+/**
+ * …and this much longer for every second they have been talking, up to the
+ * most: someone explaining something stops to think, and a turn that ended
+ * at the first such stop could not be finished.
+ */
+const SILENCE_MORE_MS = 200;
+const SILENCE_MOST_MS = 3_000;
 /** Don't end a turn on the pause before someone starts talking. */
 const MIN_SPEECH_MS = 400;
 /** Speaking over Vunemi: this long without a break is someone talking, not a cough or a cup put down. */
-const OVER_MS = 350;
+const OVER_MS = 600;
 /** A gap this long ends one stretch of talking. */
 const BREAK_MS = 200;
+/** Room kept on either side of what was said: a breath in, a last consonant. */
+const EDGE_MS = 300;
 /** Kept from before someone was known to be talking: their first word. */
 const LEAD_IN_MS = 600;
+/** The room is never taken to be louder than this many times the quietest moment heard. */
+const ROOM_OVER_QUIETEST = 2;
 /** The room is as loud as the quietest tenth of the clip. */
 const ROOM_PERCENTILE = 0.1;
 /** The first moments of a stream can be digital silence; they say nothing about the room. */
@@ -75,10 +86,15 @@ export class SpeechGate {
       if (this.gapMs >= BREAK_MS) this.runMs = 0;
       if (this.speechMs > MIN_SPEECH_MS) {
         this.quietMs += ms;
-        if (this.quietMs >= SILENCE_MS) this.ended = true;
+        if (this.quietMs >= this.patience()) this.ended = true;
       }
     }
     return this.ended;
+  }
+
+  /** How long a silence ends the turn, for what has been said so far. */
+  private patience(): number {
+    return Math.min(SILENCE_MOST_MS, SILENCE_MS + (Math.max(0, this.speechMs - 1_000) / 1_000) * SILENCE_MORE_MS);
   }
 
   /** Someone is talking right now, and has been for long enough to mean it. */
@@ -103,6 +119,22 @@ export class SpeechGate {
     return speech >= MIN_SPEECH_MS && loudest >= threshold * 1.5;
   }
 
+  /**
+   * The first and the last frame with a voice in it, by their place among
+   * the frames fed; null when there was none. What lies outside is the room.
+   */
+  span(): [number, number] | null {
+    const threshold = Math.max(FLOOR, (Number.isFinite(this.quietest) ? this.quietest : 0) * OVER_NOISE);
+    let first = -1;
+    let last = -1;
+    this.heard.forEach((f, i) => {
+      if (f.level <= threshold) return;
+      if (first < 0) first = i;
+      last = i;
+    });
+    return first < 0 ? null : [first, last];
+  }
+
   private threshold(): number {
     return Math.max(FLOOR, this.room() * OVER_NOISE);
   }
@@ -110,11 +142,18 @@ export class SpeechGate {
   private room(): number {
     const want = Math.max(1, Math.ceil(this.counted * ROOM_PERCENTILE));
     let seen = 0;
+    let tenth = 0;
     for (let i = 0; i < BUCKETS; i++) {
       seen += this.counts[i]!;
-      if (seen >= want) return 10 ** (-5 + ((i + 1) * 5) / BUCKETS);
+      if (seen >= want) {
+        tenth = 10 ** (-5 + ((i + 1) * 5) / BUCKETS);
+        break;
+      }
     }
-    return 0;
+    // Someone who talks on without a break makes their own voice the quietest
+    // tenth, and was then heard as silence in the middle of a sentence. The
+    // quietest moment of all is still the room: it holds the estimate down.
+    return Math.min(tenth, this.quietest * ROOM_OVER_QUIETEST);
   }
 }
 
@@ -236,6 +275,24 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
   /** Long enough, and loud enough against this room, to be a sentence. */
   const spoke = (): boolean => gate.spoke();
 
+  /**
+   * What was said, without the room before and after it. In voice chat the
+   * microphone is open for seconds before anyone speaks, and whisper writes
+   * words for a silence that long: a turn came back with a made-up sentence
+   * in front of the real one.
+   */
+  const said = (): Float32Array => {
+    const span = gate.span();
+    if (!span) return merge(chunks, frames);
+    const margin = Math.round((EDGE_MS / 1000) * SAMPLE_RATE);
+    let from = span[0];
+    for (let kept = 0; from > 0 && kept < margin; from--) kept += chunks[from - 1]!.length;
+    let to = span[1];
+    for (let kept = 0; to < chunks.length - 1 && kept < margin; to++) kept += chunks[to + 1]!.length;
+    const part = chunks.slice(from, to + 1);
+    return merge(part, part.reduce((sum, c) => sum + c.length, 0));
+  };
+
   const release = () => {
     done = true;
     node.port.onmessage = null;
@@ -248,7 +305,7 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
   return {
     snapshot() {
       if (!spoke() || frames < SAMPLE_RATE / 2) return null;
-      return encodeWav(merge(chunks, frames));
+      return encodeWav(said());
     },
 
     async stop() {
@@ -259,7 +316,7 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
       // silence with whatever its training data was full of ("İzlediğiniz
       // için teşekkürler"). If nobody spoke, nobody spoke.
       if (!spoke()) return null;
-      return encodeWav(merge(chunks, frames));
+      return encodeWav(said());
     },
     cancel: release,
     engage() {
