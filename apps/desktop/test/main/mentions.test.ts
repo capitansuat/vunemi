@@ -115,6 +115,16 @@ describe("meetingParts", () => {
     expect(parts.transcript).toBe("[00:12] Me: Can we ship?\n[01:05] Others: On Friday.\n[1:02:03] Me: Thanks.");
   });
 
+  it("calls the others who were told apart by number in the meeting's language, or by their name", () => {
+    const lines = [
+      { source: "others" as const, start: 1, end: 2, text: "Merhaba.", speaker: 1 },
+      { source: "others" as const, start: 3, end: 4, text: "Selam.", speaker: 2 },
+    ];
+    const speakers = [{ id: 1, name: "" }, { id: 2, name: "Deniz" }];
+    expect(meetingParts({ summary: null, lines, speakers, language: "tr" }).transcript).toBe("[00:01] Kişi 1: Merhaba.\n[00:03] Deniz: Selam.");
+    expect(meetingParts({ summary: null, lines, speakers, language: null }).transcript).toBe("[00:01] Person 1: Merhaba.\n[00:03] Deniz: Selam.");
+  });
+
   it("says so when there is no summary, and has no transcript without words", () => {
     expect(meetingParts({ summary: null, lines: [] })).toEqual({ summary: "No summary was written.", transcript: "" });
   });

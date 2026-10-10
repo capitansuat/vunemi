@@ -152,6 +152,12 @@ whisper_cache="$out/whisper-cache/v1.9.4"
 cp -p "$whisper_cache/whisper-server" "$app/Contents/Resources/whisper-server"
 cp -p "$whisper_cache/LICENSE" "$app/Contents/Resources/licenses/whisper.cpp-LICENSE"
 
+echo "› konuşmacı motoru"
+bash "$here/scripts/build-speakers.sh"
+speakers_cache="$out/speakers-cache/v1.13.8"
+cp -p "$speakers_cache/sherpa-onnx-offline-speaker-diarization" "$app/Contents/Resources/sherpa-onnx-offline-speaker-diarization"
+cp -p "$speakers_cache/LICENSE" "$app/Contents/Resources/licenses/sherpa-onnx-LICENSE"
+
 echo "› imzalanıyor (önce yardımcı ve motor, sonra uygulama) — kimlik: $identity"
 # Hardened runtime and no entitlements: the engine needs none — it reads one
 # file and listens on 127.0.0.1.
@@ -159,6 +165,9 @@ codesign --force --options runtime "${timestamp[@]}" --identifier com.vunemi.eng
 # The same for the speech engine: it reads one model file and the WAV it is
 # sent on 127.0.0.1, and needs no entitlement for either.
 codesign --force --options runtime "${timestamp[@]}" --identifier com.vunemi.whisper --sign "$identity" "$app/Contents/Resources/whisper-server"
+# And for telling speakers apart: it reads the WAV and the two model files it
+# is named, and prints who spoke when.
+codesign --force --options runtime "${timestamp[@]}" --identifier com.vunemi.speakers --sign "$identity" "$app/Contents/Resources/sherpa-onnx-offline-speaker-diarization"
 if [ -x "$helper_cache" ] && [ "$identity" != "-" ]; then
   # Already signed, and it must stay byte for byte what the keychain knows.
   cp -p "$helper_cache" "$app/Contents/Resources/VunemiHelper"

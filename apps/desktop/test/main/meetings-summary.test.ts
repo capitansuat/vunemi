@@ -7,7 +7,7 @@ import type { ChatModel, ChatRequest } from "@vunemi/agent-core";
 import type { Line } from "../../src/main/meetings/live.js";
 import { summarise, transcriptText } from "../../src/main/meetings/summary.js";
 
-const names = { me: "Ben", others: "Diğerleri" };
+const names = { me: "Ben", others: "Diğerleri", person: (n: number) => `Kişi ${n}` };
 const headings = { summary: "Özet", decisions: "Kararlar", actions: "Yapılacaklar", questions: "Açık sorular" };
 
 function model(answers: (req: ChatRequest, n: number) => string) {
@@ -40,6 +40,18 @@ describe("transcriptText", () => {
   it("writes time and speaker for each line, in order", () => {
     expect(transcriptText([{ source: "others", start: 3725, end: 3730, text: "b" }, { source: "me", start: 63, end: 65, text: "a" }], names)).toBe(
       "[01:03] Ben: a\n[1:02:05] Diğerleri: b",
+    );
+  });
+
+  it("calls the others by their number, or by the name the user gave", () => {
+    const told: Line[] = [
+      { source: "others", start: 0, end: 1, text: "a", speaker: 1 },
+      { source: "others", start: 2, end: 3, text: "b", speaker: 2 },
+      { source: "others", start: 4, end: 5, text: "c" },
+      { source: "me", start: 6, end: 7, text: "d", speaker: 1 },
+    ];
+    expect(transcriptText(told, names, [{ id: 1, name: "" }, { id: 2, name: "Deniz" }])).toBe(
+      "[00:00] Kişi 1: a\n[00:02] Deniz: b\n[00:04] Diğerleri: c\n[00:06] Ben: d",
     );
   });
 });

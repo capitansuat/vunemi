@@ -477,6 +477,18 @@ export const messages: Catalogue = {
     reminder: "Sag den anderen, dass die Besprechung aufgenommen wird.",
     me: "Ich",
     others: "Andere",
+    person: "Person {n}",
+    people: {
+      title: "Personen",
+      note: "Die Stimmen wurden von einem Programm getrennt; es kann sich irren. Klick auf einen Namen, um ihn zu ändern, führe zwei zusammen, die dieselbe Person sind, oder gib eine Zeile im Transkript jemand anderem.",
+      name: "Name für {name}",
+      merge: "Dieselbe Person wie…",
+      move: "Wer hat diese Zeile gesagt",
+    },
+    separate: {
+      title: "Sprecher trennen",
+      body: "Nach der Aufnahme werden die Stimmen, die über den Computer zu hören waren, getrennt: Person 1, Person 2… Die Namen gibst du. Es trennt Stimmen, es weiß nicht, wer jemand ist; es kann sich irren, und du kannst es danach korrigieren. Verlängert eine einstündige Besprechung um etwa fünf Minuten. Einmaliger Download von {size}; läuft auf diesem Mac.",
+    },
     empty: "Noch keine Besprechungen. Drück zu Beginn auf Besprechung aufnehmen; sie wird auf diesem Mac mitgeschrieben und zusammengefasst.",
     search: "Besprechungen durchsuchen",
     noResults: "Keine Besprechung passt.",
@@ -499,6 +511,7 @@ export const messages: Catalogue = {
     state: {
       recording: "Aufnahme",
       transcribing: "Wird mitgeschrieben",
+      separating: "Sprecher werden getrennt",
       summarising: "Wird zusammengefasst",
       done: "Fertig",
       failed: "Nicht zusammengefasst",

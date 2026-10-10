@@ -9,8 +9,9 @@ import { randomUUID } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Line } from "./live.js";
+import { SPEAKERS_WAV, type Speaker } from "./speakers.js";
 
-export type MeetingState = "recording" | "transcribing" | "summarising" | "done" | "failed";
+export type MeetingState = "recording" | "transcribing" | "separating" | "summarising" | "done" | "failed";
 
 export interface Meeting {
   id: string;
@@ -20,6 +21,8 @@ export interface Meeting {
   endedAt: number | null;
   language: string | null;
   lines: Line[];
+  /** The others, told apart by voice after the meeting; absent when they were not. */
+  speakers?: Speaker[];
   /** Markdown, in the fixed template. */
   summary: string | null;
   state: MeetingState;
@@ -30,7 +33,8 @@ export type MeetingSummary = Omit<Meeting, "lines">;
 
 /** A meeting's id, and its folder's name. */
 export const MEETING_ID = /^[0-9a-f-]{36}$/;
-const AUDIO = ["mic.pcm", "system.pcm"];
+// The copy made for telling speakers apart is removed when that is done; one left by a crash goes with the rest.
+const AUDIO = ["mic.pcm", "system.pcm", SPEAKERS_WAV];
 
 export class MeetingStore {
   constructor(
@@ -91,7 +95,7 @@ export class MeetingStore {
 
   /** Meetings Vunemi stopped in the middle of, at quit or in a crash. */
   unfinished(): Meeting[] {
-    return this.all().filter((m) => m.state === "recording" || m.state === "transcribing" || m.state === "summarising");
+    return this.all().filter((m) => m.state === "recording" || m.state === "transcribing" || m.state === "separating" || m.state === "summarising");
   }
 
   async dropAudio(id: string): Promise<void> {

@@ -6,8 +6,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, Pencil, Search, Square, Users } from "lucide-react";
 import { RenameInput } from "./RenameInput.js";
-import type { MeetingLine, MeetingStatusView, MeetingSummaryView, MicrophoneView } from "../../../shared/ipc.js";
-import { formatDate, t } from "@vunemi/i18n";
+import type { MeetingLine, MeetingSpeaker, MeetingStatusView, MeetingSummaryView, MicrophoneView, SpeakersView } from "../../../shared/ipc.js";
+import { formatDate, getLocale, t } from "@vunemi/i18n";
 import { useStore } from "../store.js";
 import { MeetingPage, meetingTitle, stateLabel } from "./MeetingPage.js";
 
@@ -93,6 +93,7 @@ export function MeetingsView() {
           </div>
         )}
         {!recording && status?.blocked && <p className="mt-2 text-[12.5px] text-muted">{status.blocked}</p>}
+        {!recording && <SpeakersSetting />}
         {error && (
           <p role="alert" className="mt-2 text-[12.5px] text-danger">
             {error}
@@ -189,6 +190,69 @@ function MicrophonePicker() {
         ))}
       </select>
     </label>
+  );
+}
+
+/** Telling the others apart after a meeting: off until the user turns it on, and its two models a download they ask for. */
+function SpeakersSetting() {
+  const [view, setView] = useState<SpeakersView | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void window.vunemi.meetingSpeakers().then(setView).catch(() => {});
+    return window.vunemi.onMeetingSpeakers(setView);
+  }, []);
+
+  if (!view || view.models.state === "unavailable") return null;
+  const models = view.models;
+  const size = new Intl.NumberFormat(getLocale(), { style: "unit", unit: "megabyte", maximumFractionDigits: 0 }).format(models.bytes / 1e6);
+  const percent = models.state === "downloading" ? Math.round((models.received / models.bytes) * 100) : 0;
+
+  return (
+    <section className="mt-4 rounded-xl border border-line bg-surface p-4">
+      <label className="flex items-center gap-2 text-[13px] font-medium text-fg">
+        <input
+          type="checkbox"
+          checked={view.on}
+          onChange={(e) => {
+            setError(null);
+            void window.vunemi.setMeetingSpeakers(e.target.checked).then(setView).catch((err: unknown) => setError(message(err)));
+          }}
+          className="size-3.5 accent-ember"
+        />
+        {t("meetings.separate.title")}
+        {view.on && models.state === "ready" && <span className="ml-auto text-[12px] font-normal text-muted">{t("memory.search.ready")}</span>}
+      </label>
+      <p className="mt-1 text-[12px] text-muted">{t("meetings.separate.body", { size })}</p>
+      {view.on && models.state === "absent" && (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            void window.vunemi.downloadMeetingSpeakers().then(setView).catch((err: unknown) => setError(message(err)));
+          }}
+          className="mt-3 rounded-lg bg-fg px-3.5 py-1.5 text-[12.5px] font-medium text-bg"
+        >
+          {t("memory.search.download")}
+        </button>
+      )}
+      {models.state === "downloading" && (
+        <div className="mt-3 flex items-center gap-3">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3">
+            <div className="h-full bg-ember" style={{ width: `${percent}%` }} />
+          </div>
+          <span className="text-[12px] text-muted">{t("memory.search.downloading", { percent })}</span>
+          <button type="button" onClick={() => void window.vunemi.cancelMeetingSpeakers()} className="text-[12px] text-muted hover:text-fg">
+            {t("memory.search.cancel")}
+          </button>
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-[12px] text-danger">
+          {t("memory.search.failed", { error })}
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -294,14 +358,40 @@ function Meter({ label, value }: { label: string; value: number }) {
   );
 }
 
-export function Transcript({ lines }: { lines: MeetingLine[] }) {
+/** What one of the others is called: the user's name for them, or their number. */
+export function speakerLabel(id: number, speakers: readonly MeetingSpeaker[] = []): string {
+  return speakers.find((s) => s.id === id)?.name || t("meetings.person", { n: id });
+}
+
+/** The words of a meeting. With `onMove`, a line of the others can be given to another of them. */
+export function Transcript({ lines, speakers = [], onMove }: { lines: MeetingLine[]; speakers?: MeetingSpeaker[]; onMove?: (line: MeetingLine, speaker: number) => void }) {
+  const who = (line: MeetingLine) => {
+    if (line.source === "me") return t("meetings.me");
+    if (!onMove || speakers.length < 2) return line.speaker ? speakerLabel(line.speaker, speakers) : t("meetings.others");
+    return (
+      <select
+        aria-label={t("meetings.people.move")}
+        title={t("meetings.people.move")}
+        value={line.speaker ?? ""}
+        onChange={(e) => onMove(line, Number(e.target.value))}
+        className="w-full cursor-pointer appearance-none truncate bg-transparent text-[12.5px] text-ok outline-none hover:underline"
+      >
+        {!line.speaker && <option value="">{t("meetings.others")}</option>}
+        {speakers.map((s) => (
+          <option key={s.id} value={s.id}>
+            {speakerLabel(s.id, speakers)}
+          </option>
+        ))}
+      </select>
+    );
+  };
   return (
     <ol className="selectable space-y-1.5">
       {lines.map((line, i) => (
         <li key={`${line.source}-${line.start}-${i}`} className="flex gap-2 text-[13.5px] leading-relaxed">
           <span className="w-12 shrink-0 font-mono text-[11.5px] tabular-nums leading-[1.9] text-faint">{elapsed(line.start * 1000)}</span>
           <span className={`w-20 shrink-0 truncate text-[12.5px] leading-[1.75] ${line.source === "me" ? "text-ember" : "text-ok"}`}>
-            {line.source === "me" ? t("meetings.me") : t("meetings.others")}
+            {who(line)}
           </span>
           <span className="min-w-0 flex-1 text-fg">{line.text}</span>
         </li>

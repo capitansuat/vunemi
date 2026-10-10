@@ -481,6 +481,18 @@ export const messages = {
     reminder: "Diğer katılımcılara toplantının kaydedildiğini söyle.",
     me: "Ben",
     others: "Diğerleri",
+    person: "Kişi {n}",
+    people: {
+      title: "Kişiler",
+      note: "Sesler bir programla ayrıldı; yanılabilir. Bir ada tıklayıp değiştirebilir, aynı kişiyi birleştirebilir, dökümde bir satırı başka kişiye verebilirsin.",
+      name: "{name} için ad",
+      merge: "Şununla aynı kişi…",
+      move: "Bu satırı kim söyledi",
+    },
+    separate: {
+      title: "Konuşanları ayır",
+      body: "Kayıt bitince bilgisayardan duyulan sesler kişilere ayrılır: Kişi 1, Kişi 2… Adlarını sen verirsin. Sesleri ayırır, kimin kim olduğunu bilmez; yanılabilir, sonradan düzeltirsin. Bir saatlik toplantıya yaklaşık beş dakika ekler. Bir kerelik {size} indirme; bu Mac'te çalışır.",
+    },
     empty: "Henüz toplantı yok. Toplantı başlayınca Toplantıyı kaydet'e bas; bu Mac'te yazıya dökülür ve özetlenir.",
     search: "Toplantılarda ara",
     noResults: "Eşleşen toplantı yok.",
@@ -503,6 +515,7 @@ export const messages = {
     state: {
       recording: "Kaydediliyor",
       transcribing: "Yazıya dökülüyor",
+      separating: "Kişiler ayrılıyor",
       summarising: "Özetleniyor",
       done: "Hazır",
       failed: "Özetlenemedi",

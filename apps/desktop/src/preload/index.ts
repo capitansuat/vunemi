@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from "electron";
 import type { AgentEvent } from "@vunemi/agent-core";
 import type { OutboxEvent } from "@vunemi/mail";
-import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MeetingLine, type MeetingStatusView, type MemorySearchStatus, type VunemiApi, type QueuedMessage, type SessionList, type UpdateStatus, type VoiceStatus } from "../shared/ipc.js";
+import { CH, type ActivityEntry, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MeetingLine, type MeetingStatusView, type MemorySearchStatus, type SpeakersView, type VunemiApi, type QueuedMessage, type SessionList, type UpdateStatus, type VoiceStatus } from "../shared/ipc.js";
 import type { Locale } from "@vunemi/i18n";
 
 const api: VunemiApi = {
@@ -62,6 +62,18 @@ const api: VunemiApi = {
   meetingsExport: (id) => ipcRenderer.invoke(CH.meetingsExport, id),
   meetingsLevels: () => ipcRenderer.invoke(CH.meetingsLevels),
   meetingsDevices: () => ipcRenderer.invoke(CH.meetingsDevices),
+  meetingsNameSpeaker: (id, speaker, name) => ipcRenderer.invoke(CH.meetingsNameSpeaker, id, speaker, name),
+  meetingsMergeSpeakers: (id, from, into) => ipcRenderer.invoke(CH.meetingsMergeSpeakers, id, from, into),
+  meetingsMoveLine: (id, start, speaker) => ipcRenderer.invoke(CH.meetingsMoveLine, id, start, speaker),
+  meetingSpeakers: () => ipcRenderer.invoke(CH.meetingSpeakers),
+  setMeetingSpeakers: (on) => ipcRenderer.invoke(CH.meetingSpeakersSet, on),
+  downloadMeetingSpeakers: () => ipcRenderer.invoke(CH.meetingSpeakersDownload),
+  cancelMeetingSpeakers: () => ipcRenderer.invoke(CH.meetingSpeakersCancel),
+  onMeetingSpeakers: (listener) => {
+    const handler = (_e: IpcRendererEvent, view: SpeakersView) => listener(view);
+    ipcRenderer.on(CH.meetingSpeakersChanged, handler);
+    return () => ipcRenderer.removeListener(CH.meetingSpeakersChanged, handler);
+  },
   onMeetings: (listener) => {
     const handler = (_e: IpcRendererEvent, status: MeetingStatusView) => listener(status);
     ipcRenderer.on(CH.meetingsChanged, handler);

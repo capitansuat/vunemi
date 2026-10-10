@@ -5,11 +5,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Check, Copy, Download, RotateCcw, Search, Trash2 } from "lucide-react";
-import type { MeetingState, MeetingSummaryView, MeetingView } from "../../../shared/ipc.js";
+import type { MeetingSpeaker, MeetingState, MeetingSummaryView, MeetingView } from "../../../shared/ipc.js";
 import { formatDate, lower, t } from "@vunemi/i18n";
 import { useStore } from "../store.js";
 import { Markdown } from "./Markdown.js";
-import { Transcript } from "./MeetingsView.js";
+import { speakerLabel, Transcript } from "./MeetingsView.js";
+import { RenameInput } from "./RenameInput.js";
 
 export function meetingTitle(m: Pick<MeetingSummaryView, "title" | "startedAt">): string {
   return m.title || t("meetings.untitled", { date: formatDate(m.startedAt, { dateStyle: "medium", timeStyle: "short" }) });
@@ -74,7 +75,10 @@ export function MeetingPage({ id, onBack }: { id: string; onBack: () => void }) 
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const busy = meeting.state === "recording" || meeting.state === "transcribing" || meeting.state === "summarising";
+  const busy = meeting.state === "recording" || meeting.state === "transcribing" || meeting.state === "separating" || meeting.state === "summarising";
+  const speakers = meeting.speakers ?? [];
+  /** A correction to who said what: the meeting comes back as it now is. */
+  const correct = (change: () => Promise<MeetingView | null>) => void act(async () => setMeeting((await change()) ?? meeting));
   return (
     <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto max-w-[1100px] px-6 pt-6 pb-10">
@@ -174,12 +178,75 @@ export function MeetingPage({ id, onBack }: { id: string; onBack: () => void }) 
                 />
               </label>
             </div>
+            {speakers.length > 0 && !busy && (
+              <People
+                speakers={speakers}
+                onName={(speaker, name) => correct(() => window.vunemi.meetingsNameSpeaker(id, speaker, name))}
+                onMerge={(from, into) => correct(() => window.vunemi.meetingsMergeSpeakers(id, from, into))}
+              />
+            )}
             <div className="mt-3">
-              <Transcript lines={lines} />
+              <Transcript
+                lines={lines}
+                speakers={speakers}
+                {...(!busy && { onMove: (line, speaker) => correct(() => window.vunemi.meetingsMoveLine(id, line.start, speaker)) })}
+              />
             </div>
           </section>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** The others, told apart by voice: each can be named, and two that are one person merged. */
+function People({ speakers, onName, onMerge }: { speakers: MeetingSpeaker[]; onName: (speaker: number, name: string) => void; onMerge: (from: number, into: number) => void }) {
+  const [naming, setNaming] = useState<number | null>(null);
+  return (
+    <div className="mt-3 rounded-lg border border-line bg-surface p-3">
+      <h3 className="text-[12.5px] font-medium text-fg">{t("meetings.people.title")}</h3>
+      <ul className="mt-2 flex flex-wrap gap-2">
+        {speakers.map((s) => {
+          const label = speakerLabel(s.id, speakers);
+          return (
+            <li key={s.id} className="flex items-center gap-1.5 rounded-md border border-line bg-bg px-2 py-1">
+              {naming === s.id ? (
+                <RenameInput
+                  initial={label}
+                  label={t("meetings.people.name", { name: label })}
+                  className="w-36 rounded border border-line-strong bg-surface px-1.5 py-0.5 text-[12.5px] text-fg outline-none"
+                  onDone={(name) => {
+                    setNaming(null);
+                    if (name) onName(s.id, name);
+                  }}
+                />
+              ) : (
+                <button type="button" title={t("meetings.people.name", { name: label })} onClick={() => setNaming(s.id)} className="max-w-40 truncate text-[12.5px] text-ok hover:underline">
+                  {label}
+                </button>
+              )}
+              {speakers.length > 1 && (
+                <select
+                  aria-label={`${label}: ${t("meetings.people.merge")}`}
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) onMerge(s.id, Number(e.target.value));
+                  }}
+                  className="max-w-36 rounded border border-line bg-surface px-1 py-0.5 text-[11.5px] text-muted"
+                >
+                  <option value="">{t("meetings.people.merge")}</option>
+                  {speakers.filter((other) => other.id !== s.id).map((other) => (
+                    <option key={other.id} value={other.id}>
+                      {speakerLabel(other.id, speakers)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-2 text-[11.5px] leading-relaxed text-faint">{t("meetings.people.note")}</p>
     </div>
   );
 }

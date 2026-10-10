@@ -26,6 +26,8 @@ export interface Line {
   start: number;
   end: number;
   text: string;
+  /** Which of the others said it, once they were told apart (speakers.ts); never on "me". */
+  speaker?: number;
 }
 
 export type Transcribe = (wav: Buffer, language: Locale | "auto") => Promise<{ text: string; language: Locale; noSpeech: number }>;

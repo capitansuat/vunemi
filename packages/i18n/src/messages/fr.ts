@@ -477,6 +477,18 @@ export const messages: Catalogue = {
     reminder: "Prévenez les autres que la réunion est enregistrée.",
     me: "Moi",
     others: "Les autres",
+    person: "Personne {n}",
+    people: {
+      title: "Personnes",
+      note: "Les voix ont été séparées par un programme ; il peut se tromper. Cliquez sur un nom pour le changer, fusionnez deux entrées qui sont la même personne, ou attribuez une ligne de la transcription à quelqu'un d'autre.",
+      name: "Nom pour {name}",
+      merge: "Même personne que…",
+      move: "Qui a dit cette ligne",
+    },
+    separate: {
+      title: "Distinguer les intervenants",
+      body: "À la fin de l'enregistrement, les voix entendues par l'ordinateur sont séparées : Personne 1, Personne 2… C'est vous qui leur donnez un nom. Le programme sépare les voix, il ne sait pas qui est qui ; il peut se tromper, et vous pouvez corriger ensuite. Ajoute environ cinq minutes à une réunion d'une heure. Téléchargement unique de {size} ; fonctionne sur ce Mac.",
+    },
     empty: "Aucune réunion pour l'instant. Appuyez sur Enregistrer la réunion quand elle commence ; elle est transcrite et résumée sur ce Mac.",
     search: "Rechercher dans les réunions",
     noResults: "Aucune réunion ne correspond.",
@@ -499,6 +511,7 @@ export const messages: Catalogue = {
     state: {
       recording: "Enregistrement",
       transcribing: "Transcription",
+      separating: "Séparation des voix",
       summarising: "Résumé en cours",
       done: "Terminé",
       failed: "Non résumé",

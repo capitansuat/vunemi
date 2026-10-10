@@ -477,6 +477,18 @@ export const messages: Catalogue = {
     reminder: "다른 참석자에게 회의가 녹음되고 있다고 알려 주세요.",
     me: "나",
     others: "다른 사람",
+    person: "참석자 {n}",
+    people: {
+      title: "참석자",
+      note: "목소리는 프로그램이 구분한 것이며 틀릴 수 있습니다. 이름을 클릭해 바꾸거나, 같은 사람인 둘을 합치거나, 기록의 한 줄을 다른 사람에게 옮길 수 있습니다.",
+      name: "{name}의 이름",
+      merge: "같은 사람으로 합치기…",
+      move: "이 줄을 말한 사람",
+    },
+    separate: {
+      title: "화자 구분",
+      body: "녹음이 끝나면 컴퓨터를 통해 들린 목소리를 사람별로 구분합니다(참석자 1, 참석자 2…). 이름은 직접 지정합니다. 목소리만 구분할 뿐 누구인지는 알지 못합니다. 틀릴 수 있으며 나중에 고칠 수 있습니다. 한 시간짜리 회의에 약 5분이 더 걸립니다. {size} 한 번 다운로드하며 이 Mac에서 실행됩니다.",
+    },
     empty: "아직 회의가 없습니다. 회의가 시작되면 회의 녹음을 누르세요. 이 Mac에서 받아쓰고 요약합니다.",
     search: "회의 검색",
     noResults: "일치하는 회의가 없습니다.",
@@ -499,6 +511,7 @@ export const messages: Catalogue = {
     state: {
       recording: "녹음 중",
       transcribing: "받아쓰는 중",
+      separating: "화자를 구분하는 중",
       summarising: "요약 중",
       done: "완료",
       failed: "요약하지 못함",

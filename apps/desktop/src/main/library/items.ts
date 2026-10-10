@@ -46,7 +46,7 @@ export function conversationItem(c: { id: string; title: string; updatedAt: numb
 
 /** A meeting that is over and has something in it; null while it records or when it is empty. */
 export function meetingItem(m: Meeting): ItemInput | null {
-  if (m.state === "recording" || m.state === "transcribing" || m.state === "summarising") return null;
+  if (m.state === "recording" || m.state === "transcribing" || m.state === "separating" || m.state === "summarising") return null;
   const summary = m.summary?.trim() ?? "";
   if (!summary && m.lines.length === 0) return null;
   const date = new Date(m.startedAt).toISOString().slice(0, 10);

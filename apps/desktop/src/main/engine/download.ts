@@ -44,7 +44,7 @@ export interface DownloadOptions {
 const SPARE = 2 * GiB;
 const PROGRESS_MS = 250;
 const MAX_REDIRECTS = 5;
-const MODEL_FILE = /^[^/\\]+\.(gguf|bin)$/;
+const MODEL_FILE = /^[^/\\]+\.(gguf|bin|onnx)$/;
 
 export function allowedUrl(url: URL): boolean {
   const host = url.hostname;
@@ -67,7 +67,7 @@ export async function freeBytesOf(dir: string): Promise<number> {
 
 export async function download(src: ModelSource, dir: string, opts: DownloadOptions): Promise<string> {
   const name = opts.saveAs ?? src.file;
-  // GGUF for language models, ggml .bin for the speech model; nothing else.
+  // GGUF for language models, ggml .bin for the speech model, ONNX for telling speakers apart; nothing else.
   if (!MODEL_FILE.test(src.file) || !MODEL_FILE.test(name) || name.startsWith(".")) {
     throw new DownloadError("host", `Refusing file name ${name}`);
   }

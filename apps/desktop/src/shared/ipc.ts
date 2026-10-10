@@ -366,9 +366,30 @@ export interface MeetingLine {
   start: number;
   end: number;
   text: string;
+  /** Which of the others said it, when they were told apart. */
+  speaker?: number;
 }
 
-export type MeetingState = "recording" | "transcribing" | "summarising" | "done" | "failed";
+/** One of the others in a meeting, told apart by voice; the name is the user's, empty until given. */
+export interface MeetingSpeaker {
+  id: number;
+  name: string;
+}
+
+/** The models that tell speakers apart, and whether they are here. */
+export type SpeakersStatus =
+  | { state: "unavailable" }
+  | { state: "absent"; bytes: number }
+  | { state: "downloading"; bytes: number; received: number }
+  | { state: "ready"; bytes: number };
+
+/** Telling speakers apart: whether the user wants it, and whether it can be done yet. */
+export interface SpeakersView {
+  on: boolean;
+  models: SpeakersStatus;
+}
+
+export type MeetingState = "recording" | "transcribing" | "separating" | "summarising" | "done" | "failed";
 
 export interface MeetingSummaryView {
   id: string;
@@ -379,6 +400,8 @@ export interface MeetingSummaryView {
   language: string | null;
   /** Markdown in the fixed template; null for a meeting nobody spoke in. */
   summary: string | null;
+  /** The others, when they were told apart. */
+  speakers?: MeetingSpeaker[];
   state: MeetingState;
   /** Already in words, for a failed meeting. */
   error?: string;
@@ -514,6 +537,15 @@ export interface VunemiApi {
   meetingsExport(id: string): Promise<boolean>;
   meetingsLevels(): Promise<{ me: number; others: number }>;
   meetingsDevices(): Promise<MicrophoneView[]>;
+  /** Corrections to who said what; each gives the meeting back as it now is. */
+  meetingsNameSpeaker(id: string, speaker: number, name: string): Promise<MeetingView | null>;
+  meetingsMergeSpeakers(id: string, from: number, into: number): Promise<MeetingView | null>;
+  meetingsMoveLine(id: string, start: number, speaker: number): Promise<MeetingView | null>;
+  meetingSpeakers(): Promise<SpeakersView>;
+  setMeetingSpeakers(on: boolean): Promise<SpeakersView>;
+  downloadMeetingSpeakers(): Promise<SpeakersView>;
+  cancelMeetingSpeakers(): Promise<void>;
+  onMeetingSpeakers(listener: (view: SpeakersView) => void): () => void;
   onMeetings(listener: (status: MeetingStatusView) => void): () => void;
   onMeetingLine(listener: (id: string, line: MeetingLine) => void): () => void;
   forgetEverything(): Promise<void>;
@@ -717,6 +749,14 @@ export const CH = {
   meetingsExport: "meetings:export",
   meetingsLevels: "meetings:levels",
   meetingsDevices: "meetings:devices",
+  meetingsNameSpeaker: "meetings:name-speaker",
+  meetingsMergeSpeakers: "meetings:merge-speakers",
+  meetingsMoveLine: "meetings:move-line",
+  meetingSpeakers: "meetings:speakers",
+  meetingSpeakersSet: "meetings:speakers-set",
+  meetingSpeakersDownload: "meetings:speakers-download",
+  meetingSpeakersCancel: "meetings:speakers-cancel",
+  meetingSpeakersChanged: "meetings:speakers-changed",
   meetingsChanged: "meetings:changed",
   meetingsLine: "meetings:line",
   forgetEverything: "data:forget-everything",

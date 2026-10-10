@@ -11,6 +11,7 @@ import type { ChatModel } from "@vunemi/agent-core";
 import { Recorder } from "../../src/main/meetings/recorder.js";
 import { RATE } from "../../src/main/meetings/segmenter.js";
 import { MeetingService, type MeetingStatus } from "../../src/main/meetings/service.js";
+import type { Turn } from "../../src/main/meetings/speakers.js";
 import { MeetingStore } from "../../src/main/meetings/store.js";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-recorder.mjs", import.meta.url));
@@ -30,6 +31,10 @@ let recorder: Recorder;
 let statuses: MeetingStatus[];
 let modelAnswer: () => string;
 let transcriptionFails: boolean;
+/** What telling the others apart answers; null leaves it switched off. */
+let turns: (() => Promise<Turn[]>) | null;
+/** Everything the model was asked. */
+let asked: string;
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), "vunemi-service-"));
@@ -38,6 +43,8 @@ beforeEach(() => {
   statuses = [];
   modelAnswer = () => SUMMARY;
   transcriptionFails = false;
+  turns = null;
+  asked = "";
   delete process.env.FAKE_RECORDER_MODE;
 });
 afterEach(() => {
@@ -48,7 +55,8 @@ afterEach(() => {
 function service(blocked: () => "macos" | null = () => null) {
   const model: ChatModel = {
     id: "fake",
-    chat: async () => {
+    chat: async (request) => {
+      asked += JSON.stringify(request.messages);
       const text = modelAnswer();
       return { text, toolCalls: [], usage: { promptTokens: null, completionTokens: null, ttftMs: null, tokensPerSec: null } };
     },
@@ -61,10 +69,11 @@ function service(blocked: () => "macos" | null = () => null) {
       return { text: "Bütçeyi konuştuk.", language: "tr", noSpeech: 0 };
     },
     model: async () => ({ model, window: 8_000 }),
-    words: () => ({ names: { me: "Ben", others: "Diğerleri" }, headings: { summary: "Özet", decisions: "Kararlar", actions: "Yapılacaklar", questions: "Sorular" }, language: "Turkish" }),
+    words: () => ({ names: { me: "Ben", others: "Diğerleri", person: (n: number) => `Kişi ${n}` }, headings: { summary: "Özet", decisions: "Kararlar", actions: "Yapılacaklar", questions: "Sorular" }, language: "Turkish" }),
     blocked,
     onChange: (s) => statuses.push(s),
     onLine: () => {},
+    ...(turns && { speakers: { ready: () => true, turns: () => turns!() } }),
   });
 }
 
@@ -189,6 +198,125 @@ describe("MeetingService", () => {
     await s.stop("lmstudio:m");
     expect(during).toContain(true);
     expect(s.summarising).toBe(false);
+  });
+});
+
+describe("telling the others apart", () => {
+  /** A finished meeting with three lines of the others' and one of the user's. */
+  function told(): string {
+    const meeting = store.create();
+    Object.assign(meeting, {
+      state: "done",
+      endedAt: 1,
+      language: "tr",
+      summary: "## Özet\n\nKişi 1 bütçeyi anlattı, Kişi 2 itiraz etti. Kişi 12 yoktu.",
+      speakers: [{ id: 1, name: "" }, { id: 2, name: "" }],
+      lines: [
+        { source: "others", start: 0, end: 4, text: "Bütçe şöyle.", speaker: 1 },
+        { source: "me", start: 5, end: 6, text: "Anladım." },
+        { source: "others", start: 7, end: 9, text: "Katılmıyorum.", speaker: 2 },
+        { source: "others", start: 10, end: 12, text: "Neden?", speaker: 1 },
+      ],
+    });
+    store.save(meeting);
+    return meeting.id;
+  }
+
+  it("gives each of the others' lines its speaker before the summary, which is told of them", async () => {
+    turns = async () => [{ start: 0, end: 1.5, voice: 4 }];
+    const s = service();
+    const meeting = await s.start();
+    writeFileSync(join(store.folder(meeting.id), "system.pcm"), speech(1.5));
+    await s.stop("lmstudio:m");
+    const done = store.get(meeting.id)!;
+    expect(done.state).toBe("done");
+    expect(done.speakers).toEqual([{ id: 1, name: "" }]);
+    expect(done.lines).toEqual([expect.objectContaining({ source: "others", speaker: 1 })]);
+    expect(asked).toContain("Kişi 1: Bütçeyi konuştuk.");
+    expect(asked).toContain("told apart by their voices");
+  });
+
+  it("leaves the others as one when it fails, and the meeting is still summarised", async () => {
+    turns = async () => {
+      throw new Error("no program");
+    };
+    const s = service();
+    const meeting = await s.start();
+    writeFileSync(join(store.folder(meeting.id), "system.pcm"), speech(1.5));
+    await s.stop("lmstudio:m");
+    const done = store.get(meeting.id)!;
+    expect(done.state).toBe("done");
+    expect(done.speakers).toBeUndefined();
+    expect(done.lines[0]!.speaker).toBeUndefined();
+    expect(asked).toContain("Diğerleri: Bütçeyi konuştuk.");
+    expect(asked).not.toContain("told apart by their voices");
+  });
+
+  it("is not asked when only the user spoke", async () => {
+    let called = 0;
+    turns = async () => (called++, []);
+    const s = service();
+    const meeting = await s.start();
+    writeFileSync(join(store.folder(meeting.id), "mic.pcm"), speech(1));
+    await s.stop("lmstudio:m");
+    expect(called).toBe(0);
+    expect(store.get(meeting.id)!.speakers).toBeUndefined();
+  });
+
+  it("names a speaker, and the summary follows without touching a number that only starts the same", () => {
+    const s = service();
+    const id = told();
+    s.nameSpeaker(id, 1, "  Deniz   Kaya ");
+    expect(store.get(id)!.speakers).toEqual([{ id: 1, name: "Deniz Kaya" }, { id: 2, name: "" }]);
+    expect(store.get(id)!.summary).toBe("## Özet\n\nDeniz Kaya bütçeyi anlattı, Kişi 2 itiraz etti. Kişi 12 yoktu.");
+    // A second name takes the first one's place in the summary too, and an empty one gives the number back.
+    s.nameSpeaker(id, 1, "Deniz");
+    expect(store.get(id)!.summary).toContain("Deniz bütçeyi anlattı");
+    s.nameSpeaker(id, 1, " ");
+    expect(store.get(id)!.summary).toContain("Kişi 1 bütçeyi anlattı");
+    // The window has no way to send an empty name: typing the number back does the same.
+    s.nameSpeaker(id, 1, "Deniz");
+    s.nameSpeaker(id, 1, "Kişi 1");
+    expect(store.get(id)!.speakers![0]).toEqual({ id: 1, name: "" });
+    expect(store.get(id)!.summary).toContain("Kişi 1 bütçeyi anlattı");
+    s.nameSpeaker(id, 9, "Nobody");
+    expect(store.get(id)!.speakers).toEqual([{ id: 1, name: "" }, { id: 2, name: "" }]);
+  });
+
+  it("merges two speakers that are one person", () => {
+    const s = service();
+    const id = told();
+    s.nameSpeaker(id, 1, "Deniz");
+    s.mergeSpeakers(id, 2, 1);
+    const m = store.get(id)!;
+    expect(m.speakers).toEqual([{ id: 1, name: "Deniz" }]);
+    expect(m.lines.filter((l) => l.source === "others").map((l) => l.speaker)).toEqual([1, 1, 1]);
+    expect(m.summary).toBe("## Özet\n\nDeniz bütçeyi anlattı, Deniz itiraz etti. Kişi 12 yoktu.");
+    s.mergeSpeakers(id, 1, 1);
+    s.mergeSpeakers(id, 1, 2);
+    expect(store.get(id)!.speakers).toEqual([{ id: 1, name: "Deniz" }]);
+  });
+
+  it("gives one line to another speaker, and a speaker left with no line is gone", () => {
+    const s = service();
+    const id = told();
+    // Not the user's own line, and not to someone who is not there.
+    s.moveLine(id, 5, 1);
+    s.moveLine(id, 0, 3);
+    expect(store.get(id)!.lines.map((l) => l.speaker)).toEqual([1, undefined, 2, 1]);
+    s.moveLine(id, 7, 1);
+    const m = store.get(id)!;
+    expect(m.lines.map((l) => l.speaker)).toEqual([1, undefined, 1, 1]);
+    expect(m.speakers).toEqual([{ id: 1, name: "" }]);
+  });
+
+  it("changes nothing in a meeting whose others were never told apart", () => {
+    const s = service();
+    const meeting = store.create();
+    Object.assign(meeting, { state: "done", lines: [{ source: "others", start: 0, end: 1, text: "a" }] });
+    store.save(meeting);
+    s.nameSpeaker(meeting.id, 1, "Deniz");
+    expect(store.get(meeting.id)!.speakers).toBeUndefined();
   });
 });
 

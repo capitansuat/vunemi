@@ -12,7 +12,7 @@ import { BrowserController, checkNavigation, trustableHost } from "@vunemi/brows
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
+import { CH, EMERGENCY_STOP_ACCELERATOR, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -56,6 +56,7 @@ import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, 
 import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t, tIn, type Locale } from "@vunemi/i18n";
 import { Recorder, recorderBinary } from "./meetings/recorder.js";
 import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
+import { SpeakerSeparator, speakersBinary } from "./meetings/speakers.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
 import { PRODUCTION, type FeedSource } from "./updates/feed.js";
@@ -1171,7 +1172,7 @@ const meetingView = <T extends MeetingSummary>(m: T): T => (m.error ? { ...m, er
 function meetingWords(language: Locale | null) {
   const l = language ?? getLocale();
   return {
-    names: { me: tIn(l, "meetings.me"), others: tIn(l, "meetings.others") },
+    names: { me: tIn(l, "meetings.me"), others: tIn(l, "meetings.others"), person: (n: number) => tIn(l, "meetings.person", { n }) },
     headings: {
       summary: tIn(l, "meetings.sections.summary"),
       decisions: tIn(l, "meetings.sections.decisions"),
@@ -1181,6 +1182,14 @@ function meetingWords(language: Locale | null) {
     language: localeInfo(l).english,
   };
 }
+/** Tells the others in a meeting apart once it is over, when the user switched that on (meetings/speakers.ts). */
+const speakersView = (): SpeakersView => ({ on: settings.meetingSpeakers, models: speakerSeparator.status() });
+const speakerSeparator = new SpeakerSeparator({
+  binary: speakersBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir(), env: process.env }),
+  // With the speech model: "Forget everything" empties this folder.
+  dir: join(app.getPath("userData"), "models"),
+  onChange: () => send(CH.meetingSpeakersChanged, speakersView()),
+});
 const meetings: MeetingService = new MeetingService({
   store: meetingStore,
   recorder,
@@ -1199,6 +1208,7 @@ const meetings: MeetingService = new MeetingService({
     send(CH.meetingsChanged, meetingStatusView(status));
   },
   onLine: (id, line) => send(CH.meetingsLine, { id, line }),
+  speakers: { ready: () => settings.meetingSpeakers && speakerSeparator.ready(), turns: (folder) => speakerSeparator.separate(folder) },
 });
 // The order the model manager unloads in is its own; these say what each server holds and when it is busy.
 models.register({ id: "meaning", busy: () => meaning.busy(), pid: () => meaning.pid(), mapped: () => meaning.mapped(), unload: () => meaning.stop() });
@@ -1237,7 +1247,7 @@ function meetingMarkdown(m: Meeting): string {
     formatDate(m.startedAt, { dateStyle: "full", timeStyle: "short" }),
     m.summary ?? tIn(l, "meetings.nothingSaid"),
     `## ${tIn(l, "meetings.transcript")}`,
-    transcriptText(m.lines, words.names),
+    transcriptText(m.lines, words.names, m.speakers),
   ].join("\n\n") + "\n";
 }
 const meetingCall = async <T>(work: () => Promise<T>): Promise<T> => {
@@ -1292,6 +1302,42 @@ function tendLibrary(): void {
   meetingsIndexed = true;
   void library.catchUp(idle);
 }
+
+/** A correction to who said what, then the meeting as it now is. */
+const corrected = (id: unknown, change: (id: string) => void): Meeting | null => {
+  if (typeof id !== "string") return null;
+  change(id);
+  meetingsIndexed = false;
+  const m = meetingStore.get(id);
+  return m ? meetingView(m) : null;
+};
+handle(CH.meetingsNameSpeaker, (_e, id: unknown, speaker: unknown, name: unknown) =>
+  corrected(id, (m) => {
+    if (typeof speaker === "number" && typeof name === "string") meetings.nameSpeaker(m, speaker, name);
+  }));
+handle(CH.meetingsMergeSpeakers, (_e, id: unknown, from: unknown, into: unknown) =>
+  corrected(id, (m) => {
+    if (typeof from === "number" && typeof into === "number") meetings.mergeSpeakers(m, from, into);
+  }));
+handle(CH.meetingsMoveLine, (_e, id: unknown, start: unknown, speaker: unknown) =>
+  corrected(id, (m) => {
+    if (typeof start === "number" && typeof speaker === "number") meetings.moveLine(m, start, speaker);
+  }));
+handle(CH.meetingSpeakers, () => speakersView());
+handle(CH.meetingSpeakersSet, (_e, on: unknown) => {
+  settings.setMeetingSpeakers(on === true);
+  return speakersView();
+});
+handle(CH.meetingSpeakersDownload, async () => {
+  try {
+    await speakerSeparator.download();
+  } catch (err) {
+    if (!(err instanceof DownloadError)) throw err;
+    if (err.code !== "cancelled") throw new Error(t(`engine.error.${err.code}`, { size: `${((err.needed ?? 0) / 1e9).toFixed(1)} GB` }));
+  }
+  return speakersView();
+});
+handle(CH.meetingSpeakersCancel, () => speakerSeparator.cancelDownload());
 
 handle(CH.meetingsRename, (_e, id: unknown, title: unknown) => {
   if (typeof id === "string" && typeof title === "string") meetings.rename(id, title);

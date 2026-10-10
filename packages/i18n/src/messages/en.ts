@@ -477,6 +477,18 @@ export const messages: Catalogue = {
     reminder: "Let the others know this meeting is being recorded.",
     me: "Me",
     others: "Others",
+    person: "Person {n}",
+    people: {
+      title: "People",
+      note: "The voices were told apart by a program; it can be wrong. Click a name to change it, merge two that are the same person, or give a line in the transcript to someone else.",
+      name: "Name for {name}",
+      merge: "Same person as…",
+      move: "Who said this line",
+    },
+    separate: {
+      title: "Tell speakers apart",
+      body: "When a recording ends, the voices heard through the computer are told apart: Person 1, Person 2… You give them their names. It tells voices apart, it does not know who anyone is; it can be wrong, and you can correct it afterwards. Adds about five minutes to an hour-long meeting. A one-time {size} download; it runs on this Mac.",
+    },
     empty: "No meetings yet. Press Record meeting when one begins; it is written down and summarised on this Mac.",
     search: "Search meetings",
     noResults: "No meeting matches.",
@@ -499,6 +511,7 @@ export const messages: Catalogue = {
     state: {
       recording: "Recording",
       transcribing: "Writing down",
+      separating: "Telling speakers apart",
       summarising: "Summarising",
       done: "Done",
       failed: "Not summarised",

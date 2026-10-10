@@ -477,6 +477,18 @@ export const messages: Catalogue = {
     reminder: "请告知其他参会者本次会议正在录制。",
     me: "我",
     others: "其他人",
+    person: "人物 {n}",
+    people: {
+      title: "人物",
+      note: "声音由程序区分，可能有误。点按名字可以修改，把其实是同一人的两项合并，或把转写中的某一行改给别人。",
+      name: "{name} 的名字",
+      merge: "与此人相同…",
+      move: "这一行是谁说的",
+    },
+    separate: {
+      title: "区分说话人",
+      body: "录制结束后，会把通过电脑听到的声音按人区分：人物 1、人物 2……名字由你来填。它只区分声音，并不知道谁是谁；可能有误，之后可以更正。一小时的会议大约多花五分钟。一次性下载 {size}；在这台 Mac 上运行。",
+    },
     empty: "还没有会议。会议开始时点按“录制会议”，它会在这台 Mac 上转写并生成摘要。",
     search: "搜索会议",
     noResults: "没有匹配的会议。",
@@ -499,6 +511,7 @@ export const messages: Catalogue = {
     state: {
       recording: "正在录制",
       transcribing: "正在转写",
+      separating: "正在区分说话人",
       summarising: "正在生成摘要",
       done: "完成",
       failed: "未生成摘要",

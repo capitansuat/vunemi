@@ -477,6 +477,18 @@ export const messages: Catalogue = {
     reminder: "Avvisa gli altri che la riunione viene registrata.",
     me: "Io",
     others: "Altri",
+    person: "Persona {n}",
+    people: {
+      title: "Persone",
+      note: "Le voci sono state separate da un programma; può sbagliare. Fai clic su un nome per cambiarlo, unisci due voci che sono la stessa persona o assegna una riga della trascrizione a qualcun altro.",
+      name: "Nome per {name}",
+      merge: "Stessa persona di…",
+      move: "Chi ha detto questa riga",
+    },
+    separate: {
+      title: "Distingui chi parla",
+      body: "Alla fine della registrazione le voci sentite dal computer vengono separate: Persona 1, Persona 2… I nomi li dai tu. Separa le voci, non sa chi è chi; può sbagliare e puoi correggere dopo. Aggiunge circa cinque minuti a una riunione di un'ora. Download unico di {size}; funziona su questo Mac.",
+    },
     empty: "Ancora nessuna riunione. Premi Registra riunione quando ne inizia una: viene trascritta e riassunta su questo Mac.",
     search: "Cerca nelle riunioni",
     noResults: "Nessuna riunione corrisponde.",
@@ -499,6 +511,7 @@ export const messages: Catalogue = {
     state: {
       recording: "In registrazione",
       transcribing: "Trascrizione",
+      separating: "Separazione delle voci",
       summarising: "Riassunto in corso",
       done: "Pronta",
       failed: "Non riassunta",

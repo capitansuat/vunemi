@@ -9,8 +9,10 @@
  * Pure: the caller reads the files.
  */
 import type { AgentEvent, MentionRef } from "@vunemi/agent-core";
+import { isLocale, tIn } from "@vunemi/i18n";
 import type { MentionItem, SessionSummary } from "../shared/ipc.js";
 import { MEETING_ID, type Meeting, type MeetingSummary } from "./meetings/store.js";
+import { lineLabel, type Names } from "./meetings/summary.js";
 import { SESSION_ID } from "./sessions.js";
 
 export const MAX_MENTIONS = 5;
@@ -83,10 +85,13 @@ function clock(seconds: number): string {
   return s >= 3600 ? `${Math.floor(s / 3600)}:${rest}` : rest;
 }
 
-export function meetingParts(meeting: Pick<Meeting, "summary" | "lines">): { summary: string; transcript: string } {
+export function meetingParts(meeting: Pick<Meeting, "summary" | "lines"> & Partial<Pick<Meeting, "speakers" | "language">>): { summary: string; transcript: string } {
+  // The others told apart are called what the summary calls them: the user's names, or their number in the meeting's language.
+  const language = isLocale(meeting.language) ? meeting.language : "en";
+  const names: Names = { me: "Me", others: "Others", person: (n) => tIn(language, "meetings.person", { n }) };
   return {
     summary: meeting.summary?.trim() ? `Summary:\n${meeting.summary.trim()}` : "No summary was written.",
-    transcript: meeting.lines.map((l) => `[${clock(l.start)}] ${l.source === "me" ? "Me" : "Others"}: ${l.text}`).join("\n"),
+    transcript: meeting.lines.map((l) => `[${clock(l.start)}] ${lineLabel(l, names, meeting.speakers)}: ${l.text}`).join("\n"),
   };
 }
 
