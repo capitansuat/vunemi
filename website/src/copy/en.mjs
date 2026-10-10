@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.18 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.19 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.18 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.19 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -119,7 +119,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.1.18 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.1.19 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -172,11 +172,9 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "Voice chat: the waveform button beside the microphone turns it on. Vunemi reads its answer aloud sentence by sentence, and you can speak over it. It listens by itself or only when you press the microphone; with other people in the room choose pressing, because a voice near you can be taken for yours.",
-      "Meetings can tell the people on a call apart: Person 1, Person 2… You name them and correct what is wrong. It is off until you turn it on in Meetings, needs a one-time download and runs on your Mac.",
-      "Personality: in Settings › Personality, write in your own words how Vunemi should talk to you. It changes tone and style only, never what Vunemi may do.",
-      "History shows the sentence that fits your request under each session or meeting it finds, and prepares new sessions in the background.",
-      "More fields on web forms count as personal details that Vunemi leaves to you: a plain name or address field next to contact details, and phone numbers. A web address written out in an answer gets the “unverified” note too.",
+      "Calendar: when two of your accounts have a calendar or reminder list with the same name, Vunemi asks which one before it adds anything. An event or reminder you put back after deleting returns to the calendar it came from. Connections now lists the accounts your calendars come from.",
+      "If the file that holds your automations is damaged, Vunemi still starts: it sets the file aside and begins with an empty list.",
+      "Speech files left over from a voice chat are cleared the next time Vunemi speaks. The app now runs on Electron 44.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],

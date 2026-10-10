@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.18 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.19 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.18 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.19 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.1.18 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.1.19 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -168,11 +168,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Sprachchat: Die Wellenform-Taste neben dem Mikrofon schaltet ihn ein. Vunemi liest seine Antwort Satz für Satz vor, und du kannst ihm ins Wort fallen. Er hört von selbst zu oder nur, wenn du das Mikrofon drückst; sind andere im Raum, wähle das Drücken, denn eine Stimme in deiner Nähe kann für deine gehalten werden.",
-      "Besprechungen können die Personen im Gespräch unterscheiden: Person 1, Person 2… Du gibst ihnen Namen und korrigierst, was nicht stimmt. Das bleibt aus, bis du es in Besprechungen einschaltest, braucht einen einmaligen Download und läuft auf deinem Mac.",
-      "Persönlichkeit: Schreib unter Einstellungen › Persönlichkeit in deinen eigenen Worten, wie Vunemi mit dir sprechen soll. Das ändert nur Ton und Stil, nie, was Vunemi tun darf.",
-      "Der Verlauf zeigt unter jeder gefundenen Sitzung oder Besprechung den Satz, der zu deiner Anfrage passt, und bereitet neue Sitzungen im Hintergrund vor.",
-      "Mehr Felder in Webformularen gelten als persönliche Angaben, die Vunemi dir überlässt: ein einfaches Namens- oder Adressfeld neben Kontaktdaten und Telefonnummern. Auch eine in einer Antwort ausgeschriebene Webadresse erhält den Hinweis „ungeprüft“.",
+      "Kalender: Haben zwei deiner Konten einen Kalender oder eine Erinnerungsliste mit demselben Namen, fragt Vunemi nach, bevor etwas hinzugefügt wird. Ein Termin oder eine Erinnerung, die du nach dem Löschen zurückholst, kommt wieder in den Kalender, aus dem sie stammt. Verbindungen zeigt jetzt die Konten, aus denen deine Kalender stammen.",
+      "Ist die Datei mit deinen Automationen beschädigt, startet Vunemi trotzdem: Die Datei wird beiseitegelegt, und die Liste beginnt leer.",
+      "Sprachdateien, die von einem Sprachchat übrig geblieben sind, werden gelöscht, sobald Vunemi das nächste Mal spricht. Die App läuft jetzt auf Electron 44.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

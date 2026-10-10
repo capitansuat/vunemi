@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: um assistente pessoal que roda no seu Mac", description: "O Vunemi ajuda nas tarefas do dia a dia. A IA roda no seu Mac, sem conta na nuvem do Vunemi. Você escolhe quais serviços externos conectar." },
-    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.1.18 faz." },
+    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.1.19 faz." },
     screens: { title: "Telas do Vunemi", description: "Telas reais do app Vunemi para Mac, capturadas com dados de exemplo." },
-    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.1.18 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
+    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.1.19 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
   },
   hero: {
     eyebrow: "Assistente pessoal para Mac",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Tudo o que o Vunemi faz",
-    intro: "O Vunemi 0.1.18 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
+    intro: "O Vunemi 0.1.19 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
     chatTitle: "Trabalhando com o Vunemi",
     chat: [
       { title: "Primeiro o plano", body: "Numa tarefa com vários passos, o Vunemi pode mostrar o plano antes. Siga em frente, edite os passos ou cancele." },
@@ -168,11 +168,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Novidades desta versão",
     highlights: [
-      "Conversa por voz: o botão de onda ao lado do microfone a ativa. O Vunemi lê a resposta em voz alta frase por frase, e você pode interrompê-lo falando. Ela escuta sozinha ou só quando você pressiona o microfone; com outras pessoas no ambiente, prefira pressionar, porque uma voz próxima pode ser tomada pela sua.",
-      "As reuniões podem distinguir as pessoas da chamada: Pessoa 1, Pessoa 2… Você dá os nomes e corrige o que estiver errado. Fica desligado até você ativar em Reuniões, pede um download único e roda no seu Mac.",
-      "Personalidade: em Ajustes › Personalidade, escreva com suas palavras como o Vunemi deve falar com você. Muda só o tom e o estilo, nunca o que o Vunemi pode fazer.",
-      "O Histórico mostra, abaixo de cada sessão ou reunião encontrada, a frase que corresponde ao seu pedido, e prepara as novas sessões em segundo plano.",
-      "Mais campos de formulários web contam como dados pessoais que o Vunemi deixa para você: um campo simples de nome ou endereço ao lado de dados de contato, e números de telefone. Um endereço web escrito por extenso em uma resposta também recebe a nota “não verificado”.",
+      "Calendário: se duas das suas contas têm um calendário ou uma lista de lembretes com o mesmo nome, o Vunemi pergunta qual antes de adicionar qualquer coisa. Um evento ou lembrete que você restaura depois de apagar volta para o calendário de onde veio. Conexões agora mostra as contas de onde vêm seus calendários.",
+      "Se o arquivo que guarda suas automações estiver danificado, o Vunemi abre mesmo assim: deixa o arquivo de lado e começa com a lista vazia.",
+      "Os arquivos de áudio que sobram de uma conversa por voz são apagados na próxima vez que o Vunemi fala. O app agora roda no Electron 44.",
     ],
     title: "Baixe o Vunemi",
     intro: "Gratuito e de código aberto. Para Macs com Apple Silicon e macOS 14 ou posterior.",

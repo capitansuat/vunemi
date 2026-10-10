@@ -1,95 +1,73 @@
 {
-  "currentRelease": "0.1.18",
+  "currentRelease": "0.1.19",
   "releases": [
     {
-      "version": "0.1.18",
+      "version": "0.1.19",
       "updateTo": {
-        "version": "0.1.18",
-        "name": "Vunemi 0.1.18",
+        "version": "0.1.19",
+        "name": "Vunemi 0.1.19",
         "pub_date": "2026-10-10T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.18/Vunemi-0.1.18-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.19/Vunemi-0.1.19-arm64.zip"
       }
     }
   ],
-  "sizeMb": 142,
+  "sizeMb": 143,
   "notes": {
     "en": [
-      "Voice chat: the waveform button beside the microphone turns it on. Vunemi reads its answer aloud sentence by sentence, and you can speak over it. It listens by itself or only when you press the microphone; with other people in the room choose pressing, because a voice near you can be taken for yours.",
-      "Meetings can tell the people on a call apart: Person 1, Person 2… You name them and correct what is wrong. It is off until you turn it on in Meetings, needs a one-time download and runs on your Mac.",
-      "Personality: in Settings › Personality, write in your own words how Vunemi should talk to you. It changes tone and style only, never what Vunemi may do.",
-      "History shows the sentence that fits your request under each session or meeting it finds, and prepares new sessions in the background.",
-      "More fields on web forms count as personal details that Vunemi leaves to you: a plain name or address field next to contact details, and phone numbers. A web address written out in an answer gets the “unverified” note too."
+      "Calendar: when two of your accounts have a calendar or reminder list with the same name, Vunemi asks which one before it adds anything. An event or reminder you put back after deleting returns to the calendar it came from. Connections now lists the accounts your calendars come from.",
+      "If the file that holds your automations is damaged, Vunemi still starts: it sets the file aside and begins with an empty list.",
+      "Speech files left over from a voice chat are cleared the next time Vunemi speaks. The app now runs on Electron 44."
     ],
     "de": [
-      "Sprachchat: Die Wellenform-Taste neben dem Mikrofon schaltet ihn ein. Vunemi liest seine Antwort Satz für Satz vor, und du kannst ihm ins Wort fallen. Er hört von selbst zu oder nur, wenn du das Mikrofon drückst; sind andere im Raum, wähle das Drücken, denn eine Stimme in deiner Nähe kann für deine gehalten werden.",
-      "Besprechungen können die Personen im Gespräch unterscheiden: Person 1, Person 2… Du gibst ihnen Namen und korrigierst, was nicht stimmt. Das bleibt aus, bis du es in Besprechungen einschaltest, braucht einen einmaligen Download und läuft auf deinem Mac.",
-      "Persönlichkeit: Schreib unter Einstellungen › Persönlichkeit in deinen eigenen Worten, wie Vunemi mit dir sprechen soll. Das ändert nur Ton und Stil, nie, was Vunemi tun darf.",
-      "Der Verlauf zeigt unter jeder gefundenen Sitzung oder Besprechung den Satz, der zu deiner Anfrage passt, und bereitet neue Sitzungen im Hintergrund vor.",
-      "Mehr Felder in Webformularen gelten als persönliche Angaben, die Vunemi dir überlässt: ein einfaches Namens- oder Adressfeld neben Kontaktdaten und Telefonnummern. Auch eine in einer Antwort ausgeschriebene Webadresse erhält den Hinweis „ungeprüft“."
+      "Kalender: Haben zwei deiner Konten einen Kalender oder eine Erinnerungsliste mit demselben Namen, fragt Vunemi nach, bevor etwas hinzugefügt wird. Ein Termin oder eine Erinnerung, die du nach dem Löschen zurückholst, kommt wieder in den Kalender, aus dem sie stammt. Verbindungen zeigt jetzt die Konten, aus denen deine Kalender stammen.",
+      "Ist die Datei mit deinen Automationen beschädigt, startet Vunemi trotzdem: Die Datei wird beiseitegelegt, und die Liste beginnt leer.",
+      "Sprachdateien, die von einem Sprachchat übrig geblieben sind, werden gelöscht, sobald Vunemi das nächste Mal spricht. Die App läuft jetzt auf Electron 44."
     ],
     "es": [
-      "Chat por voz: lo activa el botón de onda junto al micrófono. Vunemi lee su respuesta en voz alta frase a frase, y puedes interrumpirlo hablando. Escucha por sí solo o solo cuando pulsas el micrófono; si hay más gente en la habitación, elige pulsar, porque una voz cercana puede tomarse por la tuya.",
-      "Las reuniones pueden distinguir a las personas de la llamada: Persona 1, Persona 2… Tú les pones nombre y corriges lo que esté mal. Está desactivado hasta que lo actives en Reuniones, necesita una descarga única y funciona en tu Mac.",
-      "Personalidad: en Ajustes › Personalidad, escribe con tus palabras cómo debe hablarte Vunemi. Solo cambia el tono y el estilo, nunca lo que Vunemi puede hacer.",
-      "El Historial muestra, bajo cada sesión o reunión que encuentra, la frase que encaja con tu petición, y prepara las sesiones nuevas en segundo plano.",
-      "Más campos de los formularios web cuentan como datos personales que Vunemi te deja a ti: un campo simple de nombre o dirección junto a datos de contacto, y los números de teléfono. Una dirección web escrita en una respuesta también recibe la nota «sin verificar»."
+      "Calendario: si dos de tus cuentas tienen un calendario o una lista de recordatorios con el mismo nombre, Vunemi pregunta cuál antes de añadir nada. Un evento o recordatorio que recuperas después de borrarlo vuelve al calendario del que venía. Conexiones muestra ahora las cuentas de las que vienen tus calendarios.",
+      "Si el archivo que guarda tus automatizaciones está dañado, Vunemi se abre igualmente: aparta el archivo y empieza con la lista vacía.",
+      "Los archivos de voz que quedan de un chat por voz se borran la próxima vez que Vunemi habla. La app funciona ahora con Electron 44."
     ],
     "fr": [
-      "Conversation vocale : le bouton en forme d'onde à côté du micro l'active. Vunemi lit sa réponse à voix haute phrase par phrase, et vous pouvez l'interrompre en parlant. Elle écoute d'elle-même ou seulement quand vous appuyez sur le micro ; s'il y a d'autres personnes dans la pièce, choisissez l'appui, car une voix proche peut être prise pour la vôtre.",
-      "Les réunions peuvent distinguer les personnes de l'appel : Personne 1, Personne 2… Vous leur donnez un nom et corrigez ce qui est faux. La fonction reste désactivée tant que vous ne l'activez pas dans Réunions, demande un téléchargement unique et fonctionne sur votre Mac.",
-      "Personnalité : dans Réglages › Personnalité, écrivez avec vos mots comment Vunemi doit vous parler. Cela ne change que le ton et le style, jamais ce que Vunemi a le droit de faire.",
-      "L'Historique montre, sous chaque session ou réunion trouvée, la phrase qui correspond à votre demande, et prépare les nouvelles sessions en arrière-plan.",
-      "Davantage de champs des formulaires web comptent comme des données personnelles que Vunemi vous laisse : un simple champ de nom ou d'adresse à côté de coordonnées, et les numéros de téléphone. Une adresse web écrite en toutes lettres dans une réponse reçoit aussi la mention « non vérifié »."
+      "Calendrier : si deux de vos comptes ont un calendrier ou une liste de rappels du même nom, Vunemi demande lequel avant d'ajouter quoi que ce soit. Un événement ou un rappel que vous rétablissez après l'avoir supprimé retourne dans le calendrier d'où il venait. Connexions affiche désormais les comptes d'où viennent vos calendriers.",
+      "Si le fichier qui contient vos automatisations est endommagé, Vunemi démarre quand même : le fichier est mis de côté et la liste repart vide.",
+      "Les fichiers audio laissés par une conversation vocale sont supprimés la prochaine fois que Vunemi parle. L'app tourne désormais sur Electron 44."
     ],
     "it": [
-      "Chat vocale: la attiva il pulsante a forma d'onda accanto al microfono. Vunemi legge la risposta ad alta voce frase per frase, e puoi interromperlo parlando. Ascolta da sola o solo quando premi il microfono; se nella stanza ci sono altre persone scegli di premere, perché una voce vicina può essere scambiata per la tua.",
-      "Le riunioni possono distinguere le persone della chiamata: Persona 1, Persona 2… Tu dai loro un nome e correggi ciò che è sbagliato. Resta disattivato finché non lo attivi in Riunioni, richiede un download una tantum e funziona sul tuo Mac.",
-      "Personalità: in Impostazioni › Personalità scrivi con parole tue come Vunemi deve parlarti. Cambia solo tono e stile, mai ciò che Vunemi può fare.",
-      "La Cronologia mostra, sotto ogni sessione o riunione trovata, la frase che corrisponde alla tua richiesta, e prepara le nuove sessioni in background.",
-      "Più campi dei moduli web contano come dati personali che Vunemi lascia a te: un semplice campo nome o indirizzo accanto ai dati di contatto, e i numeri di telefono. Anche un indirizzo web scritto per esteso in una risposta riceve la nota “non verificato”."
+      "Calendario: se due dei tuoi account hanno un calendario o un elenco di promemoria con lo stesso nome, Vunemi chiede quale prima di aggiungere qualcosa. Un evento o un promemoria che ripristini dopo averlo eliminato torna nel calendario da cui veniva. Connessioni ora mostra gli account da cui provengono i tuoi calendari.",
+      "Se il file che contiene le tue automazioni è danneggiato, Vunemi si avvia lo stesso: mette da parte il file e riparte da un elenco vuoto.",
+      "I file audio rimasti da una chat vocale vengono eliminati la prossima volta che Vunemi parla. L'app ora gira su Electron 44."
     ],
     "tr": [
-      "Sesli sohbet: mikrofonun yanındaki dalga düğmesi açar. Vunemi cevabını cümle cümle sesli okur; o konuşurken araya girebilirsin. Kendiliğinden dinler ya da yalnız mikrofona bastığında; odada başkaları varsa basarak konuşmayı seç, çünkü yakınındaki bir ses senin sanılabilir.",
-      "Toplantılar görüşmedeki kişileri ayırabilir: Kişi 1, Kişi 2… Adlarını sen verirsin, yanlışı düzeltirsin. Sen Toplantılar'dan açana kadar kapalıdır; bir kerelik indirme gerekir ve Mac'inde çalışır.",
-      "Kişilik: Ayarlar › Kişilik'te Vunemi'nin seninle nasıl konuşacağını kendi sözlerinle yaz. Yalnız tonu ve üslubu değiştirir; Vunemi'nin neye izinli olduğunu değiştirmez.",
-      "Geçmiş, bulduğu her oturumun ya da toplantının altında isteğine uyan cümleyi gösterir ve yeni oturumları arka planda hazırlar.",
-      "Web formlarında daha çok alan Vunemi'nin sana bıraktığı kişisel bilgi sayılır: iletişim bilgilerinin yanındaki yalın ad ya da adres alanı ve telefon numaraları. Cevapta açık yazılan web adresi de “doğrulanmadı” notunu alır."
+      "Takvim: iki hesabında aynı adlı takvim ya da anımsatıcı listesi varsa Vunemi bir şey eklemeden önce hangisi olduğunu sorar. Silip geri aldığın etkinlik ya da anımsatıcı geldiği takvime döner. Bağlantılar artık takvimlerinin geldiği hesapları listeler.",
+      "Otomasyonlarını tutan dosya bozulursa Vunemi yine açılır: dosyayı kenara alır ve boş bir listeyle başlar.",
+      "Sesli sohbetten artakalan ses dosyaları Vunemi bir sonraki konuşmasında silinir. Uygulama artık Electron 44 üzerinde çalışır."
     ],
     "pt": [
-      "Conversa por voz: o botão de onda ao lado do microfone a ativa. O Vunemi lê a resposta em voz alta frase por frase, e você pode interrompê-lo falando. Ela escuta sozinha ou só quando você pressiona o microfone; com outras pessoas no ambiente, prefira pressionar, porque uma voz próxima pode ser tomada pela sua.",
-      "As reuniões podem distinguir as pessoas da chamada: Pessoa 1, Pessoa 2… Você dá os nomes e corrige o que estiver errado. Fica desligado até você ativar em Reuniões, pede um download único e roda no seu Mac.",
-      "Personalidade: em Ajustes › Personalidade, escreva com suas palavras como o Vunemi deve falar com você. Muda só o tom e o estilo, nunca o que o Vunemi pode fazer.",
-      "O Histórico mostra, abaixo de cada sessão ou reunião encontrada, a frase que corresponde ao seu pedido, e prepara as novas sessões em segundo plano.",
-      "Mais campos de formulários web contam como dados pessoais que o Vunemi deixa para você: um campo simples de nome ou endereço ao lado de dados de contato, e números de telefone. Um endereço web escrito por extenso em uma resposta também recebe a nota “não verificado”."
+      "Calendário: se duas das suas contas têm um calendário ou uma lista de lembretes com o mesmo nome, o Vunemi pergunta qual antes de adicionar qualquer coisa. Um evento ou lembrete que você restaura depois de apagar volta para o calendário de onde veio. Conexões agora mostra as contas de onde vêm seus calendários.",
+      "Se o arquivo que guarda suas automações estiver danificado, o Vunemi abre mesmo assim: deixa o arquivo de lado e começa com a lista vazia.",
+      "Os arquivos de áudio que sobram de uma conversa por voz são apagados na próxima vez que o Vunemi fala. O app agora roda no Electron 44."
     ],
     "ru": [
-      "Голосовой чат: его включает кнопка с волной рядом с микрофоном. Vunemi читает ответ вслух предложение за предложением, и его можно перебить. Он слушает сам или только когда вы нажимаете на микрофон; если в комнате есть другие люди, выбирайте нажатие: голос рядом с вами может быть принят за ваш.",
-      "Встречи умеют различать участников звонка: Участник 1, Участник 2… Вы даёте им имена и исправляете ошибки. Функция выключена, пока вы не включите её во «Встречах», требует однократной загрузки и работает на вашем Mac.",
-      "Характер: в разделе «Настройки › Характер» напишите своими словами, как Vunemi должен с вами говорить. Это меняет только тон и стиль, но не то, что Vunemi разрешено делать.",
-      "История показывает под каждым найденным сеансом или встречей фразу, которая отвечает вашему запросу, и готовит новые сеансы в фоне.",
-      "Больше полей веб-форм считаются личными данными, которые Vunemi оставляет вам: простое поле имени или адреса рядом с контактными данными и номера телефонов. Веб-адрес, написанный в ответе текстом, тоже получает пометку «не проверено»."
+      "Календарь: если в двух ваших учётных записях есть календарь или список напоминаний с одинаковым названием, Vunemi спрашивает, какой из них нужен, прежде чем что-либо добавить. Событие или напоминание, которое вы вернули после удаления, возвращается в тот календарь, где оно было. В разделе «Подключения» теперь показаны учётные записи, из которых берутся ваши календари.",
+      "Если файл с вашими автоматизациями повреждён, Vunemi всё равно запускается: файл откладывается в сторону, а список начинается пустым.",
+      "Звуковые файлы, оставшиеся после голосового чата, удаляются, когда Vunemi заговорит в следующий раз. Приложение теперь работает на Electron 44."
     ],
     "zh": [
-      "语音对话：点麦克风旁边的波形按钮即可开启。Vunemi 会逐句朗读回答，你可以随时开口打断。它可以自行聆听，也可以只在你按下麦克风时聆听；房间里有其他人时请选择按下，因为你身边的声音可能被当成你的。",
-      "会议可以区分通话中的人：人物 1、人物 2……由你为他们命名并更正错误。在你到“会议”中开启之前它保持关闭；需要一次性下载，并在你的 Mac 上运行。",
-      "个性：在“设置 › 个性”中用你自己的话写下 Vunemi 应该怎样和你说话。它只改变语气和风格，不会改变 Vunemi 可以做什么。",
-      "历史记录会在找到的每个会话或会议下方显示与你的请求相符的那句话，并在后台准备新的会话。",
-      "网页表单中有更多字段被视为由你自己填写的个人信息：联系方式旁边的普通姓名或地址字段，以及电话号码。回答中直接写出的网址同样会标记为“未核实”。"
+      "日历：如果你的两个账户里有同名的日历或提醒事项列表，Vunemi 会在添加之前先问是哪一个。删除后恢复的日程或提醒事项会回到它原来所在的日历。“连接”现在会列出日历所属的账户。",
+      "保存自动化的文件损坏时，Vunemi 仍能启动：它会把该文件放到一边，从空列表开始。",
+      "语音对话留下的语音文件会在 Vunemi 下次朗读时清除。应用现在基于 Electron 44 运行。"
     ],
     "ja": [
-      "音声チャット：マイクの横にある波形ボタンでオンにします。Vunemi は答えを一文ずつ読み上げ、話しかけて途中でさえぎることもできます。自動で聞き取るか、マイクを押したときだけ聞き取るかを選べます。部屋にほかの人がいるときは押す方法を選んでください。近くの声があなたの声と取り違えられることがあります。",
-      "会議で通話中の人を区別できるようになりました：人物 1、人物 2… 名前を付けて、間違いを直せます。「会議」でオンにするまではオフで、一度だけダウンロードが必要です。処理は Mac 上で行われます。",
-      "パーソナリティ：「設定 › パーソナリティ」に、Vunemi にどう話してほしいかを自分の言葉で書けます。変わるのは口調と文体だけで、Vunemi にできることは変わりません。",
-      "履歴は、見つけたセッションや会議ごとに、依頼に合う一文を表示します。新しいセッションの準備はバックグラウンドで行います。",
-      "ウェブフォームで、Vunemi があなたに任せる個人情報として扱う欄が増えました：連絡先の横にある単純な名前欄や住所欄、電話番号です。回答に直接書かれたウェブアドレスにも「未確認」と表示されます。"
+      "カレンダー：2 つのアカウントに同じ名前のカレンダーやリマインダーリストがある場合、Vunemi は追加する前にどちらかを尋ねます。削除したあとで元に戻したイベントやリマインダーは、元のカレンダーに戻ります。「接続」に、カレンダーの元になっているアカウントが表示されるようになりました。",
+      "オートメーションを保存しているファイルが壊れていても、Vunemi は起動します。そのファイルは別に残し、空のリストから始めます。",
+      "音声チャットで残った音声ファイルは、Vunemi が次に話すときに削除されます。アプリは Electron 44 で動作するようになりました。"
     ],
     "ko": [
-      "음성 대화: 마이크 옆의 파형 버튼으로 켭니다. Vunemi가 답을 한 문장씩 소리 내어 읽으며, 말을 걸어 중간에 끊을 수 있습니다. 스스로 듣거나 마이크를 누를 때만 듣도록 고를 수 있습니다. 방에 다른 사람이 있으면 누르는 방식을 선택하세요. 가까이에서 나는 다른 사람의 목소리도 말로 받아들일 수 있습니다.",
-      "회의에서 통화 중인 사람들을 구분할 수 있습니다: 참석자 1, 참석자 2… 이름을 붙이고 틀린 부분을 고칠 수 있습니다. 회의에서 켜기 전까지는 꺼져 있으며, 한 번의 다운로드가 필요하고 Mac에서 실행됩니다.",
-      "성격: 설정 › 성격에서 Vunemi가 어떻게 말하면 좋을지 자신의 말로 적으세요. 말투와 문체만 바뀌며, Vunemi가 할 수 있는 일은 바뀌지 않습니다.",
-      "기록은 찾아낸 세션이나 회의마다 요청에 맞는 문장을 보여 주고, 새 세션은 백그라운드에서 준비합니다.",
-      "웹 양식에서 더 많은 입력란이 Vunemi가 직접 입력하지 않고 맡기는 개인 정보로 취급됩니다: 연락처 옆의 단순한 이름 또는 주소 입력란과 전화번호입니다. 답변에 그대로 적힌 웹 주소에도 “확인되지 않음” 표시가 붙습니다."
+      "캘린더: 두 계정에 이름이 같은 캘린더나 미리 알림 목록이 있으면 Vunemi가 추가하기 전에 어느 것인지 묻습니다. 삭제한 뒤 되돌린 이벤트나 미리 알림은 원래 있던 캘린더로 돌아갑니다. 연결에 캘린더가 속한 계정이 이제 표시됩니다.",
+      "자동화를 저장하는 파일이 손상되어도 Vunemi는 시작됩니다. 그 파일은 따로 보관하고 빈 목록으로 시작합니다.",
+      "음성 대화에서 남은 음성 파일은 Vunemi가 다음에 말할 때 삭제됩니다. 앱은 이제 Electron 44에서 실행됩니다."
     ]
   }
 }

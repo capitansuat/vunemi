@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.18 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.19 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.18，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.19，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -117,7 +117,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.1.18：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.1.19：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -168,11 +168,9 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "语音对话：点麦克风旁边的波形按钮即可开启。Vunemi 会逐句朗读回答，你可以随时开口打断。它可以自行聆听，也可以只在你按下麦克风时聆听；房间里有其他人时请选择按下，因为你身边的声音可能被当成你的。",
-      "会议可以区分通话中的人：人物 1、人物 2……由你为他们命名并更正错误。在你到“会议”中开启之前它保持关闭；需要一次性下载，并在你的 Mac 上运行。",
-      "个性：在“设置 › 个性”中用你自己的话写下 Vunemi 应该怎样和你说话。它只改变语气和风格，不会改变 Vunemi 可以做什么。",
-      "历史记录会在找到的每个会话或会议下方显示与你的请求相符的那句话，并在后台准备新的会话。",
-      "网页表单中有更多字段被视为由你自己填写的个人信息：联系方式旁边的普通姓名或地址字段，以及电话号码。回答中直接写出的网址同样会标记为“未核实”。",
+      "日历：如果你的两个账户里有同名的日历或提醒事项列表，Vunemi 会在添加之前先问是哪一个。删除后恢复的日程或提醒事项会回到它原来所在的日历。“连接”现在会列出日历所属的账户。",
+      "保存自动化的文件损坏时，Vunemi 仍能启动：它会把该文件放到一边，从空列表开始。",
+      "语音对话留下的语音文件会在 Vunemi 下次朗读时清除。应用现在基于 Electron 44 运行。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",
