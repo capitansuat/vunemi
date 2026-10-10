@@ -266,7 +266,7 @@ export class SpeakerSeparator {
     const wav = join(folder, SPEAKERS_WAV);
     const seconds = statSync(pcm).size / 2 / RATE;
     // A minute of audio took about five seconds; a slow Mac gets as long as the meeting itself.
-    const limit = AbortSignal.timeout(Math.max(MIN_TIMEOUT_MS, seconds * 1000));
+    const limit = AbortSignal.timeout(Math.max(MIN_TIMEOUT_MS, Math.ceil(seconds * 1000)));
     const threads = String(Math.max(1, Math.min(4, Math.floor(cpus().length / 2))));
     try {
       await wavFromPcm(pcm, wav);

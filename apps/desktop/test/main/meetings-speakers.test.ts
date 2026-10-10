@@ -270,6 +270,16 @@ describe("SpeakerSeparator", () => {
     expect(existsSync(join(folder, "system.pcm"))).toBe(true);
   });
 
+  it("gives a long meeting as long as it lasted, whatever its length in samples", async () => {
+    place();
+    // 400.00003125 s: longer than the shortest limit, and not a whole number of milliseconds.
+    const folder = join(root, "long");
+    mkdirSync(folder);
+    writeFileSync(join(folder, "system.pcm"), Buffer.alloc((400 * RATE + 1) * 2 - 1));
+    const separator = new SpeakerSeparator({ binary: "/bin/program", dir: models(), run: async () => "1.000 -- 2.000 speaker_00\n" });
+    expect(await separator.separate(folder)).toEqual([{ start: 1, end: 2, voice: 0 }]);
+  });
+
   it("removes the copy when the program fails too, and cannot say without the others' audio", async () => {
     place();
     const folder = meeting();
