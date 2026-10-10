@@ -252,6 +252,10 @@ export const messages: Catalogue = {
       handsFreeHint: "Voice chat: sends when you stop talking, reads the answer aloud, then listens again",
       stopListening: "Stop listening",
       talk: "Talk",
+      holdToTalk: "Hold to talk",
+      listensItself: "Voice chat listens by itself",
+      listensHeld: "Voice chat listens while you hold the microphone",
+      switchMode: "Change",
       download: "Download ({size} MB)",
       downloading: "Downloading the speech model… {percent}%",
       downloadNote: "To type by voice, a speech model is downloaded once ({size} MB) and stays on this Mac.",
@@ -331,6 +335,7 @@ export const messages: Catalogue = {
     approvals: { one: "One action is waiting for your approval.", other: "{count} actions are waiting for your approval." },
     planHint: "Press Go ahead on the plan card above.",
     cancelEsc: "Cancel (Esc)",
+    wentQuiet: "Voice chat turned itself off: nobody spoke for a while.",
     codeBlock: "code block",
   },
 

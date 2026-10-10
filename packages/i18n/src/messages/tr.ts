@@ -256,6 +256,10 @@ export const messages = {
       handsFreeHint: "Sesli sohbet: susunca gönderir, cevabı sesli okur, sonra yeniden dinler",
       stopListening: "Dinlemeyi bitir",
       talk: "Konuş",
+      holdToTalk: "Konuşmak için basılı tut",
+      listensItself: "Sesli sohbet kendiliğinden dinliyor",
+      listensHeld: "Sesli sohbet, mikrofonu basılı tuttuğunda dinliyor",
+      switchMode: "Değiştir",
       download: "İndir ({size} MB)",
       downloading: "Ses modeli indiriliyor… %{percent}",
       downloadNote: "Sesle yazmak için ses modeli bir kez indirilir ({size} MB) ve bu Mac'te kalır.",
@@ -335,6 +339,7 @@ export const messages = {
     approvals: { one: "Bir eylem senin onayını bekliyor.", other: "{count} eylem senin onayını bekliyor." },
     planHint: "Yukarıdaki plan kartında Devam et'e bas.",
     cancelEsc: "Vazgeç (Esc)",
+    wentQuiet: "Bir süre kimse konuşmadığı için sesli sohbet kapandı.",
     codeBlock: "kod bloğu",
   },
 

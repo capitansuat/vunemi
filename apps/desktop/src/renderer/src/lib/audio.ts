@@ -12,6 +12,13 @@ export const SAMPLE_RATE = 16_000;
 
 /** No frame quieter than this is ever speech, whatever the room sounds like. */
 const FLOOR = 0.015;
+/**
+ * The same, while voice chat listens by itself: only a voice near the
+ * microphone is a turn. With the microphone open for as long as the chat is,
+ * people talking across the room were heard as questions and answered; they
+ * came in between 0.02 and 0.035, a voice at the Mac several times that.
+ */
+const NEAR_FLOOR = 0.04;
 /** Speech has to stand this far above the room's own noise to count. */
 const OVER_NOISE = 3.5;
 /** How long the room has to stay quiet before a hands-free turn ends, after a few words… */
@@ -64,6 +71,9 @@ export class SpeechGate {
   private gapMs = 0;
   private ended = false;
 
+  /** `floor`: the level under which nothing is speech. */
+  constructor(private readonly floor = FLOOR) {}
+
   /** One frame's loudness (RMS) and length. True once a hands-free turn has ended in silence. */
   feed(level: number, ms: number): boolean {
     // A little smoothing, so one quiet sample between syllables isn't taken for the room.
@@ -109,7 +119,7 @@ export class SpeechGate {
    * sentences is enough to know it.
    */
   spoke(): boolean {
-    const threshold = Math.max(FLOOR, (Number.isFinite(this.quietest) ? this.quietest : 0) * OVER_NOISE);
+    const threshold = Math.max(this.floor, (Number.isFinite(this.quietest) ? this.quietest : 0) * OVER_NOISE);
     let speech = 0;
     let loudest = 0;
     for (const f of this.heard) {
@@ -124,7 +134,7 @@ export class SpeechGate {
    * the frames fed; null when there was none. What lies outside is the room.
    */
   span(): [number, number] | null {
-    const threshold = Math.max(FLOOR, (Number.isFinite(this.quietest) ? this.quietest : 0) * OVER_NOISE);
+    const threshold = Math.max(this.floor, (Number.isFinite(this.quietest) ? this.quietest : 0) * OVER_NOISE);
     let first = -1;
     let last = -1;
     this.heard.forEach((f, i) => {
@@ -136,7 +146,7 @@ export class SpeechGate {
   }
 
   private threshold(): number {
-    return Math.max(FLOOR, this.room() * OVER_NOISE);
+    return Math.max(this.floor, this.room() * OVER_NOISE);
   }
 
   private room(): number {
@@ -174,6 +184,8 @@ export interface Recorder {
   cancel(): void;
   /** Vunemi has stopped talking: from here on it is the user's turn that is recorded. */
   engage(): void;
+  /** Whether anyone has spoken in this turn so far. */
+  spoke(): boolean;
 }
 
 /** A frame arrives every ~8 ms; the eye needs far fewer than that. */
@@ -190,6 +202,8 @@ export interface RecorderOptions {
    * or until engage() hands them the turn.
    */
   onSpokenOver?: () => void;
+  /** Only a voice near the microphone counts: voice chat listening by itself. */
+  near?: boolean;
 }
 
 /**
@@ -217,7 +231,8 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
   let done = false;
   let lastLevelAt = 0;
   let peak = 0;
-  let gate = new SpeechGate();
+  const floor = opts.near ? NEAR_FLOOR : FLOOR;
+  let gate = new SpeechGate(floor);
   // While Vunemi talks, the microphone is only watched for a voice over it.
   let waiting = opts.onSpokenOver !== undefined;
   const leadIn = Math.round((LEAD_IN_MS / 1000) * SAMPLE_RATE);
@@ -239,7 +254,7 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
         const kept = chunks;
         chunks = [];
         frames = 0;
-        gate = new SpeechGate();
+        gate = new SpeechGate(floor);
         for (const f of kept) {
           chunks.push(f);
           frames += f.length;
@@ -324,8 +339,9 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
       waiting = false;
       chunks = [];
       frames = 0;
-      gate = new SpeechGate();
+      gate = new SpeechGate(floor);
     },
+    spoke,
   };
 }
 

@@ -8,13 +8,6 @@ import { filterMentions, insertMention, mentionName, mentionQuery } from "../lib
 import type { MentionItem } from "../../../shared/ipc.js";
 import { formatDate, lower, t } from "@vunemi/i18n";
 
-/**
- * Voice chat (Vunemi answering out loud, then listening again) stays off
- * until replies are read sentence by sentence and can be interrupted by
- * speaking. Dictation into the text box is unaffected.
- */
-const VOICE_CHAT = false;
-
 /** A message brings in this many conversations and meetings at most; the main process holds the same line. */
 const MAX_MENTIONS = 5;
 
@@ -33,7 +26,7 @@ export function Composer() {
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
   const { running, paused, pendingStart, model, send, steer, stop, pause, resume } = useStore();
-  const { listen, finishListening, cancelListening, setHandsFree, takeDictation, refreshVoice, setVoiceStatus } = useStore();
+  const { listen, finishListening, cancelListening, setHandsFree, setVoiceHold, holdStart, holdEnd, takeDictation, refreshVoice, setVoiceStatus } = useStore();
   // The speech model offer opens when the mic is pressed without one, not before.
   const [offer, setOffer] = useState(false);
 
@@ -198,6 +191,8 @@ export function Composer() {
   const listening = voice.state === "listening";
   const canHear = voice.status?.canHear ?? false;
   const offerable = !canHear && !!voice.status?.download;
+  /** Voice chat that listens only while the microphone button is held. */
+  const held = voice.handsFree && voice.hold && canHear;
   const micTitle = !canHear
     ? (voice.status?.hint ?? t("composer.voice.unavailable"))
     : listening
@@ -303,13 +298,23 @@ export function Composer() {
           >
             <Paperclip size={14} />
           </button>
-          <span className="truncate text-[11px] text-faint">
-            {running
-              ? t("composer.hint.running")
-              : listening
-                ? t("composer.hint.listening")
-                : t("composer.hint.idle")}
-          </span>
+          {voice.handsFree && !running && !listening ? (
+            // How voice chat listens, and the way to the other way.
+            <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-faint">
+              <span className="truncate">{t(voice.hold ? "composer.voice.listensHeld" : "composer.voice.listensItself")}</span>
+              <button type="button" onClick={() => setVoiceHold(!voice.hold)} className="shrink-0 underline underline-offset-2 hover:text-fg">
+                {t("composer.voice.switchMode")}
+              </button>
+            </span>
+          ) : (
+            <span className="truncate text-[11px] text-faint">
+              {running
+                ? t("composer.hint.running")
+                : listening
+                  ? t("composer.hint.listening")
+                  : t("composer.hint.idle")}
+            </span>
+          )}
           </div>
           {running ? (
             <div className="flex items-center gap-1.5">
@@ -355,7 +360,7 @@ export function Composer() {
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
-              {VOICE_CHAT && <button
+              <button
                 type="button"
                 // Without a speech model it offers the download, like the mic;
                 // a button that looks usable and does nothing reads as broken.
@@ -369,14 +374,23 @@ export function Composer() {
                 }`}
               >
                 <AudioLines size={14} />
-              </button>}
+              </button>
               <button
                 type="button"
-                onClick={() => (offerable ? setOffer(true) : void (listening ? finishListening(voice.handsFree) : listen()))}
-                disabled={(!canHear && !offerable) || voice.state === "thinking" || voice.state === "speaking"}
+                // Held, in voice chat that listens only then; a press from the keyboard still starts and ends a turn.
+                onPointerDown={held ? () => holdStart() : undefined}
+                onPointerUp={held ? () => holdEnd() : undefined}
+                onPointerLeave={held ? () => holdEnd() : undefined}
+                onPointerCancel={held ? () => holdEnd() : undefined}
+                onClick={(e) => {
+                  if (held && e.detail !== 0) return;
+                  if (offerable) setOffer(true);
+                  else void (listening ? finishListening(voice.handsFree) : listen());
+                }}
+                disabled={(!canHear && !offerable) || voice.state === "thinking" || (voice.state === "speaking" && !held)}
                 aria-label={listening ? t("composer.voice.stopListening") : t("composer.voice.talk")}
                 aria-pressed={listening}
-                title={micTitle}
+                title={held ? t("composer.voice.holdToTalk") : micTitle}
                 className={`grid size-8 place-items-center rounded-full border transition-colors disabled:opacity-40 ${
                   listening ? "border-danger bg-danger/10 text-danger" : "border-line text-muted hover:text-fg"
                 }`}

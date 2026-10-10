@@ -134,6 +134,26 @@ describe("SpeechGate", () => {
     expect(quiet.span()).toBeNull();
   });
 
+  it("takes only a voice near the microphone for a turn, where it was told to", () => {
+    // Live, 10 Oct: with voice chat open, people talking across the room were answered.
+    const across = 0.03;
+    const anywhere = new SpeechGate();
+    feed(anywhere, ROOM, 500);
+    feed(anywhere, across, 1_500);
+    expect(anywhere.spoke()).toBe(true);
+
+    const near = new SpeechGate(0.04);
+    feed(near, ROOM, 500);
+    expect(feed(near, across, 1_500)).toBe(false);
+    feed(near, ROOM, 3_500);
+    expect(near.spoke()).toBe(false);
+    expect(near.talking()).toBe(false);
+    expect(near.span()).toBeNull();
+    feed(near, VOICE, 1_200);
+    expect(near.spoke()).toBe(true);
+    expect(feed(near, ROOM, 1_600)).toBe(true);
+  });
+
   it("keeps hearing someone who talks on without a break", () => {
     // Live, 10 Oct: a long turn was cut in the middle. The voice had become the
     // quietest tenth of the clip, and so the room it was measured against.

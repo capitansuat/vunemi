@@ -252,6 +252,10 @@ export const messages: Catalogue = {
       handsFreeHint: "음성 대화: 말을 멈추면 보내고, 답변을 소리 내어 읽은 뒤 다시 듣습니다",
       stopListening: "듣기 끝내기",
       talk: "말하기",
+      holdToTalk: "길게 눌러 말합니다",
+      listensItself: "음성 대화가 스스로 듣습니다",
+      listensHeld: "마이크를 누르고 있는 동안에만 음성 대화가 듣습니다",
+      switchMode: "변경",
       download: "다운로드({size}MB)",
       downloading: "음성 모델 다운로드 중… {percent}%",
       downloadNote: "음성으로 입력하려면 음성 모델을 한 번 다운로드합니다({size}MB). 이 Mac에 남습니다.",
@@ -331,6 +335,7 @@ export const messages: Catalogue = {
     approvals: { other: "동작 {count}개가 승인을 기다리고 있습니다." },
     planHint: "위의 계획 카드에서 '계속'을 누르십시오.",
     cancelEsc: "취소(Esc)",
+    wentQuiet: "한동안 아무도 말하지 않아 음성 대화를 껐습니다.",
     codeBlock: "코드 블록",
   },
 

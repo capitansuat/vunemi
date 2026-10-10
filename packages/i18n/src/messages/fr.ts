@@ -252,6 +252,10 @@ export const messages: Catalogue = {
       handsFreeHint: "Conversation vocale : envoie quand vous vous taisez, lit la réponse à voix haute, puis écoute à nouveau",
       stopListening: "Arrêter l’écoute",
       talk: "Parler",
+      holdToTalk: "Maintenez pour parler",
+      listensItself: "La conversation vocale écoute d’elle-même",
+      listensHeld: "La conversation vocale écoute tant que vous maintenez le micro",
+      switchMode: "Modifier",
       download: "Télécharger ({size} Mo)",
       downloading: "Téléchargement du modèle vocal… {percent} %",
       downloadNote: "Pour dicter, un modèle vocal est téléchargé une fois ({size} Mo) et reste sur ce Mac.",
@@ -331,6 +335,7 @@ export const messages: Catalogue = {
     approvals: { one: "Une action attend votre approbation.", other: "{count} actions attendent votre approbation." },
     planHint: "Appuyez sur Continuer dans la carte du plan ci-dessus.",
     cancelEsc: "Annuler (Échap)",
+    wentQuiet: "La conversation vocale s’est désactivée : personne n’a parlé pendant un moment.",
     codeBlock: "bloc de code",
   },
 

@@ -14,6 +14,7 @@ declare global {
 
 const MODEL_KEY = "vunemi.model";
 const AUTO_OPEN_KEY = "vunemi.browserAutoOpen";
+const VOICE_HOLD_KEY = "vunemi.voiceHold";
 const FOLDED_KEY = "vunemi.navFolded";
 
 /** Whether the sidebar is folded to a strip of icons; remembered per Mac. */
@@ -66,6 +67,14 @@ function carryOverStorage(): void {
 }
 carryOverStorage();
 
+function readVoiceHold(): boolean {
+  try {
+    return localStorage.getItem(VOICE_HOLD_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function readStoredModel(): string | null {
   try {
     const spec = localStorage.getItem(MODEL_KEY);
@@ -106,6 +115,8 @@ interface Voice {
   level: number;
   /** Hands-free: Vunemi listens again after it finishes speaking. */
   handsFree: boolean;
+  /** In voice chat, listen only while the microphone button is held, not by itself. */
+  hold: boolean;
   /** This run was started by speaking, so it's the voice bar's business. */
   turn: boolean;
   error: string | null;
@@ -223,6 +234,10 @@ interface State {
   finishListening(send: boolean): Promise<void>;
   cancelListening(): void;
   stopTalking(): void;
+  setVoiceHold(on: boolean): void;
+  /** The microphone button went down, and came up, in voice chat that listens only while it is held. */
+  holdStart(): void;
+  holdEnd(): void;
   setHandsFree(on: boolean): void;
   takeDictation(): string | null;
   /** Puts a suggested task in the composer for the user to edit; it isn't sent. */
@@ -240,6 +255,11 @@ let cutter: SentenceCutter | null = null;
 let spokenRun: string | null = null;
 /** The run the user spoke over or told to be quiet: no more of it is said. */
 let silenced: string | null = null;
+/** The button was let go before the microphone had opened. */
+let released = false;
+/** Voice chat that listens by itself turns itself off when nobody speaks for this long. */
+const QUIET_OFF_MS = 45_000;
+let quiet: ReturnType<typeof setTimeout> | null = null;
 
 /** How often the running transcript catches up with the speaker. */
 const FOLLOW_MS = 1_500;
@@ -268,7 +288,7 @@ export const useStore = create<State>((set, get) => ({
   library: null,
   recipeFocus: null,
   navFolded: readFolded(),
-  voice: { status: null, state: "off", partial: "", level: 0, handsFree: false, turn: false, error: null },
+  voice: { status: null, state: "off", partial: "", level: 0, handsFree: false, hold: readVoiceHold(), turn: false, error: null },
   dictated: null,
   suggested: null,
   context: null,
@@ -485,15 +505,23 @@ export const useStore = create<State>((set, get) => ({
     }
     set((s) => ({ voice: { ...s.voice, state: "listening", partial: "", level: 0, error: null } }));
     earcon("start");
+    // Voice chat listening by itself: the microphone is open for as long as the chat is.
+    const itself = get().voice.handsFree && !get().voice.hold;
     try {
       recorder = await record({
+        near: itself,
         onLevel: (level) => set((s) => (s.voice.state === "listening" ? { voice: { ...s.voice, level } } : s)),
         // Hands-free: silence ends the turn, and the task starts straight away.
         onSilence: () => {
-          if (get().voice.handsFree) void get().finishListening(true);
+          if (get().voice.handsFree && !get().voice.hold) void get().finishListening(true);
         },
       });
       followAlong(set);
+      if (itself) offWhenQuiet(set, get);
+      if (released) {
+        released = false;
+        void get().finishListening(true);
+      }
     } catch (err) {
       recorder = null;
       earcon("error");
@@ -519,6 +547,7 @@ export const useStore = create<State>((set, get) => ({
     if (!current || get().voice.state !== "listening") return;
     recorder = null;
     stopFollowing();
+    stayOn();
     earcon("stop");
     const mine = turn;
     set((s) => ({ voice: { ...s.voice, state: "thinking", level: 0 } }));
@@ -551,6 +580,7 @@ export const useStore = create<State>((set, get) => ({
     recorder?.cancel();
     recorder = null;
     stopFollowing();
+    stayOn();
     // A transcription still in flight is abandoned rather than awaited: its
     // result is ignored because the turn it belonged to is over.
     turn += 1;
@@ -567,12 +597,39 @@ export const useStore = create<State>((set, get) => ({
 
   setHandsFree(on) {
     set((s) => ({ voice: { ...s.voice, handsFree: on } }));
-    // Off in the middle of a sentence: quiet, and the microphone that waited to be spoken over is let go.
-    if (!on && get().voice.state === "speaking") get().cancelListening();
+    // Off while it talks or listens: quiet, and the microphone is let go.
+    if (!on && get().voice.state !== "off") get().cancelListening();
     else if (!on) silence();
     // Turning voice chat on starts the conversation; a mode that waits for
-    // a second button looks like a button that doesn't work.
-    else if (get().voice.status?.canHear && get().voice.state === "off") void get().listen();
+    // a second button looks like a button that doesn't work. Unless the
+    // user chose to hold the button: then nothing listens until they do.
+    else if (!get().voice.hold && get().voice.status?.canHear && get().voice.state === "off") void get().listen();
+  },
+
+  setVoiceHold(on) {
+    try {
+      localStorage.setItem(VOICE_HOLD_KEY, on ? "1" : "0");
+    } catch {
+      // Kept for this window only.
+    }
+    set((s) => ({ voice: { ...s.voice, hold: on } }));
+    if (!get().voice.handsFree) return;
+    // The microphone follows the choice at once: closed until held, or open again.
+    if (on && get().voice.state === "listening") get().cancelListening();
+    else if (!on && get().voice.state === "off" && !get().running) void get().listen();
+  },
+
+  holdStart() {
+    // Holding the button while Vunemi talks is how it is told to stop and listen.
+    if (get().voice.state !== "off") get().cancelListening();
+    released = false;
+    void get().listen();
+  },
+
+  holdEnd() {
+    if (get().voice.state !== "listening") return;
+    if (recorder) void get().finishListening(true);
+    else released = true;
   },
 
   suggest(text) {
@@ -740,12 +797,14 @@ function sayMore(runId: string, sentences: string[], set: Set, get: () => State)
 
 async function startTalking(set: Set, get: () => State): Promise<void> {
   set((s) => ({ voice: { ...s.voice, state: "speaking", partial: "", level: 0, error: null } }));
-  if (recorder) return;
+  // No microphone opens by itself where the user holds a button to talk.
+  if (recorder || get().voice.hold) return;
   try {
     const opened = await record({
+      near: true,
       onLevel: (level) => set((s) => (s.voice.state === "listening" ? { voice: { ...s.voice, level } } : s)),
       onSilence: () => {
-        if (get().voice.handsFree) void get().finishListening(true);
+        if (get().voice.handsFree && !get().voice.hold) void get().finishListening(true);
       },
       onSpokenOver: () => {
         if (get().voice.state !== "speaking") return;
@@ -786,11 +845,32 @@ function yourTurn(set: Set, get: () => State): void {
     open?.cancel();
     recorder = null;
     set((s) => ({ voice: { ...s.voice, state: "off", level: 0 } }));
-    if (get().voice.handsFree && !get().running) void get().listen();
+    if (get().voice.handsFree && !get().voice.hold && !get().running) void get().listen();
     return;
   }
   open.engage();
   set((s) => ({ voice: { ...s.voice, state: "listening", partial: "", level: 0, error: null } }));
   earcon("start");
   followAlong(set);
+  offWhenQuiet(set, get);
+}
+
+/**
+ * Voice chat that listens by itself does not stay open on an empty room:
+ * when nobody has spoken for a while it turns itself off, and says so.
+ */
+function offWhenQuiet(set: Set, get: () => State): void {
+  stayOn();
+  quiet = setTimeout(() => {
+    quiet = null;
+    if (get().voice.state !== "listening" || !get().voice.handsFree || recorder?.spoke()) return;
+    get().setHandsFree(false);
+    earcon("stop");
+    set((s) => ({ voice: { ...s.voice, error: t("voice.wentQuiet") } }));
+  }, QUIET_OFF_MS);
+}
+
+function stayOn(): void {
+  if (quiet) clearTimeout(quiet);
+  quiet = null;
 }

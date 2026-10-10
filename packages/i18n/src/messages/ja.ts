@@ -252,6 +252,10 @@ export const messages: Catalogue = {
       handsFreeHint: "音声チャット：話し終えると送信し、返答を読み上げてから再び聞き取ります",
       stopListening: "聞き取りを終了",
       talk: "話す",
+      holdToTalk: "押している間に話します",
+      listensItself: "音声チャットは自動で聞き取ります",
+      listensHeld: "音声チャットはマイクを押している間だけ聞き取ります",
+      switchMode: "変更",
       download: "ダウンロード（{size} MB）",
       downloading: "音声モデルをダウンロード中… {percent}%",
       downloadNote: "音声入力には音声モデルを一度だけダウンロードします（{size} MB）。この Mac に保存されます。",
@@ -331,6 +335,7 @@ export const messages: Catalogue = {
     approvals: { other: "{count} 件の操作があなたの承認を待っています。" },
     planHint: "上の計画カードで「続ける」を押してください。",
     cancelEsc: "キャンセル（Esc）",
+    wentQuiet: "しばらく誰も話さなかったため、音声チャットをオフにしました。",
     codeBlock: "コードブロック",
   },
 

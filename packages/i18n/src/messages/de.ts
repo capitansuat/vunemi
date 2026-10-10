@@ -252,6 +252,10 @@ export const messages: Catalogue = {
       handsFreeHint: "Sprachchat: sendet, sobald du aufhörst zu sprechen, liest die Antwort vor und hört dann wieder zu",
       stopListening: "Zuhören beenden",
       talk: "Sprechen",
+      holdToTalk: "Zum Sprechen gedrückt halten",
+      listensItself: "Der Sprachchat hört von selbst zu",
+      listensHeld: "Der Sprachchat hört zu, solange du das Mikrofon gedrückt hältst",
+      switchMode: "Ändern",
       download: "Laden ({size} MB)",
       downloading: "Sprachmodell wird geladen … {percent} %",
       downloadNote: "Zum Diktieren wird einmal ein Sprachmodell geladen ({size} MB); es bleibt auf diesem Mac.",
@@ -331,6 +335,7 @@ export const messages: Catalogue = {
     approvals: { one: "Eine Aktion wartet auf deine Freigabe.", other: "{count} Aktionen warten auf deine Freigabe." },
     planHint: "Drück oben in der Plankarte auf „Weiter“.",
     cancelEsc: "Abbrechen (Esc)",
+    wentQuiet: "Der Sprachchat hat sich ausgeschaltet: Eine Weile hat niemand gesprochen.",
     codeBlock: "Codeblock",
   },
 

@@ -252,6 +252,10 @@ export const messages: Catalogue = {
       handsFreeHint: "语音对话：你停下来就发送，朗读回答，然后再次聆听",
       stopListening: "停止聆听",
       talk: "说话",
+      holdToTalk: "按住说话",
+      listensItself: "语音对话会自动聆听",
+      listensHeld: "按住麦克风时，语音对话才会聆听",
+      switchMode: "更改",
       download: "下载（{size} MB）",
       downloading: "正在下载语音模型… {percent}%",
       downloadNote: "语音输入需要一次性下载语音模型（{size} MB），它会保留在这台 Mac 上。",
@@ -331,6 +335,7 @@ export const messages: Catalogue = {
     approvals: { other: "有 {count} 个操作等待你的批准。" },
     planHint: "在上方的计划卡片中点按“继续”。",
     cancelEsc: "取消（Esc）",
+    wentQuiet: "语音对话已自动关闭：有一段时间没有人说话。",
     codeBlock: "代码块",
   },
 
