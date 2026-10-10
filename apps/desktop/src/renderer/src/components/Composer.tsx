@@ -298,8 +298,9 @@ export function Composer() {
           >
             <Paperclip size={14} />
           </button>
-          {voice.handsFree && !running && !listening ? (
-            // How voice chat listens, and the way to the other way.
+          {voice.handsFree && !running ? (
+            // How voice chat listens, and the way to the other way: there while it listens too,
+            // which is most of the time when it listens by itself.
             <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-faint">
               <span className="truncate">{t(voice.hold ? "composer.voice.listensHeld" : "composer.voice.listensItself")}</span>
               <button type="button" onClick={() => setVoiceHold(!voice.hold)} className="shrink-0 underline underline-offset-2 hover:text-fg">
