@@ -23,7 +23,7 @@ cache="$out/speakers-cache/$tag"
 src="$out/speakers-src/$tag"
 name="sherpa-onnx-offline-speaker-diarization"
 
-if [ -x "$cache/$name" ] && [ -s "$cache/LICENSE" ] && ! grep -q -a -F "$HOME/" "$cache/$name"; then
+if [ -x "$cache/$name" ] && grep -q -F "onnxruntime: LICENSE" "$cache/LICENSE" 2>/dev/null && ! grep -q -a -F "$HOME/" "$cache/$name"; then
   echo "› konuşmacı motoru hazır ($tag)"
   exit 0
 fi
@@ -67,12 +67,15 @@ if grep -q -a -F "$HOME/" "$built"; then
 fi
 
 # The notices of everything linked into the one file: sherpa-onnx's own, then
-# each dependency's as its archive carries it.
+# each dependency's as its archive carries it. ONNX Runtime's archive holds
+# the library alone, so its notice is kept beside this script.
 notices="$(mktemp -t vunemi-speakers-licenses)"
 {
   echo "sherpa-onnx $tag"
   echo
   cat "$src/LICENSE"
+  printf '\n\n==== onnxruntime: LICENSE ====\n\n'
+  cat "$(dirname "$0")/onnxruntime-LICENSE"
   for dep in "$src"/build/_deps/*-src; do
     [ -d "$dep" ] || continue
     for file in "$dep"/LICENSE* "$dep"/COPYING* "$dep"/ThirdPartyNotices*; do
