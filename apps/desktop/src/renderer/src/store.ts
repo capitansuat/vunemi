@@ -3,6 +3,7 @@ import type { AgentEvent, ApprovalDecision, HandoffOutcome, PlanDecision } from 
 import type { ActivityEntry, AutomationLibraryView, ContextInfo, EmbeddedState, EngineView, MentionRef, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
 import { earcon, record, type Recorder } from "./lib/audio.js";
 import { foldEvent, replyText, type RunView } from "./lib/fold.js";
+import { SentenceCutter, SpeechPlayer } from "./lib/speech.js";
 import { getLocale, setLocale as setI18nLocale, t, type Locale } from "@vunemi/i18n";
 
 declare global {
@@ -221,6 +222,7 @@ interface State {
   /** Ends the turn and transcribes; `send` decides whether to run it too. */
   finishListening(send: boolean): Promise<void>;
   cancelListening(): void;
+  stopTalking(): void;
   setHandsFree(on: boolean): void;
   takeDictation(): string | null;
   /** Puts a suggested task in the composer for the user to edit; it isn't sent. */
@@ -232,6 +234,12 @@ let recorder: Recorder | null = null;
 let following: ReturnType<typeof setInterval> | null = null;
 /** Bumped whenever a turn is abandoned, so late answers can be recognised. */
 let turn = 0;
+/** What is said out loud in voice chat, and the reply it is being cut from as it is written. */
+let player: SpeechPlayer | null = null;
+let cutter: SentenceCutter | null = null;
+let spokenRun: string | null = null;
+/** The run the user spoke over or told to be quiet: no more of it is said. */
+let silenced: string | null = null;
 
 /** How often the running transcript catches up with the speaker. */
 const FOLLOW_MS = 1_500;
@@ -546,13 +554,22 @@ export const useStore = create<State>((set, get) => ({
     // A transcription still in flight is abandoned rather than awaited: its
     // result is ignored because the turn it belonged to is over.
     turn += 1;
-    void window.vunemi.stopSpeaking();
+    silence();
     set((s) => ({ voice: { ...s.voice, state: "off", partial: "", level: 0 } }));
+  },
+
+  /** "Stop talking": Vunemi is quiet and the turn is the user's. */
+  stopTalking() {
+    if (get().voice.state !== "speaking") return;
+    silence();
+    yourTurn(set, get);
   },
 
   setHandsFree(on) {
     set((s) => ({ voice: { ...s.voice, handsFree: on } }));
-    if (!on) void window.vunemi.stopSpeaking();
+    // Off in the middle of a sentence: quiet, and the microphone that waited to be spoken over is let go.
+    if (!on && get().voice.state === "speaking") get().cancelListening();
+    else if (!on) silence();
     // Turning voice chat on starts the conversation; a mode that waits for
     // a second button looks like a button that doesn't work.
     else if (get().voice.status?.canHear && get().voice.state === "off") void get().listen();
@@ -573,10 +590,17 @@ export const useStore = create<State>((set, get) => ({
     // A typed task speaks for itself in the timeline; the voice bar is only
     // for turns that started with the microphone.
     if (event.type === "run.finished") set((s) => ({ voice: { ...s.voice, turn: false } }));
-    // Hands-free means Vunemi answers out loud, then listens again.
+    // Hands-free means Vunemi answers out loud, sentence by sentence as it writes, then listens again.
+    if (event.type === "message.delta" && get().voice.handsFree) {
+      if (spokenRun !== event.runId) {
+        spokenRun = event.runId;
+        cutter = new SentenceCutter();
+      }
+      if (cutter) sayMore(event.runId, cutter.push(event.text), set, get);
+    }
     if (event.type === "run.finished" && get().voice.handsFree) {
       const said = replyText(get().runs.find((r) => r.runId === event.runId));
-      void speakThenListen(said || event.detail, set, get);
+      void finishTalking(event.runId, said || event.detail, set, get);
     }
     set((s) => ({
       runs: foldEvent(s.runs, event),
@@ -693,16 +717,80 @@ function stopFollowing(): void {
   following = null;
 }
 
-/** Says the answer, then hands the turn back — the hands-free loop. */
-async function speakThenListen(text: string, set: Set, get: () => State): Promise<void> {
-  const said = text.trim();
-  if (!said) return;
-  set((s) => ({ voice: { ...s.voice, state: "speaking" } }));
-  try {
-    await window.vunemi.speak(said);
-  } finally {
-    set((s) => (s.voice.state === "speaking" ? { voice: { ...s.voice, state: "off" } } : s));
+/** Quiet, now: what is being said stops, what was waiting is not said, and the rest of that reply stays unsaid. */
+function silence(): void {
+  silenced = spokenRun;
+  player?.stop();
+  void window.vunemi.stopSpeaking();
+}
+
+/** Says more of a reply. The first sentence opens the microphone too, so the user can speak over it. */
+function sayMore(runId: string, sentences: string[], set: Set, get: () => State): void {
+  if (sentences.length === 0 || runId === silenced) return;
+  const state = get().voice.state;
+  // The user has the turn: nothing is said over them, now or when they are done.
+  if (state === "listening" || state === "thinking") {
+    silenced = runId;
+    return;
   }
-  // Only if the user hasn't since turned it off or started typing.
-  if (get().voice.handsFree && get().voice.state === "off" && !get().running) await get().listen();
+  player ??= new SpeechPlayer({ synthesize: (text) => window.vunemi.synthesize(text) });
+  for (const sentence of sentences) player.say(sentence);
+  if (state !== "speaking") void startTalking(set, get);
+}
+
+async function startTalking(set: Set, get: () => State): Promise<void> {
+  set((s) => ({ voice: { ...s.voice, state: "speaking", partial: "", level: 0, error: null } }));
+  if (recorder) return;
+  try {
+    const opened = await record({
+      onLevel: (level) => set((s) => (s.voice.state === "listening" ? { voice: { ...s.voice, level } } : s)),
+      onSilence: () => {
+        if (get().voice.handsFree) void get().finishListening(true);
+      },
+      onSpokenOver: () => {
+        if (get().voice.state !== "speaking") return;
+        silence();
+        // No sound for it: they are already talking.
+        set((s) => ({ voice: { ...s.voice, state: "listening", partial: "", level: 0, error: null } }));
+        followAlong(set);
+      },
+    });
+    // The talking may have ended, or been stopped, while the microphone was opening.
+    if (get().voice.state !== "speaking" || recorder) opened.cancel();
+    else recorder = opened;
+  } catch {
+    // No microphone: Vunemi still talks, it just can't be spoken over.
+  }
+}
+
+/** The reply is over: its last words are said, then the turn goes back — the hands-free loop. */
+async function finishTalking(runId: string, whole: string, set: Set, get: () => State): Promise<void> {
+  if (spokenRun === runId && cutter) sayMore(runId, cutter.flush(), set, get);
+  else if (runId !== silenced && whole.trim()) {
+    // None of it was said while it was written (it came whole, or it is an error's text): it is said now.
+    spokenRun = runId;
+    const all = new SentenceCutter();
+    sayMore(runId, [...all.push(whole), ...all.flush()], set, get);
+  }
+  cutter = null;
+  await player?.finished();
+  // Spoken over or stopped in the meantime: the turn has already gone where it went.
+  if (get().voice.state === "speaking") yourTurn(set, get);
+}
+
+/** From talking to listening, on the microphone that is already open. */
+function yourTurn(set: Set, get: () => State): void {
+  const open = recorder;
+  // Only if the user hasn't since turned it off or started something else.
+  if (!get().voice.handsFree || get().running || !open) {
+    open?.cancel();
+    recorder = null;
+    set((s) => ({ voice: { ...s.voice, state: "off", level: 0 } }));
+    if (get().voice.handsFree && !get().running) void get().listen();
+    return;
+  }
+  open.engage();
+  set((s) => ({ voice: { ...s.voice, state: "listening", partial: "", level: 0, error: null } }));
+  earcon("start");
+  followAlong(set);
 }

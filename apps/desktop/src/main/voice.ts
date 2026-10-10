@@ -19,7 +19,8 @@
  */
 
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
-import { accessSync, constants, existsSync, readdirSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { accessSync, constants, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -155,6 +156,10 @@ export class Voice {
   /** Transcriptions under way, from asking for the server to the last word: the model manager never stops it under one. */
   private inflight = 0;
   private speaking: ChildProcess | null = null;
+  /** Sentences are made one at a time, in the order they were asked for. */
+  private making: Promise<unknown> = Promise.resolve();
+  /** Goes up when the talking is stopped: sentences still waiting to be made are not. */
+  private spokenTurn = 0;
   private binary: string | null;
   private model: string | null;
   private downloading: { controller: AbortController; progress: DownloadProgress | null; done: Promise<string> } | null = null;
@@ -307,32 +312,51 @@ export class Voice {
   }
 
   /**
-   * Says it out loud, cutting off whatever it was saying before. Resolves
-   * when the voice stops — including when the user interrupts it — so the UI
-   * knows whose turn it is.
+   * One sentence as sound: a WAV the window plays itself, so that it can
+   * stop in the middle of a word and its echo canceller knows what is being
+   * played. Empty when the talking was stopped before this one's turn.
    */
-  speak(text: string): Promise<void> {
-    this.stopSpeaking();
+  synthesize(text: string): Promise<Buffer> {
     const said = text.trim().slice(0, 1200);
-    if (!said) return Promise.resolve();
+    if (!said) return Promise.resolve(Buffer.alloc(0));
+    const turn = this.spokenTurn;
+    const made = this.making.then(() => (turn === this.spokenTurn ? this.say(said) : Buffer.alloc(0)));
+    this.making = made.catch(() => {});
+    return made;
+  }
+
+  private say(said: string): Promise<Buffer> {
     // In the reply's own language, not the app's: an English Vunemi read
     // "Dört" with an English voice. The writing decides when it can; else
     // the language the user just spoke, which the reply answers in.
     const voice = voiceFor(writtenIn(said) ?? this.heardLanguage ?? getLocale());
+    const dir = join(this.userData, "speech");
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const file = join(dir, `${randomUUID()}.wav`);
     // Arguments, never a shell: this is model output and may contain anything.
-    const child = spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "--", said], { stdio: "ignore" });
+    const child = spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "-o", file, "--data-format=LEI16@22050", "--", said], { stdio: "ignore" });
     this.speaking = child;
-    return new Promise<void>((resolve) => {
-      const done = () => {
+    return new Promise<Buffer>((resolve, reject) => {
+      const done = (code: number | null) => {
         if (this.speaking === child) this.speaking = null;
-        resolve();
+        try {
+          if (code === 0) resolve(readFileSync(file));
+          else reject(new Error("say"));
+        } catch (err) {
+          reject(err as Error);
+        } finally {
+          // The sound is in the window now; the file was only the way there.
+          rmSync(file, { force: true });
+        }
       };
       child.on("exit", done);
-      child.on("error", done);
+      child.on("error", () => done(null));
     });
   }
 
+  /** Nothing more is made of what was asked for so far. */
   stopSpeaking(): void {
+    this.spokenTurn += 1;
     this.speaking?.kill();
     this.speaking = null;
   }

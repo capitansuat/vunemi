@@ -210,7 +210,7 @@ const api: VunemiApi = {
   },
   requestMic: () => ipcRenderer.invoke(CH.requestMic),
   transcribe: (wav) => ipcRenderer.invoke(CH.transcribe, wav),
-  speak: (text) => ipcRenderer.invoke(CH.speak, text),
+  synthesize: (text) => ipcRenderer.invoke(CH.synthesize, text),
   stopSpeaking: () => ipcRenderer.invoke(CH.stopSpeaking),
   vaultStatus: () => ipcRenderer.invoke(CH.vaultStatus),
   vaultSet: (name, value, note) => ipcRenderer.invoke(CH.vaultSet, name, value, note),

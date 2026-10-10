@@ -6,7 +6,7 @@
  *   VUNEMI_LIVE_VOICE=1 pnpm --filter @vunemi/desktop test voice
  */
 import { execFile } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -91,6 +91,27 @@ describe.skipIf(!live)("Voice, for real", () => {
     voice.dispose();
     rmSync(dir, { recursive: true, force: true });
   });
+
+  it("makes a sentence a WAV for the window to play, in turn, and nothing once told to stop", async () => {
+    const [first, second] = await Promise.all([voice.synthesize("Bugün üç toplantın var."), voice.synthesize("The first one is at ten.")]);
+    for (const wav of [first!, second!]) {
+      expect(wav.subarray(0, 4).toString("latin1")).toBe("RIFF");
+      expect(wav.subarray(8, 12).toString("latin1")).toBe("WAVE");
+      // More than a second of 16-bit sound at 22 kHz.
+      expect(wav.length).toBeGreaterThan(44_100);
+    }
+    // The file was only the way to the window.
+    expect(readdirSync(join(dir, "speech"))).toEqual([]);
+
+    const waiting = [voice.synthesize("This one is being made."), voice.synthesize("This one is still waiting.")];
+    voice.stopSpeaking();
+    const [cut, dropped] = await Promise.allSettled(waiting);
+    // The one being made was cut short: an error, never half a sentence.
+    expect(cut!.status === "fulfilled" ? cut!.value.length : 0).toBe(0);
+    expect(dropped).toEqual({ status: "fulfilled", value: Buffer.alloc(0) });
+    expect((await voice.synthesize("And it talks again.")).length).toBeGreaterThan(20_000);
+    expect(await voice.synthesize("   ")).toEqual(Buffer.alloc(0));
+  }, 60_000);
 
   it("hears a Turkish sentence macOS says", async () => {
     expect(voice.status().canHear).toBe(true);

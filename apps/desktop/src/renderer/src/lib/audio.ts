@@ -18,6 +18,12 @@ const OVER_NOISE = 3.5;
 const SILENCE_MS = 1_100;
 /** Don't end a turn on the pause before someone starts talking. */
 const MIN_SPEECH_MS = 400;
+/** Speaking over Vunemi: this long without a break is someone talking, not a cough or a cup put down. */
+const OVER_MS = 350;
+/** A gap this long ends one stretch of talking. */
+const BREAK_MS = 200;
+/** Kept from before someone was known to be talking: their first word. */
+const LEAD_IN_MS = 600;
 /** The room is as loud as the quietest tenth of the clip. */
 const ROOM_PERCENTILE = 0.1;
 /** The first moments of a stream can be digital silence; they say nothing about the room. */
@@ -42,6 +48,9 @@ export class SpeechGate {
   private readonly heard: { level: number; ms: number }[] = [];
   private speechMs = 0;
   private quietMs = 0;
+  /** The stretch of talking under way, and the break in it. */
+  private runMs = 0;
+  private gapMs = 0;
   private ended = false;
 
   /** One frame's loudness (RMS) and length. True once a hands-free turn has ended in silence. */
@@ -59,11 +68,22 @@ export class SpeechGate {
     if (this.counted > 0 && this.smooth > this.threshold()) {
       this.speechMs += ms;
       this.quietMs = 0;
-    } else if (this.speechMs > MIN_SPEECH_MS) {
-      this.quietMs += ms;
-      if (this.quietMs >= SILENCE_MS) this.ended = true;
+      this.runMs += ms;
+      this.gapMs = 0;
+    } else {
+      this.gapMs += ms;
+      if (this.gapMs >= BREAK_MS) this.runMs = 0;
+      if (this.speechMs > MIN_SPEECH_MS) {
+        this.quietMs += ms;
+        if (this.quietMs >= SILENCE_MS) this.ended = true;
+      }
     }
     return this.ended;
+  }
+
+  /** Someone is talking right now, and has been for long enough to mean it. */
+  talking(): boolean {
+    return this.runMs >= OVER_MS;
   }
 
   /**
@@ -113,6 +133,8 @@ export interface Recorder {
   stop(): Promise<ArrayBuffer | null>;
   /** Throws the audio away and releases the microphone. */
   cancel(): void;
+  /** Vunemi has stopped talking: from here on it is the user's turn that is recorded. */
+  engage(): void;
 }
 
 /** A frame arrives every ~8 ms; the eye needs far fewer than that. */
@@ -123,6 +145,12 @@ export interface RecorderOptions {
   onLevel(level: number): void;
   /** Hands-free mode: the speaker stopped, so end the turn. */
   onSilence?: () => void;
+  /**
+   * Opens the microphone while Vunemi is talking. Nothing is recorded until
+   * the user speaks over it (told here once, with their first words kept)
+   * or until engage() hands them the turn.
+   */
+  onSpokenOver?: () => void;
 }
 
 /**
@@ -145,12 +173,15 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
     throw err;
   }
 
-  const chunks: Float32Array[] = [];
+  let chunks: Float32Array[] = [];
   let frames = 0;
   let done = false;
   let lastLevelAt = 0;
   let peak = 0;
-  const gate = new SpeechGate();
+  let gate = new SpeechGate();
+  // While Vunemi talks, the microphone is only watched for a voice over it.
+  let waiting = opts.onSpokenOver !== undefined;
+  const leadIn = Math.round((LEAD_IN_MS / 1000) * SAMPLE_RATE);
 
   const source = context.createMediaStreamSource(stream);
   const node = new AudioWorkletNode(context, "vunemi-capture");
@@ -161,6 +192,26 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
     frames += frame.length;
 
     const level = rms(frame);
+    if (waiting) {
+      gate.feed(level, (frame.length / SAMPLE_RATE) * 1000);
+      if (gate.talking()) {
+        // Theirs from the first word: the turn starts with what was just heard.
+        waiting = false;
+        const kept = chunks;
+        chunks = [];
+        frames = 0;
+        gate = new SpeechGate();
+        for (const f of kept) {
+          chunks.push(f);
+          frames += f.length;
+          gate.feed(rms(f), (f.length / SAMPLE_RATE) * 1000);
+        }
+        opts.onSpokenOver?.();
+      } else {
+        while (chunks.length > 1 && frames - chunks[0]!.length >= leadIn) frames -= chunks.shift()!.length;
+      }
+      return;
+    }
     // Report the loudest frame in the window, so a short syllable still shows.
     peak = Math.max(peak, Math.min(level * 6, 1));
     const now = performance.now();
@@ -211,6 +262,13 @@ export async function record(opts: RecorderOptions): Promise<Recorder> {
       return encodeWav(merge(chunks, frames));
     },
     cancel: release,
+    engage() {
+      if (!waiting) return;
+      waiting = false;
+      chunks = [];
+      frames = 0;
+      gate = new SpeechGate();
+    },
   };
 }
 

@@ -90,6 +90,24 @@ describe("SpeechGate", () => {
     expect(gate.spoke()).toBe(false);
   });
 
+  it("knows someone is talking over it once they have kept at it, and not from a cough", () => {
+    const gate = new SpeechGate();
+    feed(gate, ROOM, 2_000);
+    feed(gate, VOICE, 150);
+    expect(gate.talking()).toBe(false);
+    feed(gate, ROOM, 400);
+    feed(gate, VOICE, 250);
+    // Two short sounds with a silence between them are not one stretch of talking.
+    expect(gate.talking()).toBe(false);
+    feed(gate, VOICE, 150);
+    expect(gate.talking()).toBe(true);
+    // A syllable's gap does not end it; a pause does.
+    feed(gate, ROOM, 100);
+    expect(gate.talking()).toBe(true);
+    feed(gate, ROOM, 300);
+    expect(gate.talking()).toBe(false);
+  });
+
   it("ends a hands-free turn once the speaker has been quiet a while", () => {
     const gate = new SpeechGate();
     expect(feed(gate, VOICE, 1_000)).toBe(false);

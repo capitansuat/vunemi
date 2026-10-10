@@ -154,7 +154,7 @@ function Shimmer({ phase }: { phase: Phase }) {
 }
 
 function Trailer({ phase, handoffId }: { phase: Phase; handoffId: string | null }) {
-  const { finishListening, cancelListening, resolveHandoff } = useStore();
+  const { finishListening, cancelListening, stopTalking, resolveHandoff } = useStore();
   const handsFree = useStore((s) => s.voice.handsFree);
 
   if (phase === "handoff" && handoffId) {
@@ -206,7 +206,7 @@ function Trailer({ phase, handoffId }: { phase: Phase; handoffId: string | null 
     return (
       <button
         type="button"
-        onClick={() => cancelListening()}
+        onClick={() => stopTalking()}
         className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-[11.5px] text-fg transition-colors hover:bg-surface-2"
       >
         {t("voice.stopTalking")}

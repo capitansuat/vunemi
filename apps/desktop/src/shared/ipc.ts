@@ -713,8 +713,9 @@ export interface VunemiApi {
   requestMic(): Promise<boolean>;
   /** 16 kHz mono WAV bytes in, transcript out. */
   transcribe(wav: ArrayBuffer): Promise<string>;
-  /** Resolves when the voice stops, so the UI knows whose turn it is. */
-  speak(text: string): Promise<void>;
+  /** A sentence as a WAV for the window to play; empty if the talking was stopped first. */
+  synthesize(text: string): Promise<ArrayBuffer>;
+  /** Sentences asked for and not yet made are dropped. */
   stopSpeaking(): Promise<void>;
 
   getEmbedded(): Promise<EmbeddedState>;
@@ -892,7 +893,7 @@ export const CH = {
   voiceChanged: "voice:changed",
   requestMic: "voice:request-mic",
   transcribe: "voice:transcribe",
-  speak: "voice:speak",
+  synthesize: "voice:synthesize",
   stopSpeaking: "voice:stop-speaking",
   vaultStatus: "vault:status",
   vaultSet: "vault:set",

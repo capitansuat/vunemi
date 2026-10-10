@@ -1796,7 +1796,10 @@ handle(CH.requestMic, async () => {
   return systemPreferences.askForMediaAccess("microphone");
 });
 handle(CH.transcribe, async (_e, wav: ArrayBuffer) => voice.transcribe(Buffer.from(wav)));
-handle(CH.speak, (_e, text: string) => voice.speak(String(text)));
+handle(CH.synthesize, async (_e, text: string) => {
+  const wav = await voice.synthesize(String(text));
+  return wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength);
+});
 handle(CH.stopSpeaking, () => voice.stopSpeaking());
 
 const vaultStatus = (): VaultStatus => ({ available: vault.available, secrets: vault.list() });

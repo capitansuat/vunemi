@@ -326,7 +326,8 @@ export function replyText(run: RunView | undefined): string {
   return speakable(last?.text ?? "");
 }
 
-function speakable(markdown: string): string {
+/** Markdown as it would be said aloud: the marks gone, a code block named and not read. */
+export function speakable(markdown: string): string {
   return markdown
     .replace(/```[\s\S]*?```/g, ` ${t("voice.codeBlock")} `)
     .replace(/`([^`]*)`/g, "$1")
