@@ -504,6 +504,34 @@ describe("add-on packs", () => {
     expect(calls).toEqual([]);
   });
 
+  it("refuses a call that cannot work before the user is asked anything", async () => {
+    const { tools } = register(new Set(PACKS.map((p) => p.id)));
+    const check = (name: string, args: Record<string, unknown>) => tools.get(name)!.check!(args);
+    // Qwen3.8 35B gave the opening slide a chart with no categories: the card was approved, then the tool stopped.
+    const chart = { series: [{ name: "Müşteri", values: [400, 650, 900] }] };
+    expect(await check("slides_make", { path: join(folder, "kafe.pptx"), slides: [{ title: "Açılış", chart }] })).toMatch(/categories/);
+    expect(await check("slides_make", { path: join(folder, "kafe.pptx"), slides: [{ title: "Açılış", chart: { ...chart, categories: ["1", "2", "3"] } }] })).toBeNull();
+    expect(await check("sheet_make", { path: join(folder, "t.xlsx"), rows: "a,b" })).toMatch(/rows/);
+    expect(await check("sheet_make", { path: join(folder, "t.xlsx"), rows: [["a"]], chart: { range: "her şey" } })).toMatch(/A1:D4/);
+    expect(await check("document_make", { path: join(folder, "b.docx"), markdown: "  " })).toMatch(/empty/);
+    expect(await check("image_draw", { path: join(folder, "a.png"), svg: "<svg>" })).toMatch(/complete/);
+    writeFileSync(join(folder, "bir.pdf"), "x");
+    expect(await check("pdf_combine", { paths: [join(folder, "bir.pdf")], out: join(folder, "hepsi.pdf") })).toMatch(/two/);
+    expect(await check("pdf_extract", { path: join(folder, "bir.pdf"), pages: "ilk üç", out: join(folder, "uc.pdf") })).toMatch(/1,3,5-7/);
+    // Whether the file has page 400 is known only once it is open.
+    expect(await check("pdf_extract", { path: join(folder, "bir.pdf"), pages: "2,400", out: join(folder, "uc.pdf") })).toBeNull();
+    expect(await check("pdf_rotate", { path: join(folder, "bir.pdf"), degrees: 45, out: join(folder, "d.pdf") })).toMatch(/90, 180 or 270/);
+    writeFileSync(join(folder, "foto.jpg"), "x");
+    expect(await check("photo_edit", { path: join(folder, "foto.jpg"), out: join(folder, "f.jpg"), rotate: 45 })).toMatch(/rotate/);
+    expect(await check("photo_edit", { path: join(folder, "foto.jpg"), out: join(folder, "f.jpg"), crop: { ratio: "kare" } })).toMatch(/ratio/);
+    // A crop in pixels is judged against the picture, once it is open.
+    expect(await check("photo_edit", { path: join(folder, "foto.jpg"), out: join(folder, "f.jpg"), crop: { x: 0, y: 0, width: 4000, height: 3000 } })).toBeNull();
+    expect(await check("video_make", { out: join(folder, "k.mp4"), clips: [] })).toMatch(/at least one/);
+    writeFileSync(join(folder, "a.mp4"), "x");
+    expect(await check("video_make", { out: join(folder, "k.mp4"), clips: [{ path: join(folder, "a.mp4") }], titles: "Tatil" })).toMatch(/lists/);
+    expect(calls).toEqual([]);
+  });
+
   it("gives every pack an area with a guide, and no two the same name", () => {
     const areas = addonAreas([folder]);
     expect(areas.map((a) => a.id)).toEqual(PACKS.map((p) => p.area));

@@ -8,7 +8,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, paths, short, showAll, target, text, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, short, showAll, target, text, tried, type AddonToolDeps } from "./common.js";
 
 const MAX_SLIDES = 60;
 const MAX_LINES = 12;
@@ -85,6 +85,7 @@ export function deckArgs(slides: Slide[], theme: string | undefined): string[] {
 }
 
 export function slideTools(deps: AddonToolDeps): ToolDef[] {
+  const asked = (a: Record<string, unknown>) => ({ out: target(deps.roots, a.path, [".pptx"]), slides: slidesOf(a.slides), theme: THEMES.find((name) => name === a.theme) });
   return [
     {
       name: "slides_make",
@@ -120,11 +121,9 @@ export function slideTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.path ?? "")) }),
-      check: (a) => paths(() => target(deps.roots, a.path, [".pptx"])),
+      check: (a) => tried(() => asked(a)),
       async run(a, ctx) {
-        const out = target(deps.roots, a.path, [".pptx"]);
-        const slides = slidesOf(a.slides);
-        const theme = THEMES.find((name) => name === a.theme);
+        const { out, slides, theme } = asked(a);
         return deps.engines("slides", ctx.signal, async (job) => {
           const made = join(job.dir, "out.pptx");
           expectFile("DeckCraft", await job.run(deckArgs(slides, theme)), made);

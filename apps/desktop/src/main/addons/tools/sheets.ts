@@ -9,7 +9,7 @@ import { join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import type { EngineJob } from "../jobs.js";
-import { deliver, expectFile, paths, short, show, target, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, short, show, target, tried, type AddonToolDeps } from "./common.js";
 
 const MAX_ROWS = 2_000;
 const MAX_COLS = 100;
@@ -63,6 +63,17 @@ export function sheetScript(rows: Cell[][], chart?: { range: string; type: strin
 }
 
 export function sheetTools(deps: AddonToolDeps): ToolDef[] {
+  const asked = (a: Record<string, unknown>) => {
+    const out = target(deps.roots, a.path, [".xlsx"]);
+    const rows = grid(a.rows);
+    const wanted = a.chart as { range?: unknown; type?: unknown; title?: unknown } | undefined;
+    if (!wanted) return { out, rows };
+    const range = String(wanted.range ?? "").trim().toUpperCase();
+    if (!/^[A-Z]{1,3}[0-9]{1,5}:[A-Z]{1,3}[0-9]{1,5}$/.test(range)) throw new Error("chart.range must be like A1:D4.");
+    const type = CHARTS.find((kind) => kind === wanted.type) ?? "column";
+    const title = String(wanted.title ?? "").trim().slice(0, 120);
+    return { out, rows, chart: { range, type, ...(title && { title }) } };
+  };
   return [
     {
       name: "sheet_make",
@@ -82,19 +93,9 @@ export function sheetTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.path ?? "")) }),
-      check: (a) => paths(() => target(deps.roots, a.path, [".xlsx"])),
+      check: (a) => tried(() => asked(a)),
       async run(a, ctx) {
-        const out = target(deps.roots, a.path, [".xlsx"]);
-        const rows = grid(a.rows);
-        const asked = a.chart as { range?: unknown; type?: unknown; title?: unknown } | undefined;
-        let chart: { range: string; type: string; title?: string } | undefined;
-        if (asked) {
-          const range = String(asked.range ?? "").trim().toUpperCase();
-          if (!/^[A-Z]{1,3}[0-9]{1,5}:[A-Z]{1,3}[0-9]{1,5}$/.test(range)) throw new Error("chart.range must be like A1:D4.");
-          const type = CHARTS.find((kind) => kind === asked.type) ?? "column";
-          const title = String(asked.title ?? "").trim().slice(0, 120);
-          chart = { range, type, ...(title && { title }) };
-        }
+        const { out, rows, chart } = asked(a);
         const cols = Math.max(...rows.map((row) => row.length));
         const area = `A1:${column(cols - 1)}${rows.length}`;
         /** The table as the program lays it out, for the user to see. A file without a picture is still a file. */

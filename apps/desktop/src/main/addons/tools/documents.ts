@@ -8,7 +8,7 @@ import { copyFileSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, paths, short, show, source, target, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, short, show, source, target, tried, type AddonToolDeps } from "./common.js";
 
 const MAX_MARKDOWN = 400_000;
 const READS = [".docx", ".doc", ".odt", ".rtf", ".md", ".txt", ".html"] as const;
@@ -35,6 +35,13 @@ function pages(info: string): number | null {
 }
 
 export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolDef[] {
+  const asked = (a: Record<string, unknown>) => {
+    const out = target(deps.roots, a.path, [".docx", ".pdf"]);
+    const markdown = String(a.markdown ?? "");
+    if (!markdown.trim()) throw new Error("markdown is empty: write the document's text.");
+    if (markdown.length > MAX_MARKDOWN) throw new Error(`The document is too long (at most ${MAX_MARKDOWN} characters).`);
+    return { out, markdown };
+  };
   return [
     {
       name: "document_make",
@@ -49,12 +56,9 @@ export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolD
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.path ?? "")) }),
-      check: (a) => paths(() => target(deps.roots, a.path, [".docx", ".pdf"])),
+      check: (a) => tried(() => asked(a)),
       async run(a, ctx) {
-        const out = target(deps.roots, a.path, [".docx", ".pdf"]);
-        const markdown = String(a.markdown ?? "");
-        if (!markdown.trim()) throw new Error("markdown is empty: write the document's text.");
-        if (markdown.length > MAX_MARKDOWN) throw new Error(`The document is too long (at most ${MAX_MARKDOWN} characters).`);
+        const { out, markdown } = asked(a);
         return deps.engines("documents", ctx.signal, async (job) => {
           writeFileSync(join(job.dir, "in.md"), markdown);
           expectFile("WordCraft", await job.run(["convert", "in.md", "body.docx"]), join(job.dir, "body.docx"));
@@ -84,7 +88,7 @@ export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolD
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.out ?? "")) }),
-      check: (a) => paths(() => (source(deps.roots, a.path, READS), target(deps.roots, a.out, WRITES))),
+      check: (a) => tried(() => (source(deps.roots, a.path, READS), target(deps.roots, a.out, WRITES))),
       async run(a, ctx) {
         const from = source(deps.roots, a.path, READS);
         const out = target(deps.roots, a.out, WRITES);

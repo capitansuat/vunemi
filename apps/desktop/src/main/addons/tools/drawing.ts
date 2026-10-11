@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, paths, short, show, target, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, short, show, target, tried, type AddonToolDeps } from "./common.js";
 
 const MAX_SVG = 400_000;
 
@@ -18,6 +18,13 @@ export const DRAWING_GUIDE = `Drawing pictures:
 - Keep text inside the picture: leave margins, and size it to fit. The user is shown the result.`;
 
 export function drawingTools(deps: AddonToolDeps): ToolDef[] {
+  const asked = (a: Record<string, unknown>) => {
+    const out = target(deps.roots, a.path, [".png", ".pdf"]);
+    const svg = String(a.svg ?? "").trim();
+    if (!/<svg[\s>]/i.test(svg) || !/<\/svg>\s*$/i.test(svg)) throw new Error("svg must be one complete <svg>…</svg> document.");
+    if (svg.length > MAX_SVG) throw new Error(`The SVG is too long (at most ${MAX_SVG} characters).`);
+    return { out, svg };
+  };
   return [
     {
       name: "image_draw",
@@ -32,12 +39,9 @@ export function drawingTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.path ?? "")) }),
-      check: (a) => paths(() => target(deps.roots, a.path, [".png", ".pdf"])),
+      check: (a) => tried(() => asked(a)),
       async run(a, ctx) {
-        const out = target(deps.roots, a.path, [".png", ".pdf"]);
-        const svg = String(a.svg ?? "").trim();
-        if (!/<svg[\s>]/i.test(svg) || !/<\/svg>\s*$/i.test(svg)) throw new Error("svg must be one complete <svg>…</svg> document.");
-        if (svg.length > MAX_SVG) throw new Error(`The SVG is too long (at most ${MAX_SVG} characters).`);
+        const { out, svg } = asked(a);
         return deps.engines("drawing", ctx.signal, async (job) => {
           writeFileSync(join(job.dir, "in.svg"), svg);
           const picture = join(job.dir, "out.png");

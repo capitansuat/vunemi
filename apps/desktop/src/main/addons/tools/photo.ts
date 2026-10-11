@@ -10,7 +10,7 @@ import { extname, join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import type { EngineJob } from "../jobs.js";
-import { deliver, expectFile, paths, said, short, show, source, target, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, said, short, show, source, target, tried, type AddonToolDeps } from "./common.js";
 
 const ENGINE = "PhotoCraft";
 const READS = [".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".heic", ".psd"] as const;
@@ -153,7 +153,8 @@ export function photoTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.out ?? "")) }),
-      check: (a) => paths(() => (source(deps.roots, a.path, READS), target(deps.roots, a.out, WRITES))),
+      // What is wrong whatever the picture's size is told here; a crop in pixels, once the picture is open.
+      check: (a) => tried(() => (source(deps.roots, a.path, READS), target(deps.roots, a.out, WRITES), photoArgs({ ...a, crop: (a.crop as { ratio?: unknown } | undefined)?.ratio ? a.crop : undefined }, { width: 1000, height: 1000 }))),
       async run(a, ctx) {
         const from = source(deps.roots, a.path, READS);
         const out = target(deps.roots, a.out, WRITES);

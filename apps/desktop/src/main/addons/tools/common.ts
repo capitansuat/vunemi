@@ -42,14 +42,15 @@ export function source(roots: Roots, input: unknown, extensions: readonly string
 }
 
 /**
- * A tool's check before any card: the paths are tried first, so the user is
- * never asked to approve a file that could not be read or written anyway (a
- * folder that is not open, a name already taken). The reason goes back to
- * the model, which can then ask with a path that works.
+ * A tool's check before any card: what the call asks for is read first, so
+ * the user is never asked to approve something that could not be done anyway
+ * (a folder that is not open, a name already taken, a chart with no numbers).
+ * The reason goes back to the model, which can then ask again with a call
+ * that works.
  */
-export function paths(tryThem: () => unknown): string | null {
+export function tried(read: () => unknown): string | null {
   try {
-    tryThem();
+    read();
     return null;
   } catch (error) {
     return error instanceof Error ? error.message : String(error);

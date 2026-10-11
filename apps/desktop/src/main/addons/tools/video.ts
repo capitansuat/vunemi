@@ -13,7 +13,7 @@ import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import type { EngineJob } from "../jobs.js";
 import type { SandboxResult } from "../sandbox.js";
-import { deliver, expectFile, paths, said, short, show, source, target, text, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, said, short, show, source, target, text, tried, type AddonToolDeps } from "./common.js";
 
 const ENGINE = "FilmCraft";
 /** The program counts time in these: 254,016,000,000 to a second. */
@@ -125,6 +125,13 @@ export function timed(input: unknown, total: number, fallback: number): Timed[] 
 const clock = (seconds: number): string => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, "0")}`;
 
 export function videoTools(deps: AddonToolDeps): ToolDef[] {
+  const cut = (a: Record<string, unknown>) => {
+    const out = target(deps.roots, a.out, [".mp4"]);
+    if (!Array.isArray(a.clips) || a.clips.length === 0) throw new Error("clips must list at least one video.");
+    if (a.clips.length > MAX_CLIPS) throw new Error(`At most ${MAX_CLIPS} clips.`);
+    const asked = (a.clips as { path?: unknown; start?: unknown; end?: unknown }[]).map((clip) => ({ from: source(deps.roots, clip?.path, VIDEOS), start: Number(clip?.start) || 0, end: Number(clip?.end) || 0 }));
+    return { out, asked, music: String(a.music ?? "").trim() ? source(deps.roots, a.music, SOUNDS) : null };
+  };
   const words = { type: "array", items: { type: "object", properties: { text: { type: "string" }, at: { type: "number" }, seconds: { type: "number" } }, required: ["text", "at"] } };
   return [
     {
@@ -133,7 +140,7 @@ export function videoTools(deps: AddonToolDeps): ToolDef[] {
       parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] },
       actionClass: "read",
       preview: async (a) => t("files.preview.read", { path: short(String(a.path ?? "")) }),
-      check: (a) => paths(() => source(deps.roots, a.path, VIDEOS)),
+      check: (a) => tried(() => source(deps.roots, a.path, VIDEOS)),
       async run(a, ctx) {
         const from = source(deps.roots, a.path, VIDEOS);
         return deps.engines("video", ctx.signal, async (job) => {
@@ -161,18 +168,10 @@ export function videoTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.out ?? "")) }),
-      check: (a) =>
-        paths(() => {
-          target(deps.roots, a.out, [".mp4"]);
-          for (const clip of Array.isArray(a.clips) ? (a.clips as { path?: unknown }[]) : []) source(deps.roots, clip?.path, VIDEOS);
-          if (String(a.music ?? "").trim()) source(deps.roots, a.music, SOUNDS);
-        }),
+      // Titles and captions are read for their form here; where they fall in the video, once its length is known.
+      check: (a) => tried(() => (cut(a), timed(a.titles, Infinity, 3), timed(a.captions, Infinity, 3))),
       async run(a, ctx) {
-        const out = target(deps.roots, a.out, [".mp4"]);
-        if (!Array.isArray(a.clips) || a.clips.length === 0) throw new Error("clips must list at least one video.");
-        if (a.clips.length > MAX_CLIPS) throw new Error(`At most ${MAX_CLIPS} clips.`);
-        const asked = (a.clips as { path?: unknown; start?: unknown; end?: unknown }[]).map((clip) => ({ from: source(deps.roots, clip?.path, VIDEOS), start: Number(clip?.start) || 0, end: Number(clip?.end) || 0 }));
-        const music = String(a.music ?? "").trim() ? source(deps.roots, a.music, SOUNDS) : null;
+        const { out, asked, music } = cut(a);
 
         return deps.engines("video", ctx.signal, async (job) => {
           // Each different file once, under a plain name.
