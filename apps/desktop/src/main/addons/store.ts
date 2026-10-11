@@ -10,30 +10,14 @@ import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { DownloadError, downloadPinned, type DownloadErrorCode, type DownloadOptions, type PinnedFile } from "../engine/download.js";
+import type { AddonFailure, AddonStatus, AddonView } from "../../shared/ipc.js";
+import { DownloadError, downloadPinned, type DownloadOptions, type PinnedFile } from "../engine/download.js";
 import { ADDONS, ADDON_TEAM, addonUrl, allowedAddonUrl, type AddonId, type AddonSource } from "./catalog.js";
 
 const exec = promisify(execFile);
 
-export type AddonFailure = Exclude<DownloadErrorCode, "cancelled"> | "signature" | "unpack";
-
-export type AddonStatus =
-  | { state: "absent" }
-  | { state: "downloading"; received: number }
-  | { state: "installing" }
-  | { state: "ready"; version: string }
-  /** An earlier version is installed; the tools need the pinned one. */
-  | { state: "outdated"; version: string }
-  | { state: "failed"; reason: AddonFailure };
-
-export interface AddonEntry {
-  id: AddonId;
-  engine: string;
-  version: string;
-  bytes: number;
-  source: string;
-  status: AddonStatus;
-}
+export type { AddonFailure, AddonStatus };
+export type AddonEntry = AddonView;
 
 export interface AddonsOptions {
   /** Vunemi's own folder for add-ons. */

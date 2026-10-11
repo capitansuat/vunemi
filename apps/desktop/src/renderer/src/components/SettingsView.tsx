@@ -15,10 +15,11 @@ import { OutboxView } from "./OutboxView.js";
 import { VaultView } from "./VaultView.js";
 import { MemorySection } from "./MemorySection.js";
 import { SoulSection } from "./SoulSection.js";
+import { AddonsSection } from "./AddonsSection.js";
 import { useStore, type SettingsSection as Section } from "../store.js";
 import { UpdateAction } from "./UpdateAction.js";
 
-const SECTIONS: Section[] = ["permissions", "security", "connections", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "memory", "soul", "data", "updates"];
+const SECTIONS: Section[] = ["permissions", "security", "connections", "addons", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "memory", "soul", "data", "updates"];
 
 /** Sections that are whole views of their own, with their own scrolling. */
 const WHOLE: Partial<Record<Section, ComponentType>> = { connections: ConnectionsView, vault: VaultView, outbox: OutboxView, activity: ActivityView };
@@ -152,6 +153,7 @@ export function SettingsView() {
         {section === "updates" && <UpdatesSection />}
         {section === "memory" && <MemorySection />}
         {section === "soul" && <SoulSection />}
+        {section === "addons" && <AddonsSection />}
         {section === "data" && (
           <div className="mx-auto max-w-[620px]">
             <h2 className="text-[17px] font-semibold text-fg">{t("settings.sections.data")}</h2>

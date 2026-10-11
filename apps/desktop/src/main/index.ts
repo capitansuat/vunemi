@@ -12,7 +12,7 @@ import { BrowserController, checkNavigation, trustableHost } from "@vunemi/brows
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
+import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -59,6 +59,8 @@ import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t,
 import { Recorder, recorderBinary } from "./meetings/recorder.js";
 import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
 import { SpeakerSeparator, speakersBinary } from "./meetings/speakers.js";
+import { ADDONS } from "./addons/catalog.js";
+import { Addons } from "./addons/store.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
 import { PRODUCTION, type FeedSource } from "./updates/feed.js";
@@ -1393,6 +1395,28 @@ handle(CH.meetingsMoveLine, (_e, id: unknown, start: unknown, speaker: unknown) 
   corrected(id, (m) => {
     if (typeof start === "number" && typeof speaker === "number") meetings.moveLine(m, start, speaker);
   }));
+/** Add-ons: separate programs, downloaded when the user asks in Settings (addons/store.ts). */
+const addons = new Addons({
+  dir: join(app.getPath("userData"), "addons"),
+  trash: (path) => shell.trashItem(path),
+  onChange: () => send(CH.addonsChanged, addons.list()),
+});
+const addonId = (id: unknown): AddonId => {
+  const found = ADDONS.find((a) => a.id === id);
+  if (!found) throw new Error("No such add-on.");
+  return found.id;
+};
+handle(CH.addons, () => addons.list());
+handle(CH.addonsInstall, async (_e, id: unknown) => {
+  await addons.install(addonId(id));
+  return addons.list();
+});
+handle(CH.addonsCancel, (_e, id: unknown) => addons.cancel(addonId(id)));
+handle(CH.addonsRemove, async (_e, id: unknown) => {
+  await addons.remove(addonId(id));
+  return addons.list();
+});
+
 handle(CH.meetingSpeakers, () => speakersView());
 handle(CH.meetingSpeakersSet, (_e, on: unknown) => {
   settings.setMeetingSpeakers(on === true);

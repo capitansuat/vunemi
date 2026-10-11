@@ -8,7 +8,9 @@
  * signed by their developer and notarized by Apple.
  */
 
-export type AddonId = "documents" | "sheets" | "slides" | "pdf" | "drawing" | "photo" | "video";
+import type { AddonId } from "../../shared/ipc.js";
+
+export type { AddonId };
 
 export interface AddonSource {
   id: AddonId;

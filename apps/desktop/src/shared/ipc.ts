@@ -429,6 +429,31 @@ export type SpeakersStatus =
   | { state: "downloading"; bytes: number; received: number }
   | { state: "ready"; bytes: number };
 
+/** An extra ability that is a download: a separate program Vunemi runs in a sandbox. */
+export type AddonId = "documents" | "sheets" | "slides" | "pdf" | "drawing" | "photo" | "video";
+
+export type AddonFailure = "space" | "network" | "integrity" | "host" | "signature" | "unpack";
+
+export type AddonStatus =
+  | { state: "absent" }
+  | { state: "downloading"; received: number }
+  | { state: "installing" }
+  | { state: "ready"; version: string }
+  /** An earlier version is installed; the tools need the pinned one. */
+  | { state: "outdated"; version: string }
+  | { state: "failed"; reason: AddonFailure };
+
+export interface AddonView {
+  id: AddonId;
+  /** The program's own name. */
+  engine: string;
+  version: string;
+  bytes: number;
+  /** The project's page. */
+  source: string;
+  status: AddonStatus;
+}
+
 /** Telling speakers apart: whether the user wants it, and whether it can be done yet. */
 export interface SpeakersView {
   on: boolean;
@@ -587,6 +612,11 @@ export interface VunemiApi {
   meetingsNameSpeaker(id: string, speaker: number, name: string): Promise<MeetingView | null>;
   meetingsMergeSpeakers(id: string, from: number, into: number): Promise<MeetingView | null>;
   meetingsMoveLine(id: string, start: number, speaker: number): Promise<MeetingView | null>;
+  addons(): Promise<AddonView[]>;
+  installAddon(id: AddonId): Promise<AddonView[]>;
+  cancelAddon(id: AddonId): Promise<void>;
+  removeAddon(id: AddonId): Promise<AddonView[]>;
+  onAddons(listener: (list: AddonView[]) => void): () => void;
   meetingSpeakers(): Promise<SpeakersView>;
   setMeetingSpeakers(on: boolean): Promise<SpeakersView>;
   downloadMeetingSpeakers(): Promise<SpeakersView>;
@@ -810,6 +840,11 @@ export const CH = {
   meetingsNameSpeaker: "meetings:name-speaker",
   meetingsMergeSpeakers: "meetings:merge-speakers",
   meetingsMoveLine: "meetings:move-line",
+  addons: "addons:list",
+  addonsInstall: "addons:install",
+  addonsCancel: "addons:cancel",
+  addonsRemove: "addons:remove",
+  addonsChanged: "addons:changed",
   meetingSpeakers: "meetings:speakers",
   meetingSpeakersSet: "meetings:speakers-set",
   meetingSpeakersDownload: "meetings:speakers-download",
