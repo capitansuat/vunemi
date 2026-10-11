@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, short, target, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, paths, short, target, type AddonToolDeps } from "./common.js";
 
 const MAX_ROWS = 2_000;
 const MAX_COLS = 100;
@@ -79,6 +79,7 @@ export function sheetTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.path ?? "")) }),
+      check: (a) => paths(() => target(deps.roots, a.path, [".xlsx"])),
       async run(a, ctx) {
         const out = target(deps.roots, a.path, [".xlsx"]);
         const rows = grid(a.rows);

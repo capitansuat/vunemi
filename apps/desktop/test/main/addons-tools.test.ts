@@ -470,6 +470,27 @@ describe("add-on packs", () => {
     expect(tools.get("sheet_make")).toBeUndefined();
   });
 
+  it("refuses a path that cannot work before the user is asked anything", async () => {
+    const { tools } = register(new Set(PACKS.map((p) => p.id)));
+    // Every add-on tool takes a path: each one tries it before its card.
+    for (const pack of PACKS) for (const made of pack.tools(deps(), { paper: () => "A4" })) expect(typeof made.check, made.name).toBe("function");
+    const sheet = tools.get("sheet_make")!;
+    // A home folder the model made up: outside the open folders, and said so.
+    expect(await sheet.check!({ path: "/Users/someone-else/Downloads/giderler.xlsx", rows: [["a"]] })).toContain(folder);
+    expect(await sheet.check!({ path: join(folder, "giderler.xlsx"), rows: [["a"]] })).toBeNull();
+    writeFileSync(join(folder, "var.xlsx"), "mine");
+    expect(await sheet.check!({ path: join(folder, "var.xlsx"), rows: [["a"]] })).toBeTruthy();
+    const video = tools.get("video_make")!;
+    writeFileSync(join(folder, "a.mp4"), "x");
+    expect(await video.check!({ out: join(folder, "k.mp4"), clips: [{ path: join(folder, "a.mp4") }] })).toBeNull();
+    expect(await video.check!({ out: join(folder, "k.mp4"), clips: [{ path: join(folder, "yok.mp4") }] })).toBeTruthy();
+    const form = tools.get("pdf_form")!;
+    writeFileSync(join(folder, "form.pdf"), "x");
+    expect(await form.check!({ path: join(folder, "form.pdf") })).toBeNull();
+    expect(await form.check!({ path: join(folder, "form.pdf"), values: { ad: "x" } })).toBeTruthy();
+    expect(calls).toEqual([]);
+  });
+
   it("gives every pack an area with a guide, and no two the same name", () => {
     const areas = addonAreas();
     expect(areas.map((a) => a.id)).toEqual(PACKS.map((p) => p.area));

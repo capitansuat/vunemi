@@ -8,7 +8,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, short, showAll, target, text, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, paths, short, showAll, target, text, type AddonToolDeps } from "./common.js";
 
 const MAX_SLIDES = 60;
 const MAX_LINES = 12;
@@ -120,6 +120,7 @@ export function slideTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.path ?? "")) }),
+      check: (a) => paths(() => target(deps.roots, a.path, [".pptx"])),
       async run(a, ctx) {
         const out = target(deps.roots, a.path, [".pptx"]);
         const slides = slidesOf(a.slides);

@@ -12,7 +12,7 @@ import { extname, join } from "node:path";
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import type { EngineJob } from "../jobs.js";
-import { deliver, expectFile, said, short, show, source, target, text, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, paths, said, short, show, source, target, text, type AddonToolDeps } from "./common.js";
 
 const ENGINE = "PdfCraft";
 const MAX_FILES = 40;
@@ -87,6 +87,7 @@ export function pdfTools(deps: AddonToolDeps): ToolDef[] {
       parameters: { type: "object", properties: { paths: { type: "array", items: { type: "string" } }, out: { type: "string" } }, required: ["paths", "out"] },
       actionClass: "write-local",
       preview,
+      check: (a) => paths(() => (list(a.paths, [".pdf"]), target(deps.roots, a.out, [".pdf"]))),
       async run(a, ctx) {
         const from = list(a.paths, [".pdf"]);
         if (from.length < 2) throw new Error("Give at least two PDF files to join.");
@@ -108,6 +109,7 @@ export function pdfTools(deps: AddonToolDeps): ToolDef[] {
       parameters: { type: "object", properties: { path: { type: "string" }, pages: { type: "string" }, out: { type: "string" } }, required: ["path", "pages", "out"] },
       actionClass: "write-local",
       preview,
+      check: (a) => paths(() => (source(deps.roots, a.path, [".pdf"]), target(deps.roots, a.out, [".pdf"]))),
       async run(a, ctx) {
         const from = source(deps.roots, a.path, [".pdf"]);
         const out = target(deps.roots, a.out, [".pdf"]);
@@ -129,6 +131,7 @@ export function pdfTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview,
+      check: (a) => paths(() => (source(deps.roots, a.path, [".pdf"]), target(deps.roots, a.out, [".pdf"]))),
       async run(a, ctx) {
         const from = source(deps.roots, a.path, [".pdf"]);
         const out = target(deps.roots, a.out, [".pdf"]);
@@ -149,6 +152,7 @@ export function pdfTools(deps: AddonToolDeps): ToolDef[] {
       parameters: { type: "object", properties: { paths: { type: "array", items: { type: "string" } }, out: { type: "string" } }, required: ["paths", "out"] },
       actionClass: "write-local",
       preview,
+      check: (a) => paths(() => (list(a.paths, PICTURES), target(deps.roots, a.out, [".pdf"]))),
       async run(a, ctx) {
         const from = list(a.paths, PICTURES);
         const out = target(deps.roots, a.out, [".pdf"]);
@@ -172,6 +176,7 @@ export function pdfTools(deps: AddonToolDeps): ToolDef[] {
       classify: (a) => (a.values ? "write-local" : "read"),
       // Field names and what is already typed into them come from whoever made the file.
       untrustedOutput: true,
+      check: (a) => paths(() => (source(deps.roots, a.path, [".pdf"]), a.values ? target(deps.roots, a.out, [".pdf"]) : null)),
       preview: async (a) => (a.values ? t("addons.preview.make", { path: short(String(a.out ?? "")) }) : t("files.preview.read", { path: short(String(a.path ?? "")) })),
       async run(a, ctx) {
         const from = source(deps.roots, a.path, [".pdf"]);

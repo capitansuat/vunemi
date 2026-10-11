@@ -8,7 +8,7 @@ import { copyFileSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, short, show, source, target, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, paths, short, show, source, target, type AddonToolDeps } from "./common.js";
 
 const MAX_MARKDOWN = 400_000;
 const READS = [".docx", ".doc", ".odt", ".rtf", ".md", ".txt", ".html"] as const;
@@ -49,6 +49,7 @@ export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolD
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.path ?? "")) }),
+      check: (a) => paths(() => target(deps.roots, a.path, [".docx", ".pdf"])),
       async run(a, ctx) {
         const out = target(deps.roots, a.path, [".docx", ".pdf"]);
         const markdown = String(a.markdown ?? "");
@@ -83,6 +84,7 @@ export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolD
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.out ?? "")) }),
+      check: (a) => paths(() => (source(deps.roots, a.path, READS), target(deps.roots, a.out, WRITES))),
       async run(a, ctx) {
         const from = source(deps.roots, a.path, READS);
         const out = target(deps.roots, a.out, WRITES);

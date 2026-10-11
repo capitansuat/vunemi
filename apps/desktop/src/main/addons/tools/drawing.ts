@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, short, show, target, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, paths, short, show, target, type AddonToolDeps } from "./common.js";
 
 const MAX_SVG = 400_000;
 
@@ -32,6 +32,7 @@ export function drawingTools(deps: AddonToolDeps): ToolDef[] {
       },
       actionClass: "write-local",
       preview: async (a) => t("addons.preview.make", { path: short(String(a.path ?? "")) }),
+      check: (a) => paths(() => target(deps.roots, a.path, [".png", ".pdf"])),
       async run(a, ctx) {
         const out = target(deps.roots, a.path, [".png", ".pdf"]);
         const svg = String(a.svg ?? "").trim();

@@ -39,6 +39,21 @@ export function source(roots: Roots, input: unknown, extensions: readonly string
   return path;
 }
 
+/**
+ * A tool's check before any card: the paths are tried first, so the user is
+ * never asked to approve a file that could not be read or written anyway (a
+ * folder that is not open, a name already taken). The reason goes back to
+ * the model, which can then ask with a path that works.
+ */
+export function paths(tryThem: () => unknown): string | null {
+  try {
+    tryThem();
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+}
+
 /** Takes a finished file out of the job folder. Never replaces a file that appeared meanwhile. */
 export function deliver(made: string, to: string, ctx: ToolContext): void {
   try {
