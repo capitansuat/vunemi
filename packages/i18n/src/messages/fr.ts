@@ -933,6 +933,7 @@ export const messages: Catalogue = {
     pathNeeded: "Un chemin de fichier est requis.",
     pathInvalid: "Chemin de fichier non valide.",
     outside: "« {path} » est hors des dossiers ouverts à l’agent. Dossiers ouverts : {roots}. L’utilisateur doit regarder lui-même.",
+    wrongHome: "« {path} » désigne un dossier personnel qui n'existe pas sur ce Mac. Le bon chemin est « {fixed} ». Utilisez-le.",
     hidden: "« {path} » est un fichier ou dossier masqué. L’agent ne regarde pas ce genre d’élément ; l’utilisateur peut l’ouvrir lui-même si besoin.",
     notFound: "« {path} » est introuvable.",
     grantNotFile: "« {name} » n’est pas un fichier ; un dossier ne peut pas être joint.",

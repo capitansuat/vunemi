@@ -933,6 +933,7 @@ export const messages: Catalogue = {
     pathNeeded: "É preciso um caminho de arquivo.",
     pathInvalid: "Caminho de arquivo inválido.",
     outside: "“{path}” está fora das pastas abertas ao agente. Abertas: {roots}. O usuário precisa olhar lá por conta própria.",
+    wrongHome: "\"{path}\" indica uma pasta de início que não existe neste Mac. O caminho certo é \"{fixed}\". Use esse.",
     hidden: "“{path}” é um arquivo ou pasta oculta. O agente não olha essas coisas; se precisar, o usuário pode abrir por conta própria.",
     notFound: "“{path}” não foi encontrado.",
     grantNotFile: "“{name}” não é um arquivo; pastas não podem ser anexadas.",

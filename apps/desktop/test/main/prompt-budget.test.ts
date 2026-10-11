@@ -102,7 +102,7 @@ async function compose() {
   const instructions = connectors.instructions().length + addonNote;
   // As a conversation starts with areas: built-in tools, the few every
   // conversation lists, and one picked area; each area tried, the largest kept.
-  const areas = [...toolAreas(connectors.reachable()), ...addonAreas()];
+  const areas = [...toolAreas(connectors.reachable()), ...addonAreas(["/Users/someone/Desktop", "/Users/someone/Documents", "/Users/someone/Downloads"])];
   const always = new Set(areas.flatMap((a) => a.alwaysShown ?? []));
   const shared = connectors.instructions({ guides: false });
   const listedFor = (area: string) => {

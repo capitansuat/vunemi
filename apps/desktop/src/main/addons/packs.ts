@@ -10,7 +10,7 @@
 
 import type { ToolArea, ToolDef, ToolRegistry } from "@vunemi/agent-core";
 import type { AddonId } from "../../shared/ipc.js";
-import type { AddonToolDeps } from "./tools/common.js";
+import { short, type AddonToolDeps } from "./tools/common.js";
 import { DOCUMENTS_GUIDE, documentTools, type DocumentOptions } from "./tools/documents.js";
 import { DRAWING_GUIDE, drawingTools } from "./tools/drawing.js";
 import { PDF_GUIDE, pdfTools } from "./tools/pdf.js";
@@ -115,9 +115,20 @@ export function registerAddonTools(opts: AddonToolsOptions): { sync(): void } {
   return { sync };
 }
 
+/**
+ * Where files may be read and written, said with every pack's guide. Without
+ * it a model asked for "~/Downloads/x.xlsx" wrote /Users/vunemi/Downloads: it
+ * had never been told the folders, or that ~ is how the home folder is written.
+ */
+export function pathsNote(folders: readonly string[]): string {
+  const open = folders.map(short).join(", ");
+  return `Paths: files are read from and saved into the folders open to you${open ? `: ${open}` : ""}. Write the home folder as ~ (~/Downloads/report.pdf), never as /Users/ and a name you guessed. A folder in the path that does not exist yet is made for you.`;
+}
+
 /** One area per pack. The agent lists only those with a tool that can be called. */
-export function addonAreas(): ToolArea[] {
-  return PACKS.map((pack) => ({ id: pack.area, summary: pack.summary, guide: pack.guide }));
+export function addonAreas(folders: readonly string[]): ToolArea[] {
+  const note = pathsNote(folders);
+  return PACKS.map((pack) => ({ id: pack.area, summary: pack.summary, guide: `${pack.guide}\n- ${note}` }));
 }
 
 /**

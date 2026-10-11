@@ -933,6 +933,7 @@ export const messages: Catalogue = {
     pathNeeded: "A file path is needed.",
     pathInvalid: "Invalid file path.",
     outside: "\"{path}\" is outside the folders open to the agent. Open ones: {roots}. The user has to look there themselves.",
+    wrongHome: "\"{path}\" names a home folder that isn't on this Mac. The right path is \"{fixed}\". Use that.",
     hidden: "\"{path}\" is a hidden file or folder. The agent doesn't look at these; the user can open it themselves if needed.",
     notFound: "\"{path}\" wasn't found.",
     grantNotFile: "\"{name}\" isn't a file; folders can't be attached.",

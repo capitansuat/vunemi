@@ -19,6 +19,8 @@ export interface AddonToolDeps {
   roots: Roots;
   /** Vunemi's folder of pictures the window may show. */
   shotDir: string;
+  /** Draws HTML a program wrote as a PNG, in a window with no scripts and no network. */
+  picture?: (html: string, signal: AbortSignal) => Promise<Uint8Array>;
 }
 
 export const short = (path: string): string => path.replace(homedir(), "~");

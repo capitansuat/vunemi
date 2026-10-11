@@ -933,6 +933,7 @@ export const messages: Catalogue = {
     pathNeeded: "需要文件路径。",
     pathInvalid: "文件路径无效。",
     outside: "“{path}”位于向代理开放的文件夹之外。已开放：{roots}。那里需要用户自己查看。",
+    wrongHome: "“{path}”指向这台 Mac 上不存在的个人文件夹。正确的路径是“{fixed}”，请使用它。",
     hidden: "“{path}”是隐藏的文件或文件夹。代理不会查看这些；如有需要，用户可以自己打开。",
     notFound: "找不到“{path}”。",
     grantNotFile: "“{name}”不是文件；不能附加文件夹。",

@@ -4,11 +4,12 @@
  * model's own arithmetic; what it calculated comes back in the result.
  */
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, paths, short, target, type AddonToolDeps } from "./common.js";
+import type { EngineJob } from "../jobs.js";
+import { deliver, expectFile, paths, short, show, target, type AddonToolDeps } from "./common.js";
 
 const MAX_ROWS = 2_000;
 const MAX_COLS = 100;
@@ -17,6 +18,8 @@ const MAX_CELL_TEXT = 2_000;
 /** What comes back for the model to report from. */
 const MAX_PRINT = 4_000;
 const CHARTS = ["column", "bar", "line", "pie"] as const;
+/** Past this the table is not drawn: the picture shows only its top anyway. */
+const MAX_HTML = 2_000_000;
 
 export const SHEETS_GUIDE = `Making spreadsheets:
 - sheet_make makes a new .xlsx file; it cannot change an existing one (excel_write_range does that, when the Mac apps connection is on).
@@ -94,12 +97,22 @@ export function sheetTools(deps: AddonToolDeps): ToolDef[] {
         }
         const cols = Math.max(...rows.map((row) => row.length));
         const area = `A1:${column(cols - 1)}${rows.length}`;
+        /** The table as the program lays it out, for the user to see. A file without a picture is still a file. */
+        const picture = async (job: EngineJob): Promise<void> => {
+          if (!deps.picture) return;
+          await job.run(["convert", "out.xlsx", "shown.html"]);
+          const html = readFileSync(join(job.dir, "shown.html"), "utf8");
+          if (html.length > MAX_HTML) return;
+          writeFileSync(join(job.dir, "shown.png"), await deps.picture(html, ctx.signal));
+          show(deps, join(job.dir, "shown.png"), short(out), ctx);
+        };
         return deps.engines("sheets", ctx.signal, async (job) => {
           writeFileSync(join(job.dir, "steps.jsonl"), sheetScript(rows, chart));
           const made = join(job.dir, "out.xlsx");
           const result = await job.run(["run", "--script", "steps.jsonl", "--out", "out.xlsx", "--print", area, "--quiet"]);
           expectFile("GridCraft", result, made);
           deliver(made, out, ctx);
+          await picture(job).catch(() => {});
           const shown = result.stdout.trim();
           return [
             `Created ${short(out)}: ${rows.length} rows, ${cols} columns${chart ? `, one ${chart.type} chart of ${chart.range}` : ""}.`,

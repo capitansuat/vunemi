@@ -62,6 +62,7 @@ import { SpeakerSeparator, speakersBinary } from "./meetings/speakers.js";
 import { ADDONS } from "./addons/catalog.js";
 import { Addons } from "./addons/store.js";
 import { clearJobs, createEngines } from "./addons/jobs.js";
+import { renderHtmlPicture } from "./office-pdf.js";
 import { addonAreas, addonInstructions, packIds, registerAddonTools } from "./addons/packs.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
@@ -441,6 +442,7 @@ const addonTools = registerAddonTools({
   tools,
   roots,
   shotDir,
+  picture: renderHtmlPicture,
   engines: createEngines({ addons, home: homedir(), jobsDir: join(addonsDir, ".jobs") }),
   installed: (id) => addons.binary(id) !== null,
   // Letter where it is the paper in the printer; A4 everywhere else.
@@ -671,7 +673,7 @@ const session: AgentSession = new AgentSession({
   tools,
   keptOutputs,
   // Each connection's guide travels with its tools (see areas.ts).
-  areas: () => [...toolAreas(connectors.reachable()), ...addonAreas()],
+  areas: () => [...toolAreas(connectors.reachable()), ...addonAreas(roots.list())],
   emit: record,
   onHistory: (history) => {
     conversations.setHistory(history);

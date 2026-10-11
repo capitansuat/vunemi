@@ -933,6 +933,7 @@ export const messages: Catalogue = {
     pathNeeded: "Ein Dateipfad wird benötigt.",
     pathInvalid: "Ungültiger Dateipfad.",
     outside: "„{path}“ liegt außerhalb der für den Agenten geöffneten Ordner. Geöffnet sind: {roots}. Dort muss der Benutzer selbst nachsehen.",
+    wrongHome: "\"{path}\" nennt einen Benutzerordner, den es auf diesem Mac nicht gibt. Richtig ist \"{fixed}\". Verwende diesen Pfad.",
     hidden: "„{path}“ ist eine versteckte Datei oder ein versteckter Ordner. Der Agent sieht sich so etwas nicht an; bei Bedarf öffnet der Benutzer es selbst.",
     notFound: "„{path}“ wurde nicht gefunden.",
     grantNotFile: "„{name}“ ist keine Datei; Ordner können nicht angehängt werden.",

@@ -110,6 +110,15 @@ describe("file tools", () => {
     await expect(call("files_read", { path: join(homedir(), ".ssh", "id_rsa") })).rejects.toThrow(/dışında|gizli/);
   });
 
+  it("names a home folder the model made up, and gives the path it meant", () => {
+    const open = new Roots([join(homedir(), "Downloads")]);
+    // Refused, never quietly rewritten: the card would name one path and the file land at another.
+    expect(() => open.resolve("/Users/no-such-user-vunemi/Downloads/deneme/giderler.xlsx")).toThrow(t("files.wrongHome", { path: "/Users/no-such-user-vunemi/Downloads/deneme/giderler.xlsx", fixed: "~/Downloads/deneme/giderler.xlsx" }));
+    // What it meant is not open either: the plain refusal.
+    expect(() => open.resolve("/Users/no-such-user-vunemi/Documents/a.txt")).toThrow(/dışında/);
+    expect(open.resolve("~/Downloads/a.txt")).toBe(join(realpathSync(homedir()), "Downloads", "a.txt"));
+  });
+
   it("refuses to climb out with ..", async () => {
     writeFileSync(join(home, "secret.txt"), "dışarıda");
     await expect(call("files_read", { path: "../secret.txt" })).rejects.toThrow(PathRefused);

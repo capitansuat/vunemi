@@ -933,6 +933,7 @@ export const messages: Catalogue = {
     pathNeeded: "ファイルのパスが必要です。",
     pathInvalid: "ファイルのパスが無効です。",
     outside: "「{path}」はエージェントに開かれたフォルダの外にあります。開かれているのは {roots} です。そこはユーザが自分で確認する必要があります。",
+    wrongHome: "「{path}」はこの Mac に存在しないホームフォルダを指しています。正しいパスは「{fixed}」です。こちらを使ってください。",
     hidden: "「{path}」は非表示のファイルまたはフォルダです。エージェントはこれらを見ません。必要ならユーザが自分で開きます。",
     notFound: "「{path}」が見つかりません。",
     grantNotFile: "「{name}」はファイルではありません。フォルダは添付できません。",

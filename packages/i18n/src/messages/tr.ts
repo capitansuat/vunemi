@@ -937,6 +937,7 @@ export const messages = {
     pathNeeded: "Bir dosya yolu gerekiyor.",
     pathInvalid: "Dosya yolu geçersiz.",
     outside: "\"{path}\" ajana açık klasörlerin dışında. Açık olanlar: {roots}. Buraya kullanıcı kendi bakmalı.",
+    wrongHome: "\"{path}\" bu Mac'te olmayan bir ev klasörünü gösteriyor. Doğrusu: \"{fixed}\". Bu yolu kullan.",
     hidden: "\"{path}\" gizli bir dosya veya klasör. Ajan bunlara bakmaz; gerekiyorsa kullanıcı kendi açmalı.",
     notFound: "\"{path}\" bulunamadı.",
     grantNotFile: "\"{name}\" bir dosya değil; klasör eklenemez.",

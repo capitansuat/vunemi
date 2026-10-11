@@ -933,6 +933,7 @@ export const messages: Catalogue = {
     pathNeeded: "파일 경로가 필요합니다.",
     pathInvalid: "파일 경로가 유효하지 않습니다.",
     outside: "'{path}'은(는) 에이전트에 열린 폴더 밖에 있습니다. 열린 폴더: {roots}. 그곳은 사용자가 직접 봐야 합니다.",
+    wrongHome: "\"{path}\"은(는) 이 Mac에 없는 홈 폴더를 가리킵니다. 올바른 경로는 \"{fixed}\"입니다. 이 경로를 사용하세요.",
     hidden: "'{path}'은(는) 숨겨진 파일이나 폴더입니다. 에이전트는 이런 것을 보지 않습니다. 필요하면 사용자가 직접 열 수 있습니다.",
     notFound: "'{path}'을(를) 찾을 수 없습니다.",
     grantNotFile: "'{name}'은(는) 파일이 아닙니다. 폴더는 첨부할 수 없습니다.",

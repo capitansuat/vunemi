@@ -6,13 +6,13 @@
  * replaced, and that a failure is reported as one.
  */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ToolRegistry, type Artifact, type Produced, type ToolContext, type ToolDef } from "@vunemi/agent-core";
 import { Roots } from "@vunemi/files";
 import { createEngines, type Engines } from "../../src/main/addons/jobs.js";
-import { PACKS, addonAreas, addonInstructions, registerAddonTools } from "../../src/main/addons/packs.js";
+import { PACKS, addonAreas, addonInstructions, pathsNote, registerAddonTools } from "../../src/main/addons/packs.js";
 import type { SandboxResult } from "../../src/main/addons/sandbox.js";
 import { documentTools } from "../../src/main/addons/tools/documents.js";
 import { pageList, pdfTools, printed } from "../../src/main/addons/tools/pdf.js";
@@ -116,6 +116,19 @@ describe("sheet_make", () => {
     expect(produced).toEqual([{ kind: "file", path: join(folder, "butce.xlsx") }]);
     expect(out).toContain("12000  12000");
     expect(out).toContain("2 rows, 3 columns, one pie chart of A1:B2");
+  });
+
+  it("shows the table as the program lays it out, and makes the file even when no picture can be drawn", async () => {
+    const drawn: string[] = [];
+    const withPicture = (picture: (html: string) => Promise<Uint8Array>) => tool(sheetTools({ ...deps(), picture: async (html) => (drawn.push(html), picture(html)) }), "sheet_make");
+    await withPicture(async () => new Uint8Array([1, 2, 3])).run({ path: join(folder, "a.xlsx"), rows }, ctx());
+    expect(calls.map((c) => c.args)).toContainEqual(["convert", "out.xlsx", "shown.html"]);
+    expect(drawn).toEqual(["made"]);
+    expect(attached).toHaveLength(1);
+    expect(attached[0]!.path.startsWith(join(shots, "addons") + "/")).toBe(true);
+    await withPicture(async () => { throw new Error("Nothing was drawn."); }).run({ path: join(folder, "b.xlsx"), rows }, ctx());
+    expect(existsSync(join(folder, "b.xlsx"))).toBe(true);
+    expect(attached).toHaveLength(1);
   });
 
   it("never replaces a file, and writes only inside the user's folders", async () => {
@@ -492,8 +505,11 @@ describe("add-on packs", () => {
   });
 
   it("gives every pack an area with a guide, and no two the same name", () => {
-    const areas = addonAreas();
+    const areas = addonAreas([folder]);
     expect(areas.map((a) => a.id)).toEqual(PACKS.map((p) => p.area));
+    // Every guide ends by saying where files may go, and how the home folder is written.
+    for (const area of areas) expect(area.guide, area.id).toContain(`open to you: ${folder}. Write the home folder as ~`);
+    expect(pathsNote([join(homedir(), "Downloads")])).toContain("open to you: ~/Downloads.");
     expect(new Set(areas.map((a) => a.id)).size).toBe(areas.length);
     for (const area of areas) expect(area.guide, area.id).toBeTruthy();
     // "photos" is the Photos library's group in the Mac apps connection.
