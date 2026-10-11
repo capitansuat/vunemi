@@ -1661,7 +1661,11 @@ export const messages: Catalogue = {
   addons: {
     intro: "Extra abilities you add when you want them. Each is a separate program, downloaded once from its developer's release page and checked before it is installed. They run on this Mac without network access and see only the files Vunemi hands them.",
     credit: "The programs are the ArtCraft team's Craft apps, open source under MIT or Apache-2.0. They are young: results can differ from Word, Excel or PowerPoint.",
-    from: "{engine} {version} · {size}",
+    from: "{engine} {version} · {publisher} · {licence} · {size}",
+    search: "Search add-ons",
+    all: "All",
+    empty: "No add-on matches.",
+    categories: { office: "Office", images: "Images", video: "Video" },
     get: "Download",
     cancel: "Cancel",
     remove: "Remove",

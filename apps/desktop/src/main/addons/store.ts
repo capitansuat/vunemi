@@ -96,7 +96,10 @@ export class Addons {
   list(): AddonEntry[] {
     return this.catalog.map((a) => ({
       id: a.id,
+      category: a.category,
       engine: a.engine,
+      publisher: a.publisher,
+      licence: a.licence,
       version: version(a.tag),
       bytes: a.size,
       source: `https://github.com/${a.repo}`,

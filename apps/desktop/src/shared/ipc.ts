@@ -432,6 +432,9 @@ export type SpeakersStatus =
 /** An extra ability that is a download: a separate program Vunemi runs in a sandbox. */
 export type AddonId = "documents" | "sheets" | "slides" | "pdf" | "drawing" | "photo" | "video";
 
+/** The shelf an add-on sits on in Settings. */
+export type AddonCategory = "office" | "images" | "video";
+
 export type AddonFailure = "space" | "network" | "integrity" | "host" | "signature" | "unpack";
 
 export type AddonStatus =
@@ -445,8 +448,12 @@ export type AddonStatus =
 
 export interface AddonView {
   id: AddonId;
+  category: AddonCategory;
   /** The program's own name. */
   engine: string;
+  /** Who makes the program, and the licence it is published under. */
+  publisher: string;
+  licence: string;
   version: string;
   bytes: number;
   /** The project's page. */

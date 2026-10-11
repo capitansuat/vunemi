@@ -1661,7 +1661,11 @@ export const messages: Catalogue = {
   addons: {
     intro: "Des capacités supplémentaires que vous ajoutez quand vous le souhaitez. Chacune est un programme distinct, téléchargé une fois depuis la page de publication de son développeur et vérifié avant l'installation. Elles fonctionnent sur ce Mac sans accès réseau et ne voient que les fichiers que Vunemi leur confie.",
     credit: "Ces programmes sont les apps Craft de l'équipe ArtCraft, open source sous licence MIT ou Apache-2.0. Ils sont jeunes : le résultat peut différer de celui de Word, Excel ou PowerPoint.",
-    from: "{engine} {version} · {size}",
+    from: "{engine} {version} · {publisher} · {licence} · {size}",
+    search: "Rechercher une extension",
+    all: "Toutes",
+    empty: "Aucune extension ne correspond.",
+    categories: { office: "Bureautique", images: "Images", video: "Vidéo" },
     get: "Télécharger",
     cancel: "Annuler",
     remove: "Supprimer",

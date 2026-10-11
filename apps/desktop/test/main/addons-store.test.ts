@@ -14,7 +14,10 @@ import { Addons, type AddonStatus } from "../../src/main/addons/store.js";
 
 const GRID: AddonSource = {
   id: "sheets",
+  category: "office",
   engine: "GridCraft",
+  publisher: "ArtCraft",
+  licence: "MIT OR Apache-2.0",
   repo: "storytold/gridcraft",
   tag: "v9.9.9",
   file: "gridcraft-cli-9.9.9-macos-universal.zip",
@@ -133,7 +136,7 @@ describe("add-ons", () => {
   });
 
   it("lists every add-on with its size and where it comes from", () => {
-    expect(addons().list()).toEqual([{ id: "sheets", engine: "GridCraft", version: "9.9.9", bytes: 1000, source: "https://github.com/storytold/gridcraft", status: { state: "absent" } }]);
+    expect(addons().list()).toEqual([{ id: "sheets", category: "office", engine: "GridCraft", publisher: "ArtCraft", licence: "MIT OR Apache-2.0", version: "9.9.9", bytes: 1000, source: "https://github.com/storytold/gridcraft", status: { state: "absent" } }]);
   });
 });
 

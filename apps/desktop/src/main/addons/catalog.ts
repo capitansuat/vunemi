@@ -8,14 +8,22 @@
  * signed by their developer and notarized by Apple.
  */
 
-import type { AddonId } from "../../shared/ipc.js";
+import type { AddonCategory, AddonId } from "../../shared/ipc.js";
 
 export type { AddonId };
 
+/**
+ * One row of the catalogue. The list is meant to grow: a new add-on is a row
+ * here, its texts in the language catalogs, and its tools (see tools.ts).
+ */
 export interface AddonSource {
   id: AddonId;
+  category: AddonCategory;
   /** The program's own name, shown beside what it is for. */
   engine: string;
+  publisher: string;
+  /** SPDX expression, as the project states it. */
+  licence: string;
   /** owner/name on GitHub. */
   repo: string;
   tag: string;
@@ -30,20 +38,20 @@ export interface AddonSource {
 /** Learning Machines LLC, who sign every Craft release. */
 export const ADDON_TEAM = "DJ6XS33FX8";
 
-const craft = (id: AddonId, engine: string, version: string, size: number, sha256: string): AddonSource => {
+const craft = (id: AddonId, category: AddonCategory, engine: string, version: string, size: number, sha256: string): AddonSource => {
   const name = engine.toLowerCase();
   const folder = `${name}-cli-${version}-macos-universal`;
-  return { id, engine, repo: `storytold/${name}`, tag: `v${version}`, file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256 };
+  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256 };
 };
 
 export const ADDONS: readonly AddonSource[] = [
-  craft("documents", "WordCraft", "0.5.0", 80_818_424, "9ded04712fad32c955b32c4efccbe4468fd95eae4f18ea3e32dd3355e6674b5b"),
-  craft("sheets", "GridCraft", "0.5.0", 9_154_129, "4559b42d96bafcbc4180cc7f09d5f428597ec19d447c3df2e4b458afcb4c04fc"),
-  craft("slides", "DeckCraft", "0.5.0", 66_680_532, "e4f8562c4c56337d2ae4069d182e2e325ddbf700b6248272d96f3e469702990b"),
-  craft("pdf", "PdfCraft", "0.6.0", 58_516_543, "85bf80b0732f2556f3133e25693d1f1dfdd2683cd6236aa154bb19f73515b7cf"),
-  craft("drawing", "VectorCraft", "0.9.0", 69_756_789, "0e6fc38dd1ec432fb4a133ee1b1efe935d739f0fcb376b1925ee89473d55a61b"),
-  craft("photo", "PhotoCraft", "0.7.0", 64_701_365, "caf41eee1827ef740bc4495fb1fee77f6a4e0be82fb131106ad06cd591fd8091"),
-  craft("video", "FilmCraft", "0.6.0", 59_471_173, "7ede2aa3e8994ca8363618ef649526546cf951b11a8eaf895b9471101cf5bd32"),
+  craft("documents", "office", "WordCraft", "0.5.0", 80_818_424, "9ded04712fad32c955b32c4efccbe4468fd95eae4f18ea3e32dd3355e6674b5b"),
+  craft("sheets", "office", "GridCraft", "0.5.0", 9_154_129, "4559b42d96bafcbc4180cc7f09d5f428597ec19d447c3df2e4b458afcb4c04fc"),
+  craft("slides", "office", "DeckCraft", "0.5.0", 66_680_532, "e4f8562c4c56337d2ae4069d182e2e325ddbf700b6248272d96f3e469702990b"),
+  craft("pdf", "office", "PdfCraft", "0.6.0", 58_516_543, "85bf80b0732f2556f3133e25693d1f1dfdd2683cd6236aa154bb19f73515b7cf"),
+  craft("drawing", "images", "VectorCraft", "0.9.0", 69_756_789, "0e6fc38dd1ec432fb4a133ee1b1efe935d739f0fcb376b1925ee89473d55a61b"),
+  craft("photo", "images", "PhotoCraft", "0.7.0", 64_701_365, "caf41eee1827ef740bc4495fb1fee77f6a4e0be82fb131106ad06cd591fd8091"),
+  craft("video", "video", "FilmCraft", "0.6.0", 59_471_173, "7ede2aa3e8994ca8363618ef649526546cf951b11a8eaf895b9471101cf5bd32"),
 ];
 
 export function addonUrl(a: AddonSource): string {

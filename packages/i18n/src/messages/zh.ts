@@ -1661,7 +1661,11 @@ export const messages: Catalogue = {
   addons: {
     intro: "需要时再添加的额外能力。每一项都是独立的程序，从开发者的发布页面下载一次，并在安装前经过校验。它们在这台 Mac 上运行，无法访问网络，只能看到 Vunemi 交给它们的文件。",
     credit: "这些程序是 ArtCraft 团队的 Craft 应用，以 MIT 或 Apache-2.0 许可开源。它们还很新：结果可能与 Word、Excel 或 PowerPoint 不同。",
-    from: "{engine} {version} · {size}",
+    from: "{engine} {version} · {publisher} · {licence} · {size}",
+    search: "搜索扩展",
+    all: "全部",
+    empty: "没有匹配的扩展。",
+    categories: { office: "办公", images: "图像", video: "视频" },
     get: "下载",
     cancel: "取消",
     remove: "移除",

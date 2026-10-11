@@ -1667,7 +1667,11 @@ export const messages = {
   addons: {
     intro: "İstediğinde eklediğin ek yetenekler. Her biri ayrı bir programdır; geliştiricisinin sürüm sayfasından bir kez indirilir ve kurulmadan önce doğrulanır. Bu Mac'te ağ erişimi olmadan çalışırlar ve yalnız Vunemi'nin verdiği dosyaları görürler.",
     credit: "Programlar ArtCraft ekibinin Craft uygulamalarıdır; MIT ya da Apache-2.0 lisanslı açık kaynak. Henüz gençler: sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
-    from: "{engine} {version} · {size}",
+    from: "{engine} {version} · {publisher} · {licence} · {size}",
+    search: "Eklenti ara",
+    all: "Tümü",
+    empty: "Aramana uyan eklenti yok.",
+    categories: { office: "Ofis", images: "Görsel", video: "Video" },
     get: "İndir",
     cancel: "İptal",
     remove: "Kaldır",
