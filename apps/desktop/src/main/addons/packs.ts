@@ -13,8 +13,11 @@ import type { AddonId } from "../../shared/ipc.js";
 import type { AddonToolDeps } from "./tools/common.js";
 import { DOCUMENTS_GUIDE, documentTools, type DocumentOptions } from "./tools/documents.js";
 import { DRAWING_GUIDE, drawingTools } from "./tools/drawing.js";
+import { PDF_GUIDE, pdfTools } from "./tools/pdf.js";
+import { PHOTO_GUIDE, photoTools } from "./tools/photo.js";
 import { SHEETS_GUIDE, sheetTools } from "./tools/sheets.js";
 import { SLIDES_GUIDE, slideTools } from "./tools/slides.js";
+import { VIDEO_GUIDE, videoTools } from "./tools/video.js";
 
 export interface AddonPack {
   id: AddonId;
@@ -55,11 +58,33 @@ export const PACKS: readonly AddonPack[] = [
     tools: slideTools,
   },
   {
+    id: "pdf", area: "pdf", name: "PDF tools",
+    summary: "join, split, rotate PDFs; fill PDF forms",
+    guide: PDF_GUIDE,
+    wanted: /(?<!\p{L})pdf(?!\p{L})/iu,
+    tools: pdfTools,
+  },
+  {
     id: "drawing", area: "drawing", name: "drawing",
-    summary: "draw a poster, logo, diagram or simple picture",
+    summary: "draw a poster, logo or diagram",
     guide: DRAWING_GUIDE,
     wanted: /(?<!\p{L})(?:afiş|poster|logo|kartvizit|davetiye|illüstrasyon|illustration|svg)(?!\p{L})|海报|ポスター|포스터/iu,
     tools: drawingTools,
+  },
+  {
+    // "photos" is the Photos library's group in the Mac apps connection.
+    id: "photo", area: "photo_edit", name: "photo editing",
+    summary: "crop, resize, adjust or convert a picture file",
+    guide: PHOTO_GUIDE,
+    wanted: /(?<!\p{L})(?:kırp|crop|resize|boyutlandır|yeniden boyut|webp|heic)(?!\p{L})/iu,
+    tools: photoTools,
+  },
+  {
+    id: "video", area: "video_edit", name: "video editing",
+    summary: "cut video clips together; titles, captions, music",
+    guide: VIDEO_GUIDE,
+    wanted: /(?<!\p{L})(?:video|mp4|montaj|kurgu)(?!\p{L})|视频|動画|동영상|видео/iu,
+    tools: videoTools,
   },
 ];
 

@@ -15,6 +15,9 @@ import { createEngines, type Engines } from "../../src/main/addons/jobs.js";
 import { PACKS, addonAreas, addonInstructions, registerAddonTools } from "../../src/main/addons/packs.js";
 import type { SandboxResult } from "../../src/main/addons/sandbox.js";
 import { documentTools } from "../../src/main/addons/tools/documents.js";
+import { pageList, pdfTools, printed } from "../../src/main/addons/tools/pdf.js";
+import { cropBox, photoArgs, photoTools } from "../../src/main/addons/tools/photo.js";
+import { timed, videoTools } from "../../src/main/addons/tools/video.js";
 import { drawingTools } from "../../src/main/addons/tools/drawing.js";
 import { column, sheetTools } from "../../src/main/addons/tools/sheets.js";
 import { slideTools } from "../../src/main/addons/tools/slides.js";
@@ -27,7 +30,8 @@ let files: Record<string, string> = {};
 let attached: Artifact[] = [];
 let tiles: Artifact[] = [];
 let produced: Produced[] = [];
-let answer: (args: string[]) => Partial<SandboxResult> & { skip?: boolean } = () => ({});
+let answer: (args: string[], stdin?: string) => Partial<SandboxResult> & { skip?: boolean } = () => ({});
+let typed: string[] = [];
 
 beforeEach(() => {
   base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-addon-tools-")));
@@ -39,6 +43,7 @@ beforeEach(() => {
   attached = [];
   tiles = [];
   produced = [];
+  typed = [];
   answer = () => ({});
 });
 afterEach(() => rmSync(base, { recursive: true, force: true }));
@@ -48,19 +53,23 @@ function written(args: string[]): string[] {
   const after = (flag: string) => (args.includes(flag) ? [args[args.indexOf(flag) + 1]!] : []);
   if (args[0] === "convert") return [args[2]!];
   if (args[0] === "render" && args.includes("--all")) return ["shown/slide-01.png", "shown/slide-02.png"];
-  if (args[0] === "render") return [args[2]!];
-  return [...after("--out"), ...after("--save")];
+  if (args[0] === "render" && !args.includes("--out")) return [args[2]!];
+  if (args.includes("export")) return [args[args.indexOf("export") + 1]!];
+  // A script that saves names its file itself.
+  const saved = args.includes("--script") ? Object.values(files).flatMap((body) => [...body.matchAll(/"tool":"doc_save","args":\{"doc":1,"path":"([^"]+)"/g)].map((m) => m[1]!)) : [];
+  return [...saved, ...after("--out"), ...after("--save")];
 }
 
 const engines: Engines = async (id, _signal, work) => {
   const dir = mkdtempSync(join(base, "job-"));
   return work({
     dir,
-    run: async (args) => {
+    run: async (args, opts) => {
       calls.push({ id, args: [...args] });
+      if (opts?.stdin) typed.push(opts.stdin);
       // What the tool put in the job folder, as the program would read it.
-      for (const name of readdirSync(dir)) if (/\.(md|jsonl|svg)$/.test(name)) files[name] = readFileSync(join(dir, name), "utf8");
-      const said = answer([...args]);
+      for (const name of readdirSync(dir)) if (/\.(md|jsonl|json|svg)$/.test(name)) files[name] = readFileSync(join(dir, name), "utf8");
+      const said = answer([...args], opts?.stdin);
       if (!said.skip && (said.code ?? 0) === 0) {
         for (const name of written([...args])) {
           mkdirSync(join(dir, name, ".."), { recursive: true });
@@ -241,6 +250,203 @@ describe("image_draw", () => {
     answer = () => ({ skip: true, stderr: "SVG parse error: unexpected end of stream" });
     await expect(make().run({ path: join(folder, "a.png"), svg }, ctx())).rejects.toThrow(/parse error/);
     expect(existsSync(join(folder, "a.png"))).toBe(false);
+  });
+});
+
+describe("PDF tools", () => {
+  const list = () => pdfTools(deps());
+  const info = (pages: number, encrypted = false) => ({ stdout: JSON.stringify({ pages, encrypted }, null, 2) });
+
+  it("reads page lists as written, and refuses what is outside the file", () => {
+    expect(pageList("3, 1-2", 3)).toEqual([3, 1, 2]);
+    expect(() => pageList("4", 3)).toThrow(/3 pages/);
+    expect(() => pageList("2-1", 3)).toThrow();
+    expect(() => pageList("all", 3)).toThrow(/1,3,5-7/);
+    expect(() => pageList("", 3)).toThrow();
+  });
+
+  it("reads the objects the program prints one after another", () => {
+    expect(printed('{\n  "doc": 1\n}\n{\n  "fields": [\n    {\n      "name": "ad"\n    }\n  ]\n}\n')).toEqual([{ doc: 1 }, { fields: [{ name: "ad" }] }]);
+    expect(printed("pdfcraft-cli: no such file")).toEqual([]);
+  });
+
+  it("takes pages out into a new file, ranges written out page by page", async () => {
+    writeFileSync(join(folder, "tum.pdf"), "original");
+    answer = (args) => (args[0] === "info" ? info(5) : {});
+    const out = await tool(list(), "pdf_extract").run({ path: join(folder, "tum.pdf"), pages: "5,1-2", out: join(folder, "secilen.pdf") }, ctx());
+    expect(calls.map((c) => c.args)).toContainEqual(["extract", "in.pdf", "--pages", "5,1,2", "--out", "out.pdf"]);
+    expect(readFileSync(join(folder, "tum.pdf"), "utf8")).toBe("original");
+    expect(existsSync(join(folder, "secilen.pdf"))).toBe(true);
+    expect(out).toContain("secilen.pdf: 5 pages");
+    expect(attached).toHaveLength(1);
+  });
+
+  it("turns every page when none is named", async () => {
+    writeFileSync(join(folder, "tum.pdf"), "x");
+    answer = (args) => (args[0] === "info" ? info(3) : {});
+    await tool(list(), "pdf_rotate").run({ path: join(folder, "tum.pdf"), degrees: 90, out: join(folder, "donuk.pdf") }, ctx());
+    expect(calls.map((c) => c.args)).toContainEqual(["edit", "in.pdf", "--out", "out.pdf", "--rotate", "1,2,3:90"]);
+    await expect(tool(list(), "pdf_rotate").run({ path: join(folder, "tum.pdf"), degrees: 45, out: join(folder, "x.pdf") }, ctx())).rejects.toThrow(/90, 180 or 270/);
+  });
+
+  it("does not open a PDF that needs a password", async () => {
+    writeFileSync(join(folder, "kilitli.pdf"), "x");
+    writeFileSync(join(folder, "acik.pdf"), "x");
+    answer = (args) => (args[0] === "info" ? info(2, args[1] === "in-2.pdf") : {});
+    await expect(tool(list(), "pdf_combine").run({ paths: [join(folder, "acik.pdf"), join(folder, "kilitli.pdf")], out: join(folder, "hepsi.pdf") }, ctx())).rejects.toThrow(/password/);
+    expect(calls.some((c) => c.args[0] === "combine")).toBe(false);
+    expect(existsSync(join(folder, "hepsi.pdf"))).toBe(false);
+  });
+
+  it("lists a form's fields as someone else's words, and fills them into a new file", async () => {
+    writeFileSync(join(folder, "form.pdf"), "x");
+    const fields = JSON.stringify({ count: 1, fields: [{ name: "ad", type: "text", page: 1, value: "Ayşe" }] }, null, 2);
+    answer = (args) => (args[0] === "info" ? info(1) : args.includes("--script") ? { stdout: `{\n  "doc": 1\n}\n${fields}\n` } : {});
+    const form = tool(list(), "pdf_form");
+    expect(form.untrustedOutput).toBe(true);
+    expect(form.classify?.({ path: "x" })).toBe("read");
+    expect(form.classify?.({ path: "x", values: {} })).toBe("write-local");
+    expect(await form.run({ path: join(folder, "form.pdf") }, ctx())).toContain('- ad (text, page 1): "Ayşe"');
+    expect(JSON.parse(files["steps.json"]!)).toEqual([{ tool: "doc_open", args: { path: "in.pdf" } }, { tool: "form_fields", args: { doc: 1 } }]);
+
+    await form.run({ path: join(folder, "form.pdf"), values: { ad: "Ayşe", onay: true }, out: join(folder, "dolu.pdf") }, ctx());
+    expect(JSON.parse(files["steps.json"]!)).toEqual([
+      { tool: "doc_open", args: { path: "in.pdf" } },
+      { tool: "form_fill", args: { doc: 1, values: { ad: "Ayşe", onay: true } } },
+      { tool: "doc_save", args: { doc: 1, path: "out.pdf" } },
+      { tool: "form_fields", args: { doc: 1 } },
+    ]);
+    expect(existsSync(join(folder, "dolu.pdf"))).toBe(true);
+  });
+});
+
+describe("photo_edit", () => {
+  const make = () => tool(photoTools(deps()), "photo_edit");
+  const size = { width: 4000, height: 3000 };
+
+  it("crops by shape from the middle, or by pixels inside the picture", () => {
+    expect(cropBox({ ratio: "1:1" }, size)).toEqual({ x: 500, y: 0, width: 3000, height: 3000 });
+    expect(cropBox({ ratio: "9:16" }, size)).toEqual({ x: 1156, y: 0, width: 1688, height: 3000 });
+    expect(cropBox({ x: 10, y: 20, width: 100, height: 50 }, size)).toEqual({ x: 10, y: 20, width: 100, height: 50 });
+    expect(() => cropBox({ x: 3990, y: 0, width: 100, height: 50 }, size)).toThrow(/4000 by 3000/);
+    expect(() => cropBox({ ratio: "square" }, size)).toThrow(/1:1/);
+    expect(cropBox(undefined, size)).toBeNull();
+  });
+
+  it("applies the changes in one order, keeping the shape when one side is given", () => {
+    const { args, did } = photoArgs({ resize: { width: 1000 }, rotate: 90, crop: { ratio: "1:1" }, brightness: 20, contrast: -40, saturation: 250, flip: "horizontal" }, size);
+    expect(args).toEqual([
+      "--cmd", "image.crop", "--params", '{"x":500,"y":0,"width":3000,"height":3000}',
+      "--cmd", "image.imageRotation.90cw",
+      "--cmd", "image.imageRotation.flipCanvasHorizontal",
+      "--cmd", "image.imageSize", "--params", '{"width":1000,"height":1000}',
+      "--cmd", "image.adjustments.brightnessContrast", "--params", '{"brightness":30,"contrast":-20}',
+      "--cmd", "image.adjustments.vibrance", "--params", '{"saturation":100}',
+    ]);
+    expect(did[0]).toBe("cropped to 3000 by 3000");
+    // After a quarter turn the sides have changed places.
+    expect(photoArgs({ rotate: 270, resize: { height: 400 } }, size).args.slice(-2)).toEqual(["--params", '{"width":300,"height":400}']);
+    expect(() => photoArgs({ rotate: 45 }, size)).toThrow(/90, 180 or 270/);
+  });
+
+  it("makes a new picture and leaves the one it was given alone", async () => {
+    writeFileSync(join(folder, "foto.heic"), "original");
+    answer = (args) => (args[0] === "info" ? { stdout: JSON.stringify(args[1] === "in.heic" ? size : { width: 3000, height: 3000 }) } : {});
+    const out = await make().run({ path: join(folder, "foto.heic"), out: join(folder, "kare.jpg"), crop: { ratio: "1:1" } }, ctx());
+    expect(calls[1]!.args).toEqual(["run", "in.heic", "--cmd", "image.crop", "--params", '{"x":500,"y":0,"width":3000,"height":3000}', "--out", "out.jpg", "--quality", "90"]);
+    expect(readFileSync(join(folder, "foto.heic"), "utf8")).toBe("original");
+    expect(existsSync(join(folder, "kare.jpg"))).toBe(true);
+    expect(out).toContain("Before: 4000 by 3000 pixels; now: 3000 by 3000");
+    expect(attached).toHaveLength(1);
+  });
+
+  it("only converts when no change is asked for", async () => {
+    writeFileSync(join(folder, "foto.png"), "x");
+    answer = (args) => (args[0] === "info" ? { stdout: JSON.stringify(size) } : {});
+    expect(await make().run({ path: join(folder, "foto.png"), out: join(folder, "foto.webp") }, ctx())).toContain("format converted");
+    expect(calls[1]!.args).toEqual(["convert", "in.png", "out.webp", "--quality", "90"]);
+  });
+});
+
+describe("video tools", () => {
+  const list = () => videoTools(deps());
+  const TICKS = 254_016_000_000;
+  const media = (seconds: number) => ({ stdout: JSON.stringify({ duration: seconds * TICKS, audio_streams: [{}], video: { width: 1920, height: 1080, frame_rate: { num: 30, den: 1 } } }) });
+  /** Stands in for the program: every command accepted, the import numbered, the clips as placed. */
+  const film = (args: string[], stdin?: string) => {
+    if (args[0] === "probe") return media(args[1] === "out.mp4" ? 7 : 10);
+    if (args.includes("inspect")) return { stdout: JSON.stringify({ duration: 7 * TICKS, video: [{ items: [{ clip: 11 }, { clip: 12 }] }], audio: [{ items: [{ clip: 21 }, { clip: 22 }] }, { items: [{ clip: 31 }] }] }) };
+    if (stdin) {
+      const answers = stdin.trim().split("\n").map((line) => {
+        const step = JSON.parse(line) as { id: string; params: { paths?: string[] } };
+        return { ok: true, result: step.id === "file.import" ? { items: step.params.paths!.map((_, i) => i + 1), errors: [] } : null };
+      });
+      return { stdout: answers.map((one) => JSON.stringify(one)).join("\n") };
+    }
+    return {};
+  };
+  const sent = () => typed.flatMap((block) => block.trim().split("\n").map((line) => JSON.parse(line) as { id: string; params: Record<string, unknown> }));
+
+  it("keeps titles and captions inside the video", () => {
+    expect(timed([{ text: "Giriş", at: 0 }, { text: "Son", at: 9, seconds: 5 }, { text: "Sonrası", at: 12 }, { text: " ", at: 1 }], 10, 3)).toEqual([
+      { text: "Giriş", at: 0, seconds: 3 },
+      { text: "Son", at: 9, seconds: 1 },
+    ]);
+    expect(timed(undefined, 10, 3)).toEqual([]);
+  });
+
+  it("says how long a video is", async () => {
+    writeFileSync(join(folder, "a.mov"), "x");
+    answer = film;
+    expect(await tool(list(), "video_info").run({ path: join(folder, "a.mov") }, ctx())).toContain("10.0 seconds, 1920 by 1080, 30.00 frames a second, with sound");
+  });
+
+  it("cuts the clips together in the program's own units, and exports", async () => {
+    writeFileSync(join(folder, "a.mp4"), "x");
+    writeFileSync(join(folder, "b.mov"), "x");
+    writeFileSync(join(folder, "muzik.mp3"), "x");
+    answer = film;
+    const out = await tool(list(), "video_make").run(
+      {
+        out: join(folder, "kurgu.mp4"),
+        clips: [{ path: join(folder, "a.mp4"), start: 2, end: 6 }, { path: join(folder, "b.mov"), end: 3 }],
+        fade: true,
+        titles: [{ text: "Tatil", at: 0, seconds: 2 }],
+        captions: [{ text: "İlk gün", at: 1 }, { text: "çok geç", at: 60 }],
+        music: join(folder, "muzik.mp3"),
+      },
+      ctx(),
+    );
+    expect(sent()).toEqual([
+      { id: "file.import", params: { paths: ["clip-1.mp4", "clip-2.mov", "music.mp3"] } },
+      { id: "file.newSequence", params: { name: "Vunemi", width: 1920, height: 1080, fps: 30 } },
+      { id: "timeline.place", params: { item: 1, track: "V1", seconds: 0, insert: false, sourceIn: 2 * TICKS, duration: 4 * TICKS } },
+      { id: "timeline.place", params: { item: 2, track: "V1", seconds: 4, insert: false, sourceIn: 0, duration: 3 * TICKS } },
+      { id: "timeline.place", params: { item: 3, track: "A2", seconds: 0, insert: false, duration: 7 * TICKS } },
+      { id: "sequence.applyVideoTransition", params: { clip: 12, effect: "cross_dissolve", frames: 12, edge: "in" } },
+      { id: "clip.audioGain", params: { clips: [31], mode: "adjust", db: -12 } },
+      { id: "graphics.newText", params: { text: "Tatil", position: [115, 216], size: 108, newClip: true, seconds: 2, time: 0 } },
+      { id: "captions.newTrack", params: { format: "Subtitle" } },
+      { id: "captions.add", params: { text: "İlk gün", seconds: 1, durationSeconds: 2.5 } },
+    ]);
+    expect(calls.map((c) => c.args)).toContainEqual(["--project", "edit.fcproj", "export", "out.mp4", "--format", "h264", "--settings", '{"burnCaptions":true}']);
+    expect(existsSync(join(folder, "kurgu.mp4"))).toBe(true);
+    expect(out).toContain("7.0 seconds, 1920 by 1080, from 2 clips, with 1 title, 1 caption, music, cross-fades");
+  });
+
+  it("refuses a cut that leaves nothing, before the program is asked to edit", async () => {
+    writeFileSync(join(folder, "a.mp4"), "x");
+    answer = film;
+    await expect(tool(list(), "video_make").run({ out: join(folder, "k.mp4"), clips: [{ path: join(folder, "a.mp4"), start: 30 }] }, ctx())).rejects.toThrow(/10\.0 seconds long/);
+    expect(typed).toEqual([]);
+  });
+
+  it("stops when the program refuses a step, and makes no file", async () => {
+    writeFileSync(join(folder, "a.mp4"), "x");
+    answer = (args, stdin) => (stdin?.includes("timeline.place") ? { stdout: JSON.stringify({ ok: false, error: "no track V1" }) } : film(args, stdin));
+    await expect(tool(list(), "video_make").run({ out: join(folder, "k.mp4"), clips: [{ path: join(folder, "a.mp4") }] }, ctx())).rejects.toThrow(/no track V1/);
+    expect(calls.some((c) => c.args.includes("export"))).toBe(false);
+    expect(existsSync(join(folder, "k.mp4"))).toBe(false);
   });
 });
 

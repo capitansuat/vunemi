@@ -37,7 +37,7 @@ const LIMITS = {
   guide: 2_000,
   /**
    * System prompt, every connection's instructions and every tool shown, all
-   * switched on (40,192; 39,037 before the History connection, which is off
+   * switched on (40,233; 39,037 before the History connection, which is off
    * until the user switches it on, and 40,045 before add-ons: with none
    * downloaded, one line names them and where to get them, so a request for
    * a presentation is answered with that and not with "I can't").
@@ -51,9 +51,10 @@ const LIMITS = {
    * conversation lists (about 280 tokens), and 13,171 before the History
    * connection: switched on, its two tools and its guide are in every
    * conversation (about 300 tokens), since a request at any point of one may
-   * come with lines that name an earlier conversation to open. 14,505 with
+   * come with lines that name an earlier conversation to open. 14,694 with
    * add-ons: each one downloaded is an area, and an area is a line in every
-   * request (about ten tokens each; measured with all of them downloaded).
+   * request (about ten tokens each; measured with all seven downloaded). A
+   * new add-on will not fit: that is the moment to decide what its line costs.
    */
   oneArea: 14_700,
 };
