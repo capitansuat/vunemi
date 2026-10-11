@@ -1948,6 +1948,18 @@ describe("areas: one tool list for the whole conversation", () => {
     expect(output).toMatchObject({ role: "tool", toolName: "calendar_events", content: 'calendar_events ran with {"q":"tomorrow"}' });
   });
 
+  it("takes a tool named with its area in front as the tool, and nothing else that way", async () => {
+    const run = go(new Set<string>(), ["mail"], [
+      { calls: [{ name: "tool_run", argumentsText: '{"name":"calendar/calendar_events","arguments":{"q":"today"}}' }] },
+      { calls: [{ name: "tool_run", argumentsText: '{"name":"mail/calendar_events","arguments":{}}' }] },
+      { text: "done" },
+    ]);
+    await run.promise;
+    expect(run.seen[1]!.messages.at(-1)).toMatchObject({ role: "tool", toolName: "calendar_events", content: 'calendar_events ran with {"q":"today"}' });
+    // The wrong area in front is not a name of anything.
+    expect(run.seen[2]!.messages.at(-1)!.content).toContain('Unknown tool "mail/calendar_events"');
+  });
+
   it("gives the browser's tools with a request sent while a page is open, whatever was picked", async () => {
     const tools = registry().register(def("page_describe"), "browser:read");
     const areas: ToolArea[] = [...AREAS, { id: "browser", summary: "web pages", guide: "BROWSER GUIDE" }];

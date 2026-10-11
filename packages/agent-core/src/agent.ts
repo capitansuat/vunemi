@@ -934,11 +934,22 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     });
   }
 
+  /**
+   * "sheets/sheet_make" for sheet_make: given a tool under its area's
+   * heading, some models put the area in front of the name. Taken as the tool
+   * only when the name after the mark is a tool of the area before it.
+   */
+  function plainName(name: string): string {
+    if (!areaMode || tools.getAny(name)) return name;
+    const match = /^([\w-]+)[/.:]([\w-]+)$/.exec(name);
+    return match && areaOfName(match[2]!) === match[1] ? match[2]! : name;
+  }
+
   /** The tool a call stands for: tool_run's target, or the call itself. */
   function realName(call: ToolCall): string {
-    if (!areaMode || call.name !== TOOL_RUN) return call.name;
+    if (!areaMode || call.name !== TOOL_RUN) return plainName(call.name);
     const target = unwrapRun(call.argumentsText);
-    return "name" in target ? target.name : call.name;
+    return "name" in target ? plainName(target.name) : call.name;
   }
 
   /** Definitions a guide opened during the call, for the model to read next. */
@@ -972,8 +983,10 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         emit({ type: "tool.proposed", runId, stepId, callId: call.id, tool: TOOL_RUN, args: call.argumentsText, actionClass: "read" });
         return fail(call, target.error, false);
       }
-      call = { ...call, ...target };
+      call = { ...call, ...target, name: plainName(target.name) };
       called.add(call.name);
+    } else {
+      call = { ...call, name: plainName(call.name) };
     }
     // Switched off, but the user may switch it back on from its card.
     const offer = !tools.get(call.name) && tools.isSwitchedOff(call.name) ? opts.switchedOff?.(call.name) ?? null : null;
