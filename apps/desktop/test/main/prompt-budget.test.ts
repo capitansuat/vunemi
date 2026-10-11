@@ -26,14 +26,23 @@ const LIMITS = {
   core: 2_000,
   /** One tool's definition: name, description and parameters (largest 782, travel_search_flights). */
   tool: 800,
+  /**
+   * One tool that is shown on request only: its definition is paid for in
+   * the conversations that need it, not in every one. Above the limit for the
+   * others because a presentation is a nested thing to describe: slides, each
+   * with lines or a chart, each chart with its series (959, slides_make).
+   */
+  toolOnRequest: 1_000,
   /** One connection's instructions (largest 1,999, apps). */
   guide: 2_000,
   /**
    * System prompt, every connection's instructions and every tool shown, all
-   * switched on (40,045; 39,037 before the History connection, which is off
-   * until the user switches it on).
+   * switched on (40,192; 39,037 before the History connection, which is off
+   * until the user switches it on, and 40,045 before add-ons: with none
+   * downloaded, one line names them and where to get them, so a request for
+   * a presentation is answered with that and not with "I can't").
    */
-  total: 40_100,
+  total: 40_300,
   /**
    * With areas: a conversation's first prompt with one area picked, the
    * largest (13,171, browser). Was 11,743 before the browser's rule on
@@ -42,9 +51,11 @@ const LIMITS = {
    * conversation lists (about 280 tokens), and 13,171 before the History
    * connection: switched on, its two tools and its guide are in every
    * conversation (about 300 tokens), since a request at any point of one may
-   * come with lines that name an earlier conversation to open.
+   * come with lines that name an earlier conversation to open. 14,505 with
+   * add-ons: each one downloaded is an area, and an area is a line in every
+   * request (about ten tokens each; measured with all of them downloaded).
    */
-  oneArea: 14_300,
+  oneArea: 14_700,
 };
 
 async function compose() {
@@ -67,6 +78,9 @@ async function compose() {
     automations: new AutomationStore(join(dir, "automations.json")), mailAccounts: [],
     library: { library: new Library(new LibraryStore(dir), sources), sources, current: () => "" },
   });
+  // Add-ons, all installed: their tools are areas of their own, shown on request.
+  const { addonAreas, addonInstructions, registerAddonTools } = await import("../../src/main/addons/packs.js");
+  registerAddonTools({ tools, roots: { list: () => [] } as never, shotDir: join(dir, "shots"), engines: (async () => undefined) as never, paper: () => "A4", installed: () => true });
   // Off until the user switches it on, and then its two tools are there.
   const history = { offAtFirst: !connectors.isOn("history"), hiddenWhileOff: tools.get("library_open") === undefined };
   // Everything switched on: the most a user can carry.
@@ -82,10 +96,12 @@ async function compose() {
   const shown = toolSpecsOf(tools, new Set<string>(), (name) => !!connectors.partOf(name));
   const specs = shown.map((s) => ({ name: s.name, chars: JSON.stringify(s).length }));
   const onDemand = toolSpecsOf(tools).filter((s) => !shown.some((x) => x.name === s.name)).map((s) => ({ name: s.name, chars: JSON.stringify(s).length }));
-  const instructions = connectors.instructions().length;
+  // The line about add-ons is longest with none downloaded.
+  const addonNote = addonInstructions(() => false).length;
+  const instructions = connectors.instructions().length + addonNote;
   // As a conversation starts with areas: built-in tools, the few every
   // conversation lists, and one picked area; each area tried, the largest kept.
-  const areas = toolAreas(connectors.reachable());
+  const areas = [...toolAreas(connectors.reachable()), ...addonAreas()];
   const always = new Set(areas.flatMap((a) => a.alwaysShown ?? []));
   const shared = connectors.instructions({ guides: false });
   const listedFor = (area: string) => {
@@ -124,8 +140,10 @@ describe("prompt budget", async () => {
   });
 
   it("keeps every tool definition within its budget", () => {
-    const over = [...c.specs, ...c.onDemand].filter((s) => s.chars > LIMITS.tool).map((s) => `${s.name} ${s.chars}`);
+    const over = c.specs.filter((s) => s.chars > LIMITS.tool).map((s) => `${s.name} ${s.chars}`);
     expect(over).toEqual([]);
+    const overOnRequest = c.onDemand.filter((s) => s.chars > LIMITS.toolOnRequest).map((s) => `${s.name} ${s.chars}`);
+    expect(overOnRequest).toEqual([]);
   });
 
   it("keeps every connection's instructions within budget", () => {

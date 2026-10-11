@@ -20,6 +20,7 @@ const GRID: AddonSource = {
   licence: "MIT OR Apache-2.0",
   repo: "storytold/gridcraft",
   tag: "v9.9.9",
+  shelf: "addons-9",
   file: "gridcraft-cli-9.9.9-macos-universal.zip",
   folder: "gridcraft-cli-9.9.9-macos-universal",
   binary: "gridcraft-cli",
@@ -72,7 +73,7 @@ describe("add-ons", () => {
     expect(a.binary("sheets")).toBeNull();
 
     expect(await a.install("sheets")).toEqual({ state: "ready", version: "9.9.9" });
-    expect(asked).toEqual([{ url: "https://github.com/storytold/gridcraft/releases/download/v9.9.9/gridcraft-cli-9.9.9-macos-universal.zip", name: GRID.file, size: 1000, sha256: GRID.sha256 }]);
+    expect(asked).toEqual([{ url: "https://github.com/capitansuat/vunemi/releases/download/addons-9/gridcraft-cli-9.9.9-macos-universal.zip", name: GRID.file, size: 1000, sha256: GRID.sha256 }]);
     expect(a.binary("sheets")).toBe(join(dir, "sheets", "v9.9.9", GRID.folder, GRID.binary));
     expect(seen.map((s) => s.state)).toEqual(["downloading", "installing", "ready"]);
     // The zip is not kept.
@@ -148,14 +149,15 @@ describe("the add-on catalogue", () => {
       expect(a.size, a.id).toBeGreaterThan(1_000_000);
       expect(a.file, a.id).toBe(`${a.folder}.zip`);
       expect(a.file, a.id).toContain(a.tag.slice(1));
-      expect(dirname(addonUrl(a)), a.id).toBe(`https://github.com/${a.repo}/releases/download/${a.tag}`);
+      // Vunemi's own copy, never the project's release page.
+      expect(dirname(addonUrl(a)), a.id).toBe(`https://github.com/capitansuat/vunemi/releases/download/${a.shelf}`);
     }
     expect(new Set(ADDONS.map((a) => a.id)).size).toBe(ADDONS.length);
   });
 
   it("downloads only from GitHub and where GitHub keeps release files", () => {
     const ok = (u: string) => allowedAddonUrl(new URL(u));
-    expect(ok("https://github.com/storytold/gridcraft/releases/download/v0.5.0/x.zip")).toBe(true);
+    expect(ok("https://github.com/capitansuat/vunemi/releases/download/addons-1/x.zip")).toBe(true);
     expect(ok("https://release-assets.githubusercontent.com/github-production-release-asset/1/x")).toBe(true);
     expect(ok("https://objects.githubusercontent.com/x")).toBe(true);
     expect(ok("http://github.com/storytold/gridcraft/releases/download/v0.5.0/x.zip")).toBe(false);

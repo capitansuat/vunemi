@@ -1,11 +1,16 @@
 /**
- * The add-ons: programs Vunemi can use but does not carry. Each is one file
- * from the project's own release page, pinned by size and SHA-256, and
- * downloaded only when the user asks for it in Settings.
+ * The add-ons: programs Vunemi can use but does not carry. Each is one file,
+ * pinned by size and SHA-256, and downloaded only when the user asks for it
+ * in Settings.
  *
- * They are the ArtCraft team's Craft apps (MIT or Apache-2.0), in their
- * headless command-line form. Vunemi runs them as they were published:
- * signed by their developer and notarized by Apple.
+ * The file comes from Vunemi's own release page, not the project's: it is the
+ * exact copy the tools here were written and tried against, and it stays
+ * there whatever the project later does with its own releases. It is the
+ * project's published file, byte for byte, so it is still signed by its
+ * developer and notarized by Apple, and its licence files travel inside it.
+ *
+ * The first ones are the ArtCraft team's Craft apps (MIT or Apache-2.0), in
+ * their headless command-line form.
  */
 
 import type { AddonCategory, AddonId } from "../../shared/ipc.js";
@@ -24,9 +29,12 @@ export interface AddonSource {
   publisher: string;
   /** SPDX expression, as the project states it. */
   licence: string;
-  /** owner/name on GitHub. */
+  /** The project itself, owner/name on GitHub: where the user can read about it. */
   repo: string;
+  /** The project's own version tag; also the name of the folder it is installed in. */
   tag: string;
+  /** The Vunemi release that holds the copy (see ADDON_SHELF). */
+  shelf: string;
   file: string;
   /** The folder the zip unpacks to. */
   folder: string;
@@ -35,13 +43,16 @@ export interface AddonSource {
   sha256: string;
 }
 
+/** Where the copies are kept: releases of Vunemi's own repository, apart from the app's versions. */
+export const ADDON_SHELF = "capitansuat/vunemi";
+
 /** Learning Machines LLC, who sign every Craft release. */
 export const ADDON_TEAM = "DJ6XS33FX8";
 
 const craft = (id: AddonId, category: AddonCategory, engine: string, version: string, size: number, sha256: string): AddonSource => {
   const name = engine.toLowerCase();
   const folder = `${name}-cli-${version}-macos-universal`;
-  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256 };
+  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, shelf: "addons-1", file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256 };
 };
 
 export const ADDONS: readonly AddonSource[] = [
@@ -55,7 +66,7 @@ export const ADDONS: readonly AddonSource[] = [
 ];
 
 export function addonUrl(a: AddonSource): string {
-  return `https://github.com/${a.repo}/releases/download/${a.tag}/${a.file}`;
+  return `https://github.com/${ADDON_SHELF}/releases/download/${a.shelf}/${a.file}`;
 }
 
 /** GitHub, and the hosts it sends a release download on to. */

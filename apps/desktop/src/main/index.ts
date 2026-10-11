@@ -61,6 +61,8 @@ import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meeting
 import { SpeakerSeparator, speakersBinary } from "./meetings/speakers.js";
 import { ADDONS } from "./addons/catalog.js";
 import { Addons } from "./addons/store.js";
+import { clearJobs, createEngines } from "./addons/jobs.js";
+import { addonAreas, addonInstructions, packIds, registerAddonTools } from "./addons/packs.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
 import { PRODUCTION, type FeedSource } from "./updates/feed.js";
@@ -420,6 +422,31 @@ const library = new Library(new LibraryStore(app.getPath("userData")), librarySo
 /** Meetings are read from disk to be indexed: once, and again after one changed. */
 let meetingsIndexed = false;
 
+/**
+ * Add-ons: separate programs, downloaded when the user asks in Settings
+ * (addons/store.ts). Only those whose tools are written here are offered.
+ */
+const addonsDir = join(app.getPath("userData"), "addons");
+const addons: Addons = new Addons({
+  dir: addonsDir,
+  catalog: ADDONS.filter((a) => packIds().includes(a.id)),
+  trash: (path) => shell.trashItem(path),
+  onChange: () => {
+    addonTools.sync();
+    send(CH.addonsChanged, addons.list());
+  },
+});
+clearJobs(join(addonsDir, ".jobs"));
+const addonTools = registerAddonTools({
+  tools,
+  roots,
+  shotDir,
+  engines: createEngines({ addons, home: homedir(), jobsDir: join(addonsDir, ".jobs") }),
+  installed: (id) => addons.binary(id) !== null,
+  // Letter where it is the paper in the printer; A4 everywhere else.
+  paper: () => (["US", "CA", "MX", "PH", "CL", "CO", "VE"].includes(app.getLocaleCountryCode()) ? "Letter" : "A4"),
+});
+
 const connectors = buildConnectors({
   automations,
   // Set up further down, beside the scope lookup it needs; a tool asks for it only when it is called.
@@ -644,7 +671,7 @@ const session: AgentSession = new AgentSession({
   tools,
   keptOutputs,
   // Each connection's guide travels with its tools (see areas.ts).
-  areas: () => toolAreas(connectors.reachable()),
+  areas: () => [...toolAreas(connectors.reachable()), ...addonAreas()],
   emit: record,
   onHistory: (history) => {
     conversations.setHistory(history);
@@ -655,7 +682,7 @@ const session: AgentSession = new AgentSession({
   // described as well as stopping working.
   instructions: () =>
     // The personality comes last: when the user rewrites it, what a local server has cached before it still holds.
-    [languageInstructions(), generalInstructions(memory), connectors.instructions({ guides: false }), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write")), soulInstructions(soul.read())]
+    [languageInstructions(), generalInstructions(memory), connectors.instructions({ guides: false }), addonInstructions((id) => addons.binary(id) !== null), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write")), soulInstructions(soul.read())]
       .filter(Boolean)
       .join("\n\n"),
   planBeforeRun: () => settings.planBeforeRun,
@@ -1395,14 +1422,8 @@ handle(CH.meetingsMoveLine, (_e, id: unknown, start: unknown, speaker: unknown) 
   corrected(id, (m) => {
     if (typeof start === "number" && typeof speaker === "number") meetings.moveLine(m, start, speaker);
   }));
-/** Add-ons: separate programs, downloaded when the user asks in Settings (addons/store.ts). */
-const addons = new Addons({
-  dir: join(app.getPath("userData"), "addons"),
-  trash: (path) => shell.trashItem(path),
-  onChange: () => send(CH.addonsChanged, addons.list()),
-});
 const addonId = (id: unknown): AddonId => {
-  const found = ADDONS.find((a) => a.id === id);
+  const found = addons.list().find((a) => a.id === id);
   if (!found) throw new Error("No such add-on.");
   return found.id;
 };
