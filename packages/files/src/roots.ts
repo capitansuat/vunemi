@@ -121,14 +121,16 @@ export class Roots {
     const root = roots.filter((r) => real === r || real.startsWith(r + sep)).sort((a, b) => b.length - a.length)[0];
     if (!root && access === "read" && this.granted.has(real)) return real;
     if (!root) {
-      // "/Users/vunemi/Downloads/x": a home folder the model made up. Said as
-      // what it is, with the path it meant: told only "outside the open
-      // folders", Qwen3.8 35B decided the folder was missing and wrote elsewhere.
-      const guessed = /^\/Users\/([^/]+)\/(.+)$/.exec(real);
-      if (guessed && !existsSync(join(sep, "Users", guessed[1]!))) {
-        const meant = join(homedir(), guessed[2]!);
+      // "/Users/vunemi/Downloads/x", "/home/user/Downloads/x": a home folder
+      // the model made up. Said as what it is, with the path it meant: told
+      // only "outside the open folders", Qwen3.8 35B decided the folder was
+      // missing and wrote elsewhere. Read from the path as given: macOS keeps
+      // /home somewhere else, and nothing here exists to be a link.
+      const guessed = /^\/(Users|home)\/([^/]+)\/(.+)$/.exec(absolute);
+      if (guessed && !existsSync(join(sep, guessed[1]!, guessed[2]!))) {
+        const meant = join(realOrPlanned(homedir()), guessed[3]!);
         if (roots.some((r) => meant === r || meant.startsWith(r + sep))) {
-          throw new PathRefused(t("files.wrongHome", { path: raw, fixed: `~/${guessed[2]}` }));
+          throw new PathRefused(t("files.wrongHome", { path: raw, fixed: `~/${guessed[3]}` }));
         }
       }
       throw new PathRefused(

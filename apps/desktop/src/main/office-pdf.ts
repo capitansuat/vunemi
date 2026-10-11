@@ -1,8 +1,13 @@
 /** Render trusted converter output without granting the document a browser or network. */
 import { randomUUID } from "node:crypto";
 import { BrowserWindow } from "electron";
+import { inkBox } from "./ink-box.js";
 
 const PDF_TIMEOUT_MS = 30_000;
+/** White left around a picture's drawing, in pixels. */
+const PICTURE_MARGIN = 24;
+/** The narrowest a picture is cut to: about a call card's width, at twice the size. */
+const PICTURE_WIDTH = 1200;
 const POLICY = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; form-action 'none'";
 
 function withPolicy(html: string): string {
@@ -58,15 +63,21 @@ export async function renderOfficePdf(html: string, signal: AbortSignal): Promis
 
 /**
  * A picture of the top of an HTML page, as PNG: what a table looks like, for
- * the person to see. Drawn off screen, so no window ever appears.
+ * the person to see. Drawn off screen, so no window ever appears, at twice
+ * the size so it stays sharp, and cut off below what was drawn: a small table
+ * is a short picture, not a small table on a sheet of white.
  */
 export async function renderHtmlPicture(html: string, signal: AbortSignal): Promise<Uint8Array> {
-  const page = `<style>html{background:#fff}body{margin:16px}</style>${html}`;
-  return isolated(page, signal, { width: 900, height: 520, offscreen: true }, async (window) => {
+  const page = `<style>html{background:#fff;padding:${PICTURE_MARGIN}px}body{margin:0;zoom:2}</style>${html}`;
+  return isolated(page, signal, { width: 1600, height: 1000, offscreen: true }, async (window) => {
     // Off screen, a frame is painted a moment after the page has loaded.
     await new Promise((resolve) => setTimeout(resolve, 150));
     const image = await window.webContents.capturePage();
     if (image.isEmpty()) throw new Error("Nothing was drawn.");
-    return image.toPNG();
+    const { width, height } = image.getSize();
+    const box = inkBox(image.toBitmap(), width, height, PICTURE_MARGIN);
+    if (!box) return image.toPNG();
+    // A card shows a picture as wide as itself: a narrow one would be blown up, so paper is left beside it.
+    return image.crop({ ...box, x: 0, width: Math.min(width, Math.max(box.x + box.width, PICTURE_WIDTH)) }).toPNG();
   });
 }

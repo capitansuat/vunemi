@@ -114,6 +114,7 @@ describe("file tools", () => {
     const open = new Roots([join(homedir(), "Downloads")]);
     // Refused, never quietly rewritten: the card would name one path and the file land at another.
     expect(() => open.resolve("/Users/no-such-user-vunemi/Downloads/deneme/giderler.xlsx")).toThrow(t("files.wrongHome", { path: "/Users/no-such-user-vunemi/Downloads/deneme/giderler.xlsx", fixed: "~/Downloads/deneme/giderler.xlsx" }));
+    expect(() => open.resolve("/home/no-such-user-vunemi/Downloads/a.xlsx")).toThrow(t("files.wrongHome", { path: "/home/no-such-user-vunemi/Downloads/a.xlsx", fixed: "~/Downloads/a.xlsx" }));
     // What it meant is not open either: the plain refusal.
     expect(() => open.resolve("/Users/no-such-user-vunemi/Documents/a.txt")).toThrow(/dışında/);
     expect(open.resolve("~/Downloads/a.txt")).toBe(join(realpathSync(homedir()), "Downloads", "a.txt"));
