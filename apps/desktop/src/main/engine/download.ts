@@ -71,6 +71,22 @@ export async function download(src: ModelSource, dir: string, opts: DownloadOpti
   if (!MODEL_FILE.test(src.file) || !MODEL_FILE.test(name) || name.startsWith(".")) {
     throw new DownloadError("host", `Refusing file name ${name}`);
   }
+  return downloadPinned({ url: downloadUrl(src, opts.base), name, size: src.size, sha256: src.sha256 }, dir, opts);
+}
+
+/** One file at a fixed address, of a known size and SHA-256. */
+export interface PinnedFile {
+  url: string;
+  /** The name on disk: a plain file name, never a path. */
+  name: string;
+  size: number;
+  sha256: string;
+}
+
+/** The download itself, for any pinned file; the caller decides which names and hosts it accepts. */
+export async function downloadPinned(src: PinnedFile, dir: string, opts: DownloadOptions): Promise<string> {
+  const name = src.name;
+  if (!/^[^/\\]+$/.test(name) || name.startsWith(".")) throw new DownloadError("host", `Refusing file name ${name}`);
   mkdirSync(dir, { recursive: true });
   const final = join(dir, name);
   const part = partPath(dir, name);
@@ -90,13 +106,13 @@ export async function download(src: ModelSource, dir: string, opts: DownloadOpti
   if (have > 0) await hashInto(part, hash);
 
   if (have < src.size) {
-    const res = await follow(downloadUrl(src, opts.base), have, opts);
+    const res = await follow(src.url, have, opts);
     if (res.status === 200 && have > 0) {
       // The server sent the whole file, not the rest: start the file over.
       have = 0;
       hash = createHash("sha256");
     } else if (res.status !== 200 && res.status !== 206) {
-      throw new DownloadError("network", `Hugging Face answered ${res.status}`);
+      throw new DownloadError("network", `The server answered ${res.status}`);
     }
     await receive(res, part, have, src.size, hash, opts);
   }
