@@ -193,7 +193,10 @@ describe("document_make", () => {
   it("converts a copy of an existing document, leaving the original alone", async () => {
     writeFileSync(join(folder, "teklif.docx"), "original");
     const out = await tool(list(), "document_convert").run({ path: join(folder, "teklif.docx"), out: join(folder, "teklif.pdf") }, ctx());
-    expect(calls).toEqual([{ id: "documents", args: ["convert", "in.docx", "out.pdf"] }]);
+    expect(calls).toEqual([
+      { id: "documents", args: ["convert", "in.docx", "out.pdf"] },
+      { id: "documents", args: ["render", "in.docx", "page.png", "--page", "1", "--scale", "0.8"] },
+    ]);
     expect(readFileSync(join(folder, "teklif.docx"), "utf8")).toBe("original");
     expect(existsSync(join(folder, "teklif.pdf"))).toBe(true);
     expect(out).toContain("teklif.pdf");

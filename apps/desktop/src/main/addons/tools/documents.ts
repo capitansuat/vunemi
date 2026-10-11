@@ -97,7 +97,10 @@ export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolD
           const made = `out${extname(out).toLowerCase()}`;
           copyFileSync(from, join(job.dir, given));
           expectFile("WordCraft", await job.run(["convert", given, made], { timeoutMs: 180_000 }), join(job.dir, made));
+          // The first page, where the program can draw this kind of file. A copy without a picture is still a copy.
+          await job.run(["render", given, "page.png", "--page", "1", "--scale", "0.8"]).catch(() => {});
           deliver(join(job.dir, made), out, ctx);
+          show(deps, join(job.dir, "page.png"), short(out), ctx);
           return `Created ${short(out)} from ${short(from)}.`;
         });
       },
