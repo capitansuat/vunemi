@@ -203,9 +203,23 @@ describe("document_make", () => {
     await expect(tool(list(), "document_convert").run({ path: join(folder, "yok.docx"), out: join(folder, "x.pdf") }, ctx())).rejects.toThrow();
   });
 
-  it("changes text in a copy, exactly as written, and says what it did not find", async () => {
+  it("reads a document's text out, marked as someone else's words", async () => {
     writeFileSync(join(folder, "teklif.docx"), "original");
-    answer = (args) => (args[0] === "run" ? { stdout: 'edit.replaceAll: {"replaced":2}\nedit.replaceAll: {"replaced":0}\n' } : {});
+    answer = (args) => (args[0] === "text" ? { stdout: "Teklif\nGeçerlilik tarihi 15 Kasım 2026.\n" } : {});
+    const read = tool(list(), "document_read");
+    const out = await read.run({ path: join(folder, "teklif.docx") }, ctx());
+    expect(read.actionClass).toBe("read");
+    expect(read.untrustedOutput).toBe(true);
+    expect(calls.map((c) => c.args)).toEqual([["text", "in.docx"]]);
+    expect(out).toContain("teklif.docx:\nTeklif\nGeçerlilik tarihi 15 Kasım 2026.");
+    expect(produced).toEqual([]);
+    answer = () => ({ code: 1, stderr: "not a document" });
+    await expect(read.run({ path: join(folder, "teklif.docx") }, ctx())).rejects.toThrow(/not a document/);
+  });
+
+  it("changes text in a copy, exactly as written", async () => {
+    writeFileSync(join(folder, "teklif.docx"), "original");
+    answer = (args) => (args[0] === "run" ? { stdout: 'edit.replaceAll: {"replaced":2}\nedit.replaceAll: {"replaced":1}\n' } : {});
     const replace = [{ find: "Ayşe Örnek", with: "Mehmet Deneme" }, { find: "15 Kasım", with: "30 Kasım" }];
     const out = await tool(list(), "document_edit").run({ path: join(folder, "teklif.docx"), out: join(folder, "teklif-yeni.docx"), replace }, ctx());
     expect(calls.map((c) => c.args)).toEqual([
@@ -214,16 +228,15 @@ describe("document_make", () => {
     ]);
     expect(readFileSync(join(folder, "teklif.docx"), "utf8")).toBe("original");
     expect(existsSync(join(folder, "teklif-yeni.docx"))).toBe(true);
-    expect(out).toContain("2 places changed");
-    expect(out).toContain('Not found, so not changed: "15 Kasım"');
+    expect(out).toContain("3 places changed");
     expect(attached).toHaveLength(1);
   });
 
-  it("makes no copy when none of the texts is there", async () => {
+  it("makes no copy when one of the texts is not there, and names it", async () => {
     writeFileSync(join(folder, "teklif.docx"), "original");
-    answer = (args) => (args[0] === "run" ? { stdout: 'edit.replaceAll: {"replaced":0}\n' } : {});
-    const call = { path: join(folder, "teklif.docx"), out: join(folder, "yeni.pdf"), replace: [{ find: "yok", with: "var" }] };
-    await expect(tool(list(), "document_edit").run(call, ctx())).rejects.toThrow(/None of the texts/);
+    answer = (args) => (args[0] === "run" ? { stdout: 'edit.replaceAll: {"replaced":1}\nedit.replaceAll: {"replaced":0}\n' } : {});
+    const call = { path: join(folder, "teklif.docx"), out: join(folder, "yeni.pdf"), replace: [{ find: "Ayşe", with: "Mehmet" }, { find: "30 Kasım 2025", with: "30 Kasım 2026" }] };
+    await expect(tool(list(), "document_edit").run(call, ctx())).rejects.toThrow(/Not in .*teklif\.docx: "30 Kasım 2025"\. Nothing was made/);
     expect(existsSync(join(folder, "yeni.pdf"))).toBe(false);
     expect(calls).toHaveLength(1);
   });
@@ -346,21 +359,21 @@ describe("an existing presentation", () => {
     writeFileSync(join(folder, "sunum.pptx"), "original");
     answer = describes;
     const edit = tool(slideTools(deps()), "slides_edit");
-    const out = await edit.run({ path: join(folder, "sunum.pptx"), out: join(folder, "sunum-yeni.pptx"), replace: [{ find: "Ayşe Örnek", with: "Mehmet Deneme" }, { find: "yok", with: "x" }], remove: [1] }, ctx());
+    const out = await edit.run({ path: join(folder, "sunum.pptx"), out: join(folder, "sunum-yeni.pptx"), replace: [{ find: "Ayşe Örnek", with: "Mehmet Deneme" }], remove: [1] }, ctx());
     expect(calls[2]!.args).toEqual(["run", "--in", "in.pptx", "--cmd", 'slide.go={"index":2}', "--cmd", 'text.set={"id":32,"text":"Mehmet Deneme"}', "--cmd", 'slide.delete={"index":0}', "--save", "out.pptx"]);
     expect(readFileSync(join(folder, "sunum.pptx"), "utf8")).toBe("original");
     expect(existsSync(join(folder, "sunum-yeni.pptx"))).toBe(true);
     expect(out).toContain("1 text changed, 1 removed; it has 2 slides.");
-    expect(out).toContain('Not found, so not changed: "yok"');
     expect(tiles).toHaveLength(2);
   });
 
-  it("makes no copy when the only change finds nothing", async () => {
+  it("makes no copy when one of the texts is not there, and names it", async () => {
     writeFileSync(join(folder, "sunum.pptx"), "original");
     answer = describes;
-    const call = { path: join(folder, "sunum.pptx"), out: join(folder, "yeni.pptx"), replace: [{ find: "yok", with: "x" }] };
-    await expect(tool(slideTools(deps()), "slides_edit").run(call, ctx())).rejects.toThrow(/None of the texts/);
+    const call = { path: join(folder, "sunum.pptx"), out: join(folder, "yeni.pptx"), replace: [{ find: "Ayşe Örnek", with: "x" }, { find: "yok", with: "x" }], remove: [1] };
+    await expect(tool(slideTools(deps()), "slides_edit").run(call, ctx())).rejects.toThrow(/Not in .*sunum\.pptx: "yok"\. Nothing was made/);
     expect(existsSync(join(folder, "yeni.pptx"))).toBe(false);
+    expect(calls).toHaveLength(2);
   });
 
   it("reads only the lines the program printed for a command", () => {
