@@ -15,58 +15,80 @@
   "sizeMb": 143,
   "notes": {
     "en": [
-      "Add-ons: extra tools you download in Settings › Add-ons when you want them. With them Vunemi can write a Word or PDF document, make an Excel workbook with formulas and a chart, build a PowerPoint deck, join, split and rotate PDFs and fill in their forms, draw a poster, edit a photo and cut a short video. Each tool makes a new file and shows it in the chat.",
-      "Each add-on is a separate open-source program from the ArtCraft team. Vunemi downloads the copy it was tested with from its own release page, checks it before installing, and runs it without network access; it sees only the files Vunemi hands it. Results can differ from Word, Excel or PowerPoint.",
+      "Add-ons: extra tools you download in Settings › Add-ons when you want them. Each tool makes a new file and shows it in the chat.",
+      "With them Vunemi can write a Word or PDF document, make an Excel workbook with formulas and a chart, build a PowerPoint deck, join, split and rotate PDFs and fill in their forms, draw a poster, edit a photo and cut a short video.",
+      "Each add-on is a separate open-source program from the ArtCraft team. Vunemi downloads the copy it was tested with from its own release page, checks it before installing, and runs it without network access; it sees only the files Vunemi hands it.",
+      "Results can differ from Word, Excel or PowerPoint.",
       "If a model writes a file path under a home folder that isn't on your Mac, Vunemi now answers with the right path instead of only refusing."
     ],
     "de": [
-      "Erweiterungen: zusätzliche Werkzeuge, die du unter Einstellungen › Erweiterungen lädst, wenn du sie brauchst. Damit kann Vunemi ein Word- oder PDF-Dokument schreiben, eine Excel-Tabelle mit Formeln und Diagramm anlegen, eine PowerPoint-Präsentation bauen, PDFs zusammenfügen, teilen und drehen und ihre Formulare ausfüllen, ein Plakat zeichnen, ein Foto bearbeiten und ein kurzes Video schneiden. Jedes Werkzeug erzeugt eine neue Datei und zeigt sie im Chat.",
-      "Jede Erweiterung ist ein eigenes Open-Source-Programm des ArtCraft-Teams. Vunemi lädt die Kopie, mit der es getestet wurde, von seiner eigenen Release-Seite, prüft sie vor der Installation und führt sie ohne Netzwerkzugriff aus; das Programm sieht nur die Dateien, die Vunemi ihm gibt. Das Ergebnis kann von Word, Excel oder PowerPoint abweichen.",
+      "Erweiterungen: zusätzliche Werkzeuge, die du unter Einstellungen › Erweiterungen lädst, wenn du sie brauchst. Jedes Werkzeug erzeugt eine neue Datei und zeigt sie im Chat.",
+      "Damit kann Vunemi ein Word- oder PDF-Dokument schreiben, eine Excel-Tabelle mit Formeln und Diagramm anlegen, eine PowerPoint-Präsentation bauen, PDFs zusammenfügen, teilen und drehen und ihre Formulare ausfüllen, ein Plakat zeichnen, ein Foto bearbeiten und ein kurzes Video schneiden.",
+      "Jede Erweiterung ist ein eigenes Open-Source-Programm des ArtCraft-Teams. Vunemi lädt die Kopie, mit der es getestet wurde, von seiner eigenen Release-Seite, prüft sie vor der Installation und führt sie ohne Netzwerkzugriff aus; das Programm sieht nur die Dateien, die Vunemi ihm gibt.",
+      "Das Ergebnis kann von Word, Excel oder PowerPoint abweichen.",
       "Schreibt ein Modell einen Dateipfad in einen Benutzerordner, den es auf deinem Mac nicht gibt, nennt Vunemi jetzt den richtigen Pfad, statt nur abzulehnen."
     ],
     "es": [
-      "Complementos: herramientas extra que descargas en Ajustes › Complementos cuando las necesitas. Con ellos Vunemi puede escribir un documento de Word o PDF, crear un libro de Excel con fórmulas y un gráfico, preparar una presentación de PowerPoint, unir, dividir y girar archivos PDF y rellenar sus formularios, dibujar un cartel, editar una foto y montar un vídeo corto. Cada herramienta crea un archivo nuevo y lo muestra en el chat.",
-      "Cada complemento es un programa de código abierto independiente del equipo de ArtCraft. Vunemi descarga de su propia página de versiones la copia con la que se probó, la comprueba antes de instalarla y la ejecuta sin acceso a la red; el programa solo ve los archivos que Vunemi le entrega. El resultado puede diferir del de Word, Excel o PowerPoint.",
+      "Complementos: herramientas extra que descargas en Ajustes › Complementos cuando las necesitas. Cada herramienta crea un archivo nuevo y lo muestra en el chat.",
+      "Con ellos Vunemi puede escribir un documento de Word o PDF, crear un libro de Excel con fórmulas y un gráfico, preparar una presentación de PowerPoint, unir, dividir y girar archivos PDF y rellenar sus formularios, dibujar un cartel, editar una foto y montar un vídeo corto.",
+      "Cada complemento es un programa de código abierto independiente del equipo de ArtCraft. Vunemi descarga de su propia página de versiones la copia con la que se probó, la comprueba antes de instalarla y la ejecuta sin acceso a la red; el programa solo ve los archivos que Vunemi le entrega.",
+      "El resultado puede diferir del de Word, Excel o PowerPoint.",
       "Si un modelo escribe una ruta de archivo dentro de una carpeta de usuario que no existe en tu Mac, Vunemi ahora responde con la ruta correcta en lugar de limitarse a rechazarla."
     ],
     "fr": [
-      "Extensions : des outils supplémentaires que vous téléchargez dans Réglages › Extensions quand vous en avez besoin. Avec elles, Vunemi peut rédiger un document Word ou PDF, créer un classeur Excel avec des formules et un graphique, préparer une présentation PowerPoint, fusionner, scinder et faire pivoter des PDF et remplir leurs formulaires, dessiner une affiche, retoucher une photo et monter une courte vidéo. Chaque outil crée un nouveau fichier et l'affiche dans la conversation.",
-      "Chaque extension est un programme open source distinct de l'équipe ArtCraft. Vunemi télécharge depuis sa propre page de version la copie avec laquelle il a été testé, la vérifie avant de l'installer et l'exécute sans accès au réseau ; le programme ne voit que les fichiers que Vunemi lui confie. Le résultat peut différer de celui de Word, Excel ou PowerPoint.",
+      "Extensions : des outils supplémentaires que vous téléchargez dans Réglages › Extensions quand vous en avez besoin. Chaque outil crée un nouveau fichier et l'affiche dans la conversation.",
+      "Avec elles, Vunemi peut rédiger un document Word ou PDF, créer un classeur Excel avec des formules et un graphique, préparer une présentation PowerPoint, fusionner, scinder et faire pivoter des PDF et remplir leurs formulaires, dessiner une affiche, retoucher une photo et monter une courte vidéo.",
+      "Chaque extension est un programme open source distinct de l'équipe ArtCraft. Vunemi télécharge depuis sa propre page de version la copie avec laquelle il a été testé, la vérifie avant de l'installer et l'exécute sans accès au réseau ; le programme ne voit que les fichiers que Vunemi lui confie.",
+      "Le résultat peut différer de celui de Word, Excel ou PowerPoint.",
       "Si un modèle écrit un chemin de fichier dans un dossier personnel qui n'existe pas sur votre Mac, Vunemi indique désormais le bon chemin au lieu de simplement refuser."
     ],
     "it": [
-      "Componenti aggiuntivi: strumenti in più che scarichi da Impostazioni › Componenti aggiuntivi quando ti servono. Con questi Vunemi può scrivere un documento Word o PDF, creare una cartella di lavoro Excel con formule e un grafico, preparare una presentazione PowerPoint, unire, dividere e ruotare i PDF e compilarne i moduli, disegnare una locandina, ritoccare una foto e montare un breve video. Ogni strumento crea un nuovo file e lo mostra nella chat.",
-      "Ogni componente aggiuntivo è un programma open source separato del team ArtCraft. Vunemi scarica dalla propria pagina delle versioni la copia con cui è stato provato, la verifica prima di installarla e la esegue senza accesso alla rete; il programma vede solo i file che Vunemi gli passa. Il risultato può essere diverso da quello di Word, Excel o PowerPoint.",
+      "Componenti aggiuntivi: strumenti in più che scarichi da Impostazioni › Componenti aggiuntivi quando ti servono. Ogni strumento crea un nuovo file e lo mostra nella chat.",
+      "Con questi Vunemi può scrivere un documento Word o PDF, creare una cartella di lavoro Excel con formule e un grafico, preparare una presentazione PowerPoint, unire, dividere e ruotare i PDF e compilarne i moduli, disegnare una locandina, ritoccare una foto e montare un breve video.",
+      "Ogni componente aggiuntivo è un programma open source separato del team ArtCraft. Vunemi scarica dalla propria pagina delle versioni la copia con cui è stato provato, la verifica prima di installarla e la esegue senza accesso alla rete; il programma vede solo i file che Vunemi gli passa.",
+      "Il risultato può essere diverso da quello di Word, Excel o PowerPoint.",
       "Se un modello scrive un percorso di file dentro una cartella utente che sul tuo Mac non esiste, Vunemi ora risponde con il percorso giusto invece di limitarsi a rifiutare."
     ],
     "tr": [
-      "Eklentiler: istediğinde Ayarlar › Eklentiler'den indirdiğin ek araçlar. Bunlarla Vunemi Word ya da PDF belgesi yazabilir, formüllü ve grafikli Excel tablosu yapabilir, PowerPoint sunumu hazırlayabilir, PDF'leri birleştirip ayırabilir, döndürebilir ve formlarını doldurabilir, afiş çizebilir, fotoğraf düzenleyebilir ve kısa bir video kurgulayabilir. Her araç yeni bir dosya üretir ve onu sohbette gösterir.",
-      "Her eklenti, ArtCraft ekibinin ayrı bir açık kaynak programıdır. Vunemi, denediği kopyayı kendi sürüm sayfasından indirir, kurmadan önce doğrular ve ağ erişimi olmadan çalıştırır; program yalnız Vunemi'nin verdiği dosyaları görür. Sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
+      "Eklentiler: istediğinde Ayarlar › Eklentiler'den indirdiğin ek araçlar. Her araç yeni bir dosya üretir ve onu sohbette gösterir.",
+      "Bunlarla Vunemi Word ya da PDF belgesi yazabilir, formüllü ve grafikli Excel tablosu yapabilir, PowerPoint sunumu hazırlayabilir, PDF'leri birleştirip ayırabilir, döndürebilir ve formlarını doldurabilir, afiş çizebilir, fotoğraf düzenleyebilir ve kısa bir video kurgulayabilir.",
+      "Her eklenti, ArtCraft ekibinin ayrı bir açık kaynak programıdır. Vunemi, denediği kopyayı kendi sürüm sayfasından indirir, kurmadan önce doğrular ve ağ erişimi olmadan çalıştırır; program yalnız Vunemi'nin verdiği dosyaları görür.",
+      "Sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
       "Model, Mac'inde olmayan bir ev klasörünün altına dosya yolu yazarsa Vunemi artık yalnızca reddetmek yerine doğru yolu söyler."
     ],
     "pt": [
-      "Complementos: ferramentas extras que você baixa em Ajustes › Complementos quando quiser. Com eles, o Vunemi pode escrever um documento do Word ou PDF, criar uma planilha do Excel com fórmulas e um gráfico, montar uma apresentação do PowerPoint, juntar, dividir e girar PDFs e preencher seus formulários, desenhar um cartaz, editar uma foto e montar um vídeo curto. Cada ferramenta cria um arquivo novo e o mostra na conversa.",
-      "Cada complemento é um programa de código aberto separado, da equipe ArtCraft. O Vunemi baixa da própria página de versões a cópia com que foi testado, verifica antes de instalar e executa sem acesso à rede; o programa só vê os arquivos que o Vunemi entrega a ele. O resultado pode ser diferente do Word, do Excel ou do PowerPoint.",
+      "Complementos: ferramentas extras que você baixa em Ajustes › Complementos quando quiser. Cada ferramenta cria um arquivo novo e o mostra na conversa.",
+      "Com eles, o Vunemi pode escrever um documento do Word ou PDF, criar uma planilha do Excel com fórmulas e um gráfico, montar uma apresentação do PowerPoint, juntar, dividir e girar PDFs e preencher seus formulários, desenhar um cartaz, editar uma foto e montar um vídeo curto.",
+      "Cada complemento é um programa de código aberto separado, da equipe ArtCraft. O Vunemi baixa da própria página de versões a cópia com que foi testado, verifica antes de instalar e executa sem acesso à rede; o programa só vê os arquivos que o Vunemi entrega a ele.",
+      "O resultado pode ser diferente do Word, do Excel ou do PowerPoint.",
       "Se um modelo escrever um caminho de arquivo dentro de uma pasta de usuário que não existe no seu Mac, o Vunemi agora responde com o caminho certo em vez de apenas recusar."
     ],
     "ru": [
-      "Дополнения: дополнительные инструменты, которые вы загружаете в разделе «Настройки › Дополнения», когда они нужны. С ними Vunemi может написать документ Word или PDF, создать книгу Excel с формулами и диаграммой, подготовить презентацию PowerPoint, объединять, разделять и поворачивать PDF и заполнять их формы, нарисовать афишу, отредактировать фото и смонтировать короткое видео. Каждый инструмент создаёт новый файл и показывает его в чате.",
-      "Каждое дополнение — отдельная программа с открытым исходным кодом от команды ArtCraft. Vunemi загружает со своей страницы релизов ту копию, с которой он был проверен, проверяет её перед установкой и запускает без доступа к сети; программа видит только те файлы, которые ей передаёт Vunemi. Результат может отличаться от Word, Excel или PowerPoint.",
+      "Дополнения: дополнительные инструменты, которые вы загружаете в разделе «Настройки › Дополнения», когда они нужны. Каждый инструмент создаёт новый файл и показывает его в чате.",
+      "С ними Vunemi может написать документ Word или PDF, создать книгу Excel с формулами и диаграммой, подготовить презентацию PowerPoint, объединять, разделять и поворачивать PDF и заполнять их формы, нарисовать афишу, отредактировать фото и смонтировать короткое видео.",
+      "Каждое дополнение — отдельная программа с открытым исходным кодом от команды ArtCraft. Vunemi загружает со своей страницы релизов ту копию, с которой он был проверен, проверяет её перед установкой и запускает без доступа к сети; программа видит только те файлы, которые ей передаёт Vunemi.",
+      "Результат может отличаться от Word, Excel или PowerPoint.",
       "Если модель указывает путь к файлу в домашней папке, которой нет на вашем Mac, Vunemi теперь сообщает правильный путь, а не просто отказывает."
     ],
     "zh": [
-      "扩展：需要时在“设置 › 扩展”中下载的额外工具。有了它们，Vunemi 可以撰写 Word 或 PDF 文档，制作带公式和图表的 Excel 工作簿，制作 PowerPoint 演示文稿，合并、拆分和旋转 PDF 并填写其中的表单，绘制海报，编辑照片，剪辑短视频。每个工具都会生成一个新文件，并在对话中显示出来。",
-      "每个扩展都是 ArtCraft 团队的一个独立开源程序。Vunemi 从自己的发布页面下载经过测试的那一份，安装前先校验，并在没有网络访问的情况下运行；程序只能看到 Vunemi 交给它的文件。结果可能与 Word、Excel 或 PowerPoint 不同。",
+      "扩展：需要时在“设置 › 扩展”中下载的额外工具。每个工具都会生成一个新文件，并在对话中显示出来。",
+      "有了它们，Vunemi 可以撰写 Word 或 PDF 文档，制作带公式和图表的 Excel 工作簿，制作 PowerPoint 演示文稿，合并、拆分和旋转 PDF 并填写其中的表单，绘制海报，编辑照片，剪辑短视频。",
+      "每个扩展都是 ArtCraft 团队的一个独立开源程序。Vunemi 从自己的发布页面下载经过测试的那一份，安装前先校验，并在没有网络访问的情况下运行；程序只能看到 Vunemi 交给它的文件。",
+      "结果可能与 Word、Excel 或 PowerPoint 不同。",
       "如果模型把文件路径写在你的 Mac 上并不存在的个人文件夹下，Vunemi 现在会给出正确的路径，而不只是拒绝。"
     ],
     "ja": [
-      "アドオン：必要なときに「設定 › アドオン」からダウンロードする追加ツールです。これにより Vunemi は、Word や PDF の書類の作成、数式とグラフ入りの Excel ブックの作成、PowerPoint プレゼンテーションの作成、PDF の結合・分割・回転とフォームへの入力、ポスターの描画、写真の編集、短い動画の編集ができます。どのツールも新しいファイルを作り、チャットに表示します。",
-      "各アドオンは ArtCraft チームによる独立したオープンソースのプログラムです。Vunemi は、動作を確認したコピーを自身のリリースページからダウンロードし、インストール前に検証して、ネットワークにアクセスできない状態で実行します。プログラムに見えるのは Vunemi が渡したファイルだけです。結果は Word、Excel、PowerPoint と異なる場合があります。",
+      "アドオン：必要なときに「設定 › アドオン」からダウンロードする追加ツールです。どのツールも新しいファイルを作り、チャットに表示します。",
+      "これにより Vunemi は、Word や PDF の書類の作成、数式とグラフ入りの Excel ブックの作成、PowerPoint プレゼンテーションの作成、PDF の結合・分割・回転とフォームへの入力、ポスターの描画、写真の編集、短い動画の編集ができます。",
+      "各アドオンは ArtCraft チームによる独立したオープンソースのプログラムです。Vunemi は、動作を確認したコピーを自身のリリースページからダウンロードし、インストール前に検証して、ネットワークにアクセスできない状態で実行します。プログラムに見えるのは Vunemi が渡したファイルだけです。",
+      "結果は Word、Excel、PowerPoint と異なる場合があります。",
       "モデルが、この Mac に存在しないホームフォルダの下のファイルパスを書いた場合、Vunemi は拒否するだけでなく、正しいパスを伝えるようになりました。"
     ],
     "ko": [
-      "추가 기능: 필요할 때 설정 › 추가 기능에서 내려받는 추가 도구입니다. 이를 통해 Vunemi는 Word 또는 PDF 문서를 작성하고, 수식과 차트가 있는 Excel 통합 문서를 만들고, PowerPoint 프레젠테이션을 만들고, PDF를 합치고 나누고 회전하고 양식을 채우고, 포스터를 그리고, 사진을 편집하고, 짧은 동영상을 편집할 수 있습니다. 각 도구는 새 파일을 만들어 대화에 보여 줍니다.",
-      "각 추가 기능은 ArtCraft 팀이 만든 별도의 오픈 소스 프로그램입니다. Vunemi는 테스트를 마친 사본을 자체 릴리스 페이지에서 내려받아 설치 전에 검증하고, 네트워크 접근 없이 실행합니다. 프로그램은 Vunemi가 건넨 파일만 볼 수 있습니다. 결과는 Word, Excel, PowerPoint와 다를 수 있습니다.",
+      "추가 기능: 필요할 때 설정 › 추가 기능에서 내려받는 추가 도구입니다. 각 도구는 새 파일을 만들어 대화에 보여 줍니다.",
+      "이를 통해 Vunemi는 Word 또는 PDF 문서를 작성하고, 수식과 차트가 있는 Excel 통합 문서를 만들고, PowerPoint 프레젠테이션을 만들고, PDF를 합치고 나누고 회전하고 양식을 채우고, 포스터를 그리고, 사진을 편집하고, 짧은 동영상을 편집할 수 있습니다.",
+      "각 추가 기능은 ArtCraft 팀이 만든 별도의 오픈 소스 프로그램입니다. Vunemi는 테스트를 마친 사본을 자체 릴리스 페이지에서 내려받아 설치 전에 검증하고, 네트워크 접근 없이 실행합니다. 프로그램은 Vunemi가 건넨 파일만 볼 수 있습니다.",
+      "결과는 Word, Excel, PowerPoint와 다를 수 있습니다.",
       "모델이 이 Mac에 없는 홈 폴더 아래의 파일 경로를 쓰면, Vunemi는 이제 거부만 하지 않고 올바른 경로를 알려 줍니다."
     ]
   }

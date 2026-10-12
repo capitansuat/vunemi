@@ -53,6 +53,12 @@ function validateSite() {
   for (const language of languages) sameShape(copy.en, copy[language], language);
   for (const language of languages) sameShape(supportCopy.en, supportCopy[language], `support.${language}`);
   for (const language of languages) sameShape(gatekeeperCopy.en, gatekeeperCopy[language], `gatekeeper.${language}`);
+  // An installed Vunemi shows these as the update's notes and cuts each at 300 characters, 20 notes at most (updates/feed.ts).
+  for (const language of languages) {
+    const notes = copy[language].downloadPage.highlights;
+    if (notes.length > 20) throw new Error(`Too many update notes: ${language}`);
+    for (const note of notes) if (note.length > 300) throw new Error(`Update note over 300 characters: ${language}: ${note.slice(0, 40)}`);
+  }
   for (const file of [...shotFiles, "hero-plan.png"]) {
     if (!existsSync(join(publicDir, "screenshots", file))) throw new Error(`Missing product screenshot: ${file}`);
   }

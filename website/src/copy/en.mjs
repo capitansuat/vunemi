@@ -185,8 +185,10 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "Add-ons: extra tools you download in Settings › Add-ons when you want them. With them Vunemi can write a Word or PDF document, make an Excel workbook with formulas and a chart, build a PowerPoint deck, join, split and rotate PDFs and fill in their forms, draw a poster, edit a photo and cut a short video. Each tool makes a new file and shows it in the chat.",
-      "Each add-on is a separate open-source program from the ArtCraft team. Vunemi downloads the copy it was tested with from its own release page, checks it before installing, and runs it without network access; it sees only the files Vunemi hands it. Results can differ from Word, Excel or PowerPoint.",
+      "Add-ons: extra tools you download in Settings › Add-ons when you want them. Each tool makes a new file and shows it in the chat.",
+      "With them Vunemi can write a Word or PDF document, make an Excel workbook with formulas and a chart, build a PowerPoint deck, join, split and rotate PDFs and fill in their forms, draw a poster, edit a photo and cut a short video.",
+      "Each add-on is a separate open-source program from the ArtCraft team. Vunemi downloads the copy it was tested with from its own release page, checks it before installing, and runs it without network access; it sees only the files Vunemi hands it.",
+      "Results can differ from Word, Excel or PowerPoint.",
       "If a model writes a file path under a home folder that isn't on your Mac, Vunemi now answers with the right path instead of only refusing.",
     ],
     requirementsTitle: "You need",

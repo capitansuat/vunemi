@@ -183,8 +183,10 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Eklentiler: istediğinde Ayarlar › Eklentiler'den indirdiğin ek araçlar. Bunlarla Vunemi Word ya da PDF belgesi yazabilir, formüllü ve grafikli Excel tablosu yapabilir, PowerPoint sunumu hazırlayabilir, PDF'leri birleştirip ayırabilir, döndürebilir ve formlarını doldurabilir, afiş çizebilir, fotoğraf düzenleyebilir ve kısa bir video kurgulayabilir. Her araç yeni bir dosya üretir ve onu sohbette gösterir.",
-      "Her eklenti, ArtCraft ekibinin ayrı bir açık kaynak programıdır. Vunemi, denediği kopyayı kendi sürüm sayfasından indirir, kurmadan önce doğrular ve ağ erişimi olmadan çalıştırır; program yalnız Vunemi'nin verdiği dosyaları görür. Sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
+      "Eklentiler: istediğinde Ayarlar › Eklentiler'den indirdiğin ek araçlar. Her araç yeni bir dosya üretir ve onu sohbette gösterir.",
+      "Bunlarla Vunemi Word ya da PDF belgesi yazabilir, formüllü ve grafikli Excel tablosu yapabilir, PowerPoint sunumu hazırlayabilir, PDF'leri birleştirip ayırabilir, döndürebilir ve formlarını doldurabilir, afiş çizebilir, fotoğraf düzenleyebilir ve kısa bir video kurgulayabilir.",
+      "Her eklenti, ArtCraft ekibinin ayrı bir açık kaynak programıdır. Vunemi, denediği kopyayı kendi sürüm sayfasından indirir, kurmadan önce doğrular ve ağ erişimi olmadan çalıştırır; program yalnız Vunemi'nin verdiği dosyaları görür.",
+      "Sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
       "Model, Mac'inde olmayan bir ev klasörünün altına dosya yolu yazarsa Vunemi artık yalnızca reddetmek yerine doğru yolu söyler.",
     ],
     requirementsTitle: "Gerekenler",

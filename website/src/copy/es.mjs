@@ -181,8 +181,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novedades de esta versión",
     highlights: [
-      "Complementos: herramientas extra que descargas en Ajustes › Complementos cuando las necesitas. Con ellos Vunemi puede escribir un documento de Word o PDF, crear un libro de Excel con fórmulas y un gráfico, preparar una presentación de PowerPoint, unir, dividir y girar archivos PDF y rellenar sus formularios, dibujar un cartel, editar una foto y montar un vídeo corto. Cada herramienta crea un archivo nuevo y lo muestra en el chat.",
-      "Cada complemento es un programa de código abierto independiente del equipo de ArtCraft. Vunemi descarga de su propia página de versiones la copia con la que se probó, la comprueba antes de instalarla y la ejecuta sin acceso a la red; el programa solo ve los archivos que Vunemi le entrega. El resultado puede diferir del de Word, Excel o PowerPoint.",
+      "Complementos: herramientas extra que descargas en Ajustes › Complementos cuando las necesitas. Cada herramienta crea un archivo nuevo y lo muestra en el chat.",
+      "Con ellos Vunemi puede escribir un documento de Word o PDF, crear un libro de Excel con fórmulas y un gráfico, preparar una presentación de PowerPoint, unir, dividir y girar archivos PDF y rellenar sus formularios, dibujar un cartel, editar una foto y montar un vídeo corto.",
+      "Cada complemento es un programa de código abierto independiente del equipo de ArtCraft. Vunemi descarga de su propia página de versiones la copia con la que se probó, la comprueba antes de instalarla y la ejecuta sin acceso a la red; el programa solo ve los archivos que Vunemi le entrega.",
+      "El resultado puede diferir del de Word, Excel o PowerPoint.",
       "Si un modelo escribe una ruta de archivo dentro de una carpeta de usuario que no existe en tu Mac, Vunemi ahora responde con la ruta correcta en lugar de limitarse a rechazarla.",
     ],
     title: "Descarga Vunemi",

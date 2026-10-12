@@ -181,8 +181,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
-      "Componenti aggiuntivi: strumenti in più che scarichi da Impostazioni › Componenti aggiuntivi quando ti servono. Con questi Vunemi può scrivere un documento Word o PDF, creare una cartella di lavoro Excel con formule e un grafico, preparare una presentazione PowerPoint, unire, dividere e ruotare i PDF e compilarne i moduli, disegnare una locandina, ritoccare una foto e montare un breve video. Ogni strumento crea un nuovo file e lo mostra nella chat.",
-      "Ogni componente aggiuntivo è un programma open source separato del team ArtCraft. Vunemi scarica dalla propria pagina delle versioni la copia con cui è stato provato, la verifica prima di installarla e la esegue senza accesso alla rete; il programma vede solo i file che Vunemi gli passa. Il risultato può essere diverso da quello di Word, Excel o PowerPoint.",
+      "Componenti aggiuntivi: strumenti in più che scarichi da Impostazioni › Componenti aggiuntivi quando ti servono. Ogni strumento crea un nuovo file e lo mostra nella chat.",
+      "Con questi Vunemi può scrivere un documento Word o PDF, creare una cartella di lavoro Excel con formule e un grafico, preparare una presentazione PowerPoint, unire, dividere e ruotare i PDF e compilarne i moduli, disegnare una locandina, ritoccare una foto e montare un breve video.",
+      "Ogni componente aggiuntivo è un programma open source separato del team ArtCraft. Vunemi scarica dalla propria pagina delle versioni la copia con cui è stato provato, la verifica prima di installarla e la esegue senza accesso alla rete; il programma vede solo i file che Vunemi gli passa.",
+      "Il risultato può essere diverso da quello di Word, Excel o PowerPoint.",
       "Se un modello scrive un percorso di file dentro una cartella utente che sul tuo Mac non esiste, Vunemi ora risponde con il percorso giusto invece di limitarsi a rifiutare.",
     ],
     title: "Scarica Vunemi",

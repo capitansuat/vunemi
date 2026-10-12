@@ -181,8 +181,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Erweiterungen: zusätzliche Werkzeuge, die du unter Einstellungen › Erweiterungen lädst, wenn du sie brauchst. Damit kann Vunemi ein Word- oder PDF-Dokument schreiben, eine Excel-Tabelle mit Formeln und Diagramm anlegen, eine PowerPoint-Präsentation bauen, PDFs zusammenfügen, teilen und drehen und ihre Formulare ausfüllen, ein Plakat zeichnen, ein Foto bearbeiten und ein kurzes Video schneiden. Jedes Werkzeug erzeugt eine neue Datei und zeigt sie im Chat.",
-      "Jede Erweiterung ist ein eigenes Open-Source-Programm des ArtCraft-Teams. Vunemi lädt die Kopie, mit der es getestet wurde, von seiner eigenen Release-Seite, prüft sie vor der Installation und führt sie ohne Netzwerkzugriff aus; das Programm sieht nur die Dateien, die Vunemi ihm gibt. Das Ergebnis kann von Word, Excel oder PowerPoint abweichen.",
+      "Erweiterungen: zusätzliche Werkzeuge, die du unter Einstellungen › Erweiterungen lädst, wenn du sie brauchst. Jedes Werkzeug erzeugt eine neue Datei und zeigt sie im Chat.",
+      "Damit kann Vunemi ein Word- oder PDF-Dokument schreiben, eine Excel-Tabelle mit Formeln und Diagramm anlegen, eine PowerPoint-Präsentation bauen, PDFs zusammenfügen, teilen und drehen und ihre Formulare ausfüllen, ein Plakat zeichnen, ein Foto bearbeiten und ein kurzes Video schneiden.",
+      "Jede Erweiterung ist ein eigenes Open-Source-Programm des ArtCraft-Teams. Vunemi lädt die Kopie, mit der es getestet wurde, von seiner eigenen Release-Seite, prüft sie vor der Installation und führt sie ohne Netzwerkzugriff aus; das Programm sieht nur die Dateien, die Vunemi ihm gibt.",
+      "Das Ergebnis kann von Word, Excel oder PowerPoint abweichen.",
       "Schreibt ein Modell einen Dateipfad in einen Benutzerordner, den es auf deinem Mac nicht gibt, nennt Vunemi jetzt den richtigen Pfad, statt nur abzulehnen.",
     ],
     title: "Vunemi herunterladen",

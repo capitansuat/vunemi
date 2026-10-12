@@ -181,8 +181,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novidades desta versão",
     highlights: [
-      "Complementos: ferramentas extras que você baixa em Ajustes › Complementos quando quiser. Com eles, o Vunemi pode escrever um documento do Word ou PDF, criar uma planilha do Excel com fórmulas e um gráfico, montar uma apresentação do PowerPoint, juntar, dividir e girar PDFs e preencher seus formulários, desenhar um cartaz, editar uma foto e montar um vídeo curto. Cada ferramenta cria um arquivo novo e o mostra na conversa.",
-      "Cada complemento é um programa de código aberto separado, da equipe ArtCraft. O Vunemi baixa da própria página de versões a cópia com que foi testado, verifica antes de instalar e executa sem acesso à rede; o programa só vê os arquivos que o Vunemi entrega a ele. O resultado pode ser diferente do Word, do Excel ou do PowerPoint.",
+      "Complementos: ferramentas extras que você baixa em Ajustes › Complementos quando quiser. Cada ferramenta cria um arquivo novo e o mostra na conversa.",
+      "Com eles, o Vunemi pode escrever um documento do Word ou PDF, criar uma planilha do Excel com fórmulas e um gráfico, montar uma apresentação do PowerPoint, juntar, dividir e girar PDFs e preencher seus formulários, desenhar um cartaz, editar uma foto e montar um vídeo curto.",
+      "Cada complemento é um programa de código aberto separado, da equipe ArtCraft. O Vunemi baixa da própria página de versões a cópia com que foi testado, verifica antes de instalar e executa sem acesso à rede; o programa só vê os arquivos que o Vunemi entrega a ele.",
+      "O resultado pode ser diferente do Word, do Excel ou do PowerPoint.",
       "Se um modelo escrever um caminho de arquivo dentro de uma pasta de usuário que não existe no seu Mac, o Vunemi agora responde com o caminho certo em vez de apenas recusar.",
     ],
     title: "Baixe o Vunemi",

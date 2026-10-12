@@ -181,8 +181,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Nouveautés de cette version",
     highlights: [
-      "Extensions : des outils supplémentaires que vous téléchargez dans Réglages › Extensions quand vous en avez besoin. Avec elles, Vunemi peut rédiger un document Word ou PDF, créer un classeur Excel avec des formules et un graphique, préparer une présentation PowerPoint, fusionner, scinder et faire pivoter des PDF et remplir leurs formulaires, dessiner une affiche, retoucher une photo et monter une courte vidéo. Chaque outil crée un nouveau fichier et l'affiche dans la conversation.",
-      "Chaque extension est un programme open source distinct de l'équipe ArtCraft. Vunemi télécharge depuis sa propre page de version la copie avec laquelle il a été testé, la vérifie avant de l'installer et l'exécute sans accès au réseau ; le programme ne voit que les fichiers que Vunemi lui confie. Le résultat peut différer de celui de Word, Excel ou PowerPoint.",
+      "Extensions : des outils supplémentaires que vous téléchargez dans Réglages › Extensions quand vous en avez besoin. Chaque outil crée un nouveau fichier et l'affiche dans la conversation.",
+      "Avec elles, Vunemi peut rédiger un document Word ou PDF, créer un classeur Excel avec des formules et un graphique, préparer une présentation PowerPoint, fusionner, scinder et faire pivoter des PDF et remplir leurs formulaires, dessiner une affiche, retoucher une photo et monter une courte vidéo.",
+      "Chaque extension est un programme open source distinct de l'équipe ArtCraft. Vunemi télécharge depuis sa propre page de version la copie avec laquelle il a été testé, la vérifie avant de l'installer et l'exécute sans accès au réseau ; le programme ne voit que les fichiers que Vunemi lui confie.",
+      "Le résultat peut différer de celui de Word, Excel ou PowerPoint.",
       "Si un modèle écrit un chemin de fichier dans un dossier personnel qui n'existe pas sur votre Mac, Vunemi indique désormais le bon chemin au lieu de simplement refuser.",
     ],
     title: "Télécharger Vunemi",
