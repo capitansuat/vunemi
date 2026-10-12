@@ -45,8 +45,11 @@ without writing scripts, and without sending their private data to a cloud AI.
 1. Download the disk image from GitHub (Apple Silicon, macOS 14 or later).
 2. Drag Vunemi into Applications and open it. The build is signed but not
    notarized by Apple: if macOS refuses, System Settings › Privacy & Security
-   › Open Anyway. If opened straight from the disk image, Vunemi offers to
-   move itself to Applications.
+   › Open Anyway (the download page has the steps, and what to do when the
+   button is missing). If opened straight from the disk image, Vunemi offers
+   to move itself to Applications. After an update that changes the helper,
+   macOS asks once for the login password to read the vault key from the
+   Keychain; Always Allow ends it.
 3. Choose a model. The first screen recommends one that fits the Mac's memory
    and downloads it; smaller models, a Hugging Face search and "I use LM Studio
    or Ollama" are one click away. A GGUF file already on the Mac can be added.

@@ -19,9 +19,27 @@ The latest build is on the [Releases](../../releases) page: a disk image for
 Apple Silicon Macs (macOS 14 or later). Open it and drag Vunemi into the
 Applications folder.
 
-This build is signed but not yet notarized by Apple. The first time you open
-it, macOS may refuse; go to **System Settings › Privacy & Security** and
-click **Open Anyway**.
+This build is signed but not yet notarized by Apple, so macOS blocks it the
+first time you open it. If you trust the file:
+
+1. Try to open it. When the warning appears, choose **Done**.
+2. Open **System Settings › Privacy & Security** and scroll down to
+   **Security**.
+3. Next to the message that the file was blocked, click **Open Anyway**. The
+   button is there only after you have tried to open the file; if it has
+   gone, try once more.
+4. macOS asks again, and may ask for your Mac password or Touch ID.
+
+If there is no **Open Anyway** button, check in the same Security section
+where macOS allows apps from: if only the App Store is selected, choose the
+App Store and known developers, then try again. macOS may block the disk
+image and, later, Vunemi itself; the steps are the same.
+
+After an update macOS may ask for your login password when Vunemi opens.
+That is the Keychain, where Vunemi keeps the key to its vault: macOS
+recognises the helper that reads this key by its exact code, and asks once
+when an update changes it. Choose **Always Allow** and it will not ask again
+until the helper changes. Vunemi never sees the password.
 
 ## Building from source
 
