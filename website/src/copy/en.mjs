@@ -202,6 +202,8 @@ export default {
     ],
     updateTitle: "Updating",
     updateBody: "From 0.1.8 on, Vunemi tells you when a new version is out and updates itself when you press Update. From an older version, download the new disk image once and drag Vunemi into Applications, choosing Replace.",
+    keychainTitle: "If macOS asks for your password when Vunemi opens",
+    keychainBody: "Vunemi keeps the key to its vault in your Mac's Keychain. Vunemi is not yet signed with an Apple developer identity, so macOS recognises the part that reads this key by its exact code; after an update that changes it, macOS asks for your login password once. Enter it and choose Always Allow: it will not ask again until a later update changes that part. Allow alone lets it through once, and macOS asks again the next time. The prompt is macOS's own; Vunemi never sees your password.",
     checksum: "SHA-256",
     notes: "Release notes",
     source: "Source code",

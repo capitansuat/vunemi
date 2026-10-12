@@ -218,11 +218,11 @@ function download(t, lang) {
 </section>
 <aside class="gatekeeper-notice" aria-labelledby="gatekeeper-title">
 <div class="gatekeeper-mark" aria-hidden="true">!</div>
-<div><h2 id="gatekeeper-title">${esc(warning[1])}</h2><p>${esc(warning[2])}</p><p>${esc(warning[3])}</p><p>${esc(warning[4])}</p><p><a href="https://support.apple.com/en-gb/102445">${esc(warning[5])} ↗</a></p></div>
+<div><h2 id="gatekeeper-title">${esc(warning[1])}</h2><p>${esc(warning[2])}</p><p>${esc(warning[3])}</p><p>${esc(warning[4])}</p><ol class="install">${warning[7].map((s) => `<li>${esc(s)}</li>`).join("")}</ol><p>${esc(warning[8])}</p><p>${esc(warning[9])}</p><p><a href="https://support.apple.com/en-gb/102445">${esc(warning[5])} ↗</a></p></div>
 </aside>
 <div class="download-grid">
 <section class="panel-box"><h2>${esc(d.installTitle)}</h2><ol class="install">${d.install.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></section>
-<section class="panel-box"><h2>${esc(d.requirementsTitle)}</h2><ul>${d.requirements.map((r) => `<li>${esc(r)}</li>`).join("")}</ul><h3>${esc(d.updateTitle)}</h3><p>${esc(d.updateBody)}</p><h3>${esc(d.checksum)}</h3><p class="checksum">${release.sha256}</p></section>
+<section class="panel-box"><h2>${esc(d.requirementsTitle)}</h2><ul>${d.requirements.map((r) => `<li>${esc(r)}</li>`).join("")}</ul><h3>${esc(d.updateTitle)}</h3><p>${esc(d.updateBody)}</p><h3>${esc(d.keychainTitle)}</h3><p>${esc(d.keychainBody)}</p><h3>${esc(d.checksum)}</h3><p class="checksum">${release.sha256}</p></section>
 </div>
 ${notesSection(t)}
 </main>`;

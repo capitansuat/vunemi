@@ -200,6 +200,8 @@ export default {
     ],
     updateTitle: "Mise à jour",
     updateBody: "À partir de 0.1.8, Vunemi vous prévient quand une nouvelle version sort et se met à jour quand vous appuyez sur Mettre à jour. Depuis une version plus ancienne, téléchargez une fois la nouvelle image disque et faites glisser Vunemi dans Applications en choisissant Remplacer.",
+    keychainTitle: "Si macOS demande votre mot de passe à l'ouverture de Vunemi",
+    keychainBody: "Vunemi conserve la clé de son coffre dans le trousseau de votre Mac. Comme Vunemi n'est pas encore signé avec une identité de développeur Apple, macOS reconnaît la partie qui lit cette clé à son code exact ; après une mise à jour qui la modifie, macOS demande une fois votre mot de passe de session. Saisissez-le et choisissez « Toujours autoriser » : macOS ne le redemandera que lorsqu'une mise à jour ultérieure modifiera cette partie. « Autoriser » seul ne vaut qu'une fois, et macOS redemandera au prochain lancement. Cette demande vient de macOS ; Vunemi ne voit jamais votre mot de passe.",
     checksum: "SHA-256",
     notes: "Notes de version",
     source: "Code source",

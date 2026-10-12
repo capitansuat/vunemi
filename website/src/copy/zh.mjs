@@ -200,6 +200,8 @@ export default {
     ],
     updateTitle: "更新",
     updateBody: "从 0.1.8 起，新版本发布时 Vunemi 会通知你，点按“更新”即可自动更新。如果你使用的是更早的版本，请再下载一次新的磁盘映像，将 Vunemi 拖到“应用程序”并选择“替换”。",
+    keychainTitle: "如果打开 Vunemi 时 macOS 要求输入密码",
+    keychainBody: "Vunemi 把保险库的密钥保存在 Mac 的钥匙串中。Vunemi 尚未使用 Apple 开发者身份签名，因此 macOS 只能通过确切的代码来识别读取这把密钥的组件；在某次更新改动了该组件之后，macOS 会询问一次你的登录密码。输入密码并选择“始终允许”：在以后的更新再次改动该组件之前，它不会再问。如果只选择“允许”，仅本次有效，下次打开时 macOS 还会再问。这个提示来自 macOS；Vunemi 看不到你的密码。",
     checksum: "SHA-256",
     notes: "版本说明",
     source: "源代码",

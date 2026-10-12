@@ -200,6 +200,8 @@ export default {
     ],
     updateTitle: "Güncelleme",
     updateBody: "0.1.8'den itibaren Vunemi yeni sürüm çıktığında haber verir ve Güncelle'ye basınca kendini günceller. Daha eski bir sürümden, yeni disk görüntüsünü bir kez indirip Vunemi'yi Uygulamalar'a sürükle ve Değiştir'i seç.",
+    keychainTitle: "Vunemi açılırken macOS parolanı sorarsa",
+    keychainBody: "Vunemi kasasının anahtarını Mac'inin Anahtar Zinciri'nde tutar. Vunemi henüz bir Apple geliştirici kimliğiyle imzalanmadığı için macOS bu anahtarı okuyan parçayı kodunun tam hâlinden tanır; onu değiştiren bir güncellemeden sonra oturum açma parolanı bir kez sorar. Parolayı gir ve ‘Her Zaman İzin Ver’i seç: o parça yeniden değişene kadar bir daha sormaz. Yalnızca ‘İzin Ver’ dersen bir kez geçer ve macOS sonraki açılışta yine sorar. İstem macOS'in kendisinindir; Vunemi parolanı görmez.",
     checksum: "SHA-256",
     notes: "Sürüm notları",
     source: "Kaynak kod",

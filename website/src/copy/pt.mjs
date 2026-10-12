@@ -200,6 +200,8 @@ export default {
     ],
     updateTitle: "Atualização",
     updateBody: "A partir da 0.1.8, o Vunemi avisa quando sai uma versão nova e se atualiza quando você toca em Atualizar. Numa versão mais antiga, baixe uma vez a nova imagem de disco e arraste o Vunemi para Aplicativos, escolhendo Substituir.",
+    keychainTitle: "Se o macOS pedir sua senha ao abrir o Vunemi",
+    keychainBody: "O Vunemi guarda a chave do seu cofre nas Chaves do seu Mac. Como o Vunemi ainda não é assinado com uma identidade de desenvolvedor da Apple, o macOS reconhece a parte que lê essa chave pelo código exato; depois de uma atualização que a altere, o macOS pede uma vez a sua senha de login. Digite-a e escolha «Permitir Sempre»: ele só voltará a pedir quando outra atualização alterar essa parte. Com «Permitir» vale só uma vez, e o macOS pedirá de novo na próxima abertura. O pedido é do macOS; o Vunemi nunca vê a sua senha.",
     checksum: "SHA-256",
     notes: "Notas da versão",
     source: "Código-fonte",
