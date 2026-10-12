@@ -1,73 +1,73 @@
 {
-  "currentRelease": "0.1.19",
+  "currentRelease": "0.1.20",
   "releases": [
     {
-      "version": "0.1.19",
+      "version": "0.1.20",
       "updateTo": {
-        "version": "0.1.19",
-        "name": "Vunemi 0.1.19",
-        "pub_date": "2026-10-10T00:00:00Z",
+        "version": "0.1.20",
+        "name": "Vunemi 0.1.20",
+        "pub_date": "2026-10-12T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.19/Vunemi-0.1.19-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.20/Vunemi-0.1.20-arm64.zip"
       }
     }
   ],
   "sizeMb": 143,
   "notes": {
     "en": [
-      "Calendar: when two of your accounts have a calendar or reminder list with the same name, Vunemi asks which one before it adds anything. An event or reminder you put back after deleting returns to the calendar it came from. Connections now lists the accounts your calendars come from.",
-      "If the file that holds your automations is damaged, Vunemi still starts: it sets the file aside and begins with an empty list.",
-      "Speech files left over from a voice chat are cleared the next time Vunemi speaks. The app now runs on Electron 44."
+      "Add-ons: extra tools you download in Settings › Add-ons when you want them. With them Vunemi can write a Word or PDF document, make an Excel workbook with formulas and a chart, build a PowerPoint deck, join, split and rotate PDFs and fill in their forms, draw a poster, edit a photo and cut a short video. Each tool makes a new file and shows it in the chat.",
+      "Each add-on is a separate open-source program from the ArtCraft team. Vunemi downloads the copy it was tested with from its own release page, checks it before installing, and runs it without network access; it sees only the files Vunemi hands it. Results can differ from Word, Excel or PowerPoint.",
+      "If a model writes a file path under a home folder that isn't on your Mac, Vunemi now answers with the right path instead of only refusing."
     ],
     "de": [
-      "Kalender: Haben zwei deiner Konten einen Kalender oder eine Erinnerungsliste mit demselben Namen, fragt Vunemi nach, bevor etwas hinzugefügt wird. Ein Termin oder eine Erinnerung, die du nach dem Löschen zurückholst, kommt wieder in den Kalender, aus dem sie stammt. Verbindungen zeigt jetzt die Konten, aus denen deine Kalender stammen.",
-      "Ist die Datei mit deinen Automationen beschädigt, startet Vunemi trotzdem: Die Datei wird beiseitegelegt, und die Liste beginnt leer.",
-      "Sprachdateien, die von einem Sprachchat übrig geblieben sind, werden gelöscht, sobald Vunemi das nächste Mal spricht. Die App läuft jetzt auf Electron 44."
+      "Erweiterungen: zusätzliche Werkzeuge, die du unter Einstellungen › Erweiterungen lädst, wenn du sie brauchst. Damit kann Vunemi ein Word- oder PDF-Dokument schreiben, eine Excel-Tabelle mit Formeln und Diagramm anlegen, eine PowerPoint-Präsentation bauen, PDFs zusammenfügen, teilen und drehen und ihre Formulare ausfüllen, ein Plakat zeichnen, ein Foto bearbeiten und ein kurzes Video schneiden. Jedes Werkzeug erzeugt eine neue Datei und zeigt sie im Chat.",
+      "Jede Erweiterung ist ein eigenes Open-Source-Programm des ArtCraft-Teams. Vunemi lädt die Kopie, mit der es getestet wurde, von seiner eigenen Release-Seite, prüft sie vor der Installation und führt sie ohne Netzwerkzugriff aus; das Programm sieht nur die Dateien, die Vunemi ihm gibt. Das Ergebnis kann von Word, Excel oder PowerPoint abweichen.",
+      "Schreibt ein Modell einen Dateipfad in einen Benutzerordner, den es auf deinem Mac nicht gibt, nennt Vunemi jetzt den richtigen Pfad, statt nur abzulehnen."
     ],
     "es": [
-      "Calendario: si dos de tus cuentas tienen un calendario o una lista de recordatorios con el mismo nombre, Vunemi pregunta cuál antes de añadir nada. Un evento o recordatorio que recuperas después de borrarlo vuelve al calendario del que venía. Conexiones muestra ahora las cuentas de las que vienen tus calendarios.",
-      "Si el archivo que guarda tus automatizaciones está dañado, Vunemi se abre igualmente: aparta el archivo y empieza con la lista vacía.",
-      "Los archivos de voz que quedan de un chat por voz se borran la próxima vez que Vunemi habla. La app funciona ahora con Electron 44."
+      "Complementos: herramientas extra que descargas en Ajustes › Complementos cuando las necesitas. Con ellos Vunemi puede escribir un documento de Word o PDF, crear un libro de Excel con fórmulas y un gráfico, preparar una presentación de PowerPoint, unir, dividir y girar archivos PDF y rellenar sus formularios, dibujar un cartel, editar una foto y montar un vídeo corto. Cada herramienta crea un archivo nuevo y lo muestra en el chat.",
+      "Cada complemento es un programa de código abierto independiente del equipo de ArtCraft. Vunemi descarga de su propia página de versiones la copia con la que se probó, la comprueba antes de instalarla y la ejecuta sin acceso a la red; el programa solo ve los archivos que Vunemi le entrega. El resultado puede diferir del de Word, Excel o PowerPoint.",
+      "Si un modelo escribe una ruta de archivo dentro de una carpeta de usuario que no existe en tu Mac, Vunemi ahora responde con la ruta correcta en lugar de limitarse a rechazarla."
     ],
     "fr": [
-      "Calendrier : si deux de vos comptes ont un calendrier ou une liste de rappels du même nom, Vunemi demande lequel avant d'ajouter quoi que ce soit. Un événement ou un rappel que vous rétablissez après l'avoir supprimé retourne dans le calendrier d'où il venait. Connexions affiche désormais les comptes d'où viennent vos calendriers.",
-      "Si le fichier qui contient vos automatisations est endommagé, Vunemi démarre quand même : le fichier est mis de côté et la liste repart vide.",
-      "Les fichiers audio laissés par une conversation vocale sont supprimés la prochaine fois que Vunemi parle. L'app tourne désormais sur Electron 44."
+      "Extensions : des outils supplémentaires que vous téléchargez dans Réglages › Extensions quand vous en avez besoin. Avec elles, Vunemi peut rédiger un document Word ou PDF, créer un classeur Excel avec des formules et un graphique, préparer une présentation PowerPoint, fusionner, scinder et faire pivoter des PDF et remplir leurs formulaires, dessiner une affiche, retoucher une photo et monter une courte vidéo. Chaque outil crée un nouveau fichier et l'affiche dans la conversation.",
+      "Chaque extension est un programme open source distinct de l'équipe ArtCraft. Vunemi télécharge depuis sa propre page de version la copie avec laquelle il a été testé, la vérifie avant de l'installer et l'exécute sans accès au réseau ; le programme ne voit que les fichiers que Vunemi lui confie. Le résultat peut différer de celui de Word, Excel ou PowerPoint.",
+      "Si un modèle écrit un chemin de fichier dans un dossier personnel qui n'existe pas sur votre Mac, Vunemi indique désormais le bon chemin au lieu de simplement refuser."
     ],
     "it": [
-      "Calendario: se due dei tuoi account hanno un calendario o un elenco di promemoria con lo stesso nome, Vunemi chiede quale prima di aggiungere qualcosa. Un evento o un promemoria che ripristini dopo averlo eliminato torna nel calendario da cui veniva. Connessioni ora mostra gli account da cui provengono i tuoi calendari.",
-      "Se il file che contiene le tue automazioni è danneggiato, Vunemi si avvia lo stesso: mette da parte il file e riparte da un elenco vuoto.",
-      "I file audio rimasti da una chat vocale vengono eliminati la prossima volta che Vunemi parla. L'app ora gira su Electron 44."
+      "Componenti aggiuntivi: strumenti in più che scarichi da Impostazioni › Componenti aggiuntivi quando ti servono. Con questi Vunemi può scrivere un documento Word o PDF, creare una cartella di lavoro Excel con formule e un grafico, preparare una presentazione PowerPoint, unire, dividere e ruotare i PDF e compilarne i moduli, disegnare una locandina, ritoccare una foto e montare un breve video. Ogni strumento crea un nuovo file e lo mostra nella chat.",
+      "Ogni componente aggiuntivo è un programma open source separato del team ArtCraft. Vunemi scarica dalla propria pagina delle versioni la copia con cui è stato provato, la verifica prima di installarla e la esegue senza accesso alla rete; il programma vede solo i file che Vunemi gli passa. Il risultato può essere diverso da quello di Word, Excel o PowerPoint.",
+      "Se un modello scrive un percorso di file dentro una cartella utente che sul tuo Mac non esiste, Vunemi ora risponde con il percorso giusto invece di limitarsi a rifiutare."
     ],
     "tr": [
-      "Takvim: iki hesabında aynı adlı takvim ya da anımsatıcı listesi varsa Vunemi bir şey eklemeden önce hangisi olduğunu sorar. Silip geri aldığın etkinlik ya da anımsatıcı geldiği takvime döner. Bağlantılar artık takvimlerinin geldiği hesapları listeler.",
-      "Otomasyonlarını tutan dosya bozulursa Vunemi yine açılır: dosyayı kenara alır ve boş bir listeyle başlar.",
-      "Sesli sohbetten artakalan ses dosyaları Vunemi bir sonraki konuşmasında silinir. Uygulama artık Electron 44 üzerinde çalışır."
+      "Eklentiler: istediğinde Ayarlar › Eklentiler'den indirdiğin ek araçlar. Bunlarla Vunemi Word ya da PDF belgesi yazabilir, formüllü ve grafikli Excel tablosu yapabilir, PowerPoint sunumu hazırlayabilir, PDF'leri birleştirip ayırabilir, döndürebilir ve formlarını doldurabilir, afiş çizebilir, fotoğraf düzenleyebilir ve kısa bir video kurgulayabilir. Her araç yeni bir dosya üretir ve onu sohbette gösterir.",
+      "Her eklenti, ArtCraft ekibinin ayrı bir açık kaynak programıdır. Vunemi, denediği kopyayı kendi sürüm sayfasından indirir, kurmadan önce doğrular ve ağ erişimi olmadan çalıştırır; program yalnız Vunemi'nin verdiği dosyaları görür. Sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
+      "Model, Mac'inde olmayan bir ev klasörünün altına dosya yolu yazarsa Vunemi artık yalnızca reddetmek yerine doğru yolu söyler."
     ],
     "pt": [
-      "Calendário: se duas das suas contas têm um calendário ou uma lista de lembretes com o mesmo nome, o Vunemi pergunta qual antes de adicionar qualquer coisa. Um evento ou lembrete que você restaura depois de apagar volta para o calendário de onde veio. Conexões agora mostra as contas de onde vêm seus calendários.",
-      "Se o arquivo que guarda suas automações estiver danificado, o Vunemi abre mesmo assim: deixa o arquivo de lado e começa com a lista vazia.",
-      "Os arquivos de áudio que sobram de uma conversa por voz são apagados na próxima vez que o Vunemi fala. O app agora roda no Electron 44."
+      "Complementos: ferramentas extras que você baixa em Ajustes › Complementos quando quiser. Com eles, o Vunemi pode escrever um documento do Word ou PDF, criar uma planilha do Excel com fórmulas e um gráfico, montar uma apresentação do PowerPoint, juntar, dividir e girar PDFs e preencher seus formulários, desenhar um cartaz, editar uma foto e montar um vídeo curto. Cada ferramenta cria um arquivo novo e o mostra na conversa.",
+      "Cada complemento é um programa de código aberto separado, da equipe ArtCraft. O Vunemi baixa da própria página de versões a cópia com que foi testado, verifica antes de instalar e executa sem acesso à rede; o programa só vê os arquivos que o Vunemi entrega a ele. O resultado pode ser diferente do Word, do Excel ou do PowerPoint.",
+      "Se um modelo escrever um caminho de arquivo dentro de uma pasta de usuário que não existe no seu Mac, o Vunemi agora responde com o caminho certo em vez de apenas recusar."
     ],
     "ru": [
-      "Календарь: если в двух ваших учётных записях есть календарь или список напоминаний с одинаковым названием, Vunemi спрашивает, какой из них нужен, прежде чем что-либо добавить. Событие или напоминание, которое вы вернули после удаления, возвращается в тот календарь, где оно было. В разделе «Подключения» теперь показаны учётные записи, из которых берутся ваши календари.",
-      "Если файл с вашими автоматизациями повреждён, Vunemi всё равно запускается: файл откладывается в сторону, а список начинается пустым.",
-      "Звуковые файлы, оставшиеся после голосового чата, удаляются, когда Vunemi заговорит в следующий раз. Приложение теперь работает на Electron 44."
+      "Дополнения: дополнительные инструменты, которые вы загружаете в разделе «Настройки › Дополнения», когда они нужны. С ними Vunemi может написать документ Word или PDF, создать книгу Excel с формулами и диаграммой, подготовить презентацию PowerPoint, объединять, разделять и поворачивать PDF и заполнять их формы, нарисовать афишу, отредактировать фото и смонтировать короткое видео. Каждый инструмент создаёт новый файл и показывает его в чате.",
+      "Каждое дополнение — отдельная программа с открытым исходным кодом от команды ArtCraft. Vunemi загружает со своей страницы релизов ту копию, с которой он был проверен, проверяет её перед установкой и запускает без доступа к сети; программа видит только те файлы, которые ей передаёт Vunemi. Результат может отличаться от Word, Excel или PowerPoint.",
+      "Если модель указывает путь к файлу в домашней папке, которой нет на вашем Mac, Vunemi теперь сообщает правильный путь, а не просто отказывает."
     ],
     "zh": [
-      "日历：如果你的两个账户里有同名的日历或提醒事项列表，Vunemi 会在添加之前先问是哪一个。删除后恢复的日程或提醒事项会回到它原来所在的日历。“连接”现在会列出日历所属的账户。",
-      "保存自动化的文件损坏时，Vunemi 仍能启动：它会把该文件放到一边，从空列表开始。",
-      "语音对话留下的语音文件会在 Vunemi 下次朗读时清除。应用现在基于 Electron 44 运行。"
+      "扩展：需要时在“设置 › 扩展”中下载的额外工具。有了它们，Vunemi 可以撰写 Word 或 PDF 文档，制作带公式和图表的 Excel 工作簿，制作 PowerPoint 演示文稿，合并、拆分和旋转 PDF 并填写其中的表单，绘制海报，编辑照片，剪辑短视频。每个工具都会生成一个新文件，并在对话中显示出来。",
+      "每个扩展都是 ArtCraft 团队的一个独立开源程序。Vunemi 从自己的发布页面下载经过测试的那一份，安装前先校验，并在没有网络访问的情况下运行；程序只能看到 Vunemi 交给它的文件。结果可能与 Word、Excel 或 PowerPoint 不同。",
+      "如果模型把文件路径写在你的 Mac 上并不存在的个人文件夹下，Vunemi 现在会给出正确的路径，而不只是拒绝。"
     ],
     "ja": [
-      "カレンダー：2 つのアカウントに同じ名前のカレンダーやリマインダーリストがある場合、Vunemi は追加する前にどちらかを尋ねます。削除したあとで元に戻したイベントやリマインダーは、元のカレンダーに戻ります。「接続」に、カレンダーの元になっているアカウントが表示されるようになりました。",
-      "オートメーションを保存しているファイルが壊れていても、Vunemi は起動します。そのファイルは別に残し、空のリストから始めます。",
-      "音声チャットで残った音声ファイルは、Vunemi が次に話すときに削除されます。アプリは Electron 44 で動作するようになりました。"
+      "アドオン：必要なときに「設定 › アドオン」からダウンロードする追加ツールです。これにより Vunemi は、Word や PDF の書類の作成、数式とグラフ入りの Excel ブックの作成、PowerPoint プレゼンテーションの作成、PDF の結合・分割・回転とフォームへの入力、ポスターの描画、写真の編集、短い動画の編集ができます。どのツールも新しいファイルを作り、チャットに表示します。",
+      "各アドオンは ArtCraft チームによる独立したオープンソースのプログラムです。Vunemi は、動作を確認したコピーを自身のリリースページからダウンロードし、インストール前に検証して、ネットワークにアクセスできない状態で実行します。プログラムに見えるのは Vunemi が渡したファイルだけです。結果は Word、Excel、PowerPoint と異なる場合があります。",
+      "モデルが、この Mac に存在しないホームフォルダの下のファイルパスを書いた場合、Vunemi は拒否するだけでなく、正しいパスを伝えるようになりました。"
     ],
     "ko": [
-      "캘린더: 두 계정에 이름이 같은 캘린더나 미리 알림 목록이 있으면 Vunemi가 추가하기 전에 어느 것인지 묻습니다. 삭제한 뒤 되돌린 이벤트나 미리 알림은 원래 있던 캘린더로 돌아갑니다. 연결에 캘린더가 속한 계정이 이제 표시됩니다.",
-      "자동화를 저장하는 파일이 손상되어도 Vunemi는 시작됩니다. 그 파일은 따로 보관하고 빈 목록으로 시작합니다.",
-      "음성 대화에서 남은 음성 파일은 Vunemi가 다음에 말할 때 삭제됩니다. 앱은 이제 Electron 44에서 실행됩니다."
+      "추가 기능: 필요할 때 설정 › 추가 기능에서 내려받는 추가 도구입니다. 이를 통해 Vunemi는 Word 또는 PDF 문서를 작성하고, 수식과 차트가 있는 Excel 통합 문서를 만들고, PowerPoint 프레젠테이션을 만들고, PDF를 합치고 나누고 회전하고 양식을 채우고, 포스터를 그리고, 사진을 편집하고, 짧은 동영상을 편집할 수 있습니다. 각 도구는 새 파일을 만들어 대화에 보여 줍니다.",
+      "각 추가 기능은 ArtCraft 팀이 만든 별도의 오픈 소스 프로그램입니다. Vunemi는 테스트를 마친 사본을 자체 릴리스 페이지에서 내려받아 설치 전에 검증하고, 네트워크 접근 없이 실행합니다. 프로그램은 Vunemi가 건넨 파일만 볼 수 있습니다. 결과는 Word, Excel, PowerPoint와 다를 수 있습니다.",
+      "모델이 이 Mac에 없는 홈 폴더 아래의 파일 경로를 쓰면, Vunemi는 이제 거부만 하지 않고 올바른 경로를 알려 줍니다."
     ]
   }
 }

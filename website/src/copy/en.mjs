@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.19 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.20 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.19 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.20 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -67,6 +67,7 @@ export default {
       { title: "Remembers what you tell it", body: "Tell it how you like to work, or who is who, and it keeps a note in your own words once you say yes. Each answer says which notes it was given; edit or delete them in Settings.", example: "Remember: I want reports as PDF." },
       { title: "Record a meeting", body: "Press Record to capture your microphone and the sound from your Mac. Vunemi writes a transcript and summary on this Mac; after a successful summary, it moves the audio to the Trash. Requires macOS 14.2 or later.", example: "Record this meeting." },
       { title: "Bring in earlier work", body: "Type @ to pick an earlier session or a meeting. Its questions and answers, or the meeting's summary, go with your message; up to five at a time.", example: "Which hotel did we choose in @Rome trip?" },
+      { title: "Make documents, edit photos and video", body: "With add-ons you download when you want them, Vunemi writes Word and PDF documents, makes Excel workbooks with formulas and charts, builds PowerPoint decks, joins and splits PDFs, edits photos and cuts short videos. Each result is a new file.", example: "Crop this photo to a square and brighten it a little." },
     ],
   },
   screens: {
@@ -119,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.1.19 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.1.20 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -148,6 +149,18 @@ export default {
       { name: "History", body: "Finds your earlier sessions and recorded meetings when a request is about one. Each request carries only the name, date and one line of the few that fit; Vunemi reads one only when it needs it. Nothing leaves your Mac.", parts: "Finding and reading" },
       { name: "Your own connections", body: "Add any MCP server by command or address. Its keys are kept in the Vault.", parts: "One switch per connection" },
     ],
+    addonsTitle: "Add-ons",
+    addonsIntro: "Extra abilities you add when you want them. Each is a separate program: the copy Vunemi was tested with is downloaded once from Vunemi's own release page and checked before it is installed. They run on this Mac without network access and see only the files Vunemi hands them. The programs are the ArtCraft team's Craft apps, open source under MIT or Apache-2.0. They are young: results can differ from Word, Excel or PowerPoint.",
+    addonsWhy: "Without an add-on, Vunemi already reads Word and PDF documents, converts files between formats, and works through Word, Excel or PowerPoint if they are installed on your Mac. Add-ons go further: Vunemi makes the file itself, with no Office needed. Totals in a spreadsheet are real formulas that a spreadsheet program calculates, not numbers the model worked out; a deck has real slides and charts; photos and videos are edited, not only converted. Every tool makes a new file and never changes the one it was given.",
+    addons: [
+      { name: "Documents", body: "Writes reports, letters and notes as a Word or PDF file, with headings, lists and tables, on A4 or Letter paper to suit your region. Converts an existing document to another format, such as Word to PDF." },
+      { name: "Spreadsheets", body: "Makes an Excel workbook from your numbers. Totals, averages and percentages are written as formulas and calculated by the program, so change a number in Excel later and the total follows. Can add a column, bar, line or pie chart." },
+      { name: "Presentations", body: "Builds a PowerPoint deck slide by slide: an opening slide, section headers, slides with a few short lines, charts and speaker notes, in one of eight themes." },
+      { name: "PDF tools", body: "Joins PDFs into one, takes chosen pages out into a new file, rotates pages, turns pictures into a PDF, and lists and fills in a form's fields. It does not open password-protected PDFs." },
+      { name: "Drawing", body: "Draws a poster, card, logo or diagram and saves it as PNG or PDF. The model describes the drawing and the program renders it, so how it looks depends on the model." },
+      { name: "Photo editing", body: "Crops to a shape such as 1:1 or 16:9, rotates, flips and resizes a picture, fixes tone automatically, adjusts brightness, contrast and saturation, sharpens or blurs, and saves it as JPEG, PNG, WebP or TIFF. Reads iPhone HEIC photos. It cannot remove objects or backgrounds. The program behind it is PhotoCraft, an open-source image editor." },
+      { name: "Video editing", body: "Cuts clips together in the order you give and trims each one. Adds titles, captions drawn into the picture, quiet background music and cross-fades between clips, then exports an MP4 of up to 30 minutes. The program behind it is FilmCraft, an open-source video editor." },
+    ],
     safetyTitle: "Safety and control",
     safety: [
       { title: "Permission levels", body: "Four presets, from Watch and suggest to Act on its own, plus a setting for each kind of action. Financial actions are always off." },
@@ -172,9 +185,9 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "Calendar: when two of your accounts have a calendar or reminder list with the same name, Vunemi asks which one before it adds anything. An event or reminder you put back after deleting returns to the calendar it came from. Connections now lists the accounts your calendars come from.",
-      "If the file that holds your automations is damaged, Vunemi still starts: it sets the file aside and begins with an empty list.",
-      "Speech files left over from a voice chat are cleared the next time Vunemi speaks. The app now runs on Electron 44.",
+      "Add-ons: extra tools you download in Settings › Add-ons when you want them. With them Vunemi can write a Word or PDF document, make an Excel workbook with formulas and a chart, build a PowerPoint deck, join, split and rotate PDFs and fill in their forms, draw a poster, edit a photo and cut a short video. Each tool makes a new file and shows it in the chat.",
+      "Each add-on is a separate open-source program from the ArtCraft team. Vunemi downloads the copy it was tested with from its own release page, checks it before installing, and runs it without network access; it sees only the files Vunemi hands it. Results can differ from Word, Excel or PowerPoint.",
+      "If a model writes a file path under a home folder that isn't on your Mac, Vunemi now answers with the right path instead of only refusing.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.19 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.1.20 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.19 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.1.20 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -65,6 +65,7 @@ export default {
       { title: "Merkt sich, was du sagst", body: "Sag, wie du gern arbeitest oder wer wer ist, und Vunemi notiert es in deinen Worten, sobald du zustimmst. Jede Antwort zeigt, welche Notizen sie bekam; in den Einstellungen kannst du sie bearbeiten oder löschen.", example: "Merk dir: Berichte bitte als PDF." },
       { title: "Besprechung aufzeichnen", body: "Mit Aufnahme werden Mikrofon und Mac-Ton erfasst. Vunemi erstellt Transkript und Zusammenfassung auf diesem Mac; nach erfolgreicher Zusammenfassung wandert das Audio in den Papierkorb. Erfordert macOS 14.2 oder neuer.", example: "Diese Besprechung aufzeichnen." },
       { title: "Frühere Arbeit dazuholen", body: "Tippe @ und wähle eine frühere Sitzung oder eine Besprechung. Ihre Fragen und Antworten oder die Zusammenfassung der Besprechung gehen mit deiner Nachricht mit; bis zu fünf auf einmal.", example: "Welches Hotel haben wir in @Rom-Reise ausgewählt?" },
+      { title: "Dokumente erstellen, Fotos und Videos bearbeiten", body: "Mit Erweiterungen, die du bei Bedarf lädst, schreibt Vunemi Word- und PDF-Dokumente, legt Excel-Tabellen mit Formeln und Diagrammen an, baut PowerPoint-Präsentationen, fügt PDFs zusammen und teilt sie, bearbeitet Fotos und schneidet kurze Videos. Jedes Ergebnis ist eine neue Datei.", example: "Schneide dieses Foto quadratisch zu und helle es etwas auf." },
     ],
   },
   screens: {
@@ -117,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.1.19 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.1.20 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -146,6 +147,18 @@ export default {
       { name: "Verlauf", body: "Findet deine früheren Sitzungen und aufgezeichneten Besprechungen, wenn eine Anfrage sich auf eine bezieht. Jede Anfrage enthält nur Name, Datum und eine Zeile der wenigen passenden; Vunemi liest eine nur bei Bedarf. Nichts verlässt deinen Mac.", parts: "Finden und Lesen" },
       { name: "Eigene Verbindungen", body: "Füge einen beliebigen MCP-Server per Befehl oder Adresse hinzu. Seine Schlüssel liegen im Tresor.", parts: "Ein Schalter pro Verbindung" },
     ],
+    addonsTitle: "Erweiterungen",
+    addonsIntro: "Zusätzliche Fähigkeiten, die du hinzufügst, wenn du sie brauchst. Jede ist ein eigenes Programm: Die Kopie, mit der Vunemi getestet wurde, wird einmal von Vunemis eigener Release-Seite geladen und vor der Installation geprüft. Sie laufen auf diesem Mac ohne Netzzugriff und sehen nur die Dateien, die Vunemi ihnen gibt. Die Programme sind die Craft-Apps des ArtCraft-Teams, Open Source unter MIT oder Apache-2.0. Sie sind jung: Ergebnisse können von Word, Excel oder PowerPoint abweichen.",
+    addonsWhy: "Auch ohne Erweiterung liest Vunemi Word- und PDF-Dokumente, wandelt Dateien in andere Formate um und arbeitet über Word, Excel oder PowerPoint, wenn sie auf deinem Mac installiert sind. Erweiterungen gehen weiter: Vunemi erzeugt die Datei selbst, ganz ohne Office. Summen in einer Tabelle sind echte Formeln, die ein Tabellenprogramm berechnet, und keine Zahlen, die das Modell ausgerechnet hat; eine Präsentation hat echte Folien und Diagramme; Fotos und Videos werden bearbeitet, nicht nur umgewandelt. Jedes Werkzeug erzeugt eine neue Datei und ändert nie die, die du ihm gegeben hast.",
+    addons: [
+      { name: "Dokumente", body: "Schreibt Berichte, Briefe und Notizen als Word- oder PDF-Datei, mit Überschriften, Listen und Tabellen, je nach Region auf A4 oder Letter. Wandelt ein vorhandenes Dokument in ein anderes Format um, zum Beispiel Word in PDF." },
+      { name: "Tabellen", body: "Legt aus deinen Zahlen eine Excel-Arbeitsmappe an. Summen, Durchschnitte und Prozentwerte werden als Formeln geschrieben und vom Programm berechnet; änderst du später in Excel eine Zahl, ändert sich die Summe mit. Kann ein Säulen-, Balken-, Linien- oder Kreisdiagramm hinzufügen." },
+      { name: "Präsentationen", body: "Baut eine PowerPoint-Präsentation Folie für Folie: Titelfolie, Abschnittsüberschriften, Folien mit wenigen kurzen Zeilen, Diagramme und Sprechernotizen, in einem von acht Designs." },
+      { name: "PDF-Werkzeuge", body: "Fügt PDFs zu einer Datei zusammen, zieht ausgewählte Seiten in eine neue Datei, dreht Seiten, macht aus Bildern ein PDF und listet die Felder eines Formulars auf und füllt sie aus. Passwortgeschützte PDFs öffnet es nicht." },
+      { name: "Zeichnen", body: "Zeichnet ein Plakat, eine Karte, ein Logo oder ein Diagramm und sichert es als PNG oder PDF. Das Modell beschreibt die Zeichnung, das Programm rendert sie; wie sie aussieht, hängt vom Modell ab." },
+      { name: "Fotobearbeitung", body: "Schneidet ein Bild auf ein Format wie 1:1 oder 16:9 zu, dreht, spiegelt und skaliert es, korrigiert die Tonwerte automatisch, passt Helligkeit, Kontrast und Sättigung an, schärft oder zeichnet weich und sichert es als JPEG, PNG, WebP oder TIFF. Liest HEIC-Fotos vom iPhone. Objekte oder Hintergründe kann es nicht entfernen. Das Programm dahinter ist PhotoCraft, eine quelloffene Bildbearbeitung." },
+      { name: "Videoschnitt", body: "Schneidet Clips in der Reihenfolge zusammen, die du angibst, und kürzt jeden einzelnen. Fügt Titel, ins Bild eingebrannte Untertitel, leise Hintergrundmusik und Überblendungen zwischen den Clips hinzu und exportiert dann ein MP4 von bis zu 30 Minuten. Das Programm dahinter ist FilmCraft, ein quelloffenes Videoschnittprogramm." },
+    ],
     safetyTitle: "Sicherheit und Kontrolle",
     safety: [
       { title: "Berechtigungsstufen", body: "Vier Voreinstellungen von „Zusehen und vorschlagen“ bis „Selbstständig handeln“, dazu eine Einstellung pro Art von Aktion. Finanzielle Aktionen sind immer aus." },
@@ -168,9 +181,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Kalender: Haben zwei deiner Konten einen Kalender oder eine Erinnerungsliste mit demselben Namen, fragt Vunemi nach, bevor etwas hinzugefügt wird. Ein Termin oder eine Erinnerung, die du nach dem Löschen zurückholst, kommt wieder in den Kalender, aus dem sie stammt. Verbindungen zeigt jetzt die Konten, aus denen deine Kalender stammen.",
-      "Ist die Datei mit deinen Automationen beschädigt, startet Vunemi trotzdem: Die Datei wird beiseitegelegt, und die Liste beginnt leer.",
-      "Sprachdateien, die von einem Sprachchat übrig geblieben sind, werden gelöscht, sobald Vunemi das nächste Mal spricht. Die App läuft jetzt auf Electron 44.",
+      "Erweiterungen: zusätzliche Werkzeuge, die du unter Einstellungen › Erweiterungen lädst, wenn du sie brauchst. Damit kann Vunemi ein Word- oder PDF-Dokument schreiben, eine Excel-Tabelle mit Formeln und Diagramm anlegen, eine PowerPoint-Präsentation bauen, PDFs zusammenfügen, teilen und drehen und ihre Formulare ausfüllen, ein Plakat zeichnen, ein Foto bearbeiten und ein kurzes Video schneiden. Jedes Werkzeug erzeugt eine neue Datei und zeigt sie im Chat.",
+      "Jede Erweiterung ist ein eigenes Open-Source-Programm des ArtCraft-Teams. Vunemi lädt die Kopie, mit der es getestet wurde, von seiner eigenen Release-Seite, prüft sie vor der Installation und führt sie ohne Netzwerkzugriff aus; das Programm sieht nur die Dateien, die Vunemi ihm gibt. Das Ergebnis kann von Word, Excel oder PowerPoint abweichen.",
+      "Schreibt ein Modell einen Dateipfad in einen Benutzerordner, den es auf deinem Mac nicht gibt, nennt Vunemi jetzt den richtigen Pfad, statt nur abzulehnen.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

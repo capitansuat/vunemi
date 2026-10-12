@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.19'in yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.1.20'nin yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.19'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.1.20'yi Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -65,6 +65,7 @@ export default {
       { title: "Söylediklerini hatırlar", body: "Nasıl çalışmayı sevdiğini ya da kimin kim olduğunu söyle; onay verdiğinde bunu kendi sözlerinle not eder. Her yanıt hangi notların verildiğini gösterir; notları Ayarlar'da düzenleyip silebilirsin.", example: "Hatırla: raporları PDF olarak isterim." },
       { title: "Toplantıyı kaydet", body: "Kaydet düğmesi mikrofonunu ve Mac sesini kaydeder. Vunemi dökümü ve özeti bu Mac’te oluşturur; özet başarıyla tamamlanınca ses dosyalarını Çöp’e taşır. macOS 14.2 veya sonrası gerekir.", example: "Bu toplantıyı kaydet." },
       { title: "Önceki işi getir", body: "@ yazıp önceki bir oturumu ya da toplantıyı seç. Oturumun soruları ve yanıtları ya da toplantının özeti mesajınla birlikte gider; bir mesaja en çok beş tane.", example: "@Roma gezisi'nde hangi oteli seçmiştik?" },
+      { title: "Belge hazırla, fotoğraf ve video düzenle", body: "İstediğinde indirdiğin eklentilerle Vunemi Word ve PDF belgeleri yazar, formüllü ve grafikli Excel tabloları yapar, PowerPoint sunumları hazırlar, PDF'leri birleştirip ayırır, fotoğraf düzenler ve kısa videolar kurgular. Her sonuç yeni bir dosyadır.", example: "Bu fotoğrafı kare kırp ve biraz aydınlat." },
     ],
   },
   screens: {
@@ -117,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.1.19: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.1.20: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -146,6 +147,18 @@ export default {
       { name: "Geçmiş", body: "Bir istek eski bir oturumla ya da kayıtlı bir toplantıyla ilgiliyse onu bulur. Her istekle yalnız en uygun birkaçının adı, tarihi ve tek satırı gider; Vunemi gerekirse birini okur. Hiçbir şey Mac'inden çıkmaz.", parts: "Bulma ve okuma" },
       { name: "Kendi bağlantıların", body: "Komutla veya adresle istediğin MCP sunucusunu ekle. Anahtarları Kasa'da tutulur.", parts: "Her bağlantı için ayrı anahtar" },
     ],
+    addonsTitle: "Eklentiler",
+    addonsIntro: "İstediğinde eklediğin ek yetenekler. Her biri ayrı bir programdır: Vunemi'nin denediği kopya, Vunemi'nin kendi sürüm sayfasından bir kez indirilir ve kurulmadan önce doğrulanır. Bu Mac'te ağ erişimi olmadan çalışırlar ve yalnız Vunemi'nin verdiği dosyaları görürler. Programlar ArtCraft ekibinin Craft uygulamalarıdır; MIT ya da Apache-2.0 lisanslı açık kaynak. Henüz gençler: sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
+    addonsWhy: "Eklenti olmadan da Vunemi Word ve PDF belgelerini okur, dosyaları bir biçimden ötekine çevirir ve Mac'inde kuruluysa Word, Excel ya da PowerPoint üzerinden çalışır. Eklentiler bunun ötesine geçer: Vunemi dosyayı kendisi üretir, Office gerekmez. Tablodaki toplamlar modelin hesapladığı sayılar değil, bir tablo programının hesapladığı gerçek formüllerdir; sunumda gerçek slaytlar ve grafikler olur; fotoğraf ve videolar yalnızca dönüştürülmez, düzenlenir. Her araç yeni bir dosya üretir, verdiğin dosyayı değiştirmez.",
+    addons: [
+      { name: "Belgeler", body: "Rapor, mektup ve notları başlıklar, listeler ve tablolarla Word ya da PDF dosyası olarak yazar; kâğıt boyutu bölgene göre A4 ya da Letter olur. Var olan bir belgeyi başka biçime çevirir, örneğin Word'den PDF'e." },
+      { name: "Tablolar", body: "Verdiğin sayılardan bir Excel çalışma kitabı hazırlar. Toplam, ortalama ve yüzdeler formül olarak yazılır ve program tarafından hesaplanır; sonradan Excel'de bir sayıyı değiştirirsen toplam da değişir. Sütun, çubuk, çizgi ya da pasta grafiği ekleyebilir." },
+      { name: "Sunumlar", body: "PowerPoint sunumunu slayt slayt kurar: açılış slaydı, bölüm başlıkları, birkaç kısa satırlı slaytlar, grafikler ve konuşmacı notları; sekiz temadan biriyle." },
+      { name: "PDF araçları", body: "PDF'leri tek dosyada birleştirir, seçtiğin sayfaları yeni bir dosyaya çıkarır, sayfaları döndürür, resimlerden PDF yapar, bir formun alanlarını listeler ve doldurur. Parola korumalı PDF'leri açmaz." },
+      { name: "Çizim", body: "Afiş, kart, logo ya da şema çizer ve PNG ya da PDF olarak kaydeder. Çizimi model tarif eder, program çizer; nasıl göründüğü modele bağlıdır." },
+      { name: "Fotoğraf düzenleme", body: "Resmi 1:1 ya da 16:9 gibi bir orana kırpar, döndürür, çevirir ve yeniden boyutlandırır; tonu otomatik düzeltir, parlaklık, kontrast ve doygunluğu ayarlar, keskinleştirir ya da bulanıklaştırır; JPEG, PNG, WebP ya da TIFF olarak kaydeder. iPhone'un HEIC fotoğraflarını okur. Nesne ya da arka plan silemez. Arkasındaki program açık kaynak görüntü düzenleyici PhotoCraft'tır." },
+      { name: "Video kurgu", body: "Klipleri verdiğin sırayla birleştirir ve her birini kırpar. Başlık, görüntüye işlenen altyazı, kısık sesli arka plan müziği ve klipler arasında geçiş ekler; ardından en çok 30 dakikalık bir MP4 çıkarır. Arkasındaki program açık kaynak video düzenleyici FilmCraft'tır." },
+    ],
     safetyTitle: "Güvenlik ve kontrol",
     safety: [
       { title: "İzin seviyeleri", body: "İzle ve öner'den Kendi başına yap'a dört hazır ayar, ayrıca her işlem türü için ayrı seçim. Parayla ilgili işlemler her zaman kapalı." },
@@ -170,9 +183,9 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Takvim: iki hesabında aynı adlı takvim ya da anımsatıcı listesi varsa Vunemi bir şey eklemeden önce hangisi olduğunu sorar. Silip geri aldığın etkinlik ya da anımsatıcı geldiği takvime döner. Bağlantılar artık takvimlerinin geldiği hesapları listeler.",
-      "Otomasyonlarını tutan dosya bozulursa Vunemi yine açılır: dosyayı kenara alır ve boş bir listeyle başlar.",
-      "Sesli sohbetten artakalan ses dosyaları Vunemi bir sonraki konuşmasında silinir. Uygulama artık Electron 44 üzerinde çalışır.",
+      "Eklentiler: istediğinde Ayarlar › Eklentiler'den indirdiğin ek araçlar. Bunlarla Vunemi Word ya da PDF belgesi yazabilir, formüllü ve grafikli Excel tablosu yapabilir, PowerPoint sunumu hazırlayabilir, PDF'leri birleştirip ayırabilir, döndürebilir ve formlarını doldurabilir, afiş çizebilir, fotoğraf düzenleyebilir ve kısa bir video kurgulayabilir. Her araç yeni bir dosya üretir ve onu sohbette gösterir.",
+      "Her eklenti, ArtCraft ekibinin ayrı bir açık kaynak programıdır. Vunemi, denediği kopyayı kendi sürüm sayfasından indirir, kurmadan önce doğrular ve ağ erişimi olmadan çalıştırır; program yalnız Vunemi'nin verdiği dosyaları görür. Sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
+      "Model, Mac'inde olmayan bir ev klasörünün altına dosya yolu yazarsa Vunemi artık yalnızca reddetmek yerine doğru yolu söyler.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

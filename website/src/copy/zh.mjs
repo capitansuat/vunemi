@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.19 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.1.20 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.19，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.1.20，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -65,6 +65,7 @@ export default {
       { title: "记住你说过的话", body: "告诉它你喜欢的工作方式，或谁是谁；经你同意后，它会用你的原话记下来。每个回答都会显示它收到了哪些笔记；你可以在设置中编辑或删除。", example: "记住：我要 PDF 格式的报告。" },
       { title: "录制会议", body: "点击“录制”以采集麦克风和 Mac 声音。Vunemi 在此 Mac 上生成文字记录和摘要；摘要完成后将音频移入废纸篓。需要 macOS 14.2 或更高版本。", example: "录制这场会议。" },
       { title: "带入之前的工作", body: "输入 @，选择之前的会话或会议。其中的提问和回答，或会议的摘要，会随消息一起发送；每条消息最多五个。", example: "我们在 @罗马之行 里选了哪家酒店？" },
+      { title: "制作文档，编辑照片和视频", body: "借助需要时再下载的扩展，Vunemi 可以撰写 Word 和 PDF 文档，制作带公式和图表的 Excel 工作簿，制作 PowerPoint 演示文稿，合并和拆分 PDF，编辑照片，剪辑短视频。每个结果都是一个新文件。", example: "把这张照片裁成正方形，再调亮一点。" },
     ],
   },
   screens: {
@@ -117,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.1.19：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.1.20：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -146,6 +147,18 @@ export default {
       { name: "历史记录", body: "当请求涉及以前的会话或已录制的会议时找到它。每次请求只附上最相关的几项的名称、日期和一行说明；Vunemi 只在需要时阅读其中一项。任何内容都不会离开你的 Mac。", parts: "查找和阅读" },
       { name: "自定义连接", body: "通过命令或地址添加任意 MCP 服务器。它的密钥保存在保险库中。", parts: "每个连接一个开关" },
     ],
+    addonsTitle: "扩展",
+    addonsIntro: "需要时再添加的额外能力。每一项都是独立的程序：Vunemi 测试时所用的那份副本会从 Vunemi 自己的发布页面下载一次，并在安装前经过校验。它们在这台 Mac 上运行，无法访问网络，只能看到 Vunemi 交给它们的文件。 这些程序是 ArtCraft 团队的 Craft 应用，以 MIT 或 Apache-2.0 许可开源。它们还很新：结果可能与 Word、Excel 或 PowerPoint 不同。",
+    addonsWhy: "即使没有扩展，Vunemi 也能读取 Word 和 PDF 文档，在不同格式之间转换文件；如果你的 Mac 上装有 Word、Excel 或 PowerPoint，它还能通过这些应用工作。扩展更进一步：Vunemi 自己生成文件，不需要 Office。表格里的合计是由电子表格程序计算的真正公式，而不是模型算出来的数字；演示文稿有真正的幻灯片和图表；照片和视频可以编辑，而不只是转换格式。每个工具都会生成一个新文件，绝不改动你交给它的文件。",
+    addons: [
+      { name: "文档", body: "把报告、信件和笔记写成 Word 或 PDF 文件，带标题、列表和表格，并按你所在的地区使用 A4 或 Letter 纸张。还能把已有文档转换成其他格式，例如从 Word 转成 PDF。" },
+      { name: "电子表格", body: "根据你给的数字制作 Excel 工作簿。合计、平均值和百分比都写成公式并由程序计算：以后在 Excel 里改动一个数字，合计会随之更新。还可以添加柱形图、条形图、折线图或饼图。" },
+      { name: "演示文稿", body: "逐张制作 PowerPoint 演示文稿：标题页、章节标题、只有几行短句的幻灯片、图表和演讲者备注，可从八种主题中选用一种。" },
+      { name: "PDF 工具", body: "把多个 PDF 合并成一个，把选定的页面提取到新文件，旋转页面，用图片生成 PDF，列出并填写表单字段。不会打开受密码保护的 PDF。" },
+      { name: "绘图", body: "绘制海报、卡片、标志或示意图，并保存为 PNG 或 PDF。由模型描述图形、程序负责渲染，所以效果取决于模型。" },
+      { name: "照片编辑", body: "把图片裁剪成 1:1 或 16:9 等比例，旋转、翻转和调整大小，自动校正色调，调整亮度、对比度和饱和度，锐化或模糊，并保存为 JPEG、PNG、WebP 或 TIFF。可以读取 iPhone 的 HEIC 照片。不能移除物体或背景。背后的程序是开源图像编辑器 PhotoCraft。" },
+      { name: "视频剪辑", body: "按你给的顺序把片段拼接起来，并对每个片段进行裁剪。可以添加标题、烧录进画面的字幕、音量较低的背景音乐和片段之间的淡入淡出，然后导出最长 30 分钟的 MP4。背后的程序是开源视频编辑器 FilmCraft。" },
+    ],
     safetyTitle: "安全与掌控",
     safety: [
       { title: "权限级别", body: "从“观察并建议”到“自主执行”共四种预设，另外还可按操作类型分别设置。涉及资金的操作始终关闭。" },
@@ -168,9 +181,9 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "日历：如果你的两个账户里有同名的日历或提醒事项列表，Vunemi 会在添加之前先问是哪一个。删除后恢复的日程或提醒事项会回到它原来所在的日历。“连接”现在会列出日历所属的账户。",
-      "保存自动化的文件损坏时，Vunemi 仍能启动：它会把该文件放到一边，从空列表开始。",
-      "语音对话留下的语音文件会在 Vunemi 下次朗读时清除。应用现在基于 Electron 44 运行。",
+      "扩展：需要时在“设置 › 扩展”中下载的额外工具。有了它们，Vunemi 可以撰写 Word 或 PDF 文档，制作带公式和图表的 Excel 工作簿，制作 PowerPoint 演示文稿，合并、拆分和旋转 PDF 并填写其中的表单，绘制海报，编辑照片，剪辑短视频。每个工具都会生成一个新文件，并在对话中显示出来。",
+      "每个扩展都是 ArtCraft 团队的一个独立开源程序。Vunemi 从自己的发布页面下载经过测试的那一份，安装前先校验，并在没有网络访问的情况下运行；程序只能看到 Vunemi 交给它的文件。结果可能与 Word、Excel 或 PowerPoint 不同。",
+      "如果模型把文件路径写在你的 Mac 上并不存在的个人文件夹下，Vunemi 现在会给出正确的路径，而不只是拒绝。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

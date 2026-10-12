@@ -34,6 +34,7 @@ const icons = [
   '<path d="M12 20c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8Z"/><path d="M9 9h6M9 12h6M9 15h4"/>',
   '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>',
   '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>',
+  '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/>',
 ];
 const svg = (paths, size = 24) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 const lockIcon = '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>';
@@ -182,6 +183,8 @@ function features(t, lang) {
 <section class="section" aria-labelledby="chat-title"><h2 id="chat-title" class="section-title">${esc(f.chatTitle)}</h2><div class="detail-grid">${items(f.chat)}</div></section>
 <section class="section" aria-labelledby="conn-title"><h2 id="conn-title" class="section-title">${esc(f.connTitle)}</h2><p class="section-intro">${esc(f.connIntro)}</p>
 <dl class="conn-list">${f.connections.map((c) => `<div><dt>${esc(c.name)}</dt><dd><p>${esc(c.body)}</p><p class="parts"><span>${esc(f.partsLabel)}:</span> ${esc(c.parts)}</p></dd></div>`).join("")}</dl></section>
+<section class="section" aria-labelledby="addons-title"><h2 id="addons-title" class="section-title">${esc(f.addonsTitle)}</h2><p class="section-intro">${esc(f.addonsIntro)}</p><p class="section-intro">${esc(f.addonsWhy)}</p>
+<dl class="conn-list">${f.addons.map((a) => `<div><dt>${esc(a.name)}</dt><dd><p>${esc(a.body)}</p></dd></div>`).join("")}</dl></section>
 <section class="section" aria-labelledby="safety-title"><h2 id="safety-title" class="section-title">${esc(f.safetyTitle)}</h2><div class="detail-grid">${items(f.safety)}</div></section>
 ${neverSection(t)}
 <section class="section"><div class="detail-grid two">${items(f.extras)}</div></section>
