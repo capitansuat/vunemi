@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.20 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.1.21 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.20 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.1.21 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.1.20 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.1.21 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -153,11 +153,11 @@ export default {
     addonsIntro: "Extra abilities you add when you want them. Each is a separate program: the copy Vunemi was tested with is downloaded once from Vunemi's own release page and checked before it is installed. They run on this Mac without network access and see only the files Vunemi hands them. The programs are the ArtCraft team's Craft apps, open source under MIT or Apache-2.0. They are young: results can differ from Word, Excel or PowerPoint.",
     addonsWhy: "Without an add-on, Vunemi already reads Word and PDF documents, converts files between formats, and works through Word, Excel or PowerPoint if they are installed on your Mac. Add-ons go further: Vunemi makes the file itself, with no Office needed. Totals in a spreadsheet are real formulas that a spreadsheet program calculates, not numbers the model worked out; a deck has real slides and charts; photos and videos are edited, not only converted. Every tool makes a new file and never changes the one it was given.",
     addons: [
-      { name: "Documents", body: "Writes reports, letters and notes as a Word or PDF file, with headings, lists and tables, on A4 or Letter paper to suit your region. Converts an existing document to another format, such as Word to PDF." },
+      { name: "Documents", body: "Writes reports, letters and notes as a Word or PDF file, with headings, lists and tables, on A4 or Letter paper to suit your region. Converts an existing document to another format, such as Word to PDF. Changes text in an existing Word document, such as a date, a price or a name: the change is made in a copy that keeps the original's formatting, so a small correction no longer means writing the whole file again." },
       { name: "Spreadsheets", body: "Makes an Excel workbook from your numbers. Totals, averages and percentages are written as formulas and calculated by the program, so change a number in Excel later and the total follows. Can add a column, bar, line or pie chart." },
-      { name: "Presentations", body: "Builds a PowerPoint deck slide by slide: an opening slide, section headers, slides with a few short lines, charts and speaker notes, in one of eight themes." },
+      { name: "Presentations", body: "Builds a PowerPoint deck slide by slide: an opening slide, section headers, slides with a few short lines, charts and speaker notes, in one of eight themes. Reads an existing deck and makes a changed copy of it: new wording on a slide, a slide removed, a new slide after the one you name. Text inside tables and charts is not changed." },
       { name: "PDF tools", body: "Joins PDFs into one, takes chosen pages out into a new file, rotates pages, turns pictures into a PDF, and lists and fills in a form's fields. It does not open password-protected PDFs." },
-      { name: "Drawing", body: "Draws a poster, card, logo or diagram and saves it as PNG or PDF. The model describes the drawing and the program renders it, so how it looks depends on the model." },
+      { name: "Drawing", body: "Draws a poster, card, logo or diagram and saves it as PNG, PDF or SVG. An SVG keeps its shapes and text editable, so you can go on working on it in a drawing program. The model describes the drawing and the program renders it, so how it looks depends on the model." },
       { name: "Photo editing", body: "Crops to a shape such as 1:1 or 16:9, rotates, flips and resizes a picture, fixes tone automatically, adjusts brightness, contrast and saturation, sharpens or blurs, and saves it as JPEG, PNG, WebP or TIFF. Reads iPhone HEIC photos. It cannot remove objects or backgrounds. The program behind it is PhotoCraft, an open-source image editor." },
       { name: "Video editing", body: "Cuts clips together in the order you give and trims each one. Adds titles, captions drawn into the picture, quiet background music and cross-fades between clips, then exports an MP4 of up to 30 minutes. The program behind it is FilmCraft, an open-source video editor." },
     ],
@@ -185,11 +185,11 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "Add-ons: extra tools you download in Settings › Add-ons when you want them. Each tool makes a new file and shows it in the chat.",
-      "With them Vunemi can write a Word or PDF document, make an Excel workbook with formulas and a chart, build a PowerPoint deck, join, split and rotate PDFs and fill in their forms, draw a poster, edit a photo and cut a short video.",
-      "Each add-on is a separate open-source program from the ArtCraft team. Vunemi downloads the copy it was tested with from its own release page, checks it before installing, and runs it without network access; it sees only the files Vunemi hands it.",
-      "Results can differ from Word, Excel or PowerPoint.",
-      "If a model writes a file path under a home folder that isn't on your Mac, Vunemi now answers with the right path instead of only refusing.",
+      "The Documents and Presentations add-ons can now change a file you already have. Until now they could only write one from scratch, so a small correction meant writing the whole document or deck again.",
+      "Documents: Vunemi changes text in an existing Word document, such as a date, a price or a name. The change is made in a copy that keeps the original's formatting; your file is not touched.",
+      "Presentations: Vunemi reads an existing PowerPoint deck and makes a changed copy: new wording on a slide, a slide removed, a new slide after the one you name. Text inside tables and charts is not changed.",
+      "Drawing: a drawing can be saved as SVG, which keeps its shapes and text editable in a drawing program.",
+      "If a text you asked to change is not in the file, nothing is made and Vunemi says so. How well a request is carried out depends on the model.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],

@@ -1,95 +1,95 @@
 {
-  "currentRelease": "0.1.20",
+  "currentRelease": "0.1.21",
   "releases": [
     {
-      "version": "0.1.20",
+      "version": "0.1.21",
       "updateTo": {
-        "version": "0.1.20",
-        "name": "Vunemi 0.1.20",
+        "version": "0.1.21",
+        "name": "Vunemi 0.1.21",
         "pub_date": "2026-10-12T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.20/Vunemi-0.1.20-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.1.21/Vunemi-0.1.21-arm64.zip"
       }
     }
   ],
   "sizeMb": 143,
   "notes": {
     "en": [
-      "Add-ons: extra tools you download in Settings › Add-ons when you want them. Each tool makes a new file and shows it in the chat.",
-      "With them Vunemi can write a Word or PDF document, make an Excel workbook with formulas and a chart, build a PowerPoint deck, join, split and rotate PDFs and fill in their forms, draw a poster, edit a photo and cut a short video.",
-      "Each add-on is a separate open-source program from the ArtCraft team. Vunemi downloads the copy it was tested with from its own release page, checks it before installing, and runs it without network access; it sees only the files Vunemi hands it.",
-      "Results can differ from Word, Excel or PowerPoint.",
-      "If a model writes a file path under a home folder that isn't on your Mac, Vunemi now answers with the right path instead of only refusing."
+      "The Documents and Presentations add-ons can now change a file you already have. Until now they could only write one from scratch, so a small correction meant writing the whole document or deck again.",
+      "Documents: Vunemi changes text in an existing Word document, such as a date, a price or a name. The change is made in a copy that keeps the original's formatting; your file is not touched.",
+      "Presentations: Vunemi reads an existing PowerPoint deck and makes a changed copy: new wording on a slide, a slide removed, a new slide after the one you name. Text inside tables and charts is not changed.",
+      "Drawing: a drawing can be saved as SVG, which keeps its shapes and text editable in a drawing program.",
+      "If a text you asked to change is not in the file, nothing is made and Vunemi says so. How well a request is carried out depends on the model."
     ],
     "de": [
-      "Erweiterungen: zusätzliche Werkzeuge, die du unter Einstellungen › Erweiterungen lädst, wenn du sie brauchst. Jedes Werkzeug erzeugt eine neue Datei und zeigt sie im Chat.",
-      "Damit kann Vunemi ein Word- oder PDF-Dokument schreiben, eine Excel-Tabelle mit Formeln und Diagramm anlegen, eine PowerPoint-Präsentation bauen, PDFs zusammenfügen, teilen und drehen und ihre Formulare ausfüllen, ein Plakat zeichnen, ein Foto bearbeiten und ein kurzes Video schneiden.",
-      "Jede Erweiterung ist ein eigenes Open-Source-Programm des ArtCraft-Teams. Vunemi lädt die Kopie, mit der es getestet wurde, von seiner eigenen Release-Seite, prüft sie vor der Installation und führt sie ohne Netzwerkzugriff aus; das Programm sieht nur die Dateien, die Vunemi ihm gibt.",
-      "Das Ergebnis kann von Word, Excel oder PowerPoint abweichen.",
-      "Schreibt ein Modell einen Dateipfad in einen Benutzerordner, den es auf deinem Mac nicht gibt, nennt Vunemi jetzt den richtigen Pfad, statt nur abzulehnen."
+      "Die Erweiterungen Dokumente und Präsentationen können jetzt eine Datei ändern, die du schon hast. Bisher konnten sie nur eine Datei von Grund auf schreiben; für eine kleine Korrektur musste das ganze Dokument oder die ganze Präsentation neu geschrieben werden.",
+      "Dokumente: Vunemi ändert Text in einem vorhandenen Word-Dokument, zum Beispiel ein Datum, einen Preis oder einen Namen. Die Änderung landet in einer Kopie, die die Formatierung des Originals behält; deine Datei bleibt unberührt.",
+      "Präsentationen: Vunemi liest eine vorhandene PowerPoint-Präsentation und erstellt eine geänderte Kopie: neuer Text auf einer Folie, eine Folie entfernt, eine neue Folie nach der, die du nennst. Text in Tabellen und Diagrammen wird nicht geändert.",
+      "Zeichnen: Eine Zeichnung lässt sich als SVG sichern; Formen und Text bleiben in einem Zeichenprogramm bearbeitbar.",
+      "Steht ein Text, den du ändern lassen willst, nicht in der Datei, wird nichts erstellt, und Vunemi sagt es dir. Wie gut eine Anfrage umgesetzt wird, hängt vom Modell ab."
     ],
     "es": [
-      "Complementos: herramientas extra que descargas en Ajustes › Complementos cuando las necesitas. Cada herramienta crea un archivo nuevo y lo muestra en el chat.",
-      "Con ellos Vunemi puede escribir un documento de Word o PDF, crear un libro de Excel con fórmulas y un gráfico, preparar una presentación de PowerPoint, unir, dividir y girar archivos PDF y rellenar sus formularios, dibujar un cartel, editar una foto y montar un vídeo corto.",
-      "Cada complemento es un programa de código abierto independiente del equipo de ArtCraft. Vunemi descarga de su propia página de versiones la copia con la que se probó, la comprueba antes de instalarla y la ejecuta sin acceso a la red; el programa solo ve los archivos que Vunemi le entrega.",
-      "El resultado puede diferir del de Word, Excel o PowerPoint.",
-      "Si un modelo escribe una ruta de archivo dentro de una carpeta de usuario que no existe en tu Mac, Vunemi ahora responde con la ruta correcta en lugar de limitarse a rechazarla."
+      "Los complementos Documentos y Presentaciones ya pueden cambiar un archivo que ya tienes. Hasta ahora solo podían escribir un archivo desde cero, así que una pequeña corrección obligaba a escribir de nuevo todo el documento o la presentación.",
+      "Documentos: Vunemi cambia texto en un documento de Word existente, por ejemplo una fecha, un precio o un nombre. El cambio se hace en una copia que conserva el formato del original; tu archivo no se toca.",
+      "Presentaciones: Vunemi lee una presentación de PowerPoint existente y crea una copia modificada: texto nuevo en una diapositiva, una diapositiva eliminada, una nueva después de la que indiques. El texto de tablas y gráficos no se cambia.",
+      "Dibujo: un dibujo se puede guardar como SVG; sus formas y su texto siguen siendo editables en un programa de dibujo.",
+      "Si un texto que pediste cambiar no está en el archivo, no se crea nada y Vunemi te lo dice. Lo bien que se cumple una petición depende del modelo."
     ],
     "fr": [
-      "Extensions : des outils supplémentaires que vous téléchargez dans Réglages › Extensions quand vous en avez besoin. Chaque outil crée un nouveau fichier et l'affiche dans la conversation.",
-      "Avec elles, Vunemi peut rédiger un document Word ou PDF, créer un classeur Excel avec des formules et un graphique, préparer une présentation PowerPoint, fusionner, scinder et faire pivoter des PDF et remplir leurs formulaires, dessiner une affiche, retoucher une photo et monter une courte vidéo.",
-      "Chaque extension est un programme open source distinct de l'équipe ArtCraft. Vunemi télécharge depuis sa propre page de version la copie avec laquelle il a été testé, la vérifie avant de l'installer et l'exécute sans accès au réseau ; le programme ne voit que les fichiers que Vunemi lui confie.",
-      "Le résultat peut différer de celui de Word, Excel ou PowerPoint.",
-      "Si un modèle écrit un chemin de fichier dans un dossier personnel qui n'existe pas sur votre Mac, Vunemi indique désormais le bon chemin au lieu de simplement refuser."
+      "Les extensions Documents et Présentations peuvent désormais modifier un fichier que vous avez déjà. Jusqu'ici, elles ne savaient qu'écrire un fichier à partir de zéro : une petite correction obligeait à réécrire tout le document ou toute la présentation.",
+      "Documents : Vunemi modifie le texte d'un document Word existant, par exemple une date, un prix ou un nom. La modification est faite dans une copie qui conserve la mise en forme de l'original ; votre fichier n'est pas touché.",
+      "Présentations : Vunemi lit une présentation PowerPoint existante et en produit une copie modifiée : nouveau texte sur une diapositive, diapositive supprimée, nouvelle diapositive après celle que vous indiquez. Le texte des tableaux et des graphiques n'est pas modifié.",
+      "Dessin : un dessin peut être enregistré en SVG ; ses formes et son texte restent modifiables dans un logiciel de dessin.",
+      "Si un texte à modifier ne figure pas dans le fichier, rien n'est créé et Vunemi vous le dit. La qualité du résultat dépend du modèle."
     ],
     "it": [
-      "Componenti aggiuntivi: strumenti in più che scarichi da Impostazioni › Componenti aggiuntivi quando ti servono. Ogni strumento crea un nuovo file e lo mostra nella chat.",
-      "Con questi Vunemi può scrivere un documento Word o PDF, creare una cartella di lavoro Excel con formule e un grafico, preparare una presentazione PowerPoint, unire, dividere e ruotare i PDF e compilarne i moduli, disegnare una locandina, ritoccare una foto e montare un breve video.",
-      "Ogni componente aggiuntivo è un programma open source separato del team ArtCraft. Vunemi scarica dalla propria pagina delle versioni la copia con cui è stato provato, la verifica prima di installarla e la esegue senza accesso alla rete; il programma vede solo i file che Vunemi gli passa.",
-      "Il risultato può essere diverso da quello di Word, Excel o PowerPoint.",
-      "Se un modello scrive un percorso di file dentro una cartella utente che sul tuo Mac non esiste, Vunemi ora risponde con il percorso giusto invece di limitarsi a rifiutare."
+      "I componenti aggiuntivi Documenti e Presentazioni ora possono modificare un file che hai già. Finora potevano solo scrivere un file da zero, quindi per una piccola correzione bisognava riscrivere tutto il documento o la presentazione.",
+      "Documenti: Vunemi cambia il testo in un documento Word esistente, per esempio una data, un prezzo o un nome. La modifica avviene in una copia che mantiene la formattazione dell'originale; il tuo file non viene toccato.",
+      "Presentazioni: Vunemi legge una presentazione PowerPoint esistente e ne crea una copia modificata: nuovo testo in una diapositiva, una diapositiva eliminata, una nuova dopo quella che indichi. Il testo in tabelle e grafici non viene modificato.",
+      "Disegno: un disegno può essere salvato in SVG; forme e testo restano modificabili in un programma di disegno.",
+      "Se un testo da cambiare non si trova nel file, non viene creato nulla e Vunemi te lo dice. Quanto bene viene eseguita una richiesta dipende dal modello."
     ],
     "tr": [
-      "Eklentiler: istediğinde Ayarlar › Eklentiler'den indirdiğin ek araçlar. Her araç yeni bir dosya üretir ve onu sohbette gösterir.",
-      "Bunlarla Vunemi Word ya da PDF belgesi yazabilir, formüllü ve grafikli Excel tablosu yapabilir, PowerPoint sunumu hazırlayabilir, PDF'leri birleştirip ayırabilir, döndürebilir ve formlarını doldurabilir, afiş çizebilir, fotoğraf düzenleyebilir ve kısa bir video kurgulayabilir.",
-      "Her eklenti, ArtCraft ekibinin ayrı bir açık kaynak programıdır. Vunemi, denediği kopyayı kendi sürüm sayfasından indirir, kurmadan önce doğrular ve ağ erişimi olmadan çalıştırır; program yalnız Vunemi'nin verdiği dosyaları görür.",
-      "Sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
-      "Model, Mac'inde olmayan bir ev klasörünün altına dosya yolu yazarsa Vunemi artık yalnızca reddetmek yerine doğru yolu söyler."
+      "Belgeler ve Sunumlar eklentileri artık elindeki dosyayı değiştirebiliyor. Şimdiye kadar yalnızca sıfırdan dosya yazabiliyorlardı; küçük bir düzeltme için belgenin ya da sunumun baştan yazılması gerekiyordu.",
+      "Belgeler: Vunemi var olan bir Word belgesinde metni değiştirir, örneğin bir tarihi, fiyatı ya da adı. Değişiklik, özgün biçimi koruyan bir kopyada yapılır; senin dosyana dokunulmaz.",
+      "Sunumlar: Vunemi var olan bir PowerPoint sunumunu okur ve değiştirilmiş bir kopyasını çıkarır: bir slayttaki metin değişir, bir slayt silinir, adını verdiğin slayttan sonra yenisi eklenir. Tablo ve grafik içindeki metin değişmez.",
+      "Çizim: çizim SVG olarak kaydedilebilir; şekiller ve yazılar bir çizim programında düzenlenebilir kalır.",
+      "Değiştirmesini istediğin metin dosyada yoksa hiçbir dosya üretilmez ve Vunemi bunu söyler. İsteğin ne kadar iyi yerine getirildiği modele bağlıdır."
     ],
     "pt": [
-      "Complementos: ferramentas extras que você baixa em Ajustes › Complementos quando quiser. Cada ferramenta cria um arquivo novo e o mostra na conversa.",
-      "Com eles, o Vunemi pode escrever um documento do Word ou PDF, criar uma planilha do Excel com fórmulas e um gráfico, montar uma apresentação do PowerPoint, juntar, dividir e girar PDFs e preencher seus formulários, desenhar um cartaz, editar uma foto e montar um vídeo curto.",
-      "Cada complemento é um programa de código aberto separado, da equipe ArtCraft. O Vunemi baixa da própria página de versões a cópia com que foi testado, verifica antes de instalar e executa sem acesso à rede; o programa só vê os arquivos que o Vunemi entrega a ele.",
-      "O resultado pode ser diferente do Word, do Excel ou do PowerPoint.",
-      "Se um modelo escrever um caminho de arquivo dentro de uma pasta de usuário que não existe no seu Mac, o Vunemi agora responde com o caminho certo em vez de apenas recusar."
+      "Os complementos Documentos e Apresentações agora podem alterar um arquivo que você já tem. Até agora eles só escreviam um arquivo do zero, então uma pequena correção exigia escrever o documento ou a apresentação inteira de novo.",
+      "Documentos: o Vunemi altera texto em um documento do Word existente, por exemplo uma data, um preço ou um nome. A alteração é feita em uma cópia que mantém a formatação do original; o seu arquivo não é tocado.",
+      "Apresentações: o Vunemi lê uma apresentação do PowerPoint existente e cria uma cópia alterada: texto novo em um slide, um slide removido, um novo slide depois daquele que você indicar. O texto dentro de tabelas e gráficos não é alterado.",
+      "Desenho: um desenho pode ser salvo em SVG; as formas e o texto continuam editáveis em um programa de desenho.",
+      "Se um texto que você pediu para alterar não estiver no arquivo, nada é criado e o Vunemi avisa. A qualidade do resultado depende do modelo."
     ],
     "ru": [
-      "Дополнения: дополнительные инструменты, которые вы загружаете в разделе «Настройки › Дополнения», когда они нужны. Каждый инструмент создаёт новый файл и показывает его в чате.",
-      "С ними Vunemi может написать документ Word или PDF, создать книгу Excel с формулами и диаграммой, подготовить презентацию PowerPoint, объединять, разделять и поворачивать PDF и заполнять их формы, нарисовать афишу, отредактировать фото и смонтировать короткое видео.",
-      "Каждое дополнение — отдельная программа с открытым исходным кодом от команды ArtCraft. Vunemi загружает со своей страницы релизов ту копию, с которой он был проверен, проверяет её перед установкой и запускает без доступа к сети; программа видит только те файлы, которые ей передаёт Vunemi.",
-      "Результат может отличаться от Word, Excel или PowerPoint.",
-      "Если модель указывает путь к файлу в домашней папке, которой нет на вашем Mac, Vunemi теперь сообщает правильный путь, а не просто отказывает."
+      "Дополнения «Документы» и «Презентации» теперь могут изменять файл, который у вас уже есть. Раньше они умели только создавать файл с нуля, и ради небольшой правки весь документ или презентацию приходилось писать заново.",
+      "Документы: Vunemi меняет текст в существующем документе Word, например дату, цену или имя. Изменение вносится в копию, которая сохраняет форматирование оригинала; ваш файл не затрагивается.",
+      "Презентации: Vunemi читает существующую презентацию PowerPoint и создаёт изменённую копию: новый текст на слайде, удалённый слайд, новый слайд после того, который вы назовёте. Текст в таблицах и диаграммах не меняется.",
+      "Рисование: рисунок можно сохранить в SVG; фигуры и текст остаются редактируемыми в графическом редакторе.",
+      "Если текста, который вы просили изменить, нет в файле, ничего не создаётся, и Vunemi сообщает об этом. Качество выполнения запроса зависит от модели."
     ],
     "zh": [
-      "扩展：需要时在“设置 › 扩展”中下载的额外工具。每个工具都会生成一个新文件，并在对话中显示出来。",
-      "有了它们，Vunemi 可以撰写 Word 或 PDF 文档，制作带公式和图表的 Excel 工作簿，制作 PowerPoint 演示文稿，合并、拆分和旋转 PDF 并填写其中的表单，绘制海报，编辑照片，剪辑短视频。",
-      "每个扩展都是 ArtCraft 团队的一个独立开源程序。Vunemi 从自己的发布页面下载经过测试的那一份，安装前先校验，并在没有网络访问的情况下运行；程序只能看到 Vunemi 交给它的文件。",
-      "结果可能与 Word、Excel 或 PowerPoint 不同。",
-      "如果模型把文件路径写在你的 Mac 上并不存在的个人文件夹下，Vunemi 现在会给出正确的路径，而不只是拒绝。"
+      "“文档”和“演示文稿”扩展现在可以修改你已有的文件。此前它们只能从头生成新文件，哪怕是小小的改动，也得把整个文档或演示文稿重写一遍。",
+      "文档：Vunemi 可以修改已有 Word 文档中的文字，例如日期、价格或姓名。修改写入一份保留原有格式的副本，你的原文件不会被改动。",
+      "演示文稿：Vunemi 可以读取已有的 PowerPoint 演示文稿并生成修改后的副本：修改某张幻灯片的文字、删除一张幻灯片、在你指定的幻灯片之后添加新的一张。表格和图表中的文字不会被修改。",
+      "绘图：图形可以保存为 SVG，其中的形状和文字仍可在绘图软件中编辑。",
+      "如果要修改的文字不在文件中，Vunemi 不会生成任何文件，并会告诉你。请求完成得好不好取决于模型。"
     ],
     "ja": [
-      "アドオン：必要なときに「設定 › アドオン」からダウンロードする追加ツールです。どのツールも新しいファイルを作り、チャットに表示します。",
-      "これにより Vunemi は、Word や PDF の書類の作成、数式とグラフ入りの Excel ブックの作成、PowerPoint プレゼンテーションの作成、PDF の結合・分割・回転とフォームへの入力、ポスターの描画、写真の編集、短い動画の編集ができます。",
-      "各アドオンは ArtCraft チームによる独立したオープンソースのプログラムです。Vunemi は、動作を確認したコピーを自身のリリースページからダウンロードし、インストール前に検証して、ネットワークにアクセスできない状態で実行します。プログラムに見えるのは Vunemi が渡したファイルだけです。",
-      "結果は Word、Excel、PowerPoint と異なる場合があります。",
-      "モデルが、この Mac に存在しないホームフォルダの下のファイルパスを書いた場合、Vunemi は拒否するだけでなく、正しいパスを伝えるようになりました。"
+      "「書類」と「プレゼンテーション」のアドオンが、お手元のファイルを変更できるようになりました。これまでは新しいファイルを一から作ることしかできず、小さな修正でも書類やプレゼンテーション全体を書き直す必要がありました。",
+      "書類：Vunemi が既存の Word 書類の文字（日付、金額、名前など）を書き換えます。変更は元の書式を保ったコピーに行い、元のファイルには手を加えません。",
+      "プレゼンテーション：Vunemi が既存の PowerPoint プレゼンテーションを読み取り、変更を加えたコピーを作ります。スライドの文言の変更、スライドの削除、指定したスライドの後ろへの追加ができます。表やグラフの中の文字は変更されません。",
+      "描画：図を SVG で保存できます。図形と文字は描画ソフトで編集できる状態で残ります。",
+      "変更を頼んだ文字がファイルに見つからない場合は、何も作らずにその旨をお伝えします。依頼がどの程度うまく実行されるかはモデルによって変わります。"
     ],
     "ko": [
-      "추가 기능: 필요할 때 설정 › 추가 기능에서 내려받는 추가 도구입니다. 각 도구는 새 파일을 만들어 대화에 보여 줍니다.",
-      "이를 통해 Vunemi는 Word 또는 PDF 문서를 작성하고, 수식과 차트가 있는 Excel 통합 문서를 만들고, PowerPoint 프레젠테이션을 만들고, PDF를 합치고 나누고 회전하고 양식을 채우고, 포스터를 그리고, 사진을 편집하고, 짧은 동영상을 편집할 수 있습니다.",
-      "각 추가 기능은 ArtCraft 팀이 만든 별도의 오픈 소스 프로그램입니다. Vunemi는 테스트를 마친 사본을 자체 릴리스 페이지에서 내려받아 설치 전에 검증하고, 네트워크 접근 없이 실행합니다. 프로그램은 Vunemi가 건넨 파일만 볼 수 있습니다.",
-      "결과는 Word, Excel, PowerPoint와 다를 수 있습니다.",
-      "모델이 이 Mac에 없는 홈 폴더 아래의 파일 경로를 쓰면, Vunemi는 이제 거부만 하지 않고 올바른 경로를 알려 줍니다."
+      "문서 및 프레젠테이션 추가 기능이 이제 이미 가지고 있는 파일을 변경할 수 있습니다. 지금까지는 파일을 처음부터 새로 쓰는 것만 가능해서, 작은 수정에도 문서나 프레젠테이션 전체를 다시 써야 했습니다.",
+      "문서: Vunemi가 기존 Word 문서의 텍스트(날짜, 가격, 이름 등)를 바꿉니다. 변경은 원본 서식을 유지한 사본에 적용되며, 원본 파일은 건드리지 않습니다.",
+      "프레젠테이션: Vunemi가 기존 PowerPoint 프레젠테이션을 읽고 변경된 사본을 만듭니다. 슬라이드의 문구를 바꾸고, 슬라이드를 삭제하고, 지정한 슬라이드 뒤에 새 슬라이드를 추가합니다. 표와 차트 안의 텍스트는 바뀌지 않습니다.",
+      "그리기: 그림을 SVG로 저장할 수 있습니다. 도형과 텍스트는 그리기 프로그램에서 계속 편집할 수 있습니다.",
+      "바꾸려는 텍스트가 파일에 없으면 아무것도 만들지 않고 그 사실을 알려 드립니다. 요청이 얼마나 잘 수행되는지는 모델에 따라 달라집니다."
     ]
   }
 }

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi : un assistant personnel qui fonctionne sur votre Mac", description: "Vunemi aide au quotidien. Son IA fonctionne sur votre Mac, sans compte cloud Vunemi. Vous choisissez les services externes à connecter." },
-    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.1.20." },
+    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.1.21." },
     screens: { title: "Captures de Vunemi", description: "De vraies captures de l'app Vunemi pour Mac, réalisées avec des données d'exemple." },
-    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.1.20 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
+    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.1.21 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
   },
   hero: {
     eyebrow: "Assistant personnel pour Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tout ce que Vunemi sait faire",
-    intro: "Vunemi 0.1.20 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
+    intro: "Vunemi 0.1.21 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
     chatTitle: "Travailler avec Vunemi",
     chat: [
       { title: "D'abord le plan", body: "Pour une tâche en plusieurs étapes, Vunemi peut d'abord présenter son plan. Lancez-le, modifiez les étapes ou annulez." },
@@ -151,11 +151,11 @@ export default {
     addonsIntro: "Des capacités supplémentaires que vous ajoutez quand vous le souhaitez. Chacune est un programme distinct : la copie avec laquelle Vunemi a été testé est téléchargée une fois depuis la page de publication de Vunemi et vérifiée avant l'installation. Elles fonctionnent sur ce Mac sans accès réseau et ne voient que les fichiers que Vunemi leur confie. Ces programmes sont les apps Craft de l'équipe ArtCraft, open source sous licence MIT ou Apache-2.0. Ils sont jeunes : le résultat peut différer de celui de Word, Excel ou PowerPoint.",
     addonsWhy: "Sans extension, Vunemi lit déjà les documents Word et PDF, convertit des fichiers d'un format à l'autre et passe par Word, Excel ou PowerPoint s'ils sont installés sur votre Mac. Les extensions vont plus loin : Vunemi crée lui-même le fichier, sans Office. Les totaux d'une feuille de calcul sont de vraies formules calculées par un tableur, et non des nombres trouvés par le modèle ; une présentation contient de vraies diapositives et de vrais graphiques ; les photos et les vidéos sont retouchées, pas seulement converties. Chaque outil crée un nouveau fichier et ne modifie jamais celui que vous lui avez confié.",
     addons: [
-      { name: "Documents", body: "Rédige rapports, lettres et notes dans un fichier Word ou PDF, avec titres, listes et tableaux, au format A4 ou Letter selon votre région. Convertit un document existant dans un autre format, par exemple de Word en PDF." },
+      { name: "Documents", body: "Rédige rapports, lettres et notes dans un fichier Word ou PDF, avec titres, listes et tableaux, au format A4 ou Letter selon votre région. Convertit un document existant dans un autre format, par exemple de Word en PDF. Modifie le texte d'un document Word existant, par exemple une date, un prix ou un nom : la modification est faite dans une copie qui conserve la mise en forme de l'original ; une petite correction n'oblige donc plus à réécrire tout le fichier." },
       { name: "Feuilles de calcul", body: "Crée un classeur Excel à partir de vos chiffres. Totaux, moyennes et pourcentages sont écrits sous forme de formules et calculés par le programme : si vous modifiez un nombre plus tard dans Excel, le total suit. Peut ajouter un graphique en colonnes, en barres, en courbes ou en secteurs." },
-      { name: "Présentations", body: "Construit une présentation PowerPoint diapositive par diapositive : diapositive d'ouverture, titres de section, diapositives de quelques lignes courtes, graphiques et notes de l'orateur, dans l'un des huit thèmes." },
+      { name: "Présentations", body: "Construit une présentation PowerPoint diapositive par diapositive : diapositive d'ouverture, titres de section, diapositives de quelques lignes courtes, graphiques et notes de l'orateur, dans l'un des huit thèmes. Lit une présentation existante et en produit une copie modifiée : nouveau texte sur une diapositive, diapositive supprimée, nouvelle diapositive après celle que vous indiquez. Le texte des tableaux et des graphiques n'est pas modifié." },
       { name: "Outils PDF", body: "Fusionne des PDF en un seul, extrait les pages choisies dans un nouveau fichier, fait pivoter des pages, crée un PDF à partir d'images, et liste puis remplit les champs d'un formulaire. Il n'ouvre pas les PDF protégés par mot de passe." },
-      { name: "Dessin", body: "Dessine une affiche, une carte, un logo ou un schéma et l'enregistre en PNG ou en PDF. Le modèle décrit le dessin et le programme le produit ; le rendu dépend donc du modèle." },
+      { name: "Dessin", body: "Dessine une affiche, une carte, un logo ou un schéma et l'enregistre en PNG, en PDF ou en SVG. Dans un SVG, les formes et le texte restent modifiables : vous pouvez continuer à y travailler dans un logiciel de dessin. Le modèle décrit le dessin et le programme le produit ; le rendu dépend donc du modèle." },
       { name: "Retouche photo", body: "Recadre une image à un format comme 1:1 ou 16:9, la fait pivoter, la retourne et la redimensionne, corrige le ton automatiquement, règle la luminosité, le contraste et la saturation, accentue ou floute, puis l'enregistre en JPEG, PNG, WebP ou TIFF. Lit les photos HEIC de l'iPhone. Il ne peut pas supprimer d'objets ni d'arrière-plans. Le programme utilisé est PhotoCraft, un éditeur d'images open source." },
       { name: "Montage vidéo", body: "Assemble des clips dans l'ordre que vous indiquez et raccourcit chacun d'eux. Ajoute des titres, des sous-titres incrustés dans l'image, une musique de fond discrète et des fondus entre les clips, puis exporte un MP4 de 30 minutes au maximum. Le programme utilisé est FilmCraft, un logiciel de montage vidéo open source." },
     ],
@@ -181,11 +181,11 @@ export default {
   downloadPage: {
     highlightsTitle: "Nouveautés de cette version",
     highlights: [
-      "Extensions : des outils supplémentaires que vous téléchargez dans Réglages › Extensions quand vous en avez besoin. Chaque outil crée un nouveau fichier et l'affiche dans la conversation.",
-      "Avec elles, Vunemi peut rédiger un document Word ou PDF, créer un classeur Excel avec des formules et un graphique, préparer une présentation PowerPoint, fusionner, scinder et faire pivoter des PDF et remplir leurs formulaires, dessiner une affiche, retoucher une photo et monter une courte vidéo.",
-      "Chaque extension est un programme open source distinct de l'équipe ArtCraft. Vunemi télécharge depuis sa propre page de version la copie avec laquelle il a été testé, la vérifie avant de l'installer et l'exécute sans accès au réseau ; le programme ne voit que les fichiers que Vunemi lui confie.",
-      "Le résultat peut différer de celui de Word, Excel ou PowerPoint.",
-      "Si un modèle écrit un chemin de fichier dans un dossier personnel qui n'existe pas sur votre Mac, Vunemi indique désormais le bon chemin au lieu de simplement refuser.",
+      "Les extensions Documents et Présentations peuvent désormais modifier un fichier que vous avez déjà. Jusqu'ici, elles ne savaient qu'écrire un fichier à partir de zéro : une petite correction obligeait à réécrire tout le document ou toute la présentation.",
+      "Documents : Vunemi modifie le texte d'un document Word existant, par exemple une date, un prix ou un nom. La modification est faite dans une copie qui conserve la mise en forme de l'original ; votre fichier n'est pas touché.",
+      "Présentations : Vunemi lit une présentation PowerPoint existante et en produit une copie modifiée : nouveau texte sur une diapositive, diapositive supprimée, nouvelle diapositive après celle que vous indiquez. Le texte des tableaux et des graphiques n'est pas modifié.",
+      "Dessin : un dessin peut être enregistré en SVG ; ses formes et son texte restent modifiables dans un logiciel de dessin.",
+      "Si un texte à modifier ne figure pas dans le fichier, rien n'est créé et Vunemi vous le dit. La qualité du résultat dépend du modèle.",
     ],
     title: "Télécharger Vunemi",
     intro: "Gratuit et open source. Pour les Mac avec puce Apple et macOS 14 ou ultérieur.",
