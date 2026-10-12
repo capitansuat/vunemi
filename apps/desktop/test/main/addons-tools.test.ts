@@ -14,13 +14,13 @@ import { Roots } from "@vunemi/files";
 import { createEngines, type Engines } from "../../src/main/addons/jobs.js";
 import { PACKS, addonAreas, addonInstructions, pathsNote, registerAddonTools } from "../../src/main/addons/packs.js";
 import type { SandboxResult } from "../../src/main/addons/sandbox.js";
-import { documentTools } from "../../src/main/addons/tools/documents.js";
+import { changesOf, documentTools, replaced } from "../../src/main/addons/tools/documents.js";
 import { pageList, pdfTools, printed } from "../../src/main/addons/tools/pdf.js";
 import { cropBox, photoArgs, photoTools } from "../../src/main/addons/tools/photo.js";
 import { timed, videoTools } from "../../src/main/addons/tools/video.js";
-import { drawingTools } from "../../src/main/addons/tools/drawing.js";
+import { drawingTools, inert } from "../../src/main/addons/tools/drawing.js";
 import { column, sheetTools } from "../../src/main/addons/tools/sheets.js";
-import { slideTools } from "../../src/main/addons/tools/slides.js";
+import { answers, editArgs, editOf, outline, slideTools, type Seen } from "../../src/main/addons/tools/slides.js";
 
 let base = "";
 let folder = "";
@@ -202,6 +202,47 @@ describe("document_make", () => {
     expect(out).toContain("teklif.pdf");
     await expect(tool(list(), "document_convert").run({ path: join(folder, "yok.docx"), out: join(folder, "x.pdf") }, ctx())).rejects.toThrow();
   });
+
+  it("changes text in a copy, exactly as written, and says what it did not find", async () => {
+    writeFileSync(join(folder, "teklif.docx"), "original");
+    answer = (args) => (args[0] === "run" ? { stdout: 'edit.replaceAll: {"replaced":2}\nedit.replaceAll: {"replaced":0}\n' } : {});
+    const replace = [{ find: "Ayşe Örnek", with: "Mehmet Deneme" }, { find: "15 Kasım", with: "30 Kasım" }];
+    const out = await tool(list(), "document_edit").run({ path: join(folder, "teklif.docx"), out: join(folder, "teklif-yeni.docx"), replace }, ctx());
+    expect(calls.map((c) => c.args)).toEqual([
+      ["run", "--file", "in.docx", "--print", "--cmd", 'edit.replaceAll={"text":"Ayşe Örnek","with":"Mehmet Deneme","matchCase":true}', "--cmd", 'edit.replaceAll={"text":"15 Kasım","with":"30 Kasım","matchCase":true}', "--save", "out.docx"],
+      ["render", "out.docx", "page.png", "--page", "1", "--scale", "0.8"],
+    ]);
+    expect(readFileSync(join(folder, "teklif.docx"), "utf8")).toBe("original");
+    expect(existsSync(join(folder, "teklif-yeni.docx"))).toBe(true);
+    expect(out).toContain("2 places changed");
+    expect(out).toContain('Not found, so not changed: "15 Kasım"');
+    expect(attached).toHaveLength(1);
+  });
+
+  it("makes no copy when none of the texts is there", async () => {
+    writeFileSync(join(folder, "teklif.docx"), "original");
+    answer = (args) => (args[0] === "run" ? { stdout: 'edit.replaceAll: {"replaced":0}\n' } : {});
+    const call = { path: join(folder, "teklif.docx"), out: join(folder, "yeni.pdf"), replace: [{ find: "yok", with: "var" }] };
+    await expect(tool(list(), "document_edit").run(call, ctx())).rejects.toThrow(/None of the texts/);
+    expect(existsSync(join(folder, "yeni.pdf"))).toBe(false);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("saves an edited document as a PDF through its Word copy", async () => {
+    writeFileSync(join(folder, "mektup.odt"), "original");
+    answer = (args) => (args[0] === "run" ? { stdout: 'edit.replaceAll: {"replaced":1}\n' } : {});
+    await tool(list(), "document_edit").run({ path: join(folder, "mektup.odt"), out: join(folder, "mektup.pdf"), replace: [{ find: "a", with: "b" }] }, ctx());
+    expect(calls.map((c) => c.args.slice(0, 3))).toEqual([["run", "--file", "in.odt"], ["convert", "out.docx", "out.pdf"], ["render", "out.docx", "page.png"]]);
+    expect(existsSync(join(folder, "mektup.pdf"))).toBe(true);
+  });
+
+  it("reads the changes asked for and the counts the program prints", () => {
+    expect(() => changesOf([])).toThrow(/empty/);
+    expect(() => changesOf([{ find: " ", with: "x" }])).toThrow(/find/);
+    expect(() => changesOf([{ find: "x".repeat(501), with: "" }])).toThrow(/too long/);
+    expect(changesOf([{ find: "a", with: 5 }, { find: "b" }])).toEqual([{ find: "a", with: "5" }, { find: "b", with: "" }]);
+    expect(replaced('edit.replaceAll: {"replaced":3}\nnoise\nedit.replaceAll: {"replaced":0}\n', 3)).toEqual([3, 0, 0]);
+  });
 });
 
 describe("slides_make", () => {
@@ -244,6 +285,90 @@ describe("slides_make", () => {
   });
 });
 
+describe("an existing presentation", () => {
+  const deck: Seen[] = [
+    { title: "Atölye", notes: "", shapes: [{ id: 11, text: "Atölye" }, { id: 12, text: "Deneme Yapı, 2026" }] },
+    { title: "Plan", notes: "Zemin fiyatını vurgula", shapes: [{ id: 21, text: "Plan" }, { id: 22, text: "Boya 1.200 TL\nZemin 3.400 TL" }] },
+    { title: "Ekip", notes: "", shapes: [{ id: 31, text: "Ekip" }, { id: 32, text: "Ayşe Örnek" }] },
+  ];
+  /** What the program prints when asked about the deck above. */
+  const describes = (args: string[]): Partial<SandboxResult> => {
+    if (args.includes("document.inspect")) return { stdout: `document.inspect → ${JSON.stringify({ slides: deck.map((_, index) => ({ index })) })}\n` };
+    if (args.some((arg) => arg.startsWith("slide.inspect="))) return { stdout: deck.map((slide) => `slide.inspect → ${JSON.stringify({ ...slide, shapes: [...slide.shapes, { id: 99, kind: "picture" }] })}`).join("\n") };
+    return {};
+  };
+  const cmds = (args: string[]) => args.filter((_, i, all) => all[i - 1] === "--cmd");
+
+  it("is read out as text, marked as someone else's words", async () => {
+    writeFileSync(join(folder, "sunum.pptx"), "original");
+    answer = describes;
+    const read = tool(slideTools(deps()), "slides_read");
+    const out = await read.run({ path: join(folder, "sunum.pptx") }, ctx());
+    expect(read.actionClass).toBe("read");
+    expect(read.untrustedOutput).toBe(true);
+    expect(cmds(calls[1]!.args)).toEqual(['slide.inspect={"index":0}', 'slide.inspect={"index":1}', 'slide.inspect={"index":2}']);
+    expect(out).toContain("has 3 slides:");
+    expect(out).toContain("Slide 2: Plan\n  Boya 1.200 TL\n  Zemin 3.400 TL\n  Notes: Zemin fiyatını vurgula");
+    expect(produced).toEqual([]);
+  });
+
+  it("changes text where it stands, then adds and removes from the last slide back", () => {
+    const edit = editOf({
+      replace: [{ find: "3.400", with: "3.900" }, { find: "Zemin", with: "Parke" }, { find: "Ekip", with: "Kadro", slide: 1 }],
+      remove: [3, 3],
+      add: [{ after: 2, title: "Takvim", body: ["• 1 Aralık"], notes: "kısa" }, { after: 2, title: "Bütçe" }, { after: 0, title: "Kapak", layout: "title" }],
+    });
+    const plan = editArgs(deck, edit);
+    expect(cmds(plan.args)).toEqual([
+      'slide.go={"index":1}',
+      'text.set={"id":22,"text":"Boya 1.200 TL\\nParke 3.900 TL"}',
+      'slide.notes={"text":"Parke fiyatını vurgula","index":1}',
+      'slide.delete={"index":2}',
+      'slide.new={"layout":"titleOnly","at":2,"title":"Bütçe"}',
+      'slide.new={"layout":"titleAndContent","at":2,"title":"Takvim","body":"1 Aralık"}',
+      'slide.notes={"text":"kısa"}',
+      'slide.new={"layout":"title","at":0,"title":"Kapak"}',
+    ]);
+    expect(plan).toMatchObject({ changed: 3, missing: ['"Ekip"'], total: 5 });
+  });
+
+  it("refuses slide numbers the deck does not have, and an edit that leaves nothing", () => {
+    expect(() => editArgs(deck, editOf({ remove: [4] }))).toThrow(/no slide 4/);
+    expect(() => editArgs(deck, editOf({ add: [{ after: 5, title: "x" }] }))).toThrow(/no slide 5/);
+    expect(() => editArgs(deck, editOf({ remove: [1, 2, 3] }))).toThrow(/no slides/);
+    expect(() => editOf({})).toThrow(/Nothing to change/);
+    expect(() => editOf({ replace: [{ find: "", with: "x" }] })).toThrow(/find/);
+    expect(() => editOf({ remove: [1.5] })).toThrow(/slide number/);
+    expect(() => editOf({ add: [{ after: 1 }] })).toThrow(/needs a title/);
+  });
+
+  it("makes the changed copy, shows its slides and leaves the original alone", async () => {
+    writeFileSync(join(folder, "sunum.pptx"), "original");
+    answer = describes;
+    const edit = tool(slideTools(deps()), "slides_edit");
+    const out = await edit.run({ path: join(folder, "sunum.pptx"), out: join(folder, "sunum-yeni.pptx"), replace: [{ find: "Ayşe Örnek", with: "Mehmet Deneme" }, { find: "yok", with: "x" }], remove: [1] }, ctx());
+    expect(calls[2]!.args).toEqual(["run", "--in", "in.pptx", "--cmd", 'slide.go={"index":2}', "--cmd", 'text.set={"id":32,"text":"Mehmet Deneme"}', "--cmd", 'slide.delete={"index":0}', "--save", "out.pptx"]);
+    expect(readFileSync(join(folder, "sunum.pptx"), "utf8")).toBe("original");
+    expect(existsSync(join(folder, "sunum-yeni.pptx"))).toBe(true);
+    expect(out).toContain("1 text changed, 1 removed; it has 2 slides.");
+    expect(out).toContain('Not found, so not changed: "yok"');
+    expect(tiles).toHaveLength(2);
+  });
+
+  it("makes no copy when the only change finds nothing", async () => {
+    writeFileSync(join(folder, "sunum.pptx"), "original");
+    answer = describes;
+    const call = { path: join(folder, "sunum.pptx"), out: join(folder, "yeni.pptx"), replace: [{ find: "yok", with: "x" }] };
+    await expect(tool(slideTools(deps()), "slides_edit").run(call, ctx())).rejects.toThrow(/None of the texts/);
+    expect(existsSync(join(folder, "yeni.pptx"))).toBe(false);
+  });
+
+  it("reads only the lines the program printed for a command", () => {
+    expect(answers('slide.go → {"index":1}\ntext.set → null\nslide.new → {"id":282,"index":2}\nslide.new → not json', "slide.new")).toEqual([{ id: 282, index: 2 }]);
+    expect(outline([{ title: "", notes: "", shapes: [] }])).toBe("Slide 1: (no title)");
+  });
+});
+
 describe("image_draw", () => {
   const make = () => tool(drawingTools(deps()), "image_draw");
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>';
@@ -254,6 +379,29 @@ describe("image_draw", () => {
     expect(calls.map((c) => c.args)).toEqual([["convert", "in.svg", "out.png"], ["convert", "in.svg", "out.pdf"]]);
     expect(existsSync(join(folder, "afis.pdf"))).toBe(true);
     expect(attached).toHaveLength(1);
+  });
+
+  it("saves an editable SVG as the program writes it, and none that carries a link or a script", async () => {
+    await make().run({ path: join(folder, "logo.svg"), svg }, ctx());
+    expect(calls.map((c) => c.args)).toEqual([["convert", "in.svg", "out.png"], ["convert", "in.svg", "out.svg"]]);
+    expect(readFileSync(join(folder, "logo.svg"), "utf8")).toBe("made");
+    expect(attached).toHaveLength(1);
+    calls = [];
+    const linked = svg.replace("<rect", '<a href="https://example.com"><rect').replace("/></svg>", "/></a></svg>");
+    expect(make().check!({ path: join(folder, "b.svg"), svg: linked })).toMatch(/links/);
+    await expect(make().run({ path: join(folder, "b.svg"), svg: linked }, ctx())).rejects.toThrow(/links/);
+    expect(calls).toEqual([]);
+    // The same drawing as a picture is fine: a PNG cannot be clicked through.
+    expect(make().check!({ path: join(folder, "b.png"), svg: linked })).toBeNull();
+  });
+
+  it("tells a drawing from one that does something", () => {
+    expect(inert('<svg><defs><linearGradient id="g"/></defs><use href="#g"/><image xlink:href="data:image/png;base64,AAAA"/></svg>')).toBe(true);
+    expect(inert('<svg><a xlink:href="javascript:alert(1)"><text>x</text></a></svg>')).toBe(false);
+    expect(inert("<svg><image href='https://example.com/x.png'/></svg>")).toBe(false);
+    expect(inert('<svg><rect onclick="x()"/></svg>')).toBe(false);
+    expect(inert("<svg><script>1</script></svg>")).toBe(false);
+    expect(inert("<svg><foreignObject><p>x</p></foreignObject></svg>")).toBe(false);
   });
 
   it("refuses what is not a whole SVG", async () => {

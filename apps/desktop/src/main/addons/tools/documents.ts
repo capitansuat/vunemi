@@ -1,22 +1,31 @@
 /**
  * Documents, through WordCraft: a Word or PDF file from the Markdown the
- * model writes, and existing documents converted to another format. The
- * first page is shown to the user, so what was made is seen, not described.
+ * model writes, existing documents converted to another format, and text
+ * changed in a copy of one. The first page is shown to the user, so what was
+ * made is seen, not described.
  */
 
 import { copyFileSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import type { ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { deliver, expectFile, short, show, source, target, tried, type AddonToolDeps } from "./common.js";
+import { deliver, expectFile, short, show, source, target, text, tried, type AddonToolDeps } from "./common.js";
 
 const MAX_MARKDOWN = 400_000;
 const READS = [".docx", ".doc", ".odt", ".rtf", ".md", ".txt", ".html"] as const;
 const WRITES = [".pdf", ".docx", ".odt", ".rtf", ".md", ".txt", ".html"] as const;
+/** What a document with its text changed is read from and saved as: kinds that keep their formatting. */
+const EDITS = [".docx", ".doc", ".odt", ".rtf"] as const;
+const EDITED = [".docx", ".odt", ".rtf", ".pdf"] as const;
+const MAX_CHANGES = 40;
+const MAX_FIND = 500;
+const MAX_WITH = 5_000;
 
 export const DOCUMENTS_GUIDE = `Making documents:
 - document_make writes a new Word (.docx) or PDF file from Markdown: # headings, **bold**, lists, tables. Write the whole text yourself, in the user's language; it is not a template to fill in later.
-- document_convert turns an existing document into another format, for example .docx into .pdf. Neither tool changes or replaces an existing file.
+- document_convert turns an existing document into another format, for example .docx into .pdf.
+- document_edit changes text in a copy of an existing document: a name, a date, a price, a sentence. Read the document first (files_read) and give each text exactly as it stands there, capitals included; the formatting around it is kept. For a rewrite, use document_make.
+- No tool changes or replaces an existing file; each makes a new one.
 - The user is shown the first page. Layout can differ from Microsoft Word's.`;
 
 export interface DocumentOptions {
@@ -33,6 +42,39 @@ function pages(info: string): number | null {
     return null;
   }
 }
+
+export interface Change {
+  find: string;
+  with: string;
+}
+
+/** The changes asked for, as the program's replace commands take them. */
+export function changesOf(input: unknown): Change[] {
+  if (!Array.isArray(input) || input.length === 0) throw new Error("replace is empty: give at least one {find, with}.");
+  if (input.length > MAX_CHANGES) throw new Error(`Too many changes (at most ${MAX_CHANGES} in one call).`);
+  return input.map((raw): Change => {
+    const one = (raw ?? {}) as { find?: unknown; with?: unknown };
+    const find = typeof one.find === "string" ? one.find : "";
+    if (!find.trim()) throw new Error("Each change needs find: the text as it stands in the document.");
+    if (find.length > MAX_FIND) throw new Error(`find is too long (at most ${MAX_FIND} characters): give a shorter piece that is unique.`);
+    return { find, with: text(one.with, MAX_WITH) };
+  });
+}
+
+/** How many times each replace command found its text, from what the program printed. */
+export function replaced(printed: string, count: number): number[] {
+  const found = [...printed.matchAll(/^edit\.replaceAll:\s*(\{.*\})\s*$/gm)].map((m) => {
+    try {
+      const n = (JSON.parse(m[1]!) as { replaced?: unknown }).replaced;
+      return typeof n === "number" ? n : 0;
+    } catch {
+      return 0;
+    }
+  });
+  return Array.from({ length: count }, (_, i) => found[i] ?? 0);
+}
+
+const quoted = (words: string): string => JSON.stringify(words.length > 60 ? `${words.slice(0, 60)}…` : words);
 
 export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolDef[] {
   const asked = (a: Record<string, unknown>) => {
@@ -102,6 +144,58 @@ export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolD
           deliver(join(job.dir, made), out, ctx);
           show(deps, join(job.dir, "page.png"), short(out), ctx);
           return `Created ${short(out)} from ${short(from)}.`;
+        });
+      },
+    },
+    {
+      name: "document_edit",
+      description: `Change text in a copy of an existing document: each find is replaced by its with, everywhere it stands. Reads ${EDITS.join(", ")}; the new file ends in ${EDITED.join(", ")}.`,
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "The existing document" },
+          out: { type: "string", description: "The new file" },
+          replace: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { find: { type: "string", description: "Text exactly as in the document" }, with: { type: "string", description: "What takes its place; a line break starts a new paragraph" } },
+              required: ["find", "with"],
+            },
+          },
+        },
+        required: ["path", "out", "replace"],
+      },
+      actionClass: "write-local",
+      preview: async (a) => t("addons.preview.make", { path: short(String(a.out ?? "")) }),
+      check: (a) => tried(() => (source(deps.roots, a.path, EDITS), target(deps.roots, a.out, EDITED), changesOf(a.replace))),
+      async run(a, ctx) {
+        const from = source(deps.roots, a.path, EDITS);
+        const out = target(deps.roots, a.out, EDITED);
+        const changes = changesOf(a.replace);
+        return deps.engines("documents", ctx.signal, async (job) => {
+          const given = `in${extname(from).toLowerCase()}`;
+          const kind = extname(out).toLowerCase();
+          // A PDF is made from the edited Word file; the other kinds are saved as themselves.
+          const saved = kind === ".pdf" ? "out.docx" : `out${kind}`;
+          copyFileSync(from, join(job.dir, given));
+          const cmds = changes.flatMap((c) => ["--cmd", `edit.replaceAll=${JSON.stringify({ text: c.find, with: c.with, matchCase: true })}`]);
+          const ran = await job.run(["run", "--file", given, "--print", ...cmds, "--save", saved], { timeoutMs: 180_000 });
+          expectFile("WordCraft", ran, join(job.dir, saved));
+          const counts = replaced(ran.stdout, changes.length);
+          const total = counts.reduce((sum, n) => sum + n, 0);
+          const missing = changes.filter((_, i) => counts[i] === 0).map((c) => quoted(c.find));
+          // A copy with nothing changed would pass for the edited one.
+          if (total === 0) throw new Error(`None of the texts were found in ${short(from)}, so nothing was made. Read the document and give each text exactly as it stands there.`);
+          let made = join(job.dir, saved);
+          if (kind === ".pdf") {
+            made = join(job.dir, "out.pdf");
+            expectFile("WordCraft", await job.run(["convert", saved, "out.pdf"], { timeoutMs: 180_000 }), made);
+          }
+          await job.run(["render", saved, "page.png", "--page", "1", "--scale", "0.8"]).catch(() => {});
+          deliver(made, out, ctx);
+          show(deps, join(job.dir, "page.png"), short(out), ctx);
+          return `Created ${short(out)} from ${short(from)}: ${total} ${total === 1 ? "place" : "places"} changed.${missing.length > 0 ? ` Not found, so not changed: ${missing.join(", ")}.` : ""} The user is shown its first page.`;
         });
       },
     },

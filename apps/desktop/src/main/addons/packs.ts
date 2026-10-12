@@ -38,7 +38,7 @@ export type PackOptions = DocumentOptions;
 export const PACKS: readonly AddonPack[] = [
   {
     id: "documents", area: "documents", name: "documents",
-    summary: "write a Word or PDF document; convert documents",
+    summary: "write, convert or edit a Word or PDF document",
     guide: DOCUMENTS_GUIDE,
     wanted: /(?<!\p{L})(?:docx|word belge|word doc|rapor yaz|write a report)/iu,
     tools: documentTools,
@@ -52,7 +52,7 @@ export const PACKS: readonly AddonPack[] = [
   },
   {
     id: "slides", area: "slides", name: "presentations",
-    summary: "make a PowerPoint presentation",
+    summary: "make or edit a PowerPoint deck",
     guide: SLIDES_GUIDE,
     wanted: /(?<!\p{L})(?:pptx|sunum|presentation|präsentation|présentation|presentaci[oó]n|presentazion|apresenta[cç][aã]o|презентац|slayt|slides?)(?!\p{L})|演示文稿|幻灯片|プレゼン|スライド|프레젠테이션|슬라이드/iu,
     tools: slideTools,
