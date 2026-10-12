@@ -329,7 +329,7 @@ describe("an existing presentation", () => {
     const edit = editOf({
       replace: [{ find: "3.400", with: "3.900" }, { find: "Zemin", with: "Parke" }, { find: "Ekip", with: "Kadro", slide: 1 }],
       remove: [3, 3],
-      add: [{ after: 2, title: "Takvim", body: ["• 1 Aralık"], notes: "kısa" }, { after: 2, title: "Bütçe" }, { after: 0, title: "Kapak", layout: "title" }],
+      add: [{ after: "Plan", title: "Takvim", body: ["• 1 Aralık"], notes: "kısa" }, { after: 2, title: "Bütçe" }, { after: "", title: "Kapak", layout: "title" }],
     });
     const plan = editArgs(deck, edit);
     expect(cmds(plan.args)).toEqual([
@@ -342,7 +342,18 @@ describe("an existing presentation", () => {
       'slide.notes={"text":"kısa"}',
       'slide.new={"layout":"title","at":0,"title":"Kapak"}',
     ]);
-    expect(plan).toMatchObject({ changed: 3, missing: ['"Ekip"'], total: 5 });
+    expect(plan).toMatchObject({ changed: 3, missing: ['"Ekip"'], titles: ["Kapak", "Atölye", "Plan", "Takvim", "Bütçe"] });
+  });
+
+  it("puts a new slide after the slide named, whatever else is removed", () => {
+    // What a model asked for when told "add after Ekip, delete the first slide".
+    const plan = editArgs(deck, editOf({ remove: [1], add: [{ after: "ekip ", title: "Takvim" }] }));
+    expect(plan.titles).toEqual(["Plan", "Ekip", "Takvim"]);
+    expect(cmds(plan.args)).toEqual(['slide.new={"layout":"titleOnly","at":3,"title":"Takvim"}', 'slide.delete={"index":0}']);
+    expect(editArgs(deck, editOf({ add: [{ after: "3", title: "Son" }] })).titles).toEqual(["Atölye", "Plan", "Ekip", "Son"]);
+    expect(() => editArgs(deck, editOf({ add: [{ after: "Bütçe", title: "x" }] }))).toThrow(/No slide is titled "Bütçe"/);
+    const twins = [...deck, { title: "Plan", notes: "", shapes: [{ id: 41, text: "Plan" }] }];
+    expect(() => editArgs(twins, editOf({ add: [{ after: "Plan", title: "x" }] }))).toThrow(/Several slides are titled "Plan" \(2, 4\)/);
   });
 
   it("refuses slide numbers the deck does not have, and an edit that leaves nothing", () => {
@@ -363,7 +374,8 @@ describe("an existing presentation", () => {
     expect(calls[2]!.args).toEqual(["run", "--in", "in.pptx", "--cmd", 'slide.go={"index":2}', "--cmd", 'text.set={"id":32,"text":"Mehmet Deneme"}', "--cmd", 'slide.delete={"index":0}', "--save", "out.pptx"]);
     expect(readFileSync(join(folder, "sunum.pptx"), "utf8")).toBe("original");
     expect(existsSync(join(folder, "sunum-yeni.pptx"))).toBe(true);
-    expect(out).toContain("1 text changed, 1 removed; it has 2 slides.");
+    expect(out).toContain("1 text changed, 1 removed. Its slides now: 1 Plan, 2 Ekip.");
+    expect(edit.untrustedOutput).toBe(true);
     expect(tiles).toHaveLength(2);
   });
 
