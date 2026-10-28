@@ -6,7 +6,7 @@
  * it refuses before the app is ready, and after that the keychain identifies
  * an app without an Apple team by the hash of its code — which changes with
  * every update, so each update locked the vault behind an approval macOS did
- * not even show. The helper's hash changes only when its Swift code does.
+ * not even show. A dedicated Keychain broker now stays byte-identical across desktop changes.
  *
  * The crypto starts locked. Until unlock() it encrypts nothing and decrypts
  * nothing, and says so; the vault keeps what it cannot read and opens it

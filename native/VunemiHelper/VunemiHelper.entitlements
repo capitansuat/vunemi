@@ -5,13 +5,15 @@
 
   It calls EventKit, so under the hardened runtime it needs the calendar
   and reminder entitlements; nothing else. It runs no JIT, loads no
-  libraries but the system's, sends no Apple events and records no audio,
+  libraries but the system's, sends bounded TextEdit save Apple events and records no audio,
   so it gets none of the exceptions the Electron app needs. Kept apart from
   the app's list so a change there doesn't re-sign the helper (a new helper
   signature means a new keychain prompt for the Vault key).
 -->
 <plist version="1.0">
 <dict>
+  <key>com.apple.security.automation.apple-events</key>
+  <true/>
   <key>com.apple.security.personal-information.calendars</key>
   <true/>
   <key>com.apple.security.personal-information.reminders</key>

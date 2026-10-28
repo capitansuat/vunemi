@@ -25,8 +25,8 @@ distribution="${VUNEMI_DISTRIBUTION:-0}"
 # A stable identity, when there is one (scripts/signing-identity.sh). Ad hoc
 # works, but an ad-hoc app is identified by the hash of its code, so every
 # build is a new app to macOS and the calendar permission stays with the
-# previous one. (The vault's key does not depend on this: the helper holds
-# it.) A self-signed build waits a few seconds at launch (~6 s measured) while
+# previous one. The independent vault broker preserves its exact signed
+# binary across desktop updates. A self-signed build waits a few seconds at launch (~6 s measured) while
 # taskgated checks it; that is all it costs.
 find_identity() { security find-identity -p codesigning | grep "\"$1\"" | head -1 | awk '{print $2}' || true; }
 identity="${VUNEMI_SIGN_IDENTITY:-$(find_identity "Vunemi Signing")}"
@@ -77,19 +77,14 @@ else
   timestamp=(--timestamp=none)
 fi
 
-# The helper, signed, kept per version of its source. The keychain knows the
-# helper by the hash of its signed code, so a new hash means a new keychain
-# prompt. Its Swift changing is a real reason for one; Xcode or the SDK
-# changing is not — yet the same source then compiles to a different binary
+# The desktop helper is cached per source version. It no longer reads the
+# vault key; the independent VunemiVaultHelper has its own narrow source cache.
+# Xcode or the SDK changing alone need not invalidate either binary — yet the same source then compiles to a different binary
 # (measured 23 Sep: 276616 → 275816 bytes after the Xcode licence). So the
 # signed binary is kept under a hash of what it is made from, and reused
 # for as long as that stays the same, whatever the toolchain did.
 helper_src="$here/native/VunemiHelper"
-helper_key="$(
-  # paths-mapped: copies built before build paths were stripped name the user folder.
-  { cat "$helper_src/Package.swift" "$helper_src"/Sources/VunemiHelper/*; cat "$helper_entitlements"; echo "$identity" "$developer_id" paths-mapped; } |
-    shasum -a 256 | cut -c1-16
-)"
+helper_key="$(node "$here/scripts/helper-source-key.mjs" "$helper_src" "$helper_entitlements" "$identity" "$developer_id")"
 helper_cache="$out/helper-cache/$helper_key/VunemiHelper"
 helper_build="$helper_src/.build/release/VunemiHelper"
 
@@ -123,6 +118,8 @@ if grep -q -a -F "$HOME/" "$recorder_build"; then
   echo "! kaydedici derleme yolunu (kullanıcı klasörü) içeriyor"
   exit 1
 fi
+
+bash "$here/scripts/build-vault-helper.sh" "$identity" "$developer_id"
 
 echo "› uygulama paketleniyor → $out"
 pnpm --filter @vunemi/desktop exec electron-vite build
@@ -180,12 +177,16 @@ else
     cp -p "$app/Contents/Resources/VunemiHelper" "$helper_cache"
   fi
 fi
+cmp "$here/native/VunemiVaultHelper/.build/release/VunemiVaultHelper" "$app/Contents/Resources/VunemiVaultHelper"
+codesign --verify --strict "$app/Contents/Resources/VunemiVaultHelper"
 codesign -dvvv "$app/Contents/Resources/VunemiHelper" 2>&1 | grep '^CDHash=' | sed 's/^/› yardımcı /'
 # Only the microphone; system audio is asked for by Vunemi, which starts it.
 codesign --force --options runtime "${timestamp[@]}" --entitlements "$recorder_entitlements" \
   --identifier com.vunemi.recorder --sign "$identity" "$app/Contents/Resources/VunemiRecorder"
 codesign --force --deep --options runtime "${timestamp[@]}" --entitlements "$entitlements" --sign "$identity" "$app"
 codesign --verify --deep --strict "$app"
+# Packaging must never silently replace the cached Keychain caller signature.
+cmp "$here/native/VunemiVaultHelper/.build/release/VunemiVaultHelper" "$app/Contents/Resources/VunemiVaultHelper"
 codesign -d -r- "$app" 2>&1 | grep designated
 
 echo "› hazır: $app"

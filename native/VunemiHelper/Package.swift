@@ -5,8 +5,10 @@ let package = Package(
     name: "VunemiHelper",
     platforms: [.macOS(.v14)],
     targets: [
+        .target(name: "DragCancellation", path: "Sources/DragCancellation", publicHeadersPath: "include"),
         .executableTarget(
             name: "VunemiHelper",
+            dependencies: ["DragCancellation"],
             path: "Sources/VunemiHelper",
             exclude: ["Info.plist"],
             linkerSettings: [
@@ -20,6 +22,7 @@ let package = Package(
                     "-Xlinker", "Sources/VunemiHelper/Info.plist",
                 ])
             ]
-        )
+        ),
+        .testTarget(name: "VunemiHelperTests", dependencies: ["VunemiHelper"])
     ]
 )

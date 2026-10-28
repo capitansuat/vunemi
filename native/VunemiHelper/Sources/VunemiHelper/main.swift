@@ -17,6 +17,9 @@ import EventKit
 import ScreenCaptureKit
 import UniformTypeIdentifiers
 
+// Headless admission exits before AX, EventKit or desktop actions.
+exitForJournalLockModeIfRequested()
+
 // MARK: - Protocol
 
 typealias JSON = [String: Any]
@@ -131,7 +134,7 @@ func app(matching id: String) -> NSRunningApplication? {
 /// out rather than taken from the AX constants, which are mutable globals.
 let interactiveRoles: Set<String> = [
     "AXButton", "AXCheckBox", "AXRadioButton", "AXPopUpButton", "AXMenuButton",
-    "AXTextField", "AXTextArea", "AXComboBox", "AXSlider", "AXIncrementor",
+    "AXTextField", "AXTextArea", "AXComboBox", "AXSlider", "AXIncrementor", "AXScrollBar",
     "AXLink", "AXMenuItem", "AXTabGroup", "AXDisclosureTriangle", "AXSegmentedControl",
 ]
 
@@ -180,6 +183,8 @@ func centre(_ element: AXUIElement) -> CGPoint? {
 final class Tree {
     private(set) var lines: [String] = []
     private(set) var elements: [Int: AXUIElement] = [:]
+    private(set) var labels: [Int:String] = [:]
+    private(set) var inputValues:[String] = []
     private var next = 1
     private let limit: Int
 
@@ -191,10 +196,11 @@ final class Tree {
             guard lines.count < limit else { return }
             let role = (string(child, "AXRole") ?? "AXUnknown")
                 .replacingOccurrences(of: "AX", with: "")
-            let name = string(child, "AXTitle")
-                ?? string(child, "AXDescription")
-                ?? string(child, "AXValue")
+            let name = ["StaticText","TextField","TextArea","ComboBox"].contains(role)
+                ? elementLabel(title:string(child,"AXTitle"),description:string(child,"AXDescription"),value:string(child,"AXValue"))
+                : string(child, "AXTitle") ?? string(child, "AXDescription") ?? string(child, "AXValue")
 
+            if ["StaticText","TextField","TextArea","ComboBox"].contains(role), let value=string(child,"AXValue") { inputValues.append(value) }
             let interactive = interactiveRoles.contains("AX" + role)
             let worthShowing = interactive || (name != nil && !skeletonRoles.contains("AX" + role))
 
@@ -205,6 +211,7 @@ final class Tree {
                 let indent = String(repeating: "  ", count: min(depth, 6))
                 let enabled = (attribute(child, "AXEnabled") as? Bool) ?? true
                 let short = name.count > 120 ? String(name.prefix(119)) + "…" : name
+                labels[ref]=short
                 lines.append("\(indent)[\(ref)] \(role) \"\(short)\"\(enabled ? "" : " (kapalı)")")
                 build(from: child, depth: depth + 1, maxDepth: maxDepth)
             } else {
@@ -218,8 +225,129 @@ final class Tree {
 /// The last tree per pid, so clicks can name a ref and diffs have something to
 /// compare against. Single-threaded by construction: one blocking read loop,
 /// one request at a time, which is why these are `nonisolated(unsafe)`.
-nonisolated(unsafe) var trees: [Int32: Tree] = [:]
-nonisolated(unsafe) var snapshots: [Int32: [String]] = [:]
+struct Observation {
+    let id: String, pid: Int32, bundleId: String, launch: Date?, part: String
+    let window: WindowCandidate, root: AXUIElement, tree: Tree, at: Date
+    let layout: [Int:String], focused: AXUIElement?
+    let background: Bool
+    let sliders:[Int:SliderDragState]
+    var json: JSON { ["snapshotId":id,"windowId":Int(window.id),"windowTitle":window.title,"pid":Int(pid),"bundleId":bundleId,"processStartedAt":launch?.timeIntervalSince1970 ?? 0,"part":part,"observedAt":at.timeIntervalSince1970,"bounds":window.bounds.json,"coordinateFrame":"screen-points-top-left"] }
+}
+nonisolated(unsafe) var observations: [String: Observation] = [:]
+nonisolated(unsafe) var latestObservation: [String: String] = [:]
+func treeLayout(_ tree: Tree) -> [Int:String] {
+    tree.elements.mapValues { element in
+        guard let p=point(element), let z=size(element) else { return "unpositioned" }
+        return "\(p.x),\(p.y),\(z.width),\(z.height)"
+    }
+}
+// NSRunningApplication.isActive is cached until the main run loop advances.
+// This helper has a blocking JSONL loop, so input delivery uses a fresh AX
+// system-wide observation rather than that cached property.
+func focusedApplicationPID() -> Int32? {
+    RunLoop.main.run(until:Date(timeIntervalSinceNow:0.01))
+    let front=NSWorkspace.shared.frontmostApplication
+    var ax:Int32?
+    if let value=attribute(AXUIElementCreateSystemWide(),"AXFocusedApplication"),CFGetTypeID(value)==AXUIElementGetTypeID() {
+        var pid:Int32=0
+        if AXUIElementGetPid(value as! AXUIElement,&pid) == .success {ax=pid}
+    }
+    return verifiedForegroundPID(ax:ax,workspace:front?.processIdentifier,workspaceActive:front?.isActive == true)
+}
+// A background helper cannot rely on an activation request being honoured.
+// Accessibility may request the exact app's foreground state; actual focus is
+// still independently checked before any input and snapshot validation repeats.
+func requestTargetFocus(_ app:NSRunningApplication, window:AXUIElement? = nil) {
+    app.activate(options:[])
+    AXUIElementSetAttributeValue(AXUIElementCreateApplication(app.processIdentifier), "AXFrontmost" as CFString, kCFBooleanTrue)
+    if let window { AXUIElementPerformAction(window,"AXRaise" as CFString) }
+}
+func waitForFocus(pid:Int32, window:AXUIElement? = nil) -> Bool {
+    let deadline=Date().addingTimeInterval(0.75)
+    repeat {
+        if focusedApplicationPID()==pid {
+            if window==nil { return true }
+            if let focused=attribute(AXUIElementCreateApplication(pid),"AXFocusedWindow"), CFEqual(focused,window!) { return true }
+        }
+        RunLoop.current.run(until:Date().addingTimeInterval(0.025))
+    } while Date()<deadline
+    return false
+}
+func focusedElement(_ pid:Int32) -> AXUIElement? {
+    guard let element=attribute(AXUIElementCreateApplication(pid),"AXFocusedUIElement"), CFGetTypeID(element)==AXUIElementGetTypeID() else { return nil }
+    return element as! AXUIElement
+}
+func checkBackgroundSession() throws {
+    let session=CGSessionCopyCurrentDictionary() as? [String:Any]
+    try requireBackgroundSession(onConsole:session?["kCGSSessionOnConsoleKey"] as? Bool,
+        locked:session == nil ? nil : (session?["CGSSessionScreenIsLocked"] as? Bool ?? false))
+}
+func observationKey(_ pid: Int32, _ part: String, _ window: UInt32) -> String { "\(pid):\(part):\(window)" }
+func visibleWindows(pid: Int32) -> [WindowCandidate] {
+    guard let rows = CGWindowListCopyWindowInfo([.optionOnScreenOnly,.excludeDesktopElements], kCGNullWindowID) as? [[String:Any]] else { return [] }
+    return rows.compactMap { row in
+        guard let owner = row[kCGWindowOwnerPID as String] as? Int32, owner == pid,
+            let id = row[kCGWindowNumber as String] as? UInt32,
+            let bounds = row[kCGWindowBounds as String] as? [String:Double],
+            let x=bounds["X"], let y=bounds["Y"], let w=bounds["Width"], let h=bounds["Height"], w>0, h>0,
+            (row[kCGWindowLayer as String] as? Int ?? 0) == 0 else { return nil }
+        return WindowCandidate(id:id,pid:owner,title:row[kCGWindowName as String] as? String ?? "",bounds:WindowBounds(x:x,y:y,width:w,height:h))
+    }
+}
+func axBounds(_ element: AXUIElement) -> WindowBounds? {
+    guard let p=attribute(element,"AXPosition"), let z=attribute(element,"AXSize") else { return nil }
+    guard CFGetTypeID(p)==AXValueGetTypeID(), CFGetTypeID(z)==AXValueGetTypeID() else { return nil }
+    var point=CGPoint.zero, size=CGSize.zero
+    guard AXValueGetValue(p as! AXValue,.cgPoint,&point), AXValueGetValue(z as! AXValue,.cgSize,&size) else { return nil }
+    return WindowBounds(x:point.x,y:point.y,width:size.width,height:size.height)
+}
+func windowForAX(_ root: AXUIElement, pid: Int32) throws -> WindowCandidate {
+    guard let bounds=axBounds(root), let window=matchingWindow(pid:pid,title:string(root,"AXTitle") ?? "",bounds:bounds,candidates:visibleWindows(pid:pid)) else {
+        throw Failure("Pencere kimliği kesin eşleşmiyor. desktop_windows ile pencereyi seçip yeniden gözlemle; başka pencereye geçilmedi.")
+    }
+    return window
+}
+func selectedAXWindow(pid: Int32, windowId: UInt32?, allowActivation: Bool = true) throws -> AXUIElement {
+    let appElement=AXUIElementCreateApplication(pid)
+    if let windowId {
+        let windows=attribute(appElement,"AXWindows") as? [AXUIElement] ?? []
+        let matches=windows.filter { (try? windowForAX($0,pid:pid).id)==windowId }
+        guard matches.count==1 else { throw Failure("Seçilen pencere kapandı veya kesin eşleşmiyor. Yeniden gözlemle.") }
+        return matches[0]
+    }
+    var found=windowElement(of:appElement)
+    if found==nil, allowActivation, let app=NSRunningApplication(processIdentifier:pid), focusedApplicationPID() != pid { app.activate(options:[]); usleep(500_000); found=windowElement(of:appElement) }
+    guard let root=found else { throw Failure("Uygulama pencere yayınlamıyor; desktop_describe part=menu kullanılabilir.") }
+    return root
+}
+func validateObservation(_ args: JSON, app: NSRunningApplication, activate: Bool=false) throws -> Observation {
+    guard accessibilityTrusted(prompt:false) else { throw Failure("Erişilebilirlik izni yok.") }
+    guard let id=args["snapshotId"] as? String, let observed=observations[id],
+        ((args["windowId"] as? NSNumber)?.uint32Value == nil || (args["windowId"] as? NSNumber)?.uint32Value == observed.window.id),
+        observed.pid==app.processIdentifier, observed.bundleId==(app.bundleIdentifier ?? ""), observed.launch==app.launchDate,
+        latestObservation[observationKey(observed.pid,observed.part,observed.window.id)]==id,
+        Date().timeIntervalSince(observed.at)<120 else { throw Failure("Snapshot eski veya bu uygulamaya ait değil. Yeniden gözlemle; input gönderilmedi.") }
+    let root:AXUIElement, window:AXUIElement?
+    if observed.part=="menu" {
+        guard let bar=attribute(AXUIElementCreateApplication(observed.pid),"AXMenuBar") else { throw Failure("Menü kapandı.") }
+        root=bar as! AXUIElement; window=nil
+    } else {
+        guard let current=visibleWindows(pid:observed.pid).first(where:{$0.id==observed.window.id}), current.bounds.matches(observed.window.bounds),
+            (current.title.isEmpty || observed.window.title.isEmpty || current.title==observed.window.title),
+            let selected=try? selectedAXWindow(pid:observed.pid,windowId:observed.window.id) else { throw Failure("Pencere taşındı, kapandı veya değişti. Yeniden gözlemle; input gönderilmedi.") }
+        root=selected;window=selected
+    }
+    let currentTree=Tree();currentTree.build(from:root)
+    guard currentTree.lines==observed.tree.lines, treeLayout(currentTree)==observed.layout else { throw Failure("Pencere içeriği değişti; eski ref kullanılamaz. Yeniden gözlemle.") }
+    if activate {
+        guard !observed.background else { throw Failure("A background snapshot cannot authorise foreground input. No input sent.") }
+        requestTargetFocus(app,window:window)
+        guard waitForFocus(pid:observed.pid,window:window) else { throw Failure("Seçilen pencere odaklanmadı; input gönderilmedi.") }
+        // Activation is not authority to deliver to a changed target.
+        return try validateObservation(args,app:app)
+    }
+    return observed
+}
 
 /// How many windows the window server sees for this app, whatever the
 /// accessibility tree says. No Screen Recording needed for the count — only
@@ -240,60 +368,59 @@ func windowElement(of appElement: AXUIElement) -> AXUIElement? {
     return nil
 }
 
-func describe(pid: Int32, part: String) throws -> JSON {
+func describe(pid: Int32, part: String, windowId: UInt32? = nil, background: Bool = false, taskPermissionIdentity: JSON? = nil) throws -> JSON {
     guard accessibilityTrusted(prompt: false) else {
         throw Failure("Erişilebilirlik izni yok. Sistem Ayarları › Gizlilik ve Güvenlik › Erişilebilirlik.")
     }
-    let appElement = AXUIElementCreateApplication(pid)
-    let root: AXUIElement
-    switch part {
-    case "menu":
-        // The menu bar is where a Mac app keeps the commands that have no
-        // button, and it is worth asking for on purpose — never by accident,
-        // because it alone is hundreds of lines.
-        guard let bar = attribute(appElement, "AXMenuBar") else {
-            throw Failure("Bu uygulamanın menü çubuğu okunamıyor.")
-        }
-        root = bar as! AXUIElement
-    default:
-        var found = windowElement(of: appElement)
-        if found == nil, let app = NSRunningApplication(processIdentifier: pid), !app.isActive {
-            // Bring it forward and ask again: for a lot of apps that is the
-            // difference between an empty tree and the whole window.
-            app.activate()
-            usleep(500_000)
-            found = windowElement(of: appElement)
-        }
-        if let found {
-            root = found
-        } else {
-            // Tell the two apart: an app with no window, and an app we are not
-            // allowed to see into. They look identical from here otherwise.
-            let probe = axWorks()
-            let onScreen = windowCount(pid: pid)
-            if !probe.ok {
-                throw Failure(
-                    "Pencere okunamadı — \(probe.detail). Sistem Ayarları › Gizlilik ve Güvenlik › Erişilebilirlik'te Vunemi'nin (geliştirmede: Electron) işaretli olması ve uygulamanın yeniden başlatılması gerekiyor."
-                )
-            }
-            if onScreen > 0 {
-                throw Failure(
-                    "macOS bu uygulamanın \(onScreen) penceresini görüyor ama uygulama erişilebilirlik ağacında pencere yayınlamıyor. Menüsü için part=\"menu\" kullanılabilir; pencereye kullanıcının kendisi bakmalı."
-                )
-            }
-            throw Failure("Bu uygulama açık ama penceresi yok (hepsi kapatılmış olabilir). Menüsü için part=\"menu\" kullan.")
-        }
+    let root:AXUIElement, window:WindowCandidate
+    if part=="menu" {
+        guard let bar=attribute(AXUIElementCreateApplication(pid),"AXMenuBar") else { throw Failure("Menü okunamıyor.") }
+        root=bar as! AXUIElement
+        window=WindowCandidate(id:0,pid:pid,title:"menu",bounds:axBounds(root) ?? WindowBounds(x:0,y:0,width:0,height:0))
+    } else {
+        root=try selectedAXWindow(pid:pid,windowId:windowId,allowActivation: !background)
+        window=try windowForAX(root,pid:pid)
+    }
+    if let expected=taskPermissionIdentity {
+        guard background,part=="window" else{throw Failure("Task permission is for one background window only.")}
+        try requireBackgroundTaskPermissionIdentity(expected,pid:pid,windowId:windowId)
     }
     let tree = Tree()
     tree.build(from: root)
-    trees[pid] = tree
-    let previous = snapshots[pid]
-    snapshots[pid] = tree.lines
-    return [
-        "text": tree.lines.joined(separator: "\n"),
-        "count": tree.lines.count,
-        "changed": previous.map { diff(from: $0, to: tree.lines) } ?? NSNull(),
-    ]
+    if let expected=taskPermissionIdentity {try requireBackgroundTaskPermissionIdentity(expected,pid:pid,windowId:windowId)}
+    guard let app=NSRunningApplication(processIdentifier:pid) else { throw Failure("Uygulama kapandı.") }
+    let key=observationKey(pid,part,window.id)
+    let previous=latestObservation[key].flatMap { observations[$0]?.tree.lines }
+    let observation=Observation(id:UUID().uuidString,pid:pid,bundleId:app.bundleIdentifier ?? "",launch:app.launchDate,part:part,window:window,root:root,tree:tree,at:Date(),layout:treeLayout(tree),focused:focusedElement(pid),background:background,sliders:background ? observeSliderStates(pid:pid,bundle:app.bundleIdentifier ?? "",tree:tree,window:window.bounds):[:])
+    if let old=latestObservation[key] { observations.removeValue(forKey:old) }
+    observations[observation.id]=observation;latestObservation[key]=observation.id
+    var result=observation.json
+    result["controlMode"] = background ? "backgroundStrict" : "foreground"
+    if background {
+        result["extendedTargets"] = extendedBackgroundTargets(observation)
+        result["documentPath"] = documentPath(root)
+        result["targets"] = tree.elements.keys.sorted().compactMap { ref -> JSON? in
+            guard let element=tree.elements[ref], let label=tree.labels[ref] else { return nil }
+            let role=string(element,"AXRole") ?? ""
+            let subrole=string(element,"AXSubrole") ?? ""
+            let actions=["press","set-value"].filter { action in
+                guard backgroundCapability(bundle:observation.bundleId,role:role,action:action,subrole:subrole), attribute(element,"AXEnabled") as? Bool != false else { return false }
+                if action == "press" {
+                    var names:CFArray?
+                    return AXUIElementCopyActionNames(element,&names) == .success && (names as? [String] ?? []).contains("AXPress")
+                }
+                var settable:DarwinBoolean=false
+                return AXUIElementIsAttributeSettable(element,"AXValue" as CFString,&settable) == .success && settable.boolValue
+            }
+            guard !actions.isEmpty else { return nil }
+            var target:JSON=["ref":ref,"role":role,"label":label,"backgroundActions":actions]
+            if let value=string(element,"AXValue") { target["value"]=value }
+            return target
+        }
+    }
+    result["text"]=tree.lines.joined(separator:"\n"); result["count"]=tree.lines.count;result["inputValues"]=tree.inputValues
+    result["changed"]=previous.map { diff(from:$0,to:tree.lines) } ?? NSNull()
+    return result
 }
 
 /// A plain-text diff: what appeared, what went. The whole tree is ~180 KB;
@@ -324,7 +451,7 @@ func stripRef(_ line: String) -> String {
 ///
 /// Images are scaled down on the way out: a grounding model works in a
 /// 1024-wide space anyway, and a full Retina window is megabytes of nothing.
-func capture(pid: Int32, to path: String) throws -> JSON {
+func capture(pid: Int32, windowId: UInt32, bounds: WindowBounds, to path: String) throws -> JSON {
     guard CGPreflightScreenCaptureAccess() else {
         throw Failure("Ekran kaydı izni yok. Sistem Ayarları › Gizlilik ve Güvenlik › Ekran Kaydı.")
     }
@@ -343,8 +470,7 @@ func capture(pid: Int32, to path: String) throws -> JSON {
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
             guard let window = content.windows
-                .filter({ $0.owningApplication?.processID == pid && $0.frame.width > 80 && $0.frame.height > 80 })
-                .max(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height })
+                .first(where: { $0.owningApplication?.processID == pid && $0.windowID == windowId && bounds.matches(WindowBounds(x:$0.frame.minX,y:$0.frame.minY,width:$0.frame.width,height:$0.frame.height)) })
             else {
                 throw Failure("Bu uygulamanın ekranda görünen bir penceresi yok.")
             }
@@ -395,11 +521,10 @@ func clickPoint(_ where_: CGPoint, double: Bool) {
     }
 }
 
-func typeText(_ text: String) {
+func typeText(_ text: String, validate:() throws -> Void) throws {
     let source = CGEventSource(stateID: .combinedSessionState)
-    // In chunks: the event system drops very long strings.
-    for chunk in stride(from: 0, to: Array(text.utf16).count, by: 20) {
-        let units = Array(Array(text.utf16)[chunk..<min(chunk + 20, Array(text.utf16).count)])
+    // One grapheme per key event: key handlers may ignore later Unicode units.
+    try deliverUnicodeInput(text, validate:validate) { units in
         for pressed in [true, false] {
             guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: pressed) else { continue }
             event.keyboardSetUnicodeString(stringLength: units.count, unicodeString: units)
@@ -443,12 +568,31 @@ func pressKey(_ combo: String) throws {
 func handle(_ request: JSON) {
     let id = request["id"]
     let op = request["op"] as? String ?? ""
-    let args = request["args"] as? JSON ?? [:]
+    var args = request["args"] as? JSON ?? [:]
 
     do {
         switch op {
         case "ping":
             respond(id: id, result: ["version": 1])
+
+        case "scheduled_recipe_targets":
+            respond(id:id,result:try scheduledRecipeTargets())
+        case "scheduled_recipe_environment":
+            respond(id:id,result:try scheduledEnvironment(false))
+        case "scheduled_recipe_prepare", "scheduled_recipe_revalidate":
+            respond(id:id,result:try scheduledRecipePrepare(args))
+        case "scheduled_recipe_backup":
+            do{respond(id:id,result:try scheduledRecipeBackup(args))}catch{respond(id:id,result:["status":"no-input","noInputSent":true,"reasonCode":"backup-unavailable"])}
+        case "scheduled_document_append":
+            do{respond(id:id,result:try scheduledDocumentAppend(args))}catch{respond(id:id,result:["status":"rejected","noInputSent":true,"reasonCode":"native-precondition"])}
+        case "scheduled_document_save":
+            do{respond(id:id,result:try scheduledDocumentSave(args))}catch{respond(id:id,result:["status":"rejected","noInputSent":true,"reasonCode":"native-precondition"])}
+
+        case "background_target_identity":
+            respond(id:id,result:try backgroundTargetIdentity(args))
+
+        case "background_environment":
+            respond(id:id,result:readBackgroundEnvironment())
 
         case "permissions":
             respond(id: id, result: permissions(prompt: args["prompt"] as? Bool ?? false))
@@ -460,18 +604,109 @@ func handle(_ request: JSON) {
             guard let target = args["app"] as? String, let found = app(matching: target) else {
                 throw Failure("\"\(args["app"] as? String ?? "")\" diye açık bir uygulama yok.")
             }
-            found.activate()
-            usleep(250_000)
+            requestTargetFocus(found)
+            guard waitForFocus(pid:found.processIdentifier) else { throw Failure("Seçilen pencere odaklanmadı; input gönderilmedi.") }
             respond(id: id, result: ["name": found.localizedName ?? "", "pid": Int(found.processIdentifier)])
+
+        case "windows":
+            guard let target=args["app"] as? String, let found=app(matching:target) else { throw Failure("Uygulama bulunamadı.") }
+            guard accessibilityTrusted(prompt:false) else { throw Failure("Erişilebilirlik izni yok.") }
+            let pid=found.processIdentifier
+            var windows=attribute(AXUIElementCreateApplication(pid),"AXWindows") as? [AXUIElement] ?? []
+            if windows.isEmpty && args["background"] as? Bool != true { _ = try? selectedAXWindow(pid:pid,windowId:nil); windows=attribute(AXUIElementCreateApplication(pid),"AXWindows") as? [AXUIElement] ?? [] }
+            let ax=windows.compactMap { element -> AXWindowCandidate? in guard let bounds=axBounds(element) else { return nil }; return AXWindowCandidate(title:string(element,"AXTitle") ?? "",bounds:bounds) }
+            respond(id:id,result:["windows":labelledWindows(pid:pid,ax:ax,candidates:visibleWindows(pid:pid)).map { ["windowId":Int($0.id),"title":$0.title,"bounds":$0.bounds.json] as JSON }])
 
         case "describe":
             guard let target = args["app"] as? String, let found = app(matching: target) else {
                 throw Failure("\"\(args["app"] as? String ?? "")\" diye açık bir uygulama yok.")
             }
-            var result = try describe(pid: found.processIdentifier, part: args["part"] as? String ?? "window")
+            var result = try describe(pid: found.processIdentifier, part: args["part"] as? String ?? "window", windowId:(args["windowId"] as? NSNumber)?.uint32Value, background:args["background"] as? Bool == true, taskPermissionIdentity:args["taskPermissionIdentity"] as? JSON)
             result["app"] = found.localizedName ?? ""
             result["pid"] = Int(found.processIdentifier)
             respond(id: id, result: result)
+
+        case "validate_snapshot":
+            guard let target=args["app"] as? String, let found=app(matching:target) else { throw Failure("Uygulama kapandı.") }
+            let observed=try validateObservation(args,app:found)
+            if let ref=args["ref"] as? Int { _ = try requireTargetLabel(args["label"] as? String,actual:observed.tree.labels[ref]) }
+            respond(id:id, result:observed.json)
+
+        case "filesystem_move_noreplace":
+            respond(id:id,result:safeFileMove(args))
+        case "document_move_observe":
+            respond(id:id,result:try observeDocumentMove(args))
+        case "validate_document_move":
+            respond(id:id,result:try validateDocumentMove(args))
+        case "background_document_move":
+            respond(id:id,result:try backgroundDocumentMove(args))
+        case "background_open_document":
+            guard let path=args["path"] as? String else {throw Failure("Document path required.")}
+            respond(id:id,result:try backgroundOpenDocument(path:path))
+        case "background_save_document":
+            respond(id:id,result:try backgroundSaveDocument(args))
+        case "validate_background_action", "background_scroll_position", "background_menu_open", "background_menu_select", "background_drag":
+            if op != "validate_background_action" {args["action"] = op == "background_scroll_position" ? "scroll-position" : op == "background_menu_open" ? "menu-open" : op == "background_drag" ? "drag":"menu-select"}
+            respond(id:id,result:try performExtendedBackground(args,validateOnly:op == "validate_background_action"))
+        case "validate_background", "background_press", "background_set_value":
+            try checkBackgroundSession()
+            guard let target=args["app"] as? String, let found=app(matching:target) else { throw Failure("Target app closed; no input sent.") }
+            let observed=try validateObservation(args,app:found)
+            guard observed.background, observed.part == "window" else { throw Failure("A background window snapshot is required; no foreground fallback.") }
+            try requireBackgroundTarget(target:observed.pid,foreground:focusedApplicationPID())
+            guard let ref=args["ref"] as? Int, let element=observed.tree.elements[ref] else { throw Failure("The target ref is unavailable; no input sent.") }
+            _ = try requireTargetLabel(args["label"] as? String,actual:observed.tree.labels[ref])
+            let action = op == "background_set_value" || args["action"] as? String == "set-value" ? "set-value" : "press"
+            guard backgroundCapability(bundle:observed.bundleId,role:string(element,"AXRole") ?? "",action:action,subrole:string(element,"AXSubrole") ?? ""),
+                  attribute(element,"AXEnabled") as? Bool != false else { throw Failure("Unsupported background capability. No activation, key or pointer fallback; wait for the user.") }
+            AXUIElementSetMessagingTimeout(element,0.5)
+            if action == "press" {
+                var names:CFArray?
+                guard AXUIElementCopyActionNames(element,&names) == .success, (names as? [String] ?? []).contains("AXPress") else { throw Failure("Background AXPress is unavailable; no input sent.") }
+            } else {
+                var settable:DarwinBoolean = false
+                guard AXUIElementIsAttributeSettable(element,"AXValue" as CFString,&settable) == .success, settable.boolValue else { throw Failure("Background AXValue is not writable; no input sent.") }
+                guard let text=args["text"] as? String else { throw Failure("Replacement text is required.") }
+                try requireBackgroundReplacement(expected:args["expectedValue"] as? String,current:string(element,"AXValue"),replacement:text)
+            }
+            if op == "validate_background" {
+                var result=observed.json; result["controlMode"]="backgroundStrict"
+                respond(id:id,result:result); break
+            }
+            // The blocking helper loop is a single writer. Revalidate immediately
+            // before the one semantic operation; never post a global event.
+            _ = try validateObservation(args,app:found)
+            let foreground=focusedApplicationPID()
+            try checkBackgroundSession()
+            try requireBackgroundTarget(target:observed.pid,foreground:foreground)
+            guard let cursor=CGEvent(source:nil)?.location else { throw Failure("Cursor state unavailable; no input sent.") }
+            let operationId=UUID().uuidString
+            let delivery:AXError
+            if action == "press" { delivery=AXUIElementPerformAction(element,"AXPress" as CFString) }
+            else {
+                let text=args["text"] as! String
+                try requireBackgroundReplacement(expected:args["expectedValue"] as? String,current:string(element,"AXValue"),replacement:text)
+                delivery=AXUIElementSetAttributeValue(element,"AXValue" as CFString,text as CFString)
+            }
+            usleep(50_000)
+            var result:JSON
+            do { result=try describe(pid:observed.pid,part:"window",windowId:observed.window.id,background:true) }
+            catch { result=["status":"unknown","reasonCode":"post-observation-unavailable","detail":String(describing:error)] }
+            let afterForeground=focusedApplicationPID()
+            let foregroundChanged=foreground != afterForeground
+            let cursorChanged=cursor != CGEvent(source:nil)?.location
+            result["operationId"]=operationId; result["backend"]="ax";result["controlMode"]="backgroundStrict"
+            result["foregroundBefore"]=foreground.map { Int($0) as Any } ?? NSNull(); result["foregroundAfter"]=afterForeground.map { Int($0) as Any } ?? NSNull()
+            result["foregroundChanged"]=foregroundChanged;result["cursorChanged"]=cursorChanged;result["cleanup"]="complete"
+            if backgroundDeliveryUncertain(deliverySucceeded:delivery == .success,foregroundChanged:foregroundChanged,cursorChanged:cursorChanged,sessionVerified:(try? checkBackgroundSession()) != nil) {
+                result["status"]="unknown";result["reasonCode"]=foregroundChanged ? "foreground-changed" : cursorChanged ? "cursor-changed" : "ax-delivery-uncertain"
+            } else if result["status"] == nil {
+                if action == "set-value" {
+                    // Read the exact target, not a matching caption elsewhere.
+                    result["status"] = string(element,"AXValue") == (args["text"] as? String) ? "verified" : "unknown"
+                } else { result["status"] = result["changed"] as? String == "(değişiklik yok)" ? "ineffective" : "delivered" }
+            }
+            respond(id:id,result:result)
 
         case "click", "doubleclick":
             guard accessibilityTrusted(prompt: false) else {
@@ -480,23 +715,38 @@ func handle(_ request: JSON) {
             guard let target = args["app"] as? String, let found = app(matching: target) else {
                 throw Failure("Uygulama bulunamadı.")
             }
-            guard let ref = args["ref"] as? Int, let element = trees[found.processIdentifier]?.elements[ref] else {
-                throw Failure("[\(args["ref"] as? Int ?? -1)] diye bir öğe yok. Önce describe çağır.")
-            }
-            guard let spot = centre(element) else { throw Failure("Bu öğenin ekranda bir yeri yok.") }
-            found.activate()
-            usleep(150_000)
-            clickPoint(spot, double: op == "doubleclick")
+            let observed=try validateObservation(args,app:found,activate:true)
+            guard let ref=args["ref"] as? Int, let element=observed.tree.elements[ref] else { throw Failure("Ref bu snapshot'ta yok. Yeniden gözlemle.") }
+            let targetLabel=try requireTargetLabel(args["label"] as? String,actual:observed.tree.labels[ref])
+            guard let spot=centre(element) else { throw Failure("Bu öğenin ekranda bir yeri yok.") }
+            if observed.part != "menu" && !CGRect(x:observed.window.bounds.x,y:observed.window.bounds.y,width:observed.window.bounds.width,height:observed.window.bounds.height).contains(spot) { throw Failure("Öğe seçilen pencerenin dışında; input gönderilmedi.") }
+            var actionNames:CFArray?
+            let canPress=op=="click" && AXUIElementCopyActionNames(element,&actionNames) == .success && (actionNames as? [String] ?? []).contains("AXPress")
+            if canPress {
+                guard AXUIElementPerformAction(element,"AXPress" as CFString) == .success else { throw Failure("The target refused AXPress; observe the actual result before retrying.") }
+            } else { clickPoint(spot,double:op=="doubleclick") }
             usleep(250_000)
-            respond(id: id, result: ["x": spot.x, "y": spot.y])
+            var result=observed.json;result["x"]=spot.x;result["y"]=spot.y;result["targetLabel"]=targetLabel;result["inputMethod"]=canPress ? "accessibility-press" : "pointer"
+            respond(id:id,result:result)
 
         case "type":
             guard accessibilityTrusted(prompt: false) else {
                 throw Failure("Erişilebilirlik izni yok.")
             }
             guard let text = args["text"] as? String, !text.isEmpty else { throw Failure("Yazılacak bir metin gerekiyor.") }
-            typeText(text)
-            respond(id: id, result: ["typed": text.count])
+            guard let target=args["app"] as? String, let found=app(matching:target) else { throw Failure("Uygulama bulunamadı.") }
+            let observed=try validateObservation(args,app:found,activate:true)
+            guard let expected=observed.focused, let current=focusedElement(observed.pid), CFEqual(expected,current) else { throw Failure("Metin odağı değişti; yeniden gözlemle. Input gönderilmedi.") }
+            guard text.count<=2000 else { throw Failure("Text input is limited to 2000 characters per action; nothing was typed.") }
+            try typeText(text) {
+                guard AXIsProcessTrusted(), focusedApplicationPID()==observed.pid,
+                      let focus=focusedElement(observed.pid), CFEqual(expected,focus),
+                      let window=visibleWindows(pid:observed.pid).first(where:{$0.id==observed.window.id}), window.bounds.matches(observed.window.bounds) else {
+                    throw Failure("Typing stopped because permission, focus or window changed. Text may be partial; observe before retrying.")
+                }
+            }
+            var result=observed.json;result["typed"]=text.count
+            respond(id:id,result:result)
 
         case "screenshot":
             guard let target = args["app"] as? String, let found = app(matching: target) else {
@@ -505,9 +755,16 @@ func handle(_ request: JSON) {
             guard let path = args["path"] as? String, !path.isEmpty else {
                 throw Failure("Görüntünün yazılacağı bir yol gerekiyor.")
             }
-            found.activate()
-            usleep(250_000)
-            var shot = try capture(pid: found.processIdentifier, to: path)
+            if args["snapshotId"] == nil {
+                let look=try describe(pid:found.processIdentifier,part:"window",windowId:(args["windowId"] as? NSNumber)?.uint32Value)
+                args["snapshotId"]=look["snapshotId"]
+            }
+            let observed=try validateObservation(args,app:found)
+            guard observed.part=="window" else { throw Failure("Screenshot requires a window snapshot. Describe part=window first.") }
+            var shot = try capture(pid: found.processIdentifier, windowId:observed.window.id,bounds:observed.window.bounds,to:path)
+            _ = try validateObservation(args,app:found)
+            shot.merge(observed.json) { _,new in new }
+            shot["imageCoordinateFrame"]="window-pixels"
             shot["app"] = found.localizedName ?? ""
             respond(id: id, result: shot)
 
@@ -518,8 +775,13 @@ func handle(_ request: JSON) {
 
         case "key":
             guard accessibilityTrusted(prompt: false) else { throw Failure("Erişilebilirlik izni yok.") }
+            guard let target=args["app"] as? String, let found=app(matching:target) else { throw Failure("Uygulama bulunamadı.") }
+            let observed=try validateObservation(args,app:found,activate:true)
+            let current=focusedElement(observed.pid)
+            guard (observed.focused==nil && current==nil) || (observed.focused != nil && current != nil && CFEqual(observed.focused!,current!)) else { throw Failure("Tuş odağı değişti; yeniden gözlemle. Input gönderilmedi.") }
             try pressKey(args["combo"] as? String ?? "")
-            respond(id: id, result: ["pressed": args["combo"] as? String ?? ""])
+            var result=observed.json;result["pressed"]=args["combo"] as? String ?? ""
+            respond(id:id,result:result)
 
         // -- calendar and reminders ------------------------------------------
 
@@ -614,16 +876,6 @@ func handle(_ request: JSON) {
 
         case "authenticate":
             respond(id: id, result: authenticateOwner(reason: args["reason"] as? String ?? "unlock Vunemi"))
-
-        case "vault_key":
-            // Only to Vunemi itself: any program of this user can start this helper.
-            guard callerIsVunemi() else { throw Failure("Kasa anahtarı yalnız Vunemi'ye verilir.") }
-            // create=false only looks; the app asks to create on first run.
-            respond(id: id, result: try vaultKey(create: args["create"] as? Bool ?? false))
-
-        case "caller_check":
-            // Whether vault_key would answer this caller; the key itself isn't touched.
-            respond(id: id, result: ["vunemi": callerIsVunemi()])
 
         default:
             throw Failure("Bilinmeyen işlem: \(op)")

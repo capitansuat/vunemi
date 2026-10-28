@@ -9,6 +9,8 @@
 -->
 <plist version="1.0">
 <dict>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Vunemi saves the TextEdit document you approve, without changing your foreground app. The document stays on this Mac.</string>
   <key>CFBundleIdentifier</key>
   <string>com.vunemi.helper</string>
   <key>CFBundleName</key>

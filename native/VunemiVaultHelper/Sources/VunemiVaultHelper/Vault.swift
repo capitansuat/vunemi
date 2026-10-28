@@ -1,10 +1,10 @@
-// The vault's master key, kept in the login keychain under this helper's name.
+// The vault master key lives in the login keychain. This executable is built
+// independently of desktop control: ordinary desktop updates cannot change its identity.
 //
-// Why here and not in the app: the keychain identifies a caller without an
-// Apple team by the hash of its code. The app's hash changes with every
-// JavaScript change, so an update would lose access to its own key; this
-// helper's hash changes only when its Swift code does. The app asks for the
-// key through a pipe and does the encryption itself.
+// Self-signed macOS clients get a cdhash Keychain partition, even with a stable
+// designated requirement. Keep this broker's signed bytes unchanged when the
+// desktop helper changes. Developer ID distribution uses the Apple team identity.
+// The app receives the key only in its isolated Vault utility process.
 //
 // The one rule that matters: a new key is written only when the keychain
 // says there is none. Any other answer — denied, cancelled, no UI allowed —
@@ -18,7 +18,7 @@ import Security
 // Only this name is ever read. Keys under names the app had before its first
 // release are left alone: looking at them made the keychain ask a new user
 // for their password before Vunemi had shown anything.
-private let service = "com.vunemi.vault"
+private let service = ownLeafHash() == nil ? "com.vunemi.vault.dev" : "com.vunemi.vault"
 private let account = "master-key"
 private let keyBytes = 32
 
@@ -64,7 +64,11 @@ private func store(_ data: Data) throws {
     }
 }
 
-func vaultKey(create: Bool) throws -> JSON {
+func vaultKey(create: Bool, interactive: Bool) throws -> JSON {
+    // A changed signature or locked login keychain must not hold startup hostage.
+    // Only a direct user request in the Vault UI allows macOS authentication UI.
+    let uiStatus = SecKeychainSetUserInteractionAllowed(interactive)
+    guard uiStatus == errSecSuccess else { throw Failure("Anahtar zinciri erişimi hazırlanamadı.") }
     if case .found(let data) = try find() {
         return ["key": data.base64EncodedString(), "created": false]
     }

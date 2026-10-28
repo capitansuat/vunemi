@@ -6,6 +6,7 @@ out/
 .DS_Store
 coverage/
 native/VunemiHelper/.build/
+native/VunemiVaultHelper/.build/
 native/VunemiRecorder/.build/
 apps/desktop/release/
 

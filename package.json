@@ -9,7 +9,9 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "build:helper": "cd native/VunemiHelper && swift build -c release && codesign --force --sign - --identifier com.vunemi.helper .build/release/VunemiHelper",
+    "build:helper": "pnpm build:desktop-helper && pnpm build:vault-helper",
+    "build:desktop-helper": "cd native/VunemiHelper && swift build -c release && codesign --force --sign - --identifier com.vunemi.helper .build/release/VunemiHelper",
+    "build:vault-helper": "cd native/VunemiVaultHelper && swift build -c release && codesign --force --sign - --identifier com.vunemi.vault-helper .build/release/VunemiVaultHelper",
     "predev": "node scripts/dev-permissions.mjs || true",
     "package": "bash scripts/package.sh",
     "signing-identity": "bash scripts/signing-identity.sh"
