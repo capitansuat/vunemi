@@ -1,0 +1,27 @@
+/** NEW owned fixture only; cooperative Stop after actual receiver down. No replay of unknown target. */
+import {it,expect} from 'vitest';
+import {readFileSync,writeFileSync,mkdirSync,copyFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {resolve,join} from 'node:path';
+import {Helper,type HelperCallOptions} from '../src/helper.js';
+import {createDesktopTools} from '../src/tools.js';
+import type {ToolContext,ToolCheckContext} from '@vunemi/agent-core';
+it.skipIf(process.env.VUNEMI_SLIDER_STOP_LIVE!=='1')('Stop after actual owned slider down settles exact-target up and durable unknown',async()=>{
+ const info=JSON.parse(readFileSync(process.env.VUNEMI_SLIDER_FIXTURE_INFO!,'utf8')) as {pid:number;windowId:number;statePath:string};
+ const evidence=resolve(process.env.VUNEMI_SLIDER_EVIDENCE!);mkdirSync(evidence,{recursive:true});const journal=join(evidence,'journal.json');
+ if(process.env.VUNEMI_SLIDER_SEED_JOURNAL)copyFileSync(process.env.VUNEMI_SLIDER_SEED_JOURNAL,journal);
+ class PinnedHelper extends Helper{calls:string[]=[];override async call(op:string,args:Record<string,unknown>={},opts:HelperCallOptions={}){this.calls.push(op);if(!['permissions','apps','describe','validate_background_action','background_drag','background_environment'].includes(op))throw Error('Unapproved Stop fixture operation');if(['describe','validate_background_action','background_drag'].includes(op)&&String(args.app)!==String(info.pid))throw Error('Wrong fixture process');if(op==='describe'&&(args.background!==true||args.windowId!==info.windowId||args.part!=='window'))throw Error('Wrong fixture window');return super.call(op,args,opts);}}
+ const helper=new PinnedHelper(process.env.VUNEMI_SLIDER_HELPER!,{operationJournalPath:journal}),tools=createDesktopTools({helper,settleMs:0}),stop=new AbortController(),ctx:ToolContext&ToolCheckContext={runId:`slider-stop-${Date.now()}`,signal:stop.signal,assertToolActive(){},handoff:async()=>false,offerUndo(){},attach(){}};
+ const state=()=>JSON.parse(readFileSync(info.statePath,'utf8')),proof:Record<string,unknown>={method:'source registered slider tool + final signed helper + separate NEW owned fixture; test single-operation approval, cooperative Stop after receiver down, not installed model acceptance',helperHash:createHash('sha256').update(readFileSync(process.env.VUNEMI_SLIDER_HELPER!)).digest('hex')};
+ try{
+  const before=await helper.call('background_environment') as {verified:boolean;unlocked:boolean;foregroundPid:number;cursor:unknown};expect(before.verified).toBe(true);expect(before.unlocked).toBe(true);expect(before.foregroundPid).not.toBe(info.pid);proof.before=before;const original=state();expect(original.events).toHaveLength(0);proof.stateBefore=original;
+  const observation=JSON.parse(String(await tools.find(t=>t.name==='desktop_background_describe')!.run({app:String(info.pid),windowId:info.windowId},ctx))),target=observation.extendedTargets.find((t:{profile:string})=>t.profile==='scope-fixture-slider-v1'),drag=tools.find(t=>t.name==='desktop_background_drag')!;expect(target).toBeDefined();const args={targetId:target.targetId,value:75};await drag.check!(args,ctx);proof.preview=await drag.preview!(args);proof.approval='explicit test single-operation approval simulation';
+  let done=false;const pending=drag.run(args,ctx).then(result=>{done=true;return {result};},error=>{done=true;return {error};});let receiver:ReturnType<typeof state>|undefined;
+  for(let i=0;i<1000&&!done;i++){receiver=state();if(receiver.events.some((e:{kind:string;type:number;window:number})=>e.kind==='window'&&e.type===1&&e.window===info.windowId))break;await new Promise(r=>setTimeout(r,2));}
+  proof.stateAtStop=receiver;expect(done).toBe(false);expect(receiver.events.some((e:{kind:string;type:number;window:number})=>e.kind==='window'&&e.type===1&&e.window===info.windowId)).toBe(true);stop.abort(Error('Authorized Stop after receiver down'));
+  const outcome=await pending;proof.outcome='error' in outcome?{message:String(outcome.error),deliveryUnknown:outcome.error.deliveryUnknown,noInputSent:outcome.error.noInputSent}:outcome;expect(outcome).toHaveProperty('error.deliveryUnknown',true);await helper.releaseRun(ctx.runId);await new Promise(r=>setTimeout(r,150));
+  const afterState=state();proof.stateAfter=afterState;const events=afterState.events.filter((e:{kind:string})=>e.kind==='window');expect(events.filter((e:{type:number})=>e.type===1)).toHaveLength(1);expect(events.filter((e:{type:number})=>e.type===2)).toHaveLength(1);expect(events.every((e:{window:number;flags:number})=>e.window===info.windowId&&e.flags===0)).toBe(true);expect(events.at(-1).type).toBe(2);const previous=events.at(-2),up=events.at(-1);expect(up.x).toBe(previous.x);expect(up.y).toBe(previous.y);
+  const rows=JSON.parse(readFileSync(journal,'utf8')).records,own=rows.filter((r:{ownerRunId:string})=>r.ownerRunId===ctx.runId);expect(own).toHaveLength(1);expect(own[0].state).toBe('unknown');proof.operation=own[0];
+  const after=await helper.call('background_environment') as typeof before;proof.after=after;expect(after.verified).toBe(true);expect(after.unlocked).toBe(true);expect(after.foregroundPid).toBe(before.foregroundPid);expect(after.cursor).toEqual(before.cursor);proof.status='pass';
+ }catch(error){proof.status='failed';proof.error=error instanceof Error?error.message:String(error);throw error;}finally{proof.calls=helper.calls;writeFileSync(join(evidence,'summary.json'),JSON.stringify(proof,null,2));await helper.releaseRun(ctx.runId);helper.dispose();}
+},30000);

@@ -18,6 +18,7 @@
  */
 
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
+import {outcomeFingerprint} from '@vunemi/agent-core';
 import type { Helper } from "./helper.js";
 import { formatDate, t } from "@vunemi/i18n";
 
@@ -93,6 +94,24 @@ export interface CalendarToolOptions {
 }
 
 export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] {
+  /** A second exact-ID query, never the write response, supports a completion claim. */
+  async function proveEvent(expected:MacEvent,kind:'event-created'|'event-updated',ctx:ToolContext):Promise<boolean>{
+    try{
+      if(!expected.id||!expected.calendarId||ctx.signal.aborted)return false;
+      ctx.assertToolActive?.();
+      const observed=await helper.call('event_get',{id:expected.id}) as MacEvent;
+      ctx.assertToolActive?.();if(ctx.signal.aborted)return false;
+      const project=(event:MacEvent)=>{
+        if(typeof event.id!=='string'||typeof event.calendarId!=='string'||!event.calendarId||typeof event.title!=='string'||typeof event.allDay!=='boolean'||!event.start||!event.end||!Number.isFinite(Date.parse(event.start))||!Number.isFinite(Date.parse(event.end)))throw Error('Invalid event readback');
+        return {id:event.id,calendarId:event.calendarId,title:event.title,start:new Date(event.start).toISOString(),end:new Date(event.end).toISOString(),allDay:event.allDay,location:event.location??'',notes:event.notes??''};
+      };
+      const requestHash=await outcomeFingerprint(project(expected)),observedHash=await outcomeFingerprint(project(observed));
+      if(requestHash!==observedHash)return false;
+      ctx.assertToolActive?.();if(ctx.signal.aborted)return false;
+      ctx.recordOutcomeEvidence?.({version:1,domain:'calendar',kind,targetId:expected.id,requestHash,observedHash,source:'controller-readback'});
+      return true;
+    }catch{return false;} // The write already happened; never retry it to obtain proof.
+  }
   /** Reminder titles by id, from the last listing, so a card can name the one it changes. */
   const reminderTitles = new Map<string, string>();
   const sameTitle = (a: string | undefined, b: string) => (a ?? "").trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
@@ -237,6 +256,7 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
         if (twin) throw new Error(t("mac.calendar.duplicate", { title: twin.title, when: readable(twin.start!) }));
         const clashes = args.allDay === true ? [] : around.filter((e) => !e.allDay && e.start && e.end && new Date(e.start) < end && new Date(e.end) > start);
 
+        ctx.assertToolActive?.();if(ctx.signal.aborted)throw Error('Stopped before creating event.');
         const event = (await helper.call("event_create", {
           title: String(args.title),
           start: iso(start),
@@ -258,8 +278,10 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
           start: event.start ?? iso(start),
           ...(event.calendar && { calendar: event.calendar }),
         });
+        const calendarMatches=!calendar||calendar===event.calendarId||sameTitle(calendar,event.calendar);
+        const verified=calendarMatches&&await proveEvent({...event,title:String(args.title).trim(),start:iso(start),end:iso(end),allDay:args.allDay===true,location:args.location||'',notes:args.notes||''},'event-created',ctx);
         const overlap = clashes.length > 0 ? `\nIt overlaps with:\n${clashes.slice(0, 5).map(describeEvent).join("\n")}` : "";
-        return `Added: ${describeEvent(event)}${overlap}`;
+        return `Added: ${describeEvent(event)}${overlap}\n${verified?'Saved and independently verified.':'Saved, but not independently verified. Do not repeat the write; review the existing event.'}`;
       },
     },
 
@@ -329,11 +351,13 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
       async run(args: EventChange, ctx: ToolContext) {
         await ensure("event");
         const found = (await helper.call("event_get", { id: String(args.id) })) as MacEventDetail;
+        if(found.id!==String(args.id))throw Error('Calendar identity changed before update. Nothing was changed.');
         if (found.attendees?.length) throw new Error(t("mac.calendar.updateMeeting", { title: found.title }));
         if (found.recurring) throw new Error(t("mac.calendar.updateRecurring", { title: found.title }));
         if (found.writable === false) throw new Error(t("mac.calendar.updateReadOnly", { title: found.title, calendar: found.calendar }));
         const fields = eventFields(args, found);
         if (Object.keys(fields).length === 0) throw new Error(t("mac.calendar.nothingToChange"));
+        ctx.assertToolActive?.();if(ctx.signal.aborted)throw Error('Stopped before changing event.');
         const { before, after } = (await helper.call("event_update", { id: found.id, ...fields })) as { before: MacEvent; after: MacEvent };
         // Changing it back sets every field this change touched to what it was.
         ctx.offerUndo(t("mac.calendar.undoUpdate", { title: after.title }), async () => {
@@ -341,7 +365,8 @@ export function createCalendarTools({ helper }: CalendarToolOptions): ToolDef[] 
           for (const key of Object.keys(fields) as (keyof EventFields)[]) back[key] = before[key] ?? "";
           await helper.call("event_update", { id: after.id, ...back });
         });
-        return `Changed: ${describeEvent(after)}\nIt was: ${describeEvent(before).split("\n")[0]}\nThe user can change it back from the activity log.`;
+        const verified=await proveEvent({...found,...fields,id:found.id,title:fields.title?.trim()??found.title},'event-updated',ctx);
+        return `Changed: ${describeEvent(after)}\nIt was: ${describeEvent(before).split("\n")[0]}\nThe user can change it back from the activity log.\n${verified?'Saved and independently verified.':'Saved, but not independently verified. Do not repeat the write; review the existing event.'}`;
       },
     },
 

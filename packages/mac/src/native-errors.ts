@@ -5,6 +5,20 @@
 import { getLocale, t } from "@vunemi/i18n";
 
 const exact: Record<string, string> = {
+  "Snapshot eski veya bu uygulamaya ait değil. Yeniden gözlemle; input gönderilmedi.": "Snapshot is stale or belongs to another app. Observe again. No input was sent.",
+  "Pencere taşındı, kapandı veya değişti. Yeniden gözlemle; input gönderilmedi.": "The window moved, closed or changed. Observe again. No input was sent.",
+  "Pencere içeriği değişti; eski ref kullanılamaz. Yeniden gözlemle.": "Window content or layout changed; old refs cannot be used. Observe again. No input was sent.",
+  "Seçilen pencere kapandı veya kesin eşleşmiyor. Yeniden gözlemle.": "The selected window closed or cannot be matched unambiguously. Observe again.",
+  "Pencere kimliği kesin eşleşmiyor. desktop_windows ile pencereyi seçip yeniden gözlemle; başka pencereye geçilmedi.": "Window identity cannot be matched unambiguously. Select with desktop_windows and observe again; no other window was selected.",
+  "Seçilen pencere odaklanmadı; input gönderilmedi.": "The selected window did not receive focus. No input was sent. Observe again.",
+  "Metin odağı değişti; yeniden gözlemle. Input gönderilmedi.": "Text focus changed. Observe again. No input was sent.",
+  "Tuş odağı değişti; yeniden gözlemle. Input gönderilmedi.": "Keyboard focus changed. Observe again. No input was sent.",
+  "Ref bu snapshot'ta yok. Yeniden gözlemle.": "The ref does not belong to this snapshot. Observe again.",
+  "Öğe seçilen pencerenin dışında; input gönderilmedi.": "The element is outside the selected window. No input was sent.",
+  "Uygulama pencere yayınlamıyor; desktop_describe part=menu kullanılabilir.": "The app exposes no window. Try desktop_describe part=menu.",
+  "Menü kapandı.": "The menu closed. Observe again.",
+  "Menü okunamıyor.": "The menu could not be read.",
+  "Uygulama kapandı.": "The app closed. Observe again.",
   "yanıt veren uygulama yok": "No app responded to the Accessibility check.",
   "tamam": "ok",
   "erişilebilirlik kapalı (apiDisabled)": "Accessibility is disabled (apiDisabled).",

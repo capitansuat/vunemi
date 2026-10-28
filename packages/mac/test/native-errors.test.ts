@@ -5,6 +5,11 @@ import { nativeErrorText } from "../src/native-errors.js";
 afterEach(() => setLocale("tr"));
 
 describe("native helper errors", () => {
+  it("keeps stale snapshot diagnostics actionable outside Turkish UI", () => {
+    setLocale("en");
+    expect(nativeErrorText("Snapshot eski veya bu uygulamaya ait değil. Yeniden gözlemle; input gönderilmedi.")).toContain("Observe again");
+    expect(nativeErrorText("Pencere taşındı, kapandı veya değişti. Yeniden gözlemle; input gönderilmedi.")).toContain("No input was sent");
+  });
   it("keeps Turkish diagnostics in the Turkish interface", () => {
     setLocale("tr");
     expect(nativeErrorText("Erişilebilirlik izni yok.")).toBe("Erişilebilirlik izni yok.");

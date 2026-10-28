@@ -47,6 +47,7 @@ const BLOCKED_BUNDLES: readonly string[] = [
   // Vunemi's own control plane, and the settings that govern it
   "com.github.Electron",
   "com.vunemi",
+  "com.openai.codex",
   "com.apple.systempreferences",
   "com.apple.SystemSettings",
   // Anything that can run code on this Mac as the user
@@ -60,6 +61,7 @@ const BLOCKED_NAMES: readonly string[] = [
   // Vunemi itself, by name too: the bundle id above changes when the app is
   // published under its own domain, and the block must not lapse with it.
   "vunemi",
+  "codex",
   "terminal",
   "iterm",
   "warp",
@@ -137,5 +139,5 @@ function reasonFor(name: string, bundle: string): string {
 
 /** The visible list, for the model's instructions. */
 export function blockedExamples(): string {
-  return "terminals, password apps, System Settings and Vunemi itself";
+  return "terminals, password apps, System Settings, Codex and Vunemi itself";
 }

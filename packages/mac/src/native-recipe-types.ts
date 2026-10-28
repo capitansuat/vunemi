@@ -1,0 +1,4 @@
+import type {DesktopEvidence} from '@vunemi/agent-core';
+export interface NativeRecipeBinding {target:{path:string;pid:number;windowId:number;bundleId:'com.apple.TextEdit';startSec:string;startUsec:string;parentDevice:string;parentInode:string};version:{device:string;inode:string;size:string;mtimeNs:string;ctimeNs:string;sha256:string};textUnits:number;uid:number;securitySessionId:number;helperRevision:string}
+export type NativeRecipeSlotResult= {status:'verified';receipts?:DesktopEvidence[];afterBinding:NativeRecipeBinding;backup:{path:string;sha256:string};dispatchIds:string[]} | {status:'backup-only'|'no-input'|'unknown';noInputSent?:true;backup?:{path:string;sha256:string};dispatchIds:string[];reasonCode?:string};
+export interface NativeRecipeExecutionContext {runId:string;signal:AbortSignal;assertActive():void;beforeChild(phase:'append'|'save',dispatchId:string):void;recordBackup(path:string,hash:string):void;expiresAt?:number}
