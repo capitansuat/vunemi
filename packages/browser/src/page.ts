@@ -9,7 +9,9 @@
  * to detect automation, and `Runtime.evaluate` works without it.
  */
 
-import type { AXNode } from "@vunemi/perception";
+import { createHash } from "node:crypto";
+import { outline, type AXNode } from "@vunemi/perception";
+import type { BoundAction, PageState } from "./bound-actions.js";
 import type { CdpSession } from "./cdp.js";
 import { closedFrame } from "./frames.js";
 
@@ -75,6 +77,8 @@ export class PageDriver {
    * cursor arriving before the click lands. Optional; failures are ignored.
    */
   pointer: ((p: PointerEvent) => Promise<void> | void) | null = null;
+  strictCapture?:()=>Promise<Buffer>;
+  strictRegionCapture?:(region:{x:number;y:number;width:number;height:number})=>Promise<Buffer>;
   private mainFrameId: string | null = null;
   private loading = false;
   private readonly loadWaiters = new Set<() => void>();
@@ -206,6 +210,18 @@ export class PageDriver {
 
   async location(): Promise<{ url: string; title: string }> {
     return this.evaluate<{ url: string; title: string }>("({ url: location.href, title: document.title })");
+  }
+
+  /** Main-document, exact backend ref readback. Values are transient and never persisted in receipts. */
+  async fieldOutcome(ref:number):Promise<{value:string;label?:string}|null>{
+    if(this.at(ref).frame||await this.ownerField(ref))return null;
+    return this.callOn(ref,`function(){
+      if(!this.isConnected||this.ownerDocument!==document||this.ownerDocument.defaultView!==top)return null;
+      if(this.tagName==='SELECT'){if(this.multiple||this.selectedOptions.length!==1)return null;return {value:this.value,label:this.selectedOptions[0].label};}
+      if(this.tagName==='TEXTAREA')return {value:this.value};
+      if(this.tagName==='INPUT'&&!['password','hidden','file','checkbox','radio','submit','button','image','reset'].includes(this.type))return {value:this.value};
+      return null;
+    }`);
   }
 
   /**
@@ -624,6 +640,94 @@ export class PageDriver {
   private evaluate<T>(expression: string): Promise<T> {
     return evaluateIn<T>(this.s, expression);
   }
+
+  async strictState():Promise<PageState> {
+    const {frameTree}=await this.s.send<{frameTree:{frame:{id:string;loaderId?:string;url:string}}}>("Page.getFrameTree");
+    const geometry=await this.evaluate<{width:number;height:number;scale:number;scrollX:number;scrollY:number}>("({width:innerWidth,height:innerHeight,scale:devicePixelRatio,scrollX,scrollY})");
+    return {frameId:frameTree.frame.id,loaderId:frameTree.frame.loaderId??'',url:frameTree.frame.url,...geometry};
+  }
+
+  async strictReadback(ref?:number):Promise<{text:string;scrollX:number;scrollY:number;target?:unknown;title?:string;refs?:number[];labels?:Array<{ref:number;role:string;name:string}>}> {
+    const nodes=await this.axNodes();const state=await this.strictState();
+    const canvasLines:string[]=[],canvasRefs:number[]=[];
+    for(const node of nodes.filter(node=>!node.ignored&&['Canvas','image','graphics-document'].includes(String(node.role?.value))).slice(0,32)){
+      const id=node.backendDOMNodeId;if(id===undefined||this.at(id).frame)continue;
+      if((await this.describe(id)).nodeName==='CANVAS'&&await this.callOn<boolean>(id,"function(){return this.ownerDocument.defaultView===this.ownerDocument.defaultView.top;}")){canvasRefs.push(id);canvasLines.push(`[${id}] Canvas ${JSON.stringify(String(node.name?.value??'').slice(0,256))} (bound screenshot required)`);}
+    }
+    const observed=outline(nodes,{maxChars:16000});
+    const target=ref===undefined?undefined:await this.callOn(ref,"function(){return {tag:this.tagName,role:this.getAttribute('role')||'',scrollTop:this.scrollTop,scrollLeft:this.scrollLeft};}");
+    const refs=[...observed.refs,...canvasRefs],eligible=new Set(refs);
+    const labels=nodes.filter(node=>!node.ignored&&node.backendDOMNodeId!==undefined&&eligible.has(node.backendDOMNodeId)).map(node=>({ref:node.backendDOMNodeId!,role:String(node.role?.value??'').slice(0,64),name:String(node.name?.value??'').slice(0,200)}));
+    return {refs,labels,title:(await this.location()).title.slice(0,500),text:[observed.text,...canvasLines].join('\n'),scrollX:state.scrollX,scrollY:state.scrollY,...(target?{target}:{})};
+  }
+
+  /** No implicit scroll/focus: all coordinates stay in the observed viewport. */
+  async strictPrepare(args:BoundAction):Promise<unknown> {
+    const at=this.at(args.ref);
+    if(at.frame)throw new PageActionError("Strict gestures currently require a main-frame target; embedded frame gestures are unsupported.");
+    if(await this.ownerField(args.ref))throw new PageActionError("This field belongs to the user; no strict input is permitted.");
+    const info=await this.callOn<{tag:string;role:string;box:number[];scroll:number[];enabled:boolean;label:string;mainFrame:boolean}>(args.ref,
+      "function(){const r=this.getBoundingClientRect();return {mainFrame:this.ownerDocument.defaultView===this.ownerDocument.defaultView.top,tag:this.tagName,role:this.getAttribute('role')||'',box:[r.left,r.top,r.width,r.height],scroll:[this.scrollLeft,this.scrollTop,this.scrollWidth,this.scrollHeight,this.clientWidth,this.clientHeight],label:(this.getAttribute('aria-label')||(this.labels&&this.labels[0]&&this.labels[0].innerText)||(['BUTTON','A'].includes(this.tagName)||String(this.getAttribute('role')).startsWith('menuitem')?this.innerText:'')||this.getAttribute('title')||this.tagName).slice(0,200),enabled:!this.disabled&&this.getAttribute('aria-disabled')!=='true'};}");
+    if(!info.mainFrame)throw new PageActionError("Strict gestures require a main-frame target; observe the parent page or use a user handoff.");
+    const [left,top,width,height]=info.box as [number,number,number,number];
+    const state=await this.strictState();
+    if(!info.enabled||width<=1||height<=1||left<0||top<0||left+width>state.width||top+height>state.height)throw new PageActionError("The strict target is disabled or not fully visible; observe again.");
+    const domDrag=args.action==='drag'&&args.toRef!==undefined;
+    if(domDrag&&[args.x,args.y,args.toX,args.toY].some(value=>value!==undefined))throw new PageActionError("DOM drag uses refs, not canvas coordinates.");
+    const visual=args.x!==undefined||args.y!==undefined||args.action==='drag'&&!domDrag;
+    if(info.tag==='CANVAS'&&!visual)throw new PageActionError("Canvas input requires observed screenshot coordinates.");
+    if(visual&&info.tag!=='CANVAS')throw new PageActionError("Screenshot coordinates require an observed canvas element.");
+    if(args.action==='menu'&&!['menuitem','menuitemcheckbox','menuitemradio'].includes(info.role))throw new PageActionError("A semantic menu action requires an observed menu item.");
+    const x=visual?args.x!:left+width/2,y=visual?args.y!:top+height/2;
+    const inside=(px:number,py:number)=>Number.isFinite(px)&&Number.isFinite(py)&&px>left&&px<left+width&&py>top&&py<top+height;
+    if(!inside(x,y))throw new PageActionError("Coordinates are outside the observed canvas.");
+    if(args.action==='drag'&&(!domDrag&&!inside(args.toX!,args.toY!)||!Number.isSafeInteger(args.steps??8)||(args.steps??8)<2||(args.steps??8)>24))throw new PageActionError("Drag must remain inside the canvas with 2–24 steps.");
+    if(args.action==='scroll'&&(!Number.isFinite(args.delta)||Math.abs(args.delta!)<1||Math.abs(args.delta!)>600||info.scroll[3]!<=info.scroll[5]!))throw new PageActionError("Scroll requires a real scrollable container and a bounded delta of at most 600 pixels.");
+    await this.uncovered(args.ref,x,y);
+    const destination=domDrag?await this.strictPrepare({bindingId:args.bindingId,action:'click',ref:args.toRef!}):undefined;
+    return {ref:args.ref,x,y,...(destination?{destination}:{}),box:info.box,tag:info.tag,role:info.role,label:info.label,scroll:args.action==='scroll'?info.scroll:undefined};
+  }
+
+  async strictPerform(args:BoundAction,raw:unknown,guard:()=>Promise<void>):Promise<void> {
+    const plan=raw as {x:number;y:number;destination?:{x:number;y:number}};
+    await guard();
+    if(args.action==='scroll'){
+      await this.callOn(args.ref,"function(delta){this.scrollTop+=delta;return this.scrollTop;}",[args.delta]);await this.settle();return;
+    }
+    let pressed=false,last={x:plan.x,y:plan.y};
+    try {
+      await this.s.send("Input.dispatchMouseEvent",{type:"mouseMoved",...last});await guard();
+      pressed=true;await this.s.send("Input.dispatchMouseEvent",{type:"mousePressed",...last,button:"left",buttons:1,clickCount:1});
+      if(args.action==='drag')for(let i=1;i<=(args.steps??8);i++){
+        await guard();const n=i/(args.steps??8),end=plan.destination??{x:args.toX!,y:args.toY!};last={x:plan.x+(end.x-plan.x)*n,y:plan.y+(end.y-plan.y)*n};
+        await this.s.send("Input.dispatchMouseEvent",{type:"mouseMoved",...last,button:"left",buttons:1});
+      }
+      await guard();
+    } finally {
+      if(pressed)await this.s.send("Input.dispatchMouseEvent",{type:"mouseReleased",...last,button:"left",buttons:0,clickCount:1});
+    }
+    await this.settle();
+  }
+
+  async strictVisualState(selectedRef?:number):Promise<Record<string,string>> {
+    const nodes=await this.axNodes(),result:Record<string,string>={};
+    const candidates=selectedRef===undefined?nodes.filter(node=>!node.ignored&&['Canvas','image','graphics-document'].includes(String(node.role?.value))).slice(0,32).flatMap(node=>node.backendDOMNodeId===undefined?[]:[node.backendDOMNodeId]):[selectedRef];
+    const state=await this.strictState();
+    for(const ref of candidates){
+      if(this.at(ref).frame||(await this.describe(ref)).nodeName!=='CANVAS')continue;
+      const info=await this.callOn<{box:number[];style:string;mainFrame:boolean}>(ref,"function(){const r=this.getBoundingClientRect(),s=getComputedStyle(this);return {mainFrame:this.ownerDocument.defaultView===this.ownerDocument.defaultView.top,box:[r.left,r.top,r.width,r.height],style:[s.transform,s.filter,s.opacity,s.visibility,s.display].join('|')};}");
+      if(!info.mainFrame)continue;
+      const [x,y,width,height]=info.box as [number,number,number,number];
+      if(width<=1||height<=1||x<0||y<0||x+width>state.width||y+height>state.height||width*height>2_000_000)continue;
+      const region={x:Math.floor(x),y:Math.floor(y),width:Math.ceil(x+width)-Math.floor(x),height:Math.ceil(y+height)-Math.floor(y)};
+      const pixels=this.strictRegionCapture?await this.strictRegionCapture(region):Buffer.from((await this.s.send<{data:string}>("Page.captureScreenshot",{format:"png",captureBeyondViewport:false,clip:{x:region.x+state.scrollX,y:region.y+state.scrollY,width:region.width,height:region.height,scale:1}})).data,'base64');
+      result[ref]=createHash('sha256').update(JSON.stringify(info)).update(pixels).digest('hex');
+    }
+    return result;
+  }
+
+  async strictRelease():Promise<void> { /* strictPerform awaits its own exact pointer release. */ }
+  async strictScreenshot():Promise<Buffer> {return this.screenshot(10000,this.strictCapture);}
 
   /** Maps CDP's "no node" errors to something the model can act on. */
   private async run<T>(ref: number, f: () => Promise<T>): Promise<T> {

@@ -46,6 +46,14 @@ export interface Draft {
   inReplyTo?: string;
 }
 
+/** Observed through a fresh exact-ID Drafts read, never a save acknowledgement. */
+export interface DraftReadback {id:string;account:string;isDraft:boolean;draft:Draft}
+
+/** A draft was acknowledged, but its identity or final content is unverified. Never retry the write. */
+export class DraftSaveUnverified extends Error {
+  constructor(readonly id:string='') {super('A draft was created, but its saved identity or content is not independently verified.');this.name='DraftSaveUnverified';}
+}
+
 export interface SearchQuery {
   /** Free text, matched against sender, subject and body. */
   text?: string;
@@ -94,6 +102,8 @@ export interface MailAccount {
   read(id: string): Promise<MessageBody>;
   /** Puts a draft in the user's drafts folder. Sends nothing. */
   saveDraft(draft: Draft): Promise<{ id: string }>;
+  /** Missing identity or unsupported readback returns no proof; never writes or sends. */
+  verifyDraft?(id:string,expected:Draft):Promise<DraftReadback|null>;
   /** Removes only a draft this account just created. Optional when the server cannot identify it safely. */
   deleteDraft?(id: string): Promise<void>;
   /** Actually sends. Only ever called by the outbox, after its hold expires. */

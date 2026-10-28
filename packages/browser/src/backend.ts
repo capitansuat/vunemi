@@ -23,12 +23,16 @@ export interface BrowserBackend {
   /** Called when a tab's session ends underneath us (tab closed, user cancelled debugging). */
   onDetach(listener: (targetId: string) => void): () => void;
   readonly connected: boolean;
+  /** Host attestation for owned browser content only; never a control-plane renderer. */
+  strictTarget?(targetId: string): Promise<{ownerId:string;kind:"managed-browser"|"owned-web-content";protected:false;hostPid?:number;headless?:true}>;
   close(): Promise<void>;
   /**
    * A JPEG of the tab taken the host's own way, when CDP's picture could be
    * stale — a page in a hidden window stops drawing. Optional.
    */
   capture?(targetId: string): Promise<Buffer>;
+  /** Exact viewport-DIP region of the same owned target, without activation. */
+  captureRegion?(targetId:string,region:{x:number;y:number;width:number;height:number}):Promise<Buffer>;
   /** Why the tab's last page was refused, if it was; see url-policy. */
   blockReason?(targetId: string): string | null;
 }
@@ -42,6 +46,8 @@ export class CdpBrowserBackend implements BrowserBackend {
   constructor(
     private readonly conn: CdpConnection,
     private readonly onClose?: () => Promise<void>,
+    private readonly strictOwner?: string,
+    private readonly strictHost?: {hostPid?:number;headless?:true},
   ) {
     conn.on("Target.detachedFromTarget", (p) => {
       const { targetId } = p as { targetId?: string };
@@ -93,6 +99,11 @@ export class CdpBrowserBackend implements BrowserBackend {
     const session = this.conn.session(sessionId);
     this.sessions.set(targetId, session);
     return session;
+  }
+
+  async strictTarget(targetId:string):Promise<{ownerId:string;kind:"managed-browser";protected:false;hostPid?:number;headless?:true}> {
+    if(!this.strictOwner || !(await this.listTabs()).some(tab=>tab.targetId===targetId))throw Error("This CDP target is not an attested managed browser page.");
+    return {ownerId:this.strictOwner,kind:"managed-browser",protected:false,...this.strictHost};
   }
 
   async close(): Promise<void> {

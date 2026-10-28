@@ -6,6 +6,30 @@ const valid = {
   smtpHost: "smtp.example.com", smtpPort: 587, smtpSecure: false,
 };
 
+describe('draft exact UID readback',()=>{
+ const id=Buffer.from(JSON.stringify({mailbox:'Drafts',validity:'42',uid:12})).toString('base64url');
+ const draft={to:['recipient@example.com'],cc:[],subject:'Synthetic',body:'Synthetic body'};
+ function fixture(change:{validity?:bigint;specialUse?:string;uid?:number;flags?:Set<string>;from?:string}={}){
+  const account=new ImapSmtpAccount(valid,()=> 'password');
+  const source=Buffer.from(`From: ${change.from??valid.email}\r\nTo: recipient@example.com\r\nSubject: Synthetic\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nSynthetic body\r\n`);
+  const client={isClosed:true,connect:vi.fn(async()=>{}),mailbox:{uidValidity:change.validity??42n},list:vi.fn(async()=>[{path:'Drafts',specialUse:change.specialUse??'\\Drafts'}]),getMailboxLock:vi.fn(async()=>({release:vi.fn()})),fetchOne:vi.fn(async(_uid:string,_options:unknown,_flags:{uid:boolean})=>({uid:change.uid??12,size:source.length,flags:change.flags??new Set(['\\Draft']),source})),append:vi.fn(),messageDelete:vi.fn()};
+  vi.spyOn(account as unknown as {client:()=>unknown},'client').mockReturnValue(client);return {account,client};
+ }
+ it('reads only the bound Drafts UID under its original UIDVALIDITY',async()=>{
+  const {account,client}=fixture();expect(await account.verifyDraft(id,draft)).toMatchObject({id,account:valid.email,isDraft:true,draft:{to:draft.to,subject:draft.subject}});
+  expect(client.getMailboxLock).toHaveBeenCalledWith('Drafts',{readOnly:true});expect(client.fetchOne.mock.calls.every(call=>call[0]==='12'&&call[2].uid===true)).toBe(true);expect(client.append).not.toHaveBeenCalled();expect(client.messageDelete).not.toHaveBeenCalled();
+ });
+ it.each([{validity:43n},{specialUse:'\\Sent'},{uid:13},{flags:new Set(['\\Seen'])},{from:'other@example.com'}])('refuses changed draft identity/state #%#',async change=>{
+  const {account,client}=fixture(change);expect(await account.verifyDraft(id,draft)).toBeNull();expect(client.append).not.toHaveBeenCalled();
+ });
+ it('never attempts a read for an unidentified saved draft',async()=>{const {account,client}=fixture();expect(await account.verifyDraft('',draft)).toBeNull();expect(client.fetchOne).not.toHaveBeenCalled();});
+ it('keeps an APPEND without UIDPLUS unidentified and does not guess a message or retry APPEND',async()=>{
+  const {account,client}=fixture();client.append.mockResolvedValueOnce({uidValidity:42n});
+  const saved=await account.saveDraft(draft);expect(saved.id).toBe('');expect(client.append).toHaveBeenCalledOnce();
+  expect(await account.verifyDraft(saved.id,draft)).toBeNull();expect(client.fetchOne).not.toHaveBeenCalled();expect(client.append).toHaveBeenCalledOnce();
+ });
+});
+
 describe("manual mail account", () => {
   it("accepts an encrypted IMAP and STARTTLS SMTP configuration", () => {
     expect(validateMailConfig(valid)).toEqual(valid);

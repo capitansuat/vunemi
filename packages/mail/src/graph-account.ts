@@ -1,5 +1,5 @@
 /** Outlook mail via Microsoft Graph, with delegated tokens from the desktop process. */
-import { MailNotSent, NO_REPLY_SENDER, type Draft, type MailAccount, type MailAddress, type MessageBody, type MessageSummary, type Moved, type MoveTarget, type SearchQuery } from "./types.js";
+import { DraftSaveUnverified, MailNotSent, NO_REPLY_SENDER, type Draft, type DraftReadback, type MailAccount, type MailAddress, type MessageBody, type MessageSummary, type Moved, type MoveTarget, type SearchQuery } from "./types.js";
 import { t } from "@vunemi/i18n";
 
 interface GraphAddress { emailAddress?: { name?: string; address?: string } }
@@ -10,6 +10,8 @@ interface GraphMessage {
   from?: GraphAddress;
   toRecipients?: GraphAddress[];
   ccRecipients?: GraphAddress[];
+  bccRecipients?: GraphAddress[];
+  isDraft?:boolean;
   bodyPreview?: string;
   body?: { contentType?: string; content?: string };
   isRead?: boolean;
@@ -159,13 +161,22 @@ export class GraphMailAccount implements MailAccount {
   async saveDraft(draft: Draft): Promise<{ id: string }> {
     if (draft.inReplyTo) {
       const created = await this.request<GraphMessage>("POST", `/me/messages/${encodeURIComponent(draft.inReplyTo)}/createReply`);
-      if (!created.id) throw new Error(t("mail.outlook.replyDraftFailed"));
-      await this.request("PATCH", `/me/messages/${encodeURIComponent(created.id)}`, message(draft));
+      if (!created?.id) throw new DraftSaveUnverified();
+      try{await this.request("PATCH", `/me/messages/${encodeURIComponent(created.id)}`, message(draft));}
+      catch{throw new DraftSaveUnverified(created.id);}
       return { id: created.id };
     }
     const created = await this.request<GraphMessage>("POST", "/me/messages", message(draft));
-    if (!created.id) throw new Error(t("mail.outlook.draftFailed"));
+    if (!created?.id) throw new DraftSaveUnverified();
     return { id: created.id };
+  }
+
+  async verifyDraft(id:string,_expected:Draft):Promise<DraftReadback|null>{
+    if(!id)return null;
+    const data=await this.request<GraphMessage>('GET',`/me/mailFolders/drafts/messages/${encodeURIComponent(id)}?$select=id,isDraft,from,toRecipients,ccRecipients,bccRecipients,subject,body,hasAttachments`);
+    const from=data.from?.emailAddress?.address;
+    if(data.id!==id||data.isDraft!==true||typeof from!=='string'||from.trim().toLowerCase()!==this.label.trim().toLowerCase()||data.bccRecipients?.length||data.hasAttachments===true||data.body?.contentType?.toLowerCase()!=='text'||typeof data.body.content!=='string'||typeof data.subject!=='string'||!Array.isArray(data.toRecipients))return null;
+    return {id,account:from,isDraft:true,draft:{to:data.toRecipients.map(value=>address(value).address),cc:(data.ccRecipients??[]).map(value=>address(value).address),subject:data.subject,body:data.body.content}};
   }
 
   async deleteDraft(id: string): Promise<void> {

@@ -7,6 +7,7 @@
  * extension instead.
  */
 
+import { createHash } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
@@ -80,7 +81,7 @@ export async function launchIsolatedChrome(opts: LaunchOptions): Promise<CdpBrow
   while (Date.now() < deadline) {
     const conn = await tryConnect(portFile);
     if (conn) {
-      return new CdpBrowserBackend(conn, () => stopChrome(child));
+      return new CdpBrowserBackend(conn, () => stopChrome(child), createHash("sha256").update(opts.userDataDir).digest("hex"), {hostPid:child.pid,...(opts.headless?{headless:true as const}:{})});
     }
     if (exited) throw new Error(`Chrome exited during startup (${exe}).`);
     await new Promise((r) => setTimeout(r, 150));

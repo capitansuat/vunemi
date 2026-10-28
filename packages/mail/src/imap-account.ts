@@ -1,7 +1,7 @@
 import { ImapFlow, type FetchMessageObject } from "imapflow";
 import { simpleParser } from "mailparser";
 import nodemailer from "nodemailer";
-import { MailNotSent, NO_REPLY_SENDER, type Draft, type MailAccount, type MailAddress, type MessageBody, type MessageSummary, type Moved, type MoveTarget, type SearchQuery } from "./types.js";
+import { MailNotSent, NO_REPLY_SENDER, type Draft, type DraftReadback, type MailAccount, type MailAddress, type MessageBody, type MessageSummary, type Moved, type MoveTarget, type SearchQuery } from "./types.js";
 import { t } from "@vunemi/i18n";
 
 export interface ImapSmtpConfig {
@@ -328,6 +328,28 @@ export class ImapSmtpAccount implements MailAccount {
         ? encodeId({ mailbox: drafts, validity: String(result.uidValidity), uid })
         : "";
       return { id };
+    });
+  }
+
+  async verifyDraft(rawId:string,_expected:Draft):Promise<DraftReadback|null>{
+    if(!rawId)return null;
+    const id=decodeId(rawId);
+    return this.withClient(async client=>{
+      const folders=await client.list();
+      if(!folders.some(folder=>folder.path===id.mailbox&&folder.specialUse==='\\Drafts'))return null;
+      const lock=await client.getMailboxLock(id.mailbox,{readOnly:true});
+      try{
+        if(!client.mailbox||String(client.mailbox.uidValidity)!==id.validity)return null;
+        const details=await client.fetchOne(String(id.uid),{size:true},{uid:true});
+        if(!details||details.uid!==id.uid||(details.size??0)>2_000_000)return null;
+        const found=await client.fetchOne(String(id.uid),{flags:true,source:true},{uid:true});
+        if(!found||found.uid!==id.uid||!found.flags?.has('\\Draft')||found.flags.has('\\Deleted')||!found.source||found.source.length>2_000_000)return null;
+        const parsed=await simpleParser(found.source);
+        const people=(item:typeof parsed.to)=>(Array.isArray(item)?item:item?[item]:[]).flatMap(part=>part.value.map(value=>value.address??''));
+        const from=people(parsed.from);
+        if(from.length!==1||from[0]!.trim().toLowerCase()!==this.config.email.trim().toLowerCase()||people(parsed.bcc).length||parsed.attachments.length||typeof parsed.text!=='string'||typeof parsed.subject!=='string')return null;
+        return {id:rawId,account:from[0]!,isDraft:true,draft:{to:people(parsed.to),cc:people(parsed.cc),subject:parsed.subject,body:parsed.text}};
+      }finally{lock.release();}
     });
   }
 

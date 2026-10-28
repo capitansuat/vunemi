@@ -1,0 +1,12 @@
+import {it,expect,vi} from 'vitest';
+const state=vi.hoisted(()=>({beforeOpen:null as null|(()=>void),reads:0}));
+vi.mock('node:fs',async load=>{const actual=await load<typeof import('node:fs')>();return {...actual,openSync:(...args:Parameters<typeof actual.openSync>)=>{state.beforeOpen?.();return actual.openSync(...args);},readSync:(...args:any[])=>{state.reads++;return (actual.readSync as any)(...args);}}});
+import {mkdtempSync,writeFileSync,realpathSync,symlinkSync,unlinkSync,rmSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {Roots} from '../src/roots.js';
+import {createFileReadPermission,readPreparedFile} from '../src/read-permission.js';
+const ctx={runId:'r',signal:new AbortController().signal,assertToolActive(){}};
+it.each(['symlink','fifo','replacement'] as const)('opens a pinned nonblocking regular file before any bytes: %s',async(kind)=>{const dir=realpathSync(mkdtempSync(join(tmpdir(),'vun13-fd-')));state.reads=0;try{const path=join(dir,'a.txt'),privatePath=join(dir,'private.txt');writeFileSync(path,'approved');writeFileSync(privatePath,'private bytes');const args={path};const adapter=createFileReadPermission(new Roots([dir]));expect(await adapter.prepare(args,ctx)).not.toBeNull();expect(state.reads).toBe(0);state.beforeOpen=()=>{state.beforeOpen=null;unlinkSync(path);if(kind==='symlink')symlinkSync(privatePath,path);else if(kind==='fifo')execFileSync('/usr/bin/mkfifo',[path]);else writeFileSync(path,'replacement');};expect(()=>readPreparedFile(args,1024)).toThrow();expect(state.reads).toBe(0);}finally{state.beforeOpen=null;rmSync(dir,{recursive:true,force:true});}});
+it('reads the exact prepared version and keeps the finite read bound',async()=>{const dir=realpathSync(mkdtempSync(join(tmpdir(),'vun13-fd-')));try{const path=join(dir,'a.txt');writeFileSync(path,'approved');const args={path};const adapter=createFileReadPermission(new Roots([dir]));await adapter.prepare(args,ctx);expect(readPreparedFile(args,3)?.toString()).toBe('app');}finally{rmSync(dir,{recursive:true,force:true});}});

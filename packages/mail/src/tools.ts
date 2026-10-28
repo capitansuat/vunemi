@@ -14,10 +14,13 @@
  */
 
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
+import {outcomeFingerprint} from '@vunemi/agent-core';
+import {draftProjection} from './draft-proof.js';
 import { MailAccounts } from "./accounts.js";
 import type { Outbox } from "./outbox.js";
 import { redactionNote, stripSecrets } from "./secrets.js";
 import type { MessageSummary, MoveTarget } from "./types.js";
+import {DraftSaveUnverified} from './types.js';
 import { t } from "@vunemi/i18n";
 
 export const MAIL_INSTRUCTIONS = `Mail:
@@ -312,20 +315,40 @@ export function createMailTools({ accounts, outbox }: MailToolOptions): ToolDef[
         const to = addresses(args.to);
         if (to.length === 0) throw new Error(t("mail.draftNoRecipient"));
         const cc = args.cc && addresses(args.cc);
-        const saved = await entry.account.saveDraft({
+        const requested = {
           to,
           ...(cc && { cc }),
           subject: String(args.subject),
           body: String(args.body),
           ...(reply && { inReplyTo: reply.messageId }),
-        });
+        };
+        ctx.assertToolActive?.();if(ctx.signal.aborted)throw Error('Stopped before saving draft.');
+        let saved:{id:string};
+        try{saved=await entry.account.saveDraft(requested);}
+        catch(error){if(!(error instanceof DraftSaveUnverified))throw error;saved={id:error.id};}
         if (saved.id && entry.account.deleteDraft) {
           ctx.offerUndo(`${t("common.undo")}: ${String(args.subject)}`, async () => {
             await entry.account.deleteDraft!(saved.id);
           });
         }
         ctx.produced?.({ kind: "draft", account: entry.label, subject: String(args.subject), to });
-        return `Draft saved (${entry.label} → ${to.join(", ")} — "${String(args.subject)}"). It was not sent; the user can review and send it.`;
+        let verified=false;
+        try{
+          if(saved.id&&entry.account.verifyDraft&&!ctx.signal.aborted){
+            ctx.assertToolActive?.();
+            const observed=await entry.account.verifyDraft(saved.id,requested);
+            ctx.assertToolActive?.();
+            if(observed&&observed.id===saved.id&&observed.isDraft===true&&observed.account.trim().toLowerCase()===entry.account.label.trim().toLowerCase()&&!ctx.signal.aborted){
+              const project=(draft:typeof requested)=>({account:entry.id,id:saved.id,...draftProjection(draft)});
+              const requestHash=await outcomeFingerprint(project(requested)),observedHash=await outcomeFingerprint(project(observed.draft));
+              ctx.assertToolActive?.();
+              if(requestHash===observedHash&&!ctx.signal.aborted){
+                ctx.recordOutcomeEvidence?.({version:1,domain:'mail-draft',kind:'draft-saved',targetId:entry.id+'::'+saved.id,requestHash,observedHash,source:'controller-readback'});verified=true;
+              }
+            }
+          }
+        }catch{/* Saving already happened. A failed readback never retries a write. */}
+        return `Draft saved (${entry.label} → ${to.join(", ")} — "${String(args.subject)}"). It was not sent; the user can review and send it. ${verified?'Saved and independently verified.':'Saved, but not independently verified. Do not repeat the write; review the existing draft.'}`;
       },
     },
 

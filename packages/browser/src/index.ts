@@ -6,3 +6,5 @@ export * from "./page.js";
 export * from "./tools.js";
 export * from "./url-policy.js";
 export * from "./challenge.js";
+
+export * from "./bound-actions.js";

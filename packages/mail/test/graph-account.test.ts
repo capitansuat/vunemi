@@ -1,8 +1,34 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GraphMailAccount } from "../src/graph-account.js";
-import { MailNotSent } from "../src/types.js";
+import { DraftSaveUnverified, MailNotSent } from "../src/types.js";
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe('draft independent readback',()=>{
+ const expected={to:['recipient@example.com'],cc:['copy@example.com'],subject:'Synthetic',body:'Synthetic body'};
+ const person=(address:string)=>({emailAddress:{address}});
+ const message={id:'draft/1',isDraft:true,from:person('sender@example.com'),toRecipients:[person('recipient@example.com')],ccRecipients:[person('copy@example.com')],body:{contentType:'text',content:'Synthetic body'},subject:'Synthetic'};
+ it('reads the exact immutable draft afresh without writing or sending',async()=>{
+  const fetcher=vi.fn(async()=>new Response(JSON.stringify(message),{status:200}));vi.stubGlobal('fetch',fetcher);
+  const read=await new GraphMailAccount('sender@example.com',async()=> 'token').verifyDraft('draft/1',expected);
+  expect(read).toMatchObject({id:'draft/1',account:'sender@example.com',isDraft:true,draft:expected});
+  expect(fetcher).toHaveBeenCalledOnce();const [url,options]=fetcher.mock.calls[0] as unknown as [string,RequestInit];expect(url).toContain('/me/mailFolders/drafts/messages/draft%2F1');expect(options.method).toBe('GET');
+ });
+ it.each([{id:'other'},{isDraft:false},{from:person('other@example.com')},{bccRecipients:[person('hidden@example.com')]},{hasAttachments:true},{body:{contentType:'html',content:'Synthetic body'}}])('rejects unsafe draft readback %j',async change=>{
+  vi.stubGlobal('fetch',vi.fn(async()=>new Response(JSON.stringify({...message,...change}),{status:200})));
+  expect(await new GraphMailAccount('sender@example.com',async()=> 'token').verifyDraft('draft/1',expected)).toBeNull();
+ });
+ it('preserves an acknowledged draft without ID as a typed unverified write',async()=>{
+  const fetcher=vi.fn(async()=>new Response('{}',{status:201}));vi.stubGlobal('fetch',fetcher);
+  await expect(new GraphMailAccount('sender@example.com',async()=> 'token').saveDraft(expected)).rejects.toBeInstanceOf(DraftSaveUnverified);expect(fetcher).toHaveBeenCalledOnce();
+ });
+ it('preserves partial reply creation when PATCH fails and never sends an incomplete reply',async()=>{
+  const calls:string[]=[];vi.stubGlobal('fetch',vi.fn(async(url:string,options:RequestInit)=>{calls.push(options.method+' '+new URL(url).pathname);return calls.length===1?new Response('{"id":"partial"}',{status:201}):new Response('',{status:503});}));
+  const account=new GraphMailAccount('sender@example.com',async()=> 'token');
+  await expect(account.send({...expected,inReplyTo:'original'})).rejects.toBeInstanceOf(DraftSaveUnverified);
+  expect(calls).toEqual(['POST /v1.0/me/messages/original/createReply','PATCH /v1.0/me/messages/partial']);
+ });
+});
 
 describe("Outlook Graph transport", () => {
   it("reads a message as text with an immutable id", async () => {

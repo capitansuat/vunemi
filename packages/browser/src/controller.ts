@@ -5,6 +5,10 @@
  * spending a step (or a screenshot) to check.
  */
 
+import { randomUUID } from "node:crypto";
+import {outcomeFingerprint,type ToolContext} from '@vunemi/agent-core';
+import { BoundActions, type BoundOptions, type BoundAction } from "./bound-actions.js";
+import { checkNavigation } from "./url-policy.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { find, outline } from "@vunemi/perception";
@@ -29,6 +33,7 @@ interface Snapshot {
 
 const DESCRIBE_BUDGET = 16_000; // ≈4K tokens
 const VERDICT_LINES = 30;
+type RecordOutcome=NonNullable<ToolContext['recordOutcomeEvidence']>;
 
 /** The tab an action opened, if it opened one: the newest that was not there before. */
 export function openedTab(before: readonly TabInfo[], after: readonly TabInfo[]): string | null {
@@ -37,6 +42,7 @@ export function openedTab(before: readonly TabInfo[], after: readonly TabInfo[])
 }
 
 export class BrowserController {
+  private readonly bound: BoundActions;
   private backend: BrowserBackend | null = null;
   private starting: Promise<BrowserBackend> | null = null;
   private readonly shortIds = new Map<string, number>();
@@ -56,7 +62,33 @@ export class BrowserController {
   constructor(
     private readonly connect: () => Promise<BrowserBackend>,
     readonly trusted: () => TrustedSites = () => new Set(),
-  ) {}
+    options: BoundOptions = {},
+  ) { this.bound=new BoundActions(options,tab=>this.strictAdapter(tab)); }
+
+  async observeBound(runId:string,tab?:number){return this.bound.observe(runId,tab);}
+  previewBound(args:BoundAction){return this.bound.preview(args);}
+  async checkBound(args:BoundAction,runId:string){return this.bound.check(args,runId);}
+  async actBound(args:BoundAction,ctx:{runId:string;signal:AbortSignal;assertToolActive?:()=>void}){return this.bound.act(args,ctx);}
+  async releaseRun(runId:string){return this.bound.releaseRun(runId);}
+  async boundScreenshot(bindingId:string,runId:string,dir:string){
+    const image=await this.bound.screenshot(bindingId,runId);mkdirSync(dir,{recursive:true});const extension=image.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))?"png":"jpg";const path=join(dir,`bound-${randomUUID()}.${extension}`);writeFileSync(path,image,{mode:0o600});return path;
+  }
+  private async strictAdapter(tab?:number){
+    if(this.seenChallenge)throw new PageActionError("A browser challenge requires user takeover; strict input is unavailable.");
+    const backend=await this.ensure();const target=tab===undefined?this.current:await this.resolveTab(tab);
+    if(!target)throw new PageActionError("Select an existing browser tab before observing a bound target.");
+    const ownership=await backend.strictTarget?.(target);if(!ownership||ownership.protected!==false)throw new PageActionError("This browser target lacks host ownership attestation.");
+    const assertOwned=async()=>{
+      if(this.backend!==backend||!backend.connected||this.current!==target||!(await backend.listTabs()).some(t=>t.targetId===target))throw new PageActionError("The bound browser target changed or closed.");
+      const current=await backend.strictTarget?.(target);if(!current||current.ownerId!==ownership.ownerId||current.kind!==ownership.kind||current.hostPid!==ownership.hostPid||current.headless!==ownership.headless||current.protected!==false)throw new PageActionError("The browser target ownership changed.");
+      const reason=backend.blockReason?.(target);if(reason)throw new PageActionError(reason);
+    };
+    await assertOwned();let pending=this.drivers.get(target);
+    if(!pending){pending=backend.attach(target).then(s=>PageDriver.attach(s));this.drivers.set(target,pending);pending.catch(()=>this.drivers.delete(target));}
+    const driver=await pending;if(backend.capture)driver.strictCapture=()=>backend.capture!(target);if(backend.captureRegion)driver.strictRegionCapture=region=>backend.captureRegion!(target,region);const state=await driver.strictState();const refusal=await checkNavigation(state.url,this.trusted());if(refusal)throw new PageActionError(refusal);
+    if(detectChallenge(state.url,await driver.axNodes()))throw new PageActionError("A browser challenge requires user takeover.");
+    return {targetId:target,ownerId:ownership.ownerId,kind:ownership.kind,hostPid:ownership.hostPid,headless:ownership.headless,driver,assertOwned:async()=>{await assertOwned();const now=await driver.strictState();const refused=await checkNavigation(now.url,this.trusted());if(refused)throw new PageActionError(refused);if(detectChallenge(now.url,await driver.axNodes()))throw new PageActionError("A browser challenge requires user takeover.");}};
+  }
 
   /** Lets a UI draw the agent's cursor; see PageDriver.pointer. */
   onPointer(listener: (target: string, p: PointerEvent) => Promise<void> | void): void {
@@ -113,7 +145,7 @@ export class BrowserController {
 
   // -- navigation ----------------------------------------------------------
 
-  async goto(url: string, newTab: boolean): Promise<string> {
+  async goto(url: string, newTab: boolean, capturedTarget?:(target:string)=>void): Promise<string> {
     const b = await this.ensure();
     if (newTab || (await this.tabs()).length === 0) {
       const target = await b.openTab("about:blank");
@@ -121,6 +153,7 @@ export class BrowserController {
       this.current = target;
     }
     const { driver, target } = await this.page();
+    capturedTarget?.(target);
     try {
       await driver.navigate(url);
     } catch (err) {
@@ -130,6 +163,51 @@ export class BrowserController {
     }
     await driver.settle();
     return this.landing(driver, target);
+  }
+
+  /** Navigation proof describes the exact destination; redirects/challenges remain observations. */
+  async gotoWithOutcome(url:string,newTab:boolean,record:RecordOutcome):Promise<string>{
+    let expectedTarget:string|undefined;
+    const output=await this.goto(url,newTab,target=>{expectedTarget=target;});
+    if(!expectedTarget||this.seenChallenge)return output;
+    try{
+      const {driver,target}=await this.page();if(target!==expectedTarget)return output;
+      const before=await driver.strictState(),location=await driver.location(),after=await driver.strictState();
+      if(!this.outcomeIdentity(target,before,after)||new URL(url).href!==new URL(location.url).href||after.url!==location.url||typeof location.title!=='string')return output;
+      const requestHash=await outcomeFingerprint({targetId:target,frameId:after.frameId,loaderId:after.loaderId,url:new URL(url).href,title:location.title});
+      const observedHash=await outcomeFingerprint({targetId:target,frameId:after.frameId,loaderId:after.loaderId,url:new URL(location.url).href,title:location.title});
+      if(!this.outcomeIdentity(target,after,await driver.strictState())||!await this.outcomeTargetExists(target))return output;
+      record({version:1,domain:'browser',kind:'navigation',targetId:target,requestHash,observedHash,source:'controller-readback'});
+    }catch{/* A delivered navigation without independent proof remains reviewable. */}
+    return output;
+  }
+
+  /** Read a precise field after the action settles; never infer a submit/send outcome. */
+  async actWithFieldOutcome(label:string,action:(driver:PageDriver)=>Promise<void>,expected:{ref:number;value:string;mode:'text'|'option'},record:RecordOutcome):Promise<string>{
+    const initial=await this.page(),before=await initial.driver.strictState();
+    const output=await this.act(label,action);
+    if(this.seenChallenge)return output;
+    try{
+      const {driver,target}=await this.page();if(target!==initial.target||driver!==initial.driver)return output;
+      const state=await driver.strictState();if(!this.outcomeIdentity(target,before,state))return output;
+      if(await driver.ownerField(expected.ref))return output;
+      const field=await driver.fieldOutcome(expected.ref),after=await driver.strictState();
+      if(!field||!this.outcomeIdentity(target,state,after))return output;
+      const actual=expected.mode==='option'&&field.label===expected.value?field.label:field.value;
+      if(actual!==expected.value)return output;
+      const identity={targetId:target,frameId:after.frameId,loaderId:after.loaderId,url:after.url,ref:expected.ref,mode:expected.mode};
+      const requestHash=await outcomeFingerprint({...identity,value:expected.value}),observedHash=await outcomeFingerprint({...identity,value:actual});
+      if(!this.outcomeIdentity(target,after,await driver.strictState())||!await this.outcomeTargetExists(target))return output;
+      record({version:1,domain:'browser',kind:'field-value',targetId:target,requestHash,observedHash,source:'controller-readback'});
+    }catch{/* No receipt is safer than treating a field/readback mismatch as proof. */}
+    return output;
+  }
+  private outcomeIdentity(target:string,before:{frameId:string;loaderId:string;url:string},after:{frameId:string;loaderId:string;url:string}):boolean{
+    return this.backend?.connected===true&&this.current===target&&!!before.frameId&&!!before.loaderId&&before.frameId===after.frameId&&before.loaderId===after.loaderId&&before.url===after.url;
+  }
+  private async outcomeTargetExists(target:string):Promise<boolean>{
+    const backend=this.backend;
+    return !!backend&&(await backend.listTabs()).some(tab=>tab.targetId===target)&&backend===this.backend&&backend.connected&&this.current===target;
   }
 
   async back(): Promise<string> {
@@ -268,6 +346,7 @@ export class BrowserController {
   }
 
   async dispose(): Promise<void> {
+    await this.bound.dispose();
     this.seenChallenge = null;
     const b = this.backend;
     this.backend = null;

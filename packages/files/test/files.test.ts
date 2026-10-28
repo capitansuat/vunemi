@@ -5,13 +5,21 @@ import { t } from "@vunemi/i18n";
  * has to be undoable.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, linkSync, unlinkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFileTools, PathRefused, Roots } from "../src/index.js";
 import { similarNames, spotlightQuery } from "../src/tools.js";
+
+// The real production homedir API is unchanged; only this isolated worker gets
+// a synthetic home for hidden-path and Trash behavior.
+const testHome = vi.hoisted(() => ({ path: "" }));
+vi.mock("node:os", async (load) => ({
+  ...await load<typeof import("node:os")>(),
+  homedir: () => testHome.path,
+}));
 
 /** The smallest PDF with one line of real text, enough for PDFKit to read back. */
 function minimalPdf(text: string): Buffer {
@@ -36,6 +44,8 @@ function minimalPdf(text: string): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
+// Test-only no-clobber hardlink adapter. Native fd-relative atomic rename is tested in Swift.
+const testMoveAdapter: import('../src/safe-move.js').AtomicMoveAdapter={async move(r){try{linkSync(r.source,r.destination);unlinkSync(r.source);return {status:'moved'}}catch{return {status:'not-moved',reasonCode:'test-refusal'}}}};
 describe("file tools", () => {
   let home = "";
   let root = "";
@@ -45,26 +55,50 @@ describe("file tools", () => {
 
   const ctx = (): ToolContext => ({
     signal: new AbortController().signal,
+    runId:"file-unit-run",
     handoff: async () => true,
     offerUndo: (label, undo) => undos.push({ label, undo }),
     attach: () => {},
     produced: (item) => made.push(item),
   });
 
-  const call = (name: string, args: Record<string, unknown>) =>
-    tools.get(name)!.run(args as never, ctx());
+  const call = async (name: string, args: Record<string, unknown>) => {
+    const tool=tools.get(name)!,context=ctx();
+    if(name==='files_move'){const why=await tool.check?.(args as never,{runId:context.runId!,signal:context.signal,assertToolActive:()=>{}});if(why)throw new PathRefused(why);}
+    return tool.run(args as never,context);
+  };
+
+  it("rejects empty edits and missing targets before showing an approval", async () => {
+    const tool=tools.get("files_edit")!;
+    expect(await tool.check?.({path:join(root,"missing.md"),old_text:"",new_text:"new"} as never)).toMatch(/not a new file/);
+    expect(await tool.check?.({path:join(root,"missing.md"),old_text:"old",new_text:"new"} as never)).toMatch(/does not exist/);
+    writeFileSync(join(root,"existing.md"),"old");
+    expect(await tool.check?.({path:join(root,"existing.md"),old_text:"old",new_text:"new"} as never)).toBeNull();
+  });
+
+  it("rejects malformed CSV before changing the actual file and executes content checks on read", async () => {
+    const path = join(root, "report.csv");
+    await call("files_write", { path, content: "a,b\n1,33.33\n" });
+    await expect(call("files_write", { path, content: "a,b\n1,33,33\n" })).rejects.toThrow(/fields/);
+    expect(readFileSync(path, "utf8")).toBe("a,b\n1,33.33\n");
+    await expect(call("files_read", { path, checks: { rows: 1, contains: ["33.33"] } })).resolves.toContain("33.33");
+    await expect(call("files_read", { path, checks: { contains: ["999"] } })).rejects.toThrow(/Missing/);
+    await expect(call("files_read", { path, checks: { excludes: ["33.33"] } })).rejects.toThrow(/Forbidden/);
+  });
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "vunemi-files-"));
+    home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-files-")));
+    testHome.path = join(home, "SyntheticHome");
+    mkdirSync(join(testHome.path, ".Trash"), { recursive: true });
     root = join(home, "Belgeler");
     mkdirSync(root, { recursive: true });
     undos = [];
     made = [];
     tools = new Map(
-      createFileTools({ roots: new Roots([root]), shadowDir: join(home, "shadow") }).map((t) => [t.name, t]),
+      createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots: new Roots([root]), shadowDir: join(home, "shadow") }).map((t) => [t.name, t]),
     );
   });
-  afterEach(() => rmSync(home, { recursive: true, force: true }));
+  afterEach(() => { rmSync(home, { recursive: true, force: true }); testHome.path = ""; });
 
   // -- the walls ---------------------------------------------------------------
 
@@ -72,7 +106,7 @@ describe("file tools", () => {
     const downloads = join(home, "Downloads");
     mkdirSync(downloads);
     writeFileSync(join(downloads, "fatura.txt"), "x");
-    const two = new Map(createFileTools({ roots: new Roots([root, downloads]), shadowDir: join(home, "shadow") }).map((t) => [t.name, t]));
+    const two = new Map(createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots: new Roots([root, downloads]), shadowDir: join(home, "shadow") }).map((t) => [t.name, t]));
     await expect(two.get("files_read")!.run({ path: "fatura.txt" } as never, ctx())).rejects.toThrow(/Downloads\/fatura\.txt/);
   });
 
@@ -227,7 +261,7 @@ describe("file tools", () => {
     writeFileSync(join(elsewhere, "ek.txt"), "eklenen");
     writeFileSync(join(elsewhere, "yanindaki.txt"), "açılmadı");
     const roots = new Roots([root]);
-    tools = new Map(createFileTools({ roots, shadowDir: join(home, "shadow") }).map((t) => [t.name, t]));
+    tools = new Map(createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots, shadowDir: join(home, "shadow") }).map((t) => [t.name, t]));
 
     await expect(call("files_read", { path: join(elsewhere, "ek.txt") })).rejects.toThrow(PathRefused);
     roots.grant(join(elsewhere, "ek.txt"));
@@ -244,7 +278,7 @@ describe("file tools", () => {
     writeFileSync(join(elsewhere, "ek.txt"), "x");
     writeFileSync(join(elsewhere, "ek_gizli_plan.txt"), "x");
     const roots = new Roots([root]);
-    tools = new Map(createFileTools({ roots, shadowDir: join(home, "shadow") }).map((t) => [t.name, t]));
+    tools = new Map(createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots, shadowDir: join(home, "shadow") }).map((t) => [t.name, t]));
     roots.grant(join(elsewhere, "ek.txt"));
     rmSync(join(elsewhere, "ek.txt"));
     const error = await call("files_read", { path: join(elsewhere, "ek.txt") }).catch((e: Error) => e.message);
@@ -454,7 +488,7 @@ describe("files_search", () => {
 require("fs").writeFileSync(${JSON.stringify(log)}, JSON.stringify(process.argv.slice(2)));
 console.log([${JSON.stringify(inside)}, "/etc/passwd", ${JSON.stringify(join(root, ".gizli"))}, ${JSON.stringify(join(root, "X.app/Contents/a"))}].join("\\n"));
 `, { mode: 0o755 });
-    const search = createFileTools({ roots: new Roots([root]), shadowDir: join(home, "shadow"), mdfind: fake }).find((t) => t.name === "files_search")!;
+    const search = createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots: new Roots([root]), shadowDir: join(home, "shadow"), mdfind: fake }).find((t) => t.name === "files_search")!;
     const out = await search.run({ query: 'fatura "7*' }, { signal: new AbortController().signal } as ToolContext);
     expect(out).toContain("fatura.pdf");
     expect(out).not.toMatch(/passwd|gizli|X\.app/);
@@ -475,7 +509,7 @@ console.log([${JSON.stringify(inside)}, "/etc/passwd", ${JSON.stringify(join(roo
     utimesSync(fresh, new Date("2026-09-20"), new Date("2026-09-20"));
     const fake = join(home, "mdfind");
     writeFileSync(fake, `#!/usr/bin/env node\nconsole.log([${JSON.stringify(old)}, ${JSON.stringify(fresh)}].join("\\n"));\n`, { mode: 0o755 });
-    const search = createFileTools({ roots: new Roots([root]), shadowDir: join(home, "shadow"), mdfind: fake }).find((t) => t.name === "files_search")!;
+    const search = createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots: new Roots([root]), shadowDir: join(home, "shadow"), mdfind: fake }).find((t) => t.name === "files_search")!;
     const out = await search.run({ query: "*.pdf" }, { signal: new AbortController().signal } as ToolContext);
     expect(out.indexOf("yeni.pdf (2026-09-20)")).toBeGreaterThan(-1);
     expect(out.indexOf("yeni.pdf")).toBeLessThan(out.indexOf("eski.pdf (2024-01-02)"));
