@@ -23,6 +23,7 @@ export async function chatWithinBudget(
   signal: AbortSignal,
   budget: Budget,
   tools: ToolSpec[] = [],
+  hints: {thinking?:boolean} = {},
 ): Promise<string | "overrun"> {
   const overrun = new AbortController();
   let timer = setTimeout(() => overrun.abort(), budget.firstMs ?? budget.ms);
@@ -30,7 +31,7 @@ export async function chatWithinBudget(
   let streamed = 0;
   try {
     const result = await model.chat(
-      { messages, tools, signal: AbortSignal.any([signal, overrun.signal]) },
+      { messages, tools, ...hints, signal: AbortSignal.any([signal, overrun.signal]) },
       (chunk) => {
         if (!started) {
           started = true;

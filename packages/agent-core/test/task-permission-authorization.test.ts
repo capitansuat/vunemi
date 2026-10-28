@@ -1,0 +1,23 @@
+import {it,expect,vi} from 'vitest';
+import {runAgent} from '../src/agent.js';
+import {ToolRegistry} from '../src/tools.js';
+import {TaskPermissionStore} from '../src/task-permissions.js';
+import type {ChatModel} from '../src/provider.js';
+const descriptor={effect:'file-read' as const,target:{kind:'file' as const,path:'/fixture/a.txt',name:'a.txt'},identity:{kind:'file' as const,path:'/fixture/a.txt',device:'1',inode:'2',size:'3',mtimeNs:'4',ctimeNs:'5'}};
+async function fixture(mode:'ask'|'auto'|'deny'|'alert'|'always'|'foreign'|'revoked-auto'|'pause-revoke'|'reregister'='ask'){
+ const store=new TaskPermissionStore(),dispatch=vi.fn(async()=> 'synthetic text'),prepare=vi.fn(async()=>descriptor);
+ const def={name:'files_read',description:'Read fixture',parameters:{type:'object' as const,properties:{path:{type:'string'}},required:['path']},actionClass:'read' as const,alwaysAsk:mode==='always',taskPermission:{prepare,revalidate:async()=>true},run:dispatch};
+ const tools=new ToolRegistry().register(def,'files');let turn=0,authorizations=0;let auto=false;
+ const model:ChatModel={id:'test:task-read',async chat(){return {text:'',toolCalls:turn<2?[{id:`read-${++turn}`,name:'files_read',argumentsText:'{"path":"/fixture/a.txt"}'}]:[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}}}};
+ const approve=vi.fn(async(req:any)=>({kind:'approve_run' as const,offerId:mode==='foreign'?'fake':req.taskPermissionOffer?.offerId??'fake',offerRevision:req.taskPermissionOffer?.revision??1}));let used:number|undefined;
+ const revoke=()=>{const snap=store.snapshot();const g=snap.grants[0];if(g)store.revoke({grantId:g.grantId,sessionId:'s',runId:'r',expectedRevision:snap.revision});};
+ const result=await runAgent({goal:'Read the same fixture twice',runId:'r',tools,model,emit:e=>{if(e.type==='tool.finished'&&e.ok)used=store.snapshot().grants[0]?.remainingUses},authorize:async()=>{authorizations++;if((mode==='revoked-auto'||mode==='reregister')&&authorizations===4){if(mode==='revoked-auto'){revoke();auto=true;}else{tools.unregister('files');tools.register({...def},'files');}}return mode==='deny'?{kind:'deny',reason:'Denied'}:mode==='auto'||auto?{kind:'allow'}:{kind:'ask',reason:'Ask',...(mode==='alert'&&{alert:true})};},whenUnpaused:async()=>{if(mode==='pause-revoke'&&turn===2)revoke();},requestApproval:approve,taskPermissions:{store,sessionId:'s',epoch:()=>({registration:1,policy:1,task:1})}});
+ return {store,dispatch,prepare,approve,used,result};
+}
+it('asks once for two identical reads and consumes initial read',async()=>{const f=await fixture();expect(f.approve).toHaveBeenCalledTimes(1);expect(f.dispatch).toHaveBeenCalledTimes(2);expect(f.used).toBe(6);});
+it('does not prepare an offer under automatic policy',async()=>{const f=await fixture('auto');expect(f.prepare).not.toHaveBeenCalled();expect(f.dispatch).toHaveBeenCalledTimes(2);});
+it.each(['deny','alert','always','foreign'] as const)('never dispatches invalid scoped approval: %s',async(mode)=>{const f=await fixture(mode);expect(f.dispatch).not.toHaveBeenCalled();});
+it.each(['revoked-auto','pause-revoke','reregister'] as const)('pending authority cannot revive: %s',async(mode)=>{const f=await fixture(mode);expect(f.dispatch).toHaveBeenCalledTimes(1);});
+it.each(['stop','registration'] as const)('refuses a stale deferred prepare without showing a card: %s',async(mode)=>{
+ let entered!:()=>void,release!:()=>void;const ready=new Promise<void>(r=>entered=r),gate=new Promise<void>(r=>release=r);const controller=new AbortController(),dispatch=vi.fn(async()=> 'fixture'),approve=vi.fn(async()=>({kind:'approve' as const}));const tools=new ToolRegistry().register({name:'files_read',description:'Read fixture',parameters:{type:'object',properties:{path:{type:'string'}},required:['path']},actionClass:'read',taskPermission:{prepare:async()=>{entered();await gate;return descriptor;},revalidate:async()=>true},run:dispatch},'files');let turn=0,cards=0;const model:ChatModel={id:'test:deferred',async chat(){return {text:'',toolCalls:turn++===0?[{id:'read',name:'files_read',argumentsText:'{"path":"/fixture/a.txt"}'}]:[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}}}};const done=runAgent({goal:'Read fixture',runId:'r',tools,model,signal:controller.signal,emit:e=>{if(e.type==='approval.required')cards++;},authorize:async()=>({kind:'ask',reason:'Ask'}),requestApproval:approve,taskPermissions:{store:new TaskPermissionStore(),sessionId:'s',epoch:()=>({registration:1,policy:1,task:1})}});await ready;if(mode==='stop')controller.abort();else tools.unregister('files');release();await done;expect(cards).toBe(0);expect(approve).not.toHaveBeenCalled();expect(dispatch).not.toHaveBeenCalled();
+});

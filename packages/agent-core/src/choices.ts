@@ -471,12 +471,28 @@ function fact(label: string, value: string, sourceUrl: string | undefined, evide
   return { label, value: clip(value, 80), status: page ? "page" : evidence.local.some((text) => seen(value, text)) ? "local" : "unverified" };
 }
 
+/** Permission belongs to the real action's policy card, never a choice card.
+ * Keep parameter/preference questions: they decide what to do, not whether it may run.
+ */
+export function actionPermissionQuestion(question: string): boolean {
+  const segments = question.normalize("NFKC").toLowerCase().replace(/\u0307/g, "").split(/[?？]/);
+  return segments.some(q => {
+    if (/\b(?:hangi|nasıl|nasil|ne zaman|which|what|how|when|where)\b|\bor\b|\bveya\b/.test(q)) return false;
+    return /(?:yazayım|yazayim|kaydedeyim|göndereyim|gondereyim|sileyim|oluşturayım|olusturayim|değiştireyim|degistireyim|çalıştırayım|calistirayim|açayım|acayim|başlayayım|baslayayim|yapayım|yapayim)\s+m[ıiuü](?:\s|$)/.test(q)
+      || /(?:onayl(?:[ıi]yor musun(?:uz)?|ar m[ıi]s[ıi]n(?:[ıi]z)?)|izin ver(?:iyor|ir) misin(?:iz)?|izin veriyor musun(?:uz)?)/.test(q)
+      || /\b(?:shall i|may i|can i|should i|would you like me to)\s+(?:write|save|send|delete|create|change|run|execute|proceed|open|start|check|inspect)\b/.test(q)
+      || /\bdo you (?:approve|authorize|permit)\b/.test(q)
+      || /(?:genehmigen sie|autorisez-vous|autorisieren sie|autorizas|autorizzi|você autoriza|разрешаете ли|вы разрешаете|是否授权|是否允许我|承認していただけますか|승인하시겠습니까)/.test(q);
+  });
+}
+
 /** Validate once in the agent, before any card or wait is created. */
 export function prepareChoice(name: string, input: unknown, evidence: ChoiceEvidence): { card: ChoiceCard } | { error: string } {
   const args = object(input);
   if (!args) return { error: "Expected a JSON object." };
   if (name === "ask_choice") {
     const question = string(args.question, 200);
+    if (actionPermissionQuestion(question)) return { error: "Do not ask action permission with ask_choice. Call the real action tool with the prepared arguments; the application will show its approval card before execution. This rejection grants no permission and performs no action. Ask only for missing parameters or content preferences." };
     const options = Array.isArray(args.options) ? args.options.slice(0, MAX_OPTIONS).map((value) => string(value, 80)).filter(Boolean) : [];
     if (!question || options.length < 2 || new Set(options).size !== options.length) return { error: `Give a question and 2 to ${MAX_OPTIONS} distinct nonempty choices.` };
     return { card: { kind: "choice", question, options, allowOther: args.allowOther !== false } };
@@ -520,7 +536,7 @@ export function choiceTools(): ToolDef[] {
   return [
     {
       name: "ask_choice",
-      description: "Ask one short question with 2 to 5 choices, then wait for the user. Use only when the answer changes your next step.",
+      description: "Ask for missing details or preferences with 2 to 5 choices. For action permission, call the real tool, not ask_choice.",
       actionClass: "read",
       parameters: { type: "object", properties: {
         question: { type: "string" }, options: { type: "array", items: { type: "string" } }, allowOther: { type: "boolean" },

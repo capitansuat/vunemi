@@ -1,0 +1,16 @@
+import {it,expect} from 'vitest';
+import {unsupportedCurrency} from '../src/currency-grounding.js';
+const goal='Kaynak CSV dosyasından satış, maliyet ve kâr raporu üret.';
+const source='urun,satis,maliyet\nKalem,200,120';
+it('rejects an invented TL unit on otherwise correct monetary totals',()=>expect(unsupportedCurrency('Toplam Satış: 650.00 TL',goal,source)).toBe('TRY'));
+it('accepts currency-free totals',()=>expect(unsupportedCurrency('Satış: 650.00 Maliyet: 390.00 Kâr: 260.00',goal,source)).toBeNull());
+it('accepts a declared source currency including TL aliases',()=>expect(unsupportedCurrency('650.00 TL',goal,'urun,satis_TRY,maliyet_TRY\nKalem,200,120')).toBeNull());
+it('does not infer currency from a filename',()=>expect(unsupportedCurrency('650 TL',goal+' /tmp/TL/report.md dosyasına yaz.',source)).toBe('TRY'));
+it('honors an explicit requested currency',()=>expect(unsupportedCurrency('650.00 EUR',goal+' Tutarları EUR olarak göster.',source)).toBeNull());
+it('treats dollar symbols as ambiguous rather than assuming USD',()=>expect(unsupportedCurrency('$650.00',goal,'currency,sales,cost\nCAD,650,390')).toBeNull());
+it('rejects a different explicit currency',()=>expect(unsupportedCurrency('650 USD',goal,'currency,sales,cost\nCAD,650,390')).toBe('USD'));
+it('does not treat HTML or nonfinancial text as monetary units',()=>expect(unsupportedCurrency('TL: technical label 3','Write an HTML technical note.','')).toBeNull());
+it('rejects an invented euro symbol',()=>expect(unsupportedCurrency('€650.00',goal,source)).toBe('€'));
+it('does not treat an explicit negative instruction as permission',()=>expect(unsupportedCurrency('650 TL',goal+' TL ekleme.','satis_TRY,maliyet_TRY\n650,390')).toBe('TRY'));
+it('does not mistake the English verb try for a currency request',()=>expect(unsupportedCurrency('650TL',goal+' Try to prepare the report.',source)).toBe('TRY'));
+it('does not reject a verb in financial instructions',()=>expect(unsupportedCurrency('Try calculating the totals again.',goal,source)).toBeNull());

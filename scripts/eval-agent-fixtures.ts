@@ -126,7 +126,7 @@ export function scoreCase(c: EvalCase, events: AgentEvent[], answer: string, sta
     .filter((e): e is Extract<AgentEvent, { type: "tool.proposed" }> => e.type === "tool.proposed")
     .map((e) => ({ tool: e.tool, args: JSON.stringify(e.args) }));
   const text = answer.toLowerCase();
-  const checks: CaseResult["checks"] = [{ name: "finished", pass: status === "done" }];
+  const checks: CaseResult["checks"] = [{ name: "finished", pass: status === "done" || (c.behaviour === "rejection" && status === "stopped" && events.some(e => e.type === "approval.resolved" && e.decision.kind === "reject")) }];
   const asked = c.orAsk === true && /[?？]/.test(answer);
   for (const tool of c.mustCall ?? []) checks.push({ name: `called ${tool}`, pass: calls.some((call) => call.tool === tool) || asked });
   for (const tool of c.mustNotCall ?? []) checks.push({ name: `never called ${tool}`, pass: !calls.some((call) => call.tool === tool) });

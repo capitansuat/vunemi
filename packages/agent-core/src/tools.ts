@@ -24,6 +24,7 @@ export const ACTION_CLASSES: readonly ActionClass[] = [
   "financial",
 ];
 
+import type { TaskProgressInput } from "./tasks.js";
 import type { Artifact, Produced } from "./events.js";
 
 /** JSON Schema subset accepted by OpenAI-compatible tool calling. */
@@ -34,11 +35,34 @@ export interface JsonSchema {
   additionalProperties?: boolean;
 }
 
+/** Trusted loop identity for preapproval validation; never supplied by model arguments. */
+export interface ToolCheckContext {
+  runId: string;
+  signal: AbortSignal;
+  userGoal?: string;
+  assertToolActive(): void;
+}
+
 export interface ToolContext {
   signal: AbortSignal;
+  /** Structured local execution/readback proof from the native desktop tool. */
+  /** Completion is awaited before dispatch; the callback value is ignored. */
+  recordDesktopAppendIntent?():unknown;
+  desktopDocumentState?():{receipts:import('./desktop-progress.js').DesktopEvidence[];uncertain:boolean};
+  /** Independent adapter readback only; dropped if the work call fails. */
+  recordOutcomeEvidence?(evidence:import('./outcome-evidence.js').OutcomeEvidence):void;
+  recordDesktopEvidence?(evidence:import('./desktop-progress.js').DesktopEvidence):void;
+  /** Recheck registration/cancellation between steps of a bounded action. */
+  assertToolActive?(): void;
+  /** Records plan progress only; never authorizes or executes a user action. */
+  updateTask?(input: TaskProgressInput): Promise<void>;
+  /** Successful work receipts from this run, for progress evidence. */
+  taskReceipts?(): { tool: string; callId: string }[];
   /** The current user request and run, for tools that must enforce its scope. */
   userGoal?: string;
   runId?: string;
+  /** Engine-assigned identity of this exact tool invocation. */
+  callId?:string;
   /**
    * Pauses the run until the user has done something only they may do
    * (solve a CAPTCHA, log in). `reason` is shown to them, in their language.
@@ -89,18 +113,26 @@ export interface ToolDef<Args = Record<string, unknown>> {
    * the user is never asked to approve something that can't be done (a
    * note holding a secret, say). Null lets it through.
    */
-  check?(args: Args): string | null | Promise<string | null>;
+  check?(args: Args, context?: ToolCheckContext): string | null | Promise<string | null>;
   /**
    * Ask the user before every call, even when the policy says "auto" or the
    * user chose "always" earlier. A policy of "deny" still refuses.
    */
+  taskPermission?: {
+    prepare(args:Args,context:ToolCheckContext):Promise<import("./task-permissions.js").TaskPermissionDescriptor|null>;
+    revalidate(args:Args,descriptor:import("./task-permissions.js").TaskPermissionDescriptor,context:ToolCheckContext):Promise<boolean>;
+  };
   alwaysAsk?: boolean;
+  /** Force a fresh card only for explicitly destructive opt-in modes. */
+  alwaysAskWhen?(args:Args):boolean;
   /**
    * A grant key shared by matching calls in the current conversation only.
    * Use with alwaysAsk and allowSessionApproval to force the first ask even
    * under an automatic policy. The policy and taint checks run every call.
    */
   approvalScope?(args: Args): string | undefined;
+  /** Canonical identity from the file tool, not an access grant; may throw on refused paths. */
+  resolveFile?(args: Args): string;
   /** Show the existing "approve for this conversation" choice for this scope. */
   allowSessionApproval?: true;
   /**
@@ -147,7 +179,7 @@ export interface ToolDef<Args = Record<string, unknown>> {
    * What the model is given instead of the whole output, when part of it is
    * for the user only (links shown on a card, say). The UI gets all of it.
    */
-  forModel?: (raw: string) => string;
+  forModel?: (raw: string) => string | Promise<string>;
   /**
    * It saves something of Vunemi's own (a work note) though it needs no
    * approval: "I've saved it" after it ran is true, not a claim to check.
@@ -174,6 +206,16 @@ export interface ToolDef<Args = Record<string, unknown>> {
 export class ToolRegistry {
   private readonly tools = new Map<string, { tool: ToolDef; source: string }>();
   private readonly off = new Set<string>();
+  private readonly revisions = new Map<string, number>();
+
+  /** Changes invalidate calls captured before a source was changed or reloaded. */
+  revisionOf(source: string): number {
+    return this.revisions.get(source) ?? 0;
+  }
+
+  private changed(source: string): void {
+    this.revisions.set(source, this.revisionOf(source) + 1);
+  }
 
   /** `source` groups a connector's tools so they can be turned off together. */
   register<A>(tool: ToolDef<A>, source = "core"): this {
@@ -181,11 +223,13 @@ export class ToolRegistry {
       throw new Error(`Tool already registered: ${tool.name}`);
     }
     this.tools.set(tool.name, { tool: tool as unknown as ToolDef, source });
+    this.changed(source);
     return this;
   }
 
   /** Forgets a source's tools entirely, for a connector being disconnected. */
   unregister(source: string): void {
+    this.changed(source);
     for (const [name, entry] of this.tools) {
       if (entry.source === source) this.tools.delete(name);
     }
@@ -224,6 +268,7 @@ export class ToolRegistry {
   }
 
   setEnabled(source: string, on: boolean): void {
+    this.changed(source);
     if (on) this.off.delete(source);
     else this.off.add(source);
   }

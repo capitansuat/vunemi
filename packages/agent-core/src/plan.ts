@@ -55,21 +55,40 @@ export type PlanBudget = Budget;
 export async function proposePlan(
   model: ChatModel,
   goal: string,
-  opts: { signal: AbortSignal; context?: ChatMessage[]; allowSingle?: boolean; budget?: PlanBudget },
+  opts: { signal: AbortSignal; context?: ChatMessage[]; allowSingle?: boolean; budget?: PlanBudget; fastFiles?: boolean; requiredFiles?: readonly string[] },
 ): Promise<string[] | null | "overrun"> {
+  const officePaths=[...new Set(opts.requiredFiles??[])];
+  if(officePaths.length>=2&&officePaths.length<=MAX_PLAN_STEPS&&officePaths.every(p=>/\.(docx|xlsx|pptx)$/i.test(p))){
+    const names=officePaths.map(p=>p.split('/').at(-1)!);
+    return [...(/(?:^|\s)(?:\/|~\/)[^\s“"]+\s+dosyasını\s+oku/iu.test(goal.replace(/[“"][^”"]*[”"]/gu,""))&&names.length<MAX_PLAN_STEPS?["Kaynak dosyalarını oku."]:[]),...officePaths.map((p,i)=>`${names.filter(n=>n===names[i]).length>1?p:names[i]}: istenen içeriği oluştur ve doğrula.`)];
+  }
   const text = await chatWithinBudget(
     model,
     [
-      { role: "system", content: opts.allowSingle
+      { role: "system", content: (opts.allowSingle
         ? PLAN_PROMPT.replace("a single step, a question", "a question") + "\nIn this mode, a single action needs a one-step preview."
-        : PLAN_PROMPT },
+        : PLAN_PROMPT) + (opts.fastFiles ? "\nFor this file task, include every requested output. Use short basenames instead of repeating full paths. Group each output with its calculation and verification; do not make approval waits or progress bookkeeping separate steps." : "") },
       ...(opts.context ?? []),
       { role: "user", content: goal },
     ],
     opts.signal,
     opts.budget ?? PLAN_BUDGET,
+    [],
+    opts.fastFiles ? {thinking:false} : {},
   );
-  return text === "overrun" ? "overrun" : parsePlan(text, opts.allowSingle);
+  const parsed=text === "overrun" ? "overrun" : parsePlan(text, opts.allowSingle);
+  const paths=[...new Set(opts.requiredFiles ?? [])];
+  const basenames=paths.map(path=>path.split("/").at(-1)!);
+  const names=paths.map((path,i)=>basenames.filter(name=>name===basenames[i]).length>1 ? path.split("/").slice(-2).join("/") : basenames[i]!).filter(Boolean);
+  if (opts.fastFiles && names.length>1 && names.length<=MAX_PLAN_STEPS && (parsed===null || parsed==="overrun" || names.some(name=>!parsed.some(step=>step.toLocaleLowerCase().includes(name.toLocaleLowerCase()))))) {
+    // These filenames came from explicit user destinations, never from the
+    // model or a document. Keep the ordinary plan approval card.
+    return [
+      ...(/(?:^|\s)(?:\/|~\/)[^\s“"]+\s+dosyasını\s+oku/iu.test(goal.replace(/[“"][^”"]*[”"]/gu,"")) && names.length<MAX_PLAN_STEPS ? ["Kaynak dosyalarını oku."] : []),
+      ...names.map(name=>`${name}: istenen içeriği oluştur ve doğrula.`),
+    ];
+  }
+  return parsed;
 }
 
 export function parsePlan(text: string, allowSingle = false): string[] | null {

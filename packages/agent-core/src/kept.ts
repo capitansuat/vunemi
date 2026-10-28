@@ -17,7 +17,7 @@ interface Kept {
 /** Where long output is kept: in memory (KeptOutputs) or on disk (the desktop's work archive). */
 export interface OutputKeeper {
   /** Keeps `text` and returns what the model sees instead: its first part and a note. */
-  keep(tool: string, text: string, part: number): string;
+  keep(tool: string, text: string, part: number): string | Promise<string>;
   read(id: string, part: number): string;
   search(id: string, query: string): string;
   /** The tool that produced a kept output, for wrapping what's read from it. */

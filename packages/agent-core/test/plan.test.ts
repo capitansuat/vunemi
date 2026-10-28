@@ -111,3 +111,28 @@ describe("proposePlan", () => {
     expect(steps).toEqual(["Postayı aç", "Kodu söyle"]);
   });
 });
+
+it("keeps every file deliverable in a concise fast local plan and disables only planner thinking",async()=>{
+ let received:import('../src/provider.js').ChatRequest|undefined;
+ const model:ChatModel={id:'vunemi:test',chat:async req=>{received=req;return {text:'1. Read source.csv\n2. Write report.md and verify\n3. Write summary.txt and verify',toolCalls:[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}};}};
+ await proposePlan(model,'Read source.csv, write report.md and summary.txt',{signal:new AbortController().signal,fastFiles:true});
+ expect(received?.thinking).toBe(false);
+ expect(received?.messages[0]!.content).toContain('every requested output');
+ expect(received?.messages[0]!.content).toContain('basenames');
+});
+
+it.each(['NONE','1. Write report.md\n2. Verify report.md','overrun'])('falls back to a complete file plan when fast planning omits outputs (%s)',async text=>{
+ const model:ChatModel={id:'vunemi:test',chat:async()=>({text,toolCalls:[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}})};
+ const steps=await proposePlan(model,'/tmp/source.csv dosyasını oku. /tmp/report.md ve /tmp/summary.txt oluştur.',{signal:new AbortController().signal,fastFiles:true,requiredFiles:['/tmp/report.md','/tmp/summary.txt']});
+ expect(steps).toEqual(['Kaynak dosyalarını oku.','report.md: istenen içeriği oluştur ve doğrula.','summary.txt: istenen içeriği oluştur ve doğrula.']);
+});
+
+it('distinguishes same-named files in fallback plans',async()=>{
+ const model:ChatModel={id:'vunemi:test',chat:async()=>({text:'NONE',toolCalls:[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}})};
+ expect(await proposePlan(model,'Create both files',{signal:new AbortController().signal,fastFiles:true,requiredFiles:['/tmp/a/report.md','/tmp/b/report.md']})).toEqual(['a/report.md: istenen içeriği oluştur ve doğrula.','b/report.md: istenen içeriği oluştur ve doğrula.']);
+});
+
+it('does not invent a source-read step from quoted output content',async()=>{
+ const model:ChatModel={id:'vunemi:test',chat:async()=>({text:'NONE',toolCalls:[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}})};
+ expect(await proposePlan(model,'/tmp/a.txt dosyasına “/tmp/source.csv dosyasını oku” yaz. /tmp/b.txt dosyasına “text” yaz.',{signal:new AbortController().signal,fastFiles:true,requiredFiles:['/tmp/a.txt','/tmp/b.txt']})).toEqual(['a.txt: istenen içeriği oluştur ve doğrula.','b.txt: istenen içeriği oluştur ve doğrula.']);
+});

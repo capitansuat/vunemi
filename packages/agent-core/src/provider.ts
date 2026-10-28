@@ -51,12 +51,18 @@ export interface ChatResult {
 }
 
 export interface ChatRequest {
+  /** Optional local planning hint; ignored by other providers. */
+  thinking?: boolean;
   messages: ChatMessage[];
   tools: ToolSpec[];
+  /** Require one advertised function; does not authorize its execution. */
+  toolChoice?: { name: string };
   signal: AbortSignal;
 }
 
 export interface ChatModel {
+  /** Built-in engine benefits from unchanged tool schemas across workflow stages. */
+  readonly cacheStableTools?: boolean;
   /** Stable spec string, e.g. `lmstudio:qwen/qwen3.6-35b-a3b`. */
   readonly id: string;
   chat(req: ChatRequest, onChunk: (chunk: StreamChunk) => void): Promise<ChatResult>;
@@ -231,6 +237,8 @@ class OpenAICompatibleModel implements ChatModel {
     private readonly config: ProviderConfig,
   ) {}
 
+  get cacheStableTools(): boolean { return this.config.kind === "vunemi"; }
+
   contextWindow(): Promise<number | null> {
     return probeContextWindow(this.config, this.model);
   }
@@ -283,11 +291,15 @@ class OpenAICompatibleModel implements ChatModel {
   }
 
   async chat(req: ChatRequest, onChunk: (c: StreamChunk) => void): Promise<ChatResult> {
+    if (req.toolChoice && !req.tools.some(tool => tool.name === req.toolChoice!.name))
+      throw new Error('The required tool is not advertised in this model request.');
     const body = {
       model: this.model,
       stream: true,
       stream_options: { include_usage: true },
+      ...(req.toolChoice && { tool_choice: {type: "function", function: {name: req.toolChoice.name}} }),
       messages: req.messages.map(toOpenAIMessage),
+      ...(this.config.kind === "vunemi" && req.thinking !== undefined && {chat_template_kwargs:{enable_thinking:req.thinking}}),
       ...(req.tools.length > 0 && {
         tools: req.tools.map((t) => ({
           type: "function",
@@ -421,6 +433,7 @@ class OllamaModel implements ChatModel {
   }
 
   async chat(req: ChatRequest, onChunk: (c: StreamChunk) => void): Promise<ChatResult> {
+    if (req.toolChoice) throw new Error('Required named tool choice is not supported by the Ollama native provider.');
     const body = {
       model: this.model,
       stream: true,

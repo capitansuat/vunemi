@@ -267,3 +267,17 @@ describe("vision", () => {
     expect(await createModel("lmstudio:m").vision!()).toBe(false);
   });
 });
+
+
+it("advertises stable tool cache only for the built-in engine",()=>{
+ expect(createModel("vunemi:x").cacheStableTools).toBe(true);
+ expect(createModel("openai:x").cacheStableTools).not.toBe(true);
+ expect(createModel("ollama:x").cacheStableTools).not.toBe(true);
+});
+
+it.each(["vunemi","openai"])("uses the optional planner thinking hint only on the built-in backend (%s)",async provider=>{
+ const fetchMock=vi.fn<typeof fetch>(async()=>streamed(sse([{choices:[{delta:{content:"1. Read source\n2. Write outputs"}}]}])));vi.stubGlobal("fetch",fetchMock);
+ await createModel(provider+":x").chat({...req(),thinking:false},()=>{});
+ const body=JSON.parse(fetchMock.mock.calls[0]![1]!.body as string);
+ expect(body.chat_template_kwargs).toEqual(provider==="vunemi"?{enable_thinking:false}:undefined);
+});

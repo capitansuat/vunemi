@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { taskProgressTool, tasksFromEvents } from "../src/tasks.js";
 import { announcesRead, argumentMisfit, claimsChange, comparesOptions, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
 import { requestedTravelTools } from "../src/travel-intent.js";
 import { choiceTools } from "../src/choices.js";
@@ -253,7 +254,7 @@ describe("runAgent", () => {
     expect(toolMsg).not.toContain("<user_request>");
   });
 
-  it("does not run a rejected action and tells the model why", async () => {
+  it("stops the rejected task without asking the model to decide whether to continue", async () => {
     const { model, seen } = scripted([
       { calls: [{ name: "save_note", argumentsText: '{"text":"x"}' }] },
       { text: "Okay, I won't." },
@@ -262,9 +263,11 @@ describe("runAgent", () => {
       model,
       requestApproval: async (): Promise<ApprovalDecision> => ({ kind: "reject", note: "not now" }),
     });
-    await promise;
+    const result=await promise;
     expect(log).toEqual([]);
-    expect(seen[1]!.messages.at(-1)!.content).toMatch(/declined.*not now/);
+    expect(result.status).toBe("stopped");
+    expect(seen).toHaveLength(1);
+    expect(result.messages.at(-1)!.content).toMatch(/declined.*not now/);
   });
 
   it("remembers approve_always for the rest of the session", async () => {
@@ -357,7 +360,7 @@ describe("runAgent", () => {
     expect(grants.has("mac-app:notes")).toBe(true);
     expect(events.find((event) => event.type === "approval.required" && event.tool === "app_dictionary")).not.toHaveProperty("alwaysAsk");
     expect(events.find((event) => event.type === "approval.required" && event.tool === "app_command")).toMatchObject({ alwaysAsk: true });
-    expect(authorize).toHaveBeenCalledTimes(3); // The policy still checks all calls.
+    expect(authorize).toHaveBeenCalledTimes(6); // The policy still checks all calls.
     grants.clear(); // Opening a new conversation clears session grants.
     await runAgent({ goal: "read Notes again", tools: registry, emit: () => {}, model: scripted(turns).model,
       requestApproval: decisions, authorize, sessionGrants: grants, now: () => 1000, runId: "r2" });
@@ -890,7 +893,7 @@ describe("external authority", () => {
       },
     });
     expect(result.status).toBe("done");
-    expect(seen).toEqual(["save_note", "buy"]);
+    expect(seen).toEqual(["save_note", "buy", "buy"]);
     expect(log).toEqual(["BOUGHT"]); // the note was blocked, the purchase allowed
     expect(events.some((e) => e.type === "approval.required")).toBe(false);
     const refusal = events.find((e) => e.type === "tool.finished" && !e.ok);
@@ -987,8 +990,8 @@ describe("checkpoints", () => {
     const { promise, log } = run({ model, onCheckpoint: (m) => points.push(structuredClone(m)) });
     await promise;
     expect(log).toEqual(["a", "b"]);
-    expect(points.map((m) => m.at(-1)!.role)).toEqual(["assistant", "tool", "tool"]);
-    const first = points[0]!.at(-1)!;
+    expect(points.map((m) => m.at(-1)!.role)).toEqual(["user", "assistant", "tool", "tool"]);
+    const first = points[1]!.at(-1)!;
     expect(first.role === "assistant" && first.toolCalls).toHaveLength(2);
   });
 
@@ -2115,4 +2118,384 @@ describe("notes index", () => {
     const user = seen[0]!.messages.filter((m) => m.role === "user").at(-1)!.content;
     expect(user).not.toContain("Notes earlier conversations");
   });
+});
+
+describe("execution revalidation after waiting", () => {
+  // Removing the final policy/registry checks must make these side effects recur.
+  async function pending(change: (registry: ToolRegistry) => void, opts: Partial<RunOptions> = {}, decision: ApprovalDecision = { kind: "approve" }) {
+    const writes: string[] = [];
+    const registry = new ToolRegistry().register({ name: "save_note", description: "save", parameters: { type: "object", properties: {} }, actionClass: "write-local", run: async () => { writes.push("saved"); return "saved"; } }, "notes");
+    const events: AgentEvent[] = [];
+    let denied = false;
+    let asks = 0;
+    await runAgent({ goal: "Save a note", model: scripted([{ calls: [{ name: "save_note", argumentsText: "{}" }] }, { text: "Finished." }]).model,
+      tools: registry, emit: e => events.push(e),
+      authorize: () => denied ? { kind: "deny", reason: "Permission revoked" } : { kind: "ask", reason: "Please approve" },
+      requestApproval: async () => { asks++; change(registry); if (opts.goal === "deny") denied = true; return decision; },
+      ...opts,
+    });
+    return { writes, events, asks };
+  }
+  it("does not execute when policy becomes deny during approval", async () => {
+    const r = await pending(() => {}, { goal: "deny" });
+    expect(r.writes).toEqual([]);
+    expect(r.events.some(e => e.type === "tool.started")).toBe(false);
+    expect(r.events.some(e => e.type === "tool.finished" && !e.ok)).toBe(true);
+  });
+  it.each([{},null,{kind:'cancelled'},{kind:'expired'},{kind:'approve',extra:true}])('does not execute after malformed runtime approval %#',async decision=>{
+    const r=await pending(()=>{},{},decision as ApprovalDecision);
+    expect(r.writes).toEqual([]);expect(r.events.some(event=>event.type==='tool.started')).toBe(false);
+  });
+  it("does not execute when the source is switched off during approval", async () => {
+    expect((await pending(r => r.setEnabled("notes", false))).writes).toEqual([]);
+  });
+  it("invalidates approval even when the source is switched off and back on", async () => {
+    expect((await pending(r => { r.setEnabled("notes", false); r.setEnabled("notes", true); })).writes).toEqual([]);
+  });
+  it("does not execute the captured tool after its source is removed", async () => {
+    expect((await pending(r => r.unregister("notes"))).writes).toEqual([]);
+  });
+  it("does not ask twice when the approved action remains valid", async () => {
+    const r = await pending(() => {});
+    expect(r.writes).toEqual(["saved"]); expect(r.asks).toBe(1);
+  });
+  it("rechecks policy after a pause following approval", async () => {
+    let approved = false; let denied = false;
+    const r = await pending(() => { approved = true; }, {
+      authorize: () => denied ? { kind: "deny", reason: "Revoked while paused" } : { kind: "ask", reason: "Approve" },
+      whenUnpaused: async () => { if (approved) denied = true; },
+    });
+    expect(r.writes).toEqual([]);
+  });
+  it("does not use a pre-pause auto permission after it becomes ask", async () => {
+    let checks = 0;
+    const r = await pending(() => {}, {
+      authorize: () => ++checks === 1 ? { kind: "allow" } : { kind: "ask", reason: "Now requires approval" },
+    });
+    expect(r.writes).toEqual([]); expect(r.asks).toBe(0);
+  });
+
+  it("does not retain a conversation grant for an invalidated approval", async () => {
+    const grants = new Set<string>();
+    const r = await pending(r => r.setEnabled("notes", false), { sessionGrants: grants }, { kind: "approve_always" });
+    expect(r.writes).toEqual([]); expect([...grants]).toEqual([]);
+  });
+  it("does not invoke an old tool after the source is reloaded with the same object", async () => {
+    const r = await pending(r => {
+      const old = r.getAny("save_note")!;
+      r.unregister("notes"); r.register(old, "notes");
+    });
+    expect(r.writes).toEqual([]);
+  });
+  it("does not execute when the source changes during the final async authorization", async () => {
+    let registry: ToolRegistry; let checks = 0;
+    const r = await pending(r => { registry = r; }, {
+      authorize: async () => {
+        if (++checks === 2) { await Promise.resolve(); registry.setEnabled("notes", false); }
+        return { kind: "ask", reason: "Approve" };
+      },
+    });
+    expect(r.writes).toEqual([]);
+  });
+
+  it("does not reuse a scope grant cleared while the run is paused", async () => {
+    const grants = new Set(["scope:notes"]);
+    const writes: string[] = [];
+    const registry = new ToolRegistry().register({ name: "save_note", description: "save", parameters: { type: "object", properties: {} }, actionClass: "write-local", alwaysAsk: true, allowSessionApproval: true, approvalScope: () => "scope:notes", run: async () => { writes.push("saved"); return "saved"; } }, "notes");
+    let checked = false;
+    await runAgent({ goal: "Save a note", tools: registry, sessionGrants: grants, emit: () => {},
+      model: scripted([{ calls: [{ name: "save_note", argumentsText: "{}" }] }, { text: "Done" }]).model,
+      authorize: () => { checked = true; return { kind: "ask", reason: "Approve" }; },
+      requestApproval: async () => { throw new Error("The initial grant should avoid a card"); },
+      whenUnpaused: async () => { if (checked) grants.clear(); },
+    });
+    expect(writes).toEqual([]);
+  });
+
+});
+
+describe("task progress tool integration", () => {
+  it("ties a completed step to a successful call in the active run", async () => {
+    const { registry } = tools();
+    registry.register(taskProgressTool());
+    const events: AgentEvent[] = [];
+    const { model, seen } = scripted([
+      { calls: [{ name: "save_note", argumentsText: '{"text":"x"}' }] },
+      { calls: [{ name: "task_update", argumentsText: '{"step":1,"status":"completed","evidenceCallIds":["c1_0"]}' }] },
+      { text: "Saved." },
+    ]);
+    await runAgent({ goal: "Save a note", tools: registry, model, emit: e => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
+    const task = tasksFromEvents(events)[0];
+    expect(seen.some(req => req.messages.some(m => m.role === "tool" && m.toolName === "save_note" && m.content.includes("c1_0")))).toBe(true);
+    expect(task?.status).toBe("completed");
+    expect(task?.steps[0]?.receipts).toEqual([{ runId: task!.activeRunId, callId: "c1_0" }]);
+  });
+});
+
+it("resumes an accepted task without replacing its completed steps or reusing approval", async () => {
+  const prior: AgentEvent[] = [
+    { type: "run.started", runId: "old", goal: "Save two notes", model: "local", at: 1 },
+    { type: "plan.proposed", runId: "old", steps: ["Save first", "Save second"], at: 2 },
+    { type: "plan.resolved", runId: "old", decision: { kind: "go", steps: ["Save first", "Save second"] } },
+    { type: "tool.proposed", runId: "old", stepId: "s", callId: "old-call", tool: "save_note", args: {}, actionClass: "write-local" },
+    { type: "tool.finished", runId: "old", callId: "old-call", ok: true, output: "Saved", durationMs: 1 },
+    { type: "task.progress", runId: "old", step: 1, status: "completed", evidenceCallIds: ["old-call"], at: 3 },
+    { type: "run.finished", runId: "old", status: "stopped", detail: "Closed", at: 4 },
+  ];
+  const resumeTask = tasksFromEvents(prior)[0]!;
+  const { registry, log } = tools(); registry.register(taskProgressTool());
+  const events: AgentEvent[] = []; let asks = 0;
+  const { model, seen } = scripted([
+    { calls: [{ name: "save_note", argumentsText: '{"text":"second"}' }] },
+    { calls: [{ name: "task_update", argumentsText: '{"step":2,"status":"completed","evidenceCallIds":["c1_0"]}' }] },
+    { text: "Saved." },
+  ]);
+  await runAgent({ goal: "Continue", runId: "new", resumeTask, tools: registry, model, emit: e => events.push(e), sessionGrants: new Set(["save_note"]),
+    requestPlanApproval: async () => { throw new Error("Do not replace the accepted plan"); },
+    requestApproval: async () => { asks++; return { kind: "approve" }; },
+  });
+  const tasks = tasksFromEvents([...prior, ...events]);
+  expect(tasks).toHaveLength(1);
+  expect(tasks[0]?.goal).toBe("Save two notes");
+  expect(tasks[0]?.steps.map(s => s.status)).toEqual(["completed", "completed"]);
+  expect(tasks[0]?.status).toBe("completed"); expect(asks).toBe(1); expect(log).toEqual(["second"]);
+  expect(seen[0]?.messages.some(m => m.content.includes('"title":"Save first","status":"completed"'))).toBe(true);
+});
+
+
+describe("lightweight local chat", () => {
+  const areas: ToolArea[]=[{id:"files",summary:"local files"}];
+  it("omits tools and task tracking for a routed conversation but preserves personal instructions", async () => {
+    const {model,seen}=scripted([{text:"Merhaba."}]);
+    const registry=new ToolRegistry().register(taskProgressTool());
+    const result=await runAgent({goal:"Merhaba",model,tools:registry,areas,shownTools:new Set(),pickAreas:async()=>[],lightChat:true,chatInstructions:"Speak Turkish. PERSONAL STYLE",instructions:"FILES OPERATING GUIDE",emit:()=>{},requestApproval:async()=>({kind:"reject"})});
+    expect(result.status).toBe("done");
+    expect(seen[0]!.tools).toEqual([]);
+    expect(seen[0]!.messages[0]!.content).toContain("PERSONAL STYLE");
+    expect(seen[0]!.messages[0]!.content).not.toContain("FILES OPERATING GUIDE");
+    expect(seen[0]!.messages.at(-1)!.content).not.toContain("Vunemi task tracking");
+  });
+  it("reroutes an unexpected tool call before executing or requesting approval", async () => {
+    const ran=vi.fn(async()=>"saved");const approval=vi.fn(async()=>({kind:"reject" as const}));
+    const registry=new ToolRegistry().register({name:"save_note",description:"save",parameters:{type:"object",properties:{}},actionClass:"write-local",run:ran});
+    const {model,seen}=scripted([{calls:[{name:"save_note",argumentsText:"{}"}]},{text:"I can answer directly."}]);
+    await runAgent({goal:"Merhaba",model,tools:registry,areas,shownTools:new Set(),pickAreas:async()=>[],lightChat:true,emit:()=>{},requestApproval:approval});
+    expect(seen[0]!.tools).toEqual([]);expect(seen[1]!.tools.map(t=>t.name)).toContain("save_note");
+    expect(ran).not.toHaveBeenCalled();expect(approval).not.toHaveBeenCalled();
+  });
+  it("still requires approval for a real action after promotion", async () => {
+    const ran=vi.fn(async()=>"saved"), approval=vi.fn(async()=>({kind:"reject" as const}));
+    const registry=new ToolRegistry().register({name:"save_note",description:"save",parameters:{type:"object",properties:{}},actionClass:"write-local",run:ran});
+    const call={name:"save_note",argumentsText:"{}"};
+    const {model}=scripted([{calls:[call]},{calls:[call]},{text:"The action was rejected."}]);
+    await runAgent({goal:"remember this",model,tools:registry,areas,shownTools:new Set(),pickAreas:async()=>[],lightChat:true,emit:()=>{},requestApproval:approval});
+    expect(approval).toHaveBeenCalledTimes(1);expect(ran).not.toHaveBeenCalled();
+  });
+  it("keeps the full task path when an area is selected", async () => {
+    const {model,seen}=scripted([{text:"ok"}]);
+    const registry=new ToolRegistry().register(taskProgressTool());
+    await runAgent({goal:"read files",model,tools:registry,areas,shownTools:new Set(),pickAreas:async()=>["files"],lightChat:true,emit:()=>{},requestApproval:async()=>({kind:"reject"})});
+    expect(seen[0]!.tools.map(t=>t.name)).toContain("task_update");
+    expect(seen[0]!.messages.at(-1)!.content).toContain("Vunemi task tracking");
+  });
+});
+
+
+describe("compact task tools", () => {
+  it("loads assistant helpers lazily while retaining real write approval", async () => {
+    const saved=vi.fn(async()=>"saved"), rejected=vi.fn(async()=>({kind:"reject" as const}));
+    const registry=new ToolRegistry().register(taskProgressTool()).register({name:"save_note",description:"save note",parameters:{type:"object",properties:{}},actionClass:"write-local",run:saved}).register({name:"files_list",description:"list",parameters:{type:"object",properties:{}},actionClass:"read",run:async()=>"files"},"files:read");
+    const {model,seen}=scripted([{calls:[{name:"tools_open",argumentsText:'{"area":"assistant"}'}]},{calls:[{name:"tool_run",argumentsText:'{"name":"save_note","arguments":{}}'}]},{text:"The action was rejected."}]);
+    await runAgent({goal:"use files",model,tools:registry,areas:[{id:"files",summary:"local files"}],shownTools:new Set(),pickAreas:async()=>["files"],compactTaskTools:true,requestApproval:rejected,emit:()=>{}});
+    const names=seen[0]!.tools.map(t=>t.name);expect(names).toContain("files_list");expect(names).toContain("task_update");expect(names).not.toContain("save_note");
+    expect(seen[1]!.messages.some(m=>m.role==="tool" && m.content.includes('"name":"save_note"'))).toBe(true);
+    expect(rejected).toHaveBeenCalledTimes(1);expect(saved).not.toHaveBeenCalled();
+  });
+});
+
+
+it("offers actual verification tools when a file area was delivered lazily", async () => {
+  const registry=new ToolRegistry().register(taskProgressTool()).register({name:"files_write",description:"write",parameters:{type:"object",properties:{}},actionClass:"write-local",run:async(_a,ctx)=>{ctx.produced?.({kind:"file",path:"/tmp/test.txt"});return "saved";}},"files:write").register({name:"files_read",description:"read",parameters:{type:"object",properties:{path:{type:"string"},checks:{type:"object"}}},actionClass:"read",run:async()=>"contents"},"files:read");
+  const {model,seen}=scripted([{text:"1. Write test.txt\n2. Verify test.txt"},{calls:[{name:"files_write",argumentsText:'{"path":"/tmp/test.txt","content":"test"}'}]},{text:"Cannot finish yet."}]);
+  await runAgent({goal:"write test.txt and verify it",model,tools:registry,areas:[{id:"files",summary:"local files"}],shownTools:new Set(["task_update","tool_run"]),pickAreas:async()=>["files"],compactTaskTools:true,maxSteps:2,emit:()=>{},requestApproval:async()=>({kind:"approve"}),requestPlanApproval:async steps=>({kind:"go",steps})});
+  expect(seen[2]!.tools.map(t=>t.name)).toContain("files_read");
+  expect(seen[2]!.tools.map(t=>t.name)).not.toContain("files_write");
+});
+
+
+it("refuses a wrong canonical explicit write target before approval", async () => {
+  const write=vi.fn(async()=>"saved"),approval=vi.fn(async()=>({kind:"approve" as const}));
+  const registry=new ToolRegistry().register({name:"files_write",description:"write",parameters:{type:"object",properties:{}},actionClass:"write-local",resolveFile:a=>String((a as {path:string}).path).startsWith("/")?String((a as {path:string}).path):"/tmp/"+String((a as {path:string}).path),run:write});
+  const {model}=scripted([{calls:[{name:"files_write",argumentsText:'{"path":"Files:Projects/test.txt","content":"test"}'}]}]);
+  await runAgent({goal:"/tmp/test.txt dosyasına tam olarak test yaz.",model,tools:registry,maxSteps:1,emit:()=>{},requestApproval:approval});
+  expect(approval).not.toHaveBeenCalled();expect(write).not.toHaveBeenCalled();
+});
+
+
+it("keeps verification schemas and conversation prefixes stable but blocks a hidden write before approval", async () => {
+  const approvals=vi.fn(async()=>({kind:"approve" as const})),writes=vi.fn(async(_a,ctx)=>{ctx.produced?.({kind:"file",path:"/tmp/test.txt"});return "saved";});
+  const registry=new ToolRegistry().register(taskProgressTool()).register({name:"files_write",description:"write",parameters:{type:"object",properties:{}},actionClass:"write-local",run:writes},"files:write").register({name:"files_read",description:"read",parameters:{type:"object",properties:{path:{type:"string"},checks:{type:"object"}}},actionClass:"read",run:async()=>"test"},"files:read");
+  const {model,seen}=scripted([
+    {text:"1. Write test.txt\n2. Verify test.txt"},
+    {calls:[{name:"files_write",argumentsText:'{"path":"/tmp/test.txt","content":"test"}'}]},
+    {calls:[{name:"tool_run",argumentsText:'{"name":"files_write","arguments":{"path":"/tmp/other.txt","content":"other"}}'}]},
+    {calls:[{name:"files_read",argumentsText:'{"path":"/tmp/test.txt","checks":{"contains":["test"]}}'}]},
+    {text:'{"ok":true,"issues":[]}'},
+    {calls:[{name:"task_update",argumentsText:'{"step":1,"status":"completed","evidenceCallIds":["c2_0"]}'}]},
+    {calls:[{name:"task_update",argumentsText:'{"step":2,"status":"completed","evidenceCallIds":["c4_0"]}'}]},
+  ]);
+  const events:AgentEvent[]=[];
+  const result=await runAgent({goal:"write test.txt and verify it",model:{...model,cacheStableTools:true},tools:registry,areas:[{id:"files",summary:"local files"}],shownTools:new Set(["task_update","tool_run"]),pickAreas:async()=>["files"],compactTaskTools:true,maxSteps:8,emit:e=>events.push(e),requestApproval:approvals,requestPlanApproval:async steps=>({kind:"go",steps})});
+  expect(result.status).toBe("done");expect(approvals).toHaveBeenCalledTimes(1);expect(writes).toHaveBeenCalledTimes(1);
+  const main=seen.filter(r=>r.tools.length>0);
+  expect(main[0]!.tools.map(t=>t.name)).toContain("files_read");
+  expect(main.every(r=>JSON.stringify(r.tools)===JSON.stringify(main[0]!.tools))).toBe(true);
+  expect(main[2]!.messages.slice(0,main[1]!.messages.length)).toEqual(main[1]!.messages);
+  expect(main[3]!.messages.slice(0,main[2]!.messages.length)).toEqual(main[2]!.messages);
+  expect(events.find(e=>e.type==="tool.finished" && e.callId==="c3_0")).toMatchObject({ok:false,retryable:true,output:expect.stringContaining("workflow")});
+});
+
+it.each([{seed:[] as string[]},{seed:["task_update","tool_run"]}])("starts an explicit file write with native write/read/edit tools and lazily opens the remaining file tools ($seed)", async ({seed}) => {
+  const registry=new ToolRegistry().register(taskProgressTool());
+  for(const name of ["files_write","files_read","files_edit","files_search"])
+    registry.register({name,description:name==="files_search"?"LARGE SEARCH DEFINITION ".repeat(100):name,parameters:{type:"object",properties:{}},actionClass:name==="files_write"||name==="files_edit"?"write-local":"read",run:async()=>"ok"},"files:"+(name==="files_write"||name==="files_edit"?"write":"read"));
+  const {model,seen}=scripted([{calls:[{name:"tools_open",argumentsText:'{"area":"files"}'}]},{text:"Cannot continue."}]);
+  await runAgent({goal:"/tmp/test.txt dosyasına tam olarak “test” yaz ve doğrula.",model:{...model,cacheStableTools:true},tools:registry,areas:[{id:"files",summary:"local files"}],shownTools:new Set(seed),pickAreas:async()=>["files"],compactTaskTools:true,maxSteps:2,emit:()=>{},requestApproval:async()=>({kind:"reject"})});
+  expect(seen[0]!.tools.map(t=>t.name)).toEqual(expect.arrayContaining(["files_write","files_read","files_edit"]));
+  expect(seen[0]!.tools.map(t=>t.name)).not.toContain("files_search");
+  expect(JSON.stringify(seen[0]!.messages)).not.toContain("LARGE SEARCH DEFINITION");
+  expect(JSON.stringify(seen[0]!.messages)).toContain("Do not read the destination");
+  expect(seen[1]!.messages.some(m=>m.role==="tool"&&m.content.includes("LARGE SEARCH DEFINITION"))).toBe(true);
+});
+
+it.each([false,true])("uses a compact literal-file prompt without model planning while retaining approval (planEveryTask=%s)",async planEveryTask=>{
+ const registry=new ToolRegistry().register(taskProgressTool());
+ for(const name of ["files_write","files_read","files_edit"])registry.register({name,description:name,parameters:{type:"object",properties:{}},actionClass:name==="files_read"?"read":"write-local",run:vi.fn(async()=>"not reached")},"files:"+(name==="files_read"?"read":"write"));
+ const {model,seen}=scripted([{calls:[{name:"files_write",argumentsText:'{"path":"/tmp/test.txt","content":"test"}'}]},{text:"The action was rejected."}]);
+ const approval=vi.fn(async()=>({kind:"reject" as const}));const plan=vi.fn(async(steps:string[])=>({kind:"go" as const,steps}));
+ await runAgent({goal:'/tmp/test.txt dosyasına tam olarak “test” yaz ve doğrula.',model:{...model,cacheStableTools:true},tools:registry,areas:[{id:"files",summary:"local files",guide:"UNRELATED CONNECTOR MANUAL"}],shownTools:new Set(["task_update","tool_run"]),pickAreas:async()=>["files"],compactTaskTools:true,instructions:"UNRELATED CONNECTOR MANUAL",chatInstructions:"PERSONAL LANGUAGE",requestPlanApproval:plan,planEveryTask,maxSteps:2,requestApproval:approval,emit:()=>{}});
+ expect(seen[0]!.tools.map(t=>t.name)).toContain("files_write");
+ expect(seen[0]!.messages[0]!.content).toContain("PERSONAL LANGUAGE");
+ expect(seen[0]!.messages[0]!.content).not.toContain("UNRELATED CONNECTOR MANUAL");
+ expect(approval).toHaveBeenCalledTimes(1);expect(plan).toHaveBeenCalledTimes(planEveryTask?1:0);
+ if(planEveryTask)expect(plan.mock.calls[0]![0]).toHaveLength(2);
+});
+
+it("promotes an unexpected action from a simple file prompt before execution or approval",async()=>{
+ const sent=vi.fn(async()=>"sent"),approval=vi.fn(async()=>({kind:"reject" as const}));
+ const registry=new ToolRegistry().register({name:"files_write",description:"write",parameters:{type:"object",properties:{}},actionClass:"write-local",run:async()=>"saved"},"files:write").register({name:"send_note",description:"send",parameters:{type:"object",properties:{}},actionClass:"outbound",run:sent},"mail:send");
+ const {model,seen}=scripted([{calls:[{name:"send_note",argumentsText:'{}'}]},{calls:[{name:"files_write",argumentsText:'{"path":"/tmp/test.txt","content":"test"}'}]},{text:"The write was rejected."}]);
+ await runAgent({goal:'/tmp/test.txt dosyasına tam olarak “test” yaz.',model:{...model,cacheStableTools:true},tools:registry,areas:[{id:"files",summary:"local files"},{id:"mail",summary:"mail"}],shownTools:new Set(),compactTaskTools:true,chatInstructions:"personal",instructions:"FULL OPERATING RULES",history:[{role:"user",content:"OLD HISTORY RESTORED"}],pickAreas:async()=>["files"],maxSteps:2,emit:()=>{},requestApproval:approval});
+ expect(seen[0]!.messages[0]!.content).not.toContain("FULL OPERATING RULES");
+ expect(seen[1]!.messages[0]!.content).toContain("FULL OPERATING RULES");
+ expect(JSON.stringify(seen[0]!.messages)).not.toContain("OLD HISTORY RESTORED");
+ expect(JSON.stringify(seen[1]!.messages)).toContain("OLD HISTORY RESTORED");
+ expect(sent).not.toHaveBeenCalled();expect(approval).toHaveBeenCalledTimes(1);
+});
+
+it("keeps only four native schemas through literal-file verification and requires real approval",async()=>{
+ const approval=vi.fn(async()=>({kind:"approve" as const}));
+ const registry=new ToolRegistry().register(taskProgressTool()).register({name:"files_write",description:"write",parameters:{type:"object",properties:{}},actionClass:"write-local",run:async(_a,ctx)=>{ctx.produced?.({kind:"file",path:"/tmp/test.txt"});return "saved";}},"files:write").register({name:"files_read",description:"read",parameters:{type:"object",properties:{path:{type:"string"},checks:{type:"object"}}},actionClass:"read",run:async()=>"test"},"files:read").register({name:"files_edit",description:"edit",parameters:{type:"object",properties:{}},actionClass:"write-local",run:async()=>"edited"},"files:write");
+ const {model,seen}=scripted([{calls:[{name:"files_write",argumentsText:'{"path":"/tmp/test.txt","content":"test"}'}]},{calls:[{name:"files_read",argumentsText:'{"path":"/tmp/test.txt","checks":{"contains":["test"]}}'}]},{text:'{"ok":true,"issues":[]}'},{calls:[{name:"task_update",argumentsText:'{"step":1,"status":"completed","evidenceCallIds":["c1_0","c2_0"]}'}]}]);
+ const result=await runAgent({goal:'/tmp/test.txt dosyasına tam olarak “test” yaz ve doğrula.',model:{...model,cacheStableTools:true},tools:registry,areas:[{id:"files",summary:"files"}],shownTools:new Set(),compactTaskTools:true,chatInstructions:"personal",maxSteps:5,emit:()=>{},requestApproval:approval});
+ expect(result.status).toBe("done");expect(approval).toHaveBeenCalledTimes(1);
+ const main=seen.filter(r=>r.tools.length>0);
+ expect(main[0]!.tools.map(t=>t.name).sort()).toEqual(["files_edit","files_read","files_write","task_update"]);
+ expect(main.every(r=>JSON.stringify(r.tools)===JSON.stringify(main[0]!.tools))).toBe(true);
+});
+
+it("isolates an independent literal-file request from old chat without deleting history",async()=>{
+ const registry=new ToolRegistry().register({name:"files_write",description:"write",parameters:{type:"object",properties:{}},actionClass:"write-local",run:async()=>"saved"},"files:write");
+ const history:ChatMessage[]=[{role:"user",content:"OLD CHAT CONTEXT"},{role:"assistant",content:"Old unrelated answer."}];
+ const {model,seen}=scripted([{calls:[{name:"files_write",argumentsText:'{"path":"/tmp/test.txt","content":"test"}'}]},{text:"The write was rejected."}]);
+ const result=await runAgent({goal:'/tmp/test.txt dosyasına tam olarak “test” yaz.',history,model:{...model,cacheStableTools:true},tools:registry,areas:[{id:"files",summary:"files"}],shownTools:new Set(),compactTaskTools:true,chatInstructions:"personal",maxSteps:2,emit:()=>{},requestApproval:async()=>({kind:"reject"})});
+ expect(JSON.stringify(seen[0]!.messages)).not.toContain("OLD CHAT CONTEXT");
+ expect(result.messages.slice(0,2)).toEqual(history);
+});
+
+it.each([{seed:[] as string[]},{seed:["task_update","tool_run","files_search"]}])("routes a multi-file source task with compact native file tools and keeps search available on demand ($seed)",async({seed})=>{
+ const registry=new ToolRegistry().register(taskProgressTool());
+ for(const name of ["files_write","files_read","files_edit","files_search"])registry.register({name,description:name==="files_search"?"LARGE SEARCH MANUAL ".repeat(100):name,parameters:{type:"object",properties:{}},actionClass:name==="files_read"||name==="files_search"?"read":"write-local",run:async()=>"ok"},"files:"+(name==="files_read"||name==="files_search"?"read":"write"));
+ const {model,seen}=scripted([{text:"1. Read source\n2. Write report\n3. Write summary"},{calls:[{name:"tools_open",argumentsText:'{"area":"files"}'}]},{text:"Cannot continue."}]);
+ await runAgent({goal:"Read /tmp/source.csv and write /tmp/report.md and /tmp/summary.txt, verify both.",model:{...model,cacheStableTools:true},tools:registry,areas:[{id:"files",summary:"files",guide:"UNRELATED FULL MANUAL"}],shownTools:new Set(seed),pickAreas:async()=>["files"],compactTaskTools:true,chatInstructions:"PERSONAL STYLE",instructions:"UNRELATED FULL MANUAL",history:[{role:"user",content:"RELEVANT EARLIER SOURCE CONTEXT"}],maxSteps:2,emit:()=>{},requestPlanApproval:async steps=>({kind:"go",steps}),requestApproval:async()=>({kind:"reject"})});
+ const main=seen.filter(r=>r.tools.length>0);
+ expect(main[0]!.tools.map(t=>t.name)).toEqual(expect.arrayContaining(["files_read","files_write","files_edit","task_update","tools_open"]));
+ expect(main[0]!.tools.map(t=>t.name)).not.toContain("files_search");
+ expect(main[0]!.messages[0]!.content).toContain("PERSONAL STYLE");
+ expect(main[0]!.messages[0]!.content).not.toContain("UNRELATED FULL MANUAL");
+ expect(JSON.stringify(main[0]!.messages)).toContain("RELEVANT EARLIER SOURCE CONTEXT");
+ expect(JSON.stringify(main[0]!.messages)).not.toContain("LARGE SEARCH MANUAL");
+ expect(main[1]!.messages.some(m=>m.role==="tool"&&m.content.includes("LARGE SEARCH MANUAL"))).toBe(true);
+});
+
+it("does not close a two-output task after only one verified file even if its plan omitted the second output",async()=>{
+ const registry=new ToolRegistry().register(taskProgressTool()).register({name:"files_write",description:"write",parameters:{type:"object",properties:{}},actionClass:"write-local",run:async(_a,ctx)=>{ctx.produced?.({kind:"file",path:"/tmp/a.txt"});return "saved";}}).register({name:"files_read",description:"read",parameters:{type:"object",properties:{path:{type:"string"},checks:{type:"object"}}},actionClass:"read",run:async()=>"a"});
+ const {model}=scripted([{text:"1. Write a.txt"},{calls:[{name:"files_write",argumentsText:'{"path":"/tmp/a.txt","content":"a"}'}]},{calls:[{name:"files_read",argumentsText:'{"path":"/tmp/a.txt","checks":{"contains":["a"]}}'}]},{text:'{"ok":true,"issues":[]}'},{calls:[{name:"task_update",argumentsText:'{"step":1,"status":"completed","evidenceCallIds":["c2_0","c3_0"]}'}]},{text:"Done."}]);
+ const result=await runAgent({goal:'/tmp/a.txt dosyasına tam olarak “a” yaz. /tmp/b.txt dosyasına tam olarak “b” yaz.',model,tools:registry,planEveryTask:true,maxSteps:5,emit:()=>{},requestPlanApproval:async steps=>({kind:"go",steps}),requestApproval:async()=>({kind:"approve"})});
+ expect(result.status).not.toBe("done");
+ expect(result.messages.some(m=>m.role==="user"&&m.content.includes("Missing requested outputs")&&m.content.includes("/tmp/b.txt"))).toBe(true);
+});
+
+it("keeps multi-file schemas stable while verifying both outputs with separate approvals and supported progress",async()=>{
+ const files=new Map([['/tmp/source.csv','urun,satis,maliyet\nKalem,200,120\nDefter,450,270']]);
+ const approval=vi.fn(async()=>({kind:'approve' as const}));const events:AgentEvent[]=[];
+ const registry=new ToolRegistry().register(taskProgressTool()).register({name:'files_write',description:'write',parameters:{type:'object',properties:{path:{type:'string'},content:{type:'string'}}},actionClass:'write-local',run:async(a,ctx)=>{const args=a as {path:string;content:string};files.set(args.path,args.content);ctx.produced?.({kind:'file',path:args.path});return 'saved';}},'files:write').register({name:'files_read',description:'read',parameters:{type:'object',properties:{path:{type:'string'},checks:{type:'object'}}},actionClass:'read',run:async a=>files.get(String((a as {path:string}).path))??'missing'},'files:read').register({name:'files_edit',description:'edit',parameters:{type:'object',properties:{}},actionClass:'write-local',run:async()=>''},'files:write');
+ const {model,seen}=scripted([
+  {text:'1. Read source.csv\n2. Create and verify report.md\n3. Create and verify summary.txt'},
+  {calls:[{name:'files_read',argumentsText:'{"path":"/tmp/source.csv"}'}]},
+  {calls:[{name:'task_update',argumentsText:'{"step":1,"status":"completed","evidenceCallIds":["c2_0"]}'}]},
+  {calls:[{name:'files_write',argumentsText:'{"path":"/tmp/report.md","content":"sales:650 cost:390 profit:260"}'}]},
+  {calls:[{name:'files_read',argumentsText:'{"path":"/tmp/report.md","checks":{"contains":["650","390","260"]}}'}]},
+  {text:'{"ok":true,"issues":[]}'},
+  {calls:[{name:'task_update',argumentsText:'{"step":2,"status":"completed","evidenceCallIds":["c4_0","c5_0"]}'}]},
+  {calls:[{name:'files_write',argumentsText:'{"path":"/tmp/summary.txt","content":"sales:650 cost:390 profit:260"}'}]},
+  {calls:[{name:'files_read',argumentsText:'{"path":"/tmp/summary.txt","checks":{"contains":["650","390","260"]}}'}]},
+  {text:'{"ok":true,"issues":[]}'},
+  {calls:[{name:'task_update',argumentsText:'{"step":3,"status":"completed","evidenceCallIds":["c8_0","c9_0"]}'}]},
+ ]);
+ const result=await runAgent({goal:'/tmp/source.csv dosyasını oku. /tmp/report.md dosyasına genel satış, maliyet ve kârı yaz. /tmp/summary.txt dosyasına genel satış, maliyet ve kârı yaz. Her çıktıyı doğrula.',model:{...model,cacheStableTools:true},tools:registry,areas:[{id:'files',summary:'files'}],shownTools:new Set(),pickAreas:async()=>['files'],compactTaskTools:true,chatInstructions:'personal',maxSteps:12,emit:e=>events.push(e),requestApproval:approval,requestPlanApproval:async steps=>({kind:'go',steps})});
+ expect(result.status).toBe('done');expect(approval).toHaveBeenCalledTimes(2);
+ expect(events.filter(e=>e.type==='tool.finished').every(e=>e.ok)).toBe(true);
+ expect(events.filter(e=>e.type==='task.progress'&&e.status==='completed')).toHaveLength(3);
+ const main=seen.filter(r=>r.tools.length>0);expect(main.every(r=>JSON.stringify(r.tools)===JSON.stringify(main[0]!.tools))).toBe(true);
+});
+
+it('refuses to complete an implicit whole-goal step while a requested file is still missing',async()=>{
+ const events:AgentEvent[]=[];
+ const registry=new ToolRegistry().register(taskProgressTool()).register({name:'files_write',description:'write',parameters:{type:'object',properties:{}},actionClass:'write-local',run:async(_a,ctx)=>{ctx.produced?.({kind:'file',path:'/tmp/a.txt'});return 'saved';}}).register({name:'files_read',description:'read',parameters:{type:'object',properties:{path:{type:'string'},checks:{type:'object'}}},actionClass:'read',run:async()=> 'a'});
+ const {model}=scripted([{calls:[{name:'files_write',argumentsText:'{"path":"/tmp/a.txt","content":"a"}'}]},{calls:[{name:'files_read',argumentsText:'{"path":"/tmp/a.txt","checks":{"contains":["a"]}}'}]},{text:'{"ok":true,"issues":[]}'},{calls:[{name:'task_update',argumentsText:'{"step":1,"status":"completed","evidenceCallIds":["c1_0","c2_0"]}'}]},{text:'Done.'}]);
+ await runAgent({goal:'/tmp/a.txt dosyasına “a” yaz. /tmp/b.txt dosyasına “b” yaz.',model,tools:registry,maxSteps:4,emit:e=>events.push(e),requestApproval:async()=>({kind:'approve'})});
+ expect(events.some(e=>e.type==='task.progress'&&e.status==='completed')).toBe(false);
+ expect(events.some(e=>e.type==='tool.finished'&&!e.ok&&e.output.includes('whole goal'))).toBe(true);
+});
+
+it('blocks an invented monetary unit before write approval',async()=>{
+ const written=vi.fn(async()=> 'saved'),approval=vi.fn(async()=>({kind:'approve' as const}));const events:AgentEvent[]=[];
+ const registry=new ToolRegistry().register({name:'files_read',description:'read',parameters:{type:'object',properties:{}},actionClass:'read',run:async()=> 'urun,satis,maliyet\nKalem,650,390'}).register({name:'files_write',description:'write',parameters:{type:'object',properties:{}},actionClass:'write-local',run:written});
+ const {model}=scripted([{calls:[{name:'files_read',argumentsText:'{"path":"/tmp/source.csv"}'}]},{calls:[{name:'files_write',argumentsText:'{"path":"/tmp/report.md","content":"Satış: 650.00 TL"}'}]},{text:'Cannot finish yet.'}]);
+ await runAgent({goal:'CSV kaynağından satış ve maliyet raporunu /tmp/report.md dosyasına yaz.',model,tools:registry,maxSteps:2,emit:e=>events.push(e),requestApproval:approval});
+ expect(written).not.toHaveBeenCalled();expect(approval).not.toHaveBeenCalled();
+ expect(events.some(e=>e.type==='tool.finished'&&!e.ok&&e.output.includes('Currency TRY'))).toBe(true);
+});
+
+it('refuses output verification after an unsupported currency is introduced into the saved file',async()=>{
+ const events:AgentEvent[]=[];
+ const registry=new ToolRegistry().register(taskProgressTool()).register({name:'files_write',description:'write',parameters:{type:'object',properties:{}},actionClass:'write-local',run:async(_a,ctx)=>{ctx.produced?.({kind:'file',path:'/tmp/report.txt'});return 'saved';}}).register({name:'files_read',description:'read',parameters:{type:'object',properties:{path:{type:'string'},checks:{type:'object'}}},actionClass:'read',run:async a=>String((a as {path:string}).path).includes('source')?'urun,satis,maliyet\nKalem,650,390':'Satış:650 TL'});
+ const {model}=scripted([{calls:[{name:'files_read',argumentsText:'{"path":"/tmp/source.csv"}'}]},{calls:[{name:'files_write',argumentsText:'{"path":"/tmp/report.txt","content":"Satış:650"}'}]},{calls:[{name:'files_read',argumentsText:'{"path":"/tmp/report.txt","checks":{"contains":["650"]}}'}]},{text:'Verification needs a repair.'}]);
+ const result=await runAgent({goal:'/tmp/source.csv dosyasını oku. /tmp/report.txt dosyasına satış raporu yaz ve doğrula.',model,tools:registry,maxSteps:3,emit:e=>events.push(e),requestApproval:async()=>({kind:'approve'})});
+ expect(result.status).not.toBe('done');
+ expect(events.some(e=>e.type==='tool.finished'&&!e.ok&&e.output.includes('currency TRY')&&e.output.includes('<untrusted_content'))).toBe(true);
+});
+
+it('stops remaining calls in the same model batch when the user rejects the first action',async()=>{
+ const {registry,log}=tools();const {model,seen}=scripted([{calls:[{name:'save_note',argumentsText:'{"text":"first"}'},{name:'save_note',argumentsText:'{"text":"second"}'}]},{text:'retry'}]);const events:AgentEvent[]=[];
+ const result=await runAgent({goal:'save two notes',tools:registry,model,emit:e=>events.push(e),requestApproval:async()=>({kind:'reject'})});
+ expect(result.status).toBe('stopped');expect(log).toEqual([]);expect(seen).toHaveLength(1);expect(events.filter(e=>e.type==='approval.required')).toHaveLength(1);expect(events.filter(e=>e.type==='tool.started')).toHaveLength(0);
+});
+it('permits a freshly renewed scoped Always approval across desktop tools during resume, without inheriting the old grant',async()=>{
+ const registry=new ToolRegistry();const executed:string[]=[];
+ for(const name of ['desktop_click','desktop_key'])registry.register({name,description:'desktop',parameters:{type:'object',properties:{app:{type:'string'}}},actionClass:'outbound',alwaysAsk:true,allowSessionApproval:true,approvalScope:(a:{app:string})=>'desktop:'+a.app,run:async()=>{executed.push(name);return 'ok';}},'desktop:act');
+ const grants=new Set(['desktop:Calculator']);const approval=vi.fn(async()=>({kind:'approve_always' as const}));const {model}=scripted([{calls:[{name:'desktop_click',argumentsText:'{"app":"Calculator"}'}]},{calls:[{name:'desktop_key',argumentsText:'{"app":"Calculator"}'}]},{text:'done'}]);
+ await runAgent({goal:'continue desktop work',tools:registry,model,emit:()=>{},askBeyondRead:true,sessionGrants:grants,requestApproval:approval,authorize:()=>({kind:'ask',reason:'desktop'})});
+ expect(approval).toHaveBeenCalledTimes(1);expect(executed).toEqual(['desktop_click','desktop_key']);
 });

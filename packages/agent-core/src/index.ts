@@ -14,3 +14,13 @@ export * from "./travel-intent.js";
 export * from "./ledger.js";
 export * from "./kept.js";
 export * from "./areas.js";
+
+export * from "./tasks.js";
+export {validDesktopEvidence,type DesktopEvidence} from './desktop-progress.js';
+export type {SemanticMoveGuard} from './move-guard.js';
+
+export * from "./task-permissions.js";
+
+export {outcomeFingerprint,validOutcomeEvidence,requiresOutcomeEvidence,type OutcomeEvidence} from './outcome-evidence.js';
+
+export {validQuotedSource,copyQuotedSource,quotedSourceContext,type QuotedSource} from './quoted-source.js';

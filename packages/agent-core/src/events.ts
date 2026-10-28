@@ -1,3 +1,4 @@
+import type {QuotedSource} from './quoted-source.js';
 /**
  * Event Stream protocol — the only contract between the agent core and any UI.
  *
@@ -40,7 +41,8 @@ export interface MentionRef {
 }
 
 export type AgentEvent =
-  | { type: "run.started"; runId: string; goal: string; attachments?: string[]; mentions?: MentionRef[]; model: string; at: number }
+  | { type: "task.progress"; runId: string; step: number; status: "pending" | "working" | "completed"; evidenceCallIds: string[]; note?: string; at: number }
+  | { type: "run.started"; runId: string; taskId?: string; quotedSource?: QuotedSource; goal: string; attachments?: string[]; mentions?: MentionRef[]; model: string; at: number; preparationMs?: number; executionMode?: "simple-file" | "file-task" | "native-recipe" }
   | { type: "step.started"; runId: string; stepId: string; index: number; at: number }
   /** Model reasoning, streamed. UIs should render it demoted and collapsible. */
   | { type: "thought.delta"; runId: string; stepId: string; text: string }
@@ -53,12 +55,17 @@ export type AgentEvent =
       callId: string;
       tool: string;
       args: unknown;
+      outcomeRequestHash?: string;
       actionClass: ActionClass;
+      /** Canonical intended file path; not an execution or completion receipt. */
+      filePath?: string;
       /** Human-readable summary of the call, when the tool provides one. */
       preview?: string;
     }
   | {
       type: "approval.required";
+      requestId?:string;
+      taskPermissionOffer?: import("./task-permissions.js").TaskPermissionOfferView;
       runId: string;
       stepId: string;
       callId: string;
@@ -87,11 +94,11 @@ export type AgentEvent =
    * A tool needs the user to do something only they may do (a CAPTCHA, a
    * login) and is waiting. The UI shows where and offers Continue / Cancel.
    */
-  | { type: "handoff.required"; runId: string; callId: string; reason: string; at: number }
+  | { type: "handoff.required"; requestId?:string; runId: string; callId: string; reason: string; at: number }
   | { type: "handoff.resolved"; runId: string; callId: string; outcome: HandoffOutcome }
   /** A bounded, read-only decision inside an ordinary chat turn. */
   // `replaces`: the step whose text these cards stand in for, so it is not shown twice.
-  | { type: "choice.asked"; runId: string; stepId: string; callId: string; card: ChoiceCard; replaces?: string; at: number }
+  | { type: "choice.asked"; requestId?:string; runId: string; stepId: string; callId: string; card: ChoiceCard; replaces?: string; at: number }
   | { type: "choice.answered"; runId: string; callId: string; text: string; index?: number; at: number }
   /** A later step wrote this step's text again (see the question check in agent.ts): it is not shown twice. */
   | { type: "step.superseded"; runId: string; stepId: string; at: number }
@@ -100,17 +107,23 @@ export type AgentEvent =
   /** Short answers to the question an answer ends on. Nothing waits for them: picking one is the user's next message. */
   | { type: "replies.offered"; runId: string; stepId: string; options: string[]; at: number }
   /** Intent preview: what the agent means to do, before it starts. */
-  | { type: "plan.proposed"; runId: string; steps: string[]; at: number }
+  | { type: "plan.proposed"; requestId?:string; runId: string; steps: string[]; at: number }
   | { type: "plan.resolved"; runId: string; decision: PlanDecision }
   /** The user paused the run (to look, or to take over the page); nothing runs until resumed. */
   | { type: "run.paused"; runId: string; at: number }
   | { type: "run.resumed"; runId: string; at: number }
+  | { type:"desktop.append-intent";runId:string;callId:string;at:number }
+  | { type:"desktop.receipt";runId:string;callId:string;receiptId:string;evidence:import('./desktop-progress.js').DesktopEvidence;at:number }
   | { type: "tool.started"; runId: string; callId: string; at: number }
   | {
       type: "tool.finished";
       runId: string;
       callId: string;
       ok: boolean;
+      /** Validation failed safely; correcting inputs/verification may continue. Never grants permission. */
+      retryable?: boolean;
+      /** Native input may have landed. Never infer a safe retry from a failed call. */
+      deliveryUnknown?:true;
       /** Text handed back to the model (already truncated / wrapped). */
       output: string;
       /** The whole output for the UI, when the model was given less (ToolDef.forModel). */
@@ -123,6 +136,10 @@ export type AgentEvent =
       gallery?: Artifact[];
       /** What the call left behind for the user; only on success. */
       produced?: Produced[];
+      /** Controller evidence after successful execution and source review; local only. */
+      fileEvidence?: { path: string; paths?:string[]; kind: "source-read" | "write" | "verified-read"; checks?: Record<string, unknown>; review?: {version:1; fingerprint:string; mode:"independent"|"reused"} };
+      desktopEvidence?: import('./desktop-progress.js').DesktopEvidence;
+      outcomeEvidence?:import('./outcome-evidence.js').OutcomeEvidence;
       durationMs: number;
     }
   | {
@@ -162,6 +179,8 @@ export type AgentEvent =
     }
   | {
       type: "run.finished";
+      /** Bounded generation diagnostics; never arguments, model text, or target values. */
+      toolChoiceFailure?: { reason: "no-call" | "wrong-tool" | "multiple-calls"; returnedCalls: number; tools: string[] };
       runId: string;
       status: RunStatus;
       /** Final answer text when status is "done"; error message when "failed". */
@@ -209,6 +228,7 @@ export type PlanDecision =
   | { kind: "cancel" };
 
 export type ApprovalDecision =
+  | {kind:"approve_run";offerId:string;offerRevision:number}
   | { kind: "approve" }
   /** Approve and stop asking for this tool for the rest of the session. */
   | { kind: "approve_always" }
