@@ -1,3 +1,4 @@
+import {PersistentMoveGuard} from './semantic-move-guard.js';
 /**
  * Vunemi's catalogue of connections.
  *
@@ -46,6 +47,7 @@ export interface CatalogueOptions {
   shadowDir: string;
   helper: Helper;
   shotDir: string;
+  openScreenRecordingSettings?: () => Promise<void>;
   remembered?: Record<string, boolean>;
   onChange?: (state: Record<string, boolean>) => void;
   /** Servers the user added before. */
@@ -240,6 +242,18 @@ function historyConnector(library: LibraryToolsOptions): Connector {
 }
 
 export function buildConnectors(opts: CatalogueOptions): Connectors {
+  const moveGuard=new PersistentMoveGuard(join(opts.shadowDir,'..','semantic-move-targets.json'));
+  const atomicMoveAdapter: import('@vunemi/files').AtomicMoveAdapter = {async move(request) {
+    const {signal,assertActive,...payload}=request;
+    try {
+      const result=await opts.helper.call('filesystem_move_noreplace',payload,{signal,assertActive,ownerRunId:request.ownerId});
+      if(result&&typeof result==='object') {const r=result as {status?:unknown;reasonCode?:unknown};if(r.status==='moved')return {status:'moved'};if((r.status==='not-moved'||r.status==='unknown')&&typeof r.reasonCode==='string'&&/^[a-z][a-z0-9-]{0,63}$/.test(r.reasonCode))return {status:r.status,reasonCode:r.reasonCode};}
+      return {status:'unknown',reasonCode:'invalid-native-receipt'};
+    } catch(error) {
+      if(error&&typeof error==='object'&&'noInputSent' in error&&error.noInputSent===true)return {status:'not-moved',reasonCode:'native-admission-refused'};
+      return {status:'unknown',reasonCode:'native-transport-uncertain'};
+    }
+  }};
   const connectors = new Connectors({
     tools: opts.tools,
     ...(opts.remembered && { remembered: opts.remembered }),
@@ -278,12 +292,12 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       capabilities: [
         part("connectors.browser.read", {
           id: "read",
-          tools: ["page_goto", "page_search", "page_back", "page_describe", "page_read", "page_screenshot", "page_find", "page_scroll", "page_wait", "tabs_list", "tabs_focus", "tabs_close", "user_takeover"],
+          tools: ["page_goto", "page_search", "page_back", "page_describe", "page_read", "page_screenshot", "page_find", "page_target_observe", "page_scroll", "page_wait", "tabs_list", "tabs_focus", "tabs_close", "user_takeover"],
           defaultOn: true,
         }),
         part("connectors.browser.act", {
           id: "act",
-          tools: ["page_click", "page_type", "page_select", "page_press"],
+          tools: ["page_click", "page_type", "page_select", "page_press", "page_target_act"],
           defaultOn: true,
         }),
       ],
@@ -313,7 +327,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: FILE_INSTRUCTIONS,
       status: async () => ({ state: "ready" }),
-      tools: () => createFileTools({ roots: opts.roots, shadowDir: opts.shadowDir }),
+      tools: () => createFileTools({ roots: opts.roots, shadowDir: opts.shadowDir, atomicMoveAdapter, moveAdmission:(path,body,signal)=>opts.helper.admitJournal(path,body,signal), moveGuard }),
     },
 
     {
@@ -325,10 +339,10 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       capabilities: [
         part("connectors.desktop.read", {
           id: "read",
-          tools: ["desktop_apps", "desktop_describe", "desktop_screenshot", "desktop_focus"],
+          tools: ["desktop_document_move_observe", "desktop_operation_status", "desktop_software_updates", "desktop_apps", "desktop_windows", "desktop_describe", "desktop_screenshot", "desktop_focus", "desktop_background_describe"],
           defaultOn: true,
         }),
-        part("connectors.desktop.act", { id: "act", tools: ["desktop_click", "desktop_type", "desktop_key"], defaultOn: false }),
+        part("connectors.desktop.act", { id: "act", tools: ["desktop_click", "desktop_type", "desktop_key", "calculator_multiply", "desktop_background_click", "desktop_background_set_text", "desktop_background_append_text", "desktop_background_document", "desktop_background_scroll_position", "desktop_background_menu_open", "desktop_background_menu_select", "desktop_background_drag", "desktop_document_move"], defaultOn: false }),
       ],
       needs: { kind: "permission", what: "Accessibility" },
       // The widest privilege in the product. Off until asked for.
@@ -336,7 +350,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: DESKTOP_INSTRUCTIONS,
       status: () => macPermission("accessibility"),
-      tools: () => createDesktopTools({ helper: opts.helper, shotDir: opts.shotDir }),
+      tools: () => createDesktopTools({ helper: opts.helper, shotDir: opts.shotDir, onScreenPermissionNeeded: opts.openScreenRecordingSettings, moveGuard }),
       connect: async () => {
         await opts.helper.permissions(true); // shows the system prompt once
         return macPermission("accessibility");

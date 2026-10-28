@@ -15,8 +15,9 @@
  * whatever does arrive is recorded where the user can undo it.
  */
 
-import { app, session, WebContentsView, type BrowserWindow, type LoadURLOptions, type PostBody, type Session } from "electron";
+import { app, session, WebContentsView, type BrowserWindow, type LoadURLOptions, type PostBody, type Session, type WebContents } from "electron";
 import { lookup } from "node:dns/promises";
+import { randomUUID } from "node:crypto";
 import { existsSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
 import { requestGuard, trustableHost, trustWouldOpen, type BrowserBackend, type CdpSession, type PointerEvent, type TabInfo, type TrustedSites } from "@vunemi/browser";
@@ -131,6 +132,8 @@ function webUrl(raw: string): string | null {
 }
 
 export class EmbeddedBrowser {
+  private readonly strictOwnerId = randomUUID();
+  private readonly strictPages = new WeakSet<WebContents>();
   private win: BrowserWindow | null = null;
   private readonly tabs: Tab[] = [];
   private active: string | null = null;
@@ -190,6 +193,17 @@ export class EmbeddedBrowser {
     };
   }
 
+  /** Attest only isolated child pages created here, never the host approval UI. */
+  strictTarget(id: string): {ownerId:string;kind:'owned-web-content';protected:false;hostPid:number} {
+    const tab=this.tabs.find(t=>t.id===id),wc=tab?.view.webContents;
+    if(!this.available || !wc || wc.isDestroyed() || String(wc.id)!==id || wc===this.win?.webContents || !this.ses || wc.session!==this.ses)
+      throw new Error('This target is not a live owned browser child.');
+    // Membership is issued only at the isolated no-preload construction below.
+    if(!this.strictPages.has(wc))
+      throw new Error('Privileged or control-plane content cannot be a strict browser target.');
+    return {ownerId:this.strictOwnerId,kind:'owned-web-content',protected:false,hostPid:process.pid};
+  }
+
   /** The web page showing in the pane, if one is: its title and address. */
   openPage(): { title: string; url: string } | null {
     const tab = this.tabs.find((t) => t.id === this.active);
@@ -233,6 +247,7 @@ export class EmbeddedBrowser {
       },
     });
     this.secureSession(view.webContents.session);
+    this.strictPages.add(view.webContents);
     view.setBackgroundColor("#ffffff");
     // A real size even while the pane is closed, so layout and hit-testing work.
     view.setBounds(this.bounds ?? this.parked());
@@ -293,6 +308,20 @@ export class EmbeddedBrowser {
   }
 
   /** A JPEG of what the tab shows, drawn fresh even while the window is hidden. */
+  /** A canvas freshness crop, restricted to the same isolated child viewport. */
+  async captureRegion(id:string,region:{x:number;y:number;width:number;height:number}):Promise<Buffer> {
+    this.strictTarget(id);
+    const tab=this.get(id),wc=tab.view.webContents,bounds=tab.view.getBounds();
+    const {x,y,width,height}=region;
+    if(![x,y,width,height].every(Number.isFinite)||x<0||y<0||width<=0||height<=0||x+width>bounds.width||y+height>bounds.height||width*height>2_000_000)
+      throw new Error('The capture region is outside the owned browser viewport.');
+    const left=Math.floor(x),top=Math.floor(y),right=Math.ceil(x+width),bottom=Math.ceil(y+height);
+    if(right>bounds.width||bottom>bounds.height)throw new Error('The rounded capture region exceeds the viewport.');
+    const image=await wc.capturePage({x:left,y:top,width:right-left,height:bottom-top},{stayHidden:true});
+    this.strictTarget(id);
+    return image.toPNG();
+  }
+
   async capture(id: string): Promise<Buffer> {
     const image = await this.get(id).view.webContents.capturePage(undefined, { stayHidden: true, stayAwake: false });
     if (image.isEmpty()) throw new Error("The page produced an empty picture.");
@@ -357,6 +386,7 @@ export class EmbeddedBrowser {
   }
 
   private forget(tab: Tab): void {
+    this.strictPages.delete(tab.view.webContents);
     const i = this.tabs.indexOf(tab);
     if (i >= 0) this.tabs.splice(i, 1);
     this.detach(tab);
@@ -573,6 +603,8 @@ export class EmbeddedBackend implements BrowserBackend {
     return this.browser.available;
   }
 
+  async strictTarget(targetId:string) { return this.browser.strictTarget(targetId); }
+
   async listTabs(): Promise<TabInfo[]> {
     return this.browser.state.tabs.map((t) => ({ targetId: t.id, url: t.url, title: t.title }));
   }
@@ -604,6 +636,8 @@ export class EmbeddedBackend implements BrowserBackend {
    * moment of the picture, so it comes out current; stayHidden keeps the
    * window where the user put it.
    */
+  async captureRegion(targetId:string,region:{x:number;y:number;width:number;height:number}):Promise<Buffer> { return this.browser.captureRegion(targetId,region); }
+
   async capture(targetId: string): Promise<Buffer> {
     return this.browser.capture(targetId);
   }

@@ -159,3 +159,20 @@ describe("update checks", () => {
     expect(new SettingsStore(dir).updatesCheck).toBe(true);
   });
 });
+
+describe('search location preferences',()=>{
+ it('defaults to unknown regardless of language, persists and detaches the chosen profile',()=>{
+  const {dir,settings}=store();expect(settings.searchLocation).toEqual({country:null,city:null});
+  settings.setLanguage('tr');expect(settings.searchLocation.country).toBeNull();
+  const result=settings.setSearchLocation({country:'gb',city:' Nottingham '});result.country='TR';
+  const snapshot=settings.all;snapshot.searchLocation.city='Changed';
+  expect(new SettingsStore(dir).searchLocation).toEqual({country:'GB',city:'Nottingham'});
+  settings.reset();expect(settings.searchLocation).toEqual({country:'GB',city:'Nottingham'});
+ });
+ it('invalid updates preserve existing values and malformed stored data never infers a country',()=>{
+  const {dir,settings}=store();settings.setSearchLocation({country:'GB',city:null});
+  expect(()=>settings.setSearchLocation({country:'ZZ',city:null})).toThrow();expect(settings.searchLocation.country).toBe('GB');
+  writeFileSync(join(dir,'settings.json'),JSON.stringify({language:'tr',searchLocation:{country:'ZZ',city:'London'}}));
+  expect(new SettingsStore(dir).searchLocation).toEqual({country:null,city:null});
+ });
+});

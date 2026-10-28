@@ -1,3 +1,12 @@
+import { coordinatorStatus } from "./coordinator-status.js";
+import { searchLocationInstructions } from "./search-location.js";
+import { NativeExecutionHost } from "./native-execution-host.js";
+import { validateQuotedSource } from "./quoted-source.js";
+import {requireAttentionTarget} from "./attention-navigation.js";
+import {AutomationAdjustment} from "./automation-adjustment.js";
+import {installNativeRecipes} from './native-recipes/install.js';
+import {assertModelRecoveryAllowed} from './task-recovery.js';
+import {scopedApprovalRequest,permissionListRequest,permissionRevokeRequest} from "./task-permissions-ipc.js";
 import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -7,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { appMenuTemplate } from "./app-menu.js";
 import { followLanguage } from "./system-language.js";
 import { toolAreas } from "./areas.js";
-import { choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import { TaskPermissionStore, taskProgressTool, choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
 import { BrowserController, checkNavigation, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper } from "@vunemi/mac";
@@ -23,6 +32,7 @@ import { ActivityLog } from "./activity.js";
 import { AppLock, type AuthResult } from "./app-lock.js";
 import { ArtefactStore, openable } from "./artefacts.js";
 import { carryOverBrowserData, EmbeddedBackend, EmbeddedBrowser } from "./embedded-browser.js";
+import { browserHostObservation } from "./browser-host.js";
 import { Presence } from "./presence.js";
 import { previewable, registerPreviewScheme, SitePreview } from "./site-preview.js";
 import { isLocalTestBuild, remoteDebugging, scrubEnv, shouldOfferMove } from "./hardening.js";
@@ -41,7 +51,8 @@ import { migrateMcpSecrets, removeMcpSecrets, sealMcpServer, unsealed } from "./
 import { vaultMcpIO } from "./remote-mcp.js";
 import { checkAgentModel, modelConfig, probeProviders } from "./providers.js";
 import { forgetOldPictures, loadImage, readImageText } from "./images.js";
-import { AgentSession } from "./session.js";
+import type { AgentSession, SessionOptions } from "./session.js";
+import { SessionCoordinatorHost } from "./session-coordinator-host.js";
 import { SessionStore } from "./sessions.js";
 import { conversationTasks, meetingParts, mentionable, mentionRefs, mentionTexts } from "./mentions.js";
 import { MemoryStore } from "./memory/store.js";
@@ -70,6 +81,7 @@ import { PRODUCTION, type FeedSource } from "./updates/feed.js";
 import { UpdateService } from "./updates/service.js";
 import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
+import { recoveryOwner, refusedBeforeStart } from "./recovery-owner.js";
 import { createNoteTools, noteWhere } from "./work/notes-tools.js";
 import { ArchivedOutputs } from "./work/outputs.js";
 import { notesIndex } from "./work/notes-index.js";
@@ -159,7 +171,10 @@ const embedded = new EmbeddedBrowser(trustedSites);
 const browser = new BrowserController(async () => {
   if (!embedded.available) throw new Error("The Vunemi window is closed, so its browser is unavailable.");
   return new EmbeddedBackend(embedded);
-}, trustedSites);
+}, trustedSites, {
+  operationJournalPath:join(app.getPath('userData'),'browser-operations.jsonl'),
+  observeHost:async()=>browserHostObservation(await helper.call('background_environment')),
+});
 
 browser.onPointer((target, p) => embedded.showPointer(target, p));
 
@@ -187,6 +202,7 @@ if (work) {
   })) tools.register(tool);
 }
 for (const tool of choiceTools()) tools.register(tool);
+tools.register(taskProgressTool());
 
 // The folders the user opened to Vunemi — Desktop, Documents, Downloads — and
 // nothing else. Overwritten files are kept aside so the log can undo them.
@@ -200,7 +216,14 @@ const helperPath =
   (app.isPackaged
     ? join(process.resourcesPath, "VunemiHelper")
     : join(here, "../../../../native/VunemiHelper/.build/release/VunemiHelper"));
-const helper = new Helper(helperPath);
+const nativeExecutionHost = new NativeExecutionHost({
+  spawn: () => {
+    if (!app.isReady()) throw Error("Native coordinator waits for app readiness.");
+    return utilityProcess.fork(join(here, "native-execution.js"), [], { serviceName: "Vunemi Native Execution", stdio: "inherit" });
+  },
+  binary: helperPath,
+});
+const helper = new Helper(helperPath, { executionTransport: nativeExecutionHost, operationJournalPath: join(app.getPath('userData'), 'background-operations.json') });
 const shotDir = join(app.getPath("userData"), "shots");
 mkdirSync(shotDir, { recursive: true });
 // Small copies of found photos are for looking back a while, not for keeping.
@@ -292,7 +315,7 @@ function languageInstructions(): string {
 // `vaultReady`: the outbox, the MCP migration, the memory check.
 const vaultHost = new VaultHost({
   spawn: () => utilityProcess.fork(join(here, "vault.js"), [], { serviceName: "Vunemi Vault", stdio: "inherit" }),
-  init: () => ({ userData: app.getPath("userData"), helperPath, locale: getLocale() }),
+  init: () => ({ userData: app.getPath("userData"), helperPath: app.isPackaged ? join(process.resourcesPath, "VunemiVaultHelper") : join(here, "../../../../native/VunemiVaultHelper/.build/release/VunemiVaultHelper"), locale: getLocale() }),
   log: (line) => console.error(line),
 });
 const vault = vaultHost.client;
@@ -340,11 +363,9 @@ const proposals = new Map<string, { runId: string; conversation: string; proposa
 
 /**
  * Secrets written by safeStorage, re-encrypted under the helper's key. Runs
- * once the app is ready, since safeStorage refuses before that — which is
- * after the connectors were built without them, so when anything moved the
- * app starts again, once, to build them with it. Bounded: if the keychain
- * will not answer, the entry stays as it is — kept, not lost — and is tried
- * again next launch.
+ * only after explicit unlock in the Vault UI. safeStorage may need its own
+ * macOS approval, so migration must never run during automatic startup.
+ * Accounts reconnect after the user restarts. A refusal preserves every entry.
  */
 async function migrateLegacySecrets(): Promise<boolean> {
   if (!vault.available) return false;
@@ -471,6 +492,7 @@ const connectors = buildConnectors({
   vaultReady,
   mailOutbox,
   openOAuthBrowser: (url) => shell.openExternal(url),
+  openScreenRecordingSettings: () => shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"),
   countryCode: () => app.getLocaleCountryCode(),
   fetchFlightPage,
 });
@@ -604,13 +626,13 @@ embedded.onDownload((file) => {
 const presence = new Presence(
   {
     show: showWindow,
-    pause: () => session.pause(),
+    pause: () => ignoreSessionCommand(session.pause()),
     // Pausing and stopping are always open; carrying on is the owner's call.
     resume: () => {
       if (appLock.isLocked) showWindow();
-      else session.resume();
+      else ignoreSessionCommand(session.resume());
     },
-    stop: () => session.stop(),
+    stop: () => ignoreSessionCommand(session.stop()),
     emergencyStop: () => emergencyStop(),
     reportProblem: () => reportProblem(),
     locked: () => appLock.isLocked,
@@ -622,6 +644,17 @@ const presence = new Presence(
 // The single authority on what may run. The loop only asks and reports.
 const grants = new Set<string>();
 const sentinel = new Sentinel({ policy: settings.policy, grants });
+let nativeRecipesRuntime:ReturnType<typeof installNativeRecipes>|undefined;
+let invalidateRemotePermissions: ((reason: Parameters<TaskPermissionStore["expire"]>[0], epoch: typeof taskPermissionEpoch) => void) | undefined;
+const taskPermissionEpoch={registration:0,policy:0,task:0};
+const taskPermissions=new TaskPermissionStore(snapshot=>send(CH.taskPermissionsChanged,snapshot));
+function invalidateTaskPermissions(reason:Parameters<TaskPermissionStore['expire']>[0],epoch:keyof typeof taskPermissionEpoch):void{
+  taskPermissionEpoch[epoch]++;
+  if(reason!=="session-changed")nativeRecipesRuntime?.invalidate();
+  taskPermissions.expire(reason);
+  invalidateRemotePermissions?.(reason,{...taskPermissionEpoch});
+}
+
 
 // Kept conversations. "session" is the one the agent is working in; this is
 // where it and the others are kept.
@@ -631,6 +664,7 @@ const conversations = new SessionStore(join(app.getPath("userData"), "sessions")
 const projects = new ProjectStore(join(app.getPath("userData"), "projects.json"));
 const currentProject = () => projects.get(conversations.currentProject);
 function syncProjectFolders(): void {
+  invalidateTaskPermissions("session-changed","task");
   roots.setProjects(projects.list().map((p) => p.folder), currentProject()?.folder ?? null);
 }
 syncProjectFolders();
@@ -639,6 +673,7 @@ const sessionList = (): SessionList => {
   return {
     current: conversations.currentId,
     sessions: conversations.list(),
+    tasks: conversations.tasks(),
     ...(project && { project: project.id }),
     projects: projects.views(),
   };
@@ -669,24 +704,35 @@ function record(event: AgentEvent): void {
   send(CH.event, event);
 }
 
-const session: AgentSession = new AgentSession({
+const sessionOptions: SessionOptions = {
+  validateQuotedSource: source => validateQuotedSource(source, conversations.currentId, conversations.peek(conversations.currentId)?.events ?? []),
+  taskPermissions:{store:taskPermissions,sessionId:()=>conversations.currentId,epoch:()=>({...taskPermissionEpoch})},
   tools,
   keptOutputs,
   // Each connection's guide travels with its tools (see areas.ts).
   areas: () => [...toolAreas(connectors.reachable()), ...addonAreas(roots.list())],
   emit: record,
+  onRunSettled: async runId => {
+    const settled=await Promise.allSettled([helper.releaseRun(runId),browser.releaseRun(runId)]);
+    const failed=settled.find((result):result is PromiseRejectedResult=>result.status==='rejected');
+    if(failed)throw failed.reason;
+  },
   onHistory: (history) => {
     conversations.setHistory(history);
     send(CH.sessionsChanged, sessionList());
   },
   onCheckpoint: (messages) => conversations.checkpoint(messages),
+  latestTask: () => conversations.tasks().at(-1),
   // Read per run: a connection switched off mid-session stops being
   // described as well as stopping working.
   instructions: () =>
     // The personality comes last: when the user rewrites it, what a local server has cached before it still holds.
-    [languageInstructions(), generalInstructions(memory), connectors.instructions({ guides: false }), addonInstructions((id) => addons.binary(id) !== null), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write")), soulInstructions(soul.read())]
+    [languageInstructions(), searchLocationInstructions(settings.searchLocation), generalInstructions(memory), connectors.instructions({ guides: false }), addonInstructions((id) => addons.binary(id) !== null), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write")), soulInstructions(soul.read())]
       .filter(Boolean)
       .join("\n\n"),
+  // Conversation needs the user's preferences, not operating manuals for
+  // connectors or add-ons. The full instructions remain in the task path.
+  chatInstructions: () => [languageInstructions(), searchLocationInstructions(settings.searchLocation), generalInstructions(memory), projectInstructions(currentProject(), connectors.isOn("files")).split("\n")[0], soulInstructions(soul.read())].filter(Boolean).join("\n\n"),
   planBeforeRun: () => settings.planBeforeRun,
   modelConfig: (spec) => modelConfig(spec, settings.modelSettings, (s) => engine.endpoint(s)),
   // Only the conversation tells the user about a lowered context.
@@ -736,7 +782,22 @@ const session: AgentSession = new AgentSession({
       })
       .catch((err: unknown) => console.error("[vunemi] memory proposals:", err instanceof Error ? err.message : String(err)));
   },
+};
+const session = new SessionCoordinatorHost({
+  spawn: () => {
+    if (!app.isReady()) throw Error("Session coordinator waits for app readiness.");
+    return utilityProcess.fork(join(here, "sessions.js"), [], { serviceName: "Vunemi Agent Session", stdio: "inherit" });
+  },
+  sessionId: () => conversations.currentId,
+  options: sessionOptions,
+  locale: () => getLocale(),
+  onPermissionsChanged: snapshot => send(CH.taskPermissionsChanged,snapshot),
 });
+invalidateRemotePermissions=(reason,epoch)=>{void session.invalidateTaskPermissions(reason,epoch).catch(error=>console.error("[vunemi] permission invalidation:",error));};
+
+function ignoreSessionCommand(command: Promise<unknown>): void {
+  void command.catch(error => console.error("[vunemi] session command:",error));
+}
 
 /** Where a tool's untrusted output came from, in words a card can show. */
 function sourceOf(tool: string): string {
@@ -845,6 +906,7 @@ handle(CH.modelCheck, (_e, spec: string) => engine.hold(async () => {
   engine.recordToolTest(String(spec), result.toolCalled);
   return result;
 }));
+handle(CH.coordinatorStatus, () => coordinatorStatus(process.pid, app.getAppMetrics()));
 handle(CH.debugPortOpen, () => debugPortOpen);
 handle(CH.engineGet, () => engine.view());
 handle(CH.engineSearch, (_e, text: string) => engine.search(String(text)));
@@ -864,9 +926,9 @@ handle(CH.engineWarm, (_e, spec: string) => engine.warm(String(spec)));
 handle(CH.engineSetContext, async (_e, id: string, context: number) => {
   // The window the session remembered for this model is wrong now; forgotten
   // again once reloaded, in case it was asked in between.
-  session.forgetWindow(`vunemi:${String(id)}`);
+  await session.forgetWindow(`vunemi:${String(id)}`);
   await engine.setContext(String(id), Number(context));
-  session.forgetWindow(`vunemi:${String(id)}`);
+  await session.forgetWindow(`vunemi:${String(id)}`);
 });
 
 /** Only the three shapes, with string fields: the window is not trusted to send more. */
@@ -882,13 +944,15 @@ function downloadRequest(req: unknown): DownloadRequest {
 // Fire and forget, both of these: progress arrives as events, not as the
 // call's result. Whether the message runs now or waits its turn is the
 // session's business, not the renderer's.
-handle(CH.startRun, (_e, req: StartRunRequest) => {
-  session.submit(String(req.goal), String(req.model), attach(req.attachments), mentionRefs(req.mentions));
+handle(CH.startRun, async (_e, req: StartRunRequest) => {
+  const quote = req.quotedSource === undefined ? undefined : validateQuotedSource(req.quotedSource, conversations.currentId, conversations.peek(conversations.currentId)?.events ?? []);
+  await session.submit(String(req.goal), String(req.model), attach(req.attachments), mentionRefs(req.mentions), quote);
   automations.setModel(String(req.model));
 });
 
-handle(CH.steerRun, (_e, req: StartRunRequest) => {
-  session.steer(String(req.goal), String(req.model), attach(req.attachments), mentionRefs(req.mentions));
+handle(CH.steerRun, async (_e, req: StartRunRequest) => {
+  const quote = req.quotedSource === undefined ? undefined : validateQuotedSource(req.quotedSource, conversations.currentId, conversations.peek(conversations.currentId)?.events ?? []);
+  await session.steer(String(req.goal), String(req.model), attach(req.attachments), mentionRefs(req.mentions), quote);
   automations.setModel(String(req.model));
 });
 
@@ -908,6 +972,8 @@ const automationViews = (): AutomationView[] => {
   });
 };
 
+nativeRecipesRuntime=installNativeRecipes({helper,helperPath,roots,session,sentinel,connectors,locked:()=>appLock.isLocked,handle,send,conversation:async title=>{if(session.running)throw Error(t("main.stopFirst"));conversations.create(title);await switchConversation([]);syncProjectFolders();send(CH.sessionsChanged,sessionList());}});
+
 const scheduler = new Scheduler({
   store: automations,
   now: Date.now,
@@ -916,8 +982,9 @@ const scheduler = new Scheduler({
     const model = automations.model;
     if (!model) return "noModel";
     // Its own conversation, so the task neither reads nor spills into the one the user had open.
-    switchConversation([]);
+    if(session.running)throw Error(t("main.stopFirst"));
     conversations.create(t("automations.conversation", { title: item.title }));
+    await switchConversation([]);
     syncProjectFolders();
     send(CH.sessionsChanged, sessionList());
     new Notification({ title: t("automations.notify"), body: appLock.isLocked ? "" : item.title }).show();
@@ -951,29 +1018,29 @@ const lookScope = scopeLookup({
 });
 /**
  * The time and days the user chose on the summary of a setup from chat, kept
- * until that call runs. The call is known by its arguments: the summary was
- * made from them, and the tool is run with the same ones.
+ * until that exact backend request is approved and its run consumes them.
  */
-let adjustedSetup: { key: string; when: unknown } | null = null;
+const adjustedSetup=new AutomationAdjustment();
 const setupKey = (args: unknown): string => {
   const a = (args ?? {}) as Record<string, unknown>;
   return JSON.stringify([a.title, a.task, a.schedule]);
 };
 const automationSetup: AutomationSetup = {
   refuse: (scope) => scopeRefusal(scope, lookScope),
-  schedule(args, asked) {
-    const chosen = adjustedSetup?.key === setupKey(args) ? adjustedSetup.when : undefined;
-    adjustedSetup = null;
+  schedule(args, asked, runId,callId) {
+    const chosen = adjustedSetup.take(setupKey(args),runId,callId);
     return withWhen(asked, chosen);
   },
 };
 handle(CH.automationsSummarize, (_e, args: unknown) => (settings.automationLibrary ? setupView(args, lookScope) : null));
-handle(CH.automationsAdjust, (_e, args: unknown, when: unknown) => {
-  if (!settings.automationLibrary) return;
+handle(CH.automationsAdjust, async (_e, args: unknown, when: unknown, callId:string, rawOwner:unknown) => {
+  const owner=resolutionOwner(rawOwner);
+  if (!settings.automationLibrary||!await session.canResolveApproval(callId,owner)) return false;
   // Checked now, so a time that can't be read is refused here and not after the user approved.
   const a = (args ?? {}) as Record<string, unknown>;
   withWhen(validSchedule(a.schedule), when);
-  adjustedSetup = { key: setupKey(args), when };
+  adjustedSetup.set(setupKey(args),when,callId,owner);
+  return true;
 });
 /** The task deleted last from the list, for putting back. */
 let deletedAutomation: Automation | null = null;
@@ -1054,17 +1121,29 @@ handle(CH.contextCompact, (_e, model: string, runId: string) => session.compactN
 function emergencyStop(): void {
   // Nothing waiting may start on the back of an emergency: the point of the
   // shortcut is that everything halts, not that the next thing begins.
-  session.clearQueue();
-  session.stop();
+  ignoreSessionCommand(session.clearQueue());
+  ignoreSessionCommand(session.stop());
   voice.stopSpeaking();
   embedded.release();
   showWindow();
 }
 
-handle(CH.resolveApproval, (_e, callId: string, decision: ApprovalDecision) => {
-  session.resolveApproval(callId, decision);
+function resolutionOwner(raw:unknown):{runId:string;requestId:string}{
+ if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Missing decision owner.');
+ const x=raw as Record<string,unknown>;
+ if(Object.keys(x).sort().join(',')!=='requestId,runId'||typeof x.runId!=='string'||!x.runId||typeof x.requestId!=='string'||!x.requestId||x.runId.length>256||x.requestId.length>256)throw Error('Invalid decision owner.');
+ return {runId:x.runId,requestId:x.requestId};
+}
+handle(CH.resolveApproval, async (_e, callId: string, decision: ApprovalDecision, owner:unknown) => {
+ if(!decision||!['approve','approve_always','reject'].includes(decision.kind))throw Error('Invalid approval decision.');
+ const bound=resolutionOwner(owner),accepted=await session.resolveApproval(callId,decision,bound);
+ if(accepted)adjustedSetup.settle(callId,bound,decision.kind!=='reject');
+ return accepted;
 });
-handle(CH.resolveChoice, (_e, runId: string, callId: string, answer: ChoiceAnswer) => session.resolveChoice(String(runId), String(callId), answer));
+handle(CH.resolveTaskApproval,(_e,request:unknown)=>session.resolveTaskApproval(scopedApprovalRequest(request)));
+handle(CH.listTaskPermissions,(_e,request:unknown)=>session.listTaskPermissions(permissionListRequest(request)));
+handle(CH.revokeTaskPermission,(_e,request:unknown)=>session.revokeTaskPermission(permissionRevokeRequest(request)));
+handle(CH.resolveChoice, (_e, runId: string, callId: string, answer: ChoiceAnswer, owner:unknown) => session.resolveChoice(String(runId), String(callId), answer,resolutionOwner(owner)));
 handle(CH.openChoiceSource, async (_e, raw: string) => {
   const url = String(raw);
   const blocked = checkNavigation(url, trustedSites());
@@ -1072,16 +1151,14 @@ handle(CH.openChoiceSource, async (_e, raw: string) => {
   await browser.goto(url, true);
 });
 
-handle(CH.resolveHandoff, (_e, callId: string, outcome: HandoffOutcome) => {
-  session.resolveHandoff(callId, outcome === "done" ? "done" : "cancelled");
+handle(CH.resolveHandoff, (_e, callId: string, outcome: HandoffOutcome, owner:unknown) => {
+ if(outcome!=='done'&&outcome!=='cancelled')throw Error('Invalid handoff outcome.');
+ return session.resolveHandoff(callId,outcome,resolutionOwner(owner));
 });
-
-handle(CH.resolvePlan, (_e, decision: PlanDecision) => {
-  if (decision?.kind === "go" && Array.isArray(decision.steps)) {
-    session.resolvePlan({ kind: "go", steps: decision.steps.map(String).slice(0, 12) });
-  } else {
-    session.resolvePlan({ kind: "cancel" });
-  }
+handle(CH.resolvePlan, (_e, decision: PlanDecision, owner:unknown) => {
+ if(!decision||decision.kind!=='go'&&decision.kind!=='cancel')throw Error('Invalid plan decision.');
+ if(decision.kind==='go'&&(!Array.isArray(decision.steps)||!decision.steps.length||decision.steps.length>12||decision.steps.some(s=>typeof s!=='string'||!s.trim()||s.length>1000)))throw Error('Invalid plan steps.');
+ return session.resolvePlan(decision,resolutionOwner(owner));
 });
 
 /**
@@ -1089,8 +1166,8 @@ handle(CH.resolvePlan, (_e, decision: PlanDecision) => {
  * the Sentinel was tracking stay behind: what was allowed in one
  * conversation is not thereby allowed in the next.
  */
-function switchConversation(history: Parameters<AgentSession["load"]>[0]): void {
-  session.load(history); // throws while a task runs
+async function switchConversation(history: Parameters<AgentSession["load"]>[0]): Promise<void> {
+  await session.load(history); // throws while a task runs
   sentinel.reset();
 }
 
@@ -1101,22 +1178,33 @@ function listAfterSwitch(): SessionList {
 }
 
 handle(CH.sessionsList, () => sessionList());
-handle(CH.sessionsNew, (_e, projectId?: string) => {
+handle(CH.attentionList,()=>conversations.attention());
+handle(CH.attentionOpen,async(_e,raw:unknown)=>{
+ const target=requireAttentionTarget(conversations.attention(),raw);
+ if(target.sessionId===conversations.currentId)return {sessions:sessionList(),target};
+ if(session.running)throw Error(t('main.stopFirst'));
+ const {history,events}=conversations.open(target.sessionId);
+ await switchConversation(history);
+ return {sessions:listAfterSwitch(),target,events};
+});
+handle(CH.sessionsNew, async (_e, projectId?: string) => {
   const project = projects.get(typeof projectId === "string" ? projectId : undefined);
-  switchConversation([]);
+  if(session.running)throw Error(t("main.stopFirst"));
   conversations.create(undefined, project?.id);
+  await switchConversation([]);
   return listAfterSwitch();
 });
-handle(CH.sessionsOpen, (_e, id: string) => {
+handle(CH.sessionsOpen, async (_e, id: string) => {
   if (session.running) throw new Error(t("main.stopFirst"));
   const { history, events } = conversations.open(String(id));
-  switchConversation(history);
+  await switchConversation(history);
   return { ...listAfterSwitch(), events };
 });
-function forgetConversation(id: string): SessionList {
+async function forgetConversation(id: string): Promise<SessionList> {
   const current = id === conversations.currentId;
-  if (current) switchConversation([]);
+  if(current&&session.running)throw Error(t("main.stopFirst"));
   conversations.remove(id);
+  if(current)await switchConversation([]);
   work?.forgetConversation(id);
   library.forget(id);
   return listAfterSwitch();
@@ -1143,8 +1231,8 @@ handle(CH.projectsAdd, async () => {
   // read and edit there, is the user switching Files and its writing on.
   if (!connectors.isOn("files")) connectors.setOn("files", true);
   if (!connectors.isPartOn("files", "write")) connectors.setPartOn("files", "write", true);
-  switchConversation([]);
   conversations.create(undefined, project.id);
+  await switchConversation([]);
   return listAfterSwitch();
 });
 handle(CH.projectsRemove, (_e, id: string) => {
@@ -1165,12 +1253,16 @@ handle(CH.sessionsRename, (_e, id: unknown, title: unknown) => {
 // A task Vunemi's closing cut short. Picking it up is the user's call, and
 // every step beyond reading asks again: the model may not know what the
 // interrupted step already did.
-handle(CH.sessionsResume, (_e, model: string) => {
+handle(CH.sessionsResume, async (_e, model: string, sessionId: unknown) => {
   if (session.running) throw new Error(t("main.stopFirst"));
-  if (!conversations.interrupted.includes(conversations.currentId)) return;
-  void session.start(t("app.recovery.goal"), String(model), [], { askBeyondRead: true }).catch((err: unknown) => console.error("[vunemi] resume failed:", err));
+  recoveryOwner(sessionId, conversations.currentId);
+  if (!conversations.interrupted.includes(conversations.currentId)) throw new Error(t("mac.guard.closed"));
+  const resumeTask = conversations.tasks().at(-1);
+  assertModelRecoveryAllowed(resumeTask);
+  await refusedBeforeStart(session.start(t("app.recovery.goal"), String(model), [], { askBeyondRead: true, ...(resumeTask && { resumeTask }) }));
 });
-handle(CH.sessionsDismiss, () => {
+handle(CH.sessionsDismiss, (_e, sessionId: unknown) => {
+  recoveryOwner(sessionId, conversations.currentId);
   conversations.dismissInterrupted();
   return sessionList();
 });
@@ -1556,9 +1648,10 @@ handle(CH.forgetEverything, async () => {
   work?.clear();
   proposals.clear();
   settings.reset();
-  session.reset();
+  await session.reset();
   sentinel.reset();
   conversations.clear();
+  await session.load([]);
   // Nothing may hold a model file open while it is deleted.
   await engine.dispose();
   await meaning.stop();
@@ -1621,6 +1714,8 @@ handle(CH.appearanceSet, (_e, next: unknown): Appearance => {
   nativeTheme.themeSource = next;
   return next;
 });
+handle(CH.searchLocationGet, () => settings.searchLocation);
+handle(CH.searchLocationSet, (_e, profile: unknown) => settings.setSearchLocation(profile));
 handle(CH.languageGet, (): Locale => getLocale());
 handle(CH.languageSet, (_e, next: unknown): Locale => {
   if (!isLocale(next)) throw new Error(t("main.badLanguage"));
@@ -1635,6 +1730,7 @@ handle(CH.languageSet, (_e, next: unknown): Locale => {
 handle(CH.policyGet, (): PermissionSettings => ({ policy: sentinel.currentPolicy, planBeforeRun: settings.planBeforeRun }));
 handle(CH.policySet, (_e, next: PermissionSettings): PermissionSettings => {
   if (!validPolicy(next?.policy) || typeof next.planBeforeRun !== "boolean") throw new Error(t("main.invalidPolicy"));
+  invalidateTaskPermissions("policy-changed","policy");
   settings.setPolicy(next.policy, next.planBeforeRun);
   sentinel.setPolicy(next.policy);
   grants.clear();
@@ -1645,6 +1741,7 @@ handle(CH.connectionsList, () => connectors.list());
 handle(CH.connectionsOn, () => connectors.onIds());
 
 handle(CH.connectionsSet, async (_e, id: string, on: boolean) => {
+  invalidateTaskPermissions("connector-changed","registration");
   if (String(id) === "desktop" && on === true) await connectors.setOnIfReady("desktop");
   else connectors.setOn(String(id), on === true);
   if (String(id) === "history") tendLibrary();
@@ -1652,11 +1749,13 @@ handle(CH.connectionsSet, async (_e, id: string, on: boolean) => {
 });
 
 handle(CH.connectionsSetPart, async (_e, id: string, partId: string, on: boolean) => {
+  invalidateTaskPermissions("connector-changed","registration");
   connectors.setPartOn(String(id), String(partId), on === true);
   return connectors.list();
 });
 
 handle(CH.connectionsConnect, async (_e, id: string) => {
+  invalidateTaskPermissions("connector-changed","registration");
   const status = await connectors.connect(String(id));
   if (status.state === "blocked") throw new Error(status.reason);
   return connectors.list();
@@ -1754,7 +1853,7 @@ handle(CH.activityUndo, async (_e, id: string) => {
   const done = await activity.undo(String(id));
   artefacts.markUndone(String(id));
   // Undone in the conversation on screen: its model must not go on saying it happened.
-  if (conversations.hasRun(done.runId)) session.noteUndone(done.label);
+  if (conversations.hasRun(done.runId)) await session.noteUndone(done.label);
 });
 
 /**
@@ -1810,7 +1909,7 @@ handle(CH.artefactsUndo, async (_e, id: string) => {
   if (!record) throw new Error(t("main.artefact.notFound"));
   const done = await activity.undo(record.callId);
   artefacts.markUndone(record.callId);
-  if (conversations.hasRun(done.runId)) session.noteUndone(done.label);
+  if (conversations.hasRun(done.runId)) await session.noteUndone(done.label);
 });
 
 /**
@@ -1850,8 +1949,21 @@ handle(CH.synthesize, async (_e, text: string) => {
 });
 handle(CH.stopSpeaking, () => voice.stopSpeaking());
 
-const vaultStatus = (): VaultStatus => ({ available: vault.available, secrets: vault.list() });
+let vaultMigrationNeedsRestart = false;
+const vaultStatus = async (): Promise<VaultStatus> => {
+  await vaultReady;
+  return { available: vault.available, secrets: vault.list(),
+    needsMigration: (await vault.sealedEntries()).some(entry => isLegacyCipher(entry.cipher)),
+    restartRequired: vaultMigrationNeedsRestart };
+};
 handle(CH.vaultStatus, () => vaultStatus());
+handle(CH.vaultUnlock, async () => {
+  await vaultReady;
+  await vault.call("unlock", [], 310_000);
+  if (!vault.available) throw new Error(t("vaultStore.locked"));
+  if (await migrateLegacySecrets()) vaultMigrationNeedsRestart = true;
+  return vaultStatus();
+});
 handle(CH.vaultSet, async (_e, name: string, value: string, note?: string) => {
   await vault.set(String(name).trim(), String(value), note ? String(note).slice(0, 120) : undefined);
   return vaultStatus();
@@ -1916,14 +2028,8 @@ async function offerMoveToApplications(): Promise<boolean> {
 void app.whenReady().then(async () => {
   if (await offerMoveToApplications()) return;
   void vaultHost.start();
-  // Briefly, for the one-time migration below; a keychain prompt the user
-  // hasn't answered yet must not keep the window from opening.
-  await Promise.race([vaultReady, new Promise((resolve) => setTimeout(resolve, 15_000))]);
-  if (await migrateLegacySecrets()) {
-    app.relaunch();
-    app.exit(0);
-    return;
-  }
+  // Startup never requests Keychain UI, including legacy safeStorage migration.
+  // Show chat immediately; Vault operations wait for the silent startup result.
   createWindow();
   setAppMenu();
   presence.start();
@@ -1978,6 +2084,7 @@ function releaseHelpers(): void {
   globalShortcut.unregisterAll();
   presence.dispose();
   voice.dispose();
+  session.dispose();
   helper.dispose();
   vaultHost.stop();
 }
@@ -1987,10 +2094,9 @@ app.on("before-quit", (e) => {
   // Let go of the pages cleanly before the window goes.
   quitting = true;
   e.preventDefault();
-  session.stop();
   // The recorder keeps what it wrote; the next launch finishes the meeting.
   meetings.dispose();
-  const steps = Promise.allSettled([browser.dispose(), mailOutbox.settle(), engine.dispose(), meaning.stop()]);
+  const steps = Promise.allSettled([session.stop().catch(()=>undefined).then(()=>nativeExecutionHost.settle()), browser.dispose(), mailOutbox.settle(), engine.dispose(), meaning.stop()]);
   void within(steps, CLOSE_STEPS_MS).then(() => {
     try {
       memory.close();

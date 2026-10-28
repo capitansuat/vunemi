@@ -1,3 +1,4 @@
+import { NativeRecipePermissions } from "./NativeRecipePermissions.js";
 /**
  * Automations: the scheduled tasks the user has, and the ones Vunemi offers
  * to set up. A recipe is set up from its summary; the lines of the summary
@@ -78,6 +79,7 @@ export function AutomationsView() {
       </h1>
       <p className="mt-1 text-[13px] text-muted">{t("automations.page.intro")}</p>
 
+      <NativeRecipePermissions />
       <h2 className="mt-7 text-[12px] font-medium text-muted">{t("automations.page.mine")}</h2>
       {rows !== null && rows.length === 0 && !deleted && <p className="mt-2 text-[13px] text-faint">{t("automations.page.mineEmpty")}</p>}
       <ul className="mt-2 space-y-2">

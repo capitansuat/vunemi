@@ -14,9 +14,10 @@ import type { McpServerConfig } from "@vunemi/mcp";
 import { validateMailConfig, type ImapSmtpConfig } from "@vunemi/mail";
 import { isLocale, type Locale } from "@vunemi/i18n";
 import { trustableHost } from "@vunemi/browser";
-import type { Appearance, LocalModelSettings } from "../shared/ipc.js";
+import type { Appearance, LocalModelSettings, SearchLocation } from "../shared/ipc.js";
 import { DEFAULT_MODEL_SETTINGS, validateModelSettings } from "./providers.js";
 import { t } from "@vunemi/i18n";
+import { validateSearchLocation } from "./search-location.js";
 
 export interface StoredImapMailAccount {
   id: string;
@@ -77,6 +78,7 @@ export interface Settings {
   modelSettings: LocalModelSettings;
   /** Null until chosen: then the system's language decides, if Vunemi speaks it. */
   language: Locale | null;
+  searchLocation: SearchLocation;
   /** Touch ID or the Mac password before the window answers. Off unless the user turns it on. */
   appLock: boolean;
   /**
@@ -114,7 +116,7 @@ function cleanSites(value: unknown): string[] {
   return [...new Set(hosts)].slice(0, MAX_TRUSTED_SITES);
 }
 
-const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, appLock: false, trustedSites: [], appearance: "system", updatesCheck: true, meetingSpeakers: false, automationLibrary: false };
+const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, searchLocation: { country: null, city: null }, appLock: false, trustedSites: [], appearance: "system", updatesCheck: true, meetingSpeakers: false, automationLibrary: false };
 
 /**
  * Settings that exist but can't be read. Everything falls back to its
@@ -155,7 +157,7 @@ export class SettingsStore {
   }
 
   get all(): Settings {
-    return { ...this.current, connections: { ...this.current.connections }, policy: { ...this.current.policy }, mailAccounts: this.mailAccounts, modelSettings: this.modelSettings };
+    return { ...this.current, connections: { ...this.current.connections }, policy: { ...this.current.policy }, mailAccounts: this.mailAccounts, modelSettings: this.modelSettings, searchLocation: this.searchLocation };
   }
 
   get policy(): AutonomyPolicy {
@@ -203,6 +205,16 @@ export class SettingsStore {
 
   get language(): Locale | null {
     return this.current.language;
+  }
+
+  get searchLocation(): SearchLocation {
+    return { ...this.current.searchLocation };
+  }
+
+  setSearchLocation(input: unknown): SearchLocation {
+    const searchLocation = validateSearchLocation(input);
+    this.replace({ ...this.current, searchLocation });
+    return this.searchLocation;
   }
 
   setLanguage(language: Locale): void {
@@ -270,7 +282,7 @@ export class SettingsStore {
    * to read, nor stopped wanting the door shut.
    */
   reset(): void {
-    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck, meetingSpeakers: false, automationLibrary: this.current.automationLibrary });
+    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, searchLocation: this.searchLocation, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck, meetingSpeakers: false, automationLibrary: this.current.automationLibrary });
   }
 
   private replace(next: Settings): void {
@@ -328,7 +340,9 @@ export class SettingsStore {
       // Vunemi in Turkish, the only language it had; keep them there.
       const stored = (parsed as Settings).language;
       const language = stored === undefined ? "tr" : isLocale(stored) ? stored : null;
-      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false, meetingSpeakers: (parsed as Settings).meetingSpeakers === true, automationLibrary: (parsed as Settings).automationLibrary === true };
+      let searchLocation: SearchLocation = { country: null, city: null };
+      try { searchLocation = validateSearchLocation((parsed as Settings).searchLocation); } catch { /* Missing/invalid profile does not imply any geography. */ }
+      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, searchLocation, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false, meetingSpeakers: (parsed as Settings).meetingSpeakers === true, automationLibrary: (parsed as Settings).automationLibrary === true };
     } catch (err) {
       // No file yet is a first launch. A file that can't be read is not.
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { ...EMPTY };

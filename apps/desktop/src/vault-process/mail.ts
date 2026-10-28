@@ -4,7 +4,7 @@
  * account and a method; the connection is made here, with the secret read
  * here, and only the result goes back.
  */
-import { GraphMailAccount, gmailConfig, ImapSmtpAccount, mailTargets, validateMailConfig, type MailAccount } from "@vunemi/mail";
+import { DraftSaveUnverified, GraphMailAccount, gmailConfig, ImapSmtpAccount, mailTargets, validateMailConfig, type MailAccount } from "@vunemi/mail";
 import { t } from "@vunemi/i18n";
 import type { VaultServer } from "@vunemi/vault";
 import { GOOGLE_TOKEN_TARGET, googleTokenSource } from "../main/google-oauth.js";
@@ -13,7 +13,7 @@ import { OUTLOOK_TOKEN_TARGET, outlookTokenSource } from "../main/outlook-oauth.
 import type { StoredMailAccount } from "../main/settings.js";
 
 /** What main may ask a mailbox to do. Nothing else is callable. */
-export const MAIL_METHODS = ["ready", "search", "read", "saveDraft", "deleteDraft", "send", "awaitingReply", "move", "moveBack", "setRead"] as const;
+export const MAIL_METHODS = ["ready", "search", "read", "saveDraft", "verifyDraft", "deleteDraft", "send", "awaitingReply", "move", "moveBack", "setRead"] as const;
 export type MailMethod = (typeof MAIL_METHODS)[number];
 
 /** Names under which the Vault keeps mail secrets. */
@@ -105,7 +105,12 @@ export function serveMail(server: VaultServer, opts: ServeMailOptions = {}): voi
     const account = accountFor(entry);
     const fn = (account as unknown as Record<string, unknown>)[method as string];
     if (typeof fn !== "function") throw new Error(`This mailbox can't ${String(method)}.`);
-    return (fn as (...a: unknown[]) => unknown).apply(account, args);
+    try{return await (fn as (...a: unknown[]) => unknown).apply(account, args);}
+    catch(error){
+      // Preserve acknowledged partial draft state without widening the general error protocol.
+      if(method==='saveDraft'&&error instanceof DraftSaveUnverified)return {id:error.id,draftSavedUnverified:true};
+      throw error;
+    }
   });
 
   server.register("mail.close", (id: unknown) => {

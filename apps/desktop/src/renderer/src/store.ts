@@ -1,6 +1,10 @@
+import type {AttentionItem,AttentionSnapshot,AttentionTarget,ResolutionOwner} from "../../shared/ipc.js";
+import { createNativeRecipeSlice, type NativeRecipeState } from "./lib/native-recipes.js";
+import { acceptsPermissionSnapshot, currentPermissionOffer } from "./lib/task-permissions.js";
+import type { TaskPermissionsSnapshot, TaskPermissionOfferView } from "@vunemi/agent-core";
 import { create } from "zustand";
-import type { AgentEvent, ApprovalDecision, HandoffOutcome, PlanDecision } from "@vunemi/agent-core";
-import type { ActivityEntry, AutomationLibraryView, ContextInfo, EmbeddedState, EngineView, MentionRef, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
+import { foldTasks, tasksFromEvents, type QuotedSource, type TaskRecord, type AgentEvent, type ApprovalDecision, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import type { ArtefactView, ActivityEntry, AutomationLibraryView, ContextInfo, EmbeddedState, EngineView, MentionRef, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
 import { earcon, HeldButton, record, type Recorder } from "./lib/audio.js";
 import { foldEvent, replyText, type RunView } from "./lib/fold.js";
 import { SentenceCutter, SpeechPlayer } from "./lib/speech.js";
@@ -122,10 +126,20 @@ interface Voice {
   error: string | null;
 }
 
-interface State {
+interface State extends NativeRecipeState {
   /** The interface language; main holds the setting. */
   locale: Locale;
   runs: RunView[];
+  /** Actual streamed run owner; restored timelines cannot grant action authority. */
+  activeRun: {runId:string;sessionId:string}|null;
+  tasks: TaskRecord[];
+  attention:AttentionSnapshot|null;
+  attentionLoading:boolean;
+  attentionError:string|null;
+  attentionTarget:(AttentionTarget&{nonce:number})|null;
+  refreshAttention():Promise<void>;
+  openAttentionTask(item:AttentionItem):Promise<void>;
+  artefacts: ArtefactView[];
   /** Visible as soon as Send is pressed, until the main process starts the run. */
   pendingStart: { goal: string; attachments: string[] } | null;
   /** Kept conversations, and which one new tasks go into. */
@@ -172,9 +186,9 @@ interface State {
   refreshContext(): Promise<void>;
   /** Condenses the earlier part of the conversation now. */
   compactNow(): Promise<void>;
-  send(goal: string, attachments?: string[], mentions?: MentionRef[]): Promise<void>;
+  send(goal: string, attachments?: string[], mentions?: MentionRef[], quotedSource?: QuotedSource): Promise<void>;
   /** Stop the running task and hand it this message instead. */
-  steer(goal: string, attachments?: string[], mentions?: MentionRef[]): Promise<void>;
+  steer(goal: string, attachments?: string[], mentions?: MentionRef[], quotedSource?: QuotedSource): Promise<void>;
   dropQueued(id: string): Promise<void>;
   /** A waiting message that can't wait: stops the current task and does this now. */
   interruptQueued(id: string): Promise<void>;
@@ -182,9 +196,19 @@ interface State {
   stop(): Promise<void>;
   pause(): Promise<void>;
   resume(): Promise<void>;
-  decide(callId: string, decision: ApprovalDecision): Promise<void>;
-  resolveHandoff(callId: string, outcome: HandoffOutcome): Promise<void>;
-  resolvePlan(decision: PlanDecision): Promise<void>;
+  taskPermissions: TaskPermissionsSnapshot | null;
+  taskPermissionsError: string | null;
+  taskPermissionsLoadError: string | null;
+  taskPermissionRevoking: string | null;
+  taskPermissionsNotice: boolean;
+  taskApprovalStopped: boolean;
+  refreshTaskPermissions(): Promise<void>;
+  applyTaskPermissions(snapshot: TaskPermissionsSnapshot): void;
+  revokeTaskPermission(grantId: string): Promise<void>;
+  approveTaskPermission(callId: string, offer: TaskPermissionOfferView): Promise<void>;
+  decide(callId: string, decision: ApprovalDecision, owner:ResolutionOwner): Promise<boolean>;
+  resolveHandoff(callId: string, outcome: HandoffOutcome, owner:ResolutionOwner): Promise<boolean>;
+  resolvePlan(decision: PlanDecision, owner:ResolutionOwner): Promise<boolean>;
   /** A fresh conversation; the current one stays in the list. */
   newSession(projectId?: string): Promise<void>;
   /** The user picks a folder in macOS's dialog; a conversation in it starts. */
@@ -197,6 +221,7 @@ interface State {
   /** Forgets the conversation on screen. */
   forgetSession(): Promise<void>;
   setSessions(list: SessionList): void;
+  setArtefacts(rows: ArtefactView[]): void;
   /** Switches the language everywhere: this window, main's messages, the agent's replies. */
   setLocale(locale: Locale): Promise<void>;
   /** Main says the language changed. */
@@ -262,14 +287,22 @@ let opening = false;
 const button = new HeldButton();
 /** Voice chat that listens by itself turns itself off when nobody speaks for this long. */
 const QUIET_OFF_MS = 45_000;
+let attentionLoadGeneration=0,navigationGeneration=0,attentionNonce=0,attentionNavigations=0;
+let attentionRefreshTimer:ReturnType<typeof setTimeout>|undefined;
+let permissionGeneration = 0;
 let quiet: ReturnType<typeof setTimeout> | null = null;
 
 /** How often the running transcript catches up with the speaker. */
 const FOLLOW_MS = 1_500;
 
 export const useStore = create<State>((set, get) => ({
+  ...createNativeRecipeSlice(set, get, () => window.vunemi),
+  taskApprovalStopped: false, taskPermissions: null, taskPermissionsError: null, taskPermissionsLoadError: null, taskPermissionRevoking: null, taskPermissionsNotice: false,
   locale: getLocale(),
-  runs: [],
+  runs: [], activeRun: null,
+  tasks: [],
+  attention:null,attentionLoading:false,attentionError:null,attentionTarget:null,
+  artefacts: [],
   pendingStart: null,
   sessions: { current: "", sessions: [], projects: [] },
   queue: [],
@@ -350,7 +383,8 @@ export const useStore = create<State>((set, get) => ({
     await get().refreshContext();
   },
 
-  async send(goal, attachments = [], mentions = []) {
+  async send(goal, attachments = [], mentions = [], quotedSource) {
+    if(attentionNavigations)throw Error(t('taskAttention.loading'));
     const { model } = get();
     if (!model || !goal.trim()) return;
     // Never refused for being busy: main decides whether this starts now or
@@ -358,18 +392,19 @@ export const useStore = create<State>((set, get) => ({
     const pending = !get().running && !get().pendingStart ? { goal: goal.trim(), attachments } : null;
     set({ view: "chat", ...(pending && { pendingStart: pending }) });
     try {
-      await window.vunemi.startRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }), ...(mentions.length > 0 && { mentions }) });
+      await window.vunemi.startRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }), ...(mentions.length > 0 && { mentions }), ...(quotedSource && { quotedSource }) });
     } catch (error) {
       if (pending && get().pendingStart === pending) set({ pendingStart: null });
       throw error;
     }
   },
 
-  async steer(goal, attachments = [], mentions = []) {
+  async steer(goal, attachments = [], mentions = [], quotedSource) {
+    if(attentionNavigations)throw Error(t('taskAttention.loading'));
     const { model } = get();
     if (!model || !goal.trim()) return;
     set({ view: "chat" });
-    await window.vunemi.steerRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }), ...(mentions.length > 0 && { mentions }) });
+    await window.vunemi.steerRun({ goal: goal.trim(), model, ...(attachments.length > 0 && { attachments }), ...(mentions.length > 0 && { mentions }), ...(quotedSource && { quotedSource }) });
   },
 
   async dropQueued(id) {
@@ -377,6 +412,7 @@ export const useStore = create<State>((set, get) => ({
   },
 
   async interruptQueued(id) {
+    if(attentionNavigations)throw Error(t('taskAttention.loading'));
     await window.vunemi.interruptQueued(id);
   },
 
@@ -385,6 +421,7 @@ export const useStore = create<State>((set, get) => ({
   },
 
   async stop() {
+    set({taskApprovalStopped:true});
     await window.vunemi.stopRun();
     if (get().pendingStart) set({ pendingStart: null });
   },
@@ -397,68 +434,138 @@ export const useStore = create<State>((set, get) => ({
     await window.vunemi.resumeRun();
   },
 
-  async decide(callId, decision) {
-    await window.vunemi.resolveApproval(callId, decision);
+  applyTaskPermissions(snapshot) {
+    if (acceptsPermissionSnapshot(get(), snapshot, get().taskPermissions)) set({ taskPermissions: snapshot, taskPermissionsLoadError: null });
+  },
+  async refreshTaskPermissions() {
+    const generation=permissionGeneration;
+    const state=get(), sessionId=state.sessions.current, runId=state.activeRun?.runId??null;
+    if(!sessionId || !window.vunemi.listTaskPermissions)return;
+    try {
+      const snapshot=await window.vunemi.listTaskPermissions({sessionId,runId});
+      if(generation===permissionGeneration)get().applyTaskPermissions(snapshot);
+    } catch(error) {
+      if(generation===permissionGeneration&&get().sessions.current===sessionId&&(get().activeRun?.runId??null)===runId)set({taskPermissionsLoadError:String(error)});
+    }
+  },
+  async approveTaskPermission(callId,offer) {
+    const state=get(),call=state.runs.flatMap(r=>r.steps.flatMap(s=>s.calls)).find(c=>c.callId===callId&&c.taskPermissionOffer?.offerId===offer.offerId);
+    if(!call||currentPermissionOffer(state,{...call,taskPermissionOffer:offer})===undefined)return;
+    await window.vunemi.resolveTaskApproval({sessionId:offer.sessionId,runId:offer.runId,callId,decision:{kind:'approve_run',offerId:offer.offerId,offerRevision:offer.revision}});
+  },
+  async revokeTaskPermission(grantId) {
+    const generation=permissionGeneration;
+    const snapshot=get().taskPermissions,grant=snapshot?.grants.find(g=>g.grantId===grantId&&g.status==='active');
+    if(!snapshot||!grant||!acceptsPermissionSnapshot(get(),snapshot,null)||get().taskPermissionRevoking)return;
+    set({taskPermissionRevoking:grantId,taskPermissionsError:null,taskPermissionsNotice:false});
+    try {
+      const result=await window.vunemi.revokeTaskPermission({grantId,sessionId:grant.sessionId,runId:grant.runId,expectedRevision:snapshot.revision});
+      if(result.revision<=snapshot.revision||result.grants.find(g=>g.grantId===grantId)?.status!=='revoked')throw new Error(t("taskPermissions.revokeFailed"));
+      if(generation===permissionGeneration&&acceptsPermissionSnapshot(get(),result,get().taskPermissions)){
+        get().applyTaskPermissions(result);
+        set({taskPermissionsNotice:true});
+      }
+    } catch(error) {
+      if(generation===permissionGeneration&&get().sessions.current===snapshot.sessionId&&(get().activeRun?.runId??null)===snapshot.runId)set({taskPermissionsError:String(error)});
+    } finally { if(get().taskPermissionRevoking===grantId)set({taskPermissionRevoking:null}); }
   },
 
-  async resolveHandoff(callId, outcome) {
-    await window.vunemi.resolveHandoff(callId, outcome);
+  async decide(callId, decision, owner) {
+    return window.vunemi.resolveApproval(callId, decision, owner);
   },
 
-  async resolvePlan(decision) {
-    await window.vunemi.resolvePlan(decision);
+  async resolveHandoff(callId, outcome, owner) {
+    return window.vunemi.resolveHandoff(callId, outcome, owner);
+  },
+
+  async resolvePlan(decision, owner) {
+    return window.vunemi.resolvePlan(decision, owner);
   },
 
   async newSession(projectId) {
+    const generation=++navigationGeneration;set({attentionTarget:null});
     const sessions = await window.vunemi.newSession(projectId);
-    set({ sessions, runs: [], pendingStart: null, queue: [], viewer: null, view: "chat" });
+    if(generation!==navigationGeneration)return;
+    set({ sessions, tasks: sessions.tasks ?? [], runs: [], activeRun: null, pendingStart: null, queue: [], viewer: null, view: "chat" });
     void get().refreshContext();
   },
 
   async addProject() {
+    const generation=++navigationGeneration;set({attentionTarget:null});
     const sessions = await window.vunemi.addProject();
-    if (!sessions) return;
-    set({ sessions, runs: [], pendingStart: null, queue: [], viewer: null, view: "chat" });
+    if (!sessions||generation!==navigationGeneration) return;
+    set({ sessions, tasks: sessions.tasks ?? [], runs: [], activeRun: null, pendingStart: null, queue: [], viewer: null, view: "chat" });
     void get().refreshContext();
   },
 
   async removeProject(id) {
-    set({ sessions: await window.vunemi.removeProject(id) });
+    const generation=navigationGeneration,sessions=await window.vunemi.removeProject(id);
+    if(generation===navigationGeneration&&sessions.current===get().sessions.current)set({sessions});
   },
 
   async revealProject(id) {
     await window.vunemi.revealProject(id);
   },
 
+  async refreshAttention(){
+    const generation=++attentionLoadGeneration;set({attentionLoading:true});
+    try{const snapshot=await window.vunemi.listAttention();if(generation===attentionLoadGeneration)set({attention:snapshot,attentionLoading:false,attentionError:null});}
+    catch(error){if(generation===attentionLoadGeneration)set({attentionLoading:false,attentionError:String(error)});}
+  },
+  async openAttentionTask(item){
+    const before=get(),snapshot=before.attention;
+    if(!snapshot||!snapshot.items.some(i=>i.sessionId===item.sessionId&&i.taskId===item.taskId&&i.runId===item.runId))return;
+    if(before.running&&item.sessionId!==before.sessions.current)throw Error(t('main.stopFirst'));
+    const generation=++navigationGeneration,source=before.sessions.current;
+    const target={sessionId:item.sessionId,taskId:item.taskId,runId:item.runId,revision:snapshot.revision};
+    ++attentionNavigations;let result:Awaited<ReturnType<VunemiApi['openAttentionTask']>>;
+    try{result=await window.vunemi.openAttentionTask(target);}catch(error){void get().refreshAttention();throw error;}finally{--attentionNavigations;}
+    if(generation!==navigationGeneration||get().sessions.current!==source)return;
+    if(result.target.sessionId!==target.sessionId||result.target.taskId!==target.taskId||result.target.runId!==target.runId||result.sessions.current!==target.sessionId)throw Error('Attention target changed.');
+    if(target.sessionId===source)set({view:'chat',attentionTarget:{...target,nonce:++attentionNonce}});
+    else{if(!result.events)throw Error('Missing conversation evidence.');set({sessions:result.sessions,tasks:result.sessions.tasks??tasksFromEvents(result.events),runs:result.events.reduce(foldEvent,[]),activeRun:null,pendingStart:null,queue:[],view:'chat',attentionTarget:{...target,nonce:++attentionNonce}});void get().refreshContext();}
+    void get().refreshAttention();
+  },
   async openSession(id) {
+    const generation=++navigationGeneration;set({attentionTarget:null});
     if (id === get().sessions.current) return set({ view: "chat" });
     const { events, ...sessions } = await window.vunemi.openSession(id);
+    if(generation!==navigationGeneration)return;
     // The timeline is a fold of its events, so a kept one rebuilds exactly.
-    set({ sessions, runs: events.reduce(foldEvent, []), pendingStart: null, queue: [], view: "chat" });
+    set({ sessions, tasks: sessions.tasks ?? tasksFromEvents(events), runs: events.reduce(foldEvent, []), activeRun: null, pendingStart: null, queue: [], view: "chat" });
     void get().refreshContext();
   },
 
   async renameSession(id, title) {
-    set({ sessions: await window.vunemi.renameSession(id, title) });
+    const generation=navigationGeneration,sessions=await window.vunemi.renameSession(id,title);
+    if(generation===navigationGeneration&&sessions.current===get().sessions.current)set({sessions});
   },
 
   async deleteSession(id) {
+    const generation=++navigationGeneration;
     const wasCurrent = id === get().sessions.current;
     const sessions = await window.vunemi.deleteSession(id);
-    set({ sessions, ...(wasCurrent && { runs: [], pendingStart: null, queue: [], viewer: null }) });
+    if(generation!==navigationGeneration)return;
+    set({ sessions, ...(wasCurrent && { tasks: sessions.tasks ?? [], runs: [], activeRun: null, pendingStart: null, queue: [], viewer: null }) });
   },
 
   async forgetSession() {
+    const generation=++navigationGeneration;set({attentionTarget:null});
     const sessions = await window.vunemi.resetSession();
-    set({ sessions, runs: [], pendingStart: null, queue: [], viewer: null });
+    if(generation!==navigationGeneration)return;
+    set({ sessions, tasks: sessions.tasks ?? [], runs: [], activeRun: null, pendingStart: null, queue: [], viewer: null });
     void get().refreshContext();
   },
 
   setSessions(sessions) {
     // Main moved to another conversation on its own (a scheduled task started): its timeline starts empty.
-    if (sessions.current !== get().sessions.current) set({ sessions, runs: [], pendingStart: null, queue: [], viewer: null });
-    else set({ sessions });
+    if(sessions.current!==get().sessions.current){++navigationGeneration;set({attentionTarget:null});}
+    void get().refreshAttention();
+    if (sessions.current !== get().sessions.current) set({ sessions, tasks: sessions.tasks ?? [], runs: [], activeRun: null, pendingStart: null, queue: [], viewer: null });
+    else set((s) => ({ sessions, tasks: s.tasks.length ? s.tasks : sessions.tasks ?? [] }));
   },
+
+  setArtefacts(artefacts) { set({ artefacts }); },
 
   async setLocale(locale) {
     get().applyLocale(await window.vunemi.setLanguage(locale));
@@ -667,16 +774,23 @@ export const useStore = create<State>((set, get) => ({
       void finishTalking(event.runId, said || event.detail, set, get);
     }
     set((s) => ({
+      taskApprovalStopped:event.type==='run.started'?false:s.taskApprovalStopped,
       runs: foldEvent(s.runs, event),
+      tasks: foldTasks(s.tasks, event),
       pendingStart: event.type === "run.started" && s.pendingStart?.goal === event.goal ? null : s.pendingStart,
       // Follows the events rather than the send() call: a queued message
       // starts on its own, with nobody in the UI having asked for it.
-      running: event.type === "run.started" ? true : event.type === "run.finished" ? false : s.running,
+      activeRun:event.type==='run.started'?{runId:event.runId,sessionId:s.sessions.current}:event.type==='run.finished'&&s.activeRun?.runId===event.runId?null:s.activeRun,
+      running: event.type === "run.started" ? true : event.type === "run.finished" && (!s.activeRun||s.activeRun.runId===event.runId) ? false : s.running,
       paused:
         event.type === "run.paused" ? true : event.type === "run.resumed" || event.type === "run.finished" ? false : s.paused,
       // The user will need to see the page the agent is handing over.
       ...(event.type === "handoff.required" && { paneOpen: true }),
     }));
+    if(get().attention!==null&&['run.started','run.finished','plan.proposed','plan.resolved','approval.required','approval.resolved','handoff.required','handoff.resolved','choice.asked','choice.answered','tool.finished','task.progress'].includes(event.type)){
+      if(attentionRefreshTimer)clearTimeout(attentionRefreshTimer);
+      attentionRefreshTimer=setTimeout(()=>{attentionRefreshTimer=undefined;void get().refreshAttention();},150);
+    }
     if (event.type === "run.finished" || event.type === "context.compacted") void get().refreshContext();
   },
 
@@ -886,4 +1000,20 @@ function stayOn(): void {
 function endHeld(get: () => State): void {
   if (recorder) void get().finishListening(true);
   else if (opening || get().voice.state === "listening") released = true;
+}
+
+/** One subscription owned by the App lifecycle, with stale promise and unsubscribe guards. */
+export function startTaskPermissionsWatch():()=>void {
+ let live=true;
+ ++permissionGeneration;
+ const off=window.vunemi.onTaskPermissionsChanged?.(snapshot=>{if(live)useStore.getState().applyTaskPermissions(snapshot);});
+ const offState=useStore.subscribe((state,previous)=>{
+  if(state.sessions.current!==previous.sessions.current||state.activeRun?.runId!==previous.activeRun?.runId){
+   permissionGeneration++;
+   useStore.setState({taskPermissions:null,taskPermissionsError:null,taskPermissionsLoadError:null,taskPermissionsNotice:false,taskPermissionRevoking:null});
+   void state.refreshTaskPermissions();
+  }
+ });
+ void useStore.getState().refreshTaskPermissions();
+ return ()=>{live=false;permissionGeneration++;off?.();offState();};
 }

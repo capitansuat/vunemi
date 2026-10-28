@@ -1,0 +1,16 @@
+import {it,expect} from 'vitest';
+import {mkdtempSync,writeFileSync,readFileSync,readdirSync,renameSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {Roots} from '@vunemi/files';
+import {createSafeOfficeEdits} from '../../src/main/addons/tools/safe-office-edit.js';
+import type {ToolContext} from '@vunemi/agent-core';
+const setup=()=>{const dir=mkdtempSync(join(tmpdir(),'safe-office-')),roots=new Roots([dir]),path=join(dir,'report.docx'),made=join(dir,'engine.docx');writeFileSync(path,'original');writeFileSync(made,'corrected');return {dir,path,made,edits:createSafeOfficeEdits(roots)};};
+const ctx=():ToolContext=>({signal:new AbortController().signal,attach(){},offerUndo(){},handoff:async()=>true});
+it('defaults to refusing existing output and creates no backup before explicit execution',()=>{const {dir,path,edits}=setup();expect(()=>edits.prepare({},path,false)).toThrow();const plan=edits.prepare({},path,true);expect(plan.backupPath).toContain('before-edit');expect(readdirSync(dir)).toHaveLength(2);});
+it('keeps the exact original backup before replacing the destination',()=>{const {path,made,edits}=setup(),plan=edits.prepare({},path,true);edits.deliver(made,plan,ctx());expect(readFileSync(path,'utf8')).toBe('corrected');expect(readFileSync(plan.backupPath!,'utf8')).toBe('original');});
+it('does not refresh an approval snapshot and refuses changed targets',()=>{const {path,made,edits}=setup(),args={},plan=edits.prepare(args,path,true);writeFileSync(path,'user change');expect(()=>edits.prepare(args,path,true)).toThrow(/changed/i);expect(()=>edits.deliver(made,plan,ctx())).toThrow(/changed/i);expect(readFileSync(path,'utf8')).toBe('user change');});
+it('refuses replaced inode and cancellation before any backup or commit',()=>{const {dir,path,made,edits}=setup(),plan=edits.prepare({},path,true);renameSync(path,join(dir,'moved.docx'));writeFileSync(path,'original');expect(()=>edits.verify(plan)).toThrow(/changed/i);const second=edits.prepare({},path,true),controller=new AbortController();controller.abort();expect(()=>edits.deliver(made,second,{...ctx(),signal:controller.signal})).toThrow();expect(readFileSync(path,'utf8')).toBe('original');expect(readdirSync(dir).some(p=>p.includes('before-edit'))).toBe(false);});
+it('rejects replacing a non Office file',()=>{const {dir,edits}=setup(),path=join(dir,'secret.txt');writeFileSync(path,'original');expect(()=>edits.prepare({},path,true)).toThrow(/Office/i);});
+it('retains unknown delivery when a postcommit observer fails',()=>{const {path,made,edits}=setup(),plan=edits.prepare({},path,true);try{edits.deliver(made,plan,{...ctx(),produced(){throw Error('observer failed after publication');}});throw Error('must reject');}catch(error){expect(error).toMatchObject({deliveryUnknown:true});}expect(readFileSync(path,'utf8')).toBe('corrected');expect(readFileSync(plan.backupPath!,'utf8')).toBe('original');});
+it('preserves a concurrent last-moment target change and the approved backup',()=>{const {path,made,edits}=setup(),plan=edits.prepare({},path,true);let calls=0;expect(()=>edits.deliver(made,plan,{...ctx(),assertToolActive(){if(++calls===3)writeFileSync(path,'user newer text');}})).toThrow(/changed/);expect(readFileSync(path,'utf8')).toBe('user newer text');expect(readFileSync(plan.backupPath!,'utf8')).toBe('original');});

@@ -1,9 +1,10 @@
-import { useEffect, useState, type ComponentType } from "react";
+import { TaskPermissions } from "./TaskPermissions.js";
+import { useEffect, useState, useRef, type ComponentType } from "react";
 import { Check, X } from "lucide-react";
 import type { Autonomy, AutonomyPolicy } from "@vunemi/agent-core";
 import { ACTION_CLASSES } from "@vunemi/agent-core";
 import { LOCALES, t, type MessageKey } from "@vunemi/i18n";
-import type { Appearance, LockState, PermissionSettings, TrustedSiteResult, UpdateStatus } from "../../../shared/ipc.js";
+import type { Appearance, LockState, PermissionSettings, SearchLocation, TrustedSiteResult, UpdateStatus } from "../../../shared/ipc.js";
 import { ConnectionsView, Switch } from "./ConnectionsView.js";
 import { ModelPicker } from "./ModelPicker.js";
 import { ModelSources } from "./ModelSources.js";
@@ -131,6 +132,7 @@ export function SettingsView() {
               ))}
             </div>
             <p className="mt-3 text-[11.5px] text-faint">{t("settings.permissions.handedOver")}</p>
+            <TaskPermissions />
             {error && <p role="alert" className="mt-3 text-[12px] text-danger">{error}</p>}
           </div>
         )}
@@ -463,7 +465,131 @@ function LanguageSection() {
         })}
       </ul>
       <p className="mt-3 text-[11.5px] text-faint">{t("settings.language.note")}</p>
+      <SearchLocationSettings />
       {error && <p role="alert" className="mt-3 text-[12px] text-danger">{error}</p>}
     </div>
+  );
+}
+
+/** Country is explicit saved data; locale only translates the option labels. */
+const SEARCH_COUNTRY_CODES = "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW".split(" ");
+export function SearchLocationSettings() {
+  const locale = useStore((state) => state.locale);
+  const [stored, setStored] = useState<SearchLocation | null>(null);
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<"loadError" | "saveError" | null>(null);
+  const generation = useRef(0);
+  const sending = useRef(false);
+
+  async function load() {
+    const own = ++generation.current;
+    setLoading(true);
+    setError(null);
+    try {
+      const profile = await window.vunemi.searchLocation();
+      if (own !== generation.current) return;
+      setStored(profile);
+      setCountry(profile.country ?? "");
+      setCity(profile.city ?? "");
+    } catch {
+      if (own === generation.current) setError("loadError");
+    } finally {
+      if (own === generation.current) setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    return () => { generation.current++; };
+  }, []);
+
+  const names = new Intl.DisplayNames([locale], { type: "region" });
+  const collator = new Intl.Collator(locale);
+  const countries = SEARCH_COUNTRY_CODES
+    .map((code) => ({ code, name: names.of(code) ?? code }))
+    .sort((a, b) => collator.compare(a.name, b.name));
+  const dirty = stored !== null && (
+    (country || null) !== stored.country || (city.trim() || null) !== stored.city
+  );
+
+  async function save() {
+    if (sending.current || loading || stored === null || !dirty) return;
+    sending.current = true;
+    setSaving(true);
+    setSaved(false);
+    setError(null);
+    const own = ++generation.current;
+    try {
+      const profile = await window.vunemi.setSearchLocation({
+        country: country || null,
+        city: country ? city.trim() || null : null,
+      });
+      if (own !== generation.current) return;
+      setStored(profile);
+      setCountry(profile.country ?? "");
+      setCity(profile.city ?? "");
+      setSaved(true);
+    } catch {
+      if (own === generation.current) setError("saveError");
+    } finally {
+      sending.current = false;
+      if (own === generation.current) setSaving(false);
+    }
+  }
+
+  return (
+    <section className="mt-8 border-t border-line pt-6" data-search-location
+      aria-labelledby="search-location-title" aria-busy={loading || saving}>
+      <h3 id="search-location-title" className="text-[15px] font-semibold text-fg">{t("settings.searchLocation.title")}</h3>
+      <p className="mt-1 text-[13px] leading-relaxed text-muted">{t("settings.searchLocation.intro")}</p>
+      {loading ? (
+        <p role="status" className="mt-3 text-[12px] text-muted">{t("settings.searchLocation.loading")}</p>
+      ) : (
+        <>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1 text-[12px] text-muted">
+              <span>{t("settings.searchLocation.country")}</span>
+              <select value={country} disabled={saving || stored === null}
+                onChange={(event) => {
+                  setCountry(event.target.value);
+                  setCity("");
+                  setSaved(false);
+                }}
+                className="min-w-0 rounded-lg border border-line bg-surface-2 px-3 py-2 text-[13px] text-fg focus-visible:ring-2 focus-visible:ring-ember">
+                <option value="">{t("settings.searchLocation.unset")}</option>
+                {countries.map((option) => <option key={option.code} value={option.code}>{option.name}</option>)}
+              </select>
+            </label>
+            <label className="grid gap-1 text-[12px] text-muted">
+              <span>{t("settings.searchLocation.city")}</span>
+              <input value={city} maxLength={100} disabled={saving || stored === null || !country}
+                placeholder={!country ? t("settings.searchLocation.chooseCountry") : undefined}
+                onChange={(event) => {
+                  setCity(event.target.value);
+                  setSaved(false);
+                }}
+                className="min-w-0 rounded-lg border border-line bg-surface-2 px-3 py-2 text-[13px] text-fg placeholder:text-faint focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50" />
+            </label>
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <button type="button" disabled={saving || stored === null || !dirty} onClick={() => void save()}
+              className="rounded-lg border border-line-strong bg-surface-2 px-3 py-1.5 text-[12px] text-fg hover:border-ember focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50">
+              {t("settings.searchLocation.save")}
+            </button>
+            {saved && <p role="status" className="text-[12px] text-muted">{t("settings.searchLocation.saved")}</p>}
+          </div>
+        </>
+      )}
+      {error && (
+        <div className="mt-3 text-[12px] text-danger">
+          <p role="alert">{t(`settings.searchLocation.${error}`)}</p>
+          {error === "loadError" && <button type="button" onClick={() => void load()} className="mt-1 underline">{t("common.retry")}</button>}
+        </div>
+      )}
+    </section>
   );
 }

@@ -3,7 +3,7 @@
  * one, a reopened conversation looks and continues as it was, the files are
  * the user's alone, and a path cannot be smuggled in as an id.
  */
-import { mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { readFileSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AgentEvent, ChatMessage } from "@vunemi/agent-core";
@@ -169,6 +169,18 @@ describe("a task cut short by Vunemi closing", () => {
     expect(readdirSync(dir).filter((f) => f.endsWith(".checkpoint"))).toEqual([]);
   });
 
+  it("counts supported plan completion instead of tool answers", () => {
+    const store = new SessionStore(dir); const id = crash(store);
+    const file = join(dir, `${id}.checkpoint`);
+    const point = JSON.parse(readFileSync(file, "utf8"));
+    const runId = point.events.findLast((e: AgentEvent) => e.type === "run.started").runId;
+    point.events.push({ type: "tool.proposed", runId, stepId: "s", callId: "a", tool: "save_note", actionClass: "write-local", args: {} }, { type: "tool.finished", runId, callId: "a", ok: true, output: "saved", durationMs: 1 });
+    point.events.push({ type: "task.progress", runId, step: 1, status: "completed", evidenceCallIds: ["a"], at: 3 });
+    writeFileSync(file, JSON.stringify(point));
+    const next = new SessionStore(dir);
+    expect(next.list().find(s => s.id === id)?.interrupted?.steps).toBe(1);
+  });
+
   it("comes back marked, with the finished step kept and the unfinished one unknown", () => {
     const id = crash(new SessionStore(dir));
     expect(statSync(join(dir, `${id}.checkpoint`)).mode & 0o777).toBe(0o600);
@@ -176,7 +188,7 @@ describe("a task cut short by Vunemi closing", () => {
     const next = new SessionStore(dir);
     expect(readdirSync(dir).filter((f) => f.endsWith(".checkpoint"))).toEqual([]);
     expect(next.interrupted).toEqual([id]);
-    expect(next.list().find((s) => s.id === id)?.interrupted?.steps).toBe(1);
+    expect(next.list().find((s) => s.id === id)?.interrupted?.steps).toBe(0);
 
     const { history: kept, events } = next.open(id);
     const tools = kept.filter((m) => m.role === "tool");
@@ -247,4 +259,53 @@ describe("peek", () => {
     expect(store.peek("s_nothere1")).toBeNull();
     expect(store.peek("../etc/passwd")).toBeNull();
   });
+});
+
+describe("task lifecycle durability", () => {
+  it("recovers a plan waiting for approval even before the first model checkpoint", () => {
+    const store = new SessionStore(dir);
+    store.record({ type: "run.started", runId: "r1", goal: "Make report", model: "local", at: 1 });
+    store.record({ type: "plan.proposed", runId: "r1", steps: ["Read", "Write"], at: 2 });
+    const id = store.currentId;
+    const again = new SessionStore(dir);
+    expect(again.list().map(s => s.id)).toContain(id);
+    expect(again.peek(id)?.events.some(e => e.type === "plan.proposed")).toBe(true);
+  });
+  it("persists the started-call boundary so a crash cannot disguise it as unstarted", () => {
+    const store = new SessionStore(dir);
+    store.record({ type: "run.started", runId: "r1", goal: "Write report", model: "local", at: 1 });
+    store.checkpoint([{ role: "assistant", content: "", toolCalls: [{ id: "c", name: "file_write", argumentsText: "{}" }] }]);
+    store.record({ type: "tool.proposed", runId: "r1", stepId: "s", callId: "c", tool: "file_write", args: {}, actionClass: "write-local" });
+    store.record({ type: "tool.started", runId: "r1", callId: "c", at: 2 });
+    const again = new SessionStore(dir);
+    expect(again.peek(store.currentId)?.events.some(e => e.type === "tool.started")).toBe(true);
+  });
+});
+
+it("keeps a known tool result when the app closes before the next core checkpoint", () => {
+  const store = new SessionStore(dir);
+  store.record({ type: "run.started", runId: "r", goal: "Write", model: "local", at: 1 });
+  store.checkpoint([{ role: "assistant", content: "", toolCalls: [{ id: "c", name: "file_write", argumentsText: "{}" }] }]);
+  store.record({ type: "tool.proposed", runId: "r", stepId: "s", callId: "c", tool: "file_write", args: {}, actionClass: "write-local" });
+  store.record({ type: "tool.started", runId: "r", callId: "c", at: 2 });
+  store.record({ type: "tool.finished", runId: "r", callId: "c", ok: true, output: "Saved report", durationMs: 1, produced: [{ kind: "file", path: "/tmp/report.docx" }] });
+  const again = new SessionStore(dir);
+  expect(again.open(store.currentId).history.find(m => m.role === "tool" && m.toolCallId === "c")?.content).toBe("Saved report");
+  expect(again.tasks(store.currentId)[0]?.operations[0]?.status).toBe("completed");
+  expect(again.tasks(store.currentId)[0]?.outputs).toEqual([{ kind: "file", path: "/tmp/report.docx" }]);
+});
+
+it("restores task steps and receipt evidence from the local event file", () => {
+  const store = new SessionStore(dir);
+  store.record({ type: "run.started", runId: "r", goal: "Report", model: "local", at: 1 });
+  store.record({ type: "plan.proposed", runId: "r", steps: ["Read", "Write"], at: 2 });
+  store.record({ type: "plan.resolved", runId: "r", decision: { kind: "go", steps: ["Read", "Write"] } });
+  store.record({ type: "tool.proposed", runId: "r", stepId: "s", callId: "c", tool: "file_read", args: {}, actionClass: "read" });
+  store.record({ type: "tool.finished", runId: "r", callId: "c", ok: true, output: "Read", durationMs: 1 });
+  store.record({ type: "task.progress", runId: "r", step: 1, status: "completed", evidenceCallIds: ["c"], at: 3 });
+  const again = new SessionStore(dir);
+  const task = again.tasks(store.currentId)[0]!;
+  expect(task.steps.map(s => s.status)).toEqual(["completed", "pending"]);
+  expect(task.steps[0]?.receipts).toEqual([{ runId: "r", callId: "c" }]);
+  expect(task.steps[0]?.evidence).toBe("tool_result");
 });

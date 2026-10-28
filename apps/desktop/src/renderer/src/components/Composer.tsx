@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {quoteSourceAnchor} from "../lib/selection-followup.js";
+import {composerDrafts} from '../lib/composer-drafts.js';
+import { useShallow } from "zustand/react/shallow";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowUp, AudioLines, Download, FileText, ListPlus, Mic, Paperclip, Pause, Play, Square, X } from "lucide-react";
 import { useStore } from "../store.js";
 import { Queue } from "./Queue.js";
@@ -12,10 +15,13 @@ import { formatDate, lower, t } from "@vunemi/i18n";
 const MAX_MENTIONS = 5;
 
 export function Composer() {
-  const [text, setText] = useState("");
-  const [files, setFiles] = useState<string[]>([]);
+  const sessionId=useStore(s=>s.sessions.current);
+  const draft=useSyncExternalStore(composerDrafts.subscribe,()=>composerDrafts.read(sessionId),()=>composerDrafts.read(sessionId));
+  const {text,files,mentions,quote}=draft;
+  const setText=(value:string|((current:string)=>string))=>composerDrafts.change(sessionId,'text',value);
+  const setFiles=(value:string[]|((current:string[])=>string[]))=>composerDrafts.change(sessionId,'files',value);
+  const setMentions=(value:MenuItem[]|((current:MenuItem[])=>MenuItem[]))=>composerDrafts.change(sessionId,'mentions',value);
   // What "@" brought in. The chips decide what is sent; the names in the text are only text.
-  const [mentions, setMentions] = useState<MenuItem[]>([]);
   const [caret, setCaret] = useState(0);
   /** What can be brought in, asked for each time the menu opens. */
   const [mentionable, setMentionable] = useState<MentionItem[] | null>(null);
@@ -25,8 +31,9 @@ export function Composer() {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const { running, paused, pendingStart, model, send, steer, stop, pause, resume } = useStore();
-  const { listen, finishListening, cancelListening, setHandsFree, setVoiceHold, holdStart, holdEnd, takeDictation, refreshVoice, setVoiceStatus } = useStore();
+  const dropZone = useRef<HTMLDivElement>(null);
+  const { running, paused, pendingStart, model, send, steer, stop, pause, resume } = useStore(useShallow(s => ({ running: s.running, paused: s.paused, pendingStart: s.pendingStart, model: s.model, send: s.send, steer: s.steer, stop: s.stop, pause: s.pause, resume: s.resume, locale: s.locale })));
+  const { listen, finishListening, cancelListening, setHandsFree, setVoiceHold, holdStart, holdEnd, takeDictation, refreshVoice, setVoiceStatus } = useStore(useShallow(s => ({ listen: s.listen, finishListening: s.finishListening, cancelListening: s.cancelListening, setHandsFree: s.setHandsFree, setVoiceHold: s.setVoiceHold, holdStart: s.holdStart, holdEnd: s.holdEnd, takeDictation: s.takeDictation, refreshVoice: s.refreshVoice, setVoiceStatus: s.setVoiceStatus, locale: s.locale })));
   // The speech model offer opens when the mic is pressed without one, not before.
   const [offer, setOffer] = useState(false);
 
@@ -114,22 +121,22 @@ export function Composer() {
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [text]);
 
-  const addFiles = (paths: string[]) => {
+  const addFiles = (paths: string[], focus = true) => {
     const fresh = paths.filter(Boolean);
     if (fresh.length === 0) return;
     setError(null);
     setFiles((current) => [...new Set([...current, ...fresh])].slice(0, 10));
-    ref.current?.focus();
+    if(focus&&useStore.getState().sessions.current===sessionId)ref.current?.focus();
   };
 
-  // A file dropped anywhere on the window joins the message. Without this
-  // the drop did nothing at all: the window refuses to navigate to it.
+  // Prevent file navigation across the window; only a drop inside the composer
+  // may add an unsent attachment. Conversation/history drops never alter a draft.
   useEffect(() => {
     const carriesFiles = (e: DragEvent) => e.dataTransfer?.types.includes("Files") ?? false;
     const over = (e: DragEvent) => {
       if (!carriesFiles(e)) return;
       e.preventDefault();
-      setDragging(true);
+      setDragging(!!dropZone.current?.contains(e.target as Node));
     };
     const leave = (e: DragEvent) => {
       // Only when it leaves the window, not each element on the way.
@@ -139,7 +146,8 @@ export function Composer() {
       if (!carriesFiles(e)) return;
       e.preventDefault();
       setDragging(false);
-      addFiles([...(e.dataTransfer?.files ?? [])].map((f) => window.vunemi.pathForFile(f)));
+      if(useStore.getState().sessions.current!==sessionId || !dropZone.current?.contains(e.target as Node))return;
+      addFiles([...(e.dataTransfer?.files ?? [])].map((f) => window.vunemi.pathForFile(f)),false);
     };
     window.addEventListener("dragover", over);
     window.addEventListener("dragleave", leave);
@@ -149,7 +157,7 @@ export function Composer() {
       window.removeEventListener("dragleave", leave);
       window.removeEventListener("drop", drop);
     };
-  }, []);
+  }, [sessionId]);
 
   // Esc: drop the microphone first, then stop a run.
   useEffect(() => {
@@ -171,22 +179,23 @@ export function Composer() {
    * thought the user has to hold on to is a thought that gets lost.
    */
   const submit = (now = false) => {
-    if ((!text.trim() && files.length === 0) || !model) return;
+    if(useStore.getState().sessions.current!==sessionId)return;
+    const submitted=composerDrafts.read(sessionId);
+    const {text,files,mentions,quote}=submitted;
+    if ((!text.trim() && (files.length === 0 || quote)) || !model) return;
     // A message with only files in it asks the obvious thing.
     const goal = text.trim() || t("composer.filesOnly");
     const attached = files;
     const brought = mentions.map(({ kind, id, name }) => ({ kind, id, title: name }));
     setError(null);
     // Cleared only once it went: a refused attachment should still be there to fix.
-    (now && running ? steer(goal, attached, brought) : send(goal, attached, brought))
+    (now && running ? (quote?steer(goal,attached,brought,quote):steer(goal,attached,brought)) : (quote?send(goal,attached,brought,quote):send(goal,attached,brought)))
       .then(() => {
-        setText("");
-        setFiles([]);
-        setMentions([]);
+        composerDrafts.clearIf(sessionId,submitted);
       })
       .catch((err: unknown) => setError(String(err instanceof Error ? err.message : err).replace(/^.*Error: /, "")));
   };
-  const ready = (text.trim() !== "" || files.length > 0) && !!model && !pendingStart;
+  const ready = (text.trim() !== "" || (!quote && files.length > 0)) && !!model && !pendingStart;
 
   const listening = voice.state === "listening";
   const canHear = voice.status?.canHear ?? false;
@@ -209,12 +218,15 @@ export function Composer() {
       {voice.error && <p className="mb-2 px-1 text-[11.5px] text-danger">{voice.error}</p>}
       {error && <p className="mb-2 px-1 text-[11.5px] text-danger">{error}</p>}
       <div
+        ref={dropZone}
+        data-composer-drop-zone
         className={`relative rounded-2xl border bg-surface shadow-[0_1px_0_rgba(0,0,0,0.02),0_8px_24px_-12px_rgba(0,0,0,0.25)] transition-colors focus-within:border-line-strong ${
           dragging ? "border-ember border-dashed bg-ember-soft/40" : "border-line"
         }`}
       >
         {menuOpen && <MentionMenu items={offered} active={active} full={full} onPick={pick} onHover={setActive} />}
         {dragging && <p className="px-4 pt-3 text-[12px] text-ember">{t("composer.drop")}</p>}
+        {(files.length > 0 || mentions.length > 0) && <p className="px-3 pt-3 text-[11.5px] text-muted">{t("composer.draftAttachments")}</p>}
         {(files.length > 0 || mentions.length > 0) && (
           <ul className="flex flex-wrap gap-1.5 px-3 pt-3">
             {mentions.map((m) => (
@@ -247,7 +259,13 @@ export function Composer() {
             ))}
           </ul>
         )}
+        {quote && <div className="mx-3 mt-3 rounded-lg border border-line bg-surface-2 p-3">
+          <div className="flex items-start justify-between gap-2"><span className="text-[12px] font-medium text-muted">{t('quotedSource.title')}</span><button type="button" aria-label={t('quotedSource.remove')} onClick={()=>{if(useStore.getState().sessions.current===sessionId&&composerDrafts.read(sessionId).quote===quote)composerDrafts.change(sessionId,'quote',undefined);}} className="rounded p-1 text-faint hover:text-fg focus-visible:ring-2 focus-visible:ring-ember"><X size={12}/></button></div>
+          <blockquote className="selectable mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-words border-l-2 border-line-strong pl-2 text-[13px] text-fg">{quote.text}</blockquote>
+          <a className="mt-1 inline-block text-[11.5px] text-muted underline decoration-dotted" href={`#${quoteSourceAnchor(quote.runId,quote.stepId)}`}>{t('quotedSource.source')}</a>
+        </div>}
         <textarea
+          data-composer-question
           ref={ref}
           value={text}
           rows={1}
@@ -421,7 +439,7 @@ export function Composer() {
  */
 function VoiceDownload({ onClose }: { onClose: () => void }) {
   const status = useStore((s) => s.voice.status);
-  const { downloadVoice, cancelVoiceDownload } = useStore();
+  const { downloadVoice, cancelVoiceDownload } = useStore(useShallow(s => ({ downloadVoice: s.downloadVoice, cancelVoiceDownload: s.cancelVoiceDownload, locale: s.locale })));
   const size = Math.round((status?.download?.bytes ?? 0) / 1_000_000);
   const progress = status?.downloading;
   const percent = progress && progress.total > 0 ? Math.floor((progress.received / progress.total) * 100) : 0;

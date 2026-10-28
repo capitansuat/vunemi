@@ -363,7 +363,7 @@ export interface AutomationSetup {
   /** Why a scheduled task can't have this scope, in words for the model; null when it can. */
   refuse(scope: string[]): string | null;
   /** The schedule to save: the one asked for, or with the time and days the user chose on the summary. */
-  schedule(args: Record<string, unknown>, asked: Schedule): Schedule;
+  schedule(args: Record<string, unknown>, asked: Schedule, runId?:string,callId?:string): Schedule;
 }
 
 /** With `setup`, a task is set up with a scope and the user approves it on a summary made from that scope. */
@@ -423,7 +423,7 @@ export function createAutomationTools(store: AutomationStore, now: () => number 
         }
         return t("automations.preview", { title: String(a.title ?? "").slice(0, 80), when, task: String(a.task ?? "").slice(0, 400).replace(/[.。]+\s*$/, "") });
       },
-      async run(a) {
+      async run(a,ctx) {
         const title = String(a.title ?? "").trim();
         const task = String(a.task ?? "").trim();
         if (!title || title.length > 80) throw new Error("title must be 1 to 80 characters.");
@@ -431,7 +431,7 @@ export function createAutomationTools(store: AutomationStore, now: () => number 
         // Checked again here: the summary shows the scope, it does not decide.
         const scope = scopeOf(a);
         const asked = validSchedule(a.schedule);
-        const schedule = setup ? setup().schedule(a, asked) : asked;
+        const schedule = setup ? setup().schedule(a, asked,ctx.runId,ctx.callId) : asked;
         const created = now();
         const next = nextSlot(schedule, created, created);
         if (next === null) throw new Error("That time has already passed; give a time in the future.");

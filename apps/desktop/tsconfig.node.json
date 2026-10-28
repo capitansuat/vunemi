@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["electron.vite.config.ts", "src/main", "src/vault-process", "src/preload", "src/shared", "test/main"]
+  "include": ["electron.vite.config.ts", "src/main", "src/vault-process", "src/coordinator-process", "src/session-process", "src/preload", "src/shared", "test/main"]
 }

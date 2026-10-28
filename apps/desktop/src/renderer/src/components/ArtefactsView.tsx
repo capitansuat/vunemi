@@ -15,6 +15,7 @@ import type { Produced } from "@vunemi/agent-core";
 import type { ArtefactView } from "../../../shared/ipc.js";
 import { clock, groupByDay } from "../lib/time.js";
 import { formatDate, t } from "@vunemi/i18n";
+import { outputState } from "../lib/output-state.js";
 
 type Filter = "all" | "files" | "drafts" | "calendar" | "downloads";
 
@@ -136,6 +137,7 @@ function Row({
   onReveal: () => void;
   onUndo: () => void;
 }) {
+  const tasks = useStore(s => s.tasks);
   const { icon: Icon, title, detail } = describe(row.item);
   return (
     <li className="flex items-start gap-2.5 px-3.5 py-2.5">
@@ -149,6 +151,7 @@ function Row({
           {row.missing ? t("artefacts.missing") : detail}
         </div>
         {row.goal && <div className="truncate text-[11.5px] text-faint">"{row.goal}"</div>}
+        {!row.missing && <p className="mt-1 text-[12px] text-muted">{t(`outputState.${outputState(row.item, tasks)}`)}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         {row.canOpen && (

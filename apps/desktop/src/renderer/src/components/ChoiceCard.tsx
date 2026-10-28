@@ -2,24 +2,31 @@ import { useState } from "react";
 import { Check, ExternalLink, MapPin, TriangleAlert } from "lucide-react";
 import { t } from "@vunemi/i18n";
 import type { OptionCard, VerifiedFact } from "@vunemi/agent-core";
-import type { ChoiceView } from "../lib/fold.js";
+import {currentActionOwner,type ChoiceView} from "../lib/fold.js";
 import { useStore } from "../store.js";
 
 /** All content is React text. A card never interprets model output as markup. */
-export function ChoiceCard({ choice }: { choice: ChoiceView }) {
+export function ChoiceCard({ choice, readOnly = false }: { choice: ChoiceView; readOnly?: boolean }) {
+  const renderedOwner=currentActionOwner(useStore.getState(),'choice',choice);
+  const current=()=>renderedOwner?currentActionOwner(useStore.getState(),'choice',choice,renderedOwner):undefined;
   const [busy, setBusy] = useState(false);
   const [compared, setCompared] = useState<number[]>([]);
   const [error, setError] = useState("");
+  const [expired,setExpired]=useState(false);
   const setPaneOpen = useStore((s) => s.setPaneOpen);
-  const live = choice.status === "awaiting";
+  const live = !readOnly && !!choice.requestId && !expired && choice.status === "awaiting";
 
+  let sending=false;
   const answer = (index: number) => {
-    if (!live || busy) return;
+    const owner=current();if (!live || busy || !owner || sending) return;
+    sending=true;
     setBusy(true);
     setError("");
-    void window.vunemi.resolveChoice(choice.runId, choice.callId, { text: "", index }).then((ok) => {
-      if (!ok) setBusy(false);
+    void window.vunemi.resolveChoice(choice.runId, choice.callId, { text: "", index },owner).then((ok) => {
+      if(!current())return;
+      if (!ok) {setExpired(true);setBusy(false);}
     }).catch((e: unknown) => {
+      if(!current())return;
       setError(String(e));
       setBusy(false);
     });
@@ -41,7 +48,7 @@ export function ChoiceCard({ choice }: { choice: ChoiceView }) {
         ))}
       </div>
       {live && choice.card.allowOther && <p className="mt-2 text-[11.5px] text-muted">{t("choice.typeInstead")}</p>}
-      <ChoiceState choice={choice} />
+      <ChoiceState choice={expired?{...choice,status:'expired'}:choice} />
       {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
     </div>
   );
@@ -84,7 +91,7 @@ export function ChoiceCard({ choice }: { choice: ChoiceView }) {
       </div>
       {compared.length > 1 && <Comparison items={items} indices={compared} labels={labels} marks={!unchecked} />}
       {unchecked && <p className="mt-2 text-[11.5px] text-muted">{t("choice.unchecked")}</p>}
-      <ChoiceState choice={choice} />
+      <ChoiceState choice={expired?{...choice,status:'expired'}:choice} />
       {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
     </div>
   );
@@ -111,7 +118,7 @@ function Comparison({ items, indices, labels, marks }: { items: OptionCard[]; in
   </div>;
 }
 
-function ChoiceState({ choice }: { choice: ChoiceView }) {
+function ChoiceState({ choice, readOnly = false }: { choice: ChoiceView; readOnly?: boolean }) {
   if (choice.status === "awaiting") return null;
   if (choice.status === "expired") return <p className="mt-2 text-[11.5px] text-faint">{t("choice.expired")}</p>;
   return <div className="mt-3 flex justify-end"><div className="max-w-[80%] rounded-2xl rounded-br-md bg-surface-3 px-3 py-1.5 text-[13px] text-fg">{choice.answer}</div></div>;

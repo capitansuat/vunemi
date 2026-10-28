@@ -1,3 +1,4 @@
+import { useShallow } from "zustand/react/shallow";
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronDown, ChevronRight, HardDrive, RefreshCw } from "lucide-react";
 import { useStore } from "../store.js";
@@ -6,7 +7,7 @@ import { contextChoices } from "../lib/format.js";
 import { t } from "@vunemi/i18n";
 
 export function ModelPicker() {
-  const { providers, model, running, setModel, refreshProviders, engine } = useStore();
+  const { providers, model, running, setModel, refreshProviders, engine } = useStore(useShallow(s => ({ providers: s.providers, model: s.model, running: s.running, setModel: s.setModel, refreshProviders: s.refreshProviders, engine: s.engine, locale: s.locale })));
   const provider = model?.slice(0, model.indexOf(":"));
   const noneReachable = providers !== null && providers.every((p) => !p.reachable);
   const selectedAvailable = !!model && providers?.some((p) => p.reachable && p.models.includes(model));

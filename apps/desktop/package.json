@@ -58,6 +58,10 @@
     ],
     "extraResources": [
       {
+        "from": "../../native/VunemiVaultHelper/.build/release/VunemiVaultHelper",
+        "to": "VunemiVaultHelper"
+      },
+      {
         "from": "../../native/VunemiHelper/.build/release/VunemiHelper",
         "to": "VunemiHelper"
       },

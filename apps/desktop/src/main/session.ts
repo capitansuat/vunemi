@@ -1,3 +1,6 @@
+import {copyQuotedSource,type QuotedSource} from '@vunemi/agent-core';
+import type {TaskPermissionStore,TaskPermissionEpoch,TaskPermissionOfferView,TaskPermissionRevokeRequest,TaskPermissionsSnapshot} from "@vunemi/agent-core";
+import {randomUUID} from 'node:crypto';
 /**
  * One conversation with the agent: history, approvals granted "always", and
  * at most one run in flight. Lives in the main process so a run keeps going
@@ -25,6 +28,8 @@ import {
   runAgent,
   sealInterrupted,
   type AgentEvent,
+  type TaskRecord,
+  isTrackingTool,
   type ApprovalDecision,
   type ChoiceAnswer,
   type ChoiceCard,
@@ -49,6 +54,11 @@ import type { PreparedModel } from "./engine/service.js";
 import { MENTION_SHARE } from "./mentions.js";
 
 export interface SessionOptions {
+  onStateChanged?:()=>void;
+  /** Trusted process-local provider proxy; credentials stay with the service broker. */
+  modelFactory?: (spec:string)=>ChatModel;
+  validateQuotedSource?:(source:unknown)=>QuotedSource;
+  taskPermissions?:{store:TaskPermissionStore;sessionId:()=>string;epoch:()=>TaskPermissionEpoch};
   tools: ToolRegistry;
   /** Long tool output, kept whole for output_read and output_search. */
   keptOutputs?: OutputKeeper;
@@ -58,12 +68,15 @@ export interface SessionOptions {
    */
   areas?: () => ToolArea[];
   emit: (event: AgentEvent) => void;
+  /** Close this emitted run owner only after its native RPC/child has settled. Stop alone never unlocks it. */
+  onRunSettled?: (runId: string) => Promise<void>;
   /**
    * Extra guidance for the model, e.g. how to use the browser. Asked for at
    * the start of each run rather than fixed, so a connection the user
    * switches off stops being described as well as stopping working.
    */
   instructions?: () => string;
+  chatInstructions?: () => string;
   planBeforeRun?: () => boolean;
   modelConfig?: (spec: string) => Partial<ProviderConfig>;
   /**
@@ -92,13 +105,15 @@ export interface SessionOptions {
   onHistory?: (history: ChatMessage[]) => void;
   /** Told the conversation so far after every step of a run, so a crash can't take it. */
   onCheckpoint?: RunOptions["onCheckpoint"];
+  /** Latest task of this conversation, projected from persisted work events. */
+  latestTask?: () => TaskRecord | undefined;
   /** The notes from memory a request is given; an error only means none. */
   recall?: (goal: string) => Promise<{ notes: MemoryNote[]; topic: string[] }>;
   /**
    * Reads what the user brought in with "@", within this many characters
    * between them (see mentions.ts).
    */
-  readMentions?: (refs: MentionRef[], totalChars: number) => RunMention[];
+  readMentions?: (refs: MentionRef[], totalChars: number) => RunMention[] | Promise<RunMention[]>;
   /** The page showing in Vunemi's browser, if any, read as each request is sent. */
   openPage?: () => { title: string; url: string } | null;
   /**
@@ -122,6 +137,7 @@ export interface SessionOptions {
 
 /** A message waiting its turn. */
 export interface QueuedMessage {
+  quotedSource?:QuotedSource;
   id: string;
   text: string;
   /** Files attached to it, already granted for reading. */
@@ -137,6 +153,8 @@ const INTERRUPTED = "[The user interrupted; this tool did not finish.]";
 
 /** What the user wrote in the last few turns: what memory proposals may quote. */
 const WORDS_KEPT = 3;
+type RequestOwner={runId:string;requestId:string};
+type DecisionWait<T>={owner:RequestOwner;resolve:(decision:T)=>void};
 
 /** After a task, past this share of the window, make room for the next. */
 const AFTER_RUN_LIMIT = 0.6;
@@ -155,11 +173,14 @@ export class AgentSession {
   private queue: QueuedMessage[] = [];
   private queueListeners = new Set<(queue: QueuedMessage[]) => void>();
   private nextQueueId = 1;
-  private readonly pending = new Map<string, (d: ApprovalDecision) => void>();
-  private readonly handoffs = new Map<string, (o: HandoffOutcome) => void>();
-  private readonly choices = new Map<string, { card: ChoiceCard; resolve: (answer: ChoiceAnswer) => void }>();
+  private readonly pendingPermissionOffers=new Map<string,TaskPermissionOfferView>();
+  private activePermissionSessionId:string|null=null;
+  private readonly pending = new Map<string, DecisionWait<ApprovalDecision>>();
+  private readonly handoffs = new Map<string, DecisionWait<HandoffOutcome>>();
+  private readonly issuedRequests=new Map<string,RequestOwner>();
+  private readonly choices = new Map<string, { owner:RequestOwner; card: ChoiceCard; resolve: (answer: ChoiceAnswer) => void }>();
   private runId: string | null = null;
-  private pendingPlan: ((d: PlanDecision) => void) | null = null;
+  private pendingPlan: DecisionWait<PlanDecision> | null = null;
   /** Set while paused; resolves on resume. */
   private pauseGate: { promise: Promise<void>; release: () => void } | null = null;
   /** Learned from the model's own token counts; carried from run to run. */
@@ -187,6 +208,14 @@ export class AgentSession {
 
   private readonly emit = (event: AgentEvent): void => {
     if (event.type === "run.started") this.runId = event.runId;
+    if(event.type==='approval.required'||event.type==='handoff.required'||event.type==='plan.proposed'||event.type==='choice.asked'){
+      const owner={runId:event.runId,requestId:randomUUID()};
+      this.issuedRequests.set(this.requestKey(event.type,'callId'in event?event.callId:undefined),owner);
+      event={...event,requestId:owner.requestId};
+    }
+    if(event.type==='run.finished'){
+      this.issuedRequests.clear();this.pending.clear();this.handoffs.clear();this.choices.clear();this.pendingPermissionOffers.clear();this.pendingPlan=null;
+    }
     this.opts.emit(event);
     if (event.type === "run.started" && this.given) {
       this.opts.emit({ type: "memory.given", runId: event.runId, notes: this.given, at: Date.now() });
@@ -197,6 +226,16 @@ export class AgentSession {
       this.lowered = null;
     }
   };
+
+  private requestKey(kind:string,callId?:string):string{return kind+':'+(callId??'');}
+  private takeRequest(kind:string,callId?:string):RequestOwner{
+    const key=this.requestKey(kind,callId),owner=this.issuedRequests.get(key);this.issuedRequests.delete(key);
+    if(!owner||owner.runId!==this.runId||!this.active||this.active.signal.aborted)throw Error('No active approval request.');
+    return owner;
+  }
+  private requestCurrent(owner:RequestOwner|undefined,expected:RequestOwner):boolean{
+    return !!owner&&typeof owner==='object'&&!Array.isArray(owner)&&[Object.prototype,null].includes(Object.getPrototypeOf(owner))&&Object.keys(owner).sort().join(',')==='requestId,runId'&&typeof owner.runId==='string'&&typeof owner.requestId==='string'&&owner.runId===expected.runId&&owner.requestId===expected.requestId&&this.runId===expected.runId&&!!this.active&&!this.active.signal.aborted&&!this.pauseGate;
+  }
 
   /** What the user wrote in the last few turns, for the memory tool's check. */
   userWords(): string[] {
@@ -216,7 +255,7 @@ export class AgentSession {
   // -- the queue -------------------------------------------------------------
 
   get queued(): QueuedMessage[] {
-    return [...this.queue];
+    return this.queue.map(message=>({...message,...(message.quotedSource&&{quotedSource:{...message.quotedSource}})}));
   }
 
   onQueueChange(listener: (queue: QueuedMessage[]) => void): () => void {
@@ -224,40 +263,48 @@ export class AgentSession {
     return () => this.queueListeners.delete(listener);
   }
 
+  private validateQuote(source:unknown):QuotedSource|undefined {
+    if(source===undefined)return undefined;
+    if(!this.opts.validateQuotedSource)throw Error('Quoted source validation unavailable.');
+    return copyQuotedSource(this.opts.validateQuotedSource(copyQuotedSource(source)));
+  }
+
   /**
    * The ordinary way in. Starts straight away when the agent is idle, and
    * otherwise waits its turn — the caller never has to ask which.
    */
-  submit(text: string, model: string, attachments: string[] = [], mentions: MentionRef[] = []): QueuedMessage | null {
+  submit(text: string, model: string, attachments: string[] = [], mentions: MentionRef[] = [], quotedSource?:QuotedSource): QueuedMessage | null {
+    const quote=this.validateQuote(quotedSource);
     const goal = text.trim();
     if (!goal) return null;
     // A message that brings something with it is a request of its own, not a card's answer.
-    if (this.active && attachments.length === 0 && mentions.length === 0) {
+    if (!quote && this.active && attachments.length === 0 && mentions.length === 0) {
       const waiting = [...this.choices].findLast(([, entry]) => entry.card.kind === "choice" && entry.card.allowOther);
-      if (waiting && this.runId && this.resolveChoice(this.runId, waiting[0], { text: goal })) return null;
+      if (waiting && this.runId && this.resolveChoice(this.runId, waiting[0], { text: goal },waiting[1].owner)) return null;
     }
     if (!this.active) {
-      void this.start(goal, model, attachments, { mentions }).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
+      void this.start(goal, model, attachments, { mentions,...(quote&&{quotedSource:quote}) }).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
       return null;
     }
-    const message: QueuedMessage = { id: `q${this.nextQueueId++}`, text: goal, attachments, mentions, model, at: Date.now() };
+    const message: QueuedMessage = { id: `q${this.nextQueueId++}`, text: goal, attachments, mentions, ...(quote&&{quotedSource:quote}), model, at: Date.now() };
     this.queue.push(message);
     this.announce();
-    return message;
+    return {...message,...(quote&&{quotedSource:{...quote}})};
   }
 
   /**
    * "Stop what you're doing and read this." The message goes to the front and
    * the current run is cut; draining then picks it up.
    */
-  steer(text: string, model: string, attachments: string[] = [], mentions: MentionRef[] = []): void {
+  steer(text: string, model: string, attachments: string[] = [], mentions: MentionRef[] = [], quotedSource?:QuotedSource): void {
+    const quote=this.validateQuote(quotedSource);
     const goal = text.trim();
     if (!goal) return;
     if (!this.active) {
-      void this.start(goal, model, attachments, { mentions }).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
+      void this.start(goal, model, attachments, { mentions,...(quote&&{quotedSource:quote}) }).catch((err: unknown) => console.error("[vunemi] run failed to start:", err));
       return;
     }
-    this.queue.unshift({ id: `q${this.nextQueueId++}`, text: goal, attachments, mentions, model, at: Date.now() });
+    this.queue.unshift({ id: `q${this.nextQueueId++}`, text: goal, attachments, mentions, ...(quote&&{quotedSource:quote}), model, at: Date.now() });
     this.announce();
     this.stop();
   }
@@ -301,7 +348,7 @@ export class AgentSession {
     const next = this.queue.shift();
     if (!next) return;
     this.announce();
-    void this.start(next.text, next.model, next.attachments, { mentions: next.mentions }).catch((err: unknown) => {
+    void this.start(next.text, next.model, next.attachments, { mentions: next.mentions,quotedSource:next.quotedSource }).catch((err: unknown) => {
       console.error("[vunemi] queued run failed to start:", err);
     });
   }
@@ -315,12 +362,30 @@ export class AgentSession {
     goal: string,
     modelSpec: string,
     attachments: string[] = [],
-    run: { unattended?: boolean; askBeyondRead?: boolean; waitLimitMs?: number; onlySources?: readonly string[]; mentions?: readonly MentionRef[] } = {},
+    run: { quotedSource?:QuotedSource; resumeTask?: TaskRecord; unattended?: boolean; askBeyondRead?: boolean; waitLimitMs?: number; onlySources?: readonly string[]; mentions?: readonly MentionRef[] } = {},
   ): Promise<RunStatus | null> {
     if (this.active) throw new Error("A run is already in progress.");
+    const quotedSource=this.validateQuote(run.quotedSource);
+    if(quotedSource&&run.resumeTask)throw Error('Quoted questions cannot resume a prior task.');
+    run={...run,...(quotedSource&&{quotedSource})};
+    // Resolve at actual start, also for queued/steered messages after Stop.
+    // A short continuation picks up work; added instructions/files are new work.
+    const continuation=goal.trim().toLocaleLowerCase("tr").replaceAll("ı","i").replaceAll("ğ","g").replace(/[.!?]+$/u,"").replace(/\s+/gu," ");
+    if(!run.quotedSource && !run.resumeTask && !run.unattended && !attachments.length && !run.mentions?.length &&
+       /^(?:devam et|kaldigin yerden devam et|continue|resume|continue where you left off)$/.test(continuation)){
+      const task=this.opts.latestTask?.();
+      if(task && ["stopped","interrupted"].includes(task.status) &&
+         (task.planAccepted || task.operations.some(o=>["completed","unknown"].includes(o.status)&&!isTrackingTool(o.tool))))
+        run={...run,resumeTask:structuredClone(task),askBeyondRead:true};
+    }
+    if(run.resumeTask?.executionMode==='native-recipe'||run.resumeTask?.operations.some(o=>o.tool==='native_recipe_textedit_append_save'))throw Error(t('nativeRecipes.noResume'));
+    const permissionSessionId=this.opts.taskPermissions?.sessionId();
+    this.activePermissionSessionId=permissionSessionId??null;
+    const preparationStartedAt=Date.now();
     const ctrl = new AbortController();
     this.active = ctrl;
     let status: RunStatus | null = null;
+    let ownerRunId: string | null = null;
     /** Waits for the user; past the limit, stops the run rather than act without them. */
     const waitFor = <T>(register: (resolve: (value: T) => void) => void): Promise<T> =>
       new Promise<T>((resolve) => {
@@ -348,14 +413,19 @@ export class AgentSession {
       const openPage = this.opts.openPage?.() ?? null;
       // Read now, not when picked: a queued message brings the item as it is when its turn comes.
       const mentions = run.mentions?.length
-        ? this.opts.readMentions?.([...run.mentions], Math.floor(window * this.charsPerToken * MENTION_SHARE))
+        ? await this.opts.readMentions?.([...run.mentions], Math.floor(window * this.charsPerToken * MENTION_SHARE))
         : undefined;
       // Only a conversation's first request: added later, it would sit in the middle of the history.
       const notesIndex = this.history.length === 0 ? (this.opts.notesIndex?.() ?? null) : null;
       // Not for a scheduled task (nobody asked it about the past), nor beside what the user brought in themselves.
       const library = run.unattended || run.mentions?.length ? null : await this.opts.libraryIndex?.(goal, this.libraryGiven).catch(() => null) ?? null;
+      // Model/library preparation can await: the conversation may have changed meanwhile.
+      if(quotedSource)this.validateQuote(quotedSource);
       const result = await runAgent({
+        ...(this.opts.taskPermissions&&permissionSessionId&&{taskPermissions:{store:this.opts.taskPermissions.store,sessionId:permissionSessionId,epoch:this.opts.taskPermissions.epoch}}),
         goal,
+        ...(quotedSource&&{quotedSource}),
+        preparationStartedAt,
         ...(openPage && { openPage }),
         ...(undone.length > 0 && { undone }),
         ...(memory.length > 0 && { memory }),
@@ -368,9 +438,16 @@ export class AgentSession {
         charsPerToken: this.charsPerToken,
         tools: this.opts.tools,
         ...(this.opts.keptOutputs && { keptOutputs: this.opts.keptOutputs }),
-        emit: this.emit,
+        emit: event => {
+          if (event.type === "run.started") ownerRunId = event.runId;
+          this.emit(event);
+        },
         history: this.history,
         ...(this.opts.instructions && { instructions: this.opts.instructions() }),
+        lightChat: true,
+        compactTaskTools: true,
+        automaticOutputChecks: true,
+        ...(this.opts.chatInstructions && { chatInstructions: this.opts.chatInstructions() }),
         planEveryTask: this.opts.planBeforeRun?.() === true,
         maxSteps: 30,
         sessionGrants: this.opts.grants,
@@ -389,14 +466,15 @@ export class AgentSession {
         ...(run.unattended && { unattended: true }),
         ...(run.onlySources && { onlySources: run.onlySources }),
         ...(run.askBeyondRead && { askBeyondRead: true }),
+        ...(run.resumeTask && { resumeTask: run.resumeTask }),
         ...(this.opts.onCheckpoint && { onCheckpoint: this.opts.onCheckpoint }),
-        requestApproval: (req) => waitFor<ApprovalDecision>((resolve) => this.pending.set(req.callId, resolve)),
-        requestChoice: (req) => waitFor<ChoiceAnswer>((resolve) => this.choices.set(req.callId, { card: req.card, resolve })),
-        requestHandoff: (req) => waitFor<HandoffOutcome>((resolve) => this.handoffs.set(req.callId, resolve)),
+        requestApproval: (req) => waitFor<ApprovalDecision>((resolve) => {const owner=this.takeRequest('approval.required',req.callId);if(req.taskPermissionOffer)this.pendingPermissionOffers.set(req.callId,req.taskPermissionOffer);this.pending.set(req.callId,{owner,resolve});}),
+        requestChoice: (req) => waitFor<ChoiceAnswer>((resolve) => this.choices.set(req.callId, { owner:this.takeRequest('choice.asked',req.callId),card: req.card, resolve })),
+        requestHandoff: (req) => waitFor<HandoffOutcome>((resolve) => this.handoffs.set(req.callId,{owner:this.takeRequest('handoff.required',req.callId),resolve})),
         requestPlanApproval: (steps) =>
           waitFor<PlanDecision>((resolve) => {
             void steps;
-            this.pendingPlan = resolve;
+            this.pendingPlan = {owner:this.takeRequest('plan.proposed'),resolve};
           }),
       });
       status = result.status;
@@ -422,27 +500,51 @@ export class AgentSession {
       // Nobody watches a scheduled task to answer a card under it.
       if (result.status === "done" && !run.unattended) this.opts.afterRun?.({ runId: result.runId, model, words: [...this.words] });
     } finally {
-      this.given = null;
-      this.pending.clear();
-      this.handoffs.clear();
-      this.choices.clear();
-      this.pendingPlan = null;
-      this.pauseGate?.release();
-      this.pauseGate = null;
-      this.runId = null;
-      this.active = null;
-      // After this run's own caller has had its turn, not inside it.
-      setTimeout(() => this.drain(), 0);
+      this.opts.taskPermissions?.store.expire("run-ended");
+      try {
+        // run.finished (and Stop) can precede a native child exiting. Keep the
+        // session busy and its queue waiting until the owner boundary settles.
+        if (ownerRunId) await this.opts.onRunSettled?.(ownerRunId);
+      } finally {
+        this.given = null;
+        this.pending.clear();
+        this.issuedRequests.clear();
+        this.pendingPermissionOffers.clear();
+        this.activePermissionSessionId=null;
+        this.handoffs.clear();
+        this.choices.clear();
+        this.pendingPlan = null;
+        this.pauseGate?.release();
+        this.pauseGate = null;
+        this.runId = null;
+        this.active = null;
+        this.opts.onStateChanged?.();
+        // After this run's own caller has had its turn, not inside it.
+        setTimeout(() => this.drain(), 0);
+      }
     }
     return status;
   }
 
+  private nativeRecipeActive=false;
+  async startNativeRecipe(req:{runId:string;goal:string;execute(signal:AbortSignal,emit:(e:AgentEvent)=>void):Promise<RunStatus>}):Promise<RunStatus>{
+    if(this.active||this.queue.length)throw Error('Session is busy');
+    const active=new AbortController();this.active=active;this.nativeRecipeActive=true;
+    this.emit({type:'run.started',runId:req.runId,goal:req.goal,model:'recipe:textedit.append-save.v1',executionMode:'native-recipe',at:Date.now()});
+    let status:RunStatus='failed';
+    try{status=await req.execute(active.signal,this.emit);if(active.signal.aborted)status='stopped';return status;}
+    finally{try{await this.opts.onRunSettled?.(req.runId);}finally{
+      this.emit({type:'run.finished',runId:req.runId,status,detail:t(status==='done'?'nativeRecipes.slotStatus.verified':'nativeRecipes.title'),at:Date.now()});this.runId=null;this.active=null;this.nativeRecipeActive=false;this.opts.onStateChanged?.();setTimeout(()=>this.drain(),0);
+    }}
+  }
+
   stop(): void {
+    this.opts.taskPermissions?.store.expire("stopped");
     this.active?.abort();
   }
 
   private model(spec: string): ChatModel {
-    return createModel(spec, this.opts.modelConfig?.(spec));
+    return this.opts.modelFactory?.(spec) ?? createModel(spec, this.opts.modelConfig?.(spec));
   }
 
   /** The model's context length changed; ask its server again next time. */
@@ -473,7 +575,7 @@ export class AgentSession {
   /** What every request carries besides the conversation, as the next run would send it. */
   private fixed(): { system: string; tools: ToolSpec[] } {
     const instructions = this.opts.instructions?.();
-    if (this.opts.areas && this.shownTools.size > 0) return listedRequest(this.opts.tools, this.opts.areas(), this.shownTools, instructions, this.offerable);
+    if (this.opts.areas && this.shownTools.size > 0) return listedRequest(this.opts.tools, this.opts.areas(), this.shownTools, instructions, this.offerable, undefined, true);
     return { system: systemPrompt(instructions), tools: toolSpecsOf(this.opts.tools, this.openedTools, this.offerable) };
   }
 
@@ -563,7 +665,7 @@ export class AgentSession {
       });
       this.opts.onHistory?.(this.history);
     } finally {
-      if (this.active === ctrl) this.active = null;
+      if (this.active === ctrl) {this.active = null;this.opts.onStateChanged?.();}
     }
   }
 
@@ -573,6 +675,7 @@ export class AgentSession {
 
   /** Holds the run at its next safe point (before the next model call or tool). */
   pause(): void {
+    if(this.nativeRecipeActive){this.stop();return;}
     if (!this.active || this.pauseGate || !this.runId) return;
     let release!: () => void;
     const promise = new Promise<void>((r) => (release = r));
@@ -588,24 +691,54 @@ export class AgentSession {
     gate.release();
   }
 
-  resolveApproval(callId: string, decision: ApprovalDecision): void {
-    const resolve = this.pending.get(callId);
-    if (!resolve) return; // already resolved, or the run ended
-    this.pending.delete(callId);
-    resolve(decision);
+  private permissionOwner(sessionId:string,runId:string|null):TaskPermissionStore {
+    const config=this.opts.taskPermissions;
+    if(!config||sessionId!==config.sessionId())throw new Error('Task permission session changed.');
+    const snapshot=config.store.snapshot();
+    if(snapshot.sessionId!==sessionId||snapshot.runId!==runId)throw new Error('Task permission run changed.');
+    return config.store;
+  }
+  resolveTaskApproval(request:{sessionId:string;runId:string;callId:string;decision:{kind:'approve_run';offerId:string;offerRevision:number}}):void {
+    const store=this.permissionOwner(request.sessionId,request.runId);
+    const offer=this.pendingPermissionOffers.get(request.callId),pending=this.pending.get(request.callId);
+    if(!pending||!this.requestCurrent(pending.owner,pending.owner)||this.activePermissionSessionId!==request.sessionId||this.runId!==request.runId||!offer||offer.offerId!==request.decision.offerId||offer.revision!==request.decision.offerRevision)throw new Error('Stale or foreign scoped approval.');
+    if(!store.canApprove(offer.offerId,offer.revision,{sessionId:request.sessionId,taskId:offer.taskId,runId:request.runId},request.callId))throw new Error('Expired or revoked scoped approval.');
+    this.pendingPermissionOffers.delete(request.callId);this.pending.delete(request.callId);pending.resolve(request.decision);
+  }
+  listTaskPermissions(request:{sessionId:string;runId:string|null}):TaskPermissionsSnapshot{
+    const config=this.opts.taskPermissions;
+    if(!config||request.sessionId!==config.sessionId())throw new Error('Task permission session changed.');
+    if(request.runId===null){
+      if(this.active&&this.runId)throw new Error('A run is active.');
+      const snapshot=config.store.snapshot();
+      return {revision:snapshot.revision,sessionId:request.sessionId,runId:null,grants:snapshot.sessionId===request.sessionId?snapshot.grants.filter(g=>g.status!=='active'):[]};
+    }
+    return this.permissionOwner(request.sessionId,request.runId).snapshot();
+  }
+  revokeTaskPermission(request:TaskPermissionRevokeRequest):TaskPermissionsSnapshot{return this.permissionOwner(request.sessionId,request.runId).revoke(request);}
+
+  /** A preview/adjustment may check ownership without consuming the decision. */
+  canResolveApproval(callId:string,owner:RequestOwner):boolean{
+    const pending=this.pending.get(callId);return !!pending&&this.requestCurrent(owner,pending.owner);
+  }
+  resolveApproval(callId: string, decision: ApprovalDecision,owner:RequestOwner): boolean {
+    if(decision?.kind==="approve_run")throw new Error("Scoped approvals require the scoped channel.");
+    if(!decision||typeof decision!=='object'||Array.isArray(decision)||![Object.prototype,null].includes(Object.getPrototypeOf(decision))||!['approve','approve_always','reject'].includes(decision.kind)||Object.keys(decision).some(key=>key!=='kind'&&(decision.kind!=='reject'||key!=='note'))||decision.kind==='reject'&&decision.note!==undefined&&(typeof decision.note!=='string'||decision.note.length>1000))return false;
+    const pending=this.pending.get(callId);if(!pending||!this.canResolveApproval(callId,owner))return false;
+    this.pendingPermissionOffers.delete(callId);this.pending.delete(callId);pending.resolve(decision);return true;
   }
 
-  resolveHandoff(callId: string, outcome: HandoffOutcome): void {
-    const resolve = this.handoffs.get(callId);
-    if (!resolve) return;
-    this.handoffs.delete(callId);
-    resolve(outcome);
+  resolveHandoff(callId: string, outcome: HandoffOutcome,owner:RequestOwner): boolean {
+    if(outcome!=='done'&&outcome!=='cancelled')return false;
+    const pending=this.handoffs.get(callId);if(!pending||!this.requestCurrent(owner,pending.owner))return false;
+    this.handoffs.delete(callId);pending.resolve(outcome);return true;
   }
 
   /** A second click or a stale card cannot answer the same wait again. */
-  resolveChoice(runId: string, callId: string, answer: ChoiceAnswer): boolean {
+  resolveChoice(runId: string, callId: string, answer: ChoiceAnswer,owner:RequestOwner): boolean {
     const entry = this.choices.get(callId);
-    if (!entry || runId !== this.runId || !this.active || this.active.signal.aborted) return false;
+    if (!entry || runId !== this.runId || !this.requestCurrent(owner,entry.owner)) return false;
+    if(!answer||typeof answer!=='object'||Array.isArray(answer)||typeof answer.text!=='string'||Object.keys(answer).some(key=>key!=='index'&&key!=='text'))return false;
     const index = answer.index;
     if (index !== undefined && (!Number.isInteger(index) || index < 0 || index >= (entry.card.kind === "choice" ? entry.card.options.length : entry.card.items.length))) return false;
     if (index === undefined && (entry.card.kind !== "choice" || !entry.card.allowOther || !answer.text.trim())) return false;
@@ -615,11 +748,11 @@ export class AgentSession {
     return true;
   }
 
-  resolvePlan(decision: PlanDecision): void {
-    const resolve = this.pendingPlan;
-    if (!resolve) return;
-    this.pendingPlan = null;
-    resolve(decision);
+  resolvePlan(decision: PlanDecision,owner:RequestOwner): boolean {
+    if(!decision||typeof decision!=='object'||Array.isArray(decision)||![Object.prototype,null].includes(Object.getPrototypeOf(decision))||decision.kind!=='go'&&decision.kind!=='cancel')return false;
+    if(Object.keys(decision).some(key=>key!=='kind'&&(decision.kind!=='go'||key!=='steps'))||decision.kind==='go'&&(!Array.isArray(decision.steps)||!decision.steps.length||decision.steps.length>12||decision.steps.some(step=>typeof step!=='string'||!step.trim()||step.length>1000)))return false;
+    const pending=this.pendingPlan;if(!pending||!this.requestCurrent(owner,pending.owner))return false;
+    this.pendingPlan=null;pending.resolve(decision);return true;
   }
 
   reset(): void {
@@ -628,6 +761,7 @@ export class AgentSession {
 
   /** Continues another conversation. Not while a task runs: its events would land in the wrong one. */
   load(history: ChatMessage[]): void {
+    this.opts.taskPermissions?.store.expire("session-changed");
     if (this.active) throw new Error(t("main.stopFirst"));
     this.clearQueue();
     this.history = [...history];

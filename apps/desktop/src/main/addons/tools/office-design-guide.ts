@@ -1,0 +1,2 @@
+/** Guidance for new documents or an explicitly requested redesign; never a mandate to restyle an existing file. */
+export const OFFICE_DOCUMENT_DESIGN = `For new reports, use distinct descriptive table headers (Item / Value), a clear total row, modest row spacing and aligned numbers with consistent supplied precision. Keep source values and formulas intact; never infer a currency. Do not add unsolicited process notes such as "no currency was added" to the document. Preserve surrounding text styles during edits. Redesign an existing document only when requested.`;

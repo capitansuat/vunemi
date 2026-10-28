@@ -202,7 +202,7 @@ describe("foldEvent", () => {
       { type: "run.finished", runId: "r", status: "stopped", detail: "Stopped by user.", at: 9 },
     ]);
     expect(run!.status).toBe("stopped");
-    expect(run!.steps[0]!.calls[0]!.status).toBe("rejected");
+    expect(run!.steps[0]!.calls[0]!.status).toBe("cancelled");
   });
 
   it("only touches the run an event belongs to", () => {
@@ -245,6 +245,30 @@ describe("tool output", () => {
 });
 
 describe("runStats", () => {
+  it.each([16382,null])("does not replace the first request latency with its output review (initial=%s)",ttftMs=>{
+    const [run]=fold([...start,
+      {type:"usage",runId:"r",stepId:"s0",promptTokens:5087,completionTokens:200,ttftMs,tokensPerSec:35},
+      {type:"usage",runId:"r",stepId:"s0",promptTokens:962,completionTokens:300,ttftMs:3600,tokensPerSec:31},
+    ]);
+    expect(runStats(run!).ttftMs).toBe(ttftMs);
+    expect(runStats(run!).lastPromptTokens).toBe(962);
+  });
+  it("reports executor latency separately from resume preflight review", () => {
+    const [run]=fold([...start,
+      {type:"step.started",runId:"r",stepId:"r.preflight0",index:0,at:1},
+      {type:"usage",runId:"r",stepId:"r.preflight0",promptTokens:900,completionTokens:200,ttftMs:69,tokensPerSec:30},
+      {type:"step.started",runId:"r",stepId:"r.s0",index:0,at:2},
+      {type:"usage",runId:"r",stepId:"r.s0",promptTokens:5000,completionTokens:200,ttftMs:15000,tokensPerSec:35},
+    ]);
+    expect(runStats(run!).ttftMs).toBe(15000);
+  });
+  it("leaves executor latency unknown when preflight completes the whole task", () => {
+    const [run]=fold([...start,
+      {type:"step.started",runId:"r",stepId:"r.preflight0",index:0,at:1},
+      {type:"usage",runId:"r",stepId:"r.preflight0",promptTokens:900,completionTokens:200,ttftMs:69,tokensPerSec:30},
+    ]);
+    expect(runStats(run!).ttftMs).toBeNull();
+  });
   it("averages throughput and reports first-token latency", () => {
     const [run] = fold([
       ...start,
@@ -345,4 +369,13 @@ describe("a shorter context", () => {
     runs = foldEvent(runs, { type: "model.context", runId: "r", context: 16_384, wanted: 32_768, tight: false, at: 1 });
     expect(runs[0]!.lowered).toEqual({ context: 16_384, wanted: 32_768, tight: false });
   });
+});
+
+it("shows a started call without a result as uncertain rather than user rejection", () => {
+  const [run] = fold([...start, { type: "tool.proposed", runId: "r", stepId: "s0", callId: "c", tool: "write", args: {}, actionClass: "write-local" }, { type: "tool.started", runId: "r", callId: "c", at: 2 }, { type: "run.finished", runId: "r", status: "stopped", detail: "Closed", at: 3 }]);
+  expect(run?.steps[0]?.calls[0]?.status).toBe("interrupted");
+});
+it("shows an unstarted approval wait as cancelled when the run ends", () => {
+  const [run] = fold([...start, { type: "tool.proposed", runId: "r", stepId: "s0", callId: "c", tool: "write", args: {}, actionClass: "write-local" }, { type: "approval.required", runId: "r", stepId: "s0", callId: "c", tool: "write", args: {}, actionClass: "write-local", reason: "Approve" }, { type: "run.finished", runId: "r", status: "stopped", detail: "Stopped", at: 3 }]);
+  expect(run?.steps[0]?.calls[0]?.status).toBe("cancelled");
 });

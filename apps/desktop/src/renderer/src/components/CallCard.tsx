@@ -1,3 +1,6 @@
+import { currentPermissionOffer, permissionTarget } from "../lib/task-permissions.js";
+import { BackgroundCapabilitiesCard } from "./BackgroundCapabilitiesCard.js";
+import { parseBackgroundCapabilities } from "../lib/background-capabilities.js";
 import { useEffect, useState } from "react";
 import {
   Ban,
@@ -19,7 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ActionClass } from "@vunemi/agent-core";
-import type { CallView } from "../lib/fold.js";
+import { currentActionOwner, type CallView } from "../lib/fold.js";
 import { actionClassLabel, callDetail, callStatusLabel, formatMs, toolLabel } from "../lib/labels.js";
 import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
@@ -43,17 +46,20 @@ const CLASS_TONE: Record<ActionClass, string> = {
   financial: "text-danger",
 };
 
-export function CallCard({ call }: { call: CallView }) {
-  if (call.status === "awaiting") return call.tool === "automation_create" ? <AutomationSetupCard call={call} /> : <ApprovalCard call={call} />;
-  if (call.handoff) return <HandoffCard call={call} reason={call.handoff} />;
-  return <CallRow call={call} />;
+export function CallCard({ call, showFiles = true, showCapabilities = true, readOnly = false, waitingFor }: { waitingFor?: "approval"|"handoff"; readOnly?: boolean; call: CallView; showFiles?: boolean; showCapabilities?: boolean }) {
+  readOnly=readOnly||!call.requestId;
+  if (!readOnly && waitingFor === "handoff" && call.handoff) return <HandoffCard call={call} reason={call.handoff} />;
+  if (!readOnly && call.status === "awaiting") return call.tool === "automation_create" ? <AutomationSetupCard call={call} /> : <ApprovalCard key={`${call.callId}:${call.taskPermissionOffer?.offerId}:${call.taskPermissionOffer?.revision}`} call={call} />;
+  if (!readOnly && call.handoff) return <HandoffCard call={call} reason={call.handoff} />;
+  return <><CallRow call={call} showFiles={showFiles} showCapabilities={showCapabilities} />{readOnly&&call.handoff&&<p className="selectable text-[12px] text-muted">{call.handoff}</p>}</>;
 }
 
-function CallRow({ call }: { call: CallView }) {
+function CallRow({ call, showFiles, showCapabilities }: { call: CallView; showFiles: boolean; showCapabilities: boolean }) {
   const [open, setOpen] = useState(false);
   const Icon = CLASS_ICON[call.actionClass];
   const hasDetail = hasArgs(call.args) || Boolean(call.output);
   const detail = callDetail(call);
+  const capabilities = showCapabilities ? parseBackgroundCapabilities(call) : null;
 
   return (
     <div className="overflow-hidden rounded-lg border border-line bg-surface">
@@ -76,6 +82,7 @@ function CallRow({ call }: { call: CallView }) {
           <ChevronRight size={13} className={`shrink-0 text-faint transition-transform ${open ? "rotate-90" : ""}`} />
         )}
       </button>
+      {capabilities && <div className="border-t border-line px-3 py-2"><BackgroundCapabilitiesCard capabilities={capabilities} /></div>}
       {call.status === "error" && call.output && (
         <p className="selectable border-t border-line px-3 py-2 text-[12px] leading-snug text-danger">
           {call.output.replace(/^Error:\s*/, "")}
@@ -89,7 +96,7 @@ function CallRow({ call }: { call: CallView }) {
       )}
       {call.artifact && <Shot artifact={call.artifact} />}
       {call.gallery && call.gallery.length > 0 && <Gallery pictures={call.gallery} />}
-      {call.files && call.files.length > 0 && <Files files={call.files} />}
+      {showFiles && call.files && call.files.length > 0 && <Files files={call.files} />}
       <TravelOptionsCard call={call} />
       {open && (
         <div className="selectable space-y-2.5 border-t border-line bg-surface-2/60 px-3 py-2.5">
@@ -109,12 +116,15 @@ function CallRow({ call }: { call: CallView }) {
  * the model's own words; without it, or if the summary can't be had, on the
  * card as before.
  */
-function AutomationSetupCard({ call }: { call: CallView }) {
+export function AutomationSetupCard({ call }: { call: CallView }) {
   const decide = useStore((s) => s.decide);
+  const renderedOwner=currentActionOwner(useStore.getState(),'approval',call);
+  const current=()=>renderedOwner?currentActionOwner(useStore.getState(),'approval',call,renderedOwner):undefined;
   // undefined while it is asked for; null when there is none.
   const [view, setView] = useState<SetupView | null | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expired,setExpired]=useState(false);
 
   useEffect(() => {
     let live = true;
@@ -128,16 +138,27 @@ function AutomationSetupCard({ call }: { call: CallView }) {
   }, [call.args]);
 
   if (view === undefined) return null;
-  if (view === null) return <ApprovalCard call={call} />;
+  if (view === null) return <ApprovalCard key={`${call.callId}:${call.taskPermissionOffer?.offerId}:${call.taskPermissionOffer?.revision}`} call={call} />;
 
+  let sending=false;
   const install = async (when?: { time: string; days: number[] }) => {
+    const owner=current();if(!owner||busy||expired||sending)return;
+    sending=true;
     setBusy(true);
     setError(null);
     try {
       // Kept by the main process and used when the approved call runs.
-      if (when) await window.vunemi.adjustAutomation(call.args, when);
-      await decide(call.callId, { kind: "approve" });
+      if (when){
+        const adjusted=await window.vunemi.adjustAutomation(call.args, when,call.callId,owner);
+        if(!current())return;
+        if(!adjusted){setExpired(true);setBusy(false);return;}
+      }
+      if(!current())return;
+      const accepted=await decide(call.callId, { kind: "approve" },owner);
+      if(!current())return;
+      if(!accepted){setExpired(true);setBusy(false);}
     } catch (e) {
+      if(!current())return;
       setError(e instanceof Error ? e.message : String(e));
       setBusy(false);
     }
@@ -148,25 +169,52 @@ function AutomationSetupCard({ call }: { call: CallView }) {
       <SetupSummary
         view={view}
         error={error}
-        busy={busy}
+        busy={busy||expired}
         onInstall={(when) => void install(when)}
         onCancel={() => {
-          setBusy(true);
-          void decide(call.callId, { kind: "reject" });
+          const owner=current();if(!owner||busy||expired||sending)return;
+          sending=true;
+          setBusy(true);setError(null);
+          void decide(call.callId, { kind: "reject" },owner).then(ok=>{if(!current())return;if(!ok){setExpired(true);setBusy(false);}}).catch(e=>{if(!current())return;setError(e instanceof Error?e.message:String(e));setBusy(false);});
         }}
       />
+      {expired&&<p role="status">{callStatusLabel('cancelled')}</p>}
     </div>
   );
 }
 
-function ApprovalCard({ call }: { call: CallView }) {
+export function ApprovalCard({ call }: { call: CallView }) {
+  const renderedOwner=currentActionOwner(useStore.getState(),'approval',call);
+  const current=()=>renderedOwner?currentActionOwner(useStore.getState(),'approval',call,renderedOwner):undefined;
+  const offer=useStore(s=>currentPermissionOffer(s,call));
+  const [scope,setScope]=useState<"once"|"run">("once");
   const decide = useStore((s) => s.decide);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expired,setExpired]=useState(false);
   const Icon = CLASS_ICON[call.actionClass];
+  const args = call.args && typeof call.args === "object" ? call.args as Record<string, unknown> : {};
+  const exports = Array.isArray(args.outputs) ? args.outputs.flatMap(value =>
+    value && typeof value === "object" && typeof (value as Record<string, unknown>).path === "string" ? [(value as Record<string, unknown>).path] : []) : [];
+  const target = [args.app, args.windowTitle, ...(exports.length ? exports : [args.out ?? args.path]), args.account, args.to]
+    .flatMap(v => typeof v === "string" ? [v] : Array.isArray(v) ? v.filter((s): s is string => typeof s === "string") : [])
+    .join(" · ");
 
+  let sending=false;
   const act = (kind: "approve" | "approve_always" | "reject") => {
+    const owner=current();
+    if(!owner||busy||expired||sending)return;
+    if(kind==="approve"&&scope==="run"&&!offer)return;
+    sending=true;
     setBusy(true);
-    void decide(call.callId, kind === "reject" ? { kind } : { kind });
+    setError(null);
+    const scoped=kind==="approve"&&scope==="run"&&offer;
+    const pending=scoped ? useStore.getState().approveTaskPermission(call.callId,offer!) : decide(call.callId, { kind },owner);
+    void pending.then(ok=>{if(!current())return;if(!scoped&&ok===false){setExpired(true);setBusy(false);}}).catch((e: unknown) => {
+      if(!current())return;
+      setBusy(false);
+      setError(e instanceof Error ? e.message : String(e));
+    });
   };
 
   return (
@@ -180,6 +228,7 @@ function ApprovalCard({ call }: { call: CallView }) {
         </span>
       </div>
       <p className="mt-2 text-[14px] font-medium text-fg">{toolLabel(call.tool, "awaiting")}</p>
+      {target && <p className="selectable mt-1 break-words text-[13px] text-muted"><span className="font-medium">{t("approvalContext.target")}:</span> {target}</p>}
       {call.switchedOff && call.reason && <p className="mt-1 text-[12.5px] leading-snug text-muted">{call.reason}</p>}
       {call.alert && call.reason && (
         <p className="selectable mt-2 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-[12.5px] leading-snug text-fg">
@@ -188,27 +237,35 @@ function ApprovalCard({ call }: { call: CallView }) {
         </p>
       )}
       {call.preview ? (
-        <p className="selectable mt-2 break-words rounded-lg bg-surface/70 px-3 py-2 font-mono text-[12.5px] text-fg">
-          {call.preview}
-        </p>
+        <div className="mt-2 rounded-lg bg-surface/70 px-3 py-2"><p className="text-[12px] font-medium text-muted">{t("approvalContext.change")}</p><p className="selectable mt-1 whitespace-pre-wrap break-words text-[13px] text-fg">{call.preview}</p></div>
       ) : (
         hasArgs(call.args) && <ArgsPreview args={call.args} />
       )}
       {call.tool === "shortcuts_run" && <ShowShortcut args={call.args} />}
+      {offer && <fieldset disabled={busy||expired||!call.requestId} className="mt-3 space-y-2 text-[12px] text-fg">
+        <legend className="mb-1 font-medium">{t("taskPermissions.scopeLegend")}</legend>
+        <label className="flex items-start gap-2"><input type="radio" name={`scope-${call.callId}`} checked={scope==="once"} onChange={()=>setScope("once")} />{t("taskPermissions.once")}</label>
+        <label className="flex items-start gap-2"><input type="radio" name={`scope-${call.callId}`} checked={scope==="run"} onChange={()=>setScope("run")} />{t(offer.effect==='file-read'?"taskPermissions.fileOffer":"taskPermissions.windowOffer")}</label>
+        <p className="selectable break-words text-muted"><bdi>{permissionTarget(offer.target)}</bdi></p>
+        {offer.effect==='file-read'&&<p className="text-muted">{t("taskPermissions.fileSameVersion")}</p>}
+      </fieldset>}
+      <p className="mt-2 text-[12px] leading-relaxed text-muted">{t("approvalContext.once")}</p>
+      {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
+      {expired&&<p role="status">{callStatusLabel('cancelled')}</p>}
       <div className="mt-3 flex flex-wrap gap-2">
         {/* No autoFocus: a stray Enter while typing must never grant an action. */}
         <button
           type="button"
-          disabled={busy}
+          disabled={busy||expired||!call.requestId}
           onClick={() => act("approve")}
           className="rounded-lg bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {call.switchedOff ? t("call.switchOnce") : t("call.approve")}
         </button>
-        {(call.switchedOff || !call.alwaysAsk) && (
+        {call.switchedOff && (
           <button
             type="button"
-            disabled={busy}
+            disabled={busy||expired||!call.requestId}
             onClick={() => act("approve_always")}
             className="rounded-lg border border-line-strong bg-surface px-3.5 py-1.5 text-[13px] text-fg transition-colors hover:bg-surface-2 disabled:opacity-50"
           >
@@ -217,7 +274,7 @@ function ApprovalCard({ call }: { call: CallView }) {
         )}
         <button
           type="button"
-          disabled={busy}
+          disabled={busy||expired||!call.requestId}
           onClick={() => act("reject")}
           className="rounded-lg px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:bg-surface hover:text-fg disabled:opacity-50"
         >
@@ -356,12 +413,19 @@ function Shot({ artifact }: { artifact: { path: string; label?: string } }) {
   );
 }
 
-function HandoffCard({ call, reason }: { call: CallView; reason: string }) {
+export function HandoffCard({ call, reason }: { call: CallView; reason: string }) {
+  const renderedOwner=currentActionOwner(useStore.getState(),'handoff',call);
+  const current=()=>renderedOwner?currentActionOwner(useStore.getState(),'handoff',call,renderedOwner):undefined;
   const resolve = useStore((s) => s.resolveHandoff);
   const [busy, setBusy] = useState(false);
+  const [error,setError]=useState<string|null>(null),[expired,setExpired]=useState(false);
+  let sending=false;
   const act = (outcome: "done" | "cancelled") => {
+    const owner=current();if(!owner||busy||expired||sending)return;
+    sending=true;
     setBusy(true);
-    void resolve(call.callId, outcome);
+    setError(null);
+    void resolve(call.callId, outcome,owner).then(ok=>{if(!current())return;if(!ok){setExpired(true);setBusy(false);}}).catch(e=>{if(!current())return;setError(e instanceof Error?e.message:String(e));setBusy(false);});
   };
 
   return (
@@ -371,10 +435,12 @@ function HandoffCard({ call, reason }: { call: CallView; reason: string }) {
         {t("call.yourTurn")}
       </div>
       <p className="selectable mt-2 text-[14px] leading-snug text-fg">{reason}</p>
+      {error&&<p role="alert">{error}</p>}
+      {expired&&<p role="status">{callStatusLabel('cancelled')}</p>}
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={busy}
+          disabled={busy||expired||!call.requestId}
           onClick={() => act("done")}
           className="rounded-lg bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
         >
@@ -382,7 +448,7 @@ function HandoffCard({ call, reason }: { call: CallView; reason: string }) {
         </button>
         <button
           type="button"
-          disabled={busy}
+          disabled={busy||expired||!call.requestId}
           onClick={() => act("cancelled")}
           className="rounded-lg px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:bg-surface hover:text-fg disabled:opacity-50"
         >
@@ -407,6 +473,9 @@ function StatusGlyph({ call }: { call: CallView }) {
           <TriangleAlert size={12} /> {label}
         </span>
       );
+    case "interrupted":
+      return <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted"><TriangleAlert size={12} className="text-warn" />{label}</span>;
+    case "cancelled":
     case "rejected":
       return (
         <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-muted">

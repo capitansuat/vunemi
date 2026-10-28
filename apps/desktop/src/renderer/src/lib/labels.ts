@@ -10,7 +10,7 @@ export function actionClassLabel(actionClass: ActionClass): string {
 
 export function toolLabel(tool: string, status: CallStatus): string {
   const key = `tools.${tool}.${status === "ok" ? "done" : status === "awaiting" ? "ask" : "doing"}`;
-  return has(key) ? t(key) : tool;
+  return has(key) ? t(key) : t(`toolActivity.${status === 'ok' ? 'done' : status === 'awaiting' ? 'ask' : 'doing'}`);
 }
 
 /** A short "what exactly" for a call's row: the preview, or the key argument. */

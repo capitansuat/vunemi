@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AudioLines, Hand, ListChecks, Loader, Mic, ShieldQuestion, Volume2, X } from "lucide-react";
-import { pendingApprovals, pendingHandoff, planAwaiting } from "../lib/fold.js";
+import { activeTurnAction, currentActionOwner, pendingApprovals, pendingHandoff, planAwaiting } from "../lib/fold.js";
 import { useStore, type VoiceState } from "../store.js";
 import { t } from "@vunemi/i18n";
 
@@ -26,6 +26,9 @@ export function VoiceBar() {
   const runs = useStore((s) => s.runs);
 
   const handoff = pendingHandoff(runs);
+  const active=useStore((s)=>s.activeRun);
+  const actionRun=runs.find(r=>r.runId===active?.runId),action=actionRun&&activeTurnAction(actionRun,true);
+  const trailerKey=action?.kind==='handoff'?`${active?.runId}:${action.call.requestId}`:active?.runId??'none';
   const approvals = pendingApprovals(runs);
   const plan = planAwaiting(runs);
   const phase: Phase = handoff
@@ -63,7 +66,7 @@ export function VoiceBar() {
       ) : (
         <Shimmer phase={phase} />
       )}
-      <Trailer phase={phase} handoffId={handoff?.callId ?? null} />
+      <Trailer key={trailerKey} phase={phase} handoffId={handoff?.callId ?? null} />
     </div>
   );
 }
@@ -157,20 +160,36 @@ function Trailer({ phase, handoffId }: { phase: Phase; handoffId: string | null 
   const { finishListening, cancelListening, stopTalking, resolveHandoff } = useStore();
   const handsFree = useStore((s) => s.voice.handsFree);
   const hold = useStore((s) => s.voice.hold);
+  const current=useStore.getState(),run=current.runs.find(r=>r.runId===current.activeRun?.runId),action=run&&activeTurnAction(run,true);
+  const captured=action?.kind==='handoff'?action.call:null;
+  const renderedOwner=captured?currentActionOwner(current,'handoff',captured):undefined;
+  const [decisionError,setDecisionError]=useState('');
+  const [decisionBusy,setDecisionBusy]=useState(false);
+  const decisionSent=useRef(false);
+  const act=async(outcome:'done'|'cancelled')=>{
+   if(!captured||captured.callId!==handoffId||decisionBusy||decisionSent.current)return;
+   const owner=renderedOwner&&currentActionOwner(useStore.getState(),'handoff',captured,renderedOwner);if(!owner)return;
+   decisionSent.current=true;setDecisionBusy(true);setDecisionError('');
+   try{const ok=await resolveHandoff(handoffId!,outcome,owner);if(!ok&&currentActionOwner(useStore.getState(),'handoff',captured,owner))setDecisionError(t('callStatus.cancelled'));}
+   catch(e){if(currentActionOwner(useStore.getState(),'handoff',captured,owner)){setDecisionError(String(e));setDecisionBusy(false);decisionSent.current=false;}}
+  };
 
   if (phase === "handoff" && handoffId) {
     return (
       <div className="flex shrink-0 items-center gap-1.5">
+        {decisionError&&<span role="alert">{decisionError}</span>}
         <button
           type="button"
-          onClick={() => void resolveHandoff(handoffId, "done")}
+          disabled={decisionBusy}
+          onClick={() => void act("done")}
           className="rounded-md bg-ember px-2.5 py-1 text-[11.5px] font-medium text-white transition-opacity hover:opacity-90"
         >
           {t("call.doneContinue")}
         </button>
         <button
           type="button"
-          onClick={() => void resolveHandoff(handoffId, "cancelled")}
+          disabled={decisionBusy}
+          onClick={() => void act("cancelled")}
           className="rounded-md border border-line-strong px-2 py-1 text-[11.5px] text-fg transition-colors hover:bg-surface-2"
         >
           {t("common.cancel")}

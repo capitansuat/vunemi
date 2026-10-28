@@ -1,3 +1,4 @@
+import { NativeRecipePermissions } from "./NativeRecipePermissions.js";
 import { useEffect, useState } from "react";
 import { Play, Trash2 } from "lucide-react";
 import { formatDate, t } from "@vunemi/i18n";
@@ -62,6 +63,7 @@ export function AutomationRow({ row, act, onDeleted }: { row: AutomationView; ac
         </div>
         <Switch on={row.enabled} label={row.title} disabled={false} onChange={(next) => act(() => window.vunemi.setAutomationEnabled(row.id, next))} />
       </div>
+      <p className="mt-2 text-[11.5px] text-muted">{t("taskPermissions.schedulerRestriction")}</p>
       <div className="mt-2 flex justify-end gap-1">
         <button type="button" onClick={() => act(() => window.vunemi.runAutomation(row.id))} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-muted hover:bg-surface-2 hover:text-fg">
           <Play size={12} /> {t("automations.runNow")}
@@ -95,6 +97,7 @@ export function AutomationsSection() {
     return (
       <div className="mx-auto max-w-[620px]">
         <h2 className="text-[17px] font-semibold text-fg">{t("automations.title")}</h2>
+      <NativeRecipePermissions />
         <p className="mb-4 mt-1 text-[13px] text-muted">{t("automations.page.moved")}</p>
         <button type="button" onClick={() => openAutomations()} className="rounded-md border border-line px-2.5 py-1 text-[12.5px] text-fg hover:bg-surface-2">
           {t("automations.page.open")}
@@ -106,6 +109,7 @@ export function AutomationsSection() {
   return (
     <div className="mx-auto max-w-[620px]">
       <h2 className="text-[17px] font-semibold text-fg">{t("automations.title")}</h2>
+      <NativeRecipePermissions />
       <p className="mb-5 mt-1 text-[13px] text-muted">{t("automations.intro")}</p>
       {rows !== null && rows.length === 0 && <p className="text-[13px] text-faint">{t("automations.empty")}</p>}
       <ul className="space-y-2">

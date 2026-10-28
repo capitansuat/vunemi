@@ -1,25 +1,57 @@
-import { useEffect, useState } from "react";
+import {SelectionFollowup} from './SelectionFollowup.js';
+import {quoteSourceAnchor,type QuoteOrigin} from '../lib/selection-followup.js';
+import { BackgroundCapabilitiesCard } from "./BackgroundCapabilitiesCard.js";
+import { parseBackgroundCapabilities } from "../lib/background-capabilities.js";
+import { copyAnswer } from "../lib/coordinated-design.js";
+import { taskSummary } from "../lib/task-summary.js";
+import { memo, useEffect, useState } from "react";
 import { ChevronRight, CircleStop, FileText, TriangleAlert } from "lucide-react";
 import { Mochi } from "./Mochi.js";
-import { draftText, runStats, type CompactionView, type RunView, type StepView } from "../lib/fold.js";
+import { activeTurnAction, draftText, runStats, type CompactionView, type RunView, type StepView } from "../lib/fold.js";
 import { formatMs, formatTokens, runStatusLabel, shortModelName } from "../lib/labels.js";
 import { CallCard } from "./CallCard.js";
 import { MentionIcon } from "./MentionMenu.js";
 import { ChoiceCard } from "./ChoiceCard.js";
+import { TaskSummary } from "./TaskSummary.js";
+import type { TaskRecord } from "@vunemi/agent-core";
 import { PlanCard } from "./PlanCard.js";
 import { MemoryNotice, MemoryProposals } from "./MemoryNotes.js";
 import { SavedNotes } from "./WorkNotes.js";
 import { Markdown } from "./Markdown.js";
 import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
+import {attentionTaskAnchor,focusAttentionTarget} from '../lib/task-attention.js';
 
 /** One exchange: what the user asked, and everything the agent did about it. */
-export function Turn({ run, replies }: { run: RunView; replies?: string[] }) {
+export const Turn = memo(function Turn({ run, replies, task, recovery = false, active = false }: { active?: boolean; run: RunView; replies?: string[]; task?: TaskRecord; recovery?: boolean }) {
+  useStore(s => s.locale);
+  const sessionId=useStore(s=>s.sessions.current);
+  const attentionTarget=useStore(s=>s.attentionTarget);
+  useEffect(()=>{
+    if(!attentionTarget||!task||attentionTarget.taskId!==task.id||attentionTarget.runId!==run.runId)return;
+    const frame=requestAnimationFrame(()=>{
+      const state=useStore.getState();
+      focusAttentionTarget(attentionTarget,{sessionId:state.sessions.current,taskId:task.id,runId:run.runId,current:state.attentionTarget},document.getElementById(attentionTaskAnchor(task.id)));
+    });
+    return ()=>cancelAnimationFrame(frame);
+  },[attentionTarget,task?.id,run.runId]);
   const live = run.status === "running";
   const last = run.steps.at(-1);
   // The answer is the final step's text; earlier steps' text is narration.
   // A run that ran out of steps still answers, with what it found.
   const answerStep = !live && (run.status === "done" || (run.status === "max_steps" && answered(last))) ? last : undefined;
+  const currentStep = live ? last : answerStep ?? last;
+  const foreground = task ? run.steps.filter(step => step === currentStep || step.calls.some(call => call.status === "awaiting" || call.handoff) || step.choices.some(choice => choice.status === "awaiting")) : run.steps;
+  const history = task ? run.steps.filter(step => !foreground.includes(step)) : [];
+  const showFiles = !task || task.waitingPlan || task.outputs.length === 0;
+  // Only the latest describe can speak for this run; an error must not revive an older observation.
+  const latestDescribe = run.steps.flatMap(step => step.calls).filter(call => ["desktop_background_describe","page_target_observe"].includes(call.tool)).at(-1);
+  const latestCapabilities = latestDescribe ? parseBackgroundCapabilities(latestDescribe) : null;
+  const promoteCapabilities = Boolean(latestCapabilities && history.some(step => step.calls.includes(latestDescribe!)));
+  const visibleCapabilityCallId = promoteCapabilities ? undefined : latestDescribe?.callId;
+  const action=activeTurnAction(run,active);
+  const excludedCalls = new Set(action?.kind==='approval'||action?.kind==='handoff'?[action.call.callId]:[]);
+  const excludedChoices = new Set(action?.kind==='choice'?[action.choice.callId]:[]);
 
   return (
     <section className="space-y-4">
@@ -43,17 +75,19 @@ export function Turn({ run, replies }: { run: RunView; replies?: string[] }) {
         <div className="selectable max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-surface-3 px-4 py-2.5 text-[14.5px] leading-relaxed text-fg">
           {run.goal}
         </div>
+        {run.quotedSource && <div className="max-w-[80%] rounded-lg border border-line bg-surface-2 p-3 text-[12px] text-muted"><a href={`#${quoteSourceAnchor(run.quotedSource.runId,run.quotedSource.stepId)}`} className="underline decoration-dotted">{t('quotedSource.source')}</a><blockquote className="selectable mt-1 whitespace-pre-wrap break-words border-l-2 border-line-strong pl-2">{run.quotedSource.text}</blockquote></div>}
       </div>
 
       <div className="space-y-2.5">
-        {run.plan && <PlanCard plan={run.plan} />}
-        {run.steps.map((step) => (
-          <Step
-            key={step.stepId}
-            step={step}
-            streaming={live && step === last}
-            isAnswer={step === answerStep}
-          />
+        {task && <TaskSummary task={task} recovery={recovery} anchor={!task.waitingPlan||action?.kind!=='plan'} />}
+        {promoteCapabilities && latestCapabilities && <BackgroundCapabilitiesCard capabilities={latestCapabilities} />}
+        {run.plan && action?.kind!=="plan" && (run.plan.status !== "accepted" || !task) && <PlanCard plan={run.plan} readOnly />}
+        {history.length > 0 && <details className="group rounded-lg px-1 py-1">
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded text-[12px] text-faint outline-none hover:text-muted focus-visible:ring-2 focus-visible:ring-ember"><ChevronRight size={12} aria-hidden="true" className="group-open:rotate-90" />{t("chatTask.history")}</summary>
+          <div className="mt-3 space-y-3">{history.map(step => <Step key={step.stepId} step={step} streaming={false} isAnswer={false} showFiles={showFiles} excludedCalls={excludedCalls} excludedChoices={excludedChoices} capabilityCallId={visibleCapabilityCallId} />)}</div>
+        </details>}
+        {foreground.map((step) => (
+          <Step key={step.stepId} step={step} streaming={live && step === last} isAnswer={step === answerStep} quoteOrigin={step===answerStep?{sessionId,runId:run.runId,stepId:step.stepId,raw:step.text}:undefined} showFiles={showFiles} excludedCalls={excludedCalls} excludedChoices={excludedChoices} capabilityCallId={visibleCapabilityCallId} />
         ))}
         {live && run.plan?.status !== "awaiting" && (!last || isEmpty(last)) && (
           // Before the first token a local model reads the whole
@@ -66,7 +100,8 @@ export function Turn({ run, replies }: { run: RunView; replies?: string[] }) {
             since={last?.startedAt ?? run.startedAt}
           />
         )}
-        {!live && run.status !== "done" && <Ending run={run} />}
+        {!live && run.status !== "done" && !(run.status === "stopped" && task && taskSummary(task).show) && <Ending run={run} />}
+        {answerStep && <AnswerActions text={answerStep.text} />}
         {replies && <Replies options={replies} />}
       </div>
 
@@ -76,9 +111,12 @@ export function Turn({ run, replies }: { run: RunView; replies?: string[] }) {
       {run.memory && run.memory.proposals.length > 0 && <MemoryProposals runId={run.runId} proposals={run.memory.proposals} />}
       {run.notes && run.notes.length > 0 && <SavedNotes notes={run.notes} />}
       {run.compaction && <Compaction c={run.compaction} />}
+      {action && <div data-turn-actions id={task?.waitingPlan&&action.kind==='plan'?attentionTaskAnchor(task.id):undefined} data-task-id={task?.waitingPlan&&action.kind==='plan'?task.id:undefined} tabIndex={task?.waitingPlan&&action.kind==='plan'?-1:undefined} aria-label={task?.waitingPlan&&action.kind==='plan'?task.goal:undefined} className="space-y-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ember">
+        {action.kind==='plan'?<PlanCard key={`${run.runId}:plan:${action.plan.requestId??'history'}`} plan={action.plan}/>:action.kind==='choice'?<ChoiceCard key={`${run.runId}:choice:${action.choice.callId}:${action.choice.requestId??'history'}`} choice={action.choice}/>:<CallCard key={`${run.runId}:${action.kind}:${action.call.callId}:${action.call.requestId??'history'}`} call={action.call} waitingFor={action.kind} showFiles={showFiles}/>}
+      </div>}
     </section>
   );
-}
+});
 
 /**
  * The answer ended on "which one?": its items, to answer with a click.
@@ -134,7 +172,8 @@ function Compaction({ c }: { c: CompactionView }) {
   );
 }
 
-function Step({ step, streaming, isAnswer }: { step: StepView; streaming: boolean; isAnswer: boolean }) {
+const Step = memo(function Step({ step, streaming, isAnswer, showFiles, excludedCalls, excludedChoices, capabilityCallId, quoteOrigin }: { quoteOrigin?: QuoteOrigin; step: StepView; streaming: boolean; isAnswer: boolean; showFiles: boolean; excludedCalls: ReadonlySet<string>; excludedChoices: ReadonlySet<string>; capabilityCallId?: string }) {
+  useStore(s => s.locale);
   const thinking = streaming && step.thought !== "" && step.text === "" && step.calls.length === 0;
   return (
     <div className="space-y-2">
@@ -143,17 +182,17 @@ function Step({ step, streaming, isAnswer }: { step: StepView; streaming: boolea
         <Draft text={step.text} />
       ) : step.text.trim() !== "" &&
         (isAnswer || (streaming && step.calls.length === 0) ? (
-          <Markdown text={step.text} {...(step.unverifiedLinks && { unverified: step.unverifiedLinks })} />
+          quoteOrigin ? <SelectionFollowup source={quoteOrigin}><Markdown text={step.text} {...(step.unverifiedLinks && { unverified: step.unverifiedLinks })} /></SelectionFollowup> : <Markdown text={step.text} {...(step.unverifiedLinks && { unverified: step.unverifiedLinks })} />
         ) : (
           <p className="selectable whitespace-pre-wrap text-[13.5px] text-muted">{step.text.trim()}</p>
         ))}
-      {step.calls.map((c) => (
-        <CallCard key={c.callId} call={c} />
+      {step.calls.filter(c => !excludedCalls.has(c.callId) && (c.tool !== "task_update" || c.status === "awaiting" || c.handoff)).map((c) => (
+        <CallCard key={c.callId} call={c} readOnly showFiles={showFiles} showCapabilities={c.callId === capabilityCallId} />
       ))}
-      {step.choices.map((choice) => <ChoiceCard key={choice.callId} choice={choice} />)}
+      {step.choices.filter(choice => !excludedChoices.has(choice.callId)).map((choice) => <ChoiceCard key={choice.callId} choice={choice} readOnly />)}
     </div>
   );
-}
+});
 
 /** What the model wrote before the cards that now show it: kept, out of the way. */
 function Draft({ text }: { text: string }) {
@@ -262,15 +301,30 @@ function Footer({ run }: { run: RunView }) {
     s.ttftMs !== null ? t("turn.firstToken", { time: formatMs(s.ttftMs) }) : null,
   ].filter(Boolean);
   return (
-    <div className="flex items-center gap-1.5 text-[11.5px] text-faint">
+    <details className="group text-[11.5px] text-muted">
+      <summary className="cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-ember">{t("turn.details")}</summary>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
       <Mochi size={12} face={false} className="text-ember/70" />
       <span className="font-medium text-muted">{shortModelName(run.model)}</span>
       <span>·</span>
       <span className="tabular-nums">{parts.join(" · ")}</span>
-    </div>
+      </div>
+    </details>
   );
 }
 
 function isEmpty(s: StepView): boolean {
   return s.thought === "" && s.text === "" && s.calls.length === 0 && s.choices.length === 0;
+}
+
+function AnswerActions({ text }: { text: string }) {
+  const [state, setState] = useState<"idle" | "busy" | "copied" | "error">("idle");
+  useEffect(() => setState("idle"), [text]);
+  return <div className="flex flex-wrap items-center gap-2">
+    <button type="button" disabled={state === "busy"} className="rounded-md border border-line px-2.5 py-1.5 text-[12px] text-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50" onClick={() => {
+      setState("busy");
+      void Promise.resolve().then(() => copyAnswer(text, navigator.clipboard)).then(() => setState("copied"), () => setState("error"));
+    }}>{t(state === "copied" ? "turn.copied" : "turn.copy")}</button>
+    {state === "error" && <span role="alert" className="text-[12px] text-danger">{t("turn.copyFailed")}</span>}
+  </div>;
 }

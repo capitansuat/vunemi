@@ -58,6 +58,9 @@ export default defineConfig({
         input: {
           index: resolve(import.meta.dirname, "src/main/index.ts"),
           vault: resolve(import.meta.dirname, "src/vault-process/index.ts"),
+          observations: resolve(import.meta.dirname, "src/coordinator-process/index.ts"),
+          "native-execution": resolve(import.meta.dirname, "src/coordinator-process/native-execution.ts"),
+          sessions: resolve(import.meta.dirname, "src/session-process/index.ts"),
         },
       },
     },

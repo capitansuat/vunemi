@@ -29,10 +29,14 @@ async function until(check: () => boolean, ms = 3_000): Promise<void> {
 }
 
 describe("serverArgs", () => {
+  it("keeps the smaller prompt batch on Macs with limited memory", () => {
+    const args=serverArgs(spec, 5555, "k", 16 * 1024 ** 3);
+    expect(args[args.indexOf("-ub")+1]).toBe("512");
+  });
   it("binds to this Mac only and asks for a key", () => {
-    expect(serverArgs(spec, 5555, "k")).toEqual([
+    expect(serverArgs(spec, 5555, "k", 64 * 1024 ** 3)).toEqual([
       "-m", "/models/m.gguf", "--host", "127.0.0.1", "--port", "5555", "--api-key", "k",
-      "--jinja", "-c", "32768", "-fa", "on", "-ngl", "999", "--no-webui",
+      "--jinja", "-c", "32768", "-fa", "on", "-ngl", "999", "--no-webui", "-ub", "2048",
     ]);
   });
 });

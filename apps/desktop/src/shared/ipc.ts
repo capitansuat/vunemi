@@ -1,15 +1,22 @@
+export type AttentionReason='plan'|'approval'|'user'|'review'|'uncertain'|'recovery';
+export interface AttentionItem {sessionId:string;taskId:string;runId:string;status:string;reason:AttentionReason;title:string;sessionTitle:string;updatedAt:number;projectId?:string}
+export interface AttentionSnapshot {revision:number;items:AttentionItem[];truncated:boolean}
+export interface AttentionTarget {sessionId:string;taskId:string;runId:string;revision:number}
+export interface ResolutionOwner { runId:string; requestId:string }
+import type {NativeRecipeTargetView,NativeRecipeSetupInput,NativeRecipeReadOffer,NativeRecipeOffsetChoice,NativeRecipeOffer,NativeRecipesSnapshot,PrepareNativeRecipeRequest,ApproveNativeRecipeRequest,RevokeNativeRecipeRequest,SetupOwner} from './native-recipes.js';
 /**
  * The IPC contract between main, preload and renderer. Types only — each side
  * imports these so a channel can't drift out of sync with its handler.
  */
 
-import type { ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, ChoiceAnswer, HandoffOutcome, MentionRef, PlanDecision, Produced, ProviderKind } from "@vunemi/agent-core";
+import type { TaskPermissionOfferView, TaskPermissionView, TaskPermissionsSnapshot, TaskPermissionRevokeRequest, TaskRecord, QuotedSource, ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, ChoiceAnswer, HandoffOutcome, MentionRef, PlanDecision, Produced, ProviderKind } from "@vunemi/agent-core";
 import type { ConnectorView, PrivacyPane } from "@vunemi/connectors";
 import type { OutboxEvent, Pending, UncertainSend } from "@vunemi/mail";
 import type { Locale } from "@vunemi/i18n";
 
 export type { ConnectorView, PrivacyPane };
-export type { MentionRef };
+export type { MentionRef, TaskPermissionOfferView, TaskPermissionView, TaskPermissionsSnapshot, TaskPermissionRevokeRequest };
+export type ScopedApprovalRequest={sessionId:string;runId:string;callId:string;decision:{kind:"approve_run";offerId:string;offerRevision:number}};
 
 /** Something "@" can bring into a message, as the menu lists it. An untitled meeting has an empty title. */
 export interface MentionItem extends MentionRef {
@@ -113,6 +120,8 @@ export interface AutomationLibraryView {
 }
 
 export interface SessionList {
+  /** Local goal/step/operation records; no additional model or network request. */
+  tasks?: TaskRecord[];
   /** The conversation new tasks go into. May not be listed yet: an empty one is not kept. */
   current: string;
   sessions: SessionSummary[];
@@ -170,6 +179,8 @@ export interface VoiceStatus {
 
 /** What the Vault can tell the UI. Values are never part of this. */
 export interface VaultStatus {
+  needsMigration?: boolean;
+  restartRequired?: boolean;
   /** False when this Mac has no secure storage, so nothing may be saved. */
   available: boolean;
   secrets: SecretInfo[];
@@ -182,6 +193,17 @@ export interface ProviderStatus {
   /** Full specs, e.g. `lmstudio:qwen/qwen3.6-35b-a3b`. */
   models: string[];
   error?: string;
+}
+
+/** Read-only health identities; contains no credentials or execution controls. */
+export interface CoordinatorStatus {
+  mainPid: number;
+  workers: Array<{ role: "session" | "native" | "vault"; pid: number; startedAt: number }>;
+}
+
+export interface SearchLocation {
+  country: string | null;
+  city: string | null;
 }
 
 export interface LocalModelSettings {
@@ -258,6 +280,7 @@ export interface LockState {
 export type LockAttempt = { ok: true; state: LockState } | { ok: false; state: LockState; message: string | null };
 
 export interface StartRunRequest {
+  quotedSource?: QuotedSource;
   goal: string;
   model: string;
   /** Files the user attached: dropped on the window or picked. */
@@ -301,6 +324,7 @@ export interface PaneBounds {
 
 /** A message the user sent while the agent was busy. */
 export interface QueuedMessage {
+  quotedSource?: QuotedSource;
   id: string;
   text: string;
   attachments: string[];
@@ -521,7 +545,16 @@ export interface UpdateStatus {
 
 /** Exposed on `window.vunemi` by the preload script. */
 export interface VunemiApi {
+  nativeRecipeTargets():Promise<NativeRecipeTargetView[]>;
+  beginNativeRecipeSetup(input:NativeRecipeSetupInput):Promise<NativeRecipeReadOffer|NativeRecipeOffsetChoice>;
+  prepareNativeRecipe(req:PrepareNativeRecipeRequest):Promise<NativeRecipeOffer>;
+  approveNativeRecipe(req:ApproveNativeRecipeRequest):Promise<NativeRecipesSnapshot>;
+  cancelNativeRecipeSetup(owner:SetupOwner):Promise<void>;
+  listNativeRecipes():Promise<NativeRecipesSnapshot>;
+  revokeNativeRecipe(req:RevokeNativeRecipeRequest):Promise<NativeRecipesSnapshot>;
+  onNativeRecipesChanged(listener:(snapshot:NativeRecipesSnapshot)=>void):()=>void;
   listProviders(): Promise<ProviderStatus[]>;
+  getCoordinatorStatus(): Promise<CoordinatorStatus>;
   getModelSettings(): Promise<LocalModelSettings>;
   setModelSettings(settings: LocalModelSettings): Promise<LocalModelSettings>;
   checkModel(spec: string): Promise<ModelCheckResult>;
@@ -546,14 +579,18 @@ export interface VunemiApi {
   /** Hold the run at its next safe point, so the user can look or take over the page. */
   pauseRun(): Promise<void>;
   resumeRun(): Promise<void>;
-  resolveApproval(callId: string, decision: ApprovalDecision): Promise<void>;
-  resolveChoice(runId: string, callId: string, answer: ChoiceAnswer): Promise<boolean>;
+  resolveApproval(callId: string, decision: ApprovalDecision, owner:ResolutionOwner): Promise<boolean>;
+  resolveTaskApproval(request:ScopedApprovalRequest):Promise<void>;
+  listTaskPermissions(request:{sessionId:string;runId:string|null}):Promise<TaskPermissionsSnapshot>;
+  revokeTaskPermission(request:TaskPermissionRevokeRequest):Promise<TaskPermissionsSnapshot>;
+  onTaskPermissionsChanged(listener:(snapshot:TaskPermissionsSnapshot)=>void):()=>void;
+  resolveChoice(runId: string, callId: string, answer: ChoiceAnswer, owner:ResolutionOwner): Promise<boolean>;
   /** Opens a card's observed public source in Vunemi's browser pane. */
   openChoiceSource(url: string): Promise<void>;
   /** The user accepted, edited or cancelled the intent preview. */
-  resolvePlan(decision: PlanDecision): Promise<void>;
+  resolvePlan(decision: PlanDecision, owner:ResolutionOwner): Promise<boolean>;
   /** The user finished (or gave up on) a step the agent handed to them. */
-  resolveHandoff(callId: string, outcome: HandoffOutcome): Promise<void>;
+  resolveHandoff(callId: string, outcome: HandoffOutcome, owner:ResolutionOwner): Promise<boolean>;
   /** Forgets the current conversation and starts a fresh one. */
   resetSession(): Promise<SessionList>;
   /** The chosen model's window and the conversation's size in it. */
@@ -573,12 +610,14 @@ export interface VunemiApi {
   revealProject(id: string): Promise<void>;
   /** Continues a kept conversation; its events rebuild the timeline. */
   openSession(id: string): Promise<SessionList & { events: AgentEvent[] }>;
+  listAttention():Promise<AttentionSnapshot>;
+  openAttentionTask(target:AttentionTarget):Promise<{sessions:SessionList;target:AttentionTarget;events?:AgentEvent[]}>;
   deleteSession(id: string): Promise<SessionList>;
   renameSession(id: string, title: string): Promise<SessionList>;
   /** Picks up the current conversation's cut-short task; every step beyond reading asks. */
-  resumeInterrupted(model: string): Promise<void>;
+  resumeInterrupted(model: string, sessionId: string): Promise<void>;
   /** Lets the cut-short task go; the conversation stays. */
-  dismissInterrupted(): Promise<SessionList>;
+  dismissInterrupted(sessionId: string): Promise<SessionList>;
   onSessions(listener: (list: SessionList) => void): () => void;
   listMemory(): Promise<MemoryNoteView[]>;
   updateMemory(id: string, text: string): Promise<MemoryNoteView[]>;
@@ -645,6 +684,8 @@ export interface VunemiApi {
   getAppearance(): Promise<Appearance>;
   setAppearance(appearance: Appearance): Promise<Appearance>;
   /** The language Vunemi speaks; main keeps it, the window follows. */
+  searchLocation(): Promise<SearchLocation>;
+  setSearchLocation(profile: SearchLocation): Promise<SearchLocation>;
   getLanguage(): Promise<Locale>;
   setLanguage(locale: Locale): Promise<Locale>;
   onLanguage(listener: (locale: Locale) => void): () => void;
@@ -717,7 +758,7 @@ export interface VunemiApi {
   /** The summary of a task the model asks to set up, from the call's arguments; null while the library is off. */
   summarizeAutomation(args: unknown): Promise<SetupView | null>;
   /** The time and days chosen on that summary; the setup about to be approved is saved with them. */
-  adjustAutomation(args: unknown, when: { time?: string; days?: number[] }): Promise<void>;
+  adjustAutomation(args: unknown, when: { time?: string; days?: number[] },callId:string,owner:ResolutionOwner): Promise<boolean>;
   onAutomations(listener: (rows: AutomationView[]) => void): () => void;
 
   listArtefacts(): Promise<ArtefactView[]>;
@@ -734,6 +775,7 @@ export interface VunemiApi {
 
   /** Names and notes only — a secret's value never crosses this boundary. */
   vaultStatus(): Promise<VaultStatus>;
+  vaultUnlock(): Promise<VaultStatus>;
   vaultSet(name: string, value: string, note?: string): Promise<VaultStatus>;
   vaultDelete(name: string): Promise<VaultStatus>;
 
@@ -789,9 +831,18 @@ export interface VunemiApi {
 
 export const CH = {
   listProviders: "providers:list",
+  coordinatorStatus: "coordinator:status",
   modelSettingsGet: "providers:settings-get",
   modelSettingsSet: "providers:settings-set",
   modelCheck: "providers:check",
+  nativeRecipeTargets:'native-recipes:targets',
+  beginNativeRecipeSetup:'native-recipes:begin',
+  prepareNativeRecipe:'native-recipes:prepare',
+  approveNativeRecipe:'native-recipes:approve',
+  cancelNativeRecipeSetup:'native-recipes:cancel',
+  listNativeRecipes:'native-recipes:list',
+  revokeNativeRecipe:'native-recipes:revoke',
+  nativeRecipesChanged:'native-recipes:changed',
   startRun: "run:start",
   pickFiles: "files:pick",
   steerRun: "run:steer",
@@ -803,6 +854,10 @@ export const CH = {
   pauseRun: "run:pause",
   resumeRun: "run:resume",
   resolveApproval: "approval:resolve",
+  resolveTaskApproval: "task-permissions:approve",
+  listTaskPermissions: "task-permissions:list",
+  revokeTaskPermission: "task-permissions:revoke",
+  taskPermissionsChanged: "task-permissions:changed",
   resolveChoice: "choice:resolve",
   openChoiceSource: "choice:open-source",
   resolveHandoff: "handoff:resolve",
@@ -817,6 +872,8 @@ export const CH = {
   projectsRemove: "projects:remove",
   projectsReveal: "projects:reveal",
   sessionsOpen: "sessions:open",
+  attentionList:"attention:list",
+  attentionOpen:"attention:open",
   sessionsDelete: "sessions:delete",
   sessionsRename: "sessions:rename",
   sessionsChanged: "sessions:changed",
@@ -871,6 +928,8 @@ export const CH = {
   updatesChanged: "updates:changed",
   appearanceGet: "appearance:get",
   appearanceSet: "appearance:set",
+  searchLocationGet: "search-location:get",
+  searchLocationSet: "search-location:set",
   languageGet: "language:get",
   languageSet: "language:set",
   languageChanged: "language:changed",
@@ -938,6 +997,7 @@ export const CH = {
   synthesize: "voice:synthesize",
   stopSpeaking: "voice:stop-speaking",
   vaultStatus: "vault:status",
+  vaultUnlock: "vault:unlock",
   vaultSet: "vault:set",
   vaultDelete: "vault:delete",
   embeddedGet: "embedded:get",

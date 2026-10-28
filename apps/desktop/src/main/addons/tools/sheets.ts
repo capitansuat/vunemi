@@ -22,8 +22,9 @@ const CHARTS = ["column", "bar", "line", "pie"] as const;
 const MAX_HTML = 2_000_000;
 
 export const SHEETS_GUIDE = `Making spreadsheets:
-- sheet_make makes a new .xlsx file; it cannot change an existing one (excel_write_range does that, when the Mac apps connection is on).
+- sheet_make makes a new .xlsx file. For existing workbooks, multiple sheets, pivot tables and all other GridCraft features use sheets_engine_run.
 - Write every total, average or percentage as a formula, in English function names with commas (=SUM(B2:B4)). Do not calculate it yourself.
+- Use distinct descriptive headers (for example Item and Value), not repeated generic headings. New tables receive readable row spacing and aligned numeric columns; fractional numeric columns keep consistent precision without adding currency.
 - Its result shows the grid as calculated. Report numbers from that result, never from your own sums.`;
 
 /** A1-style column letters: 0 is A, 26 is AA. */
@@ -56,7 +57,27 @@ export function sheetScript(rows: Cell[][], chart?: { range: string; type: strin
       if (cell !== "") steps.push({ id: "cell.set", params: { cell: `${column(c)}${r + 1}`, input: String(cell) } });
     }),
   );
-  if (rows.length > 1) steps.push({ id: "home.bold", params: { range: `A1:${column(cols - 1)}1`, on: true } });
+  const header = `A1:${column(cols - 1)}1`;
+  steps.push({ id: "home.rowHeight", params: { rows: `1:${rows.length}`, height: 32 } });
+  steps.push({ id: "home.alignMiddle", params: { range: `A1:${column(cols - 1)}${rows.length}` } });
+  if (rows.length > 1) {
+    steps.push({ id: "home.bold", params: { range: header, on: true } });
+    steps.push({ id: "home.fillColor", params: { range: header, color: "#EDF2F6" } });
+    for (let c = 0; c < cols; c++) {
+      const values = rows.slice(1).map(row => row[c]).filter(value => value !== undefined && value !== "");
+      const literals = values.filter(value => !String(value).startsWith("="));
+      const numeric = literals.length > 0 && literals.every(value => /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(String(value)));
+      if (!numeric) continue;
+      const range = `${column(c)}2:${column(c)}${rows.length}`;
+      steps.push({ id: "home.alignRight", params: { range } });
+      const precision = Math.max(...literals.map(value => String(value).split(".")[1]?.length ?? 0));
+      // Keep supplied precision, including totals; formatting never rewrites stored values.
+      if (precision > 0 && precision <= 12) steps.push({ id: "home.numberFormat", params: { range, code: `0.${"0".repeat(Math.max(2, precision))}` } });
+    }
+    rows.slice(1).forEach((row, index) => {
+      if (typeof row[0] === "string" && /^(?:total|toplam|genel toplam)$/i.test(row[0].trim())) steps.push({ id: "home.bold", params: { range: `A${index + 2}:${column(cols - 1)}${index + 2}`, on: true } });
+    });
+  }
   steps.push({ id: "home.autofitColumnWidth", params: { cols: `A:${column(cols - 1)}` } });
   if (chart) steps.push({ id: "insert.chart", params: { range: chart.range, type: chart.type, ...(chart.title && { title: chart.title }), at: `${column(cols + 1)}2` } });
   return steps.map((step) => JSON.stringify(step)).join("\n") + "\n";

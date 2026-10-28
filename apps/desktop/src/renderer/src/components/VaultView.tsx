@@ -3,7 +3,7 @@ import { Eye, EyeOff, KeyRound, Plus, ShieldCheck, Trash2, TriangleAlert } from 
 import type { VaultStatus } from "../../../shared/ipc.js";
 import { formatDate, t } from "@vunemi/i18n";
 
-const EMPTY: VaultStatus = { available: true, secrets: [] };
+const EMPTY: VaultStatus = { available: false, secrets: [] };
 
 /**
  * The Kasa. The user puts a secret in once; after that only its name is ever
@@ -12,6 +12,7 @@ const EMPTY: VaultStatus = { available: true, secrets: [] };
 export function VaultView() {
   const [status, setStatus] = useState<VaultStatus>(EMPTY);
   const [adding, setAdding] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,14 +47,21 @@ export function VaultView() {
           </span>
         </div>
 
-        {!status.available && (
+        {(!status.available || status.needsMigration) && (
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2.5 text-[12.5px] text-fg">
             <TriangleAlert size={14} className="mt-0.5 shrink-0 text-danger" />
             <span>
-              {t("vault.unavailable")}
+              {t("vault.unlockHint")}
+              <button type="button" disabled={unlocking}
+                onClick={() => {setUnlocking(true);void run(() => window.vunemi.vaultUnlock()).finally(() => setUnlocking(false));}}
+                className="mt-2 block rounded-md border border-line-strong px-3 py-1.5 disabled:opacity-50">
+                {t(unlocking ? "vault.unlocking" : "vault.unlock")}
+              </button>
             </span>
           </div>
         )}
+
+        {status.restartRequired && <p className="mt-3 text-[12.5px] text-muted">{t("vault.restartNeeded")}</p>}
 
         {error && <p className="mt-3 text-[12.5px] text-danger">{error}</p>}
 
@@ -67,7 +75,7 @@ export function VaultView() {
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-mono text-[12.5px] text-fg">{s.name}</div>
                   <div className="truncate text-[11.5px] text-faint">
-                    {s.note ?? t("vault.noNote")}
+                    {!status.available || status.needsMigration ? t("vault.lockedNote") : s.note ?? t("vault.noNote")}
                     {" · "}
                     {s.lastUsedAt ? t("vault.lastUsed", { when: when(s.lastUsedAt) }) : t("vault.neverUsed")}
                   </div>

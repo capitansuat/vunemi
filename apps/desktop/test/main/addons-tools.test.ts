@@ -76,7 +76,7 @@ const engines: Engines = async (id, _signal, work) => {
           writeFileSync(join(dir, name), "made");
         }
       }
-      return { code: 0, stdout: "", stderr: "", ...said };
+      return { code: 0, stdout: args[0] === "inspect" && args[1] === "body.docx" ? JSON.stringify({ blocks: [] }) : "", stderr: "", ...said };
     },
   });
 };
@@ -108,7 +108,11 @@ describe("sheet_make", () => {
       { id: "cell.set", params: { cell: "A2", input: "Kira" } },
       { id: "cell.set", params: { cell: "B2", input: "12000" } },
       { id: "cell.set", params: { cell: "C2", input: "=SUM(B2:B2)" } },
+      { id: "home.rowHeight", params: { rows: "1:2", height: 32 } },
+      { id: "home.alignMiddle", params: { range: "A1:C2" } },
       { id: "home.bold", params: { range: "A1:C1", on: true } },
+      { id: "home.fillColor", params: { range: "A1:C1", color: "#EDF2F6" } },
+      { id: "home.alignRight", params: { range: "B2:B2" } },
       { id: "home.autofitColumnWidth", params: { cols: "A:C" } },
       { id: "insert.chart", params: { range: "A1:B2", type: "pie", title: "Giderler", at: "E2" } },
     ]);
@@ -166,6 +170,7 @@ describe("document_make", () => {
     expect(files["in.md"]).toBe("# Rapor\n\nMetin.");
     expect(calls.map((c) => c.args)).toEqual([
       ["convert", "in.md", "body.docx"],
+      ["inspect", "body.docx"],
       ["run", "--file", "body.docx", "--cmd", 'layout.size={"name":"A4"}', "--save", "out.docx"],
       ["info", "out.docx"],
       ["render", "out.docx", "page.png", "--page", "1", "--scale", "0.8"],
@@ -181,7 +186,7 @@ describe("document_make", () => {
   it("makes a PDF from the same document when asked for one", async () => {
     await tool(list("Letter"), "document_make").run({ path: join(folder, "rapor.pdf"), markdown: "Metin" }, ctx());
     expect(calls.map((c) => c.args.slice(0, 3))).toContainEqual(["convert", "out.docx", "out.pdf"]);
-    expect(calls[1]!.args).toContain('layout.size={"name":"Letter"}');
+    expect(calls[2]!.args).toContain('layout.size={"name":"Letter"}');
     expect(existsSync(join(folder, "rapor.pdf"))).toBe(true);
   });
 
@@ -278,11 +283,20 @@ describe("slides_make", () => {
     expect(cmds()).toEqual([
       'file.new={"blank":true,"theme":"Harbor"}',
       'slide.new={"layout":"title","title":"Giderler","body":"Ekim 2026"}',
+      'edit.selectAll={}',
+      'format.autofit={"mode":"shrink"}',
+      'edit.deselect={}',
       'slide.new={"layout":"titleAndContent","title":"Kalemler","body":"Kira\\nMarket\\n-5 derece"}',
+      'edit.selectAll={}',
+      'format.autofit={"mode":"shrink"}',
+      'edit.deselect={}',
       'slide.notes={"text":"Kısa tut"}',
       'slide.new={"layout":"titleOnly","title":"Dağılım"}',
       'insert.chart={"type":"pie","categories":["Kira","Market"],"series":[{"name":"Ekim","values":[12000,4200]}],"rect":[80,150,800,340]}',
       'chart.options={"title":null}',
+      'edit.selectAll={}',
+      'format.autofit={"mode":"shrink"}',
+      'edit.deselect={}',
     ]);
     expect(calls[0]!.args.slice(-2)).toEqual(["--save", "out.pptx"]);
     expect(existsSync(join(folder, "sunum.pptx"))).toBe(true);
@@ -338,9 +352,18 @@ describe("an existing presentation", () => {
       'slide.notes={"text":"Parke fiyatını vurgula","index":1}',
       'slide.delete={"index":2}',
       'slide.new={"layout":"titleOnly","at":2,"title":"Bütçe"}',
+      'edit.selectAll={}',
+      'format.autofit={"mode":"shrink"}',
+      'edit.deselect={}',
       'slide.new={"layout":"titleAndContent","at":2,"title":"Takvim","body":"1 Aralık"}',
+      'edit.selectAll={}',
+      'format.autofit={"mode":"shrink"}',
+      'edit.deselect={}',
       'slide.notes={"text":"kısa"}',
       'slide.new={"layout":"title","at":0,"title":"Kapak"}',
+      'edit.selectAll={}',
+      'format.autofit={"mode":"shrink"}',
+      'edit.deselect={}',
     ]);
     expect(plan).toMatchObject({ changed: 3, missing: ['"Ekip"'], titles: ["Kapak", "Atölye", "Plan", "Takvim", "Bütçe"] });
   });
@@ -349,7 +372,7 @@ describe("an existing presentation", () => {
     // What a model asked for when told "add after Ekip, delete the first slide".
     const plan = editArgs(deck, editOf({ remove: [1], add: [{ after: "ekip ", title: "Takvim" }] }));
     expect(plan.titles).toEqual(["Plan", "Ekip", "Takvim"]);
-    expect(cmds(plan.args)).toEqual(['slide.new={"layout":"titleOnly","at":3,"title":"Takvim"}', 'slide.delete={"index":0}']);
+    expect(cmds(plan.args)).toEqual(['slide.new={"layout":"titleOnly","at":3,"title":"Takvim"}', 'edit.selectAll={}', 'format.autofit={"mode":"shrink"}', 'edit.deselect={}', 'slide.delete={"index":0}']);
     expect(editArgs(deck, editOf({ add: [{ after: "3", title: "Son" }] })).titles).toEqual(["Atölye", "Plan", "Ekip", "Son"]);
     expect(() => editArgs(deck, editOf({ add: [{ after: "Bütçe", title: "x" }] }))).toThrow(/No slide is titled "Bütçe"/);
     const twins = [...deck, { title: "Plan", notes: "", shapes: [{ id: 41, text: "Plan" }] }];
@@ -657,6 +680,31 @@ describe("add-on packs", () => {
     installed.delete("sheets");
     sync();
     expect(tools.get("sheet_make")).toBeUndefined();
+  });
+
+  it("opens full engine access for every installed pack and removes it with that pack", () => {
+    const installed = new Set<string>();
+    const { tools, sync } = register(installed);
+    for (const pack of PACKS) {
+      expect(tools.get(`${pack.id}_engine_help`)).toBeUndefined();
+      expect(tools.get(`${pack.id}_engine_run`)).toBeUndefined();
+      installed.add(pack.id);
+      sync();
+      expect(tools.get(`${pack.id}_engine_help`)?.onDemand).toBe(pack.area);
+      expect(tools.get(`${pack.id}_engine_run`)?.onDemand).toBe(pack.area);
+      installed.delete(pack.id);
+      sync();
+      expect(tools.get(`${pack.id}_engine_run`)).toBeUndefined();
+    }
+  });
+
+  it("guides installed packs to their complete command catalogue", () => {
+    for (const pack of PACKS) {
+      const guide = addonAreas([folder]).find(a => a.id === pack.area)!.guide;
+      expect(guide).toContain(`${pack.id}_engine_help`);
+      expect(guide).toContain(`${pack.id}_engine_run`);
+      expect(guide).toContain("complete");
+    }
   });
 
   it("refuses a path that cannot work before the user is asked anything", async () => {

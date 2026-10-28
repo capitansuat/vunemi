@@ -3,7 +3,8 @@
  * the account's description, so a Vault process that restarted picks the
  * account up again without being told; the password never comes here.
  */
-import type { Draft, MailAccount, MessageBody, MessageSummary, Moved, MoveTarget, SearchQuery } from "@vunemi/mail";
+import type { Draft, DraftReadback, MailAccount, MessageBody, MessageSummary, Moved, MoveTarget, SearchQuery } from "@vunemi/mail";
+import {DraftSaveUnverified} from '@vunemi/mail';
 import type { VaultClient } from "@vunemi/vault";
 import { mailAddressOf, type StoredMailAccount } from "./settings.js";
 
@@ -38,8 +39,14 @@ export class RemoteMailAccount implements MailAccount {
     return this.call("read", id);
   }
 
-  saveDraft(draft: Draft): Promise<{ id: string }> {
-    return this.call("saveDraft", draft);
+  async saveDraft(draft: Draft): Promise<{ id: string }> {
+    const saved=await this.call<{id:string;draftSavedUnverified?:boolean}>('saveDraft',draft);
+    if(saved.draftSavedUnverified===true)throw new DraftSaveUnverified(saved.id);
+    return saved;
+  }
+
+  verifyDraft(id:string,expected:Draft):Promise<DraftReadback|null>{
+    return this.call('verifyDraft',id,expected);
   }
 
   async deleteDraft(id: string): Promise<void> {

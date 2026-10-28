@@ -11,7 +11,7 @@ const SUMMARIES: Record<string, string> = {
   browser: "the web: search, open and read pages, act on websites",
   files: "files and folders on this Mac: list, find, read, write, move, convert",
   desktop: "the Mac screen: which apps are open, read or click a window, screenshots",
-  apps: "Apple Notes, the Finder selection, and other Mac apps: music, messages, contacts, photos, Word, Excel, PowerPoint",
+  apps: "Installed apps/open-window control: Notes, Finder, Office",
   shortcuts: "the user's own Shortcuts",
   automations: "tasks that run later or repeatedly on a schedule",
   history: "the user's earlier conversations with you and their recorded meetings",

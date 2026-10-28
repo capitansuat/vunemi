@@ -13,7 +13,7 @@
   --border-strong: #d6ccc0;
   --text: #1f1a15;
   --muted: #6b6157;
-  --faint: #9b9085;
+  --faint: #76695d;
   --ember: #e0582a;
   --ember-soft: color-mix(in oklab, var(--ember) 10%, transparent);
   --ember-line: color-mix(in oklab, var(--ember) 35%, transparent);
@@ -36,7 +36,7 @@
     --border-strong: #433a31;
     --text: #efe8e0;
     --muted: #a69b8f;
-    --faint: #6f655b;
+    --faint: #a19487;
     --ember: #ff7a45;
     --ok: #62c98b;
     --warn: #f0b44c;

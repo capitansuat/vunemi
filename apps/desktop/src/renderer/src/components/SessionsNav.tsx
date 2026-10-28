@@ -1,7 +1,9 @@
+import { useShallow } from "zustand/react/shallow";
 import { useState } from "react";
 import { FolderOpen, FolderPlus, Folder, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { RenameInput } from "./RenameInput.js";
-import type { ProjectView, SessionSummary } from "../../../shared/ipc.js";
+import type { ProjectView, SessionSummary,AttentionItem,AttentionSnapshot } from "../../../shared/ipc.js";
+import {attentionTasksForSession,attentionNavigationBlocked,attentionSessionGroups} from '../lib/task-attention.js';
 import { clock, dayLabel } from "../lib/time.js";
 import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
@@ -15,17 +17,32 @@ const errorText = (e: unknown) =>
  * conversation it started in.
  */
 export function SessionsNav() {
-  const { sessions, running, addProject } = useStore();
+  const { sessions, running, addProject,attention,attentionLoading,attentionError,refreshAttention } = useStore(useShallow(s => ({ sessions: s.sessions, running: s.running, addProject: s.addProject, locale: s.locale,attention:s.attention,attentionLoading:s.attentionLoading,attentionError:s.attentionError,refreshAttention:s.refreshAttention })));
+  const [filter, setFilter] = useState<'all'|'recoverable'|'attention'>('all');
+  const recoverableOnly=filter==='recoverable',attentionMode=filter==='attention';
+  const attentionSessions=new Set(attention?.items.map(item=>item.sessionId)??[]);
+  const visibleSessions = (attentionMode?attentionSessionGroups(attention,sessions.sessions):sessions.sessions).filter(s => attentionMode?attentionSessions.has(s.id):!recoverableOnly || Boolean(s.interrupted));
   const [error, setError] = useState<string | null>(null);
   const known = new Set(sessions.projects.map((p) => p.id));
-  const loose = sessions.sessions.filter((s) => !s.projectId || !known.has(s.projectId));
+  const loose = visibleSessions.filter((s) => !s.projectId || !known.has(s.projectId));
   const freshHere = (projectId: string | undefined) =>
     !sessions.sessions.some((s) => s.id === sessions.current) && sessions.project === projectId;
 
   return (
     <div className="no-drag mt-5 flex min-h-0 flex-1 flex-col">
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-2.5 pb-2">
-        <div className="flex items-center justify-between px-2.5 pb-1.5">
+        <div className="mb-3 flex flex-wrap gap-1 px-2.5" role="group" aria-label={t("app.sessions.title")}>
+          {(['all','recoverable','attention'] as const).map(value => <button key={value} type="button" aria-pressed={filter===value} onClick={() => {setFilter(value);if(value==='attention')void refreshAttention().catch(()=>{});}} className={`rounded-md px-2 py-1.5 text-[11.5px] focus-visible:ring-2 focus-visible:ring-ember ${filter===value ? "bg-surface-2 text-fg" : "text-muted hover:text-fg"}`}>{t(value==='attention'?'taskAttention.title':value==='recoverable'?'app.sessions.recoverable':'app.sessions.all')}{value==='recoverable'&&` (${sessions.sessions.filter(s=>s.interrupted).length})`}{value==='attention'&&attention&&` (${attention.items.length}${attention.truncated?'+':''})`}</button>)}
+        </div>
+        {attentionMode&&<div className="mb-3 space-y-2 px-2.5 text-[12px] text-muted">
+          {attentionLoading&&<p role="status">{t('taskAttention.loading')}</p>}
+          {attentionError&&<p role="alert">{t('taskAttention.error')} <span className="break-words">{errorText(attentionError)}</span></p>}
+          {!attentionLoading&&!attentionError&&attention&&attention.items.length===0&&<p role="status">{t('taskAttention.empty')}</p>}
+          {attention?.truncated&&<p role="status">{t('taskAttention.truncated')}</p>}
+          <button type="button" disabled={attentionLoading} onClick={()=>void refreshAttention().catch(()=>{})} className="rounded border border-line px-2 py-1 focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50">{t('taskAttention.refresh')}</button>
+        </div>}
+        {recoverableOnly && visibleSessions.length === 0 && <p role="status" className="px-2.5 pb-3 text-[12px] text-muted">{t("app.sessions.noRecoverable")}</p>}
+        {!attentionMode&&<div className="flex items-center justify-between px-2.5 pb-1.5">
           <span className="text-[11px] font-medium uppercase tracking-wide text-faint">{t("app.projects.title")}</span>
           <button
             type="button"
@@ -40,9 +57,9 @@ export function SessionsNav() {
           >
             <FolderPlus size={14} />
           </button>
-        </div>
+        </div>}
         {error && <p className="px-2.5 pb-1.5 text-[11.5px] leading-snug text-danger">{error}</p>}
-        {sessions.projects.length === 0 && (
+        {!attentionMode&&sessions.projects.length === 0 && (
           <button
             type="button"
             disabled={running}
@@ -56,31 +73,33 @@ export function SessionsNav() {
           </button>
         )}
         <ul className="space-y-0.5">
-          {sessions.projects.map((project) => (
+          {sessions.projects.filter(project=>!attentionMode||visibleSessions.some(session=>session.projectId===project.id)).map((project) => (
             <ProjectGroup
               key={project.id}
               project={project}
-              items={sessions.sessions.filter((s) => s.projectId === project.id)}
-              fresh={freshHere(project.id)}
+              items={visibleSessions.filter((s) => s.projectId === project.id)}
+              fresh={filter==='all' && freshHere(project.id)}
+              attentionMode={attentionMode} attention={attention}
             />
           ))}
         </ul>
 
         <div className="px-2.5 pt-4 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">{t("app.sessions.title")}</div>
         <ul className="space-y-0.5">
-          {freshHere(undefined) && <FreshRow />}
-          {loose.map((s) => <SessionRow key={s.id} item={s} />)}
+          {filter==='all' && freshHere(undefined) && <FreshRow />}
+          {loose.map((s) => attentionMode?<AttentionSessionGroup key={s.id} session={s} items={attentionTasksForSession(attention,s.id)}/>:<SessionRow key={s.id} item={s} />)}
         </ul>
       </div>
     </div>
   );
 }
 
-function ProjectGroup({ project, items, fresh }: { project: ProjectView; items: SessionSummary[]; fresh: boolean }) {
-  const { sessions, running, newSession, removeProject, revealProject } = useStore();
+function ProjectGroup({ project, items, fresh,attentionMode=false,attention=null }: { project: ProjectView; items: SessionSummary[]; fresh: boolean;attentionMode?:boolean;attention?:AttentionSnapshot|null }) {
+  const { sessions, running, newSession, removeProject, revealProject } = useStore(useShallow(s => ({ sessions: s.sessions, running: s.running, newSession: s.newSession, removeProject: s.removeProject, revealProject: s.revealProject, locale: s.locale })));
   const openProjectNotes = useStore((s) => s.openProjectNotes);
   const [confirming, setConfirming] = useState(false);
   const here = sessions.project === project.id;
+  if(attentionMode)return <li><div className="flex items-center gap-2 px-2.5 py-1.5 text-[13px] text-muted"><Folder size={14} aria-hidden="true"/><span className="min-w-0 break-words">{project.name}</span></div><ul className="ml-3.5 space-y-0.5 border-l border-line pl-1.5">{items.map(session=><AttentionSessionGroup key={session.id} session={session} items={attentionTasksForSession(attention,session.id)}/>)}</ul></li>;
   return (
     <li>
       <div className="group relative">
@@ -165,19 +184,34 @@ function ProjectGroup({ project, items, fresh }: { project: ProjectView; items: 
   );
 }
 
+export function AttentionSessionGroup({session,items}:{session:SessionSummary;items:AttentionItem[]}){
+  return <li><p className="break-words px-2.5 pt-2 pb-1 text-[12px] font-medium text-muted">{session.title||t('app.sessions.untitled')}</p><ul className="space-y-1">{items.map(item=><AttentionTaskRow key={`${item.sessionId}:${item.taskId}`} item={item}/>)}</ul></li>;
+}
+export function AttentionTaskRow({item}:{item:AttentionItem}){
+  const {running,sessions,attentionTarget}=useStore(useShallow(s=>({running:s.running,sessions:s.sessions,attentionTarget:s.attentionTarget})));
+  const [error,setError]=useState<string|null>(null);
+  const blocked=attentionNavigationBlocked(item,running,sessions.current);
+  const current=attentionTarget?.sessionId===item.sessionId&&attentionTarget.taskId===item.taskId;
+  const open=()=>{const state=useStore.getState();if(attentionNavigationBlocked(item,state.running,state.sessions.current))return;setError(null);void state.openAttentionTask(item).catch(e=>setError(errorText(e)));};
+  const label=`${t('taskAttention.open',{title:item.title})} · ${t(`taskAttention.${item.reason}`)} · ${item.sessionTitle}`;
+  return <li><button type="button" disabled={blocked} onClick={open} aria-label={label} aria-current={current?'true':undefined} title={blocked?t('taskAttention.blocked'):label} className="w-full rounded-lg border border-line px-2.5 py-2 text-left hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50">
+    <span className="block break-words text-[12.5px] leading-snug text-fg">{item.title}</span><span className="mt-1 block break-words text-[11.5px] text-warn">{t(`taskAttention.${item.reason}`)}</span><span className="mt-0.5 block text-[11px] text-faint">{dayLabel(item.updatedAt)} {clock(item.updatedAt)}</span>
+  </button>{blocked&&<p className="px-2.5 py-1 text-[11px] text-muted">{t('taskAttention.blocked')}</p>}{error&&<p role="alert" className="break-words px-2.5 py-1 text-[11px] text-danger">{error}</p>}</li>;
+}
+
 /** The fresh conversation is not kept until something happens in it. */
 function FreshRow() {
-  const { runs, view } = useStore();
+  const { goal, hasRuns, view } = useStore(useShallow(s => ({ goal: s.runs[0]?.goal, hasRuns: s.runs.length > 0, view: s.view, locale: s.locale })));
   return (
     <li className={`rounded-lg px-2.5 py-2 text-[13px] ${view === "chat" ? "bg-surface-2 text-fg" : "text-muted"}`}>
-      <div className="truncate">{runs[0]?.goal ?? t("app.newSession")}</div>
-      <div className="text-[11.5px] text-faint">{runs.length === 0 ? t("app.sessions.empty") : t("app.sessions.ongoing")}</div>
+      <div className="truncate">{goal ?? t("app.newSession")}</div>
+      <div className="text-[11.5px] text-faint">{!hasRuns ? t("app.sessions.empty") : t("app.sessions.ongoing")}</div>
     </li>
   );
 }
 
 function SessionRow({ item: s }: { item: SessionSummary }) {
-  const { sessions, running, openSession, deleteSession, renameSession } = useStore();
+  const { sessions, running, openSession, deleteSession, renameSession } = useStore(useShallow(s => ({ sessions: s.sessions, running: s.running, openSession: s.openSession, deleteSession: s.deleteSession, renameSession: s.renameSession, locale: s.locale })));
   const [confirming, setConfirming] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const current = s.id === sessions.current;

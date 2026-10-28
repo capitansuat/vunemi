@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { once } from "node:events";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
+import { totalmem } from "node:os";
 
 /**
  * Runs the built-in model server. One process at a time, on 127.0.0.1 with a
@@ -56,7 +57,10 @@ const READY_MS = 3 * 60_000;
 const STOP_GRACE_MS = 3_000;
 const STOPPED = "The engine stopped while loading the model.";
 
-export function serverArgs(spec: LaunchSpec, port: number, apiKey: string): string[] {
+/** Measured on the local 35B model: 2048 cuts cold prefill by ~11%.
+ * Keep the original 512 on smaller Macs, where a larger compute graph competes
+ * with the model and KV cache for unified memory. Embeddings have their own batch. */
+export function serverArgs(spec: LaunchSpec, port: number, apiKey: string, memoryBytes = totalmem()): string[] {
   if (spec.pooling) {
     // The whole context goes to one sequence, and a sequence must fit one batch.
     const n = String(spec.context);
@@ -68,6 +72,7 @@ export function serverArgs(spec: LaunchSpec, port: number, apiKey: string): stri
   return [
     "-m", spec.path, "--host", "127.0.0.1", "--port", String(port), "--api-key", apiKey,
     "--jinja", "-c", String(spec.context), "-fa", "on", "-ngl", "999", "--no-webui",
+    "-ub", memoryBytes >= 32 * 1024 ** 3 ? "2048" : "512",
     ...(spec.projector ? ["--mmproj", spec.projector] : []),
   ];
 }

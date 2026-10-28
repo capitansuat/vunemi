@@ -1,5 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, Bug, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, CalendarClock, Trash2, Users } from "lucide-react";
+import { RecoveryActions } from "./components/RecoveryActions.js";
+import { taskSummary } from "./lib/task-summary.js";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ArrowDown, ArrowLeft, Bug, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, CalendarClock, Trash2, Users } from "lucide-react";
 import { ArtefactsView } from "./components/ArtefactsView.js";
 import { AutomationsView } from "./components/AutomationsView.js";
 import { MeetingsView } from "./components/MeetingsView.js";
@@ -13,6 +15,9 @@ import { ModelPicker } from "./components/ModelPicker.js";
 import { Mochi } from "./components/Mochi.js";
 import { SessionsNav } from "./components/SessionsNav.js";
 import { SettingsView } from "./components/SettingsView.js";
+import { useShallow } from "zustand/react/shallow";
+import { createEventBatcher, schedulePresentation } from "./lib/event-batcher.js";
+import { nearBottom } from "./lib/task-summary.js";
 import { Turn } from "./components/Turn.js";
 import { openReplies, runStats } from "./lib/fold.js";
 import type { LedgerKind } from "@vunemi/agent-core";
@@ -20,14 +25,14 @@ import { available, GOALS, IDEAS, PROJECT_GOALS, PROJECT_IDEAS, switchable } fro
 import { ICONS } from "./components/ConnectionsView.js";
 import { formatTokens } from "./lib/labels.js";
 import { clock, dayLabel } from "./lib/time.js";
-import { useStore, type View } from "./store.js";
+import { startTaskPermissionsWatch, useStore, type View } from "./store.js";
 import { t } from "@vunemi/i18n";
 import type { UpdateStatus } from "../../shared/ipc.js";
 import { UpdateAction } from "./components/UpdateAction.js";
 
 
 export function App() {
-  const { runs, pendingStart, ingest, refreshProviders, setEmbedded, setQueue, setSessions, setEngine, refreshEngine } = useStore();
+  const { hasRuns, pendingStart, ingest, refreshProviders, setEmbedded, setQueue, setSessions, setArtefacts, setEngine, refreshEngine } = useStore(useShallow(s => ({ hasRuns: s.runs.length > 0, pendingStart: s.pendingStart, ingest: s.ingest, refreshProviders: s.refreshProviders, setEmbedded: s.setEmbedded, setQueue: s.setQueue, setSessions: s.setSessions, setArtefacts: s.setArtefacts, setEngine: s.setEngine, refreshEngine: s.refreshEngine, locale: s.locale })));
   const showPane = useStore((s) => s.paneOpen);
   const viewer = useStore((s) => s.viewer);
   const preview = useStore((s) => s.preview);
@@ -39,8 +44,14 @@ export function App() {
     // Subscribed here, not in the pane, so a tab the agent opens can bring
     // the closed pane up.
     void window.vunemi.getEmbedded().then(setEmbedded);
+    const offNativeRecipes = useStore.getState().watchNativeRecipes();
+    const offTaskPermissions = startTaskPermissionsWatch();
     const offEmbedded = window.vunemi.onEmbeddedState(setEmbedded);
-    const offEvents = window.vunemi.onEvent(ingest);
+    const presentation = createEventBatcher(ingest, schedulePresentation);
+    const offEvents = window.vunemi.onEvent(presentation.push);
+    let receivedArtefacts = false;
+    const offArtefacts = window.vunemi.onArtefacts(rows => { receivedArtefacts = true; setArtefacts(rows); });
+    void window.vunemi.listArtefacts().then(rows => { if (!receivedArtefacts) setArtefacts(rows); }).catch(() => {});
     // The queue lives in main, so a window reload finds it still there.
     void window.vunemi.listQueued().then(setQueue);
     const offQueue = window.vunemi.onQueue(setQueue);
@@ -51,18 +62,22 @@ export function App() {
       const fresh = !list.sessions.some((s) => s.id === list.current);
       if (cut && fresh) void useStore.getState().openSession(cut.id).catch(() => {});
     });
-    const offSessions = window.vunemi.onSessions(setSessions);
+    const offSessions = window.vunemi.onSessions(list => { presentation.flush(); setSessions(list); });
     void refreshEngine();
     void useStore.getState().refreshLibrary();
     const offEngine = window.vunemi.onEngine(setEngine);
     return () => {
+      offTaskPermissions();
+      offNativeRecipes();
       offEngine();
       offEmbedded();
       offEvents();
+      presentation.dispose();
+      offArtefacts();
       offQueue();
       offSessions();
     };
-  }, [ingest, refreshProviders, setEmbedded, setQueue, setSessions, setEngine, refreshEngine]);
+  }, [ingest, refreshProviders, setEmbedded, setQueue, setSessions, setArtefacts, setEngine, refreshEngine]);
 
   return (
     <div className="flex h-full">
@@ -82,7 +97,7 @@ export function App() {
           <SettingsView />
         ) : (
           <>
-            {runs.length === 0 && !pendingStart ? <Empty /> : <Conversation />}
+            {!hasRuns && !pendingStart ? <Empty /> : <Conversation />}
             <div className="mx-auto w-full max-w-[760px] px-6 pb-5">
               <EngineBanner />
               <BackgroundBrowsing />
@@ -118,7 +133,7 @@ function DebugPortWarning() {
  * activity log — lives in Settings. Folds down to a strip of icons.
  */
 function Sidebar() {
-  const { newSession, running, navFolded, setNavFolded } = useStore();
+  const { newSession, running, navFolded, setNavFolded } = useStore(useShallow(s => ({ newSession: s.newSession, running: s.running, navFolded: s.navFolded, setNavFolded: s.setNavFolded, locale: s.locale })));
   // The Automations page exists only in a build with the library switched on.
   const library = useStore((s) => s.library?.enabled === true);
   if (navFolded) {
@@ -241,7 +256,7 @@ function ViewButton({
   icon: typeof Package;
   folded?: boolean;
 }) {
-  const { view: current, setView } = useStore();
+  const { view: current, setView } = useStore(useShallow(s => ({ view: s.view, setView: s.setView, locale: s.locale })));
   const on = current === view;
   if (folded) {
     return (
@@ -273,13 +288,12 @@ function ViewButton({
 }
 
 function TopBar() {
-  const runs = useStore((s) => s.runs);
-  const context = useStore((s) => s.context);
-  const last = runs.at(-1);
-  const compacted = last?.compaction?.status === "done" ? last.compaction.after : null;
-  const used = compacted ?? (last ? runStats(last).lastPromptTokens : null) ?? context?.estimate ?? null;
-  // After a compaction the last request no longer describes what's sent next.
-  const parts = compacted === null && last ? runStats(last).lastParts : null;
+  const { context, used, parts } = useStore(useShallow(s => {
+    const last = s.runs.at(-1);
+    const stats = last ? runStats(last) : null;
+    const compacted = last?.compaction?.status === "done" ? last.compaction.after : null;
+    return { context: s.context, used: compacted ?? stats?.lastPromptTokens ?? s.context?.estimate ?? null, parts: compacted === null ? stats?.lastParts ?? null : null, locale: s.locale };
+  }));
 
   return (
     <header className="drag flex h-[52px] shrink-0 items-center gap-3 border-b border-line px-4">
@@ -323,7 +337,7 @@ function PageBar() {
 }
 
 function PaneToggle() {
-  const { paneOpen, setPaneOpen } = useStore();
+  const { paneOpen, setPaneOpen } = useStore(useShallow(s => ({ paneOpen: s.paneOpen, setPaneOpen: s.setPaneOpen, locale: s.locale })));
   return (
     <button
       type="button"
@@ -384,13 +398,33 @@ function ContextMeter({ used, budget, known, parts }: { used: number; budget: nu
   );
 }
 
-function Conversation() {
+export function Conversation() {
   const runs = useStore((s) => s.runs);
+  const running = useStore(s=>s.running);
+  const activeRun = useStore(s=>s.activeRun);
   const replies = openReplies(runs);
+  const recoveryRun = runs.at(-1)?.runId;
+  const tasks = useStore(s => s.tasks);
+  const conversationId = useStore(s => s.sessions.current);
+  const taskByRun = useMemo(() => new Map(tasks.map(task => [task.activeRunId, task])), [tasks]);
   const pendingStart = useStore((s) => s.pendingStart);
   const stop = useStore((s) => s.stop);
   const scroller = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
+  const content = useRef<HTMLDivElement>(null);
+  const [following, setFollowing] = useState(true);
+
+  const follow = () => {
+    const el = scroller.current;
+    if (el && pinned.current) el.scrollTop = el.scrollHeight;
+  };
+  useLayoutEffect(() => { pinned.current = true; setFollowing(true); follow(); }, [conversationId]);
+  useEffect(() => {
+    if (!content.current) return;
+    const observer = new ResizeObserver(follow);
+    observer.observe(content.current);
+    return () => observer.disconnect();
+  }, []);
 
   // Follow new output, unless the user has scrolled up to read.
   useLayoutEffect(() => {
@@ -399,17 +433,22 @@ function Conversation() {
   });
 
   return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
     <div
       ref={scroller}
+      tabIndex={0}
+      role="region"
+      aria-label={t("app.nav.chat")}
       onScroll={(e) => {
         const el = e.currentTarget;
-        pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        pinned.current = nearBottom(el);
+        setFollowing(pinned.current);
       }}
-      className="scroll-thin min-h-0 flex-1 overflow-y-auto"
+      className="scroll-thin min-h-0 flex-1 overflow-y-auto outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ember"
     >
-      <div className="mx-auto max-w-[760px] space-y-9 px-6 pt-8 pb-10">
+      <div ref={content} className="mx-auto max-w-[760px] space-y-9 px-6 pt-8 pb-10">
         {runs.map((r) => (
-          <Turn key={r.runId} run={r} {...(replies?.runId === r.runId && { replies: replies.options })} />
+          <Turn key={r.runId} run={r} active={running && activeRun?.sessionId===conversationId && activeRun.runId===r.runId && r===runs.at(-1)} task={taskByRun.get(r.runId)} recovery={r.runId === recoveryRun} {...(replies?.runId === r.runId && { replies: replies.options })} />
         ))}
         {pendingStart && <section className="space-y-4">
           <div className="flex justify-end">
@@ -420,60 +459,14 @@ function Conversation() {
             <button type="button" onClick={() => void stop()} className="ml-2 text-faint underline hover:text-fg">{t("composer.stop")}</button>
           </div>
         </section>}
-        <Interrupted />
+        {!runs.some(r => r.runId === recoveryRun && taskByRun.has(r.runId) && taskSummary(taskByRun.get(r.runId)!).show) && <RecoveryActions standalone />}
       </div>
+    </div>
+    {!following && <button type="button" onClick={() => { pinned.current = true; setFollowing(true); follow(); }} className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 py-2 text-[12px] text-fg shadow-sm hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ember"><ArrowDown size={13} aria-hidden="true" />{t("chatTask.jump")}</button>}
     </div>
   );
 }
 
-/** The last task here was cut short by Vunemi closing; picking it up is the user's call. */
-function Interrupted() {
-  const { sessions, running, model, setSessions } = useStore();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const cut = sessions.sessions.find((s) => s.id === sessions.current)?.interrupted;
-  useEffect(() => setBusy(false), [sessions.current]);
-  if (!cut || running) return null;
-
-  const act = (fn: () => Promise<unknown>) => {
-    setBusy(true);
-    setError(null);
-    fn().catch((e: unknown) => {
-      setBusy(false);
-      setError(e instanceof Error ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(e));
-    });
-  };
-  return (
-    <div role="status" className="rounded-xl border border-warn-line bg-warn-soft p-3.5">
-      <div className="flex items-center gap-2 text-[13.5px] font-medium text-fg">
-        <TriangleAlert size={14} className="text-warn" />
-        {t("app.recovery.title")}
-      </div>
-      <p className="mt-1.5 text-[12.5px] leading-snug text-muted">
-        {t("app.recovery.steps", { count: cut.steps })} {t("app.recovery.body")}
-      </p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          disabled={busy || !model}
-          onClick={() => act(() => window.vunemi.resumeInterrupted(model!))}
-          className="rounded-lg bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {t("app.recovery.resume")}
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => act(async () => { setSessions(await window.vunemi.dismissInterrupted()); setBusy(false); })}
-          className="rounded-lg px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:bg-surface hover:text-fg disabled:opacity-50"
-        >
-          {t("app.recovery.dismiss")}
-        </button>
-      </div>
-      {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
-    </div>
-  );
-}
 
 function Empty() {
   const { send, suggest, model, providers, engine, sessions, openConnection, openAutomations } = useStore();

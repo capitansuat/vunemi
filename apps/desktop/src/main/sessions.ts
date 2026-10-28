@@ -23,10 +23,11 @@
  * the model, and so before the history, ever sees them.
  */
 
-import { chmodSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readdirSync, readFileSync, statSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { sealInterrupted, type AgentEvent, type ChatMessage } from "@vunemi/agent-core";
-import type { SessionSummary } from "../shared/ipc.js";
+import { sealInterrupted, tasksFromEvents, type TaskRecord, type AgentEvent, type ChatMessage } from "@vunemi/agent-core";
+import {taskAttention} from "./task-attention.js";
+import type { AttentionItem, AttentionSnapshot, SessionSummary } from "../shared/ipc.js";
 import { t } from "@vunemi/i18n";
 
 interface StoredSession {
@@ -56,6 +57,12 @@ interface Checkpoint {
 }
 
 const CHECKPOINT = ".checkpoint";
+const TASK_BOUNDARIES = new Set([
+  "desktop.append-intent", "desktop.receipt",
+  "run.started", "plan.proposed", "plan.resolved", "task.progress", "run.paused", "run.resumed",
+  "tool.proposed", "approval.required", "approval.resolved", "tool.started", "tool.finished",
+  "handoff.required", "handoff.resolved", "choice.asked", "choice.answered",
+]);
 /** Answers a call that was under way when Vunemi closed. For the model. */
 export const CLOSED_MID_CALL = "[Vunemi closed before this tool reported back. It may or may not have taken effect: check before doing it again.]";
 /** Ends a transcript that Vunemi's closing cut short. For the model. */
@@ -68,7 +75,12 @@ const MAX_STORED_OUTPUT = 20_000;
 const TITLE_CHARS = 80;
 
 export class SessionStore {
+  private attentionCache=new Map<string,{signature:string;items:AttentionItem[]}>();
+  private attentionSignature="";
+  private attentionRevision=0;
   private current: StoredSession;
+  private activeRun: string | null = null;
+  private checkpointMessages: ChatMessage[] | null = null;
   private readonly summaries = new Map<string, SessionSummary>();
 
   constructor(
@@ -106,6 +118,34 @@ export class SessionStore {
     return [...this.summaries.values()].sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
+  /** Local display-only projection; reads each unchanged stored conversation at most once. */
+  attention(): AttentionSnapshot {
+    const ids=new Set([...this.summaries.keys(),this.current.id]);
+    const items:AttentionItem[]=[];
+    for(const id of ids){
+      const current=id===this.current.id;
+      let signature="";
+      if(!current){
+        try {const st=statSync(join(this.dir,`${id}.json`));signature=`${st.mtimeMs}:${st.ctimeMs}:${st.size}`;}
+        catch {this.attentionCache.delete(id);continue;}
+        const cached=this.attentionCache.get(id);
+        if(cached?.signature===signature){items.push(...cached.items);continue;}
+      }
+      const stored=current?this.current:this.read(id);
+      if(!stored){this.attentionCache.delete(id);continue;}
+      const recoveredRunId=stored.interrupted?stored.events.findLast(e=>e.type==='run.started')?.runId:undefined;
+      const projected=taskAttention({...stored,recoveredRunId},tasksFromEvents(stored.events));
+      if(!current)this.attentionCache.set(id,{signature,items:projected});
+      items.push(...projected);
+    }
+    for(const id of this.attentionCache.keys())if(!ids.has(id))this.attentionCache.delete(id);
+    items.sort((a,b)=>b.updatedAt-a.updatedAt||a.sessionId.localeCompare(b.sessionId)||a.taskId.localeCompare(b.taskId));
+    const bounded=items.slice(0,100),truncated=items.length>100;
+    const signature=JSON.stringify({items:bounded,truncated});
+    if(signature!==this.attentionSignature){this.attentionSignature=signature;this.attentionRevision++;}
+    return {revision:this.attentionRevision,items:bounded.map(item=>({...item})),truncated};
+  }
+
   /** Whether a task ran in the current conversation. */
   hasRun(runId: string): boolean {
     return this.current.events.some((e) => e.type === "run.started" && e.runId === runId);
@@ -117,14 +157,29 @@ export class SessionStore {
     if (event.type === "run.started") {
       if (s.title === "") s.title = event.goal.trim().slice(0, TITLE_CHARS);
       delete s.interrupted;
+      this.activeRun = event.runId;
+      this.checkpointMessages = null;
     }
     appendCompacted(s.events, event);
     s.updatedAt = this.now();
     // A finished task is the moment worth keeping; mid-run there is nothing
     // to reopen that would not be missing its end.
     if (event.type === "run.finished") {
+      this.activeRun = null;
       this.save();
       rmSync(this.checkpointFile(s.id), { force: true });
+    }
+    if (this.activeRun && TASK_BOUNDARIES.has(event.type)) {
+      const messages = this.checkpointMessages ?? s.history;
+      // A crash between tool.finished and the next core checkpoint must not
+      // turn a known result into an unknown one in the model transcript.
+      if (event.type === "tool.finished") {
+        const asked = messages.findLastIndex(m => m.role === "assistant" && m.toolCalls?.some(c => c.id === event.callId));
+        if (asked >= 0 && !messages.slice(asked + 1).some(m => m.role === "tool" && m.toolCallId === event.callId)) {
+          const proposal = s.events.findLast(e => e.type === "tool.proposed" && e.runId === event.runId && e.callId === event.callId);
+          this.checkpoint([...messages, { role: "tool", toolCallId: event.callId, toolName: proposal?.type === "tool.proposed" ? proposal.tool : "unknown", content: event.output }]);
+        } else this.checkpoint(messages);
+      } else this.checkpoint(messages);
     }
     // Notes proposed after the answer, and the user's yes or no, come once the task is over.
     if (event.type === "memory.proposed" || event.type === "memory.resolved") this.save();
@@ -133,6 +188,7 @@ export class SessionStore {
   /** Keeps the run in progress, as of this step. */
   checkpoint(messages: ChatMessage[]): void {
     const s = this.current;
+    this.checkpointMessages = structuredClone(messages);
     const point: Checkpoint = {
       version: 1, id: s.id, title: s.title, createdAt: s.createdAt, at: this.now(), events: s.events, messages,
       ...(s.projectId && { projectId: s.projectId }),
@@ -169,6 +225,12 @@ export class SessionStore {
     if (!stored) throw new Error(t("sessions.notFound"));
     this.current = stored;
     return { history: stored.history, events: stored.events };
+  }
+
+  /** Durable task records projected from the same events as the conversation. */
+  tasks(id = this.current.id): TaskRecord[] {
+    const s = id === this.current.id ? this.current : SESSION_ID.test(id) ? this.read(id) : null;
+    return s ? tasksFromEvents(s.events) : [];
   }
 
   /** A stored conversation's name, date and timeline, without making it current. */
@@ -252,7 +314,7 @@ export class SessionStore {
       updatedAt: point.at,
       history,
       events: [...point.events, { type: "run.finished", runId, status: "stopped", detail: t("sessions.interrupted"), at: point.at }],
-      interrupted: { steps: stepsDone(point.messages), at: point.at },
+      interrupted: { steps: tasksFromEvents(point.events).find(t => t.activeRunId === runId)?.steps.filter(s => s.status === "completed" && s.evidence === "tool_result").length ?? 0, at: point.at },
       ...((point.projectId ?? kept?.projectId) && { projectId: point.projectId ?? kept?.projectId }),
     });
     rmSync(this.checkpointFile(id), { force: true });

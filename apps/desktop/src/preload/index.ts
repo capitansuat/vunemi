@@ -1,11 +1,21 @@
+import type {NativeRecipesSnapshot} from '../shared/native-recipes.js';
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from "electron";
 import type { AgentEvent } from "@vunemi/agent-core";
 import type { OutboxEvent } from "@vunemi/mail";
-import { CH, type ActivityEntry, type AddonView, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MeetingLine, type MeetingStatusView, type MemorySearchStatus, type SpeakersView, type VunemiApi, type QueuedMessage, type SessionList, type UpdateStatus, type VoiceStatus } from "../shared/ipc.js";
+import { CH, type TaskPermissionsSnapshot, type ActivityEntry, type AddonView, type ArtefactView, type AutomationView, type EmbeddedState, type EngineView, type LockState, type MeetingLine, type MeetingStatusView, type MemorySearchStatus, type SpeakersView, type VunemiApi, type QueuedMessage, type SessionList, type UpdateStatus, type VoiceStatus } from "../shared/ipc.js";
 import type { Locale } from "@vunemi/i18n";
 
 const api: VunemiApi = {
+  nativeRecipeTargets:()=>ipcRenderer.invoke(CH.nativeRecipeTargets),
+  beginNativeRecipeSetup:input=>ipcRenderer.invoke(CH.beginNativeRecipeSetup,input),
+  prepareNativeRecipe:req=>ipcRenderer.invoke(CH.prepareNativeRecipe,req),
+  approveNativeRecipe:req=>ipcRenderer.invoke(CH.approveNativeRecipe,req),
+  cancelNativeRecipeSetup:owner=>ipcRenderer.invoke(CH.cancelNativeRecipeSetup,owner),
+  listNativeRecipes:()=>ipcRenderer.invoke(CH.listNativeRecipes),
+  revokeNativeRecipe:req=>ipcRenderer.invoke(CH.revokeNativeRecipe,req),
+  onNativeRecipesChanged:listener=>{const fn=(_e:IpcRendererEvent,s:NativeRecipesSnapshot)=>listener(s);ipcRenderer.on(CH.nativeRecipesChanged,fn);return()=>ipcRenderer.removeListener(CH.nativeRecipesChanged,fn);},
   listProviders: () => ipcRenderer.invoke(CH.listProviders),
+  getCoordinatorStatus: () => ipcRenderer.invoke(CH.coordinatorStatus),
   getModelSettings: () => ipcRenderer.invoke(CH.modelSettingsGet),
   setModelSettings: (settings) => ipcRenderer.invoke(CH.modelSettingsSet, settings),
   checkModel: (spec) => ipcRenderer.invoke(CH.modelCheck, spec),
@@ -26,11 +36,19 @@ const api: VunemiApi = {
   stopRun: () => ipcRenderer.invoke(CH.stopRun),
   pauseRun: () => ipcRenderer.invoke(CH.pauseRun),
   resumeRun: () => ipcRenderer.invoke(CH.resumeRun),
-  resolveApproval: (callId, decision) => ipcRenderer.invoke(CH.resolveApproval, callId, decision),
-  resolveChoice: (runId, callId, answer) => ipcRenderer.invoke(CH.resolveChoice, runId, callId, answer),
+  resolveApproval: (callId, decision, owner) => ipcRenderer.invoke(CH.resolveApproval, callId, decision, owner),
+  resolveTaskApproval:request=>ipcRenderer.invoke(CH.resolveTaskApproval,request),
+  listTaskPermissions:request=>ipcRenderer.invoke(CH.listTaskPermissions,request),
+  revokeTaskPermission:request=>ipcRenderer.invoke(CH.revokeTaskPermission,request),
+  onTaskPermissionsChanged:listener=>{
+    const handler=(_event:IpcRendererEvent,snapshot:TaskPermissionsSnapshot)=>listener(snapshot);
+    ipcRenderer.on(CH.taskPermissionsChanged,handler);
+    return ()=>ipcRenderer.removeListener(CH.taskPermissionsChanged,handler);
+  },
+  resolveChoice: (runId, callId, answer, owner) => ipcRenderer.invoke(CH.resolveChoice, runId, callId, answer, owner),
   openChoiceSource: (url) => ipcRenderer.invoke(CH.openChoiceSource, url),
-  resolveHandoff: (callId, outcome) => ipcRenderer.invoke(CH.resolveHandoff, callId, outcome),
-  resolvePlan: (decision) => ipcRenderer.invoke(CH.resolvePlan, decision),
+  resolveHandoff: (callId, outcome, owner) => ipcRenderer.invoke(CH.resolveHandoff, callId, outcome, owner),
+  resolvePlan: (decision, owner) => ipcRenderer.invoke(CH.resolvePlan, decision, owner),
   resetSession: () => ipcRenderer.invoke(CH.resetSession),
   getContext: (model) => ipcRenderer.invoke(CH.contextGet, model),
   compactNow: (model, runId) => ipcRenderer.invoke(CH.contextCompact, model, runId),
@@ -41,8 +59,10 @@ const api: VunemiApi = {
   removeProject: (id) => ipcRenderer.invoke(CH.projectsRemove, id),
   revealProject: (id) => ipcRenderer.invoke(CH.projectsReveal, id),
   openSession: (id) => ipcRenderer.invoke(CH.sessionsOpen, id),
-  resumeInterrupted: (model) => ipcRenderer.invoke(CH.sessionsResume, model),
-  dismissInterrupted: () => ipcRenderer.invoke(CH.sessionsDismiss),
+  listAttention:()=>ipcRenderer.invoke(CH.attentionList),
+  openAttentionTask:(target)=>ipcRenderer.invoke(CH.attentionOpen,target),
+  resumeInterrupted: (model, sessionId) => ipcRenderer.invoke(CH.sessionsResume, model, sessionId),
+  dismissInterrupted: (sessionId) => ipcRenderer.invoke(CH.sessionsDismiss, sessionId),
   deleteSession: (id) => ipcRenderer.invoke(CH.sessionsDelete, id),
   renameSession: (id, title) => ipcRenderer.invoke(CH.sessionsRename, id, title),
   onSessions: (listener) => {
@@ -127,6 +147,8 @@ const api: VunemiApi = {
   forgetEverything: () => ipcRenderer.invoke(CH.forgetEverything),
   getAppearance: () => ipcRenderer.invoke(CH.appearanceGet),
   setAppearance: (appearance) => ipcRenderer.invoke(CH.appearanceSet, appearance),
+  searchLocation: () => ipcRenderer.invoke(CH.searchLocationGet),
+  setSearchLocation: (profile) => ipcRenderer.invoke(CH.searchLocationSet, profile),
   getLanguage: () => ipcRenderer.invoke(CH.languageGet),
   setLanguage: (locale) => ipcRenderer.invoke(CH.languageSet, locale),
   getLock: () => ipcRenderer.invoke(CH.lockGet),
@@ -197,7 +219,7 @@ const api: VunemiApi = {
   installShortcut: (id) => ipcRenderer.invoke(CH.automationsShortcut, id),
   undoDeleteAutomation: () => ipcRenderer.invoke(CH.automationsUndoDelete),
   summarizeAutomation: (args) => ipcRenderer.invoke(CH.automationsSummarize, args),
-  adjustAutomation: (args, when) => ipcRenderer.invoke(CH.automationsAdjust, args, when),
+  adjustAutomation: (args, when,callId,owner) => ipcRenderer.invoke(CH.automationsAdjust, args, when,callId,owner),
   onAutomations: (listener) => {
     const handler = (_e: IpcRendererEvent, rows: AutomationView[]) => listener(rows);
     ipcRenderer.on(CH.automationsChanged, handler);
@@ -222,6 +244,7 @@ const api: VunemiApi = {
   synthesize: (text) => ipcRenderer.invoke(CH.synthesize, text),
   stopSpeaking: () => ipcRenderer.invoke(CH.stopSpeaking),
   vaultStatus: () => ipcRenderer.invoke(CH.vaultStatus),
+  vaultUnlock: () => ipcRenderer.invoke(CH.vaultUnlock),
   vaultSet: (name, value, note) => ipcRenderer.invoke(CH.vaultSet, name, value, note),
   vaultDelete: (name) => ipcRenderer.invoke(CH.vaultDelete, name),
   getEmbedded: () => ipcRenderer.invoke(CH.embeddedGet),

@@ -1,25 +1,33 @@
 import { useState } from "react";
 import { Ban, ListChecks, Pencil, Play } from "lucide-react";
-import type { PlanView } from "../lib/fold.js";
+import {currentActionOwner,type PlanView} from "../lib/fold.js";
+import {callStatusLabel} from '../lib/labels.js';
 import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
 
 /** Intent preview: what the agent means to do, before it starts. */
-export function PlanCard({ plan }: { plan: PlanView }) {
+export function PlanCard({ plan, readOnly = false }: { plan: PlanView; readOnly?: boolean }) {
   const resolvePlan = useStore((s) => s.resolvePlan);
+  const renderedOwner=currentActionOwner(useStore.getState(),'plan',plan);
+  const current=()=>renderedOwner?currentActionOwner(useStore.getState(),'plan',plan,renderedOwner):undefined;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(plan.steps.join("\n"));
   const [busy, setBusy] = useState(false);
+  const [error,setError]=useState<string|null>(null),[expired,setExpired]=useState(false);
 
-  if (plan.status !== "awaiting") return <PlanSummary plan={plan} />;
+  if (readOnly || plan.status !== "awaiting" || !plan.requestId) return <PlanSummary plan={plan} />;
 
   const steps = () => draft.split("\n").map((l) => l.replace(/^\s*\d{1,2}[.)]\s*/, "").trim()).filter(Boolean);
 
+  let sending=false;
   const go = () => {
+    const owner=current();if(!owner||busy||expired||sending)return;
     const s = editing ? steps() : plan.steps;
     if (s.length === 0) return;
+    sending=true;
     setBusy(true);
-    void resolvePlan({ kind: "go", steps: s });
+    setError(null);
+    void resolvePlan({ kind: "go", steps: s },owner).then(ok=>{if(!current())return;if(!ok){setExpired(true);setBusy(false);}}).catch(e=>{if(!current())return;setError(e instanceof Error?e.message:String(e));setBusy(false);});
   };
 
   return (
@@ -52,7 +60,7 @@ export function PlanCard({ plan }: { plan: PlanView }) {
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={busy}
+          disabled={busy||expired}
           onClick={go}
           className="flex items-center gap-1.5 rounded-lg bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
         >
@@ -61,8 +69,8 @@ export function PlanCard({ plan }: { plan: PlanView }) {
         {!editing && (
           <button
             type="button"
-            disabled={busy}
-            onClick={() => setEditing(true)}
+            disabled={busy||expired}
+            onClick={() => {if(current())setEditing(true);}}
             className="flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface px-3.5 py-1.5 text-[13px] text-fg transition-colors hover:bg-surface-2 disabled:opacity-50"
           >
             <Pencil size={12} /> {t("plan.edit")}
@@ -70,16 +78,21 @@ export function PlanCard({ plan }: { plan: PlanView }) {
         )}
         <button
           type="button"
-          disabled={busy}
+          disabled={busy||expired}
           onClick={() => {
+            const owner=current();if(!owner||busy||expired||sending)return;
+            sending=true;
             setBusy(true);
-            void resolvePlan({ kind: "cancel" });
+            setError(null);
+            void resolvePlan({ kind: "cancel" },owner).then(ok=>{if(!current())return;if(!ok){setExpired(true);setBusy(false);}}).catch(e=>{if(!current())return;setError(e instanceof Error?e.message:String(e));setBusy(false);});
           }}
           className="flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:bg-surface-2 hover:text-fg disabled:opacity-50"
         >
           <Ban size={12} /> {t("common.cancel")}
         </button>
       </div>
+      {error&&<p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
+      {expired&&<p role="status" className="mt-2 text-[12px] text-muted">{callStatusLabel('cancelled')}</p>}
     </div>
   );
 }

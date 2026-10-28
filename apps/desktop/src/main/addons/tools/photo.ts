@@ -22,7 +22,7 @@ export const PHOTO_GUIDE = `Editing pictures:
 - photo_edit makes a changed copy of a picture: crop, rotate, flip, resize, brightness, contrast, saturation, automatic tone, sharpen, blur. With no change it only converts the format, which the new file's ending chooses (.jpg, .png, .webp, .tif, .psd).
 - Crop by shape with crop.ratio ("1:1", "16:9", "4:5": the middle of the picture is kept) or by exact pixels with x, y, width, height. Resize by width or height alone to keep the shape.
 - brightness, contrast and saturation go from -100 to 100; 0 changes nothing. Small steps (10 to 30) look natural.
-- It cannot remove objects or backgrounds, and cannot make a picture from words. The original is never changed. The result says the picture's size before and after.`;
+- These short tools cover basic adjustments. For other supported PhotoCraft operations, discover its commands and use photo_engine_run. Image generation depends on installed engine capabilities. The original is never changed. The result says the picture's size before and after.`;
 
 interface Size {
   width: number;

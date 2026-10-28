@@ -311,7 +311,9 @@ export class AppleMailAccount implements MailAccount {
   async saveDraft(draft: Draft): Promise<{ id: string }> {
     const result = await this.call<{ saved?: boolean; id?: number; failed?: string; reason?: string }>(MAIL_COMPOSE, this.compose("draft", draft));
     if (!result.saved) throw new Error(t("apps.error.failed", { app: APP, detail: result.reason ?? "" }));
-    // Mail's draft id doesn't survive the save as a message id, so there is no undo to offer.
+    // Mail's draft id doesn't survive the save as a message id. No undo or
+    // verifyDraft is offered: a broad Drafts search cannot prove this exact write.
+    // mail_draft reports the acknowledgement as saved-unverified without retrying.
     return { id: "" };
   }
 
