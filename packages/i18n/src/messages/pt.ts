@@ -1,6 +1,184 @@
 import type { Catalogue } from "../types.js";
 
 export const messages: Catalogue = {
+  quotedSource: {"action": "Perguntar sobre a seleção", "title": "Texto citado", "remove": "Remover citação", "source": "Ver resposta original", "unsupported": "Selecione texto de uma única resposta concluída.", "tooLong": "Selecione até 2.000 caracteres.", "placeholder": "Faça uma pergunta sobre esta citação…", "show": "Mostrar citação", "hide": "Ocultar citação"},
+  taskAttention: {
+    "title": "Precisam de atenção",
+    "loading": "A carregar tarefas…",
+    "empty": "Nenhuma tarefa precisa de atenção.",
+    "error": "Não foi possível carregar as tarefas.",
+    "refresh": "Atualizar",
+    "truncated": "São apresentadas as últimas 100 tarefas.",
+    "open": "Abrir tarefa {title}",
+    "blocked": "Termina ou interrompe a tarefa atual antes de mudar de conversa.",
+    "plan": "Aprovação do plano",
+    "approval": "É necessária aprovação",
+    "user": "É necessária a tua resposta",
+    "review": "Revisão necessária",
+    "uncertain": "Resultado incerto",
+    "recovery": "Interrompida ao reiniciar"
+},
+  outcomeProgress: {
+    browserWrite: "Abrir {target}.",
+    browserVerify: "Verificar a página atual de {target}.",
+    calendarWrite: "Criar o evento de calendário {target}.",
+    calendarVerify: "Reler e verificar o evento {target}.",
+    draftWrite: "Guardar o rascunho {target}.",
+    draftVerify: "Reler e verificar o rascunho {target}.",
+    reviewNeeded: "A ação foi confirmada, mas o resultado não foi verificado de forma independente. Reveja o resultado existente; não repita a alteração.",
+  },
+  nativeRecipes: {
+    noResume: "As tarefas nativas agendadas não podem ser retomadas. Reveja uma nova permissão nas Tarefas agendadas.",
+    backupCount: "Até {count} cópias, uma por horário aprovado",
+    "title": "Tarefa TextEdit agendada",
+    "intro": "Acrescente texto fixo a um documento UTF-8 já aberto e guardado.",
+    "setup": "Configurar tarefa TextEdit",
+    "target": "Documento e janela abertos",
+    "literal": "Texto exato a acrescentar",
+    "timezone": "Fuso horário",
+    "slot": "Horário {count}",
+    "addSlot": "Adicionar horário",
+    "removeSlot": "Remover horário",
+    "reviewRead": "Rever leitura de preparação",
+    "readConsent": "A preparação lê o documento do disco e do TextEdit para verificar igualdade e cópias. Autoriza apenas leituras de preparação, não alterações ou tarefas agendadas.",
+    "prepare": "Permitir leitura de preparação",
+    "approve": "Aprovar estas alterações agendadas",
+    "cancel": "Cancelar e voltar",
+    "expired": "Esta revisão expirou. Cancele e prepare outra.",
+    "failed": "Esta revisão não pode continuar. Cancele e prepare outra.",
+    "busy": "A aguardar o processo principal…",
+    "revoke": "Revogar permissão",
+    "revoking": "A revogar…",
+    "runNowDisabled": "Apenas nos horários aprovados",
+    "remaining": "Restam {count} horários aprovados",
+    "expires": "A permissão termina: {at}",
+    "next": "Próximo horário aprovado: {at}",
+    "backup": "Cópia de segurança: {path}",
+    "readTarget": "Destino da leitura: {path}",
+    "review": "Rever alterações exatas",
+    "limits": "No máximo 4 horários em 24 horas. Cada um permite uma cópia, um acréscimo e uma gravação. Exige 10 segundos sem entrada; se ocupado ou com mais de 60 segundos de atraso, o horário é consumido sem repetição. Não abre, ativa nem reverte. Revogar não desfaz pedidos enviados. Pode haver entrada após a última verificação; resultados incertos exigem revisão. Reiniciar exige nova aprovação. Cada tentativa deixa de enviar novos pedidos nativos 30 segundos após o primeiro efeito nativo, ou antes se a permissão expirar. Os pedidos enviados não podem ser revertidos.",
+    "noTargets": "Não há documentos TextEdit abertos elegíveis.",
+    "offset": "Desvio UTC explícito",
+    "offsetRequired": "Escolha o desvio UTC",
+    "invalidInput": "Verifique o documento, o texto e 1 a 4 horários concretos.",
+    "revokeFailed": "A revogação não foi confirmada.",
+    "authority": {
+      "active": "Ativa",
+      "revoked": "Revogada",
+      "expired": "Expirada",
+      "reapproval-required": "Exige nova aprovação",
+      "blocked-unknown": "Bloqueada: resultado incerto",
+      "exhausted": "Horários aprovados esgotados"
+    },
+    "slotStatus": {
+      "scheduled": "Agendado",
+      "reserved": "Reservado",
+      "skipped": "Ignorado",
+      "backup-only": "Apenas cópia; nenhum acréscimo enviado",
+      "verified": "Verificado independentemente",
+      "unknown": "Incerto; exige revisão"
+    }
+  },
+  taskPermissions: {
+    loadFailed: "Não foi possível carregar as permissões desta execução.",
+    "title": "Permissões desta execução",
+    "once": "Apenas esta ação",
+    "fileOffer": "Ler este ficheiro nesta execução · até 8 leituras",
+    "windowOffer": "Observar esta janela nesta execução · até 8 vezes",
+    "fileSameVersion": "Apenas esta versão; alterações exigem nova permissão.",
+    "remaining": "{remaining}/{max} utilizações restantes",
+    "expired": "Expirada",
+    "exhausted": "Limite atingido",
+    "revoke": "Revogar permissão",
+    "revoking": "A revogar…",
+    "revoked": "Revogada",
+    "revokeFailed": "Não foi possível revogar a permissão.",
+    "inFlightRead": "Novas leituras com esta permissão estão bloqueadas; as anteriores não são desfeitas.",
+    "empty": "Sem permissões ativas.",
+    "schedulerRestriction": "Executar agora usa restrições sem supervisão. Estas permissões não passam para tarefas agendadas.",
+    "runDuration": "Apenas nesta execução",
+    "activeCount": "Permissões ativas · {count}",
+    "revokeTarget": "Revogar permissão para {target}",
+    "scopeLegend": "Âmbito da permissão",
+    "effect": {
+      "fileRead": "Leitura de ficheiros",
+      "windowObserve": "Observação de janelas"
+    }
+  },
+  safeMove: {
+    documentAutomationRequired: "Permita que o Vunemi controle o TextEdit em Ajustes do Sistema → Privacidade e Segurança → Automação; depois observe o documento novamente.","preview": {"backup": "Cópia: {path}", "noOverwrite": "Não substitui um destino existente."}, "documentPreview": "Mover seleção e guardar\nTextEdit PID {pid} · {title} #{window}\n{path}\nUTF-16 {start}–{end} → {destination}\n{selection}\nCópia: {backup}\nPara se o documento mudar. A edição simultânea não é bloqueada."},
+
+  backgroundCapabilities: {
+    "perAction": "As ações disponíveis são verificadas novamente em cada pedido.",
+    "notObserved": "Ações não observadas neste destino",
+    backend: {"native": "Janela da aplicação", "browser": "Separador do navegador", "webContent": "Conteúdo web numa aplicação"},
+    "title": "Funções em segundo plano",
+    "available": "Ações observadas",
+    "none": "Esta observação não oferece ações elegíveis em segundo plano.",
+    "notProvided": "Não disponível em segundo plano nesta versão",
+    "observationOnly": "Uma observação não é uma permissão nem prova de conclusão. A disponibilidade pode mudar.",
+    "actions": {
+      "sliderDrag": "Arrastar controle deslizante",
+      "scrollPosition": "Definir a posição de deslocamento",
+      "menuOpen": "Abrir um menu",
+      "menuSelect": "Selecionar um item do menu",
+      "press": "Premir um botão",
+      "setValue": "Alterar um campo de texto",
+      "menu": "Menu",
+      "scroll": "Deslocar",
+      "drag": "Arrastar"
+    }
+  },
+  chatTask: {
+    target: "Destino",
+    mode: {"background": "Em segundo plano", "foreground": "Em primeiro plano"},
+    history: "Detalhes do trabalho",
+    "status": {
+      "running": "Em andamento",
+      "waiting_approval": "Aguardando aprovação",
+      "waiting_user": "Aguardando sua ajuda",
+      "paused": "Pausado",
+      "completed": "Etapas concluídas",
+      "finished": "Respondido",
+      "needs_review": "Precisa de revisão",
+      "interrupted": "Interrompido",
+      "stopped": "Parado",
+      "failed": "Não foi concluído"
+    },
+    "remaining": "Etapas restantes",
+    "steps": "Todas as etapas",
+    "progress": "{done}/{total} etapas",
+    "outputs": "Resultados",
+    "allOutputs": "Ver todos os resultados",
+    "missing": "Arquivo não encontrado",
+    "reported": "Informado; precisa de revisão",
+    "review": "Algumas etapas ou resultados ainda não foram confirmados.",
+    "uncertain": "O resultado de algumas ações é incerto; verifique antes de repeti-las.",
+    "resumed": "Tarefa retomada",
+    "jump": "Ir à última mensagem",
+    "pending": "Pendente",
+    "supported": "Ação bem-sucedida registrada"
+  },
+  toolActivity: {
+    ask: "Quer realizar esta operação",
+    doing: "Executando a operação",
+    done: "Resultado da operação recebido",
+  },
+  outputState: {
+    created: "Criado",
+    checked: "Conteúdo verificado",
+    savedChecked: "Salvo e verificado",
+    draft: "Rascunho salvo",
+    added: "Adicionado",
+    downloaded: "Baixado",
+    uncertain: "Resultado incerto",
+  },
+  approvalContext: {
+    target: "Destino",
+    once: "Permitir uma vez vale para esta operação.",
+    session: "A permissão de sessão dura durante esta sessão. As permissões de conexão e do sistema continuam valendo.",
+    change: "Alteração proposta",
+  },
   choice: {
     choose: "Escolher",
     compare: "Comparar",
@@ -34,6 +212,8 @@ export const messages: Catalogue = {
   },
 
   callStatus: {
+    cancelled: "cancelado",
+    interrupted: "resultado incerto",
     proposed: "preparando",
     awaiting: "aguardando aprovação",
     running: "em andamento",
@@ -51,6 +231,16 @@ export const messages: Catalogue = {
   },
 
   tools: {
+    desktop_document_move_observe: {"ask": "Pedido: Observar seleção", "doing": "Em curso: Observar seleção", "done": "Resultado: Observar seleção"},
+    desktop_document_move: {"ask": "Pedido: Mover seleção e guardar", "doing": "Em curso: Mover seleção e guardar", "done": "Resultado: Mover seleção e guardar"},
+    files_move: {"ask": "Pedido: Mover ficheiro", "doing": "Em curso: Mover ficheiro", "done": "Resultado: Mover ficheiro"},
+
+    page_target_observe: {"ask": "Pedido: Observação da página", "doing": "Em curso: Observação da página", "done": "Resultado recebido: Observação da página"},
+    page_target_act: {"ask": "Pedido: Ação na página", "doing": "Em curso: Ação na página", "done": "Resultado recebido: Ação na página"},
+    desktop_background_scroll_position: {"ask": "Pedido: Posição de deslocamento", "doing": "Em curso: Posição de deslocamento", "done": "Resultado recebido: Posição de deslocamento"},
+    desktop_background_drag: {"ask": "Pedido: Arrastar controle deslizante", "doing": "Em curso: Arrastar controle deslizante", "done": "Resultado recebido: Arrastar controle deslizante"},
+    desktop_background_menu_open: {"ask": "Pedido: Abertura do menu", "doing": "Em curso: Abertura do menu", "done": "Resultado recebido: Abertura do menu"},
+    desktop_background_menu_select: {"ask": "Pedido: Seleção do menu", "doing": "Em curso: Seleção do menu", "done": "Resultado recebido: Seleção do menu"},
     finder_selection: { ask: "Quer ver o que está selecionado no Finder", doing: "Vendo a seleção do Finder", done: "Viu a seleção do Finder" },
     finder_reveal: { ask: "Quer mostrar um arquivo no Finder", doing: "Mostrando no Finder", done: "Mostrou no Finder" },
     notes_search: { ask: "Quer pesquisar nas suas notas", doing: "Pesquisando notas", done: "Pesquisou notas" },
@@ -58,6 +248,7 @@ export const messages: Catalogue = {
     notes_create: { ask: "Quer criar uma nota", doing: "Criando uma nota", done: "Criou uma nota" },
     notes_append: { ask: "Quer adicionar a uma nota", doing: "Adicionando a uma nota", done: "Adicionou a uma nota" },
     get_current_time: { ask: "Quer ver a hora", doing: "Vendo a hora", done: "Viu a hora" },
+    task_update: { ask: "Quer salvar o progresso da tarefa", doing: "Salvando o progresso da tarefa", done: "Progresso da tarefa salvo" },
     worknote_write: { ask: "Quer salvar uma nota de trabalho", doing: "Salvando uma nota de trabalho", done: "Salvou uma nota de trabalho" },
     worknote_read: { ask: "Quer ler uma nota de trabalho", doing: "Lendo uma nota de trabalho", done: "Leu uma nota de trabalho" },
     worknote_search: { ask: "Quer pesquisar nas notas de trabalho", doing: "Pesquisando nas notas de trabalho", done: "Pesquisou nas notas de trabalho" },
@@ -123,6 +314,10 @@ export const messages: Catalogue = {
       back: "Voltar ao chat",
     },
     sessions: {
+    all: "Todas as conversas",
+    recoverable: "Interrompidas",
+    noRecoverable: "Nenhuma conversa interrompida",
+
       title: "Sessões",
       empty: "nenhuma tarefa ainda",
       ongoing: "em andamento",
@@ -213,6 +408,7 @@ export const messages: Catalogue = {
   },
 
   composer: {
+    draftAttachments: "Anexos do rascunho · não enviados",
     filesOnly: "Veja os arquivos que eu anexei.",
     drop: "Solte: o arquivo é anexado à mensagem, e o agente só pode ler esse arquivo.",
     removeFile: "Remover o anexo {name}",
@@ -263,6 +459,11 @@ export const messages: Catalogue = {
   },
 
   turn: {
+    copy: "Copiar resposta",
+    copied: "Copiado",
+    copyFailed: "Não foi possível copiar. Selecione a resposta e copie manualmente.",
+    details: "Detalhes do modelo e dos tempos",
+
     thinking: "Pensando…",
     thoughts: "Raciocínio",
     planning: "Fazendo um plano…",
@@ -432,6 +633,11 @@ export const messages: Catalogue = {
   },
 
   vault: {
+    lockedNote: "Desbloqueia o cofre para usar esta chave",
+    restartNeeded: "As chaves guardadas foram migradas. Reinicia o Vunemi para voltar a ligar as contas.",
+    unlock: "Desbloquear cofre",
+    unlocking: "A aguardar o macOS…",
+    unlockHint: "O cofre está bloqueado. A conversa continua disponível. Desbloqueia-o para usar as chaves guardadas; o macOS poderá pedir a palavra-passe do porta-chaves de início de sessão.",
     intro: "Guarde suas chaves aqui. O modelo só fica sabendo o nome; o valor fica criptografado nas Chaves deste Mac e nunca entra no chat. Mesmo que apareça em uma página, é trocado pelo nome antes de o modelo ver.",
     neverTypes: "O Vunemi nunca digita senhas, números de cartão ou de documento por você. O cofre é para chaves que as ferramentas usam em segundo plano; em telas de login, a vez é sempre sua.",
     unavailable: "O armazenamento seguro não está disponível neste computador, então o cofre não salva nada novo. Melhor não guardar nada do que guardar sem criptografia.",
@@ -679,6 +885,19 @@ export const messages: Catalogue = {
         thisComputer: "Os endereços do próprio Mac não podem ser confiáveis: os controles do Vunemi ficam ali.",
         full: "A lista está cheia. Remova antes um site de que não precisa mais.",
       },
+    },
+    searchLocation: {
+      title: "Localização de pesquisa",
+      intro: "Guarde um país predefinido e, se quiser, uma cidade para as pesquisas. Esta definição é independente do idioma da aplicação e das respostas. Um local pedido explicitamente na conversa tem prioridade.",
+      country: "País",
+      unset: "Não definida",
+      city: "Cidade (opcional)",
+      chooseCountry: "Escolha primeiro um país.",
+      save: "Guardar localização de pesquisa",
+      saved: "Localização de pesquisa guardada.",
+      loading: "A carregar a localização de pesquisa…",
+      loadError: "Não foi possível carregar a localização de pesquisa. Tente novamente.",
+      saveError: "Não foi possível guardar a localização de pesquisa. Verifique os dados e tente novamente.",
     },
     language: {
       intro: "A interface do Vunemi, as mensagens e as respostas do agente ficarão neste idioma. O reconhecimento de voz também espera por ele.",
@@ -1008,6 +1227,16 @@ export const messages: Catalogue = {
     search: "Buscar: “{query}”",
   },
   agent: {
+    requiredBackgroundUnavailable: "A ferramenta de observação em segundo plano necessária não está disponível. Nenhuma entrada foi enviada.",
+    requiredBackgroundMissing: "O modelo não produziu a chamada de observação em segundo plano necessária. Nenhuma entrada proposta foi executada.",
+    backgroundSinglePressBlocked: "Já foi tentada a única pressão solicitada. Nenhuma segunda entrada foi enviada; leia o destino para verificar o resultado.",
+    backgroundOnlyBlocked: "Este pedido requer controlo em segundo plano. Foi bloqueada uma alternativa que poderia mudar o foco; nenhuma entrada foi enviada.",
+    backgroundAttemptStopped: "O controlo em segundo plano não terminou em segurança. A ação não foi repetida nem houve passagem para primeiro plano. Verifique o destino antes de continuar.",
+    rejectionStopped: "A ação foi rejeitada. A tarefa foi interrompida.",
+    deliverySavedOne: "1 arquivo salvo.",
+    deliverySavedMany: "{count} arquivos salvos.",
+    deliveryVerifiedOne: "1 arquivo salvo e seu conteúdo verificado.",
+    deliveryVerifiedMany: "{count} arquivos salvos e seus conteúdos verificados.",
     calendarUnread: "Não consegui ler o calendário: {error} Não consegui confirmar se há eventos.",
     nothingChanged: "⚠️ Nota do Vunemi: nada foi adicionado, enviado ou alterado nesta tarefa. Se a resposta acima disser o contrário, está errada; peça de novo ou faça você mesmo.",
     switchedOff: "{part} está desativado. Esta tarefa quer usá-lo.",
@@ -1122,6 +1351,15 @@ export const messages: Catalogue = {
   },
 
   mac: {
+    guard: {
+      busy: "Há outra operação local em curso. Nenhum novo pedido foi enviado.",
+      targetBusy: "Outra tarefa utiliza esta janela. Nenhuma nova entrada foi enviada.",
+      closed: "Esta tarefa foi parada ou fechada. Nenhum novo pedido foi enviado.",
+      uncertain: "O resultado anterior é incerto. Verifica o destino antes da recuperação; a ação não foi repetida.",
+      identity: "Não foi possível verificar a identidade da tarefa ou janela. Nenhum pedido foi enviado.",
+      capacity: "Foi atingido o limite de registos. Revê o trabalho pendente.",
+      journal: "O registo de operações está indisponível. A ação em segundo plano foi bloqueada.",
+    },
     helper: {
       missing: "O auxiliar de desktop não está instalado. Ele é compilado no repositório com `pnpm build:helper`.",
       timeout: "O auxiliar de desktop não respondeu à solicitação “{op}”.",
@@ -1182,6 +1420,7 @@ export const messages: Catalogue = {
     desktop: {
       whichApp: "Você precisa dizer qual app.",
       noSuchApp: "Não há nenhum app aberto chamado “{app}”. Abertos: {open}.",
+      ambiguousApp: "Vários processos em execução correspondem a {app}. Use um PID exato: {pids}. Nenhuma entrada foi enviada.",
       noPermission: "A permissão de acessibilidade não foi concedida, então o Vunemi não pode usar apps. Você precisa concedê-la em Ajustes do Sistema › Privacidade e Segurança › Acessibilidade.",
       preview: {
         apps: "Listar os apps abertos",
@@ -1660,7 +1899,7 @@ export const messages: Catalogue = {
     },
   },
   addons: {
-    intro: "Capacidades extras que você adiciona quando quiser. Cada uma é um programa separado: a cópia com a qual o Vunemi foi testado é baixada uma vez da página de versões do Vunemi e verificada antes de ser instalada. Eles rodam neste Mac sem acesso à rede e só veem os arquivos que o Vunemi entrega.",
+    intro: "Escolha complementos para acessar todas as funções de edição local compatíveis. Eles só são baixados quando você os escolhe. Cada uma é um programa separado: a cópia com a qual o Vunemi foi testado é baixada uma vez da página de versões do Vunemi e verificada antes de ser instalada. Eles rodam neste Mac sem acesso à rede e só veem os arquivos que o Vunemi entrega.",
     credit: "Os programas são os apps Craft da equipe ArtCraft, de código aberto sob MIT ou Apache-2.0. São recentes: o resultado pode diferir do Word, Excel ou PowerPoint.",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "Buscar complementos",
@@ -1678,13 +1917,13 @@ export const messages: Catalogue = {
     ready: "Instalado",
     outdated: "A versão {version} está instalada; este Vunemi precisa da mais recente.",
     items: {
-      documents: { title: "Documentos", body: "Escreve relatórios, cartas e notas como arquivo Word ou PDF, com títulos, listas e tabelas. Altera o texto em uma cópia de um documento existente." },
-      sheets: { title: "Planilhas", body: "Cria pastas de trabalho do Excel com fórmulas e gráficos." },
-      slides: { title: "Apresentações", body: "Cria apresentações do PowerPoint com títulos, tópicos e gráficos. Lê uma apresentação existente e cria uma cópia alterada." },
-      pdf: { title: "Ferramentas de PDF", body: "Junta e divide PDFs, extrai páginas, gira e preenche formulários." },
-      drawing: { title: "Desenho", body: "Desenha cartazes, cartões, logotipos e ilustrações simples, em PNG, PDF ou SVG editável." },
-      photo: { title: "Edição de fotos", body: "Recorta, redimensiona e ajusta imagens e salva em outro formato." },
-      video: { title: "Edição de vídeo", body: "Junta clipes, adiciona títulos e legendas e exporta um MP4." },
+      documents: { title: "Documentos", body: "Lê, cria e edita documentos Word com estilos, tabelas, comentários e controle de alterações, e exporta PDFs." },
+      sheets: { title: "Planilhas", body: "Lê, cria e edita pastas de trabalho do Excel com fórmulas, tabelas dinâmicas e gráficos." },
+      slides: { title: "Apresentações", body: "Lê, cria e edita apresentações PowerPoint com layouts, objetos, gráficos e notas do apresentador." },
+      pdf: { title: "Ferramentas de PDF", body: "Lê e edita PDFs, organiza páginas, combina e divide arquivos e preenche formulários." },
+      drawing: { title: "Desenho", body: "Cria e edita desenhos vetoriais, formas e texto, e exporta SVG, PNG ou PDF." },
+      photo: { title: "Edição de fotos", body: "Edita imagens com camadas, retoques, ajustes e efeitos, e converte formatos." },
+      video: { title: "Edição de vídeo", body: "Edita linhas do tempo, clipes, títulos, efeitos e áudio, e exporta vídeos finalizados." },
     },
     failed: {
       space: "Não há espaço suficiente em disco.",

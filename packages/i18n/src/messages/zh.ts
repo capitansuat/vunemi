@@ -1,6 +1,184 @@
 import type { Catalogue } from "../types.js";
 
 export const messages: Catalogue = {
+  quotedSource: {"action": "询问所选内容", "title": "引用文本", "remove": "移除引用", "source": "查看原始回答", "unsupported": "请在一条已完成的回答内选择文本。", "tooLong": "最多选择2,000个字符。", "placeholder": "输入关于这段引用的问题…", "show": "显示引用", "hide": "隐藏引用"},
+  taskAttention: {
+    "title": "需要处理",
+    "loading": "正在加载任务…",
+    "empty": "没有需要处理的任务。",
+    "error": "无法加载任务。",
+    "refresh": "刷新",
+    "truncated": "显示最近100项任务。",
+    "open": "打开任务“{title}”",
+    "blocked": "切换聊天前，请先完成或停止当前任务。",
+    "plan": "计划审批",
+    "approval": "需要审批",
+    "user": "需要你的回复",
+    "review": "需要检查",
+    "uncertain": "结果不确定",
+    "recovery": "重启时中断"
+},
+  outcomeProgress: {
+    browserWrite: "打开 {target}。",
+    browserVerify: "核验 {target} 的当前页面。",
+    calendarWrite: "创建日历日程 {target}。",
+    calendarVerify: "重新读取并核验日程 {target}。",
+    draftWrite: "保存草稿 {target}。",
+    draftVerify: "重新读取并核验草稿 {target}。",
+    reviewNeeded: "操作已获确认，但结果尚未经过独立核验。请检查现有结果，不要重复执行此更改。",
+  },
+  nativeRecipes: {
+    noResume: "无法恢复已计划的原生任务。请在计划任务中审核新的权限。",
+    backupCount: "最多 {count} 个备份，每个批准时间一个",
+    "title": "TextEdit 定时任务",
+    "intro": "向已打开并保存的 UTF-8 文本文档追加固定文本。",
+    "setup": "设置 TextEdit 任务",
+    "target": "已打开的文档和窗口",
+    "literal": "要追加的准确文本",
+    "timezone": "时区",
+    "slot": "时间 {count}",
+    "addSlot": "添加时间",
+    "removeSlot": "删除时间",
+    "reviewRead": "检查准备读取",
+    "readConsent": "准备过程从磁盘和 TextEdit 读取文档，以检查一致性和备份。这只允许准备读取，不允许编辑或定时执行。",
+    "prepare": "允许准备读取",
+    "approve": "批准这些定时更改",
+    "cancel": "取消并返回",
+    "expired": "此检查已过期。请取消并重新准备。",
+    "failed": "此检查无法继续。请取消并重新准备。",
+    "busy": "正在等待主进程…",
+    "revoke": "撤销权限",
+    "revoking": "正在撤销…",
+    "runNowDisabled": "仅在批准的时间执行",
+    "remaining": "剩余批准时间：{count}",
+    "expires": "权限到期：{at}",
+    "next": "下次批准时间：{at}",
+    "backup": "备份：{path}",
+    "readTarget": "读取目标：{path}",
+    "review": "检查准确更改",
+    "limits": "24 小时内最多 4 次。每次最多创建一个备份、追加一次并保存一次。需要 10 秒无输入；忙碌或延迟超过 60 秒将消耗该时间且不重试。不打开、激活或回滚。撤销无法收回已发送的请求。最终检查后仍可能发生用户输入；不确定的结果需要检查。重启后需要重新批准。 每次尝试在首次原生操作产生效果 30 秒后停止发送新的原生请求；如果权限更早到期，则提前停止。已发送的请求无法回滚。",
+    "noTargets": "没有符合条件的已打开 TextEdit 文档。",
+    "offset": "明确的 UTC 偏移量",
+    "offsetRequired": "选择 UTC 偏移量",
+    "invalidInput": "请检查文档、文本以及 1 至 4 个具体时间。",
+    "revokeFailed": "撤销未得到确认。",
+    "authority": {
+      "active": "有效",
+      "revoked": "已撤销",
+      "expired": "已过期",
+      "reapproval-required": "需要重新批准",
+      "blocked-unknown": "已阻止：结果不确定",
+      "exhausted": "批准时间已用完"
+    },
+    "slotStatus": {
+      "scheduled": "已安排",
+      "reserved": "已预留",
+      "skipped": "已跳过",
+      "backup-only": "仅备份，未发送追加请求",
+      "verified": "已独立验证",
+      "unknown": "不确定，需要检查"
+    }
+  },
+  taskPermissions: {
+    loadFailed: "无法加载运行权限。",
+    "title": "本次运行的权限",
+    "once": "仅此操作",
+    "fileOffer": "本次运行中读取此文件 · 最多8次",
+    "windowOffer": "本次运行中观察此窗口 · 最多8次",
+    "fileSameVersion": "仅限此文件版本；文件更改后需要重新授权。",
+    "remaining": "剩余{remaining}/{max}次",
+    "expired": "已过期",
+    "exhausted": "已达到使用上限",
+    "revoke": "撤销权限",
+    "revoking": "正在撤销…",
+    "revoked": "已撤销",
+    "revokeFailed": "无法撤销权限。",
+    "inFlightRead": "已阻止使用此权限进行新的读取；此前的读取不会被撤回。",
+    "empty": "没有有效的运行权限。",
+    "schedulerRestriction": "立即运行同样受无人值守限制。运行权限不会转移到计划任务。",
+    "runDuration": "仅限本次运行",
+    "activeCount": "有效权限 · {count}",
+    "revokeTarget": "撤销{target}的权限",
+    "scopeLegend": "权限范围",
+    "effect": {
+      "fileRead": "读取文件",
+      "windowObserve": "观察窗口"
+    }
+  },
+  safeMove: {
+    documentAutomationRequired: "在系统设置 → 隐私与安全性 → 自动化中允许 Vunemi 控制 TextEdit，然后重新观察文稿。","preview": {"backup": "备份：{path}", "noOverwrite": "不覆盖已有目标文件。"}, "documentPreview": "移动选定文本并保存\nTextEdit PID {pid} · {title} #{window}\n{path}\nUTF-16 {start}–{end} → {destination}\n{selection}\n备份：{backup}\n文档变化时停止；不锁定用户的同时编辑。"},
+
+  backgroundCapabilities: {
+    "perAction": "每次请求都会重新检查可用操作。",
+    "notObserved": "此目标中未观察到的操作",
+    backend: {"native": "应用窗口", "browser": "浏览器标签页", "webContent": "应用内网页内容"},
+    "title": "后台功能",
+    "available": "观察到的操作",
+    "none": "本次观察未提供符合条件的后台操作。",
+    "notProvided": "此版本未提供该后台操作",
+    "observationOnly": "观察不代表授权或完成证明。可用性可能发生变化。",
+    "actions": {
+      "sliderDrag": "拖动滑块",
+      "scrollPosition": "设置滚动位置",
+      "menuOpen": "打开菜单",
+      "menuSelect": "选择菜单项",
+      "press": "按下按钮",
+      "setValue": "修改文本框",
+      "menu": "菜单",
+      "scroll": "滚动",
+      "drag": "拖动"
+    }
+  },
+  chatTask: {
+    target: "目标",
+    mode: {"background": "后台", "foreground": "前台"},
+    history: "工作详情",
+    "status": {
+      "running": "正在处理",
+      "waiting_approval": "等待批准",
+      "waiting_user": "等待你的协助",
+      "paused": "已暂停",
+      "completed": "步骤已完成",
+      "finished": "已回复",
+      "needs_review": "需要检查",
+      "interrupted": "已中断",
+      "stopped": "已停止",
+      "failed": "未能完成"
+    },
+    "remaining": "剩余步骤",
+    "steps": "所有步骤",
+    "progress": "{done}/{total} 步",
+    "outputs": "输出",
+    "allOutputs": "查看所有输出",
+    "missing": "找不到文件",
+    "reported": "已报告；需要检查",
+    "review": "部分步骤或结果尚未确认。",
+    "uncertain": "部分操作的结果不确定；重复前请先检查。",
+    "resumed": "继续的任务",
+    "jump": "跳到最新消息",
+    "pending": "待处理",
+    "supported": "成功操作已记录"
+  },
+  toolActivity: {
+    ask: "请求执行此操作",
+    doing: "正在执行操作",
+    done: "已收到操作结果",
+  },
+  outputState: {
+    created: "已创建",
+    checked: "内容已检查",
+    savedChecked: "已保存并检查",
+    draft: "草稿已保存",
+    added: "已添加",
+    downloaded: "已下载",
+    uncertain: "结果不确定",
+  },
+  approvalContext: {
+    target: "目标",
+    once: "单次允许仅适用于此操作。",
+    session: "会话授权在当前会话内有效，连接和系统权限仍然适用。",
+    change: "拟议更改",
+  },
   choice: {
     choose: "选择此项",
     compare: "比较",
@@ -34,6 +212,8 @@ export const messages: Catalogue = {
   },
 
   callStatus: {
+    cancelled: "已取消",
+    interrupted: "结果不确定",
     proposed: "准备中",
     awaiting: "等待批准",
     running: "运行中",
@@ -51,6 +231,16 @@ export const messages: Catalogue = {
   },
 
   tools: {
+    desktop_document_move_observe: {"ask": "请求：查看选定文本", "doing": "执行中：查看选定文本", "done": "结果：查看选定文本"},
+    desktop_document_move: {"ask": "请求：移动选定文本并保存", "doing": "执行中：移动选定文本并保存", "done": "结果：移动选定文本并保存"},
+    files_move: {"ask": "请求：移动文件", "doing": "执行中：移动文件", "done": "结果：移动文件"},
+
+    page_target_observe: {"ask": "请求: 页面观察", "doing": "处理中: 页面观察", "done": "已返回结果: 页面观察"},
+    page_target_act: {"ask": "请求: 页面操作", "doing": "处理中: 页面操作", "done": "已返回结果: 页面操作"},
+    desktop_background_scroll_position: {"ask": "请求: 滚动位置", "doing": "处理中: 滚动位置", "done": "已返回结果: 滚动位置"},
+    desktop_background_drag: {"ask": "请求: 拖动滑块", "doing": "处理中: 拖动滑块", "done": "已返回结果: 拖动滑块"},
+    desktop_background_menu_open: {"ask": "请求: 打开菜单", "doing": "处理中: 打开菜单", "done": "已返回结果: 打开菜单"},
+    desktop_background_menu_select: {"ask": "请求: 菜单选择", "doing": "处理中: 菜单选择", "done": "已返回结果: 菜单选择"},
     finder_selection: { ask: "想查看访达中选中的项目", doing: "正在查看访达选择", done: "已查看访达选择" },
     finder_reveal: { ask: "想在访达中显示文件", doing: "正在访达中显示", done: "已在访达中显示" },
     notes_search: { ask: "想搜索你的备忘录", doing: "正在搜索备忘录", done: "已搜索备忘录" },
@@ -58,6 +248,7 @@ export const messages: Catalogue = {
     notes_create: { ask: "想新建备忘录", doing: "正在新建备忘录", done: "已新建备忘录" },
     notes_append: { ask: "想追加到备忘录", doing: "正在追加到备忘录", done: "已追加到备忘录" },
     get_current_time: { ask: "想要查看时间", doing: "正在查看时间", done: "已查看时间" },
+    task_update: { ask: "想要保存任务进度", doing: "正在保存任务进度", done: "已保存任务进度" },
     worknote_write: { ask: "想要保存一条工作笔记", doing: "正在保存工作笔记", done: "已保存工作笔记" },
     worknote_read: { ask: "想要读取一条工作笔记", doing: "正在读取工作笔记", done: "已读取工作笔记" },
     worknote_search: { ask: "想要搜索工作笔记", doing: "正在搜索工作笔记", done: "已搜索工作笔记" },
@@ -123,6 +314,10 @@ export const messages: Catalogue = {
       back: "返回对话",
     },
     sessions: {
+    all: "全部对话",
+    recoverable: "已中断",
+    noRecoverable: "没有中断的对话",
+
       title: "会话",
       empty: "还没有任务",
       ongoing: "进行中",
@@ -213,6 +408,7 @@ export const messages: Catalogue = {
   },
 
   composer: {
+    draftAttachments: "草稿附件 · 尚未发送",
     filesOnly: "看看我附上的文件。",
     drop: "松开：文件会附到消息中，代理只能读取这个文件。",
     removeFile: "移除附件 {name}",
@@ -263,6 +459,11 @@ export const messages: Catalogue = {
   },
 
   turn: {
+    copy: "复制回答",
+    copied: "已复制",
+    copyFailed: "无法复制。请选择回答并手动复制。",
+    details: "模型与耗时详情",
+
     thinking: "思考中…",
     thoughts: "思考过程",
     planning: "正在制定计划…",
@@ -432,6 +633,11 @@ export const messages: Catalogue = {
   },
 
   vault: {
+    lockedNote: "解锁保险库以使用此密钥",
+    restartNeeded: "已迁移保存的密钥。请重启 Vunemi 以重新连接账户。",
+    unlock: "解锁保险库",
+    unlocking: "正在等待 macOS…",
+    unlockHint: "保险库已锁定，聊天仍可使用。需要已保存的密钥时请解锁；macOS 可能会要求输入登录钥匙串密码。",
     intro: "把你的密钥放在这里。模型只会知道名称；值以加密形式存放在这台 Mac 的钥匙串中，绝不会进入对话。即使它出现在某个页面上，也会在模型看到之前被替换成名称。",
     neverTypes: "Vunemi 绝不会替你输入密码、卡号或证件号码。保险箱用于工具在后台使用的密钥；遇到登录界面，总是由你来操作。",
     unavailable: "这台电脑上无法使用安全存储，因此保险箱不会保存任何新内容。我们宁可不存，也不以明文存储。",
@@ -679,6 +885,19 @@ export const messages: Catalogue = {
         thisComputer: "这台 Mac 自己的地址不能设为受信任：Vunemi 自己的控制接口就在那里。",
         full: "列表已满。请先移除一个不再需要的网站。",
       },
+    },
+    searchLocation: {
+      title: "搜索地区",
+      intro: "保存搜索时默认使用的国家和可选城市。此设置独立于应用和回复语言。聊天中明确指定的地点优先于此默认设置。",
+      country: "国家",
+      unset: "未设置",
+      city: "城市（可选）",
+      chooseCountry: "请先选择国家。",
+      save: "保存搜索地区",
+      saved: "搜索地区已保存。",
+      loading: "正在加载搜索地区…",
+      loadError: "无法加载搜索地区，请重试。",
+      saveError: "无法保存搜索地区，请检查信息后重试。",
     },
     language: {
       intro: "Vunemi 的界面、消息和代理的回复都会使用这种语言。语音识别也会按这种语言识别。",
@@ -1008,6 +1227,16 @@ export const messages: Catalogue = {
     search: "搜索：“{query}”",
   },
   agent: {
+    requiredBackgroundUnavailable: "所需的后台观察工具不可用。未发送输入。",
+    requiredBackgroundMissing: "模型未生成所需的后台观察调用。未执行任何提议的输入。",
+    backgroundSinglePressBlocked: "已尝试请求的单次按钮输入。未发送第二次输入；请读取目标以验证结果。",
+    backgroundOnlyBlocked: "此请求需要后台控制。已阻止可能改变焦点的替代操作；未发送输入。",
+    backgroundAttemptStopped: "后台控制未能安全完成。未重复操作或切换到前台。继续前请检查目标。",
+    rejectionStopped: "操作已被拒绝。任务已停止。",
+    deliverySavedOne: "已保存1个文件。",
+    deliverySavedMany: "已保存{count}个文件。",
+    deliveryVerifiedOne: "已保存1个文件并检查内容。",
+    deliveryVerifiedMany: "已保存{count}个文件并检查内容。",
     calendarUnread: "我无法读取日历：{error} 无法确认是否有事件。",
     nothingChanged: "⚠️ Vunemi 提示：此任务中没有添加、发送或更改任何内容。如果上面的回答说法不同，那是错误的；请重新提出或自己完成。",
     switchedOff: "{part} 已关闭。此任务想要使用它。",
@@ -1122,6 +1351,15 @@ export const messages: Catalogue = {
   },
 
   mac: {
+    guard: {
+      busy: "另一个本地操作正在运行。未发送新请求。",
+      targetBusy: "另一个任务正在使用此窗口。未发送新的输入。",
+      closed: "此任务已停止或关闭。未发送新请求。",
+      uncertain: "上次操作的结果不确定。恢复前请检查目标；未重复执行该操作。",
+      identity: "无法验证任务或窗口标识。未发送请求。",
+      capacity: "操作记录已达上限。请检查待处理工作。",
+      journal: "操作日志不可用。后台操作已被阻止。",
+    },
     helper: {
       missing: "未安装桌面助手。它在代码仓库中用 `pnpm build:helper` 构建。",
       timeout: "桌面助手没有响应“{op}”请求。",
@@ -1182,6 +1420,7 @@ export const messages: Catalogue = {
     desktop: {
       whichApp: "你需要说明是哪个应用。",
       noSuchApp: "没有名为“{app}”的已打开应用。已打开：{open}。",
+      ambiguousApp: "有多个运行中的进程与 {app} 匹配。请使用准确的 PID：{pids}。未发送任何输入。",
       noPermission: "未授予辅助功能权限，所以 Vunemi 无法使用应用。你需要在系统设置 › 隐私与安全性 › 辅助功能中授予权限。",
       preview: {
         apps: "列出已打开的应用",
@@ -1660,7 +1899,7 @@ export const messages: Catalogue = {
     },
   },
   addons: {
-    intro: "需要时再添加的额外能力。每一项都是独立的程序：Vunemi 测试时所用的那份副本会从 Vunemi 自己的发布页面下载一次，并在安装前经过校验。它们在这台 Mac 上运行，无法访问网络，只能看到 Vunemi 交给它们的文件。",
+    intro: "选择扩展，即可使用其支持的全部本地编辑功能。只有选中后才会下载。每一项都是独立的程序：Vunemi 测试时所用的那份副本会从 Vunemi 自己的发布页面下载一次，并在安装前经过校验。它们在这台 Mac 上运行，无法访问网络，只能看到 Vunemi 交给它们的文件。",
     credit: "这些程序是 ArtCraft 团队的 Craft 应用，以 MIT 或 Apache-2.0 许可开源。它们还很新：结果可能与 Word、Excel 或 PowerPoint 不同。",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "搜索扩展",
@@ -1678,13 +1917,13 @@ export const messages: Catalogue = {
     ready: "已安装",
     outdated: "已安装 {version} 版；此版 Vunemi 需要更新的版本。",
     items: {
-      documents: { title: "文档", body: "把报告、信件和笔记写成 Word 或 PDF 文件，带标题、列表和表格。还能在现有文档的副本中修改文字。" },
-      sheets: { title: "电子表格", body: "制作带公式和图表的 Excel 工作簿。" },
-      slides: { title: "演示文稿", body: "制作带标题、要点和图表的 PowerPoint 演示文稿。还能读取现有演示文稿，并生成修改后的副本。" },
-      pdf: { title: "PDF 工具", body: "合并和拆分 PDF，提取、旋转页面，并填写表单。" },
-      drawing: { title: "绘图", body: "绘制海报、卡片、标志和简单插图，输出 PNG、PDF 或可编辑的 SVG。" },
-      photo: { title: "照片编辑", body: "裁剪、调整图片大小和色彩，并另存为其他格式。" },
-      video: { title: "视频剪辑", body: "把片段剪接在一起，添加标题和字幕，并导出 MP4。" },
+      documents: { title: "文档", body: "读取、创建和编辑 Word 文档，支持样式、表格、批注和修订，并可导出 PDF。" },
+      sheets: { title: "电子表格", body: "读取、创建和编辑 Excel 工作簿，支持公式、数据透视表和图表。" },
+      slides: { title: "演示文稿", body: "读取、创建和编辑 PowerPoint 演示文稿，支持布局、对象、图表和演讲者备注。" },
+      pdf: { title: "PDF 工具", body: "读取和编辑 PDF，管理页面、合并和拆分文件，并填写表单。" },
+      drawing: { title: "绘图", body: "创建和编辑矢量图形、形状和文字，并导出 SVG、PNG 或 PDF。" },
+      photo: { title: "照片编辑", body: "通过图层、修饰、调整和效果编辑图像，并转换格式。" },
+      video: { title: "视频剪辑", body: "编辑视频时间线、片段、标题、效果和音频，并导出完成的视频。" },
     },
     failed: {
       space: "磁盘空间不足。",

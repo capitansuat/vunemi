@@ -1,6 +1,184 @@
 import type { Catalogue } from "../types.js";
 
 export const messages: Catalogue = {
+  quotedSource: {"action": "선택한 내용 질문", "title": "인용문", "remove": "인용 삭제", "source": "원본 답변 보기", "unsupported": "완료된 답변 하나 안에서 텍스트를 선택하세요.", "tooLong": "최대 2,000자를 선택하세요.", "placeholder": "이 인용문에 대해 질문하세요…", "show": "인용문 보기", "hide": "인용문 숨기기"},
+  taskAttention: {
+    "title": "확인 필요",
+    "loading": "작업을 불러오는 중…",
+    "empty": "확인이 필요한 작업이 없습니다.",
+    "error": "작업을 불러오지 못했습니다.",
+    "refresh": "새로 고침",
+    "truncated": "최근 작업 100개를 표시합니다.",
+    "open": "{title} 작업 열기",
+    "blocked": "채팅을 바꾸기 전에 현재 작업을 완료하거나 중지하세요.",
+    "plan": "계획 승인",
+    "approval": "승인 필요",
+    "user": "응답 필요",
+    "review": "검토 필요",
+    "uncertain": "결과 불확실",
+    "recovery": "다시 시작할 때 중단됨"
+},
+  outcomeProgress: {
+    browserWrite: "{target} 열기.",
+    browserVerify: "{target}의 현재 페이지 검증하기.",
+    calendarWrite: "캘린더 일정 {target} 만들기.",
+    calendarVerify: "일정 {target}을 다시 읽고 검증하기.",
+    draftWrite: "초안 {target} 저장하기.",
+    draftVerify: "초안 {target}을 다시 읽고 검증하기.",
+    reviewNeeded: "작업은 확인되었지만 결과가 독립적으로 검증되지 않았습니다. 기존 결과를 검토하고 같은 변경을 반복하지 마세요.",
+  },
+  nativeRecipes: {
+    noResume: "예약된 네이티브 작업은 재개할 수 없습니다. 예약 작업에서 새 권한을 검토하세요.",
+    backupCount: "승인 시간당 하나씩, 최대 {count}개 백업",
+    "title": "예약된 TextEdit 작업",
+    "intro": "이미 열려 있고 저장된 UTF-8 텍스트 문서에 고정 텍스트를 추가합니다.",
+    "setup": "TextEdit 작업 설정",
+    "target": "열린 문서와 윈도우",
+    "literal": "추가할 정확한 텍스트",
+    "timezone": "시간대",
+    "slot": "시간 {count}",
+    "addSlot": "시간 추가",
+    "removeSlot": "시간 삭제",
+    "reviewRead": "준비 읽기 검토",
+    "readConsent": "준비 과정은 디스크와 TextEdit에서 문서를 읽어 일치 여부와 백업을 확인합니다. 준비 읽기만 허용하며 편집이나 예약 실행은 허용하지 않습니다.",
+    "prepare": "준비 읽기 허용",
+    "approve": "이 예약 변경 승인",
+    "cancel": "취소하고 돌아가기",
+    "expired": "검토가 만료되었습니다. 취소하고 새 검토를 준비하세요.",
+    "failed": "이 검토는 계속할 수 없습니다. 취소하고 새 검토를 준비하십시오.",
+    "busy": "메인 프로세스 대기 중…",
+    "revoke": "권한 철회",
+    "revoking": "철회 중…",
+    "runNowDisabled": "승인된 시간에만 실행",
+    "remaining": "남은 승인 시간: {count}",
+    "expires": "권한 만료: {at}",
+    "next": "다음 승인 시간: {at}",
+    "backup": "백업: {path}",
+    "readTarget": "읽기 대상: {path}",
+    "review": "정확한 변경 검토",
+    "limits": "24시간 이내 최대 4회입니다. 매회 백업, 추가, 저장을 각각 한 번 허용합니다. 10초 동안 입력이 없어야 합니다. 사용 중이거나 60초 넘게 늦으면 재시도 없이 소진됩니다. 열기, 활성화, 되돌리기는 하지 않습니다. 철회해도 이미 보낸 요청은 취소되지 않습니다. 최종 확인 후 사용자 입력이 발생할 수 있으며 불확실한 결과는 검토해야 합니다. 재시작 후에는 새 승인이 필요합니다. 각 시도는 첫 네이티브 효과 발생 30초 후 또는 권한이 먼저 만료되면 새 네이티브 요청 전송을 중단합니다. 이미 보낸 요청은 되돌릴 수 없습니다.",
+    "noTargets": "적합한 TextEdit 문서가 열려 있지 않습니다.",
+    "offset": "명시적 UTC 오프셋",
+    "offsetRequired": "UTC 오프셋 선택",
+    "invalidInput": "문서, 텍스트와 구체적인 시간 1~4개를 확인하세요.",
+    "revokeFailed": "철회가 확인되지 않았습니다.",
+    "authority": {
+      "active": "활성",
+      "revoked": "철회됨",
+      "expired": "만료됨",
+      "reapproval-required": "새 승인 필요",
+      "blocked-unknown": "불확실한 결과로 차단됨",
+      "exhausted": "승인된 시간 소진"
+    },
+    "slotStatus": {
+      "scheduled": "예약됨",
+      "reserved": "확보됨",
+      "skipped": "건너뜀",
+      "backup-only": "백업만 생성, 추가 요청 미전송",
+      "verified": "독립적으로 검증됨",
+      "unknown": "불확실, 검토 필요"
+    }
+  },
+  taskPermissions: {
+    loadFailed: "실행 권한을 불러오지 못했습니다.",
+    "title": "이번 실행의 권한",
+    "once": "이 작업만",
+    "fileOffer": "이번 실행에서 이 파일 읽기 · 최대 8회",
+    "windowOffer": "이번 실행에서 이 창 관찰 · 최대 8회",
+    "fileSameVersion": "이 파일 버전만 허용됩니다. 변경되면 새 권한이 필요합니다.",
+    "remaining": "{remaining}/{max}회 남음",
+    "expired": "만료됨",
+    "exhausted": "사용 한도에 도달함",
+    "revoke": "권한 취소",
+    "revoking": "취소 중…",
+    "revoked": "취소됨",
+    "revokeFailed": "권한을 취소하지 못했습니다.",
+    "inFlightRead": "이 권한을 통한 새 읽기가 차단됩니다. 이전 읽기는 되돌려지지 않습니다.",
+    "empty": "활성 실행 권한이 없습니다.",
+    "schedulerRestriction": "지금 실행에도 무인 실행 제한이 적용됩니다. 실행 권한은 예약 작업으로 이전되지 않습니다.",
+    "runDuration": "이번 실행만",
+    "activeCount": "활성 권한 · {count}",
+    "revokeTarget": "{target}의 권한 취소",
+    "scopeLegend": "권한 범위",
+    "effect": {
+      "fileRead": "파일 읽기",
+      "windowObserve": "창 관찰"
+    }
+  },
+  safeMove: {
+    documentAutomationRequired: "시스템 설정 → 개인정보 보호 및 보안 → 자동화에서 Vunemi의 TextEdit 제어를 허용한 뒤 문서를 다시 확인하세요.","preview": {"backup": "백업: {path}", "noOverwrite": "기존 대상 파일을 덮어쓰지 않습니다."}, "documentPreview": "선택 영역 이동 및 저장\nTextEdit PID {pid} · {title} #{window}\n{path}\nUTF-16 {start}–{end} → {destination}\n{selection}\n백업: {backup}\n문서가 변경되면 중지합니다. 동시 편집을 잠그지 않습니다."},
+
+  backgroundCapabilities: {
+    "perAction": "사용 가능한 동작은 요청마다 다시 확인합니다.",
+    "notObserved": "이 대상에서 확인되지 않은 동작",
+    backend: {"native": "앱 창", "browser": "브라우저 탭", "webContent": "앱 내 웹 콘텐츠"},
+    "title": "백그라운드 기능",
+    "available": "관찰된 작업",
+    "none": "이 관찰에서는 사용 가능한 백그라운드 작업이 없습니다.",
+    "notProvided": "이 버전에서는 백그라운드로 제공하지 않음",
+    "observationOnly": "관찰은 권한이나 완료 증거가 아닙니다. 사용 가능 여부는 달라질 수 있습니다.",
+    "actions": {
+      "sliderDrag": "슬라이더 드래그",
+      "scrollPosition": "스크롤 위치 설정",
+      "menuOpen": "메뉴 열기",
+      "menuSelect": "메뉴 항목 선택",
+      "press": "버튼 누르기",
+      "setValue": "텍스트 필드 변경",
+      "menu": "메뉴",
+      "scroll": "스크롤",
+      "drag": "드래그"
+    }
+  },
+  chatTask: {
+    target: "대상",
+    mode: {"background": "백그라운드", "foreground": "전면"},
+    history: "작업 세부 정보",
+    "status": {
+      "running": "진행 중",
+      "waiting_approval": "승인 대기 중",
+      "waiting_user": "사용자의 도움 대기 중",
+      "paused": "일시 정지됨",
+      "completed": "단계 완료",
+      "finished": "답변 완료",
+      "needs_review": "확인 필요",
+      "interrupted": "중단됨",
+      "stopped": "정지됨",
+      "failed": "완료하지 못함"
+    },
+    "remaining": "남은 단계",
+    "steps": "모든 단계",
+    "progress": "{done}/{total} 단계",
+    "outputs": "결과물",
+    "allOutputs": "모든 결과물 보기",
+    "missing": "파일을 찾을 수 없음",
+    "reported": "보고됨; 확인 필요",
+    "review": "일부 단계나 결과가 아직 확인되지 않았습니다.",
+    "uncertain": "결과가 불확실한 작업이 있습니다. 반복하기 전에 확인하세요.",
+    "resumed": "재개된 작업",
+    "jump": "최신 메시지로 이동",
+    "pending": "대기 중",
+    "supported": "성공한 작업이 기록됨"
+  },
+  toolActivity: {
+    ask: "이 작업의 허가를 요청합니다",
+    doing: "작업 수행 중",
+    done: "작업 결과를 받았습니다",
+  },
+  outputState: {
+    created: "생성됨",
+    checked: "내용 확인됨",
+    savedChecked: "저장 및 확인됨",
+    draft: "초안 저장됨",
+    added: "추가됨",
+    downloaded: "다운로드됨",
+    uncertain: "결과 불확실",
+  },
+  approvalContext: {
+    target: "대상",
+    once: "한 번 허용은 이 작업에 적용됩니다.",
+    session: "세션 권한은 현재 세션에서 유효합니다. 연결 및 시스템 권한도 계속 적용됩니다.",
+    change: "제안된 변경",
+  },
   choice: {
     choose: "이 항목 선택",
     compare: "비교",
@@ -34,6 +212,8 @@ export const messages: Catalogue = {
   },
 
   callStatus: {
+    cancelled: "취소됨",
+    interrupted: "결과 불확실",
     proposed: "준비 중",
     awaiting: "승인 대기 중",
     running: "실행 중",
@@ -51,6 +231,16 @@ export const messages: Catalogue = {
   },
 
   tools: {
+    desktop_document_move_observe: {"ask": "요청: 선택 영역 확인", "doing": "실행 중: 선택 영역 확인", "done": "결과: 선택 영역 확인"},
+    desktop_document_move: {"ask": "요청: 선택 영역 이동 및 저장", "doing": "실행 중: 선택 영역 이동 및 저장", "done": "결과: 선택 영역 이동 및 저장"},
+    files_move: {"ask": "요청: 파일 이동", "doing": "실행 중: 파일 이동", "done": "결과: 파일 이동"},
+
+    page_target_observe: {"ask": "요청: 페이지 관찰", "doing": "진행 중: 페이지 관찰", "done": "결과 수신: 페이지 관찰"},
+    page_target_act: {"ask": "요청: 페이지 동작", "doing": "진행 중: 페이지 동작", "done": "결과 수신: 페이지 동작"},
+    desktop_background_scroll_position: {"ask": "요청: 스크롤 위치", "doing": "진행 중: 스크롤 위치", "done": "결과 수신: 스크롤 위치"},
+    desktop_background_drag: {"ask": "요청: 슬라이더 드래그", "doing": "진행 중: 슬라이더 드래그", "done": "결과 수신: 슬라이더 드래그"},
+    desktop_background_menu_open: {"ask": "요청: 메뉴 열기", "doing": "진행 중: 메뉴 열기", "done": "결과 수신: 메뉴 열기"},
+    desktop_background_menu_select: {"ask": "요청: 메뉴 선택", "doing": "진행 중: 메뉴 선택", "done": "결과 수신: 메뉴 선택"},
     finder_selection: { ask: "Finder에서 선택한 항목을 보려고 합니다", doing: "Finder 선택 항목 확인 중", done: "Finder 선택 항목을 확인했습니다" },
     finder_reveal: { ask: "파일을 Finder에서 보여 주려고 합니다", doing: "Finder에서 보여 주는 중", done: "Finder에서 보여 주었습니다" },
     notes_search: { ask: "메모를 검색하려고 합니다", doing: "메모 검색 중", done: "메모를 검색했습니다" },
@@ -58,6 +248,7 @@ export const messages: Catalogue = {
     notes_create: { ask: "메모를 만들려고 합니다", doing: "메모 만드는 중", done: "메모를 만들었습니다" },
     notes_append: { ask: "메모에 추가하려고 합니다", doing: "메모에 추가 중", done: "메모에 추가했습니다" },
     get_current_time: { ask: "시간을 확인하려고 합니다", doing: "시간을 확인하는 중", done: "시간을 확인했습니다" },
+    task_update: { ask: "작업 진행 상황을 저장하려고 합니다", doing: "작업 진행 상황을 저장하고 있습니다", done: "작업 진행 상황을 저장했습니다" },
     worknote_write: { ask: "작업 메모를 저장하려고 합니다", doing: "작업 메모 저장 중", done: "작업 메모를 저장했습니다" },
     worknote_read: { ask: "작업 메모를 읽으려고 합니다", doing: "작업 메모 읽는 중", done: "작업 메모를 읽었습니다" },
     worknote_search: { ask: "작업 메모를 검색하려고 합니다", doing: "작업 메모 검색 중", done: "작업 메모를 검색했습니다" },
@@ -123,6 +314,10 @@ export const messages: Catalogue = {
       back: "채팅으로 돌아가기",
     },
     sessions: {
+    all: "모든 채팅",
+    recoverable: "중단됨",
+    noRecoverable: "중단된 채팅 없음",
+
       title: "세션",
       empty: "아직 작업이 없습니다",
       ongoing: "진행 중",
@@ -213,6 +408,7 @@ export const messages: Catalogue = {
   },
 
   composer: {
+    draftAttachments: "초안 첨부 파일 · 전송되지 않음",
     filesOnly: "첨부한 파일을 봐 줘.",
     drop: "놓기: 파일이 메시지에 첨부되며, 에이전트는 그 파일만 읽을 수 있습니다.",
     removeFile: "첨부 파일 {name} 제거",
@@ -263,6 +459,11 @@ export const messages: Catalogue = {
   },
 
   turn: {
+    copy: "답변 복사",
+    copied: "복사됨",
+    copyFailed: "복사할 수 없습니다. 답변을 선택하여 직접 복사하세요.",
+    details: "모델 및 시간 세부 정보",
+
     thinking: "생각하는 중…",
     thoughts: "사고 과정",
     planning: "계획을 세우는 중…",
@@ -432,6 +633,11 @@ export const messages: Catalogue = {
   },
 
   vault: {
+    lockedNote: "이 키를 사용하려면 보관함 잠금을 해제하세요",
+    restartNeeded: "저장된 키를 이전했습니다. 계정을 다시 연결하려면 Vunemi를 다시 시작하세요.",
+    unlock: "보관함 잠금 해제",
+    unlocking: "macOS 대기 중…",
+    unlockHint: "보관함이 잠겨 있습니다. 채팅은 계속 사용할 수 있습니다. 저장된 키가 필요할 때 잠금을 해제하세요. macOS에서 로그인 키체인 암호를 요청할 수 있습니다.",
     intro: "키를 여기에 보관하십시오. 모델에는 이름만 알려지고, 값은 이 Mac의 키체인에 암호화되어 보관되며 채팅에 절대 들어가지 않습니다. 어떤 페이지에 나타나더라도 모델이 보기 전에 이름으로 바뀝니다.",
     neverTypes: "Vunemi는 사용자 대신 암호, 카드 번호, 신분증 번호를 입력하지 않습니다. 금고는 도구가 백그라운드에서 쓰는 키를 위한 곳입니다. 로그인 화면에서는 언제나 사용자가 직접 합니다.",
     unavailable: "이 컴퓨터에서는 보안 저장소를 사용할 수 없어 금고가 새로운 것을 저장하지 않습니다. 암호화하지 않고 저장하느니 아무것도 저장하지 않겠습니다.",
@@ -679,6 +885,19 @@ export const messages: Catalogue = {
         thisComputer: "이 Mac 자체의 주소는 신뢰할 수 없습니다. Vunemi 자체의 제어 기능이 그곳에 있습니다.",
         full: "목록이 가득 찼습니다. 더 이상 필요 없는 사이트를 먼저 삭제하세요.",
       },
+    },
+    searchLocation: {
+      title: "검색 지역",
+      intro: "검색에 사용할 기본 국가와 선택 사항인 도시를 저장하세요. 앱 및 답변 언어와는 별개인 설정입니다. 채팅에서 장소를 명확히 지정하면 그 장소가 우선됩니다.",
+      country: "국가",
+      unset: "설정 안 함",
+      city: "도시 (선택 사항)",
+      chooseCountry: "먼저 국가를 선택하세요.",
+      save: "검색 지역 저장",
+      saved: "검색 지역이 저장되었습니다.",
+      loading: "검색 지역을 불러오는 중…",
+      loadError: "검색 지역을 불러오지 못했습니다. 다시 시도하세요.",
+      saveError: "검색 지역을 저장하지 못했습니다. 내용을 확인하고 다시 시도하세요.",
     },
     language: {
       intro: "Vunemi의 화면, 메시지, 에이전트의 답변이 이 언어로 표시됩니다. 음성 인식도 이 언어를 기준으로 합니다.",
@@ -1008,6 +1227,16 @@ export const messages: Catalogue = {
     search: "검색: '{query}'",
   },
   agent: {
+    requiredBackgroundUnavailable: "필요한 백그라운드 관찰 도구를 사용할 수 없습니다. 입력을 보내지 않았습니다.",
+    requiredBackgroundMissing: "모델이 필요한 백그라운드 관찰 호출을 생성하지 않았습니다. 제안된 입력을 실행하지 않았습니다.",
+    backgroundSinglePressBlocked: "요청한 한 번의 버튼 입력을 이미 시도했습니다. 두 번째 입력은 보내지 않았습니다. 대상을 읽어 결과를 확인하세요.",
+    backgroundOnlyBlocked: "이 요청에는 백그라운드 제어가 필요합니다. 포커스를 바꿀 수 있는 대체 작업을 차단했으며 입력을 보내지 않았습니다.",
+    backgroundAttemptStopped: "백그라운드 제어를 안전하게 완료하지 못했습니다. 작업을 반복하거나 전경으로 전환하지 않았습니다. 계속하기 전에 대상을 확인하세요.",
+    rejectionStopped: "작업이 거부되었습니다. 진행을 중단했습니다.",
+    deliverySavedOne: "파일 1개를 저장했습니다.",
+    deliverySavedMany: "파일 {count}개를 저장했습니다.",
+    deliveryVerifiedOne: "파일 1개를 저장하고 내용을 확인했습니다.",
+    deliveryVerifiedMany: "파일 {count}개를 저장하고 내용을 확인했습니다.",
     calendarUnread: "캘린더를 읽을 수 없었습니다: {error} 일정이 있는지 확인하지 못했습니다.",
     nothingChanged: "⚠️ Vunemi 알림: 이 작업에서는 아무것도 추가, 전송 또는 변경되지 않았습니다. 위 답변이 다르게 말한다면 잘못된 것입니다. 다시 요청하거나 직접 하세요.",
     switchedOff: "{part}이(가) 꺼져 있습니다. 이 작업이 그것을 사용하려고 합니다.",
@@ -1122,6 +1351,15 @@ export const messages: Catalogue = {
   },
 
   mac: {
+    guard: {
+      busy: "다른 로컬 작업이 실행 중입니다. 새 요청은 전송되지 않았습니다.",
+      targetBusy: "다른 작업이 이 창을 사용하고 있습니다. 새 입력은 전송되지 않았습니다.",
+      closed: "이 작업이 중지되거나 종료되었습니다. 새 요청은 전송되지 않았습니다.",
+      uncertain: "이전 결과가 불확실합니다. 복구 전에 대상을 확인하세요. 작업은 반복되지 않았습니다.",
+      identity: "작업 또는 창의 식별 정보를 확인할 수 없습니다. 요청은 전송되지 않았습니다.",
+      capacity: "작업 기록 한도에 도달했습니다. 대기 중인 작업을 확인하세요.",
+      journal: "작업 기록을 사용할 수 없습니다. 백그라운드 실행이 차단되었습니다.",
+    },
     helper: {
       missing: "데스크톱 도우미가 설치되어 있지 않습니다. 저장소에서 `pnpm build:helper`로 빌드합니다.",
       timeout: "데스크톱 도우미가 '{op}' 요청에 응답하지 않았습니다.",
@@ -1182,6 +1420,7 @@ export const messages: Catalogue = {
     desktop: {
       whichApp: "어떤 앱인지 말해야 합니다.",
       noSuchApp: "'{app}'(이)라는 열린 앱이 없습니다. 열려 있는 앱: {open}.",
+      ambiguousApp: "{app}에 해당하는 실행 중인 프로세스가 여러 개입니다. 정확한 PID를 사용하세요: {pids}. 입력은 전송되지 않았습니다.",
       noPermission: "손쉬운 사용 권한이 허용되지 않아 Vunemi가 앱을 사용할 수 없습니다. 시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용에서 직접 허용해야 합니다.",
       preview: {
         apps: "열린 앱 목록 보기",
@@ -1660,7 +1899,7 @@ export const messages: Catalogue = {
     },
   },
   addons: {
-    intro: "원할 때 추가하는 기능입니다. 각각 별도의 프로그램으로, Vunemi가 시험한 사본을 Vunemi의 릴리스 페이지에서 한 번 다운로드하고 설치 전에 검증합니다. 이 Mac에서 네트워크 접근 없이 실행되며 Vunemi가 건네준 파일만 볼 수 있습니다.",
+    intro: "추가 기능을 선택하면 지원되는 모든 로컬 편집 기능을 사용할 수 있습니다. 선택한 추가 기능만 다운로드합니다. 각각 별도의 프로그램으로, Vunemi가 시험한 사본을 Vunemi의 릴리스 페이지에서 한 번 다운로드하고 설치 전에 검증합니다. 이 Mac에서 네트워크 접근 없이 실행되며 Vunemi가 건네준 파일만 볼 수 있습니다.",
     credit: "이 프로그램들은 ArtCraft 팀의 Craft 앱으로, MIT 또는 Apache-2.0 라이선스의 오픈 소스입니다. 아직 초기 단계라 결과가 Word, Excel, PowerPoint와 다를 수 있습니다.",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "추가 기능 검색",
@@ -1678,13 +1917,13 @@ export const messages: Catalogue = {
     ready: "설치됨",
     outdated: "{version} 버전이 설치되어 있습니다. 이 Vunemi에는 더 새로운 버전이 필요합니다.",
     items: {
-      documents: { title: "문서", body: "보고서, 편지, 메모를 제목·목록·표가 있는 Word 또는 PDF 파일로 작성합니다. 기존 문서의 사본에서 텍스트를 바꿉니다." },
-      sheets: { title: "스프레드시트", body: "수식과 차트가 있는 Excel 통합 문서를 만듭니다." },
-      slides: { title: "프레젠테이션", body: "제목, 글머리 기호, 차트가 있는 PowerPoint 프레젠테이션을 만듭니다. 기존 프레젠테이션을 읽고 변경한 사본을 만듭니다." },
-      pdf: { title: "PDF 도구", body: "PDF를 합치고 나누며, 페이지를 추출·회전하고 양식을 채웁니다." },
-      drawing: { title: "그리기", body: "포스터, 카드, 로고, 간단한 일러스트를 PNG, PDF 또는 편집 가능한 SVG로 그립니다." },
-      photo: { title: "사진 편집", body: "이미지를 자르고 크기와 색을 조정하여 다른 형식으로 저장합니다." },
-      video: { title: "동영상 편집", body: "클립을 이어 붙이고 제목과 자막을 넣어 MP4로 내보냅니다." },
+      documents: { title: "문서", body: "Word 문서를 읽고 만들고 편집하며, 스타일, 표, 댓글, 변경 내용 추적을 다루고 PDF로 내보냅니다." },
+      sheets: { title: "스프레드시트", body: "Excel 통합 문서를 읽고 만들고 편집하며, 수식, 피벗 테이블, 차트를 다룹니다." },
+      slides: { title: "프레젠테이션", body: "PowerPoint 프레젠테이션을 읽고 만들고 편집하며, 레이아웃, 개체, 차트, 발표자 노트를 다룹니다." },
+      pdf: { title: "PDF 도구", body: "PDF를 읽고 편집하며, 페이지 관리, 파일 병합과 분할, 양식 작성을 지원합니다." },
+      drawing: { title: "그리기", body: "벡터 그림, 도형, 텍스트를 만들고 편집하며 SVG, PNG, PDF로 내보냅니다." },
+      photo: { title: "사진 편집", body: "레이어, 보정, 조정, 효과로 이미지를 편집하고 형식을 변환합니다." },
+      video: { title: "동영상 편집", body: "동영상 타임라인, 클립, 제목, 효과, 오디오를 편집하고 완성된 동영상을 내보냅니다." },
     },
     failed: {
       space: "디스크 공간이 부족합니다.",

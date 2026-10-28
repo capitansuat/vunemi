@@ -4,6 +4,184 @@
  * `count`.
  */
 export const messages = {
+  quotedSource: {"action": "Alıntıyla sor", "title": "Alıntılanan metin", "remove": "Alıntıyı kaldır", "source": "Kaynak yanıtı göster", "unsupported": "Tamamlanmış tek bir yanıt içinden metin seç.", "tooLong": "En fazla 2.000 karakter seç.", "placeholder": "Bu alıntı hakkında bir soru yaz…", "show": "Alıntıyı göster", "hide": "Alıntıyı gizle"},
+  taskAttention: {
+    "title": "Dikkat gerekenler",
+    "loading": "Görevler yükleniyor…",
+    "empty": "Dikkat gerektiren görev yok.",
+    "error": "Görevler yüklenemedi.",
+    "refresh": "Yenile",
+    "truncated": "Son 100 görev gösteriliyor.",
+    "open": "{title} görevini aç",
+    "blocked": "Sohbet değiştirmeden önce mevcut görevi bitir veya durdur.",
+    "plan": "Plan onayı",
+    "approval": "Onay gerekiyor",
+    "user": "Yanıtın gerekiyor",
+    "review": "İnceleme gerekiyor",
+    "uncertain": "Sonuç belirsiz",
+    "recovery": "Yeniden başlatmada yarım kaldı"
+},
+  outcomeProgress: {
+    browserWrite: "{target} sayfasını aç.",
+    browserVerify: "{target} için geçerli sayfayı doğrula.",
+    calendarWrite: "{target} takvim etkinliğini oluştur.",
+    calendarVerify: "{target} etkinliğini yeniden okuyup doğrula.",
+    draftWrite: "{target} taslağını kaydet.",
+    draftVerify: "{target} taslağını yeniden okuyup doğrula.",
+    reviewNeeded: "İşlem onaylandı ancak sonucu bağımsız olarak doğrulanmadı. Mevcut sonucu inceleyin; değişikliği tekrarlamayın.",
+  },
+  nativeRecipes: {
+    noResume: "Zamanlanmış native iş sürdürülemez. Zamanlanmış işler bölümünde yeni izin incele.",
+    backupCount: "Onaylı zaman başına bir tane, en fazla {count} yedek",
+    "title": "Zamanlanmış TextEdit işi",
+    "intro": "Zaten açık, kaydedilmiş UTF-8 metin belgesine sabit metin ekleyin.",
+    "setup": "TextEdit işi kur",
+    "target": "Açık belge ve pencere",
+    "literal": "Eklenecek tam metin",
+    "timezone": "Saat dilimi",
+    "slot": "Zaman {count}",
+    "addSlot": "Zaman ekle",
+    "removeSlot": "Zamanı kaldır",
+    "reviewRead": "Hazırlık okumasını incele",
+    "readConsent": "Hazırlık, eşitliği ve yedekleri denetlemek için belgeyi diskten ve TextEdit’ten okur. Bu yalnız hazırlık okumasına izin verir; düzenleme veya zamanlanmış iş izni değildir.",
+    "prepare": "Hazırlık okumasına izin ver",
+    "approve": "Bu zamanlanmış değişiklikleri onayla",
+    "cancel": "İptal et ve geri dön",
+    "expired": "İncelemenin süresi doldu. İptal edip yeni inceleme hazırlayın.",
+    "failed": "Bu inceleme devam edemez. İptal edip yeni bir inceleme hazırla.",
+    "busy": "Ana işlem bekleniyor…",
+    "revoke": "İzni kaldır",
+    "revoking": "İzin kaldırılıyor…",
+    "runNowDisabled": "Yalnız onaylanan zamanlarda",
+    "remaining": "{count} onaylı zaman kaldı",
+    "expires": "İzin bitişi: {at}",
+    "next": "Sonraki onaylı zaman: {at}",
+    "backup": "Yedek: {path}",
+    "readTarget": "Okuma hedefi: {path}",
+    "review": "Tam değişiklikleri incele",
+    "limits": "24 saat içinde en fazla 4 zaman. Her zaman bir yedek, bir ekleme ve bir kaydetmeye izin verir. 10 saniye giriş olmamalı; meşgul veya 60 saniyeden fazla geciken zaman tekrarlanmadan tüketilir. Belge açılmaz, uygulama etkinleştirilmez, geri alma yoktur. İptal, gönderilmiş isteği geri alamaz. Son kontrolden sonra kullanıcı girişi olabilir; belirsiz sonuç inceleme gerektirir. Yeniden başlatma yeni onay gerektirir. Her denemede ilk native etkiden 30 saniye sonra veya izin daha erken dolarsa yeni native istek gönderilmez. Gönderilmiş istekler geri alınamaz.",
+    "noTargets": "Uygun açık TextEdit belgesi yok.",
+    "offset": "Açık UTC farkı",
+    "offsetRequired": "UTC farkını seçin",
+    "invalidInput": "Belgeyi, metni ve 1–4 somut zamanı denetleyin.",
+    "revokeFailed": "İzin kaldırma doğrulanmadı.",
+    "authority": {
+      "active": "Etkin",
+      "revoked": "İzin kaldırıldı",
+      "expired": "Süresi doldu",
+      "reapproval-required": "Yeni onay gerekli",
+      "blocked-unknown": "Engellendi: belirsiz sonuç",
+      "exhausted": "Onaylı zamanlar tükendi"
+    },
+    "slotStatus": {
+      "scheduled": "Zamanlandı",
+      "reserved": "Ayrıldı",
+      "skipped": "Atlandı",
+      "backup-only": "Yalnız yedek; ekleme gönderilmedi",
+      "verified": "Bağımsız doğrulandı",
+      "unknown": "Belirsiz; inceleme gerekli"
+    }
+  },
+  taskPermissions: {
+    loadFailed: "Çalıştırma izinleri yüklenemedi.",
+    "title": "Bu çalıştırmanın izinleri",
+    "once": "Yalnız bu işlem",
+    "fileOffer": "Bu çalıştırmada bu dosyayı oku · en fazla 8 okuma",
+    "windowOffer": "Bu çalıştırmada bu pencereyi gözle · en fazla 8 gözlem",
+    "fileSameVersion": "Yalnız bu dosya sürümü; dosya değişirse yeniden izin gerekir.",
+    "remaining": "{remaining}/{max} kullanım kaldı",
+    "expired": "Sona erdi",
+    "exhausted": "Kullanım sınırına ulaşıldı",
+    "revoke": "İzni kaldır",
+    "revoking": "Kaldırılıyor…",
+    "revoked": "Kaldırıldı",
+    "revokeFailed": "İzin kaldırılamadı.",
+    "inFlightRead": "Bu izne dayalı yeni okumalar engellendi; önceki okuma geri alınmış değildir.",
+    "empty": "Şu anda etkin çalıştırma izni yok.",
+    "schedulerRestriction": "Şimdi çalıştır gözetimsiz kısıtlarla çalışır. Çalıştırma izinleri zamanlanmış işlere devredilmez.",
+    "runDuration": "Yalnız bu çalıştırma boyunca",
+    "activeCount": "Etkin izinler · {count}",
+    "revokeTarget": "{target} için izni kaldır",
+    "scopeLegend": "İzin kapsamı",
+    "effect": {
+      "fileRead": "Dosya okuma",
+      "windowObserve": "Pencere gözleme"
+    }
+  },
+  safeMove: {
+    documentAutomationRequired: "Sistem Ayarları → Gizlilik ve Güvenlik → Otomasyon bölümünde Vunemi’nin TextEdit erişimine izin ver, ardından belgeyi yeniden gözle.","preview": {"backup": "Yedek: {path}", "noOverwrite": "Hedefteki dosyanın üzerine yazılmaz."}, "documentPreview": "Seçili metni taşı ve kaydet\nTextEdit PID {pid} · {title} #{window}\n{path}\nUTF-16 {start}–{end} → {destination}\n{selection}\nYedek: {backup}\nBelge değişirse işlem durur. Eşzamanlı kullanıcı düzenlemesini kilitlemez."},
+
+  backgroundCapabilities: {
+    "perAction": "Uygun eylemler her işlem için yeniden kontrol edilir.",
+    "notObserved": "Bu hedefte gözlenmeyen eylemler",
+    backend: {"native": "Uygulama penceresi", "browser": "Tarayıcı sekmesi", "webContent": "Uygulama içi web sayfası"},
+    "title": "Arka plan yetenekleri",
+    "available": "Gözlenen eylemler",
+    "none": "Bu gözlemde uygun bir arka plan eylemi sunulmuyor.",
+    "notProvided": "Bu sürümde arka planda sunulmuyor",
+    "observationOnly": "Gözlem, izin veya tamamlanma kanıtı değildir. Kullanılabilirlik değişebilir.",
+    "actions": {
+      "sliderDrag": "Sürgüyü sürükleme",
+      "scrollPosition": "Kaydırma konumunu ayarlama",
+      "menuOpen": "Menüyü açma",
+      "menuSelect": "Menü öğesini seçme",
+      "press": "Düğmeye basma",
+      "setValue": "Metin alanını değiştirme",
+      "menu": "Menü",
+      "scroll": "Kaydırma",
+      "drag": "Sürükleme"
+    }
+  },
+  chatTask: {
+    target: "Hedef",
+    mode: {"background": "Arka planda", "foreground": "Ön planda"},
+    history: "İşlem ayrıntıları",
+    "status": {
+      "running": "Çalışıyor",
+      "waiting_approval": "Onay bekliyor",
+      "waiting_user": "Senden yardım bekliyor",
+      "paused": "Duraklatıldı",
+      "completed": "Adımlar tamamlandı",
+      "finished": "Yanıtlandı",
+      "needs_review": "Kontrol gerekiyor",
+      "interrupted": "İş yarım kaldı",
+      "stopped": "Durduruldu",
+      "failed": "Tamamlanamadı"
+    },
+    "remaining": "Kalan adımlar",
+    "steps": "Tüm adımlar",
+    "progress": "{done}/{total} adım",
+    "outputs": "Çıktılar",
+    "allOutputs": "Tüm çıktıları gör",
+    "missing": "Dosya bulunamadı",
+    "reported": "Bildirildi; kontrol gerekiyor",
+    "review": "Bazı adımlar veya sonuçlar henüz doğrulanmadı.",
+    "uncertain": "Sonucu belirsiz işlemler var; tekrarından önce kontrol edilmeli.",
+    "resumed": "Devam edilen görev",
+    "jump": "Son mesaja dön",
+    "pending": "Sırada",
+    "supported": "Başarılı işlem kaydı var"
+  },
+  toolActivity: {
+    ask: "Bu işlem için izin istiyor",
+    doing: "İşlem yürütülüyor",
+    done: "İşlem sonucu alındı",
+  },
+  outputState: {
+    created: "Oluşturuldu",
+    checked: "İçerik kontrol edildi",
+    savedChecked: "Kaydedildi ve kontrol edildi",
+    draft: "Taslak kaydedildi",
+    added: "Eklendi",
+    downloaded: "İndirildi",
+    uncertain: "Sonucu belirsiz",
+  },
+  approvalContext: {
+    target: "Hedef",
+    once: "Bir kez izin, burada gösterilen işlem içindir.",
+    session: "Oturum izni bu oturum boyunca geçerlidir. Bağlantı ve sistem izinleri yine uygulanır.",
+    change: "Önerilen değişiklik",
+  },
   choice: {
     choose: "Bunu seç",
     compare: "Karşılaştır",
@@ -37,6 +215,8 @@ export const messages = {
   },
 
   callStatus: {
+    cancelled: "iptal edildi",
+    interrupted: "sonucu belirsiz",
     proposed: "hazırlanıyor",
     awaiting: "onay bekliyor",
     running: "çalışıyor",
@@ -55,6 +235,16 @@ export const messages = {
 
   /** What a tool is doing: asking for approval, doing it, done. */
   tools: {
+    desktop_document_move_observe: {"ask": "İstek: Seçili metni gözle", "doing": "Yürütülüyor: Seçili metni gözle", "done": "Sonuç döndü: Seçili metni gözle"},
+    desktop_document_move: {"ask": "İstek: Seçili metni taşı ve kaydet", "doing": "Yürütülüyor: Seçili metni taşı ve kaydet", "done": "Sonuç döndü: Seçili metni taşı ve kaydet"},
+    files_move: {"ask": "İstek: Dosyayı taşı", "doing": "Yürütülüyor: Dosyayı taşı", "done": "Sonuç döndü: Dosyayı taşı"},
+
+    page_target_observe: {"ask": "İstek: Sayfa gözlemi", "doing": "Yürütülüyor: Sayfa gözlemi", "done": "Sonuç döndü: Sayfa gözlemi"},
+    page_target_act: {"ask": "İstek: Sayfa işlemi", "doing": "Yürütülüyor: Sayfa işlemi", "done": "Sonuç döndü: Sayfa işlemi"},
+    desktop_background_scroll_position: {"ask": "İstek: Kaydırma konumu", "doing": "Yürütülüyor: Kaydırma konumu", "done": "Sonuç döndü: Kaydırma konumu"},
+    desktop_background_drag: {"ask": "İstek: Sürgüyü sürükleme", "doing": "Yürütülüyor: Sürgüyü sürükleme", "done": "Sonuç döndü: Sürgüyü sürükleme"},
+    desktop_background_menu_open: {"ask": "İstek: Menü açma", "doing": "Yürütülüyor: Menü açma", "done": "Sonuç döndü: Menü açma"},
+    desktop_background_menu_select: {"ask": "İstek: Menü seçimi", "doing": "Yürütülüyor: Menü seçimi", "done": "Sonuç döndü: Menü seçimi"},
     finder_selection: { ask: "Finder'da seçili olanları görmek istiyor", doing: "Finder seçimine bakıyor", done: "Finder seçimine baktı" },
     finder_reveal: { ask: "Bir dosyayı Finder'da göstermek istiyor", doing: "Finder'da gösteriyor", done: "Finder'da gösterdi" },
     notes_search: { ask: "Notlarında arama yapmak istiyor", doing: "Notlarda arıyor", done: "Notlarda aradı" },
@@ -62,6 +252,7 @@ export const messages = {
     notes_create: { ask: "Not oluşturmak istiyor", doing: "Not oluşturuyor", done: "Not oluşturdu" },
     notes_append: { ask: "Bir nota eklemek istiyor", doing: "Nota ekliyor", done: "Nota ekledi" },
     get_current_time: { ask: "Saate bakmak istiyor", doing: "Saate bakıyor", done: "Saate baktı" },
+    task_update: { ask: "Görev ilerlemesini kaydetmek istiyor", doing: "Görev ilerlemesini kaydediyor", done: "Görev ilerlemesini kaydetti" },
     worknote_write: { ask: "Bir çalışma notu kaydetmek istiyor", doing: "Çalışma notunu kaydediyor", done: "Çalışma notunu kaydetti" },
     worknote_read: { ask: "Bir çalışma notunu okumak istiyor", doing: "Çalışma notunu okuyor", done: "Çalışma notunu okudu" },
     worknote_search: { ask: "Çalışma notlarında aramak istiyor", doing: "Çalışma notlarında arıyor", done: "Çalışma notlarında aradı" },
@@ -127,6 +318,10 @@ export const messages = {
       back: "Sohbete dön",
     },
     sessions: {
+    all: "Tüm sohbetler",
+    recoverable: "Yarım kalanlar",
+    noRecoverable: "Yarım kalan sohbet yok",
+
       title: "Oturumlar",
       empty: "henüz görev yok",
       ongoing: "sürüyor",
@@ -217,6 +412,7 @@ export const messages = {
   },
 
   composer: {
+    draftAttachments: "Taslak ekler · henüz gönderilmedi",
     filesOnly: "Eklediğim dosyalara bak.",
     drop: "Bırak: dosya mesaja eklenir, ajan yalnızca onu okuyabilir.",
     removeFile: "{name} ekini kaldır",
@@ -267,6 +463,11 @@ export const messages = {
   },
 
   turn: {
+    copy: "Yanıtı kopyala",
+    copied: "Kopyalandı",
+    copyFailed: "Kopyalanamadı. Yanıtı seçerek elle kopyalayabilirsin.",
+    details: "Model ve süre ayrıntıları",
+
     thinking: "Düşünüyor…",
     thoughts: "Düşünce süreci",
     planning: "Plan çıkarıyor…",
@@ -436,6 +637,11 @@ export const messages = {
   },
 
   vault: {
+    lockedNote: "Bu anahtarı kullanmak için kasayı aç",
+    restartNeeded: "Kayıtlı anahtarlar taşındı. Hesapları yeniden bağlamak için Vunemi’yi yeniden başlat.",
+    unlock: "Kasayı aç",
+    unlocking: "macOS bekleniyor…",
+    unlockHint: "Kasa kilitli. Sohbeti kullanabilirsin. Kayıtlı anahtarlar gerektiğinde kasayı aç; macOS giriş anahtar zinciri şifreni isteyebilir.",
     intro: "Anahtarlarını burada tut. Modele yalnızca adı söylenir; değeri bu Mac'in anahtar zincirinde şifreli durur ve sohbete hiç girmez. Bir sayfada görünse bile, model görmeden önce adıyla değiştirilir.",
     neverTypes: "Vunemi senin adına şifre, kart veya kimlik numarası yazmaz. Kasa, araçların arka planda kullandığı anahtarlar içindir; giriş ekranlarında sıra her zaman sende.",
     unavailable: "Bu bilgisayarda güvenli saklama kullanılamıyor, bu yüzden kasa yeni bir şey kaydetmez. Şifresiz saklamaktansa hiç saklamamayı seçiyoruz.",
@@ -683,6 +889,19 @@ export const messages = {
         thisComputer: "Bu Mac'in kendi adresleri güvenli listeye eklenemez: Vunemi'nin kendi denetimleri orada.",
         full: "Liste dolu. Önce artık gerekmeyen bir siteyi kaldır.",
       },
+    },
+    searchLocation: {
+      title: "Arama konumu",
+      intro: "Aramalar için varsayılan ülkeyi ve isteğe bağlı şehri kaydedin. Bu ayar, uygulama ve yanıt dilinden bağımsızdır. Sohbette açıkça belirttiğiniz yer bu varsayılanın önüne geçer.",
+      country: "Ülke",
+      unset: "Belirtilmedi",
+      city: "Şehir (isteğe bağlı)",
+      chooseCountry: "Önce bir ülke seçin.",
+      save: "Arama konumunu kaydet",
+      saved: "Arama konumu kaydedildi.",
+      loading: "Arama konumu yükleniyor…",
+      loadError: "Arama konumu yüklenemedi. Tekrar deneyin.",
+      saveError: "Arama konumu kaydedilemedi. Bilgileri kontrol edip tekrar deneyin.",
     },
     language: {
       intro: "Vunemi'nin arayüzü, mesajları ve ajanın yanıtları bu dilde olur. Ses tanıma da bu dili bekler.",
@@ -1012,6 +1231,16 @@ export const messages = {
     search: "Ara: \"{query}\"",
   },
   agent: {
+    requiredBackgroundUnavailable: "Gerekli arka plan gözlem aracı kullanılamıyor. Giriş gönderilmedi.",
+    requiredBackgroundMissing: "Model gerekli arka plan gözlem çağrısını üretmedi. Önerilen hiçbir giriş uygulanmadı.",
+    backgroundSinglePressBlocked: "İstenen tek düğme girişi daha önce denendi. İkinci giriş gönderilmedi; sonucu hedefi okuyarak doğrulayın.",
+    backgroundOnlyBlocked: "Bu istek arka plan denetimi gerektiriyor. Odağı değiştirebilecek alternatif işlem engellendi; giriş gönderilmedi.",
+    backgroundAttemptStopped: "Arka plan işlemi güvenle tamamlanamadı. İşlem tekrarlanmadı ve ön plana geçilmedi. Devam etmeden hedefi kontrol edin.",
+    rejectionStopped: "İşlem reddedildi. Görev durduruldu.",
+    deliverySavedOne: "1 dosya kaydedildi.",
+    deliverySavedMany: "{count} dosya kaydedildi.",
+    deliveryVerifiedOne: "1 dosya kaydedildi ve içeriği kontrol edildi.",
+    deliveryVerifiedMany: "{count} dosya kaydedildi ve içerikleri kontrol edildi.",
     calendarUnread: "Takvimi okuyamadım: {error} Etkinlik olup olmadığını doğrulayamadım.",
     nothingChanged: "⚠️ Vunemi'nin notu: bu görevde hiçbir şey eklenmedi, gönderilmedi ya da değiştirilmedi. Yukarıdaki cevap aksini söylüyorsa yanlış; işi yeniden iste ya da kendin yap.",
     switchedOff: "{part} kapalı. Bu görev onu kullanmak istiyor.",
@@ -1126,6 +1355,15 @@ export const messages = {
   },
 
   mac: {
+    guard: {
+      busy: "Başka bir yerel işlem sürüyor. Yeni istek gönderilmedi.",
+      targetBusy: "Bu pencereyi başka bir görev kullanıyor. Yeni giriş gönderilmedi.",
+      closed: "Bu görev durdu veya kapandı. Yeni istek gönderilmedi.",
+      uncertain: "Önceki sonuç belirsiz. Kurtarmadan önce hedefi kontrol et; işlem tekrarlanmadı.",
+      identity: "Görev veya pencere kimliği doğrulanamadı. İstek gönderilmedi.",
+      capacity: "İşlem kayıt sınırına ulaşıldı. Bekleyen işleri incele.",
+      journal: "İşlem kaydı kullanılamıyor. Arka plan işlemi başlatılmadı.",
+    },
     helper: {
       missing: "Masaüstü yardımcısı kurulu değil. Depoda `pnpm build:helper` ile derlenir.",
       timeout: "Masaüstü yardımcısı \"{op}\" isteğine yanıt vermedi.",
@@ -1186,6 +1424,7 @@ export const messages = {
     desktop: {
       whichApp: "Hangi uygulama olduğunu söylemen gerekiyor.",
       noSuchApp: "\"{app}\" diye açık bir uygulama yok. Açık olanlar: {open}.",
+      ambiguousApp: "{app} ile eşleşen birden fazla çalışan süreç var. Tam PID kullan: {pids}. Giriş gönderilmedi.",
       noPermission: "Erişilebilirlik izni verilmemiş, bu yüzden Vunemi uygulamaları kullanamıyor. System Settings › Privacy & Security › Accessibility altından izni sen vermelisin.",
       preview: {
         apps: "Açık uygulamaları listele",
@@ -1666,7 +1905,7 @@ export const messages = {
     },
   },
   addons: {
-    intro: "İstediğinde eklediğin ek yetenekler. Her biri ayrı bir programdır: Vunemi'nin denediği kopya, Vunemi'nin kendi sürüm sayfasından bir kez indirilir ve kurulmadan önce doğrulanır. Bu Mac'te ağ erişimi olmadan çalışırlar ve yalnız Vunemi'nin verdiği dosyaları görürler.",
+    intro: "Destekledikleri tüm yerel düzenleme özelliklerini kullanmak için eklentileri seç. Yalnızca seçtiğinde indirilirler. Her biri ayrı bir programdır: Vunemi'nin denediği kopya, Vunemi'nin kendi sürüm sayfasından bir kez indirilir ve kurulmadan önce doğrulanır. Bu Mac'te ağ erişimi olmadan çalışırlar ve yalnız Vunemi'nin verdiği dosyaları görürler.",
     credit: "Programlar ArtCraft ekibinin Craft uygulamalarıdır; MIT ya da Apache-2.0 lisanslı açık kaynak. Henüz gençler: sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "Eklenti ara",
@@ -1684,13 +1923,13 @@ export const messages = {
     ready: "Kurulu",
     outdated: "{version} sürümü kurulu; bu Vunemi yenisini gerektiriyor.",
     items: {
-      documents: { title: "Belgeler", body: "Rapor, mektup ve notları başlıklar, listeler ve tablolarla Word ya da PDF dosyası olarak yazar. Var olan bir belgenin kopyasında metni değiştirir." },
-      sheets: { title: "Tablolar", body: "Formüllü ve grafikli Excel çalışma kitapları hazırlar." },
-      slides: { title: "Sunumlar", body: "Başlıklı, maddeli ve grafikli PowerPoint sunumları hazırlar. Var olan bir sunumu okur ve değiştirilmiş bir kopyasını çıkarır." },
-      pdf: { title: "PDF araçları", body: "PDF'leri birleştirir, böler, sayfa çıkarır, döndürür ve formları doldurur." },
-      drawing: { title: "Çizim", body: "Afiş, kart, logo ve basit illüstrasyonları PNG, PDF ya da düzenlenebilir SVG olarak çizer." },
-      photo: { title: "Fotoğraf düzenleme", body: "Resimleri kırpar, boyutlandırır, ayarlar ve başka biçimde kaydeder." },
-      video: { title: "Video kurgu", body: "Klipleri birleştirir, başlık ve altyazı ekler, MP4 olarak çıkarır." },
+      documents: { title: "Belgeler", body: "Word belgelerini okur, oluşturur ve düzenler; stiller, tablolar, yorumlar ve değişiklik takibiyle çalışır, PDF olarak dışa aktarır." },
+      sheets: { title: "Tablolar", body: "Excel çalışma kitaplarını okur, oluşturur ve düzenler; formüller, özet tablolar ve grafiklerle çalışır." },
+      slides: { title: "Sunumlar", body: "PowerPoint sunumlarını okur, oluşturur ve düzenler; yerleşimler, nesneler, grafikler ve konuşmacı notlarıyla çalışır." },
+      pdf: { title: "PDF araçları", body: "PDF'leri okur ve düzenler, sayfaları yönetir, dosyaları birleştirir ve böler, formları doldurur." },
+      drawing: { title: "Çizim", body: "Vektör çizimlerini, şekilleri ve metinleri oluşturur ve düzenler; SVG, PNG veya PDF olarak dışa aktarır." },
+      photo: { title: "Fotoğraf düzenleme", body: "Görselleri katmanlar, rötuş, ayarlar ve efektlerle düzenler, dosya biçimlerini dönüştürür." },
+      video: { title: "Video kurgu", body: "Video zaman çizelgelerini, klipleri, başlıkları, efektleri ve sesi düzenler, tamamlanan videoları dışa aktarır." },
     },
     failed: {
       space: "Diskte yeterli yer yok.",

@@ -1,6 +1,184 @@
 import type { Catalogue } from "../types.js";
 
 export const messages: Catalogue = {
+  quotedSource: {"action": "Ask about selection", "title": "Quoted text", "remove": "Remove quote", "source": "View source answer", "unsupported": "Select text within one completed answer.", "tooLong": "Select at most 2,000 characters.", "placeholder": "Ask a question about this quote…", "show": "Show quote", "hide": "Hide quote"},
+  taskAttention: {
+    "title": "Needs attention",
+    "loading": "Loading tasks…",
+    "empty": "No tasks need attention.",
+    "error": "Tasks could not be loaded.",
+    "refresh": "Refresh",
+    "truncated": "Showing the latest 100 tasks.",
+    "open": "Open task {title}",
+    "blocked": "Finish or stop the current task before switching chats.",
+    "plan": "Plan approval",
+    "approval": "Approval needed",
+    "user": "Your input needed",
+    "review": "Review needed",
+    "uncertain": "Result uncertain",
+    "recovery": "Interrupted on restart"
+},
+  outcomeProgress: {
+    browserWrite: "Open {target}.",
+    browserVerify: "Verify the current page for {target}.",
+    calendarWrite: "Create calendar event {target}.",
+    calendarVerify: "Read back and verify event {target}.",
+    draftWrite: "Save draft {target}.",
+    draftVerify: "Read back and verify draft {target}.",
+    reviewNeeded: "The action was acknowledged, but its result was not independently verified. Review the existing result; do not repeat the change.",
+  },
+  nativeRecipes: {
+    noResume: "Scheduled native jobs cannot be resumed. Review a new permission in Scheduled tasks.",
+    backupCount: "Up to {count} backups, one per approved time",
+    "title": "Scheduled TextEdit work",
+    "intro": "Append fixed text to an already open, saved UTF-8 text document.",
+    "setup": "Set up TextEdit work",
+    "target": "Open document and window",
+    "literal": "Exact text to append",
+    "timezone": "Time zone",
+    "slot": "Time {count}",
+    "addSlot": "Add time",
+    "removeSlot": "Remove time",
+    "reviewRead": "Review preparation read",
+    "readConsent": "Preparation reads the document from disk and TextEdit to check equality and backups. This only permits preparation reads, not edits or scheduled work.",
+    "prepare": "Allow preparation read",
+    "approve": "Approve these scheduled changes",
+    "cancel": "Cancel and go back",
+    "expired": "This review expired. Cancel and prepare a new review.",
+    "failed": "This review can no longer continue. Cancel and prepare a new review.",
+    "busy": "Waiting for main process…",
+    "revoke": "Revoke permission",
+    "revoking": "Revoking…",
+    "runNowDisabled": "Only at the approved times",
+    "remaining": "{count} approved times remaining",
+    "expires": "Permission ends: {at}",
+    "next": "Next approved time: {at}",
+    "backup": "Backup: {path}",
+    "readTarget": "Read target: {path}",
+    "review": "Review exact changes",
+    "limits": "At most 4 times within 24 hours. Each time can create one backup, append once and save once. Requires 10 seconds without input; busy or over 60 seconds late consumes the time without retry. No open, activate or rollback. Revoking cannot undo an already sent request. User input can race the final check; uncertain results require review. Restart requires new approval. Each attempt stops sending new native requests 30 seconds after the first native effect, or earlier when permission expires. Sent requests cannot be rolled back.",
+    "noTargets": "No eligible open TextEdit documents.",
+    "offset": "Explicit UTC offset",
+    "offsetRequired": "Choose the UTC offset",
+    "invalidInput": "Check the document, text and 1–4 concrete times.",
+    "revokeFailed": "Revocation was not acknowledged.",
+    "authority": {
+      "active": "Active",
+      "revoked": "Revoked",
+      "expired": "Expired",
+      "reapproval-required": "New approval required",
+      "blocked-unknown": "Blocked: uncertain result",
+      "exhausted": "Approved times exhausted"
+    },
+    "slotStatus": {
+      "scheduled": "Scheduled",
+      "reserved": "Reserved",
+      "skipped": "Skipped",
+      "backup-only": "Backup only; no append sent",
+      "verified": "Independently verified",
+      "unknown": "Uncertain; review required"
+    }
+  },
+  taskPermissions: {
+    loadFailed: "Could not load run permissions.",
+    "title": "Run permissions",
+    "once": "Only this action",
+    "fileOffer": "Read this file during this run · up to 8 reads",
+    "windowOffer": "Observe this window during this run · up to 8 observations",
+    "fileSameVersion": "Only this file version; a changed file needs new permission.",
+    "remaining": "{remaining}/{max} uses remaining",
+    "expired": "Expired",
+    "exhausted": "Use limit reached",
+    "revoke": "Revoke permission",
+    "revoking": "Revoking…",
+    "revoked": "Revoked",
+    "revokeFailed": "Could not revoke permission.",
+    "inFlightRead": "New reads using this permission are blocked; an earlier read is not undone.",
+    "empty": "No active run permissions.",
+    "schedulerRestriction": "Run now uses unattended restrictions. Run permissions do not transfer to scheduled jobs.",
+    "runDuration": "For this run only",
+    "activeCount": "Active permissions · {count}",
+    "revokeTarget": "Revoke permission for {target}",
+    "scopeLegend": "Permission scope",
+    "effect": {
+      "fileRead": "File reading",
+      "windowObserve": "Window observation"
+    }
+  },
+  safeMove: {
+    documentAutomationRequired: "Allow Vunemi to automate TextEdit in System Settings → Privacy & Security → Automation, then observe the document again.","preview": {"backup": "Backup: {path}", "noOverwrite": "Never overwrite an existing destination."}, "documentPreview": "Move selected text and save\nTextEdit PID {pid} · {title} #{window}\n{path}\nUTF-16 {start}–{end} → {destination}\n{selection}\nBackup: {backup}\nStops if the document changes. Concurrent user editing is not locked."},
+
+  backgroundCapabilities: {
+    "perAction": "Available actions are checked again for each request.",
+    "notObserved": "Actions not observed on this target",
+    backend: {"native": "Application window", "browser": "Browser tab", "webContent": "Web content in an app"},
+    "title": "Background capabilities",
+    "available": "Observed actions",
+    "none": "This observation offers no eligible background action.",
+    "notProvided": "Not provided in the background by this version",
+    "observationOnly": "An observation is not permission or proof of completion. Availability can change.",
+    "actions": {
+      "sliderDrag": "Slider drag",
+      "scrollPosition": "Set scroll position",
+      "menuOpen": "Open a menu",
+      "menuSelect": "Select a menu item",
+      "press": "Press a button",
+      "setValue": "Change a text field",
+      "menu": "Menu",
+      "scroll": "Scroll",
+      "drag": "Drag"
+    }
+  },
+  chatTask: {
+    target: "Target",
+    mode: {"background": "Background", "foreground": "Foreground"},
+    history: "Work details",
+    "status": {
+      "running": "Working",
+      "waiting_approval": "Waiting for approval",
+      "waiting_user": "Waiting for your help",
+      "paused": "Paused",
+      "completed": "Steps completed",
+      "finished": "Answered",
+      "needs_review": "Needs review",
+      "interrupted": "Interrupted",
+      "stopped": "Stopped",
+      "failed": "Could not finish"
+    },
+    "remaining": "Remaining steps",
+    "steps": "All steps",
+    "progress": "{done}/{total} steps",
+    "outputs": "Outputs",
+    "allOutputs": "View all outputs",
+    "missing": "File not found",
+    "reported": "Reported; needs review",
+    "review": "Some steps or results have not been confirmed yet.",
+    "uncertain": "Some actions have an uncertain result; check before repeating them.",
+    "resumed": "Resumed task",
+    "jump": "Jump to latest",
+    "pending": "Pending",
+    "supported": "Successful operation recorded"
+  },
+  toolActivity: {
+    ask: "Wants to perform this operation",
+    doing: "Performing the operation",
+    done: "Operation result received",
+  },
+  outputState: {
+    created: "Created",
+    checked: "Content checked",
+    savedChecked: "Saved and checked",
+    draft: "Draft saved",
+    added: "Added",
+    downloaded: "Downloaded",
+    uncertain: "Result uncertain",
+  },
+  approvalContext: {
+    target: "Target",
+    once: "Allow once applies to the operation shown here.",
+    session: "Session permission lasts for this session. Connection and system permissions still apply.",
+    change: "Proposed change",
+  },
   choice: {
     choose: "Choose this",
     compare: "Compare",
@@ -34,6 +212,8 @@ export const messages: Catalogue = {
   },
 
   callStatus: {
+    cancelled: "cancelled",
+    interrupted: "result uncertain",
     proposed: "preparing",
     awaiting: "awaiting approval",
     running: "running",
@@ -51,6 +231,16 @@ export const messages: Catalogue = {
   },
 
   tools: {
+    desktop_document_move_observe: {"ask": "Request: Observe selected text", "doing": "Running: Observe selected text", "done": "Result returned: Observe selected text"},
+    desktop_document_move: {"ask": "Request: Move selected text and save", "doing": "Running: Move selected text and save", "done": "Result returned: Move selected text and save"},
+    files_move: {"ask": "Request: Move file", "doing": "Running: Move file", "done": "Result returned: Move file"},
+
+    page_target_observe: {"ask": "Request: Page observation", "doing": "Working: Page observation", "done": "Result returned: Page observation"},
+    page_target_act: {"ask": "Request: Page action", "doing": "Working: Page action", "done": "Result returned: Page action"},
+    desktop_background_scroll_position: {"ask": "Request: Scroll position", "doing": "Working: Scroll position", "done": "Result returned: Scroll position"},
+    desktop_background_drag: {"ask": "Request: Slider drag", "doing": "Working: Slider drag", "done": "Result returned: Slider drag"},
+    desktop_background_menu_open: {"ask": "Request: Menu opening", "doing": "Working: Menu opening", "done": "Result returned: Menu opening"},
+    desktop_background_menu_select: {"ask": "Request: Menu selection", "doing": "Working: Menu selection", "done": "Result returned: Menu selection"},
     finder_selection: { ask: "Wants to see what's selected in Finder", doing: "Looking at the Finder selection", done: "Looked at the Finder selection" },
     finder_reveal: { ask: "Wants to show a file in Finder", doing: "Showing in Finder", done: "Showed in Finder" },
     notes_search: { ask: "Wants to search your notes", doing: "Searching notes", done: "Searched notes" },
@@ -58,6 +248,7 @@ export const messages: Catalogue = {
     notes_create: { ask: "Wants to create a note", doing: "Creating a note", done: "Created a note" },
     notes_append: { ask: "Wants to add to a note", doing: "Adding to a note", done: "Added to a note" },
     get_current_time: { ask: "Wants to check the time", doing: "Checking the time", done: "Checked the time" },
+    task_update: { ask: "Wants to save task progress", doing: "Saving task progress", done: "Saved task progress" },
     worknote_write: { ask: "Wants to save a work note", doing: "Saving a work note", done: "Saved a work note" },
     worknote_read: { ask: "Wants to read a work note", doing: "Reading a work note", done: "Read a work note" },
     worknote_search: { ask: "Wants to search work notes", doing: "Searching work notes", done: "Searched work notes" },
@@ -123,6 +314,10 @@ export const messages: Catalogue = {
       back: "Back to chat",
     },
     sessions: {
+    all: "All chats",
+    recoverable: "Interrupted",
+    noRecoverable: "No interrupted chats",
+
       title: "Sessions",
       empty: "no tasks yet",
       ongoing: "in progress",
@@ -213,6 +408,7 @@ export const messages: Catalogue = {
   },
 
   composer: {
+    draftAttachments: "Draft attachments · not sent",
     filesOnly: "Look at the files I attached.",
     drop: "Drop: the file is attached to the message, and the agent can read only that file.",
     removeFile: "Remove the attachment {name}",
@@ -263,6 +459,11 @@ export const messages: Catalogue = {
   },
 
   turn: {
+    copy: "Copy answer",
+    copied: "Copied",
+    copyFailed: "Could not copy. Select the answer and copy it manually.",
+    details: "Model and timing details",
+
     thinking: "Thinking…",
     thoughts: "Thought process",
     planning: "Making a plan…",
@@ -432,6 +633,11 @@ export const messages: Catalogue = {
   },
 
   vault: {
+    lockedNote: "Unlock the vault to use this key",
+    restartNeeded: "Saved keys were migrated. Restart Vunemi to reconnect accounts.",
+    unlock: "Unlock vault",
+    unlocking: "Waiting for macOS…",
+    unlockHint: "The vault is locked. Chat remains available. Unlock it when you need saved keys; macOS may ask for your login keychain password.",
     intro: "Keep your keys here. The model is told only the name; the value stays encrypted in this Mac's keychain and never enters the chat. Even if it shows up on a page, it is replaced with its name before the model sees it.",
     neverTypes: "Vunemi never types passwords, card numbers or ID numbers for you. The vault is for keys that tools use in the background; at a sign-in screen it is always your turn.",
     unavailable: "Secure storage is unavailable on this computer, so the vault won't save anything new. We'd rather store nothing than store it unencrypted.",
@@ -679,6 +885,19 @@ export const messages: Catalogue = {
         thisComputer: "This Mac's own addresses can't be trusted: Vunemi's own controls live there.",
         full: "The list is full. Remove a site you no longer need first.",
       },
+    },
+    searchLocation: {
+      title: "Search location",
+      intro: "Save a default country and optional city for searches. This is separate from the app and reply language. A place explicitly requested in chat overrides this default.",
+      country: "Country",
+      unset: "Not set",
+      city: "City (optional)",
+      chooseCountry: "Choose a country first.",
+      save: "Save search location",
+      saved: "Search location saved.",
+      loading: "Loading search location…",
+      loadError: "Could not load the search location. Try again.",
+      saveError: "Could not save the search location. Check the details and try again.",
     },
     language: {
       intro: "Vunemi's interface, its messages and the agent's replies will be in this language. Speech recognition expects it too.",
@@ -1008,6 +1227,16 @@ export const messages: Catalogue = {
     search: "Search: \"{query}\"",
   },
   agent: {
+    requiredBackgroundUnavailable: "The required background observation tool is unavailable. No input was sent.",
+    requiredBackgroundMissing: "The model did not produce the required background observation call. No proposed input was executed.",
+    backgroundSinglePressBlocked: "The requested single button input was already attempted. No second input was sent; read the target to verify the result.",
+    backgroundOnlyBlocked: "This request requires background control. A fallback that could change focus was blocked; no input was sent.",
+    backgroundAttemptStopped: "Background control did not complete safely. No repeat or foreground fallback was sent. Inspect the target before continuing.",
+    rejectionStopped: "The user declined this action. The task was stopped.",
+    deliverySavedOne: "Saved 1 file.",
+    deliverySavedMany: "Saved {count} files.",
+    deliveryVerifiedOne: "Saved 1 file and checked its contents.",
+    deliveryVerifiedMany: "Saved {count} files and checked their contents.",
     calendarUnread: "I couldn't read the calendar: {error} I couldn't confirm whether there are any events.",
     nothingChanged: "⚠️ Note from Vunemi: nothing was added, sent or changed in this task. If the answer above says otherwise, it is wrong; ask again or do it yourself.",
     switchedOff: "{part} is switched off. This task wants to use it.",
@@ -1122,6 +1351,15 @@ export const messages: Catalogue = {
   },
 
   mac: {
+    guard: {
+      busy: "Another local operation is running. No new request was sent.",
+      targetBusy: "Another task owns this window. No new input was sent.",
+      closed: "This task stopped or closed. No new request was sent.",
+      uncertain: "The previous result is uncertain. Inspect the target before recovery; the action was not repeated.",
+      identity: "The task or window identity could not be verified. No request was sent.",
+      capacity: "The operation record limit was reached. Review pending work.",
+      journal: "The operation journal is unavailable. Background dispatch was blocked.",
+    },
     helper: {
       missing: "The desktop helper isn't installed. It's built in the repository with `pnpm build:helper`.",
       timeout: "The desktop helper didn't answer the \"{op}\" request.",
@@ -1182,6 +1420,7 @@ export const messages: Catalogue = {
     desktop: {
       whichApp: "You need to say which app.",
       noSuchApp: "There's no open app called \"{app}\". Open ones: {open}.",
+      ambiguousApp: "Several running processes match {app}. Use an exact PID: {pids}. No input was sent.",
       noPermission: "Accessibility permission hasn't been granted, so Vunemi can't use apps. You have to grant it under System Settings › Privacy & Security › Accessibility.",
       preview: {
         apps: "List the open apps",
@@ -1660,7 +1899,7 @@ export const messages: Catalogue = {
     },
   },
   addons: {
-    intro: "Extra abilities you add when you want them. Each is a separate program: the copy Vunemi was tested with is downloaded once from Vunemi's own release page and checked before it is installed. They run on this Mac without network access and see only the files Vunemi hands them.",
+    intro: "Choose add-ons to unlock all their supported local editing features. They download only when you select them. Each is a separate program: the copy Vunemi was tested with is downloaded once from Vunemi's own release page and checked before it is installed. They run on this Mac without network access and see only the files Vunemi hands them.",
     credit: "The programs are the ArtCraft team's Craft apps, open source under MIT or Apache-2.0. They are young: results can differ from Word, Excel or PowerPoint.",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "Search add-ons",
@@ -1678,13 +1917,13 @@ export const messages: Catalogue = {
     ready: "Installed",
     outdated: "Version {version} is installed; this Vunemi needs the newer one.",
     items: {
-      documents: { title: "Documents", body: "Writes reports, letters and notes as Word or PDF files, with headings, lists and tables. Changes text in a copy of an existing document." },
-      sheets: { title: "Spreadsheets", body: "Makes Excel workbooks with formulas and charts." },
-      slides: { title: "Presentations", body: "Makes PowerPoint decks with titles, bullet points and charts. Reads an existing deck and makes a changed copy of it." },
-      pdf: { title: "PDF tools", body: "Combines and splits PDFs, takes pages out, rotates them and fills in forms." },
-      drawing: { title: "Drawing", body: "Draws posters, cards, logos and simple illustrations, as PNG, PDF or editable SVG." },
-      photo: { title: "Photo editing", body: "Crops, resizes and adjusts pictures, and saves them in another format." },
-      video: { title: "Video editing", body: "Cuts clips together, adds titles and captions, and exports an MP4." },
+      documents: { title: "Documents", body: "Reads, creates and edits Word documents, with styles, tables, comments and tracked changes, and exports PDFs." },
+      sheets: { title: "Spreadsheets", body: "Reads, creates and edits Excel workbooks, with formulas, pivot tables and charts." },
+      slides: { title: "Presentations", body: "Reads, creates and edits PowerPoint decks, including layouts, objects, charts and speaker notes." },
+      pdf: { title: "PDF tools", body: "Reads and edits PDFs, manages pages, combines and splits files, and fills forms." },
+      drawing: { title: "Drawing", body: "Creates and edits vector drawings, shapes and text, and exports SVG, PNG or PDF." },
+      photo: { title: "Photo editing", body: "Edits images with layers, retouching, adjustments and effects, and converts formats." },
+      video: { title: "Video editing", body: "Edits video timelines, clips, titles, effects and audio, and exports finished videos." },
     },
     failed: {
       space: "Not enough disk space.",

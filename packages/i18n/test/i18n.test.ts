@@ -46,6 +46,18 @@ function namesOf(entry: Entry): Set<string> {
 afterEach(() => setLocale("tr"));
 
 describe("catalogues", () => {
+  it('localizes outcome progress and preserves exact target interpolation in every language',()=>{
+    for(const locale of LOCALES){
+      setLocale(locale.code);
+      for(const key of ['browserWrite','browserVerify','calendarWrite','calendarVerify','draftWrite','draftVerify']){
+        const text=t(`outcomeProgress.${key}` as Parameters<typeof t>[0],{target:'Synthetic target Ω'});
+        expect(text).toContain('Synthetic target Ω');expect(text).not.toContain('{target}');
+        expect(text).not.toContain('outcomeProgress.');
+      }
+      const review=t('outcomeProgress.reviewNeeded');expect(review).not.toContain('{target}');
+      if(locale.code!=='en')expect(review).not.toBe(en.outcomeProgress.reviewNeeded);
+    }
+  });
   const source = new Map(entries(tr));
 
   for (const [code, catalogue] of Object.entries(CATALOGUES)) {
@@ -154,4 +166,7 @@ describe("the current language", () => {
     setLocale("en");
     expect(lower("TITLE")).toBe("title");
   });
+});
+it('attention task navigation labels keep the task title in all languages',()=>{
+ const before=getLocale();try{for(const locale of LOCALES){setLocale(locale.code);expect(t('taskAttention.open',{title:'Synthetic VUN16'})).toContain('Synthetic VUN16');expect(t('taskAttention.title')).not.toBe('taskAttention.title');}}finally{setLocale(before);}
 });
