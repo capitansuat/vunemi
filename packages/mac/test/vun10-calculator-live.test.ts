@@ -20,7 +20,7 @@ it.skipIf(process.platform!=='darwin'||process.env.VUNEMI_CALCULATOR_LIVE!=='1')
   const before=(await helper.apps()).find(a=>a.frontmost);evidence.foregroundBefore=before;expect(before).toBeDefined();expect(before!.bundleId).not.toBe('com.apple.calculator');
   const tools=createDesktopTools({helper,settleMs:0}),describe=tools.find(t=>t.name==='desktop_background_describe')!,press=tools.find(t=>t.name==='desktop_background_click')!;
   const observed=JSON.parse(String(await describe.run({app:'com.apple.calculator'},ctx)));evidence.before=observed;evidence.observationAt=new Date().toISOString();expect(observed.bundleId).toBe('com.apple.calculator');expect(observed.controlMode).toBe('backgroundStrict');
-  const matches=observed.targets.filter((t:{label:string;role:string;backgroundActions:string[]})=>t.label==='All Clear'&&t.role==='AXButton'&&t.backgroundActions.includes('press'));expect(matches).toHaveLength(1);
+  const matches=observed.targets.filter((t:{label:string;role:string;backgroundActions:string[]})=>t.label===(process.env.VUNEMI_CALCULATOR_LABEL??'All Clear')&&t.role==='AXButton'&&t.backgroundActions.includes('press'));expect(matches).toHaveLength(1);
   const args={app:'com.apple.calculator',snapshotId:observed.snapshotId,ref:matches[0].ref,label:matches[0].label};expect(await press.check!(args)).toBe(null);
   evidence.pressStartedAt=new Date().toISOString();evidence.result=JSON.parse(String(await press.run(args,ctx)));evidence.pressSettledAt=new Date().toISOString();
   const afterObservation=JSON.parse(String(await describe.run({app:'com.apple.calculator',windowId:observed.windowId},ctx)));evidence.after=afterObservation;evidence.independentReadAt=new Date().toISOString();
