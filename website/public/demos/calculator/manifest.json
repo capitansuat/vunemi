@@ -1,0 +1,20 @@
+{
+  "kind": "illustrated-demo",
+  "duration": 12,
+  "languages": [
+    "en",
+    "de",
+    "es",
+    "fr",
+    "it",
+    "tr",
+    "pt",
+    "ru",
+    "zh",
+    "ja",
+    "ko"
+  ],
+  "verifiedWorkflow": "45383 × 564 ÷ 235 = 108919.2",
+  "capture": "Reconstructed animation; timing is illustrative",
+  "evidence": "research/desktop-input-2026-10-14/calculator-session.json"
+}

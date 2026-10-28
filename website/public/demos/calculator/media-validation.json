@@ -1,0 +1,196 @@
+{
+  "languages": [
+    "en",
+    "de",
+    "es",
+    "fr",
+    "it",
+    "tr",
+    "pt",
+    "ru",
+    "zh",
+    "ja",
+    "ko"
+  ],
+  "videoFiles": [
+    {
+      "file": "calculator-en.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "6472dc6c2a5af29089cb5a8fd4b841673c20ec869332fdfff7c75eca151d5cc5",
+      "bytes": 185173
+    },
+    {
+      "file": "calculator-en.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "e2b0e3f0f9d28e517e008a6be0f6a23de40d6df6f1a13fc23f8dc078bc73d8ad",
+      "bytes": 217989
+    },
+    {
+      "file": "calculator-de.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "0c0c1274ab5d03820620ae0bfa3daac59394bbe18d686cefcbf865b77f273803",
+      "bytes": 193710
+    },
+    {
+      "file": "calculator-de.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "0fa8391b1e8646a5a0d55075ebb22d90f80666d18e7d8829367201b313ee08d7",
+      "bytes": 227099
+    },
+    {
+      "file": "calculator-es.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "7b4690e5eb3055c52296a918d193800b50af97f0b232d9dd2cad31e3fd2872e6",
+      "bytes": 189901
+    },
+    {
+      "file": "calculator-es.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "65b5b61ec767c686bacb0314c249a20103dd9a5dea7fe5f16900a09ca1b97343",
+      "bytes": 222827
+    },
+    {
+      "file": "calculator-fr.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "f4c95a8d96d5dd6a3ce379838b03aac1903905c5d6df15f21149ad1d95dafe69",
+      "bytes": 188348
+    },
+    {
+      "file": "calculator-fr.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "e550b6e1166b9aca40e359df4db2e57f31fd4f6ef2c1609574597ca67f3d8040",
+      "bytes": 221604
+    },
+    {
+      "file": "calculator-it.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "fa6c6c887e4ef7d8d0a7eb0546267484cbabdf4d4c04ea3c5e54b7a55efe641e",
+      "bytes": 193175
+    },
+    {
+      "file": "calculator-it.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "47bb2e035c9cb17f11b27848c3bd52b1a0aed1787807a32c16c8d47bb0ad8fbc",
+      "bytes": 223988
+    },
+    {
+      "file": "calculator-tr.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "0c00b5164140db3bc7c89efb67c724c93cc62ba6f732695c60e425441bc12ed2",
+      "bytes": 187739
+    },
+    {
+      "file": "calculator-tr.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "fbdf2144cf96ec89afe89154cce9f2be74db3367312a9493c6b69afa378cc281",
+      "bytes": 220269
+    },
+    {
+      "file": "calculator-pt.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "ad8fd96ec9a603e64655dbe2e554c7d6e76e360029dbd4c40774fe82bd4b7f8d",
+      "bytes": 190061
+    },
+    {
+      "file": "calculator-pt.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "6644b76aa0110497ecc3f4132684e8dff2fe6f450b5d2d260cb84c2f9a29254a",
+      "bytes": 225574
+    },
+    {
+      "file": "calculator-ru.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "b7fe9e312521e489edc983f87c7e150ee804d6fc66c288b61155b994a341b84b",
+      "bytes": 193928
+    },
+    {
+      "file": "calculator-ru.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "d10fdd2ab1a0615a165a18b2c0f97edb6b664a6fb3ecbee10dbb8a2148a6cbe2",
+      "bytes": 230306
+    },
+    {
+      "file": "calculator-zh.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "819463c2138b2e8532559f4b6853a28d8320d1abc797333760dbf53a39a18512",
+      "bytes": 187801
+    },
+    {
+      "file": "calculator-zh.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "0f7337a36d689a70cb4847301ec431be946168cd7f6d39b52844ab50e03d37d0",
+      "bytes": 219315
+    },
+    {
+      "file": "calculator-ja.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "bf4c310ddcc33756e25601867e32094cbc99a3a24bb9d2ae14015d58acbc590f",
+      "bytes": 192382
+    },
+    {
+      "file": "calculator-ja.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "e4753937c48b75e781a31c5749e07083d4e7dab1f3590ad9751818ba1a616018",
+      "bytes": 225800
+    },
+    {
+      "file": "calculator-ko.mp4",
+      "codec": "h264",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "970ecb7358f5b306473c71e1a072991028df6ca983511dad8f652fc6add30762",
+      "bytes": 182850
+    },
+    {
+      "file": "calculator-ko.webm",
+      "codec": "vp9",
+      "duration": "12.000000",
+      "frames": 360,
+      "sha256": "e4c10db33bce164e8f08c721a23a02ea808a9450ef72c3fb293a8f2d5fc53417",
+      "bytes": 206809
+    }
+  ],
+  "posterCount": 11,
+  "audioStreams": 0,
+  "allDecodedFrames": "passed"
+}

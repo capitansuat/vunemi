@@ -1,0 +1,189 @@
+[
+  {
+    "lang": "tr",
+    "files": [
+      {
+        "file": "calculator-tr.mp4",
+        "bytes": 187739
+      },
+      {
+        "file": "calculator-tr.webm",
+        "bytes": 220269
+      },
+      {
+        "file": "calculator-tr-poster.png",
+        "bytes": 84746
+      }
+    ]
+  },
+  {
+    "lang": "en",
+    "files": [
+      {
+        "file": "calculator-en.mp4",
+        "bytes": 185173
+      },
+      {
+        "file": "calculator-en.webm",
+        "bytes": 217989
+      },
+      {
+        "file": "calculator-en-poster.png",
+        "bytes": 84186
+      }
+    ]
+  },
+  {
+    "lang": "de",
+    "files": [
+      {
+        "file": "calculator-de.mp4",
+        "bytes": 193710
+      },
+      {
+        "file": "calculator-de.webm",
+        "bytes": 227099
+      },
+      {
+        "file": "calculator-de-poster.png",
+        "bytes": 87835
+      }
+    ]
+  },
+  {
+    "lang": "es",
+    "files": [
+      {
+        "file": "calculator-es.mp4",
+        "bytes": 189901
+      },
+      {
+        "file": "calculator-es.webm",
+        "bytes": 222827
+      },
+      {
+        "file": "calculator-es-poster.png",
+        "bytes": 87021
+      }
+    ]
+  },
+  {
+    "lang": "fr",
+    "files": [
+      {
+        "file": "calculator-fr.mp4",
+        "bytes": 188348
+      },
+      {
+        "file": "calculator-fr.webm",
+        "bytes": 221604
+      },
+      {
+        "file": "calculator-fr-poster.png",
+        "bytes": 83409
+      }
+    ]
+  },
+  {
+    "lang": "it",
+    "files": [
+      {
+        "file": "calculator-it.mp4",
+        "bytes": 193175
+      },
+      {
+        "file": "calculator-it.webm",
+        "bytes": 223988
+      },
+      {
+        "file": "calculator-it-poster.png",
+        "bytes": 87084
+      }
+    ]
+  },
+  {
+    "lang": "pt",
+    "files": [
+      {
+        "file": "calculator-pt.mp4",
+        "bytes": 190061
+      },
+      {
+        "file": "calculator-pt.webm",
+        "bytes": 225574
+      },
+      {
+        "file": "calculator-pt-poster.png",
+        "bytes": 86546
+      }
+    ]
+  },
+  {
+    "lang": "ru",
+    "files": [
+      {
+        "file": "calculator-ru.mp4",
+        "bytes": 193928
+      },
+      {
+        "file": "calculator-ru.webm",
+        "bytes": 230306
+      },
+      {
+        "file": "calculator-ru-poster.png",
+        "bytes": 87548
+      }
+    ]
+  },
+  {
+    "lang": "zh",
+    "files": [
+      {
+        "file": "calculator-zh.mp4",
+        "bytes": 187801
+      },
+      {
+        "file": "calculator-zh.webm",
+        "bytes": 219315
+      },
+      {
+        "file": "calculator-zh-poster.png",
+        "bytes": 91801
+      }
+    ]
+  },
+  {
+    "lang": "ja",
+    "files": [
+      {
+        "file": "calculator-ja.mp4",
+        "bytes": 192382
+      },
+      {
+        "file": "calculator-ja.webm",
+        "bytes": 225800
+      },
+      {
+        "file": "calculator-ja-poster.png",
+        "bytes": 94199
+      }
+    ]
+  },
+  {
+    "lang": "ko",
+    "files": [
+      {
+        "file": "calculator-ko.mp4",
+        "bytes": 182850
+      },
+      {
+        "file": "calculator-ko.webm",
+        "bytes": 206809
+      },
+      {
+        "file": "calculator-ko-poster.png",
+        "bytes": 81507
+      }
+    ]
+  }
+]
