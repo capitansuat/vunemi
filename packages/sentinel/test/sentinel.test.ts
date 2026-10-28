@@ -158,3 +158,22 @@ describe("untrusted sources", () => {
     expect(sentinel.untrustedSources()).toEqual([]);
   });
 });
+
+it('does not mistake validated desktop snapshot metadata for outbound copied content',()=>{
+ const s=make();const snapshotId='51EC1240-57BC-4E9F-99A4-29AAF12A8E7A';s.noteUntrusted(`snapshotId=${snapshotId}; Calculator window`, 'desktop_describe');
+ grants.add('desktop_click');grants.add('desktop_key');grants.add('desktop_type');
+ grants.add('desktop_background_click');grants.add('desktop_background_set_text');grants.add('desktop_background_append_text');
+ expect(s.check({tool:'desktop_click',actionClass:'outbound',args:{app:'Calculator',snapshotId,ref:7}})).toEqual({kind:'allow'});
+ expect(s.check({tool:'desktop_key',actionClass:'outbound',args:{app:'Calculator',snapshotId,combo:'return'}})).toEqual({kind:'allow'});
+ expect(s.check({tool:'desktop_type',actionClass:'outbound',args:{app:'Calculator',snapshotId,text:'235'}})).toEqual({kind:'allow'});
+ expect(s.check({tool:'desktop_background_click',actionClass:'outbound',args:{app:'Calculator',snapshotId,ref:7}})).toEqual({kind:'allow'});
+ expect(s.check({tool:'desktop_background_set_text',actionClass:'outbound',args:{app:'TextEdit',snapshotId,text:'235'}})).toEqual({kind:'allow'});
+ expect(s.check({tool:'desktop_background_append_text',actionClass:'outbound',args:{targetId:snapshotId+':1',text:'235'}})).toEqual({kind:'allow'});
+ s.noteUntrusted('a long secret copied from a document', 'document');
+ const carried=s.check({tool:'desktop_type',actionClass:'outbound',args:{app:'Notes',snapshotId,text:'a long secret copied from a document'}});
+ expect(carried.kind==='ask'&&carried.alert).toBe(true);
+ const background=s.check({tool:'desktop_background_set_text',actionClass:'outbound',args:{app:'TextEdit',snapshotId,text:'a long secret copied from a document'}});
+ expect(background.kind==='ask'&&background.alert).toBe(true);
+ const appended=s.check({tool:'desktop_background_append_text',actionClass:'outbound',args:{targetId:snapshotId+':1',text:'a long secret copied from a document'}});
+ expect(appended.kind==='ask'&&appended.alert).toBe(true);
+});

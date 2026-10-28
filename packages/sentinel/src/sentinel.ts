@@ -27,6 +27,7 @@ export type Verdict =
   | { kind: "deny"; reason: string };
 
 export interface GateRequest {
+  ignoreSessionGrants?:boolean;
   tool: string;
   actionClass: ActionClass;
   args: unknown;
@@ -134,7 +135,10 @@ export class Sentinel {
 
     // Taint beats a session grant: the user allowed the tool, not this payload.
     if (CARRIES_DATA.has(req.actionClass)) {
-      const carried = this.carriedText(req.args);
+      // Native desktop snapshots identify a target; they are not transmitted content.
+      const payload = req.tool === "desktop_click" || req.tool === "desktop_key" || req.tool === "desktop_background_click" ? undefined
+        : req.tool === "desktop_type" || req.tool === "desktop_background_set_text" || req.tool === "desktop_background_append_text" ? (req.args as {text?:unknown} | null)?.text : req.args;
+      const carried = this.carriedText(payload);
       if (carried) {
         return {
           kind: "ask",
@@ -148,7 +152,7 @@ export class Sentinel {
       if (this.suspect) return { kind: "ask", alert: true, reason: t("sentinel.suspect", { source: this.suspect }) };
     }
 
-    if (!req.alwaysAsk && (mode === "auto" || this.opts.grants.has(req.tool))) return { kind: "allow" };
+    if (!req.alwaysAsk && (mode === "auto" || (!req.ignoreSessionGrants && this.opts.grants.has(req.tool)))) return { kind: "allow" };
     return { kind: "ask", reason: `${req.tool}: ${t(`sentinel.class.${req.actionClass}`)}` };
   }
 
