@@ -91,6 +91,16 @@ export function sheetTools(deps: AddonToolDeps): ToolDef[] {
     if (!wanted) return { out, rows };
     const range = String(wanted.range ?? "").trim().toUpperCase();
     if (!/^[A-Z]{1,3}[0-9]{1,5}:[A-Z]{1,3}[0-9]{1,5}$/.test(range)) throw new Error("chart.range must be like A1:D4.");
+    // A chart over empty cells is a chart of nothing: one model sent only the header with a chart of A1:B32.
+    const cols = Math.max(...rows.map((row) => row.length));
+    const [lastCol, lastRow] = range.split(":").reduce(([c, r], corner) => {
+      const [, letters, digits] = /^([A-Z]+)(\d+)$/.exec(corner)!;
+      const index = [...letters!].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+      return [Math.max(c, index), Math.max(r, Number(digits))];
+    }, [0, 0]);
+    if (rows.length < 2 || lastRow > rows.length || lastCol > cols) {
+      throw new Error(`chart.range ${range} covers cells with no data: the table fills A1:${column(cols - 1)}${rows.length}${rows.length < 2 ? ", the header only" : ""}. Chart only cells that hold the rows given. Nothing was made.`);
+    }
     const type = CHARTS.find((kind) => kind === wanted.type) ?? "column";
     const title = String(wanted.title ?? "").trim().slice(0, 120);
     return { out, rows, chart: { range, type, ...(title && { title }) } };

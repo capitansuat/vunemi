@@ -122,6 +122,18 @@ describe("sheet_make", () => {
     expect(out).toContain("2 rows, 3 columns, one pie chart of A1:B2");
   });
 
+  it("refuses a chart over cells with no data, before anything is made", async () => {
+    // Qwen3.8 35B sent only the header row with a chart of A1:B32: the workbook had a chart and no data.
+    const header = [["Tarih", "Fiyat"]];
+    for (const [given, range] of [[header, "A1:B32"], [rows, "A1:B3"], [rows, "A1:D2"]] as const) {
+      const args = { path: join(folder, "kur.xlsx"), rows: given, chart: { range, type: "line" } };
+      expect(await make().check!(args as never)).toMatch(/no data/);
+      await expect(make().run(args as never, ctx())).rejects.toThrow(/no data/);
+    }
+    expect(calls).toEqual([]);
+    expect(existsSync(join(folder, "kur.xlsx"))).toBe(false);
+  });
+
   it("shows the table as the program lays it out, and makes the file even when no picture can be drawn", async () => {
     const drawn: string[] = [];
     const withPicture = (picture: (html: string) => Promise<Uint8Array>) => tool(sheetTools({ ...deps(), picture: async (html) => (drawn.push(html), picture(html)) }), "sheet_make");
