@@ -67,3 +67,12 @@ it('refuses excessive archive entries and unknown XML attribute entities',async(
  await expect(readOffice(await fixture(parts),'.xlsx')).rejects.toThrow(/archive entries/);
  await expect(readOffice(await fixture({...workbook,'xl/workbook.xml':'<workbook><sheet name="&unresolved;" r:id="r1"/></workbook>'}),'.xlsx')).rejects.toThrow(/entity/);
 });
+it('names each chart of a sheet with its kind, title and the cells it shows',async()=>{
+ const parts={...workbook,'xl/worksheets/sheet2.xml':'<worksheet><sheetData><row><c r="A1" t="inlineStr"><is><t>Ay</t></is></c><c r="B1"><v>120</v></c></row></sheetData><drawing r:id="d1"/></worksheet>',
+  'xl/worksheets/_rels/sheet2.xml.rels':'<Relationships><Relationship Id="d1" Target="../drawings/drawing1.xml" Type="x/drawing"/></Relationships>',
+  'xl/drawings/drawing1.xml':'<xdr:wsDr><xdr:twoCellAnchor><xdr:graphicFrame><a:graphic><a:graphicData><c:chart r:id="c1"/></a:graphicData></a:graphic></xdr:graphicFrame></xdr:twoCellAnchor></xdr:wsDr>',
+  'xl/drawings/_rels/drawing1.xml.rels':'<Relationships><Relationship Id="c1" Target="../charts/chart1.xml" Type="x/chart"/></Relationships>',
+  'xl/charts/chart1.xml':'<c:chartSpace><c:chart><c:title><c:tx><c:rich><a:p><a:r><a:t>Satışlar</a:t></a:r></a:p></c:rich></c:tx></c:title><c:plotArea><c:barChart><c:barDir val="col"/><c:ser><c:tx><c:strRef><c:f>Budget!$B$1</c:f></c:strRef></c:tx><c:cat><c:strRef><c:f>Budget!$A$2:$A$4</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>Budget!$B$2:$B$4</c:f></c:numRef></c:val></c:ser></c:barChart></c:plotArea></c:chart></c:chartSpace>'};
+ expect(await readOffice(await fixture(parts),'.xlsx')).toBe('Sheet: Budget\nA1: Ay\nB1: 120\nChart: column "Satışlar"; series Budget!$B$1: values Budget!$B$2:$B$4, categories Budget!$A$2:$A$4');
+ await expect(readOffice(await fixture({...parts,'xl/drawings/_rels/drawing1.xml.rels':'<Relationships><Relationship Id="c1" Target="../worksheets/sheet2.xml" Type="x/chart"/></Relationships>'}),'.xlsx')).rejects.toThrow(/chart/i);
+});
