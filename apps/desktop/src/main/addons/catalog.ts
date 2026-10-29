@@ -52,17 +52,17 @@ export const ADDON_TEAM = "DJ6XS33FX8";
 const craft = (id: AddonId, category: AddonCategory, engine: string, version: string, size: number, sha256: string): AddonSource => {
   const name = engine.toLowerCase();
   const folder = `${name}-cli-${version}-macos-universal`;
-  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, shelf: "addons-1", file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256 };
+  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, shelf: "addons-2", file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256 };
 };
 
 export const ADDONS: readonly AddonSource[] = [
-  craft("documents", "office", "WordCraft", "0.5.0", 80_818_424, "9ded04712fad32c955b32c4efccbe4468fd95eae4f18ea3e32dd3355e6674b5b"),
-  craft("sheets", "office", "GridCraft", "0.5.0", 9_154_129, "4559b42d96bafcbc4180cc7f09d5f428597ec19d447c3df2e4b458afcb4c04fc"),
-  craft("slides", "office", "DeckCraft", "0.5.0", 66_680_532, "e4f8562c4c56337d2ae4069d182e2e325ddbf700b6248272d96f3e469702990b"),
-  craft("pdf", "office", "PdfCraft", "0.6.0", 58_516_543, "85bf80b0732f2556f3133e25693d1f1dfdd2683cd6236aa154bb19f73515b7cf"),
-  craft("drawing", "images", "VectorCraft", "0.9.0", 69_756_789, "0e6fc38dd1ec432fb4a133ee1b1efe935d739f0fcb376b1925ee89473d55a61b"),
-  craft("photo", "images", "PhotoCraft", "0.7.0", 64_701_365, "caf41eee1827ef740bc4495fb1fee77f6a4e0be82fb131106ad06cd591fd8091"),
-  craft("video", "video", "FilmCraft", "0.6.0", 59_471_173, "7ede2aa3e8994ca8363618ef649526546cf951b11a8eaf895b9471101cf5bd32"),
+  craft("documents", "office", "WordCraft", "0.12.0", 94_748_190, "dc030590fdd9cb5971c38bc79cadecf30f68f6d46b67a456a8f53a46990b6de4"),
+  craft("sheets", "office", "GridCraft", "0.13.0", 11_835_794, "3db52969cf7621fdfdaebd123f72d5b1de343f63d3b52ec5a4a964f5605986ac"),
+  craft("slides", "office", "DeckCraft", "0.12.0", 93_735_843, "dfd374a5af7139344bf06fbb52beb6f0f255e54276ae20b5d457ce4f958a8322"),
+  craft("pdf", "office", "PdfCraft", "0.15.0", 83_973_078, "0304db20f3597e4e9ad3044d67f79cb89bdad49833c6ad7a60c0d0d6a7afaa50"),
+  craft("drawing", "images", "VectorCraft", "0.18.0", 115_481_401, "694d216cc0ac8ff32dc1c32ffa318da9e5229d58bc821e378eef6f3739286744"),
+  craft("photo", "images", "PhotoCraft", "0.17.0", 106_003_284, "6edff99cc1977508bea9b5566f551374e7b8ef42a21502ee084a1d969f0d54c0"),
+  craft("video", "video", "FilmCraft", "0.14.0", 93_928_472, "c9dc8dfd9c63edb2f793f0727dc9816e4432ea545fa8cd7331d242944d843087"),
 ];
 
 export function addonUrl(a: AddonSource): string {

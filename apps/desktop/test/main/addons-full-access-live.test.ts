@@ -1,4 +1,4 @@
-/** Opt in with CRAFT_LIVE=1. Uses installed pinned programs through production sandbox jobs. */
+/** Opt in with CRAFT_LIVE=1. Uses installed pinned programs through production sandbox jobs; CRAFT_ADDONS_DIR points at another add-ons folder. */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, statSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
@@ -10,7 +10,7 @@ import type { ToolContext } from '@vunemi/agent-core';
 import { ADDONS, type AddonId } from '../../src/main/addons/catalog.js';
 import { createEngines } from '../../src/main/addons/jobs.js';
 import { fullAccessTools } from '../../src/main/addons/tools/full-access.js';
-const installed = join(homedir(), 'Library/Application Support/Vunemi/addons');
+const installed = process.env.CRAFT_ADDONS_DIR ?? join(homedir(), 'Library/Application Support/Vunemi/addons');
 const program = (id: AddonId) => { const a = ADDONS.find(a => a.id === id)!; return join(installed,id,a.tag,a.folder,a.binary); };
 const evidence = resolve('../../research/craft-full-access-2026-10-14/live');
 const ctx = (): ToolContext => ({ signal:new AbortController().signal, handoff:async()=>true, offerUndo:()=>{}, attach:()=>{} });

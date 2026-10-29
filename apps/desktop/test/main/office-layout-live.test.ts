@@ -13,7 +13,7 @@ import {sheetTools} from '../../src/main/addons/tools/sheets.js';
 import {slideTools} from '../../src/main/addons/tools/slides.js';
 it.skipIf(process.env.CRAFT_LIVE!=='1'||process.platform!=='darwin')('real generated Office layout preserves values and stores actual layout properties',async()=>{
  const base=realpathSync(mkdtempSync(join(tmpdir(),'vunemi-layout-'))),evidence=resolve('../../research/office-design-2026-10-15',new Date().toISOString().replaceAll(':','-'));mkdirSync(evidence,{recursive:true});
- const installed=join(homedir(),'Library/Application Support/Vunemi/addons');const program=(id:AddonId)=>{const a=ADDONS.find(a=>a.id===id)!;return join(installed,id,a.tag,a.folder,a.binary)};
+ const installed = process.env.CRAFT_ADDONS_DIR ?? join(homedir(), 'Library/Application Support/Vunemi/addons');const program=(id:AddonId)=>{const a=ADDONS.find(a=>a.id===id)!;return join(installed,id,a.tag,a.folder,a.binary)};
  const engines=createEngines({home:homedir(),jobsDir:join(base,'jobs'),addons:{binary:program,engineDir:id=>join(installed,id,ADDONS.find(a=>a.id===id)!.tag)}});
  const ctx:ToolContext={signal:new AbortController().signal,handoff:async()=>true,offerUndo:()=>{},attach:()=>{},gallery:()=>{}};const deps={engines,roots:new Roots([base]),shotDir:base};
  const xml=(name:string,part:string)=>execFileSync('/usr/bin/unzip',['-p',join(base,name),part],{encoding:'utf8'});

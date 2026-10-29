@@ -10,7 +10,7 @@ import type {ToolContext} from '@vunemi/agent-core';
 import {ADDONS,type AddonId} from '../../src/main/addons/catalog.js';
 import {createEngines} from '../../src/main/addons/jobs.js';
 import {fullAccessTools} from '../../src/main/addons/tools/full-access.js';
-const installed=join(homedir(),'Library/Application Support/Vunemi/addons');
+const installed = process.env.CRAFT_ADDONS_DIR ?? join(homedir(), 'Library/Application Support/Vunemi/addons');
 const program=(id:AddonId)=>{const a=ADDONS.find(a=>a.id===id)!;return join(installed,id,a.tag,a.folder,a.binary)};
 const ctx=():ToolContext=>({signal:new AbortController().signal,handoff:async()=>true,offerUndo:()=>{},attach:()=>{}});
 const cmd=(id:string,params:Record<string,unknown>)=>['--cmd',`${id}=${JSON.stringify(params)}`];
