@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: um assistente pessoal que roda no seu Mac", description: "O Vunemi ajuda nas tarefas do dia a dia. A IA roda no seu Mac, sem conta na nuvem do Vunemi. Você escolhe quais serviços externos conectar." },
-    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.2.1 faz." },
+    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.2.2 faz." },
     screens: { title: "Telas do Vunemi", description: "Telas reais do app Vunemi para Mac, capturadas com dados de exemplo." },
-    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.2.1 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
+    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.2.2 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
   },
   hero: {
     eyebrow: "Assistente pessoal para Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tudo o que o Vunemi faz",
-    intro: "O Vunemi 0.2.1 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
+    intro: "O Vunemi 0.2.2 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
     chatTitle: "Trabalhando com o Vunemi",
     chat: [
       { title: "Primeiro o plano", body: "Numa tarefa com vários passos, o Vunemi pode mostrar o plano antes. Siga em frente, edite os passos ou cancele." },
@@ -186,6 +186,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Novidades desta versão",
     highlights: [
+      "Os arquivos do Word, Excel e PowerPoint voltam a ser criados corretamente. Desde a 0.2.0, um arquivo salvo num caminho escrito com ~ (por exemplo ~/Desktop) era tratado como incerto mesmo tendo sido salvo, e os arquivos seguintes da mesma tarefa eram recusados.",
+      "Quando um salvamento é de fato incerto, só esse arquivo fica retido: o Vunemi não o grava de novo, mas pode salvar um arquivo novo com outro nome. Até agora todo arquivo seguinte da tarefa era recusado, mesmo depois de o antigo ter sido lido.",
       "Os complementos agora são atualizados junto com o Vunemi. Quando esta versão abre, os complementos que você tem passam, um após o outro, para a versão com que as ferramentas do Vunemi foram testadas. A cópia antiga fica até a nova ser verificada.",
       "Até agora, depois de uma atualização do Vunemi, um complemento que precisava de uma versão mais nova esperava você clicar em Atualizar em Ajustes › Complementos, e o Vunemi não podia usá-lo enquanto isso. Se uma atualização falhar, o Vunemi tenta de novo na próxima vez que abrir.",
       "Os sete programas dos complementos estão mais novos: WordCraft e DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 e FilmCraft 0.14.",

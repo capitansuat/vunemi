@@ -1,20 +1,22 @@
 {
-  "currentRelease": "0.2.1",
+  "currentRelease": "0.2.2",
   "releases": [
     {
-      "version": "0.2.1",
+      "version": "0.2.2",
       "updateTo": {
-        "version": "0.2.1",
-        "name": "Vunemi 0.2.1",
+        "version": "0.2.2",
+        "name": "Vunemi 0.2.2",
         "pub_date": "2026-10-29T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.1/Vunemi-0.2.1-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.2/Vunemi-0.2.2-arm64.zip"
       }
     }
   ],
   "sizeMb": 143,
   "notes": {
     "en": [
+      "Word, Excel and PowerPoint files are made properly again. Since 0.2.0, a file saved to a path written with ~ (for example ~/Desktop) was treated as uncertain although it had been saved, and later files in the same task were refused.",
+      "When a save really is uncertain, only that file is held back: Vunemi does not write it again, but it can save a new file under another name. Until now every later file in the task was refused, even after the old one had been read.",
       "Add-ons now update with Vunemi. When this version opens, the add-ons you have are brought, one after another, to the version its tools were tested with. The old copy is kept until the new one is checked.",
       "Until now, after a Vunemi update, an add-on that needed a newer version waited until you pressed Update in Settings › Add-ons, and Vunemi could not use it meanwhile. If an update fails, Vunemi tries again the next time it opens.",
       "All seven add-on programs are newer: WordCraft and DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 and FilmCraft 0.14.",
@@ -23,6 +25,8 @@
       "Updating from a version before 0.2.0: the vault now has its own helper, so macOS may ask once for your login password; choose Always Allow. How well a request is carried out still depends on the model."
     ],
     "de": [
+      "Word-, Excel- und PowerPoint-Dateien entstehen wieder richtig. Seit 0.2.0 wurde eine Datei, die unter einem Pfad mit ~ (etwa ~/Desktop) gespeichert wurde, als ungewiss behandelt, obwohl sie gespeichert war, und weitere Dateien derselben Aufgabe wurden abgelehnt.",
+      "Ist eine Speicherung wirklich ungewiss, wird nur diese Datei zurückgehalten: Vunemi schreibt sie nicht noch einmal, kann aber eine neue Datei unter einem anderen Namen speichern. Bisher wurde jede weitere Datei der Aufgabe abgelehnt, selbst nachdem die alte gelesen war.",
       "Erweiterungen werden jetzt mit Vunemi aktualisiert. Wenn diese Version startet, bringt sie deine Erweiterungen nacheinander auf die Version, mit der ihre Werkzeuge getestet wurden. Die alte Kopie bleibt, bis die neue geprüft ist.",
       "Bisher wartete nach einem Vunemi-Update eine Erweiterung, die eine neuere Version brauchte, bis du unter Einstellungen › Erweiterungen auf „Aktualisieren“ geklickt hast; so lange konnte Vunemi sie nicht nutzen. Schlägt ein Update fehl, versucht Vunemi es beim nächsten Öffnen erneut.",
       "Alle sieben Erweiterungsprogramme sind neuer: WordCraft und DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 und FilmCraft 0.14.",
@@ -31,6 +35,8 @@
       "Beim Update von einer Version vor 0.2.0: Der Tresor hat jetzt einen eigenen Helfer, daher fragt macOS eventuell einmal nach deinem Anmeldepasswort; wähle „Immer erlauben“. Wie gut eine Anfrage ausgeführt wird, hängt weiterhin vom Modell ab."
     ],
     "es": [
+      "Los archivos de Word, Excel y PowerPoint vuelven a crearse bien. Desde la 0.2.0, un archivo guardado en una ruta escrita con ~ (por ejemplo ~/Desktop) se trataba como incierto aunque se había guardado, y los archivos siguientes de la misma tarea se rechazaban.",
+      "Cuando un guardado es de verdad incierto, solo se retiene ese archivo: Vunemi no lo vuelve a escribir, pero puede guardar un archivo nuevo con otro nombre. Hasta ahora se rechazaba cada archivo siguiente de la tarea, incluso después de leer el anterior.",
       "Los complementos ahora se actualizan con Vunemi. Al abrirse esta versión, tus complementos pasan uno tras otro a la versión con la que se probaron sus herramientas. La copia antigua se conserva hasta que la nueva se comprueba.",
       "Hasta ahora, tras actualizar Vunemi, un complemento que necesitaba una versión más reciente esperaba a que pulsaras Actualizar en Ajustes › Complementos, y Vunemi no podía usarlo mientras tanto. Si una actualización falla, Vunemi lo reintenta la próxima vez que se abra.",
       "Los siete programas de los complementos son más recientes: WordCraft y DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 y FilmCraft 0.14.",
@@ -39,6 +45,8 @@
       "Si actualizas desde una versión anterior a la 0.2.0: la bóveda ahora tiene su propio asistente, así que macOS puede pedir una vez tu contraseña de inicio de sesión; elige «Permitir siempre». Lo bien que se cumple una petición sigue dependiendo del modelo."
     ],
     "fr": [
+      "Les fichiers Word, Excel et PowerPoint sont de nouveau créés correctement. Depuis la 0.2.0, un fichier enregistré dans un chemin écrit avec ~ (par exemple ~/Desktop) était traité comme incertain alors qu'il avait été enregistré, et les fichiers suivants de la même tâche étaient refusés.",
+      "Quand un enregistrement est vraiment incertain, seul ce fichier est retenu : Vunemi ne l'écrit pas une deuxième fois, mais peut enregistrer un nouveau fichier sous un autre nom. Jusqu'ici, tous les fichiers suivants de la tâche étaient refusés, même après la lecture de l'ancien.",
       "Les extensions se mettent désormais à jour avec Vunemi. Au démarrage de cette version, vos extensions passent une à une à la version avec laquelle ses outils ont été testés. L'ancienne copie est gardée jusqu'à ce que la nouvelle soit vérifiée.",
       "Jusqu'ici, après une mise à jour de Vunemi, une extension qui demandait une version plus récente attendait que vous cliquiez sur Mettre à jour dans Réglages › Extensions, sans que Vunemi puisse l'utiliser. Si une mise à jour échoue, Vunemi réessaie à sa prochaine ouverture.",
       "Les sept programmes d'extension sont plus récents : WordCraft et DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 et FilmCraft 0.14.",
@@ -47,6 +55,8 @@
       "Depuis une version antérieure à 0.2.0 : le coffre a désormais son propre assistant, donc macOS peut demander une fois votre mot de passe de session ; choisissez « Toujours autoriser ». La qualité d'exécution d'une demande dépend toujours du modèle."
     ],
     "it": [
+      "I file Word, Excel e PowerPoint vengono di nuovo creati correttamente. Dalla 0.2.0 un file salvato in un percorso scritto con ~ (per esempio ~/Desktop) veniva trattato come incerto anche se era stato salvato, e i file successivi della stessa attività venivano rifiutati.",
+      "Quando un salvataggio è davvero incerto, viene trattenuto solo quel file: Vunemi non lo riscrive, ma può salvare un nuovo file con un altro nome. Finora ogni file successivo dell'attività veniva rifiutato, anche dopo aver letto quello vecchio.",
       "I componenti aggiuntivi ora si aggiornano con Vunemi. All'apertura di questa versione, i tuoi componenti passano uno dopo l'altro alla versione con cui sono stati provati i suoi strumenti. La copia vecchia resta finché la nuova non è verificata.",
       "Finora, dopo un aggiornamento di Vunemi, un componente che richiedeva una versione più recente aspettava che premessi Aggiorna in Impostazioni › Componenti aggiuntivi, e intanto Vunemi non poteva usarlo. Se un aggiornamento non riesce, Vunemi riprova alla prossima apertura.",
       "Tutti e sette i programmi dei componenti aggiuntivi sono più recenti: WordCraft e DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 e FilmCraft 0.14.",
@@ -55,6 +65,8 @@
       "Se aggiorni da una versione precedente alla 0.2.0: la cassaforte ora ha un proprio assistente, quindi macOS può chiedere una volta la password di accesso; scegli «Consenti sempre». Quanto bene viene eseguita una richiesta dipende sempre dal modello."
     ],
     "tr": [
+      "Word, Excel ve PowerPoint dosyaları yeniden düzgün oluşturuluyor. 0.2.0'dan beri ~ ile yazılan bir yola (örneğin ~/Desktop) kaydedilen dosya, kaydedilmiş olduğu hâlde belirsiz sayılıyor, aynı görevdeki sonraki dosyalar da reddediliyordu.",
+      "Bir kayıt gerçekten belirsiz olduğunda artık yalnızca o dosya bekletiliyor: Vunemi onu yeniden yazmaz ama başka bir adla yeni bir dosya kaydedebilir. Şimdiye kadar eski dosya okunduktan sonra bile görevdeki sonraki bütün dosyalar reddediliyordu.",
       "Eklentiler artık Vunemi ile birlikte güncelleniyor. Bu sürüm açıldığında kurulu eklentilerin, araçlarının denendiği sürüme sırayla getirilir. Yenisi doğrulanana kadar eski kopya yerinde kalır.",
       "Şimdiye kadar Vunemi güncellendikten sonra yeni sürüm isteyen bir eklenti, sen Ayarlar › Eklentiler'de Güncelle'ye basana kadar bekliyor, Vunemi de o arada onu kullanamıyordu. Güncelleme başarısız olursa Vunemi bir sonraki açılışında yeniden dener.",
       "Yedi eklenti programının hepsi yenilendi: WordCraft ve DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 ve FilmCraft 0.14.",
@@ -63,6 +75,8 @@
       "0.2.0'dan eski bir sürümden güncelliyorsan: kasa artık kendi yardımcısında çalıştığı için macOS giriş parolanı bir kez sorabilir; Her Zaman İzin Ver’i seç. İsteğin ne kadar iyi yerine getirildiği yine modele bağlıdır."
     ],
     "pt": [
+      "Os arquivos do Word, Excel e PowerPoint voltam a ser criados corretamente. Desde a 0.2.0, um arquivo salvo num caminho escrito com ~ (por exemplo ~/Desktop) era tratado como incerto mesmo tendo sido salvo, e os arquivos seguintes da mesma tarefa eram recusados.",
+      "Quando um salvamento é de fato incerto, só esse arquivo fica retido: o Vunemi não o grava de novo, mas pode salvar um arquivo novo com outro nome. Até agora todo arquivo seguinte da tarefa era recusado, mesmo depois de o antigo ter sido lido.",
       "Os complementos agora são atualizados junto com o Vunemi. Quando esta versão abre, os complementos que você tem passam, um após o outro, para a versão com que as ferramentas do Vunemi foram testadas. A cópia antiga fica até a nova ser verificada.",
       "Até agora, depois de uma atualização do Vunemi, um complemento que precisava de uma versão mais nova esperava você clicar em Atualizar em Ajustes › Complementos, e o Vunemi não podia usá-lo enquanto isso. Se uma atualização falhar, o Vunemi tenta de novo na próxima vez que abrir.",
       "Os sete programas dos complementos estão mais novos: WordCraft e DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 e FilmCraft 0.14.",
@@ -71,6 +85,8 @@
       "Se você atualizar de uma versão anterior à 0.2.0: o cofre agora tem o seu próprio assistente, então o macOS pode pedir uma vez a sua senha de login; escolha «Permitir Sempre». O quão bem um pedido é cumprido continua dependendo do modelo."
     ],
     "ru": [
+      "Файлы Word, Excel и PowerPoint снова создаются правильно. Начиная с 0.2.0 файл, сохранённый по пути с ~ (например, ~/Desktop), считался неподтверждённым, хотя был сохранён, а следующие файлы в той же задаче отклонялись.",
+      "Если сохранение действительно под вопросом, задерживается только этот файл: Vunemi не записывает его повторно, но может сохранить новый файл под другим именем. Раньше отклонялся каждый следующий файл задачи, даже после того как старый был прочитан.",
       "Дополнения теперь обновляются вместе с Vunemi. При запуске этой версии ваши дополнения по очереди переходят на версию, с которой проверялись её инструменты. Старая копия остаётся, пока новая не пройдёт проверку.",
       "Раньше после обновления Vunemi дополнение, которому нужна была более новая версия, ждало, пока вы нажмёте «Обновить» в Настройках › Дополнения, и Vunemi тем временем не мог им пользоваться. Если обновление не удалось, Vunemi повторит его при следующем запуске.",
       "Все семь программ дополнений обновлены: WordCraft и DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 и FilmCraft 0.14.",
@@ -79,6 +95,8 @@
       "При обновлении с версии до 0.2.0: у сейфа теперь свой помощник, поэтому macOS может один раз запросить пароль входа; выберите «Всегда разрешать». Насколько хорошо выполняется запрос, по-прежнему зависит от модели."
     ],
     "zh": [
+      "Word、Excel 和 PowerPoint 文件又能正常生成了。从 0.2.0 起，保存到以 ~ 书写的路径（例如 ~/Desktop）的文件虽已保存，却被视为不确定，同一任务中之后的文件也会被拒绝。",
+      "当保存确实不确定时，现在只会暂停那一个文件：Vunemi 不会再次写入它，但可以用其他名称保存新文件。此前，即使已读取旧文件，任务中之后的每个文件都会被拒绝。",
       "扩展现在会随 Vunemi 一起更新。此版本打开时，你已安装的扩展会依次更新到其工具测试时所用的版本。新版本通过校验之前，旧副本会保留。",
       "以前 Vunemi 更新后，需要新版本的扩展会一直等到你在“设置 › 扩展”中点按“更新”，在此期间 Vunemi 无法使用它。如果更新失败，Vunemi 会在下次打开时重试。",
       "全部七个扩展程序都已更新：WordCraft 和 DeckCraft 0.12、GridCraft 0.13、PdfCraft 0.15、VectorCraft 0.18、PhotoCraft 0.17 以及 FilmCraft 0.14。",
@@ -87,6 +105,8 @@
       "如果从 0.2.0 之前的版本更新：保险库现在有了自己的辅助程序，macOS 可能会询问一次你的登录密码；请选择“始终允许”。请求完成得好不好，仍取决于模型。"
     ],
     "ja": [
+      "Word、Excel、PowerPoint のファイルが再び正しく作成されるようになりました。0.2.0 以降、~ で書いたパス（例: ~/Desktop）に保存したファイルは、保存されていても不明として扱われ、同じタスクの以降のファイルは拒否されていました。",
+      "保存が本当に不明な場合は、そのファイルだけが保留されます。Vunemi はそれを書き直しませんが、別の名前で新しいファイルを保存できます。これまでは古いファイルを読み取った後でも、タスクの以降のファイルがすべて拒否されていました。",
       "アドオンが Vunemi と一緒にアップデートされるようになりました。このバージョンを起動すると、インストール済みのアドオンが、ツールの動作確認に使ったバージョンへ順番に更新されます。新しいコピーの検証が済むまで、古いコピーは残ります。",
       "これまでは Vunemi のアップデート後、新しいバージョンが必要なアドオンは、設定 › アドオンで「アップデート」を押すまで待機し、その間 Vunemi は使えませんでした。アップデートに失敗した場合は、次回起動時に再試行します。",
       "7 つのアドオンのプログラムがすべて新しくなりました：WordCraft と DeckCraft 0.12、GridCraft 0.13、PdfCraft 0.15、VectorCraft 0.18、PhotoCraft 0.17、FilmCraft 0.14。",
@@ -95,6 +115,8 @@
       "0.2.0 より前のバージョンからアップデートする場合：金庫に専用のヘルパーが付いたため、macOS がログインパスワードを一度求めることがあります。「常に許可」を選んでください。依頼がどれだけうまく実行されるかは、引き続きモデルによります。"
     ],
     "ko": [
+      "Word, Excel, PowerPoint 파일이 다시 제대로 만들어집니다. 0.2.0부터 ~로 쓴 경로(예: ~/Desktop)에 저장한 파일은 저장되었는데도 불확실한 것으로 처리되었고, 같은 작업의 이후 파일은 거부되었습니다.",
+      "저장이 실제로 불확실한 경우에는 이제 그 파일만 보류됩니다. Vunemi는 그 파일을 다시 쓰지 않지만 다른 이름으로 새 파일을 저장할 수 있습니다. 지금까지는 이전 파일을 읽은 뒤에도 작업의 이후 파일이 모두 거부되었습니다.",
       "이제 추가 기능이 Vunemi와 함께 업데이트됩니다. 이 버전이 열리면 설치된 추가 기능이 도구를 시험한 버전으로 하나씩 업데이트됩니다. 새 사본이 검증될 때까지 이전 사본은 남아 있습니다.",
       "지금까지는 Vunemi를 업데이트한 뒤 더 새로운 버전이 필요한 추가 기능이 설정 › 추가 기능에서 '업데이트'를 누를 때까지 기다렸고, 그동안 Vunemi는 그 기능을 사용할 수 없었습니다. 업데이트에 실패하면 다음에 열릴 때 다시 시도합니다.",
       "일곱 가지 추가 기능 프로그램이 모두 새 버전입니다: WordCraft와 DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17, FilmCraft 0.14.",

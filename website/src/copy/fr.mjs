@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi : un assistant personnel qui fonctionne sur votre Mac", description: "Vunemi aide au quotidien. Son IA fonctionne sur votre Mac, sans compte cloud Vunemi. Vous choisissez les services externes à connecter." },
-    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.2.1." },
+    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.2.2." },
     screens: { title: "Captures de Vunemi", description: "De vraies captures de l'app Vunemi pour Mac, réalisées avec des données d'exemple." },
-    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.2.1 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
+    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.2.2 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
   },
   hero: {
     eyebrow: "Assistant personnel pour Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tout ce que Vunemi sait faire",
-    intro: "Vunemi 0.2.1 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
+    intro: "Vunemi 0.2.2 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
     chatTitle: "Travailler avec Vunemi",
     chat: [
       { title: "D'abord le plan", body: "Pour une tâche en plusieurs étapes, Vunemi peut d'abord présenter son plan. Lancez-le, modifiez les étapes ou annulez." },
@@ -186,6 +186,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Nouveautés de cette version",
     highlights: [
+      "Les fichiers Word, Excel et PowerPoint sont de nouveau créés correctement. Depuis la 0.2.0, un fichier enregistré dans un chemin écrit avec ~ (par exemple ~/Desktop) était traité comme incertain alors qu'il avait été enregistré, et les fichiers suivants de la même tâche étaient refusés.",
+      "Quand un enregistrement est vraiment incertain, seul ce fichier est retenu : Vunemi ne l'écrit pas une deuxième fois, mais peut enregistrer un nouveau fichier sous un autre nom. Jusqu'ici, tous les fichiers suivants de la tâche étaient refusés, même après la lecture de l'ancien.",
       "Les extensions se mettent désormais à jour avec Vunemi. Au démarrage de cette version, vos extensions passent une à une à la version avec laquelle ses outils ont été testés. L'ancienne copie est gardée jusqu'à ce que la nouvelle soit vérifiée.",
       "Jusqu'ici, après une mise à jour de Vunemi, une extension qui demandait une version plus récente attendait que vous cliquiez sur Mettre à jour dans Réglages › Extensions, sans que Vunemi puisse l'utiliser. Si une mise à jour échoue, Vunemi réessaie à sa prochaine ouverture.",
       "Les sept programmes d'extension sont plus récents : WordCraft et DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 et FilmCraft 0.14.",

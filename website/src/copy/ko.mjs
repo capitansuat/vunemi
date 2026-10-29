@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.1의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.2의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.1을 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.2를 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.2.1 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.2.2 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -186,6 +186,8 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
+      "Word, Excel, PowerPoint 파일이 다시 제대로 만들어집니다. 0.2.0부터 ~로 쓴 경로(예: ~/Desktop)에 저장한 파일은 저장되었는데도 불확실한 것으로 처리되었고, 같은 작업의 이후 파일은 거부되었습니다.",
+      "저장이 실제로 불확실한 경우에는 이제 그 파일만 보류됩니다. Vunemi는 그 파일을 다시 쓰지 않지만 다른 이름으로 새 파일을 저장할 수 있습니다. 지금까지는 이전 파일을 읽은 뒤에도 작업의 이후 파일이 모두 거부되었습니다.",
       "이제 추가 기능이 Vunemi와 함께 업데이트됩니다. 이 버전이 열리면 설치된 추가 기능이 도구를 시험한 버전으로 하나씩 업데이트됩니다. 새 사본이 검증될 때까지 이전 사본은 남아 있습니다.",
       "지금까지는 Vunemi를 업데이트한 뒤 더 새로운 버전이 필요한 추가 기능이 설정 › 추가 기능에서 '업데이트'를 누를 때까지 기다렸고, 그동안 Vunemi는 그 기능을 사용할 수 없었습니다. 업데이트에 실패하면 다음에 열릴 때 다시 시도합니다.",
       "일곱 가지 추가 기능 프로그램이 모두 새 버전입니다: WordCraft와 DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17, FilmCraft 0.14.",

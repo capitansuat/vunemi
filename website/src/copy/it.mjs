@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un assistente personale che funziona sul tuo Mac", description: "Vunemi aiuta nelle attività quotidiane. L’IA funziona sul tuo Mac, senza account cloud Vunemi. Scegli tu quali servizi esterni collegare." },
-    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.2.1." },
+    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.2.2." },
     screens: { title: "Schermate di Vunemi", description: "Schermate reali dell'app Vunemi per Mac, catturate con dati di esempio." },
-    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.2.1 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
+    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.2.2 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
   },
   hero: {
     eyebrow: "Assistente personale per Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tutto ciò che Vunemi sa fare",
-    intro: "Vunemi 0.2.1 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
+    intro: "Vunemi 0.2.2 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
     chatTitle: "Lavorare con Vunemi",
     chat: [
       { title: "Prima il piano", body: "Per un'attività con più passaggi, Vunemi può mostrarti prima il piano. Vai avanti, modifica i passaggi o annulla." },
@@ -186,6 +186,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
+      "I file Word, Excel e PowerPoint vengono di nuovo creati correttamente. Dalla 0.2.0 un file salvato in un percorso scritto con ~ (per esempio ~/Desktop) veniva trattato come incerto anche se era stato salvato, e i file successivi della stessa attività venivano rifiutati.",
+      "Quando un salvataggio è davvero incerto, viene trattenuto solo quel file: Vunemi non lo riscrive, ma può salvare un nuovo file con un altro nome. Finora ogni file successivo dell'attività veniva rifiutato, anche dopo aver letto quello vecchio.",
       "I componenti aggiuntivi ora si aggiornano con Vunemi. All'apertura di questa versione, i tuoi componenti passano uno dopo l'altro alla versione con cui sono stati provati i suoi strumenti. La copia vecchia resta finché la nuova non è verificata.",
       "Finora, dopo un aggiornamento di Vunemi, un componente che richiedeva una versione più recente aspettava che premessi Aggiorna in Impostazioni › Componenti aggiuntivi, e intanto Vunemi non poteva usarlo. Se un aggiornamento non riesce, Vunemi riprova alla prossima apertura.",
       "Tutti e sette i programmi dei componenti aggiuntivi sono più recenti: WordCraft e DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 e FilmCraft 0.14.",

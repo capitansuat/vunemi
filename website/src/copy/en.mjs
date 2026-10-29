@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.1 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.2 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.1 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.2 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.2.1 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.2.2 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -190,6 +190,8 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
+      "Word, Excel and PowerPoint files are made properly again. Since 0.2.0, a file saved to a path written with ~ (for example ~/Desktop) was treated as uncertain although it had been saved, and later files in the same task were refused.",
+      "When a save really is uncertain, only that file is held back: Vunemi does not write it again, but it can save a new file under another name. Until now every later file in the task was refused, even after the old one had been read.",
       "Add-ons now update with Vunemi. When this version opens, the add-ons you have are brought, one after another, to the version its tools were tested with. The old copy is kept until the new one is checked.",
       "Until now, after a Vunemi update, an add-on that needed a newer version waited until you pressed Update in Settings › Add-ons, and Vunemi could not use it meanwhile. If an update fails, Vunemi tries again the next time it opens.",
       "All seven add-on programs are newer: WordCraft and DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 and FilmCraft 0.14.",

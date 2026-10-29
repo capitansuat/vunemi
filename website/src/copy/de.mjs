@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.2.1 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.2.2 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.2.1 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.2.2 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.2.1 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.2.2 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -186,6 +186,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
+      "Word-, Excel- und PowerPoint-Dateien entstehen wieder richtig. Seit 0.2.0 wurde eine Datei, die unter einem Pfad mit ~ (etwa ~/Desktop) gespeichert wurde, als ungewiss behandelt, obwohl sie gespeichert war, und weitere Dateien derselben Aufgabe wurden abgelehnt.",
+      "Ist eine Speicherung wirklich ungewiss, wird nur diese Datei zurückgehalten: Vunemi schreibt sie nicht noch einmal, kann aber eine neue Datei unter einem anderen Namen speichern. Bisher wurde jede weitere Datei der Aufgabe abgelehnt, selbst nachdem die alte gelesen war.",
       "Erweiterungen werden jetzt mit Vunemi aktualisiert. Wenn diese Version startet, bringt sie deine Erweiterungen nacheinander auf die Version, mit der ihre Werkzeuge getestet wurden. Die alte Kopie bleibt, bis die neue geprüft ist.",
       "Bisher wartete nach einem Vunemi-Update eine Erweiterung, die eine neuere Version brauchte, bis du unter Einstellungen › Erweiterungen auf „Aktualisieren“ geklickt hast; so lange konnte Vunemi sie nicht nutzen. Schlägt ein Update fehl, versucht Vunemi es beim nächsten Öffnen erneut.",
       "Alle sieben Erweiterungsprogramme sind neuer: WordCraft und DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 und FilmCraft 0.14.",

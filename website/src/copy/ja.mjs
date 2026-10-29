@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：Mac の上で動くパーソナルアシスタント", description: "Vunemi は日々の作業を手伝います。AI は Mac 上で動作し、Vunemi のクラウドアカウントは不要です。外部サービスとの接続は自分で選べます。" },
-    features: { title: "Vunemi にできること", description: "メール、カレンダー、ファイル、Web、Mac のアプリ。承認カード、取り消し、はっきりした制限つき。Vunemi 0.2.1 の全機能です。" },
+    features: { title: "Vunemi にできること", description: "メール、カレンダー、ファイル、Web、Mac のアプリ。承認カード、取り消し、はっきりした制限つき。Vunemi 0.2.2 の全機能です。" },
     screens: { title: "Vunemi の画面", description: "Mac 版 Vunemi の実際の画面です。サンプルデータで撮影しています。" },
-    download: { title: "Mac 版 Vunemi をダウンロード", description: "Vunemi 0.2.1 をダウンロード。Apple シリコン搭載、macOS 14 以降の Mac 向け。無料でオープンソースです。" },
+    download: { title: "Mac 版 Vunemi をダウンロード", description: "Vunemi 0.2.2 をダウンロード。Apple シリコン搭載、macOS 14 以降の Mac 向け。無料でオープンソースです。" },
   },
   hero: {
     eyebrow: "Mac のためのパーソナルアシスタント",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi にできることのすべて",
-    intro: "Vunemi 0.2.1 の詳細です。使い方、接続できるもの、そしてあなたが主導権を保つしくみを紹介します。",
+    intro: "Vunemi 0.2.2 の詳細です。使い方、接続できるもの、そしてあなたが主導権を保つしくみを紹介します。",
     chatTitle: "Vunemi との作業",
     chat: [
       { title: "まず計画", body: "いくつかの手順が必要なタスクでは、Vunemi が先に計画を示せます。そのまま進める、手順を編集する、キャンセルする、から選べます。" },
@@ -186,6 +186,8 @@ export default {
   downloadPage: {
     highlightsTitle: "このバージョンの新機能",
     highlights: [
+      "Word、Excel、PowerPoint のファイルが再び正しく作成されるようになりました。0.2.0 以降、~ で書いたパス（例: ~/Desktop）に保存したファイルは、保存されていても不明として扱われ、同じタスクの以降のファイルは拒否されていました。",
+      "保存が本当に不明な場合は、そのファイルだけが保留されます。Vunemi はそれを書き直しませんが、別の名前で新しいファイルを保存できます。これまでは古いファイルを読み取った後でも、タスクの以降のファイルがすべて拒否されていました。",
       "アドオンが Vunemi と一緒にアップデートされるようになりました。このバージョンを起動すると、インストール済みのアドオンが、ツールの動作確認に使ったバージョンへ順番に更新されます。新しいコピーの検証が済むまで、古いコピーは残ります。",
       "これまでは Vunemi のアップデート後、新しいバージョンが必要なアドオンは、設定 › アドオンで「アップデート」を押すまで待機し、その間 Vunemi は使えませんでした。アップデートに失敗した場合は、次回起動時に再試行します。",
       "7 つのアドオンのプログラムがすべて新しくなりました：WordCraft と DeckCraft 0.12、GridCraft 0.13、PdfCraft 0.15、VectorCraft 0.18、PhotoCraft 0.17、FilmCraft 0.14。",

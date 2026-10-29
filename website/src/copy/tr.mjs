@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.1'in yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.2'nin yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.1'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.2'yi Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.2.1: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.2.2: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -188,6 +188,8 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
+      "Word, Excel ve PowerPoint dosyaları yeniden düzgün oluşturuluyor. 0.2.0'dan beri ~ ile yazılan bir yola (örneğin ~/Desktop) kaydedilen dosya, kaydedilmiş olduğu hâlde belirsiz sayılıyor, aynı görevdeki sonraki dosyalar da reddediliyordu.",
+      "Bir kayıt gerçekten belirsiz olduğunda artık yalnızca o dosya bekletiliyor: Vunemi onu yeniden yazmaz ama başka bir adla yeni bir dosya kaydedebilir. Şimdiye kadar eski dosya okunduktan sonra bile görevdeki sonraki bütün dosyalar reddediliyordu.",
       "Eklentiler artık Vunemi ile birlikte güncelleniyor. Bu sürüm açıldığında kurulu eklentilerin, araçlarının denendiği sürüme sırayla getirilir. Yenisi doğrulanana kadar eski kopya yerinde kalır.",
       "Şimdiye kadar Vunemi güncellendikten sonra yeni sürüm isteyen bir eklenti, sen Ayarlar › Eklentiler'de Güncelle'ye basana kadar bekliyor, Vunemi de o arada onu kullanamıyordu. Güncelleme başarısız olursa Vunemi bir sonraki açılışında yeniden dener.",
       "Yedi eklenti programının hepsi yenilendi: WordCraft ve DeckCraft 0.12, GridCraft 0.13, PdfCraft 0.15, VectorCraft 0.18, PhotoCraft 0.17 ve FilmCraft 0.14.",
