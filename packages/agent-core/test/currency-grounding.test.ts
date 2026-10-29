@@ -14,3 +14,7 @@ it('rejects an invented euro symbol',()=>expect(unsupportedCurrency('€650.00',
 it('does not treat an explicit negative instruction as permission',()=>expect(unsupportedCurrency('650 TL',goal+' TL ekleme.','satis_TRY,maliyet_TRY\n650,390')).toBe('TRY'));
 it('does not mistake the English verb try for a currency request',()=>expect(unsupportedCurrency('650TL',goal+' Try to prepare the report.',source)).toBe('TRY'));
 it('does not reject a verb in financial instructions',()=>expect(unsupportedCurrency('Try calculating the totals again.',goal,source)).toBeNull());
+it('does not take a spreadsheet cell reference for dollars',()=>{
+ expect(unsupportedCurrency("B5: formula=SUM($B$2:$B$4); cached=405\nChart: column \"Satışlar\"; series Sheet1!$B$1: values Sheet1!$B$2:$B$4",goal,source)).toBeNull();
+ expect(unsupportedCurrency('Toplam Satış: $650',goal,source)).toBe('$');
+});
