@@ -20,7 +20,7 @@ const output=input;
 async function run(id:AddonId,label:string,args:string[],extra:Record<string,unknown>={}){
  const addon=ADDONS.find(a=>a.id===id)!;
  const engines=createEngines({home:homedir(),jobsDir:join(base,'jobs'),addons:{binary:id=>existsSync(program(id))?program(id):null,engineDir:id=>join(installed,id,ADDONS.find(a=>a.id===id)!.tag)}});
- const tools=fullAccessTools(id,addon.engine,'quality fixture',{roots:new Roots([base]),shotDir:base,engines});
+ const tools=fullAccessTools(id,addon.engine,'quality fixture',{roots:new Roots([base]),shotDir:base,backupDir:join(base,'.backups'),engines});
  try{const result=String(await tools[1]!.run({args,...extra},ctx()));writeFileSync(join(evidence,`${label}.txt`),result);records.push({id,label,args,ok:true,output:result});for(const file of (extra.outputs??[])as {name:string;path:string}[]){if(existsSync(file.path)){copyFileSync(file.path,join(evidence,file.name));records.push({file:file.name,sha256:createHash('sha256').update(readFileSync(file.path)).digest('hex')})}}return result}
  catch(error){records.push({id,label,args,ok:false,error:String(error)});throw error}
 }

@@ -101,7 +101,7 @@ function outputTree(job: string, name: string): {
   return children;
 }
 export function fullAccessTools(id: AddonId, engine: string, prefix: string, deps: AddonToolDeps): ToolDef[] {
-  const edits=createSafeOfficeEdits(deps.roots);
+  const edits=createSafeOfficeEdits(deps.roots,deps.backupDir);
   function prepare(a: Record<string, unknown>) {
     if (!Array.isArray(a.args) || a.args.some(v => typeof v !== "string" || v.includes("\0"))) throw new Error("args must be CLI arguments as a string list.");
     const inputs = objects<Named>(a.inputs).map(value => {

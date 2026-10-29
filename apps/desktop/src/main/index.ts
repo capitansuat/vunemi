@@ -465,6 +465,7 @@ const addonTools = registerAddonTools({
   tools,
   roots,
   shotDir,
+  backupDir: join(app.getPath("userData"), "office-backups"),
   picture: renderHtmlPicture,
   engines: createEngines({ addons, home: homedir(), jobsDir: join(addonsDir, ".jobs") }),
   installed: (id) => addons.binary(id) !== null,

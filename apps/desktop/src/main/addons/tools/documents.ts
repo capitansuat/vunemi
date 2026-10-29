@@ -84,7 +84,7 @@ export function replaced(printed: string, count: number): number[] {
 const quoted = (words: string): string => JSON.stringify(words.length > 60 ? `${words.slice(0, 60)}…` : words);
 
 export function documentTools(deps: AddonToolDeps, opts: DocumentOptions): ToolDef[] {
-  const edits=createSafeOfficeEdits(deps.roots);
+  const edits=createSafeOfficeEdits(deps.roots,deps.backupDir);
   const asked = (a: Record<string, unknown>) => {
     const out = target(deps.roots, a.path, [".docx", ".pdf"]);
     const markdown = String(a.markdown ?? "");

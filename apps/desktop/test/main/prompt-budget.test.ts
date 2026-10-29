@@ -83,7 +83,7 @@ async function compose() {
   });
   // Add-ons, all installed: their tools are areas of their own, shown on request.
   const { addonAreas, addonInstructions, registerAddonTools } = await import("../../src/main/addons/packs.js");
-  registerAddonTools({ tools, roots: { list: () => [] } as never, shotDir: join(dir, "shots"), engines: (async () => undefined) as never, paper: () => "A4", installed: () => true });
+  registerAddonTools({ tools, roots: { list: () => [] } as never, shotDir: join(dir, "shots"), backupDir: join(dir, "office-backups"), engines: (async () => undefined) as never, paper: () => "A4", installed: () => true });
   // Off until the user switches it on, and then its two tools are there.
   const history = { offAtFirst: !connectors.isOn("history"), hiddenWhileOff: tools.get("library_open") === undefined };
   // Everything switched on: the most a user can carry.

@@ -15,7 +15,7 @@ it.skipIf(process.env.CRAFT_LIVE!=='1'||process.platform!=='darwin')('real gener
  const base=realpathSync(mkdtempSync(join(tmpdir(),'vunemi-layout-'))),evidence=resolve('../../research/office-design-2026-10-15',new Date().toISOString().replaceAll(':','-'));mkdirSync(evidence,{recursive:true});
  const installed = process.env.CRAFT_ADDONS_DIR ?? join(homedir(), 'Library/Application Support/Vunemi/addons');const program=(id:AddonId)=>{const a=ADDONS.find(a=>a.id===id)!;return join(installed,id,a.tag,a.folder,a.binary)};
  const engines=createEngines({home:homedir(),jobsDir:join(base,'jobs'),addons:{binary:program,engineDir:id=>join(installed,id,ADDONS.find(a=>a.id===id)!.tag)}});
- const ctx:ToolContext={signal:new AbortController().signal,handoff:async()=>true,offerUndo:()=>{},attach:()=>{},gallery:()=>{}};const deps={engines,roots:new Roots([base]),shotDir:base};
+ const ctx:ToolContext={signal:new AbortController().signal,handoff:async()=>true,offerUndo:()=>{},attach:()=>{},gallery:()=>{}};const deps={engines,roots:new Roots([base]),shotDir:base,backupDir:join(base,'.backups')};
  const xml=(name:string,part:string)=>execFileSync('/usr/bin/unzip',['-p',join(base,name),part],{encoding:'utf8'});
  try{
   const sheet=join(base,'layout.xlsx');await sheetTools(deps)[0]!.run({path:sheet,rows:[['Kalem','Değer'],['Alfa',12.5],['Beta',7.25],['Gama',20.25],['Toplam','=SUM(B2:B4)']]},ctx);

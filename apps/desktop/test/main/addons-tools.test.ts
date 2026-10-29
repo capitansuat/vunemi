@@ -81,7 +81,7 @@ const engines: Engines = async (id, _signal, work) => {
   });
 };
 
-const deps = () => ({ engines, roots: new Roots([folder]), shotDir: shots });
+const deps = () => ({ engines, roots: new Roots([folder]), shotDir: shots, backupDir: join(shots, 'office-backups') });
 const ctx = (): ToolContext => ({
   signal: new AbortController().signal,
   handoff: async () => true,

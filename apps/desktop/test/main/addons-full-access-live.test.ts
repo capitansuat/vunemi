@@ -21,7 +21,7 @@ function hashes(file:{name:string;path:string}):unknown[] { return statSync(file
 async function run(id:AddonId,label:string,args:string[],extra:Record<string,unknown>={}) {
  const a=ADDONS.find(a=>a.id===id)!;
  const engines=createEngines({home:homedir(),jobsDir:join(base,'jobs'),addons:{binary:id=>existsSync(program(id))?program(id):null,engineDir:id=>join(installed,id,ADDONS.find(a=>a.id===id)!.tag)}});
- const tools=fullAccessTools(id,a.engine,'fixture',{roots:new Roots([base]),shotDir:base,engines});
+ const tools=fullAccessTools(id,a.engine,'fixture',{roots:new Roots([base]),shotDir:base,backupDir:join(base,'.backups'),engines});
  const params={args,...extra};
  try { const output=String(await (label.endsWith('-help') ? tools[0]!.run({},ctx()) : tools[1]!.run(params,ctx()))); records.push({id,label,args,ok:true,output,exports:(extra.outputs as {name:string;path:string}[]|undefined)?.flatMap(hashes)}); writeFileSync(join(evidence,`${label}.txt`),output); return output; }
  catch(error) { records.push({id,label,args,ok:false,error:String(error)});throw error; }

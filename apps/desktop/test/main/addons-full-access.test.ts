@@ -39,6 +39,7 @@ const ctx = (): ToolContext => ({
 const list = () => fullAccessTools('sheets', 'GridCraft', 'sheet', {
   roots: new Roots([folder]),
   shotDir: base,
+  backupDir: join(base, '.backups'),
   engines: (async (_id, _signal, work) => work({
     dir: job,
     run: async args => {
@@ -405,6 +406,7 @@ it('rechecks directory entries immediately before staging', async () => {
   const tool = fullAccessTools('sheets', 'GridCraft', 'sheet', {
     roots: new Roots([folder]),
     shotDir: base,
+  backupDir: join(base, '.backups'),
     engines: (async (_id, _signal, work) => {
       rmSync(join(folder, 'batch/a'));
       symlinkSync(join(base, 'private'), join(folder, 'batch/a'));

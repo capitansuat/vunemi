@@ -281,7 +281,7 @@ export function editArgs(slides: Seen[], edit: Edit): { args: string[]; changed:
 }
 
 export function slideTools(deps: AddonToolDeps): ToolDef[] {
-  const edits = createSafeOfficeEdits(deps.roots);
+  const edits = createSafeOfficeEdits(deps.roots,deps.backupDir);
   const editTarget = (a: Record<string, unknown>) => {
     const plan = edits.prepare(a, String(a.out ?? ""), a.replaceExisting);
     if (!/\.pptx$/i.test(plan.path)) throw new Error("Expected a .pptx output.");
