@@ -414,6 +414,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     return tool&&tools.getAny(tool)?.parameters.properties?.replaceExisting?`A supported repair requires ${tool} with explicit replaceExisting=true, the same destination, a fresh approval and original backup; then independently read and review again.`:undefined;
   };
   const fileCalls = new Map<string, { tool: string; path: string; checked: boolean }>();
+  /** The files each Craft export of this run was sent to: an uncertain one holds back only those. */
+  const craftCallPaths = new Map<string, string[]>();
   const unverifiedFiles = new Set<string>(opts.resumeTask?.outputs.flatMap(o => o.kind === "file" ? [o.path] : []) ?? []);
   const readBackFiles = new Set<string>();
   const requestedTextOutputs=[...new Set(explicitWriteTargets(opts.resumeTask?.goal ?? opts.goal)
@@ -1588,8 +1590,14 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       const actual=craftPaths.map(path=>canonicalFile("files_write",{path},path));
       if(allowedWorkflowTools&&((parsed.value as {replaceExisting?:unknown}).replaceExisting!==true||actual.some(path=>!unverifiedFiles.has(path))))return fail(call,'Only an explicit replacement of the pending saved output is allowed here. Read the actual defect and request a supported edit with replaceExisting=true; no new export was sent.',false,true);
       if(expected.length&&actual.some(path=>!expected.includes(path)))return fail(call,`Craft output differs from explicit requested destination. Use ${JSON.stringify(expected)}. Nothing was written.`,false,true);
-      const uncertain=trackedTasks.find(t=>t.activeRunId===runId)?.operations.some(o=>o.status==='unknown'&&(['document_make','sheet_make','slides_make','document_edit','document_convert','slides_edit'].includes(o.tool)||/^(documents|sheets|slides)_engine_run$/.test(o.tool)));
-      if(uncertain)return fail(call,'A prior Craft export has uncertain delivery. Inspect the actual destination before any new export; no mutation was repeated.',false,true);
+      // An export whose files are not known, such as one from before a restart, still holds back every export.
+      const uncertain=trackedTasks.find(t=>t.activeRunId===runId)?.operations.some(o=>{
+        if(o.status!=='unknown'||!(['document_make','sheet_make','slides_make','document_edit','document_convert','slides_edit'].includes(o.tool)||/^(documents|sheets|slides)_engine_run$/.test(o.tool)))return false;
+        const sent=craftCallPaths.get(o.callId)??(o.filePath?[o.filePath]:null);
+        return !sent||sent.some(path=>actual.includes(path));
+      });
+      if(uncertain)return fail(call,'A prior Craft export to this destination has uncertain delivery. Read the existing file to see what was saved; do not export to it again. A new file needs a new name. No mutation was repeated.',false,true);
+      craftCallPaths.set(call.id,actual);
       const saved=trackedTasks.find(t=>t.activeRunId===runId)?.outputs.filter(o=>o.kind==='file').map(o=>canonicalFile("files_write",{path:o.path},o.path))??[];
       if(actual.some(path=>saved.includes(path))&&!((parsed.value as {replaceExisting?:unknown}).replaceExisting===true&&["document_edit","slides_edit","documents_engine_run","sheets_engine_run","slides_engine_run"].includes(tool.name)))return fail(call,'This Craft output was already saved. Read and independently verify it; do not create it again.',false,true);
     }
