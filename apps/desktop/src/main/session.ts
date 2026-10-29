@@ -49,6 +49,7 @@ import {
   type ToolRegistry,
   type ProviderConfig,
 } from "@vunemi/agent-core";
+import type { RootsSnapshot } from "@vunemi/files";
 import { t } from "@vunemi/i18n";
 import type { PreparedModel } from "./engine/service.js";
 import { MENTION_SHARE } from "./mentions.js";
@@ -67,6 +68,12 @@ export interface SessionOptions {
    * conversation keeps one tool list from its first request on.
    */
   areas?: () => ToolArea[];
+  /**
+   * The open folders, for the session process: the agent compares the file
+   * a request names with the file a tool saved, and "~/Desktop/x.xlsx" must
+   * read as the same file there too.
+   */
+  fileRoots?: () => RootsSnapshot;
   emit: (event: AgentEvent) => void;
   /** Close this emitted run owner only after its native RPC/child has settled. Stop alone never unlocks it. */
   onRunSettled?: (runId: string) => Promise<void>;

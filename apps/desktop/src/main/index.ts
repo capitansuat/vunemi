@@ -710,6 +710,7 @@ const sessionOptions: SessionOptions = {
   validateQuotedSource: source => validateQuotedSource(source, conversations.currentId, conversations.peek(conversations.currentId)?.events ?? []),
   taskPermissions:{store:taskPermissions,sessionId:()=>conversations.currentId,epoch:()=>({...taskPermissionEpoch})},
   tools,
+  fileRoots: () => roots.snapshot(),
   keptOutputs,
   // Each connection's guide travels with its tools (see areas.ts).
   areas: () => [...toolAreas(connectors.reachable()), ...addonAreas(roots.list())],

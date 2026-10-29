@@ -1,7 +1,7 @@
 import {beforeAll,afterEach,afterAll,expect,it,vi} from 'vitest';
 import {fork,execFileSync,type ChildProcess} from 'node:child_process';
 import {mkdtempSync,rmSync,realpathSync} from 'node:fs';
-import {tmpdir} from 'node:os';
+import {homedir,tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {ToolRegistry,TaskPermissionStore,type ChatModel,type AgentEvent} from '@vunemi/agent-core';
 import {SessionCoordinatorHost,type SessionCoordinatorChild} from '../../src/main/session-coordinator-host.js';
@@ -47,4 +47,13 @@ it('real worker task permission revoke validates exact owner before cancelling t
  await f.host.resolveTaskApproval({sessionId:'synthetic-session',runId:approval.runId,callId:approval.callId,decision:{kind:'approve_run',offerId:offer.offerId,offerRevision:offer.revision}});await vi.waitFor(()=>expect(read).toHaveBeenCalledOnce());const snapshot=await f.host.listTaskPermissions({sessionId:'synthetic-session',runId:approval.runId}),grant=snapshot.grants[0];
  await expect(f.host.revokeTaskPermission({sessionId:'synthetic-session',runId:'old-run',grantId:grant.grantId,expectedRevision:snapshot.revision})).rejects.toThrow(/Stale/);expect(signal?.aborted).toBe(false);
  await f.host.revokeTaskPermission({sessionId:'synthetic-session',runId:approval.runId,grantId:grant.grantId,expectedRevision:snapshot.revision});expect(signal?.aborted).toBe(true);await pending;expect(read).toHaveBeenCalledOnce();
+},15000);
+it('real worker matches a Craft output written as ~/ with the file the tool produced',async()=>{
+ const home=realpathSync(homedir()),saved=join(home,'vunemi-synthetic-missing','rates.xlsx');
+ const make=vi.fn(async(_args:unknown,ctx:import('@vunemi/agent-core').ToolContext)=>{ctx.produced?.({kind:'file',path:saved});return'Created ~/vunemi-synthetic-missing/rates.xlsx';});
+ const tools=new ToolRegistry().register({name:'files_write',description:'Write a synthetic file',parameters:{type:'object',properties:{path:{type:'string'},content:{type:'string'}},required:['path','content']},actionClass:'write-local',resolveFile:(args:{path?:unknown})=>String(args.path).replace(/^~(?=\/)/,home),run:async()=> 'unused'},'files').register({name:'sheet_make',description:'Make a synthetic workbook',parameters:{type:'object',properties:{path:{type:'string'},rows:{type:'array'}},required:['path','rows']},actionClass:'write-local',run:make},'addon:sheets');let calls=0;
+ const f=setup(async req=>{calls++;if(req.messages.some(m=>m.role==='tool'))return result('Done');return{...result(''),toolCalls:[{id:'make-'+calls,name:'sheet_make',argumentsText:'{"path":"~/vunemi-synthetic-missing/rates.xlsx","rows":[["Date","Rate"]]}'}]};},tools);
+ (f.options as any).fileRoots=()=>({roots:[home],projects:[],active:null,granted:[]});
+ await f.host.start('Make a synthetic workbook','synthetic:model');
+ expect(make).toHaveBeenCalledOnce();expect(f.events.find(e=>e.type==='tool.finished')).toMatchObject({ok:true});
 },15000);

@@ -1,12 +1,19 @@
 import {randomUUID} from 'node:crypto';
 import {AgentSession,type SessionOptions} from '../main/session.js';
 import {setLocale,isLocale} from '@vunemi/i18n';
+import {Roots} from '@vunemi/files';
 import {ToolRegistry,TaskPermissionStore,copyQuotedSource,tasksFromEvents,type ChatModel,type ChatRequest,type ToolContext,type ToolDef,type AgentEvent,type OutputKeeper,type TaskPermissionEpoch} from '@vunemi/agent-core';
 import {SESSION_COMMANDS,sessionError,fromSessionError,type SessionConfiguration,type SessionState,type SessionService,type SessionContextMethod} from '../shared/session-coordinator.js';
+/**
+ * The agent names a file through these tools with arguments it made itself,
+ * to compare the file a request names with the one a tool saved. Main never
+ * prepared those, so they are resolved here against a copy of the open folders.
+ */
+const FILE_ACCESS:Record<string,'read'|'write'>={files_read:'read',files_write:'write',files_edit:'write'};
 export interface SessionWorkerPort {postMessage(message:unknown):void;on(event:'message',listener:(event:{data:unknown})=>void):unknown}
 /** The actual AgentSession, including queue/history/approval owners, lives here. */
 export function serveSessionCoordinator(port:SessionWorkerPort):()=>void{
- let epoch='',sessionId='',config:SessionConfiguration,session:AgentSession|undefined,closed=false,currentRun:string|null=null,nextId=1,preparationGeneration=0;
+ let epoch='',sessionId='',config:SessionConfiguration,fileRoots:Roots|null=null,session:AgentSession|undefined,closed=false,currentRun:string|null=null,nextId=1,preparationGeneration=0;
  const commandIds=new Set<number>();
  const pending=new Map<number,{resolve:(v:any)=>void;reject:(e:Error)=>void;stream?:(v:any)=>void;cleanup:()=>void}>(),contexts=new Map<string,ToolContext>(),tools=new ToolRegistry(),grants=new Set<string>();
  const modelFlags=new Map<string,boolean>();
@@ -20,12 +27,12 @@ export function serveSessionCoordinator(port:SessionWorkerPort):()=>void{
  };
  const workEvents:AgentEvent[]=[];
  const emitted=(event:AgentEvent)=>{workEvents.push(event);config.latestTask=tasksFromEvents(workEvents).at(-1)??config.latestTask;if(event.type==='run.started')currentRun=event.runId;post({kind:'event',event,state:state()});if(event.type==='run.finished')currentRun=null;};
- function apply(next:SessionConfiguration,rebuild=true){config=next;sessionId=next.sessionId;if(isLocale(next.locale))setLocale(next.locale);if(rebuild){for(const s of tools.sources())tools.unregister(s.source);for(const meta of next.tools){const handles=new WeakMap<object,{id:string;prepared?:any;modelOutputs:Map<string,string>}>();
+ function apply(next:SessionConfiguration,rebuild=true){config=next;fileRoots=next.fileRoots?Roots.from(next.fileRoots):null;sessionId=next.sessionId;if(isLocale(next.locale))setLocale(next.locale);if(rebuild){for(const s of tools.sources())tools.unregister(s.source);for(const meta of next.tools){const handles=new WeakMap<object,{id:string;prepared?:any;modelOutputs:Map<string,string>}>();
   const handle=(args:object)=>{let v=handles.get(args);if(!v){v={id:randomUUID(),modelOutputs:new Map()};handles.set(args,v);}return v;};
   const argsFor=(args:object,goal?:string)=>[meta.definition.name,handle(args).id,args,goal];
   const proxy:ToolDef={...meta.definition,...(meta.wantedFor&&{wantedFor:new RegExp(meta.wantedFor.source,meta.wantedFor.flags)}),...(meta.avoidFor&&{avoidFor:new RegExp(meta.avoidFor.source,meta.avoidFor.flags)}),
    preview:async args=>{const h=handle(args);if(!h.prepared)h.prepared=await rpc('tool.prepare',argsFor(args));return h.prepared.preview;},
-   classify:args=>{const p=handle(args).prepared;if(!p)throw Error('Tool not prepared.');return p.actionClass;},alwaysAskWhen:args=>handle(args).prepared?.alwaysAsk===true,approvalScope:args=>handle(args).prepared?.scope,resolveFile:args=>{const path=handle(args).prepared?.path;if(!path)throw Error('File not prepared.');return path;},
+   classify:args=>{const p=handle(args).prepared;if(!p)throw Error('Tool not prepared.');return p.actionClass;},alwaysAskWhen:args=>handle(args).prepared?.alwaysAsk===true,approvalScope:args=>handle(args).prepared?.scope,resolveFile:args=>{const path=handle(args).prepared?.path;if(path)return path;const access=FILE_ACCESS[meta.definition.name];if(!access||!fileRoots)throw Error('File not prepared.');return fileRoots.resolve(String(args.path??''),access);},
    check:async(args,c)=>{if(!handle(args).prepared)handle(args).prepared=await rpc('tool.prepare',argsFor(args),c?.signal);return rpc('tool.check',argsFor(args,c?.userGoal),c?.signal);},
    run:async(args,ctx)=>{const id=randomUUID();contexts.set(id,ctx);try{const result=await rpc('tool.run',[...argsFor(args,ctx.userGoal),id,{taskReceipts:ctx.taskReceipts?.(),desktopDocumentState:ctx.desktopDocumentState?.()},ctx.callId],ctx.signal);handle(args).modelOutputs.set(result.output,result.modelOutput);return result.output;}finally{contexts.delete(id);}},
    forModel:raw=>raw,

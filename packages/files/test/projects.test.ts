@@ -56,6 +56,18 @@ describe("project folders", () => {
     expect(readFileSync(join(docs, "notes.md"), "utf8")).toBe("elsewhere");
   });
 
+  it("resolve the same way from a snapshot, as the session process does", () => {
+    roots.setProjects([project], project);
+    const outside = join(home, "attached.txt");
+    writeFileSync(outside, "attached");
+    roots.grant(outside);
+    const copy = Roots.from(roots.snapshot());
+    for (const [path, access] of [["notes.md", "write"], [join(docs, "a.xlsx"), "write"], [outside, "read"]] as const) {
+      expect(copy.resolve(path, access)).toBe(roots.resolve(path, access));
+    }
+    expect(() => copy.resolve(outside, "write")).toThrow(PathRefused);
+  });
+
   it("still hide what is hidden inside a project", async () => {
     writeFileSync(join(project, ".env"), "TOKEN=abc");
     roots.setProjects([project], project);

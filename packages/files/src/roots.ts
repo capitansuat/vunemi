@@ -61,6 +61,14 @@ export function defaultRoots(home = homedir()): string[] {
   return [join(home, "Desktop"), join(home, "Documents"), join(home, "Downloads")];
 }
 
+/** What a Roots holds, sent to the session process so it can name files the way the tools do. */
+export interface RootsSnapshot {
+  roots: string[];
+  projects: string[];
+  active: string | null;
+  granted: string[];
+}
+
 export class Roots {
   private readonly base: string[];
   /** Project folders the user chose, and the one the current conversation works in. */
@@ -73,6 +81,17 @@ export class Roots {
     // Resolve the roots themselves too: on macOS /tmp and even the home
     // directory can be symlinks, and a root that isn't real can't be matched.
     this.base = roots.map((r) => realOrPlanned(resolve(r)));
+  }
+
+  snapshot(): RootsSnapshot {
+    return { roots: [...this.base], projects: [...this.projects], active: this.active, granted: [...this.granted] };
+  }
+
+  static from(snapshot: RootsSnapshot): Roots {
+    const roots = new Roots(snapshot.roots);
+    roots.setProjects(snapshot.projects, snapshot.active);
+    for (const file of snapshot.granted) roots.granted.add(file);
+    return roots;
   }
 
   /**
