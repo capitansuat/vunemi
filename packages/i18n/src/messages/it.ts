@@ -16,7 +16,13 @@ export const messages: Catalogue = {
     "user": "Serve la tua risposta",
     "review": "Verifica necessaria",
     "uncertain": "Risultato incerto",
-    "recovery": "Interrotta al riavvio"
+    "recovery": "Interrotta al riavvio",
+    "seen": "Visto",
+    "checked": "Ho controllato",
+    "seenAll": "Segna tutte le verifiche come viste",
+    "dismissLabel": "Rimuovi {title} da questo elenco",
+    "checkedNote": "La rimuove solo da questo elenco: il risultato non viene considerato completato e l’azione non viene ripetuta.",
+    "aging": "Le verifiche più vecchie di 7 giorni escono da sole da questo elenco. Le attività che aspettano te e i risultati incerti restano finché non li rimuovi."
 },
   outcomeProgress: {
     browserWrite: "Apri {target}.",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "Riprova",
     downloading: "Download… {percent}%",
     installing: "Installazione…",
+    updating: "Aggiornamento… {percent}%",
+    updateLater: "Vunemi riprova l’aggiornamento alla prossima apertura, oppure puoi premere Riprova.",
+    autoUpdate: "Quando Vunemi si aggiorna, i tuoi componenti aggiuntivi si aggiornano insieme.",
     ready: "Installato",
     outdated: "È installata la versione {version}; questo Vunemi richiede quella più recente.",
     items: {

@@ -3,6 +3,7 @@ import { searchLocationInstructions } from "./search-location.js";
 import { NativeExecutionHost } from "./native-execution-host.js";
 import { validateQuotedSource } from "./quoted-source.js";
 import {requireAttentionTarget} from "./attention-navigation.js";
+import {AttentionSeen,requireAttentionDismissal} from "./attention-seen.js";
 import {AutomationAdjustment} from "./automation-adjustment.js";
 import {installNativeRecipes} from './native-recipes/install.js';
 import {assertModelRecoveryAllowed} from './task-recovery.js';
@@ -447,6 +448,7 @@ let meetingsIndexed = false;
 /**
  * Add-ons: separate programs, downloaded when the user asks in Settings
  * (addons/store.ts). Only those whose tools are written here are offered.
+ * One the user has is updated when Vunemi opens with a newer pinned version.
  */
 const addonsDir = join(app.getPath("userData"), "addons");
 const addons: Addons = new Addons({
@@ -727,7 +729,7 @@ const sessionOptions: SessionOptions = {
   // described as well as stopping working.
   instructions: () =>
     // The personality comes last: when the user rewrites it, what a local server has cached before it still holds.
-    [languageInstructions(), searchLocationInstructions(settings.searchLocation), generalInstructions(memory), connectors.instructions({ guides: false }), addonInstructions((id) => addons.binary(id) !== null), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write")), soulInstructions(soul.read())]
+    [languageInstructions(), searchLocationInstructions(settings.searchLocation), generalInstructions(memory), connectors.instructions({ guides: false }), addonInstructions((id) => (addons.binary(id) ? "ready" : addons.updating(id) ? "updating" : "absent")), projectInstructions(currentProject(), connectors.isOn("files"), connectors.isOn("files") && connectors.isPartOn("files", "write")), soulInstructions(soul.read())]
       .filter(Boolean)
       .join("\n\n"),
   // Conversation needs the user's preferences, not operating manuals for
@@ -1178,9 +1180,16 @@ function listAfterSwitch(): SessionList {
 }
 
 handle(CH.sessionsList, () => sessionList());
-handle(CH.attentionList,()=>conversations.attention());
+/** What the user took off the list, and reviews past their days, are not listed. */
+const attentionSeen=new AttentionSeen(join(app.getPath("userData"),"attention-seen.json"));
+const attentionList=()=>conversations.attention(item=>attentionSeen.shown(item,Date.now()));
+handle(CH.attentionList,()=>attentionList());
+handle(CH.attentionDismiss,(_e,raw:unknown)=>{
+ attentionSeen.dismiss(requireAttentionDismissal(attentionList(),raw),conversations.attentionItems());
+ return attentionList();
+});
 handle(CH.attentionOpen,async(_e,raw:unknown)=>{
- const target=requireAttentionTarget(conversations.attention(),raw);
+ const target=requireAttentionTarget(attentionList(),raw);
  if(target.sessionId===conversations.currentId)return {sessions:sessionList(),target};
  if(session.running)throw Error(t('main.stopFirst'));
  const {history,events}=conversations.open(target.sessionId);
@@ -2034,6 +2043,8 @@ void app.whenReady().then(async () => {
   setAppMenu();
   presence.start();
   tendLibrary();
+  // Add-ons the user has, brought to the version this Vunemi was tested with.
+  setTimeout(() => void addons.updateOutdated(), 20_000);
   // The Mac locking locks Vunemi too, when the user asked for a lock at all.
   powerMonitor.on("lock-screen", () => {
     macAway = true;

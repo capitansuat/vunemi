@@ -10,6 +10,7 @@ type Filter = "all" | "installed" | AddonCategory;
  * that can grow: by category, with a search and a filter. Each is a
  * separate program from its developer's release page; nothing is fetched
  * until the user presses Download, and removing one puts it in the Trash.
+ * One the user has is updated by itself when Vunemi opens with a newer pin.
  */
 export function AddonsSection() {
   const [list, setList] = useState<AddonView[] | null>(null);
@@ -32,7 +33,7 @@ export function AddonsSection() {
   const shown = useMemo(() => {
     const words = lower(query.trim()).split(/\s+/).filter(Boolean);
     return (list ?? []).filter((a) => {
-      if (filter === "installed" ? a.status.state === "absent" || a.status.state === "failed" : filter !== "all" && a.category !== filter) return false;
+      if (filter === "installed" ? a.status.state === "absent" || (a.status.state === "failed" && !a.status.from) : filter !== "all" && a.category !== filter) return false;
       const text = lower([t(`addons.items.${a.id}.title`), t(`addons.items.${a.id}.body`), a.engine, a.publisher].join(" "));
       return words.every((word) => text.includes(word));
     });
@@ -56,7 +57,7 @@ export function AddonsSection() {
   return (
     <div className="mx-auto max-w-[620px]">
       <h2 className="text-[17px] font-semibold text-fg">{t("settings.sections.addons")}</h2>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{t("addons.intro")}</p>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{t("addons.intro")} {t("addons.autoUpdate")}</p>
 
       <div className="mt-4 flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
         <Search size={14} className="shrink-0 text-faint" />
@@ -147,7 +148,7 @@ function Addon({ addon, onInstall, onCancel, onRemove }: { addon: AddonView; onI
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3">
             <div className="h-full bg-ember" style={{ width: `${percent}%` }} />
           </div>
-          <span className="text-[12px] text-muted">{t("addons.downloading", { percent })}</span>
+          <span className="text-[12px] text-muted">{t(status.from ? "addons.updating" : "addons.downloading", { percent })}</span>
           <button type="button" onClick={onCancel} className="text-[12px] text-muted hover:text-fg">
             {t("addons.cancel")}
           </button>
@@ -160,6 +161,7 @@ function Addon({ addon, onInstall, onCancel, onRemove }: { addon: AddonView; onI
           {t(`addons.failed.${status.reason}`)}
         </p>
       )}
+      {status.state === "failed" && status.from && <p className="mt-1 text-[12px] text-muted">{t("addons.updateLater")}</p>}
     </article>
   );
 }

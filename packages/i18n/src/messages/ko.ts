@@ -16,7 +16,13 @@ export const messages: Catalogue = {
     "user": "응답 필요",
     "review": "검토 필요",
     "uncertain": "결과 불확실",
-    "recovery": "다시 시작할 때 중단됨"
+    "recovery": "다시 시작할 때 중단됨",
+    "seen": "읽음으로 표시",
+    "checked": "확인 완료",
+    "seenAll": "모든 검토 항목을 읽음으로 표시",
+    "dismissLabel": "{title}을(를) 이 목록에서 제거",
+    "checkedNote": "이 목록에서만 제거합니다. 결과가 완료로 처리되지 않으며 작업도 반복되지 않습니다.",
+    "aging": "7일이 지난 검토 항목은 이 목록에서 자동으로 사라집니다. 사용자를 기다리는 작업과 결과가 불확실한 작업은 직접 제거할 때까지 남습니다."
 },
   outcomeProgress: {
     browserWrite: "{target} 열기.",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "다시 시도",
     downloading: "다운로드 중… {percent}%",
     installing: "설치 중…",
+    updating: "업데이트 중… {percent}%",
+    updateLater: "Vunemi가 다음에 열릴 때 업데이트를 다시 시도합니다. '다시 시도'를 눌러도 됩니다.",
+    autoUpdate: "Vunemi가 업데이트되면 설치된 추가 기능도 함께 업데이트됩니다.",
     ready: "설치됨",
     outdated: "{version} 버전이 설치되어 있습니다. 이 Vunemi에는 더 새로운 버전이 필요합니다.",
     items: {

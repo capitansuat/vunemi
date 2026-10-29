@@ -88,9 +88,27 @@ export class Addons {
     if (running) return running.status;
     if (this.binary(id)) return { state: "ready", version: version(src.tag) };
     const failure = this.failed.get(id);
-    if (failure) return { state: "failed", reason: failure };
+    const from = this.installed(id).map(version)[0];
+    if (failure) return { state: "failed", reason: failure, ...(from && { from }) };
     const older = this.installed(id).find((tag) => tag !== src.tag);
     return older ? { state: "outdated", version: version(older) } : { state: "absent" };
+  }
+
+  /** An earlier version is on this Mac but the pinned one is not ready yet: an update is due or under way. */
+  updating(id: AddonId): boolean {
+    return this.binary(id) === null && this.installed(id).length > 0;
+  }
+
+  /**
+   * Brings every add-on the user installed up to the version this Vunemi
+   * pins, one after another. Called when Vunemi opens, so an add-on is
+   * updated together with Vunemi; one that fails is tried again on the next
+   * opening, and the Update button stays for the user meanwhile.
+   */
+  async updateOutdated(): Promise<void> {
+    for (const src of this.catalog) {
+      if (this.status(src.id).state === "outdated") await this.install(src.id);
+    }
   }
 
   list(): AddonEntry[] {
@@ -124,14 +142,15 @@ export class Addons {
     if (this.binary(id)) return Promise.resolve(this.status(id));
 
     this.failed.delete(id);
+    const from = this.installed(id).map(version)[0];
     const controller = new AbortController();
-    const state = { controller, status: { state: "downloading", received: 0 } as AddonStatus, done: Promise.resolve(this.status(id)) };
+    const state = { controller, status: { state: "downloading", received: 0, ...(from && { from }) } as AddonStatus, done: Promise.resolve(this.status(id)) };
     const say = (status: AddonStatus): void => {
       state.status = status;
       this.opts.onChange?.(id, status);
     };
     this.busy.set(id, state);
-    state.done = this.fetch(src, controller.signal, say)
+    state.done = this.fetch(src, controller.signal, say, from)
       .then(
         () => undefined,
         (err: unknown) => {
@@ -149,15 +168,15 @@ export class Addons {
     return state.done;
   }
 
-  private async fetch(src: AddonSource, signal: AbortSignal, say: (status: AddonStatus) => void): Promise<void> {
+  private async fetch(src: AddonSource, signal: AbortSignal, say: (status: AddonStatus) => void, from?: string): Promise<void> {
     const incoming = join(this.opts.dir, ".incoming");
     const staging = join(this.home(src.id), `.${src.tag}`);
     const zip = await (this.opts.download ?? downloadPinned)(
       { url: addonUrl(src), name: src.file, size: src.size, sha256: src.sha256 },
       incoming,
-      { signal, allowUrl: allowedAddonUrl, onProgress: (p) => say({ state: "downloading", received: p.received }) },
+      { signal, allowUrl: allowedAddonUrl, onProgress: (p) => say({ state: "downloading", received: p.received, ...(from && { from }) }) },
     );
-    say({ state: "installing" });
+    say({ state: "installing", ...(from && { from }) });
     try {
       rmSync(staging, { recursive: true, force: true });
       mkdirSync(staging, { recursive: true });

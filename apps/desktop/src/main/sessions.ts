@@ -118,8 +118,17 @@ export class SessionStore {
     return [...this.summaries.values()].sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
-  /** Local display-only projection; reads each unchanged stored conversation at most once. */
-  attention(): AttentionSnapshot {
+  /** Local display-only projection; reads each unchanged stored conversation at most once. `shown` drops what the user took off the list. */
+  attention(shown:(item:AttentionItem)=>boolean=()=>true): AttentionSnapshot {
+    const items=this.attentionItems().filter(shown);
+    const bounded=items.slice(0,100),truncated=items.length>100;
+    const signature=JSON.stringify({items:bounded,truncated});
+    if(signature!==this.attentionSignature){this.attentionSignature=signature;this.attentionRevision++;}
+    return {revision:this.attentionRevision,items:bounded.map(item=>({...item})),truncated};
+  }
+
+  /** Every task that needs attention, in every conversation, newest first and unbounded. */
+  attentionItems(): AttentionItem[] {
     const ids=new Set([...this.summaries.keys(),this.current.id]);
     const items:AttentionItem[]=[];
     for(const id of ids){
@@ -140,10 +149,7 @@ export class SessionStore {
     }
     for(const id of this.attentionCache.keys())if(!ids.has(id))this.attentionCache.delete(id);
     items.sort((a,b)=>b.updatedAt-a.updatedAt||a.sessionId.localeCompare(b.sessionId)||a.taskId.localeCompare(b.taskId));
-    const bounded=items.slice(0,100),truncated=items.length>100;
-    const signature=JSON.stringify({items:bounded,truncated});
-    if(signature!==this.attentionSignature){this.attentionSignature=signature;this.attentionRevision++;}
-    return {revision:this.attentionRevision,items:bounded.map(item=>({...item})),truncated};
+    return items.map(item=>({...item}));
   }
 
   /** Whether a task ran in the current conversation. */

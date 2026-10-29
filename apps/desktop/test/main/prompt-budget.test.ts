@@ -37,12 +37,14 @@ const LIMITS = {
   guide: 2_000,
   /**
    * System prompt, every connection's instructions and every tool shown, all
-   * switched on (40,233; 39,037 before the History connection, which is off
+   * switched on (40,347; 39,037 before the History connection, which is off
    * until the user switches it on, and 40,045 before add-ons: with none
    * downloaded, one line names them and where to get them, so a request for
-   * a presentation is answered with that and not with "I can't").
+   * a presentation is answered with that and not with "I can't". 40,263
+   * before that line also named the add-ons being updated, which it does
+   * only in the minutes after Vunemi itself was updated).
    */
-  total: 40_300,
+  total: 40_400,
   /**
    * With areas: a conversation's first prompt with one area picked, the
    * largest (13,171, browser). Was 11,743 before the browser's rule on
@@ -97,8 +99,8 @@ async function compose() {
   const shown = toolSpecsOf(tools, new Set<string>(), (name) => !!connectors.partOf(name));
   const specs = shown.map((s) => ({ name: s.name, chars: JSON.stringify(s).length }));
   const onDemand = toolSpecsOf(tools).filter((s) => !shown.some((x) => x.name === s.name)).map((s) => ({ name: s.name, chars: JSON.stringify(s).length }));
-  // The line about add-ons is longest with none downloaded.
-  const addonNote = addonInstructions(() => false).length;
+  // The lines about add-ons are longest with none downloaded, all being updated, or half of each.
+  const addonNote = Math.max(...(["absent", "updating"] as const).map((state) => addonInstructions(() => state).length), addonInstructions((id) => (id.length % 2 ? "absent" : "updating")).length);
   const instructions = connectors.instructions().length + addonNote;
   // As a conversation starts with areas: built-in tools, the few every
   // conversation lists, and one picked area; each area tried, the largest kept.

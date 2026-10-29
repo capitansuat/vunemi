@@ -461,14 +461,15 @@ export type AddonCategory = "office" | "images" | "video";
 
 export type AddonFailure = "space" | "network" | "integrity" | "host" | "signature" | "unpack";
 
+/** `from`: the earlier version on this Mac, when the work is an update. */
 export type AddonStatus =
   | { state: "absent" }
-  | { state: "downloading"; received: number }
-  | { state: "installing" }
+  | { state: "downloading"; received: number; from?: string }
+  | { state: "installing"; from?: string }
   | { state: "ready"; version: string }
   /** An earlier version is installed; the tools need the pinned one. */
   | { state: "outdated"; version: string }
-  | { state: "failed"; reason: AddonFailure };
+  | { state: "failed"; reason: AddonFailure; from?: string };
 
 export interface AddonView {
   id: AddonId;
@@ -611,6 +612,8 @@ export interface VunemiApi {
   /** Continues a kept conversation; its events rebuild the timeline. */
   openSession(id: string): Promise<SessionList & { events: AgentEvent[] }>;
   listAttention():Promise<AttentionSnapshot>;
+  /** Takes tasks off the Needs attention list only; the tasks themselves are unchanged. */
+  dismissAttention(items:readonly Pick<AttentionItem,'sessionId'|'taskId'|'updatedAt'>[]):Promise<AttentionSnapshot>;
   openAttentionTask(target:AttentionTarget):Promise<{sessions:SessionList;target:AttentionTarget;events?:AgentEvent[]}>;
   deleteSession(id: string): Promise<SessionList>;
   renameSession(id: string, title: string): Promise<SessionList>;
@@ -874,6 +877,7 @@ export const CH = {
   sessionsOpen: "sessions:open",
   attentionList:"attention:list",
   attentionOpen:"attention:open",
+  attentionDismiss:"attention:dismiss",
   sessionsDelete: "sessions:delete",
   sessionsRename: "sessions:rename",
   sessionsChanged: "sessions:changed",

@@ -19,7 +19,13 @@ export const messages = {
     "user": "Yanıtın gerekiyor",
     "review": "İnceleme gerekiyor",
     "uncertain": "Sonuç belirsiz",
-    "recovery": "Yeniden başlatmada yarım kaldı"
+    "recovery": "Yeniden başlatmada yarım kaldı",
+    "seen": "Gördüm",
+    "checked": "Kontrol ettim",
+    "seenAll": "Tüm incelemeleri gördüm",
+    "dismissLabel": "{title} görevini bu listeden çıkar",
+    "checkedNote": "Yalnızca bu listeden çıkarır: sonuç tamamlandı sayılmaz ve işlem tekrarlanmaz.",
+    "aging": "7 günden eski incelemeler bu listeden kendiliğinden çıkar. Seni bekleyen görevler ve belirsiz sonuçlar sen çıkarana kadar kalır."
 },
   outcomeProgress: {
     browserWrite: "{target} sayfasını aç.",
@@ -1920,6 +1926,9 @@ export const messages = {
     retry: "Yeniden dene",
     downloading: "İndiriliyor… %{percent}",
     installing: "Kuruluyor…",
+    updating: "Güncelleniyor… %{percent}",
+    updateLater: "Vunemi güncellemeyi bir sonraki açılışında yeniden dener; istersen Yeniden dene'ye de basabilirsin.",
+    autoUpdate: "Vunemi güncellendiğinde kurulu eklentilerin de onunla birlikte güncellenir.",
     ready: "Kurulu",
     outdated: "{version} sürümü kurulu; bu Vunemi yenisini gerektiriyor.",
     items: {

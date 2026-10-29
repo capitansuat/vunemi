@@ -5,18 +5,24 @@ export const messages: Catalogue = {
   taskAttention: {
     "title": "À vérifier",
     "loading": "Chargement des tâches…",
-    "empty": "Aucune tâche ne nécessite ton attention.",
+    "empty": "Aucune tâche ne nécessite votre attention.",
     "error": "Impossible de charger les tâches.",
     "refresh": "Actualiser",
     "truncated": "Les 100 dernières tâches sont affichées.",
     "open": "Ouvrir la tâche {title}",
-    "blocked": "Termine ou arrête la tâche en cours avant de changer de conversation.",
+    "blocked": "Terminez ou arrêtez la tâche en cours avant de changer de conversation.",
     "plan": "Approbation du plan",
     "approval": "Approbation nécessaire",
-    "user": "Ta réponse est nécessaire",
+    "user": "Votre réponse est nécessaire",
     "review": "Vérification nécessaire",
     "uncertain": "Résultat incertain",
-    "recovery": "Interrompue au redémarrage"
+    "recovery": "Interrompue au redémarrage",
+    "seen": "Vu",
+    "checked": "J’ai vérifié",
+    "seenAll": "Marquer toutes les vérifications comme vues",
+    "dismissLabel": "Retirer {title} de cette liste",
+    "checkedNote": "La retire seulement de cette liste : le résultat n’est pas considéré comme terminé et l’action n’est pas répétée.",
+    "aging": "Les vérifications de plus de 7 jours quittent cette liste d’elles-mêmes. Les tâches qui vous attendent et les résultats incertains restent jusqu’à ce que vous les retiriez."
 },
   outcomeProgress: {
     browserWrite: "Ouvrir {target}.",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "Réessayer",
     downloading: "Téléchargement… {percent} %",
     installing: "Installation…",
+    updating: "Mise à jour… {percent} %",
+    updateLater: "Vunemi réessaiera la mise à jour à sa prochaine ouverture, ou vous pouvez cliquer sur Réessayer.",
+    autoUpdate: "Quand Vunemi est mis à jour, vos extensions le sont aussi.",
     ready: "Installée",
     outdated: "La version {version} est installée ; ce Vunemi a besoin de la plus récente.",
     items: {

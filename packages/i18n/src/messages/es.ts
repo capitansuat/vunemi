@@ -16,7 +16,13 @@ export const messages: Catalogue = {
     "user": "Se necesita tu respuesta",
     "review": "Revisión necesaria",
     "uncertain": "Resultado incierto",
-    "recovery": "Interrumpida al reiniciar"
+    "recovery": "Interrumpida al reiniciar",
+    "seen": "Visto",
+    "checked": "Ya lo comprobé",
+    "seenAll": "Marcar todas las revisiones como vistas",
+    "dismissLabel": "Quitar {title} de esta lista",
+    "checkedNote": "Solo la quita de esta lista: el resultado no se da por terminado y la acción no se repite.",
+    "aging": "Las revisiones de más de 7 días salen solas de esta lista. Las tareas que te esperan y los resultados inciertos se quedan hasta que los quites."
 },
   outcomeProgress: {
     browserWrite: "Abrir {target}.",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "Reintentar",
     downloading: "Descargando… {percent} %",
     installing: "Instalando…",
+    updating: "Actualizando… {percent} %",
+    updateLater: "Vunemi vuelve a intentar la actualización la próxima vez que se abra, o puedes pulsar Reintentar.",
+    autoUpdate: "Cuando Vunemi se actualiza, tus complementos se actualizan con él.",
     ready: "Instalado",
     outdated: "Está instalada la versión {version}; este Vunemi necesita la más reciente.",
     items: {

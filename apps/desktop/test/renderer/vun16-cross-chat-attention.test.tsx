@@ -84,3 +84,20 @@ it.each(['Enter',' '] as const)('keyboard %j on an attention row acts like a cli
  expect(exact.focus).toHaveBeenCalledExactlyOnceWith({preventScroll:true});expect(decoy.focus).not.toHaveBeenCalled();
  expect(composerDrafts.read('s-run').text).toBe('Half-written synthetic draft');expect(useStore.getState().queue).toHaveLength(1);
 });
+
+it('Seen takes the exact task off the list, even while another session runs, and navigates nowhere',async()=>{
+ const before=snapshot();
+ api.dismissAttention=vi.fn(async()=>({revision:6,items:[same],truncated:false}));
+ const tree=draw(other),seen=nodes(tree).filter(n=>n.type==='button')[1];
+ expect(text(seen)).toBe(t('taskAttention.seen'));expect(seen.props.disabled).toBeFalsy();
+ seen.props.onClick();await settle();
+ expect(api.dismissAttention).toHaveBeenCalledWith([other]);
+ expect(api.openAttentionTask).not.toHaveBeenCalled();
+ expect(useStore.getState().attention).toEqual({revision:6,items:[same],truncated:false});
+ const after=snapshot();expect({...after,attentionTarget:null}).toEqual({...before,attentionTarget:null});
+});
+it('an uncertain result is closed with I checked it, which says the action is neither marked done nor repeated',()=>{
+ const uncertain={...other,status:'interrupted',reason:'uncertain' as const};
+ const checked=nodes(draw(uncertain)).filter(n=>n.type==='button')[1];
+ expect(text(checked)).toBe(t('taskAttention.checked'));expect(checked.props.title).toBe(t('taskAttention.checkedNote'));
+});

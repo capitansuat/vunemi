@@ -17,12 +17,13 @@ const errorText = (e: unknown) =>
  * conversation it started in.
  */
 export function SessionsNav() {
-  const { sessions, running, addProject,attention,attentionLoading,attentionError,refreshAttention } = useStore(useShallow(s => ({ sessions: s.sessions, running: s.running, addProject: s.addProject, locale: s.locale,attention:s.attention,attentionLoading:s.attentionLoading,attentionError:s.attentionError,refreshAttention:s.refreshAttention })));
+  const { sessions, running, addProject,attention,attentionLoading,attentionError,refreshAttention,dismissAttention } = useStore(useShallow(s => ({ sessions: s.sessions, running: s.running, addProject: s.addProject, locale: s.locale,attention:s.attention,attentionLoading:s.attentionLoading,attentionError:s.attentionError,refreshAttention:s.refreshAttention,dismissAttention:s.dismissAttention })));
   const [filter, setFilter] = useState<'all'|'recoverable'|'attention'>('all');
   const recoverableOnly=filter==='recoverable',attentionMode=filter==='attention';
   const attentionSessions=new Set(attention?.items.map(item=>item.sessionId)??[]);
   const visibleSessions = (attentionMode?attentionSessionGroups(attention,sessions.sessions):sessions.sessions).filter(s => attentionMode?attentionSessions.has(s.id):!recoverableOnly || Boolean(s.interrupted));
   const [error, setError] = useState<string | null>(null);
+  const reviews=attention?.items.filter(item=>item.reason==='review')??[];
   const known = new Set(sessions.projects.map((p) => p.id));
   const loose = visibleSessions.filter((s) => !s.projectId || !known.has(s.projectId));
   const freshHere = (projectId: string | undefined) =>
@@ -39,7 +40,11 @@ export function SessionsNav() {
           {attentionError&&<p role="alert">{t('taskAttention.error')} <span className="break-words">{errorText(attentionError)}</span></p>}
           {!attentionLoading&&!attentionError&&attention&&attention.items.length===0&&<p role="status">{t('taskAttention.empty')}</p>}
           {attention?.truncated&&<p role="status">{t('taskAttention.truncated')}</p>}
-          <button type="button" disabled={attentionLoading} onClick={()=>void refreshAttention().catch(()=>{})} className="rounded border border-line px-2 py-1 focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50">{t('taskAttention.refresh')}</button>
+          <div className="flex flex-wrap gap-1.5">
+            <button type="button" disabled={attentionLoading} onClick={()=>void refreshAttention().catch(()=>{})} className="rounded border border-line px-2 py-1 focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50">{t('taskAttention.refresh')}</button>
+            {reviews.length>0&&<button type="button" disabled={attentionLoading} onClick={()=>{setError(null);void dismissAttention(reviews).catch(e=>setError(errorText(e)));}} className="rounded border border-line px-2 py-1 focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50">{t('taskAttention.seenAll')} ({reviews.length})</button>}
+          </div>
+          <p className="text-[11px] leading-snug text-faint">{t('taskAttention.aging')}</p>
         </div>}
         {recoverableOnly && visibleSessions.length === 0 && <p role="status" className="px-2.5 pb-3 text-[12px] text-muted">{t("app.sessions.noRecoverable")}</p>}
         {!attentionMode&&<div className="flex items-center justify-between px-2.5 pb-1.5">
@@ -185,7 +190,16 @@ function ProjectGroup({ project, items, fresh,attentionMode=false,attention=null
 }
 
 export function AttentionSessionGroup({session,items}:{session:SessionSummary;items:AttentionItem[]}){
-  return <li><p className="break-words px-2.5 pt-2 pb-1 text-[12px] font-medium text-muted">{session.title||t('app.sessions.untitled')}</p><ul className="space-y-1">{items.map(item=><AttentionTaskRow key={`${item.sessionId}:${item.taskId}`} item={item}/>)}</ul></li>;
+  const {running,current,deleteSession}=useStore(useShallow(s=>({running:s.running,current:s.sessions.current,deleteSession:s.deleteSession})));
+  const [confirming,setConfirming]=useState(false);
+  const [error,setError]=useState<string|null>(null);
+  const title=session.title||t('app.sessions.untitled');
+  return <li><div className="group flex items-start gap-1 px-2.5 pt-2 pb-1">
+    <p className="min-w-0 flex-1 break-words text-[12px] font-medium text-muted">{title}</p>
+    {confirming
+      ?<button type="button" autoFocus onBlur={()=>setConfirming(false)} onClick={()=>{setConfirming(false);setError(null);void deleteSession(session.id).catch(e=>setError(errorText(e)));}} className="shrink-0 rounded-md bg-danger px-1.5 py-0.5 text-[11px] font-medium text-white">{t('common.delete')}</button>
+      :<button type="button" aria-label={t('app.sessions.deleteLabel',{title})} title={t('app.sessions.deleteLabel',{title})} disabled={running&&session.id===current} onClick={()=>setConfirming(true)} className="grid size-5 shrink-0 place-items-center rounded-md text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-danger focus-visible:opacity-100 disabled:hidden"><Trash2 size={12}/></button>}
+  </div>{error&&<p role="alert" className="break-words px-2.5 pb-1 text-[11px] text-danger">{error}</p>}<ul className="space-y-1">{items.map(item=><AttentionTaskRow key={`${item.sessionId}:${item.taskId}`} item={item}/>)}</ul></li>;
 }
 export function AttentionTaskRow({item}:{item:AttentionItem}){
   const {running,sessions,attentionTarget}=useStore(useShallow(s=>({running:s.running,sessions:s.sessions,attentionTarget:s.attentionTarget})));
@@ -194,9 +208,12 @@ export function AttentionTaskRow({item}:{item:AttentionItem}){
   const current=attentionTarget?.sessionId===item.sessionId&&attentionTarget.taskId===item.taskId;
   const open=()=>{const state=useStore.getState();if(attentionNavigationBlocked(item,state.running,state.sessions.current))return;setError(null);void state.openAttentionTask(item).catch(e=>setError(errorText(e)));};
   const label=`${t('taskAttention.open',{title:item.title})} · ${t(`taskAttention.${item.reason}`)} · ${item.sessionTitle}`;
-  return <li><button type="button" disabled={blocked} onClick={open} aria-label={label} aria-current={current?'true':undefined} title={blocked?t('taskAttention.blocked'):label} className="w-full rounded-lg border border-line px-2.5 py-2 text-left hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50">
-    <span className="block break-words text-[12.5px] leading-snug text-fg">{item.title}</span><span className="mt-1 block break-words text-[11.5px] text-warn">{t(`taskAttention.${item.reason}`)}</span><span className="mt-0.5 block text-[11px] text-faint">{dayLabel(item.updatedAt)} {clock(item.updatedAt)}</span>
-  </button>{blocked&&<p className="px-2.5 py-1 text-[11px] text-muted">{t('taskAttention.blocked')}</p>}{error&&<p role="alert" className="break-words px-2.5 py-1 text-[11px] text-danger">{error}</p>}</li>;
+  // Only off the list: an uncertain result stays uncertain and is not repeated.
+  const dismiss=()=>{setError(null);void useStore.getState().dismissAttention([item]).catch(e=>setError(errorText(e)));};
+  return <li className="relative"><button type="button" disabled={blocked} onClick={open} aria-label={label} aria-current={current?'true':undefined} title={blocked?t('taskAttention.blocked'):label} className="w-full rounded-lg border border-line px-2.5 py-2 text-left hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50">
+    <span className="block break-words text-[12.5px] leading-snug text-fg">{item.title}</span><span className="mt-1 block break-words text-[11.5px] text-warn">{t(`taskAttention.${item.reason}`)}</span><span className="mt-0.5 block pr-24 text-[11px] text-faint">{dayLabel(item.updatedAt)} {clock(item.updatedAt)}</span>
+  </button>
+  <button type="button" onClick={dismiss} aria-label={t('taskAttention.dismissLabel',{title:item.title})} title={item.reason==='uncertain'?t('taskAttention.checkedNote'):t('taskAttention.dismissLabel',{title:item.title})} className="absolute right-1.5 bottom-1.5 rounded-md border border-line bg-surface px-1.5 py-0.5 text-[11px] text-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-ember">{t(item.reason==='uncertain'?'taskAttention.checked':'taskAttention.seen')}</button>{blocked&&<p className="px-2.5 py-1 text-[11px] text-muted">{t('taskAttention.blocked')}</p>}{error&&<p role="alert" className="break-words px-2.5 py-1 text-[11px] text-danger">{error}</p>}</li>;
 }
 
 /** The fresh conversation is not kept until something happens in it. */

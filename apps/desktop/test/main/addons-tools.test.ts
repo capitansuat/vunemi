@@ -769,8 +769,17 @@ describe("add-on packs", () => {
   });
 
   it("tells the model which add-ons are not there, and nothing once all are", () => {
-    expect(addonInstructions((id) => id !== "slides")).toBe("Add-ons not downloaded yet: presentations. If a request needs one, tell the user to add it in Settings › Add-ons.");
-    expect(addonInstructions(() => true)).toBe("");
+    expect(addonInstructions((id) => (id === "slides" ? "absent" : "ready"))).toBe("Add-ons not downloaded yet: presentations. If a request needs one, tell the user to add it in Settings › Add-ons.");
+    expect(addonInstructions(() => "ready")).toBe("");
+  });
+
+  it("says an add-on waiting for its new version is being updated, not missing", () => {
+    expect(addonInstructions((id) => (id === "slides" ? "absent" : id === "sheets" ? "updating" : "ready"))).toBe(
+      "Add-ons not downloaded yet: presentations; being updated: spreadsheets. If a request needs one, tell the user to add it in Settings › Add-ons, or that it is being updated and works once shown as installed there.",
+    );
+    expect(addonInstructions((id) => (id === "sheets" ? "updating" : "ready"))).toBe(
+      "Add-ons being updated: spreadsheets. If a request needs one, tell the user it is being updated and works once shown as installed there.",
+    );
   });
 
   it("opens the right area for a request, in the app's languages", () => {

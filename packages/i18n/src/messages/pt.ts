@@ -10,13 +10,19 @@ export const messages: Catalogue = {
     "refresh": "Atualizar",
     "truncated": "São apresentadas as últimas 100 tarefas.",
     "open": "Abrir tarefa {title}",
-    "blocked": "Termina ou interrompe a tarefa atual antes de mudar de conversa.",
+    "blocked": "Termine ou interrompa a tarefa atual antes de mudar de conversa.",
     "plan": "Aprovação do plano",
     "approval": "É necessária aprovação",
-    "user": "É necessária a tua resposta",
+    "user": "Sua resposta é necessária",
     "review": "Revisão necessária",
     "uncertain": "Resultado incerto",
-    "recovery": "Interrompida ao reiniciar"
+    "recovery": "Interrompida ao reiniciar",
+    "seen": "Visto",
+    "checked": "Já conferi",
+    "seenAll": "Marcar todas as revisões como vistas",
+    "dismissLabel": "Remover {title} desta lista",
+    "checkedNote": "Só remove desta lista: o resultado não é considerado concluído e a ação não é repetida.",
+    "aging": "Revisões com mais de 7 dias saem desta lista sozinhas. Tarefas esperando por você e resultados incertos ficam até você removê-los."
 },
   outcomeProgress: {
     browserWrite: "Abrir {target}.",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "Tentar de novo",
     downloading: "Baixando… {percent}%",
     installing: "Instalando…",
+    updating: "Atualizando… {percent}%",
+    updateLater: "O Vunemi tenta a atualização de novo na próxima vez que abrir, ou você pode clicar em Tentar de novo.",
+    autoUpdate: "Quando o Vunemi é atualizado, os complementos que você tem são atualizados junto.",
     ready: "Instalado",
     outdated: "A versão {version} está instalada; este Vunemi precisa da mais recente.",
     items: {

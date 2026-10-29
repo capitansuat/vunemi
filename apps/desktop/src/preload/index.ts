@@ -60,6 +60,7 @@ const api: VunemiApi = {
   revealProject: (id) => ipcRenderer.invoke(CH.projectsReveal, id),
   openSession: (id) => ipcRenderer.invoke(CH.sessionsOpen, id),
   listAttention:()=>ipcRenderer.invoke(CH.attentionList),
+  dismissAttention:(items)=>ipcRenderer.invoke(CH.attentionDismiss,{items:items.map(({sessionId,taskId,updatedAt})=>({sessionId,taskId,updatedAt}))}),
   openAttentionTask:(target)=>ipcRenderer.invoke(CH.attentionOpen,target),
   resumeInterrupted: (model, sessionId) => ipcRenderer.invoke(CH.sessionsResume, model, sessionId),
   dismissInterrupted: (sessionId) => ipcRenderer.invoke(CH.sessionsDismiss, sessionId),

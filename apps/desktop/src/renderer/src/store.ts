@@ -138,6 +138,8 @@ interface State extends NativeRecipeState {
   attentionError:string|null;
   attentionTarget:(AttentionTarget&{nonce:number})|null;
   refreshAttention():Promise<void>;
+  /** Takes tasks off the list only; what they did and their state are unchanged. */
+  dismissAttention(items:readonly AttentionItem[]):Promise<void>;
   openAttentionTask(item:AttentionItem):Promise<void>;
   artefacts: ArtefactView[];
   /** Visible as soon as Send is pressed, until the main process starts the run. */
@@ -512,6 +514,11 @@ export const useStore = create<State>((set, get) => ({
     try{const snapshot=await window.vunemi.listAttention();if(generation===attentionLoadGeneration)set({attention:snapshot,attentionLoading:false,attentionError:null});}
     catch(error){if(generation===attentionLoadGeneration)set({attentionLoading:false,attentionError:String(error)});}
   },
+  async dismissAttention(items){
+    const generation=++attentionLoadGeneration;
+    try{const snapshot=await window.vunemi.dismissAttention(items);if(generation===attentionLoadGeneration)set({attention:snapshot,attentionError:null});}
+    catch(error){void get().refreshAttention();throw error;}
+  },
   async openAttentionTask(item){
     const before=get(),snapshot=before.attention;
     if(!snapshot||!snapshot.items.some(i=>i.sessionId===item.sessionId&&i.taskId===item.taskId&&i.runId===item.runId))return;
@@ -547,6 +554,7 @@ export const useStore = create<State>((set, get) => ({
     const sessions = await window.vunemi.deleteSession(id);
     if(generation!==navigationGeneration)return;
     set({ sessions, ...(wasCurrent && { tasks: sessions.tasks ?? [], runs: [], activeRun: null, pendingStart: null, queue: [], viewer: null }) });
+    void get().refreshAttention();
   },
 
   async forgetSession() {

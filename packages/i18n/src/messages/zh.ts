@@ -16,7 +16,13 @@ export const messages: Catalogue = {
     "user": "需要你的回复",
     "review": "需要检查",
     "uncertain": "结果不确定",
-    "recovery": "重启时中断"
+    "recovery": "重启时中断",
+    "seen": "已看过",
+    "checked": "已核实",
+    "seenAll": "将所有检查标为已看过",
+    "dismissLabel": "从此列表中移除“{title}”",
+    "checkedNote": "只会从此列表中移除：结果不会被视为已完成，操作也不会重复执行。",
+    "aging": "超过 7 天的检查项会自动从此列表中移除。等待你处理的任务和结果不确定的任务会一直保留，直到你将其移除。"
 },
   outcomeProgress: {
     browserWrite: "打开 {target}。",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "重试",
     downloading: "正在下载… {percent}%",
     installing: "正在安装…",
+    updating: "正在更新… {percent}%",
+    updateLater: "Vunemi 会在下次打开时重试更新，你也可以点按“重试”。",
+    autoUpdate: "Vunemi 更新时，你已安装的扩展也会随之更新。",
     ready: "已安装",
     outdated: "已安装 {version} 版；此版 Vunemi 需要更新的版本。",
     items: {

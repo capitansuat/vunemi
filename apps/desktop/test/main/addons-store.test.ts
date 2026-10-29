@@ -128,6 +128,52 @@ describe("add-ons", () => {
     expect(readdirSync(join(dir, "sheets"))).toEqual(["v9.9.9"]);
   });
 
+  it("updates on opening only the add-ons the user has, keeping the old version until the new one is checked", async () => {
+    const PHOTO: AddonSource = { ...GRID, id: "photo", engine: "PhotoCraft", repo: "storytold/photocraft" };
+    const old = join(dir, "sheets", "v9.9.8", "gridcraft-cli-9.9.8-macos-universal");
+    mkdirSync(old, { recursive: true });
+    writeFileSync(join(old, GRID.binary), "");
+    let oldThere: boolean[] = [];
+    const a = addons({
+      catalog: [GRID, PHOTO],
+      signedBy: async () => {
+        oldThere.push(existsSync(old));
+        return "DJ6XS33FX8";
+      },
+    });
+    expect(a.updating("sheets")).toBe(true);
+    expect(a.updating("photo")).toBe(false);
+    await a.updateOutdated();
+    // Only the add-on that was installed is downloaded; the other stays absent.
+    expect(asked.map((f) => f.name)).toEqual([GRID.file]);
+    expect(a.status("photo")).toEqual({ state: "absent" });
+    expect(a.status("sheets")).toEqual({ state: "ready", version: "9.9.9" });
+    expect(a.updating("sheets")).toBe(false);
+    expect(oldThere).toEqual([true]);
+    expect(seen.slice(0, 2)).toEqual([{ state: "downloading", received: 0, from: "9.9.8" }, { state: "installing", from: "9.9.8" }]);
+    expect(readdirSync(join(dir, "sheets"))).toEqual(["v9.9.9"]);
+    // Nothing is left to update.
+    oldThere = [];
+    await a.updateOutdated();
+    expect(asked).toHaveLength(1);
+  });
+
+  it("keeps the old version when an update fails, says it was an update, and tries again on the next opening", async () => {
+    const old = join(dir, "sheets", "v9.9.8", "gridcraft-cli-9.9.8-macos-universal");
+    mkdirSync(old, { recursive: true });
+    writeFileSync(join(old, GRID.binary), "");
+    const failing = addons({ download: async () => { throw new DownloadError("network", "Offline"); } });
+    await failing.updateOutdated();
+    expect(failing.status("sheets")).toEqual({ state: "failed", reason: "network", from: "9.9.8" });
+    expect(failing.updating("sheets")).toBe(true);
+    expect(existsSync(join(old, GRID.binary))).toBe(true);
+    // Vunemi opens again, now online.
+    const next = addons();
+    expect(next.status("sheets")).toEqual({ state: "outdated", version: "9.9.8" });
+    await next.updateOutdated();
+    expect(next.status("sheets")).toEqual({ state: "ready", version: "9.9.9" });
+  });
+
   it("removes an add-on to the Trash", async () => {
     const a = addons();
     await a.install("sheets");

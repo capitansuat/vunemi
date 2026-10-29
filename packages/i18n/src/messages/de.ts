@@ -16,7 +16,13 @@ export const messages: Catalogue = {
     "user": "Deine Eingabe nötig",
     "review": "Prüfung nötig",
     "uncertain": "Ergebnis ungewiss",
-    "recovery": "Beim Neustart unterbrochen"
+    "recovery": "Beim Neustart unterbrochen",
+    "seen": "Gesehen",
+    "checked": "Geprüft",
+    "seenAll": "Alle Prüfungen als gesehen markieren",
+    "dismissLabel": "{title} aus dieser Liste entfernen",
+    "checkedNote": "Entfernt sie nur aus dieser Liste: Das Ergebnis gilt nicht als erledigt, und die Aktion wird nicht wiederholt.",
+    "aging": "Prüfungen, die älter als 7 Tage sind, verschwinden von selbst aus dieser Liste. Aufgaben, die auf dich warten, und ungewisse Ergebnisse bleiben, bis du sie entfernst."
 },
   outcomeProgress: {
     browserWrite: "{target} öffnen.",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "Erneut versuchen",
     downloading: "Wird geladen … {percent} %",
     installing: "Wird installiert …",
+    updating: "Wird aktualisiert … {percent} %",
+    updateLater: "Vunemi versucht das Update beim nächsten Öffnen erneut, oder du klickst auf „Erneut versuchen“.",
+    autoUpdate: "Wenn Vunemi aktualisiert wird, werden deine Erweiterungen mit aktualisiert.",
     ready: "Installiert",
     outdated: "Version {version} ist installiert; dieses Vunemi braucht die neuere.",
     items: {

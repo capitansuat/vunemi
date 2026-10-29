@@ -148,10 +148,12 @@ function fullGuide(pack: AddonPack): string {
 /**
  * What the model is told about add-ons that are not installed, so that a
  * request for a presentation gets "download it in Settings" and not a claim
- * that it cannot be done, or worse, that it was.
+ * that it cannot be done, or worse, that it was. One the user has, waiting
+ * for the version this Vunemi needs, is called what it is: being updated.
  */
-export function addonInstructions(installed: (id: AddonId) => boolean): string {
-  const missing = PACKS.filter((pack) => !installed(pack.id)).map((pack) => pack.name);
-  if (missing.length === 0) return "";
-  return `Add-ons not downloaded yet: ${missing.join(", ")}. If a request needs one, tell the user to add it in Settings › Add-ons.`;
+export function addonInstructions(state: (id: AddonId) => "ready" | "updating" | "absent"): string {
+  const names = (want: "updating" | "absent") => PACKS.filter((pack) => state(pack.id) === want).map((pack) => pack.name).join(", ");
+  const missing = names("absent"), updating = names("updating");
+  if (!updating) return missing ? `Add-ons not downloaded yet: ${missing}. If a request needs one, tell the user to add it in Settings › Add-ons.` : "";
+  return `Add-ons ${missing ? `not downloaded yet: ${missing}; ` : ""}being updated: ${updating}. If a request needs one, tell the user ${missing ? "to add it in Settings › Add-ons, or that " : ""}it is being updated and works once shown as installed there.`;
 }

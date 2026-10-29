@@ -16,7 +16,13 @@ export const messages: Catalogue = {
     "user": "回答が必要",
     "review": "確認が必要",
     "uncertain": "結果が不明",
-    "recovery": "再起動時に中断"
+    "recovery": "再起動時に中断",
+    "seen": "既読にする",
+    "checked": "確認しました",
+    "seenAll": "確認項目をすべて既読にする",
+    "dismissLabel": "「{title}」をこのリストから外す",
+    "checkedNote": "このリストから外すだけです。結果は完了扱いにならず、操作も繰り返されません。",
+    "aging": "7 日より前の確認項目は自動的にこのリストから外れます。あなたを待っているタスクと結果が不明なタスクは、外すまで残ります。"
 },
   outcomeProgress: {
     browserWrite: "{target} を開く。",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "やり直す",
     downloading: "ダウンロード中… {percent}%",
     installing: "インストール中…",
+    updating: "アップデート中… {percent}%",
+    updateLater: "Vunemi は次回起動時にアップデートを再試行します。「やり直す」を押すこともできます。",
+    autoUpdate: "Vunemi をアップデートすると、インストール済みのアドオンも一緒にアップデートされます。",
     ready: "インストール済み",
     outdated: "バージョン {version} がインストールされています。この Vunemi には新しいバージョンが必要です。",
     items: {

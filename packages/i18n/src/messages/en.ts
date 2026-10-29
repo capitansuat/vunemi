@@ -16,7 +16,13 @@ export const messages: Catalogue = {
     "user": "Your input needed",
     "review": "Review needed",
     "uncertain": "Result uncertain",
-    "recovery": "Interrupted on restart"
+    "recovery": "Interrupted on restart",
+    "seen": "Seen",
+    "checked": "I checked it",
+    "seenAll": "Mark all reviews as seen",
+    "dismissLabel": "Remove {title} from this list",
+    "checkedNote": "Only removes it from this list: the result is not marked as done and the action is not repeated.",
+    "aging": "Reviews older than 7 days leave this list by themselves. Tasks waiting for you and uncertain results stay until you remove them."
 },
   outcomeProgress: {
     browserWrite: "Open {target}.",
@@ -1914,6 +1920,9 @@ export const messages: Catalogue = {
     retry: "Try again",
     downloading: "Downloading… {percent}%",
     installing: "Installing…",
+    updating: "Updating… {percent}%",
+    updateLater: "Vunemi tries the update again the next time it opens, or you can press Try again.",
+    autoUpdate: "When Vunemi updates, the add-ons you have are updated with it.",
     ready: "Installed",
     outdated: "Version {version} is installed; this Vunemi needs the newer one.",
     items: {
