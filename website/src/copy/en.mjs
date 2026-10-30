@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.2 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.3 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.2 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.3 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.2.2 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.2.3 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -154,9 +154,9 @@ export default {
     ],
     addonsTitle: "Add-ons",
     addonsIntro: "Extra abilities you add when you want them. Each is a separate program: the copy Vunemi was tested with is downloaded once from Vunemi's own release page and checked before it is installed. They run on this Mac without network access and see only the files Vunemi hands them. The programs are the ArtCraft team's Craft apps, open source under MIT or Apache-2.0. They are young: results can differ from Word, Excel or PowerPoint. When Vunemi updates, the add-ons you have are updated with it, and the old copy is kept until the new one is checked.",
-    addonsWhy: "Without an add-on, Vunemi already reads Word and PDF documents, converts files between formats, and works through Word, Excel or PowerPoint if they are installed on your Mac. Add-ons go further: Vunemi makes the file itself, with no Office needed. Totals in a spreadsheet are real formulas that a spreadsheet program calculates, not numbers the model worked out; a deck has real slides and charts; photos and videos are edited, not only converted. Until now Vunemi could use only a few fixed tools of each program; now it can use everything the program supports, such as pivot tables in a spreadsheet or the layout of a slide. A tool makes a new file and leaves the one it was given as it is. Only when you ask does Vunemi change a Word, Excel or PowerPoint file itself: it keeps a backup next to it first, and stops if the file changed after you approved.",
+    addonsWhy: "Without an add-on, Vunemi already reads Word and PDF documents, converts files between formats, and works through Word, Excel or PowerPoint if they are installed on your Mac. Add-ons go further: Vunemi makes the file itself, with no Office needed. Totals in a spreadsheet are real formulas that a spreadsheet program calculates, not numbers the model worked out; a deck has real slides and charts; photos and videos are edited, not only converted. Until now Vunemi could use only a few fixed tools of each program; now it can use everything the program supports, such as pivot tables in a spreadsheet or the layout of a slide. A tool makes a new file and leaves the one it was given as it is. Only when you ask does Vunemi change a Word, Excel or PowerPoint file itself: it first keeps the original in its own folder, and stops if the file changed after you approved.",
     addons: [
-      { name: "Documents", body: "Writes reports, letters and notes as a Word or PDF file, with headings, lists and tables, on A4 or Letter paper to suit your region. Converts an existing document to another format, such as Word to PDF. Changes text in an existing Word document, such as a date, a price or a name: the change is made in a copy that keeps the original's formatting, so a small correction no longer means writing the whole file again. When you ask, it changes your Word file itself instead, after keeping a backup next to it. Tables in a new document get clear headers, comfortable row spacing and right-aligned numbers." },
+      { name: "Documents", body: "Writes reports, letters and notes as a Word or PDF file, with headings, lists and tables, on A4 or Letter paper to suit your region. Converts an existing document to another format, such as Word to PDF. Changes text in an existing Word document, such as a date, a price or a name: the change is made in a copy that keeps the original's formatting, so a small correction no longer means writing the whole file again. When you ask, it changes your Word file itself instead, after keeping the original in its own folder. Tables in a new document get clear headers, comfortable row spacing and right-aligned numbers." },
       { name: "Spreadsheets", body: "Makes an Excel workbook from your numbers. Totals, averages and percentages are written as formulas and calculated by the program, so change a number in Excel later and the total follows. Can add a column, bar, line or pie chart. It can also change a workbook you already have: add sheets, write formulas or build a pivot table. New tables get clear headers and aligned numbers that keep the precision you gave, without a guessed currency." },
       { name: "Presentations", body: "Builds a PowerPoint deck slide by slide: an opening slide, section headers, slides with a few short lines, charts and speaker notes, in one of eight themes. Reads an existing deck and makes a changed copy of it: new wording on a slide, a slide removed, a new slide after the one you name. It can also change layouts and fit text to its box." },
       { name: "PDF tools", body: "Joins PDFs into one, takes chosen pages out into a new file, rotates pages, turns pictures into a PDF, and lists and fills in a form's fields. It does not open password-protected PDFs." },
@@ -190,6 +190,13 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
+      "When Vunemi checks a workbook it made, it now sees the charts too. Until now a requested chart could not be confirmed, and the check failed although the chart was there.",
+      "A formula or chart that uses cell references such as $B$2 is no longer taken for an amount in dollars when Vunemi checks the file.",
+      "When Vunemi checks a file against your request, a number that ends a sentence, as in “March 150.”, is no longer dropped from the request. The check had reported such a value as invented.",
+      "Changing a Word, Excel or PowerPoint file no longer leaves a copy named ….before-edit-….xlsx beside it, which looked like a second, different file. The original is kept in Vunemi's own folder, and Undo puts it back.",
+      "A workbook chart that points at cells with no data is now refused before the file is made. Until now a workbook could come out with a chart and no data.",
+      "A task could run out of steps with its file already done, when the model kept checking the file in a way Vunemi does not count. The instructions now say which check counts; whether the model follows them depends on the model.",
+      "When Vunemi reads the cells of a saved Excel file, it now also lists that sheet's charts and the cells each one shows. Until now it saw only the values and could tell you there was no chart when there was one.",
       "Word, Excel and PowerPoint files are made properly again. Since 0.2.0, a file saved to a path written with ~ (for example ~/Desktop) was treated as uncertain although it had been saved, and later files in the same task were refused.",
       "When a save really is uncertain, only that file is held back: Vunemi does not write it again, but it can save a new file under another name. Until now every later file in the task was refused, even after the old one had been read.",
       "Add-ons now update with Vunemi. When this version opens, the add-ons you have are brought, one after another, to the version its tools were tested with. The old copy is kept until the new one is checked.",

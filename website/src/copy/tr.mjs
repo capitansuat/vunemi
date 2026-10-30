@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.2'nin yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.3'ün yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.2'yi Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.3'ü Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.2.2: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.2.3: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -152,9 +152,9 @@ export default {
     ],
     addonsTitle: "Eklentiler",
     addonsIntro: "İstediğinde eklediğin ek yetenekler. Her biri ayrı bir programdır: Vunemi'nin denediği kopya, Vunemi'nin kendi sürüm sayfasından bir kez indirilir ve kurulmadan önce doğrulanır. Bu Mac'te ağ erişimi olmadan çalışırlar ve yalnız Vunemi'nin verdiği dosyaları görürler. Programlar ArtCraft ekibinin Craft uygulamalarıdır; MIT ya da Apache-2.0 lisanslı açık kaynak. Henüz gençler: sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir. Vunemi güncellendiğinde kurulu eklentilerin de onunla birlikte güncellenir; yenisi doğrulanana kadar eski kopya yerinde kalır.",
-    addonsWhy: "Eklenti olmadan da Vunemi Word ve PDF belgelerini okur, dosyaları bir biçimden ötekine çevirir ve Mac'inde kuruluysa Word, Excel ya da PowerPoint üzerinden çalışır. Eklentiler bunun ötesine geçer: Vunemi dosyayı kendisi üretir, Office gerekmez. Tablodaki toplamlar modelin hesapladığı sayılar değil, bir tablo programının hesapladığı gerçek formüllerdir; sunumda gerçek slaytlar ve grafikler olur; fotoğraf ve videolar yalnızca dönüştürülmez, düzenlenir. Şimdiye kadar Vunemi her programın yalnız birkaç sabit aracını kullanabiliyordu; artık programın desteklediği her şeyi, örneğin bir tablodaki pivot tabloları ya da bir slaydın düzenini kullanabilir. Bir araç yeni bir dosya üretir, verdiğin dosyayı olduğu gibi bırakır. Vunemi bir Word, Excel ya da PowerPoint dosyasını ancak sen istersen doğrudan değiştirir: önce yanına bir yedek koyar, onayından sonra dosya değiştiyse durur.",
+    addonsWhy: "Eklenti olmadan da Vunemi Word ve PDF belgelerini okur, dosyaları bir biçimden ötekine çevirir ve Mac'inde kuruluysa Word, Excel ya da PowerPoint üzerinden çalışır. Eklentiler bunun ötesine geçer: Vunemi dosyayı kendisi üretir, Office gerekmez. Tablodaki toplamlar modelin hesapladığı sayılar değil, bir tablo programının hesapladığı gerçek formüllerdir; sunumda gerçek slaytlar ve grafikler olur; fotoğraf ve videolar yalnızca dönüştürülmez, düzenlenir. Şimdiye kadar Vunemi her programın yalnız birkaç sabit aracını kullanabiliyordu; artık programın desteklediği her şeyi, örneğin bir tablodaki pivot tabloları ya da bir slaydın düzenini kullanabilir. Bir araç yeni bir dosya üretir, verdiğin dosyayı olduğu gibi bırakır. Vunemi bir Word, Excel ya da PowerPoint dosyasını ancak sen istersen doğrudan değiştirir: önce aslını kendi klasöründe saklar, onayından sonra dosya değiştiyse durur.",
     addons: [
-      { name: "Belgeler", body: "Rapor, mektup ve notları başlıklar, listeler ve tablolarla Word ya da PDF dosyası olarak yazar; kâğıt boyutu bölgene göre A4 ya da Letter olur. Var olan bir belgeyi başka biçime çevirir, örneğin Word'den PDF'e. Var olan bir Word belgesinde metni değiştirir, örneğin bir tarihi, fiyatı ya da adı: değişiklik, özgün biçimi koruyan bir kopyada yapılır; küçük bir düzeltme için dosyanın baştan yazılması artık gerekmez. Sen istersen bunun yerine Word dosyanı doğrudan değiştirir; önce yanına bir yedek koyar. Yeni belgedeki tablolarda başlıklar belirgin, satırlar ferah ve sayılar sağa hizalı olur." },
+      { name: "Belgeler", body: "Rapor, mektup ve notları başlıklar, listeler ve tablolarla Word ya da PDF dosyası olarak yazar; kâğıt boyutu bölgene göre A4 ya da Letter olur. Var olan bir belgeyi başka biçime çevirir, örneğin Word'den PDF'e. Var olan bir Word belgesinde metni değiştirir, örneğin bir tarihi, fiyatı ya da adı: değişiklik, özgün biçimi koruyan bir kopyada yapılır; küçük bir düzeltme için dosyanın baştan yazılması artık gerekmez. Sen istersen bunun yerine Word dosyanı doğrudan değiştirir; önce aslını kendi klasöründe saklar. Yeni belgedeki tablolarda başlıklar belirgin, satırlar ferah ve sayılar sağa hizalı olur." },
       { name: "Tablolar", body: "Verdiğin sayılardan bir Excel çalışma kitabı hazırlar. Toplam, ortalama ve yüzdeler formül olarak yazılır ve program tarafından hesaplanır; sonradan Excel'de bir sayıyı değiştirirsen toplam da değişir. Sütun, çubuk, çizgi ya da pasta grafiği ekleyebilir. Elindeki bir çalışma kitabını da değiştirebilir: sayfa ekler, formül yazar ya da pivot tablo kurar. Yeni tablolarda başlıklar belirgin olur, sayılar hizalanır ve verdiğin ondalık hassasiyet korunur; tahmine dayalı para birimi eklenmez." },
       { name: "Sunumlar", body: "PowerPoint sunumunu slayt slayt kurar: açılış slaydı, bölüm başlıkları, birkaç kısa satırlı slaytlar, grafikler ve konuşmacı notları; sekiz temadan biriyle. Var olan bir sunumu okur ve değiştirilmiş bir kopyasını çıkarır: bir slayttaki metin değişir, bir slayt silinir, adını verdiğin slayttan sonra yenisi eklenir. Düzeni de değiştirebilir ve metni kutusuna sığdırabilir." },
       { name: "PDF araçları", body: "PDF'leri tek dosyada birleştirir, seçtiğin sayfaları yeni bir dosyaya çıkarır, sayfaları döndürür, resimlerden PDF yapar, bir formun alanlarını listeler ve doldurur. Parola korumalı PDF'leri açmaz." },
@@ -188,6 +188,13 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
+      "Vunemi oluşturduğu bir Excel dosyasını kontrol ederken artık grafikleri de görüyor. Şimdiye kadar istenen grafik doğrulanamıyor, grafik orada olduğu hâlde kontrol başarısız oluyordu.",
+      "$B$2 gibi hücre adresleri kullanan bir formül ya da grafik, Vunemi dosyayı kontrol ederken artık dolar tutarı sanılmıyor.",
+      "Vunemi bir dosyayı isteğine göre kontrol ederken, “Mart 150.” gibi cümle sonundaki bir sayı artık istekten düşmüyor. Kontrol böyle bir değeri uydurulmuş sanıyordu.",
+      "Bir Word, Excel ya da PowerPoint dosyası değiştirildiğinde yanında artık ….before-edit-….xlsx adlı, ikinci ve farklı bir dosya gibi görünen bir kopya kalmıyor. Eski hâli Vunemi'nin kendi klasöründe saklanıyor; Geri al onu yerine koyar.",
+      "Verisi olmayan hücrelere bağlanan bir Excel grafiği artık dosya oluşturulmadan reddediliyor. Şimdiye kadar grafiği olup verisi olmayan bir tablo çıkabiliyordu.",
+      "Model dosyayı Vunemi'nin saymadığı bir yolla kontrol etmeye devam ettiğinde, dosya hazır olduğu hâlde görev adım sınırına takılabiliyordu. Talimatlar artık hangi kontrolün sayıldığını söylüyor; modelin buna uyması modele bağlı.",
+      "Vunemi kaydedilmiş bir Excel dosyasının hücrelerini okurken artık o sayfadaki grafikleri ve her grafiğin gösterdiği hücreleri de listeliyor. Şimdiye kadar yalnızca değerleri görüyor, grafik olduğu hâlde grafik yok diyebiliyordu.",
       "Word, Excel ve PowerPoint dosyaları yeniden düzgün oluşturuluyor. 0.2.0'dan beri ~ ile yazılan bir yola (örneğin ~/Desktop) kaydedilen dosya, kaydedilmiş olduğu hâlde belirsiz sayılıyor, aynı görevdeki sonraki dosyalar da reddediliyordu.",
       "Bir kayıt gerçekten belirsiz olduğunda artık yalnızca o dosya bekletiliyor: Vunemi onu yeniden yazmaz ama başka bir adla yeni bir dosya kaydedebilir. Şimdiye kadar eski dosya okunduktan sonra bile görevdeki sonraki bütün dosyalar reddediliyordu.",
       "Eklentiler artık Vunemi ile birlikte güncelleniyor. Bu sürüm açıldığında kurulu eklentilerin, araçlarının denendiği sürüme sırayla getirilir. Yenisi doğrulanana kadar eski kopya yerinde kalır.",
