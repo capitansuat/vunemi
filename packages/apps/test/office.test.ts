@@ -1,6 +1,6 @@
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { describe, expect, it, vi } from "vitest";
 import { Roots } from "@vunemi/files";
@@ -211,6 +211,33 @@ describe("Excel without Excel", () => {
     });
     const out = JSON.parse(await tool("excel_read_range", closed()).found.run({ path: book }, ctx));
     expect(out).toMatchObject({ source: "saved file", sheet: "Sheet", range: "A1:C2", values: [["Tarih", "2026-09-26", "2026-09-26 12:00"], [12.5, true, ""]] });
+  });
+
+  it("lists the sheet's charts with the cells they show, and says when there are none", async () => {
+    // A model read a workbook with a chart through this tool, saw values only and told the user there was no chart.
+    // Real zip archives: the file check reads them with unzip, which wants their checksums.
+    const zipped = (name: string, parts: Record<string, string>): string => {
+      const dir = mkdtempSync(join(tmpdir(), "xlsx-parts-"));
+      for (const [part, text] of Object.entries(parts)) { mkdirSync(dirname(join(dir, part)), { recursive: true }); writeFileSync(join(dir, part), text); }
+      execFileSync("/usr/bin/zip", ["-q", "-r", join(allowed, name), "."], { cwd: dir });
+      return join(allowed, name);
+    };
+    const book = {
+      "xl/workbook.xml": `<workbook xmlns:r="${REL}"><sheets><sheet name="Sheet" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+      "xl/_rels/workbook.xml.rels": `<Relationships><Relationship Id="rId1" Type="${REL}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
+      "xl/worksheets/sheet1.xml": `<worksheet xmlns:r="${REL}"><dimension ref="A1:B2"/><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Ay</t></is></c></row><row r="2"><c r="B2"><v>120</v></c></row></sheetData></worksheet>`,
+    };
+    const plain = zipped("no-chart.xlsx", book);
+    expect(JSON.parse(await tool("excel_read_range", closed()).found.run({ path: plain }, ctx)).charts).toEqual([]);
+    const charted = zipped("with-chart.xlsx", {
+      ...book,
+      "xl/worksheets/sheet1.xml": book["xl/worksheets/sheet1.xml"].replace("</worksheet>", '<drawing r:id="d1"/></worksheet>'),
+      "xl/worksheets/_rels/sheet1.xml.rels": `<Relationships><Relationship Id="d1" Type="${REL}/drawing" Target="../drawings/drawing1.xml"/></Relationships>`,
+      "xl/drawings/drawing1.xml": `<xdr:wsDr><xdr:twoCellAnchor><xdr:graphicFrame><a:graphic><a:graphicData><c:chart r:id="c1"/></a:graphicData></a:graphic></xdr:graphicFrame></xdr:twoCellAnchor></xdr:wsDr>`,
+      "xl/drawings/_rels/drawing1.xml.rels": `<Relationships><Relationship Id="c1" Type="${REL}/chart" Target="../charts/chart1.xml"/></Relationships>`,
+      "xl/charts/chart1.xml": `<c:chartSpace><c:chart><c:plotArea><c:barChart><c:barDir val="col"/><c:ser><c:val><c:numRef><c:f>Sheet!$B$2:$B$2</c:f></c:numRef></c:val></c:ser></c:barChart></c:plotArea></c:chart></c:chartSpace>`,
+    });
+    expect(JSON.parse(await tool("excel_read_range", closed()).found.run({ path: charted }, ctx)).charts).toEqual(["column; series (unnamed): values Sheet!$B$2:$B$2"]);
   });
 
   it("asks which file when nothing is open in Excel and no path was given", async () => {

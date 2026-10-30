@@ -4,7 +4,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { extname, dirname, basename, join } from "node:path";
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
-import type { Roots } from "@vunemi/files";
+import { readOffice, type Roots } from "@vunemi/files";
 import { t } from "@vunemi/i18n";
 import { AppScriptError, type ScriptRunner } from "./runner.js";
 import { pptxOutline, xlsxCells, xlsxSheets, xlsxUsedRange, xlsxValues, type SheetValue } from "./ooxml.js";
@@ -264,6 +264,25 @@ function liveRestorable(before: unknown[][], rows: number, cols: number): CellVa
   return out;
 }
 
+/**
+ * The charts on one sheet of a saved workbook, as the file check reads them.
+ * Values alone made a model tell the user a workbook with a chart had none.
+ * Null when the file could not be read that way: then nothing is said about charts.
+ */
+async function savedCharts(path: string, sheet: string, signal: AbortSignal): Promise<string[] | null> {
+  let text: string;
+  try {
+    text = await readOffice(path, ".xlsx", signal);
+  } catch {
+    return null;
+  }
+  const lines = text.split("\n");
+  const start = lines.indexOf(`Sheet: ${sheet}`);
+  if (start < 0) return null;
+  const end = lines.findIndex((line, i) => i > start && line.startsWith("Sheet: "));
+  return lines.slice(start + 1, end < 0 ? undefined : end).filter((line) => line.startsWith("Chart: ")).map((line) => line.slice("Chart: ".length));
+}
+
 /** Puts old values back in the saved file, only over cells that still hold what was written. */
 function undoInFile(path: string, sheet: string, target: { cols: number; start: { row: number; col: number } }, refs: string[], wrote: CellValue[][], old: CellValue[][]): void {
   const holder = lockedBy(path);
@@ -459,7 +478,8 @@ export function createOfficeTools(run: ScriptRunner, roots: Roots, catalog: { fi
         }
         const values: SheetValue[][] = [];
         for (let i = 0; i < refs.length; i += area.cols) values.push(refs.slice(i, i + area.cols).map((ref) => read.values[ref] ?? ""));
-        return bounded({ source: "saved file", path, sheet: read.sheet, range: area.text, ...(truncated && { truncated: true }), values });
+        const charts = await savedCharts(path, read.sheet, ctx.signal);
+        return bounded({ source: "saved file", path, sheet: read.sheet, range: area.text, ...(truncated && { truncated: true }), values, ...(charts && { charts }) });
       },
     },
     {
