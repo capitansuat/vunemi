@@ -79,7 +79,7 @@ export class Helper {
     const active=this.activeRPC;if(active?.owner===runId)await active.done;
     this.leases.releaseKnown(runId);
   }
-  constructor(private readonly binary: string, private readonly options: {operationJournalPath?:string;observationTransport?:ObservationTransport;executionTransport?:ExecutionTransport} = {}) {}
+  constructor(private readonly binary: string, private readonly options: {operationJournalPath?:string;observationTransport?:ObservationTransport;executionTransport?:ExecutionTransport;processGone?:(pid:number)=>boolean} = {}) {}
 
   queryOperation(dispatchId:string):OperationRecord|null {
     if(typeof dispatchId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(dispatchId))throw Error("Invalid dispatch ID.");
@@ -182,6 +182,7 @@ export class Helper {
 
   /** Read-only isolation, never resolution: old unknown targets remain blocked/audited. */
   private async admitDocumentOpen(args:Record<string,unknown>,opts:HelperCallOptions,journal:OperationJournal):Promise<void> {
+    const processGone=this.options.processGone??((pid:number)=>{try{process.kill(pid,0);return false;}catch(error){return (error as NodeJS.ErrnoException).code==='ESRCH';}});
     try{this.leases.admitOpen(opts.ownerRunId!);return;}catch(error){if(!(error instanceof NoInputSent)||error.reasonCode!=='delivery-blocked')throw error;}
     const blocked=()=>new NoInputSent('Prior uncertain target could not be independently isolated from this document; no open sent.','delivery-blocked');
     const unresolved=journal.unresolved();
@@ -193,6 +194,8 @@ export class Helper {
       const proven:LeaseTarget[]=[];
       for(const record of unresolved){
         const target=record.target!;
+        // A process that has exited can no longer take the uncertain input, and a closed app can't be described: it would block every open for good.
+        if(processGone(target.pid)){proven.push(target);continue;}
         const value=await this.transport('describe',{app:String(target.pid),part:'window',windowId:target.windowId,background:true},opts) as Record<string,unknown>;
         if(!value||value.bundleId!==target.bundleId||value.pid!==target.pid||value.processStartedAt!==target.processStartedAt||value.windowId!==target.windowId||value.controlMode!=='backgroundStrict'||value.foregroundChanged===true||typeof value.documentPath!=='string'||!isAbsolute(value.documentPath))throw blocked();
         const prior=realpathSync(value.documentPath),previous=statSync(prior);
