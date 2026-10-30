@@ -615,6 +615,12 @@ export const messages: Catalogue = {
     empty: "이 필터에 해당하는 기록이 없습니다.",
     undone: "실행 취소됨",
     waitingUser: "사용자를 기다리는 중",
+    search: "요청, 파일 또는 작업으로 검색",
+    noResults: "검색과 일치하는 항목이 없습니다.",
+    noGoal: "요청이 없는 작업",
+    actions: { other: "작업 {count}개" },
+    undoable: { other: "{count}개 되돌리기 가능" },
+    problems: { other: "문제 {count}개" },
   },
 
   artefacts: {

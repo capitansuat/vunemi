@@ -619,6 +619,12 @@ export const messages = {
     empty: "Bu filtrede kayıt yok.",
     undone: "geri alındı",
     waitingUser: "kullanıcı bekleniyor",
+    search: "İsteğe, dosyaya ya da işleme göre ara",
+    noResults: "Bu aramaya uyan kayıt yok.",
+    noGoal: "İsteği olmayan görev",
+    actions: { other: "{count} işlem" },
+    undoable: { other: "{count} geri alınabilir" },
+    problems: { other: "{count} sorun" },
   },
 
   artefacts: {

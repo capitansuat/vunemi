@@ -615,6 +615,12 @@ export const messages: Catalogue = {
     empty: "このフィルタに該当する記録はありません。",
     undone: "取り消し済み",
     waitingUser: "ユーザ待ち",
+    search: "依頼・ファイル・操作で検索",
+    noResults: "この検索に一致する項目はありません。",
+    noGoal: "依頼のないタスク",
+    actions: { other: "{count} 件の操作" },
+    undoable: { other: "{count} 件を元に戻せます" },
+    problems: { other: "{count} 件の問題" },
   },
 
   artefacts: {

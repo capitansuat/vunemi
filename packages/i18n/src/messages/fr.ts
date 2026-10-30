@@ -615,6 +615,12 @@ export const messages: Catalogue = {
     empty: "Rien pour ce filtre.",
     undone: "annulé",
     waitingUser: "attend l’utilisateur",
+    search: "Rechercher par demande, fichier ou action",
+    noResults: "Aucun résultat pour cette recherche.",
+    noGoal: "Tâche sans demande",
+    actions: { one: "{count} action", other: "{count} actions" },
+    undoable: { one: "{count} annulable", other: "{count} annulables" },
+    problems: { one: "{count} problème", other: "{count} problèmes" },
   },
 
   artefacts: {

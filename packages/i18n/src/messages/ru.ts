@@ -620,6 +620,12 @@ export const messages: Catalogue = {
     empty: "По этому фильтру ничего нет.",
     undone: "отменено",
     waitingUser: "ждёт пользователя",
+    search: "Поиск по запросу, файлу или действию",
+    noResults: "По этому запросу ничего не найдено.",
+    noGoal: "Задача без запроса",
+    actions: { one: "{count} действие", few: "{count} действия", many: "{count} действий", other: "{count} действия" },
+    undoable: { one: "{count} можно отменить", few: "{count} можно отменить", many: "{count} можно отменить", other: "{count} можно отменить" },
+    problems: { one: "{count} проблема", few: "{count} проблемы", many: "{count} проблем", other: "{count} проблемы" },
   },
 
   artefacts: {

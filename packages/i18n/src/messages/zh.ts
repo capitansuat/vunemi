@@ -615,6 +615,12 @@ export const messages: Catalogue = {
     empty: "此筛选下没有记录。",
     undone: "已撤销",
     waitingUser: "等待用户",
+    search: "按请求、文件或操作搜索",
+    noResults: "没有与此搜索匹配的内容。",
+    noGoal: "无请求的任务",
+    actions: { other: "{count} 个操作" },
+    undoable: { other: "{count} 个可撤销" },
+    problems: { other: "{count} 个问题" },
   },
 
   artefacts: {

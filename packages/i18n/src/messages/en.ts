@@ -615,6 +615,12 @@ export const messages: Catalogue = {
     empty: "Nothing under this filter.",
     undone: "undone",
     waitingUser: "waiting for the user",
+    search: "Search by request, file or action",
+    noResults: "Nothing matches this search.",
+    noGoal: "Task without a request",
+    actions: { one: "1 action", other: "{count} actions" },
+    undoable: { one: "1 can be undone", other: "{count} can be undone" },
+    problems: { one: "1 problem", other: "{count} problems" },
   },
 
   artefacts: {

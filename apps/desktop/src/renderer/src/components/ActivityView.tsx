@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Ban, Check, CornerUpLeft, Hand, History, LoaderCircle, TriangleAlert } from "lucide-react";
+import { Ban, Check, ChevronRight, CornerUpLeft, Hand, History, LoaderCircle, Search, TriangleAlert } from "lucide-react";
 import type { ActionClass } from "@vunemi/agent-core";
 import type { ActivityEntry } from "../../../shared/ipc.js";
 import { actionClassLabel, formatMs, toolLabel } from "../lib/labels.js";
+import { groupByTask, matchesActivity, type ActivityTask } from "../lib/activity-groups.js";
 import { clock, groupByDay } from "../lib/time.js";
 import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
@@ -22,6 +23,9 @@ const CHANGING = new Set<ActionClass>(["write-local", "destructive", "outbound",
 export function ActivityView() {
   const { activity, setActivity } = useStore();
   const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
+  /** Tasks the user opened or closed, against how they start. */
+  const [toggled, setToggled] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,10 +36,19 @@ export function ActivityView() {
 
   const shown = useMemo(() => {
     const match = FILTERS.find((f) => f.key === filter)!.match;
-    return activity.filter(match);
-  }, [activity, filter]);
+    return activity.filter((e) => match(e) && matchesActivity(e, query, toolLabel(e.tool, "ok")));
+  }, [activity, filter, query]);
 
-  const days = useMemo(() => groupByDay(shown), [shown]);
+  const days = useMemo(() => groupByDay(groupByTask(shown)), [shown]);
+  const searching = query.trim() !== "";
+  // Tasks start closed; a search opens them to show what matched, and a running one stays open.
+  const isOpen = (task: ActivityTask) => (searching || task.active) !== toggled.has(task.runId);
+  const toggle = (runId: string) =>
+    setToggled((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(runId)) next.add(runId);
+      return next;
+    });
 
   const undo = async (id: string) => {
     setBusy(id);
@@ -59,7 +72,22 @@ export function ActivityView() {
           {t("activity.intro")}
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-1.5">
+        <label className="mt-4 flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+          <Search size={14} className="shrink-0 text-faint" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setToggled(new Set());
+            }}
+            placeholder={t("activity.search")}
+            aria-label={t("activity.search")}
+            className="flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-faint"
+          />
+        </label>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
             <button
               key={f.key}
@@ -80,14 +108,14 @@ export function ActivityView() {
         {error && <p className="mt-3 text-[12.5px] text-danger">{error}</p>}
 
         {shown.length === 0 ? (
-          <p className="mt-8 text-[13px] text-faint">{t("activity.empty")}</p>
+          <p className="mt-8 text-[13px] text-faint">{searching ? t("activity.noResults") : t("activity.empty")}</p>
         ) : (
-          days.map(([day, entries]) => (
+          days.map(([day, tasks]) => (
             <section key={day} className="mt-6">
-              <h2 className="sticky top-0 bg-bg py-1 text-[11px] font-medium uppercase tracking-wide text-faint">{day}</h2>
+              <h2 className="sticky top-0 z-10 bg-bg py-1 text-[11px] font-medium uppercase tracking-wide text-faint">{day}</h2>
               <ul className="mt-1 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
-                {entries.map((e) => (
-                  <Row key={e.id} entry={e} busy={busy === e.id} onUndo={() => void undo(e.id)} />
+                {tasks.map((task) => (
+                  <TaskGroup key={task.runId} task={task} open={isOpen(task)} onToggle={() => toggle(task.runId)} busy={busy} onUndo={(id) => void undo(id)} />
                 ))}
               </ul>
             </section>
@@ -95,6 +123,39 @@ export function ActivityView() {
         )}
       </div>
     </div>
+  );
+}
+
+function TaskGroup({ task, open, onToggle, busy, onUndo }: { task: ActivityTask; open: boolean; onToggle: () => void; busy: string | null; onUndo: (id: string) => void }) {
+  const since = clock(task.since);
+  const until = clock(task.at);
+  return (
+    <li>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={onToggle}
+        className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-surface-2"
+      >
+        <ChevronRight size={13} className={`shrink-0 text-faint transition-transform ${open ? "rotate-90" : ""}`} />
+        <span className="min-w-[11ch] shrink-0 font-mono text-[11px] tabular-nums text-faint">{since === until ? until : `${since}–${until}`}</span>
+        <span className="min-w-0 flex-1 truncate text-[13px] text-fg">{task.goal || t("activity.noGoal")}</span>
+        {task.problems > 0 && <TriangleAlert size={13} className="shrink-0 text-danger" aria-label={t("activity.problems", { count: task.problems })} />}
+        {task.undoable > 0 && (
+          <span className="flex shrink-0 items-center gap-1 rounded-full border border-line px-2 py-0.5 text-[11px] text-muted">
+            <CornerUpLeft size={10} /> {t("activity.undoable", { count: task.undoable })}
+          </span>
+        )}
+        <span className="shrink-0 text-[11.5px] text-faint">{t("activity.actions", { count: task.entries.length })}</span>
+      </button>
+      {open && (
+        <ul className="divide-y divide-line border-t border-line bg-bg/40 pl-5">
+          {task.entries.map((e) => (
+            <Row key={e.id} entry={e} busy={busy === e.id} onUndo={() => onUndo(e.id)} />
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }
 
@@ -111,7 +172,6 @@ function Row({ entry, busy, onUndo }: { entry: ActivityEntry; busy: boolean; onU
         <div className="truncate text-[11.5px] text-faint">
           {actionClassLabel(entry.actionClass)}
           {entry.durationMs !== undefined && ` · ${formatMs(entry.durationMs)}`}
-          {entry.goal && ` · ${entry.goal}`}
         </div>
       </div>
       {entry.undone ? (
