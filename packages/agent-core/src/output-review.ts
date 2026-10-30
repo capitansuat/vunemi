@@ -3,7 +3,10 @@ import type {ChatModel,ChatResult,ChatMessage} from './provider.js';
 /** Preserve shared constraints and clauses naming this file. Ambiguous clauses
  * mentioning multiple files stay intact; the verifier must still scope its verdict. */
 function scopedRequirements(text:string,fileName:string):string {
- const numbered=text.split(/(?:^|\s)\d+[).]\s+/u);
+ // A list only when its markers count 1, 2, 3…: "Mart 150. Grafik" is a value ending a sentence.
+ const markers=[...text.matchAll(/(?:^|\s)(\d+)[).]\s+/gu)].map(m=>Number(m[1]));
+ const list=markers.length>1&&markers.every((n,i)=>n===i+1);
+ const numbered=list?text.split(/(?:^|\s)\d+[).]\s+/u):[text];
  const clauses=numbered.length>1?numbered:text.split(/(?<=[.!?;])\s+|\n+/u);
  const selected=clauses.filter(clause=>clause.includes(fileName)||!/[\p{L}\p{N}_.-]+\.(?:docx|xlsx|pptx|pdf|csv|md|txt|html|json|svg)\b/iu.test(clause));
  return selected.some(clause=>clause.includes(fileName))?selected.join(' ').trim():text;
