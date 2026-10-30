@@ -1245,6 +1245,8 @@ export const messages: Catalogue = {
     backgroundOnlyBlocked: "이 요청에는 백그라운드 제어가 필요합니다. 포커스를 바꿀 수 있는 대체 작업을 차단했으며 입력을 보내지 않았습니다.",
     backgroundAttemptStopped: "백그라운드 제어를 안전하게 완료하지 못했습니다. 작업을 반복하거나 전경으로 전환하지 않았습니다. 계속하기 전에 대상을 확인하세요.",
     rejectionStopped: "작업이 거부되었습니다. 진행을 중단했습니다.",
+    grantUncertain: "{tool}의 결과가 불확실합니다. 다시 시도하지 않았고 작업을 껐습니다. 확인한 후 설정 › 예약된 작업에서 다시 켜십시오.",
+    grantDid: "여기까지 작동한 도구: {tools}.",
     deliverySavedOne: "파일 1개를 저장했습니다.",
     deliverySavedMany: "파일 {count}개를 저장했습니다.",
     deliveryVerifiedOne: "파일 1개를 저장하고 내용을 확인했습니다.",
@@ -1449,6 +1451,9 @@ export const messages: Catalogue = {
       shell: "이것은 터미널이거나 코드를 실행하는 앱입니다. Vunemi는 여기에 입력하지 않습니다. 셸을 조작하면 셸을 닫아 두기로 한 결정을 키 한 번으로 뒤집게 되기 때문입니다. 이 일은 사용자가 직접 합니다.",
       secrets: "이 앱은 암호를 보관합니다. Vunemi는 암호를 읽지도 입력하지도 않습니다. 필요하면 사용자가 직접 입력합니다.",
       control: "이 앱은 Vunemi 자신의 제어 화면이거나 시스템 설정입니다. 에이전트는 자신의 권한이나 승인을 조작할 수 없습니다.",
+      notScheduled: "{app}은(는) 예약된 작업에 맡길 수 없습니다. 아무도 없을 때 그곳을 클릭하면 무언가를 보내거나 돈을 쓸 수 있습니다.",
+      notInstalled: "“{app}”(이)라는 설치된 앱을 찾지 못했습니다.",
+      whichOne: "“{app}”에 해당하는 앱이 여러 개입니다: {apps}. 전체 이름으로 말씀해 주십시오.",
     },
   },
 
@@ -1729,6 +1734,9 @@ export const messages: Catalogue = {
     unit: { hours: { other: "{count}시간" }, days: { other: "{count}일" }, weeks: { other: "{count}주" } },
   },
   automations: {
+    allowed: { heading: "설정할 때 허용한 내용", apps: "이 앱에서는 묻지 않고 클릭하고 입력합니다: {apps}. Vunemi는 그곳의 버튼이 무엇을 하는지 확인할 수 없으므로 신뢰하는 앱만 선택하십시오.", files: "이 파일과 폴더는 묻지 않고 변경합니다: {files}.", revoke: "{name} 허용 취소" },
+    stop: { off: "설정 › 연결 › 데스크탑의 제어가 꺼져 있습니다. 이 작업에는 켜져 있어야 합니다.", permission: "Vunemi에 손쉬운 사용 권한이 없어 작업이 권한을 요청하지 않고 멈췄습니다. 시스템 설정 › 개인정보 보호 및 보안에서 허용할 수 있습니다.", busy: "이 단계에는 마우스와 키보드가 필요하지만 {minutes}분 동안 Mac이 유휴 및 잠금 해제 상태가 아니었습니다. 작업이 여기서 멈췄습니다." },
+    stopped: "“{title}”이(가) 멈췄습니다",
     badge: { task: "Vunemi가 실행", shortcut: "단축어 · Siri로도 실행됩니다" },
     shortcut: {
       when: "직접 실행할 때: 단축어 앱, Siri 또는 메뉴 막대에서",

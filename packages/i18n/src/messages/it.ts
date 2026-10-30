@@ -1245,6 +1245,8 @@ export const messages: Catalogue = {
     backgroundOnlyBlocked: "Questa richiesta richiede il controllo in background. È stata bloccata un’alternativa che potrebbe cambiare il focus; nessun input è stato inviato.",
     backgroundAttemptStopped: "Il controllo in background non si è concluso in sicurezza. Nessuna ripetizione o passaggio in primo piano è stato eseguito. Controlla la destinazione prima di continuare.",
     rejectionStopped: "L’azione è stata rifiutata. L’attività è stata interrotta.",
+    grantUncertain: "Il risultato di {tool} è incerto. Non è stato ripetuto e l’attività è stata disattivata; controlla, poi riattivala in Impostazioni › Attività pianificate.",
+    grantDid: "Strumenti che hanno funzionato fin qui: {tools}.",
     deliverySavedOne: "1 file salvato.",
     deliverySavedMany: "{count} file salvati.",
     deliveryVerifiedOne: "1 file salvato e contenuto controllato.",
@@ -1449,6 +1451,9 @@ export const messages: Catalogue = {
       shell: "Questo è un terminale o un’app che esegue codice. Vunemi qui non scrive: pilotare una shell annullerebbe con un solo tasto la decisione di tenere chiusa la shell. L’utente lo fa da sé.",
       secrets: "Questa app conserva password. Vunemi non legge né scrive password; se serve, l’utente le inserisce da sé.",
       control: "Questa app è la superficie di controllo di Vunemi stesso o le impostazioni di sistema. L’agente non può pilotare i propri permessi o le proprie approvazioni.",
+      notScheduled: "{app} non può essere data a un’attività pianificata: senza nessuno davanti, un clic lì potrebbe inviare qualcosa o spendere denaro.",
+      notInstalled: "Non è stata trovata nessuna app installata chiamata «{app}».",
+      whichOne: "«{app}» corrisponde a più app: {apps}. Di’ quale con il nome completo.",
     },
   },
 
@@ -1729,6 +1734,9 @@ export const messages: Catalogue = {
     unit: { hours: { one: "{count} ora", other: "{count} ore" }, days: { one: "{count} giorno", other: "{count} giorni" }, weeks: { one: "{count} settimana", other: "{count} settimane" } },
   },
   automations: {
+    allowed: { heading: "Cosa hai consentito durante la configurazione", apps: "In queste app fa clic e scrive senza chiedere: {apps}. Vunemi non può controllare cosa fa un pulsante lì; scegli solo app di cui ti fidi.", files: "Modifica questi file e cartelle senza chiedere: {files}.", revoke: "Revoca {name}" },
+    stop: { off: "Controllo è disattivato in Impostazioni › Connessioni › Scrivania; per questo deve essere attivo.", permission: "Vunemi non ha il permesso di Accessibilità; l’attività si è fermata senza chiederlo. Puoi darlo in Impostazioni di Sistema › Privacy e sicurezza.", busy: "Questo passaggio richiede mouse e tastiera, ma il Mac non è stato inattivo e sbloccato per {minutes} minuti. L’attività si è fermata qui." },
+    stopped: "«{title}» si è fermata",
     badge: { task: "Lo esegue Vunemi", shortcut: "Comando rapido · funziona anche con Siri" },
     shortcut: {
       when: "Quando lo avvii: da Comandi Rapidi, con Siri o dalla barra dei menu",

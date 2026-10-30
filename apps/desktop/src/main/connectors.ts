@@ -30,7 +30,7 @@ import { vaultMcpIO } from "./remote-mcp.js";
 import { renderOfficePdf } from "./office-pdf.js";
 import { travelConnectors } from "./travel.js";
 import type { FetchPage } from "./flights/search.js";
-import { AUTOMATION_INSTRUCTIONS, createAutomationTools, type AutomationSetup, type AutomationStore } from "./automations.js";
+import { AUTOMATION_INSTRUCTIONS, createAutomationTools, type AutomationSetup, type AutomationStore, type GrantLookup } from "./automations.js";
 import { createLibraryTools, LIBRARY_INSTRUCTIONS, type LibraryToolsOptions } from "./library/tools.js";
 import { authorizeOutlook, OUTLOOK_TOKEN_TARGET, outlookAddress } from "./outlook-oauth.js";
 import { authorizeGoogle, GOOGLE_TOKEN_TARGET, googleAddress } from "./google-oauth.js";
@@ -68,6 +68,10 @@ export interface CatalogueOptions {
   automations?: AutomationStore;
   /** With the automation library on: what setting a task up from chat is checked with. */
   automationSetup?: () => AutomationSetup;
+  /** How a task's set-up card turns app names and paths into what it stores. */
+  automationGrants?: () => GrantLookup;
+  /** During a scheduled task set up for some apps, their bundle ids. */
+  scheduledApps?: () => ReadonlySet<string> | null;
   /** With the automation library on: builds a shortcut from the block menu and has Shortcuts offer it to the user. */
   shortcutBuild?: (draft: ShortcutDraft, signal: AbortSignal) => Promise<ShortcutBuilt>;
   /** Earlier conversations and meetings; without it the connection is not offered. */
@@ -206,7 +210,7 @@ export function shortcutsConnector(opts: { osascript?: string; build?: (draft: S
 }
 
 /** Tasks the user asked to run later; setting one up is a card every time. */
-function automationsConnector(store: AutomationStore, setup?: () => AutomationSetup): Connector {
+function automationsConnector(store: AutomationStore, setup?: () => AutomationSetup, grants?: () => GrantLookup): Connector {
   return {
     id: "automations",
     get label() { return t("connectors.automations.label"); },
@@ -219,7 +223,7 @@ function automationsConnector(store: AutomationStore, setup?: () => AutomationSe
     origin: "builtin",
     instructions: AUTOMATION_INSTRUCTIONS,
     status: async () => ({ state: "ready" }),
-    tools: () => createAutomationTools(store, Date.now, setup),
+    tools: () => createAutomationTools(store, Date.now, setup, grants),
   };
 }
 
@@ -350,7 +354,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: DESKTOP_INSTRUCTIONS,
       status: () => macPermission("accessibility"),
-      tools: () => createDesktopTools({ helper: opts.helper, shotDir: opts.shotDir, onScreenPermissionNeeded: opts.openScreenRecordingSettings, moveGuard }),
+      tools: () => createDesktopTools({ helper: opts.helper, shotDir: opts.shotDir, onScreenPermissionNeeded: opts.openScreenRecordingSettings, moveGuard, ...(opts.scheduledApps && { onlyApps: opts.scheduledApps }) }),
       connect: async () => {
         await opts.helper.permissions(true); // shows the system prompt once
         return macPermission("accessibility");
@@ -361,7 +365,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
 
     shortcutsConnector(opts.shortcutBuild ? { build: opts.shortcutBuild } : {}),
 
-    ...(opts.automations ? [automationsConnector(opts.automations, opts.automationSetup)] : []),
+    ...(opts.automations ? [automationsConnector(opts.automations, opts.automationSetup, opts.automationGrants)] : []),
     ...(opts.library ? [historyConnector(opts.library)] : []),
 
     {

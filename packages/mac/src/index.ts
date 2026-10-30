@@ -6,3 +6,4 @@ export * from './native-recipe-types.js';
 export {NativeRecipeDriver} from './native-recipe.js';
 
 export {withJournalAdmission,JournalAdmissionError} from './journal-coordinator.js';
+export * from "./scheduled-apps.js";

@@ -68,6 +68,9 @@ export interface AutomationView {
   task: string;
   when: string;
   enabled: boolean;
+  /** What the user allowed it at set-up, and can take back here. */
+  apps?: { name: string; bundleId: string }[];
+  files?: string[];
   next?: number;
   lastRunAt?: number;
   lastStatus?: "done" | "stopped" | "error" | "missed" | "noModel";
@@ -751,6 +754,8 @@ export interface VunemiApi {
   deleteAutomation(id: string): Promise<AutomationView[]>;
   /** False when it can't start now (a task is running, Vunemi is locked, no model yet). */
   runAutomation(id: string): Promise<boolean>;
+  /** Takes back one app or file a task was allowed at set-up. */
+  revokeAutomation(id: string, what: { bundleId?: string; file?: string }): Promise<AutomationView[]>;
   automationLibrary(): Promise<AutomationLibraryView>;
   /** Sets up one of the library's tasks, at the time and on the weekdays the user chose. */
   installRecipe(id: string, when?: { time?: string; days?: number[] }): Promise<AutomationView[]>;
@@ -984,6 +989,7 @@ export const CH = {
   automationsSuggest: "automations:suggest",
   automationsDelete: "automations:delete",
   automationsRun: "automations:run",
+  automationsRevoke: "automations:revoke",
   automationsLibrary: "automations:library",
   automationsInstall: "automations:install",
   automationsShortcut: "automations:shortcut",

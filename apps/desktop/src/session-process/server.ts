@@ -19,7 +19,7 @@ export function serveSessionCoordinator(port:SessionWorkerPort):()=>void{
  const modelFlags=new Map<string,boolean>();
  const permissions=new TaskPermissionStore(()=>{if(session)sendState();});
  const post=(message:Record<string,unknown>)=>{if(!closed)port.postMessage({...message,epoch,sessionId});};
- const state=():SessionState=>({running:session?.running??false,paused:session?.paused??false,queued:session?.queued??[],lastAnswer:session?.lastAnswer??'',words:session?.userWords()??[],grants:[...grants],permissions:permissions.snapshot(),permissionEpoch:config?.permissionEpoch});
+ const state=():SessionState=>({running:session?.running??false,paused:session?.paused??false,queued:session?.queued??[],lastAnswer:session?.lastAnswer??'',lastDetail:session?.lastDetail??'',words:session?.userWords()??[],grants:[...grants],permissions:permissions.snapshot(),permissionEpoch:config?.permissionEpoch});
  const sendState=()=>post({kind:'state',state:state()});
  const rpc=(op:SessionService,args:unknown[]=[],signal?:AbortSignal,stream?:(v:any)=>void):Promise<any>=>{
   if(closed||signal?.aborted)return Promise.reject(Error('Session service stopped.'));const id=nextId++;
@@ -69,6 +69,8 @@ export function serveSessionCoordinator(port:SessionWorkerPort):()=>void{
    if(m.method==='state')return state();
    if(m.method==='load'||m.method==='reset'){workEvents.length=0;grants.clear();}
    if(m.method==='start'&&m.args[3]?.nativeToken){const lane=m.args[3];return session!.startNativeRecipe({runId:lane.runId,goal:m.args[0],execute:(signal,emit)=>rpc('native.execute',[lane.nativeToken],signal,emit)});}
+   // What a scheduled task was allowed is decided in the main process, call by call; only the tool names come here.
+   if(m.method==='start'&&m.args[3]?.standing){const {standing,...run}=m.args[3],covered=new Set<string>(standing.covered);return await session!.start(m.args[0],m.args[1],m.args[2],{...run,standingGrant:{covers:tool=>covered.has(tool),before:(tool,args,signal)=>rpc('grant.before',[tool,args],signal),allows:(tool,args)=>rpc('grant.allows',[tool,args]),onUncertain:()=>void rpc('grant.uncertain').catch(()=>{})}});}
    const fn=(session as any)[m.method];if(typeof fn!=='function')throw Error('Unknown session command.');return await fn.apply(session,m.args);
   })().then(value=>post({kind:'result',id:m.id,ok:true,value,state:state()}),error=>post({kind:'result',id:m.id,ok:false,error:sessionError(error),state:state()}));
  });

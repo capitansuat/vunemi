@@ -28,7 +28,7 @@ export interface AppRef {
 }
 
 /** Matched on bundle id prefix, so "com.apple.Terminal" covers its variants. */
-const BLOCKED_BUNDLES: readonly string[] = [
+export const BLOCKED_BUNDLES: readonly string[] = [
   // Terminals and shells
   "com.apple.Terminal",
   "com.googlecode.iterm2",
@@ -135,6 +135,32 @@ function reasonFor(name: string, bundle: string): string {
     return t("mac.policy.secrets");
   }
   return t("mac.policy.control");
+}
+
+/**
+ * Apps a scheduled task can't be allowed to act in: nobody is watching, and a
+ * click in them can send something or spend money. Matched like the list above.
+ */
+const NOT_SCHEDULED_BUNDLES: readonly string[] = [
+  // Browsers
+  "com.apple.Safari", "com.google.Chrome", "org.chromium", "org.mozilla", "com.microsoft.edgemac", "company.thebrowser", "com.brave.Browser", "com.operasoftware", "com.vivaldi", "org.torproject", "com.kagi",
+  // Mail and calendars, whose invitations are mail
+  "com.apple.mail", "com.microsoft.Outlook", "com.readdle.smartemail", "com.superhuman", "com.freron.MailMate", "com.apple.iCal",
+  // Messages and calls
+  "com.apple.MobileSMS", "com.apple.iChat", "com.apple.FaceTime", "net.whatsapp", "ru.keepcoder.Telegram", "org.telegram", "com.tinyspeck.slackmacgap", "com.hnc.Discord", "com.microsoft.teams", "us.zoom", "org.whispersystems", "com.facebook.archon", "com.skype",
+  // Money
+  "com.apple.stocks", "com.paypal", "com.wise", "com.revolut",
+];
+const NOT_SCHEDULED_CATEGORIES: readonly string[] = ["public.app-category.finance", "public.app-category.social-networking"];
+
+/** Why a scheduled task can't act in this app, or null if it can. `category` is its LSApplicationCategoryType. */
+export function notScheduledReason(app: AppRef & { category?: string }): string | null {
+  const blocked = blockedReason(app);
+  if (blocked) return blocked;
+  const bundle = (app.bundleId ?? "").toLowerCase();
+  if (NOT_SCHEDULED_BUNDLES.some((b) => bundle.startsWith(b.toLowerCase()))) return t("mac.policy.notScheduled", { app: app.name });
+  if (app.category && NOT_SCHEDULED_CATEGORIES.includes(app.category)) return t("mac.policy.notScheduled", { app: app.name });
+  return null;
 }
 
 /** The visible list, for the model's instructions. */

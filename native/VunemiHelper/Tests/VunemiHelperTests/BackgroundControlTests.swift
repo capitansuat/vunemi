@@ -24,7 +24,21 @@ final class BackgroundControlTests: XCTestCase {
         XCTAssertTrue(backgroundCapability(bundle: "com.apple.TextEdit", role: "AXTextArea", action: "set-value"))
         XCTAssertFalse(backgroundCapability(bundle: "com.apple.calculator", role: "AXButton", action: "key"))
         XCTAssertFalse(backgroundCapability(bundle: "com.apple.TextEdit", role: "AXMenuItem", action: "press"))
-        XCTAssertFalse(backgroundCapability(bundle: "com.example.unknown", role: "AXButton", action: "press"))
+        XCTAssertFalse(backgroundCapability(bundle: "", role: "AXButton", action: "press"))
+    }
+    func testAnyOtherAppGetsPlainButtonsAndTextOnly() {
+        XCTAssertTrue(backgroundCapability(bundle: "com.apple.Notes", role: "AXButton", action: "press"))
+        XCTAssertTrue(backgroundCapability(bundle: "com.apple.Notes", role: "AXTextArea", action: "set-value"))
+        XCTAssertTrue(backgroundCapability(bundle: "com.example.unknown", role: "AXTextField", action: "set-value"))
+        XCTAssertFalse(backgroundCapability(bundle: "com.example.unknown", role: "AXButton", action: "set-value"))
+        XCTAssertFalse(backgroundCapability(bundle: "com.example.unknown", role: "AXTextField", action: "press"))
+        XCTAssertFalse(backgroundCapability(bundle: "com.example.unknown", role: "AXTextField", action: "set-value", subrole: "AXSecureTextField"))
+    }
+    func testOffLimitAppsGetNothing() {
+        for bundle in ["com.apple.Terminal", "com.apple.Passwords", "com.vunemi.app", "com.apple.systempreferences", "com.1password.1password"] {
+            XCTAssertFalse(backgroundCapability(bundle: bundle, role: "AXButton", action: "press"), bundle)
+            XCTAssertFalse(backgroundCapability(bundle: bundle, role: "AXTextArea", action: "set-value"), bundle)
+        }
     }
     func testWindowManagementButtonsAreNotBackgroundArithmetic() {
         XCTAssertFalse(backgroundCapability(bundle: "com.apple.calculator", role: "AXButton", action: "press", subrole: "AXCloseButton"))

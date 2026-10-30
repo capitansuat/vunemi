@@ -111,6 +111,12 @@ export class Helper {
     return apps;
   }
 
+  /** Seconds since the user last touched the mouse or keyboard. */
+  async inputIdle(): Promise<number> {
+    const { seconds } = (await this.call("input_idle")) as { seconds: number };
+    return seconds;
+  }
+
   blockTarget(owner:string,target:LeaseTarget):void{this.leases.markUnknown(owner,target);}
 
   async call(op:string,args:Record<string,unknown>={},opts:HelperCallOptions={}):Promise<unknown> {

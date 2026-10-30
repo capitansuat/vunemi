@@ -1245,6 +1245,8 @@ export const messages: Catalogue = {
     backgroundOnlyBlocked: "此请求需要后台控制。已阻止可能改变焦点的替代操作；未发送输入。",
     backgroundAttemptStopped: "后台控制未能安全完成。未重复操作或切换到前台。继续前请检查目标。",
     rejectionStopped: "操作已被拒绝。任务已停止。",
+    grantUncertain: "{tool} 的结果不确定。没有重试，任务已关闭；请检查后到“设置 › 计划任务”重新打开。",
+    grantDid: "到此为止正常工作的工具：{tools}。",
     deliverySavedOne: "已保存1个文件。",
     deliverySavedMany: "已保存{count}个文件。",
     deliveryVerifiedOne: "已保存1个文件并检查内容。",
@@ -1449,6 +1451,9 @@ export const messages: Catalogue = {
       shell: "这是终端或运行代码的应用。Vunemi 不会在这里输入：操控 shell 只需一次按键，就会推翻让 shell 保持关闭的决定。这件事由用户自己来做。",
       secrets: "这个应用保存着密码。Vunemi 不读取也不输入密码；如有需要，由用户自己输入。",
       control: "这个应用是 Vunemi 自身的控制界面或系统设置。代理不能操控自己的权限或批准。",
+      notScheduled: "{app} 不能交给定时任务：无人在场时，在其中的一次点击可能会发送内容或花钱。",
+      notInstalled: "找不到名为“{app}”的已安装应用。",
+      whichOne: "“{app}”对应多个应用：{apps}。请说出完整名称。",
     },
   },
 
@@ -1729,6 +1734,9 @@ export const messages: Catalogue = {
     unit: { hours: { other: "{count} 小时" }, days: { other: "{count} 天" }, weeks: { other: "{count} 周" } },
   },
   automations: {
+    allowed: { heading: "设置时你允许的内容", apps: "在这些应用中，它会不经询问地点击和输入：{apps}。Vunemi 无法核实其中某个按钮的作用，因此请只选择你信任的应用。", files: "它会不经询问地更改这些文件和文件夹：{files}。", revoke: "撤销 {name}" },
+    stop: { off: "“设置 › 连接 › 桌面”中的“控制”已关闭；需要打开才能这样做。", permission: "Vunemi 没有辅助功能权限；任务未请求权限便已停止。你可以在“系统设置 › 隐私与安全性”中授予。", busy: "这一步需要鼠标和键盘，但 Mac 在 {minutes} 分钟内都没有处于空闲且未锁定的状态。任务在此停止。" },
+    stopped: "“{title}”已停止",
     badge: { task: "由 Vunemi 运行", shortcut: "快捷指令 · 也可通过 Siri 运行" },
     shortcut: {
       when: "由你运行时：从“快捷指令”、通过 Siri 或从菜单栏",

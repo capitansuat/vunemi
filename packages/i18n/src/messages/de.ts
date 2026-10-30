@@ -1245,6 +1245,8 @@ export const messages: Catalogue = {
     backgroundOnlyBlocked: "Diese Anfrage erfordert Hintergrundsteuerung. Eine Alternative, die den Fokus ändern könnte, wurde blockiert; es wurde keine Eingabe gesendet.",
     backgroundAttemptStopped: "Die Hintergrundsteuerung wurde nicht sicher abgeschlossen. Es gab keine Wiederholung und keinen Wechsel in den Vordergrund. Prüfen Sie das Ziel, bevor Sie fortfahren.",
     rejectionStopped: "Die Aktion wurde abgelehnt. Die Aufgabe wurde gestoppt.",
+    grantUncertain: "Das Ergebnis von {tool} ist unsicher. Es wurde nicht wiederholt und die Aufgabe wurde ausgeschaltet; prüfe es und schalte die Aufgabe dann unter Einstellungen › Geplante Aufgaben wieder ein.",
+    grantDid: "Bis hierhin funktionierten diese Werkzeuge: {tools}.",
     deliverySavedOne: "1 Datei gespeichert.",
     deliverySavedMany: "{count} Dateien gespeichert.",
     deliveryVerifiedOne: "1 Datei gespeichert und ihr Inhalt geprüft.",
@@ -1449,6 +1451,9 @@ export const messages: Catalogue = {
       shell: "Das ist ein Terminal oder eine App, die Code ausführt. Vunemi tippt hier nicht: Eine Shell zu steuern würde mit einem Tastendruck die Entscheidung aufheben, die Shell geschlossen zu halten. Das erledigt der Benutzer selbst.",
       secrets: "Diese App speichert Passwörter. Vunemi liest und tippt keine Passwörter; bei Bedarf gibt der Benutzer sie selbst ein.",
       control: "Diese App ist Vunemis eigene Steuerfläche oder die Systemeinstellungen. Der Agent kann seine eigenen Berechtigungen oder Freigaben nicht steuern.",
+      notScheduled: "{app} kann keiner geplanten Aufgabe gegeben werden: Wenn niemand dabei ist, könnte ein Klick dort etwas senden oder Geld ausgeben.",
+      notInstalled: "Es wurde keine installierte App namens „{app}“ gefunden.",
+      whichOne: "„{app}“ passt auf mehrere Apps: {apps}. Sag mit dem vollständigen Namen, welche gemeint ist.",
     },
   },
 
@@ -1729,6 +1734,9 @@ export const messages: Catalogue = {
     unit: { hours: { one: "{count} Stunde", other: "{count} Stunden" }, days: { one: "{count} Tag", other: "{count} Tage" }, weeks: { one: "{count} Woche", other: "{count} Wochen" } },
   },
   automations: {
+    allowed: { heading: "Was du beim Einrichten erlaubt hast", apps: "In diesen Apps klickt und tippt sie, ohne zu fragen: {apps}. Vunemi kann nicht prüfen, was eine Taste dort tut; wähle also nur Apps, denen du vertraust.", files: "Diese Dateien und Ordner ändert sie, ohne zu fragen: {files}.", revoke: "{name} zurücknehmen" },
+    stop: { off: "Steuerung ist unter Einstellungen › Verbindungen › Schreibtisch aus; dafür muss sie an sein.", permission: "Vunemi hat die Berechtigung „Bedienungshilfen“ nicht; die Aufgabe hat angehalten, ohne danach zu fragen. Du kannst sie unter Systemeinstellungen › Datenschutz & Sicherheit erteilen.", busy: "Dieser Schritt braucht Maus und Tastatur, aber der Mac war {minutes} Minuten lang nicht unbenutzt und entsperrt. Die Aufgabe hat hier angehalten." },
+    stopped: "„{title}“ wurde angehalten",
     badge: { task: "Vunemi führt es aus", shortcut: "Kurzbefehl · geht auch mit Siri" },
     shortcut: {
       when: "Wenn du ihn startest: in Kurzbefehle, mit Siri oder über die Menüleiste",

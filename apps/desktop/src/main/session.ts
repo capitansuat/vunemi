@@ -1,5 +1,5 @@
 import {copyQuotedSource,type QuotedSource} from '@vunemi/agent-core';
-import type {TaskPermissionStore,TaskPermissionEpoch,TaskPermissionOfferView,TaskPermissionRevokeRequest,TaskPermissionsSnapshot} from "@vunemi/agent-core";
+import type {StandingGrant,TaskPermissionStore,TaskPermissionEpoch,TaskPermissionOfferView,TaskPermissionRevokeRequest,TaskPermissionsSnapshot} from "@vunemi/agent-core";
 import {randomUUID} from 'node:crypto';
 /**
  * One conversation with the agent: history, approvals granted "always", and
@@ -95,6 +95,8 @@ export interface SessionOptions {
   prepareModel?: (spec: string) => Promise<PreparedModel | null | void>;
   /** The Sentinel: the only thing that may authorise an action. */
   authorize: RunOptions["authorize"];
+  /** What the scheduled task now running was allowed at set-up; the worker asks it call by call. */
+  standingGrant?: () => StandingGrant | null;
   /** A switched-off tool the user may switch back on from its card (see RunOptions.switchedOff). */
   switchedOff?: RunOptions["switchedOff"];
   switchOn?: RunOptions["switchOn"];
@@ -253,6 +255,9 @@ export class AgentSession {
     return this.active !== null;
   }
 
+  /** Why the last run ended as it did, in the words it finished with. */
+  lastDetail = "";
+
   /** What the model last said to the user, once a run has finished. */
   get lastAnswer(): string {
     const last = this.history.findLast((m) => m.role === "assistant" && m.content.trim().length > 0);
@@ -369,7 +374,7 @@ export class AgentSession {
     goal: string,
     modelSpec: string,
     attachments: string[] = [],
-    run: { quotedSource?:QuotedSource; resumeTask?: TaskRecord; unattended?: boolean; askBeyondRead?: boolean; waitLimitMs?: number; onlySources?: readonly string[]; mentions?: readonly MentionRef[] } = {},
+    run: { quotedSource?:QuotedSource; resumeTask?: TaskRecord; unattended?: boolean; standingGrant?: StandingGrant; askBeyondRead?: boolean; waitLimitMs?: number; onlySources?: readonly string[]; mentions?: readonly MentionRef[] } = {},
   ): Promise<RunStatus | null> {
     if (this.active) throw new Error("A run is already in progress.");
     const quotedSource=this.validateQuote(run.quotedSource);
@@ -471,6 +476,7 @@ export class AgentSession {
         whenUnpaused: () => this.pauseGate?.promise ?? Promise.resolve(),
         ...(this.opts.onUndoOffered && { onUndoOffered: this.opts.onUndoOffered }),
         ...(run.unattended && { unattended: true }),
+        ...(run.standingGrant && { standingGrant: run.standingGrant }),
         ...(run.onlySources && { onlySources: run.onlySources }),
         ...(run.askBeyondRead && { askBeyondRead: true }),
         ...(run.resumeTask && { resumeTask: run.resumeTask }),
@@ -485,6 +491,7 @@ export class AgentSession {
           }),
       });
       status = result.status;
+      this.lastDetail = result.detail;
       // A finished turn is kept as it is. A stopped one is kept sealed: the
       // user who interrupts is usually about to say what they wanted
       // instead, and that correction is worth far more with the context of

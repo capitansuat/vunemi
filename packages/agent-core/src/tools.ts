@@ -102,6 +102,8 @@ export interface ToolDef<Args = Record<string, unknown>> {
   description: string;
   parameters: JsonSchema;
   actionClass: ActionClass;
+  /** May bring an app forward or use the mouse and keyboard: a scheduled run gets it only through a StandingGrant. */
+  takesForeground?: true;
   /**
    * The class of this particular call, when it depends on the arguments
    * (e.g. an app command that may be "get" or "delete"). Falls back to

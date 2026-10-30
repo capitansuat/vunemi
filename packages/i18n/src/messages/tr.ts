@@ -1249,6 +1249,8 @@ export const messages = {
     backgroundOnlyBlocked: "Bu istek arka plan denetimi gerektiriyor. Odağı değiştirebilecek alternatif işlem engellendi; giriş gönderilmedi.",
     backgroundAttemptStopped: "Arka plan işlemi güvenle tamamlanamadı. İşlem tekrarlanmadı ve ön plana geçilmedi. Devam etmeden hedefi kontrol edin.",
     rejectionStopped: "İşlem reddedildi. Görev durduruldu.",
+    grantUncertain: "{tool} adımının sonucu belirsiz. Tekrar denenmedi ve görev kapatıldı; kontrol edip Ayarlar › Zamanlanmış görevler'den yeniden açabilirsin.",
+    grantDid: "Bu noktaya kadar çalışan araçlar: {tools}.",
     deliverySavedOne: "1 dosya kaydedildi.",
     deliverySavedMany: "{count} dosya kaydedildi.",
     deliveryVerifiedOne: "1 dosya kaydedildi ve içeriği kontrol edildi.",
@@ -1453,6 +1455,9 @@ export const messages = {
       shell: "Bu bir terminal veya kod çalıştıran bir uygulama. Vunemi buraya yazmaz: bir kabuğu sürmek, kabuğu kapalı tutma kararını tek tuşla geri alırdı. Bu işi kullanıcı kendi yapar.",
       secrets: "Bu uygulama parola saklıyor. Vunemi parola okumaz ve yazmaz; gerekiyorsa kullanıcı kendi girer.",
       control: "Bu uygulama Vunemi'nin kendi kontrol yüzeyi ya da sistem ayarları. Ajan kendi izinlerini veya onaylarını süremez.",
+      notScheduled: "{app} zamanlanmış göreve verilemez: başında kimse yokken oradaki bir tıklama ileti gönderebilir veya para harcayabilir.",
+      notInstalled: "“{app}” adında kurulu bir uygulama bulunamadı.",
+      whichOne: "“{app}” birden çok uygulamaya uyuyor: {apps}. Hangisi olduğunu tam adıyla söyle.",
     },
   },
 
@@ -1735,6 +1740,9 @@ export const messages = {
     unit: { hours: { other: "{count} saat" }, days: { other: "{count} gün" }, weeks: { other: "{count} hafta" } },
   },
   automations: {
+    allowed: { heading: "Kurarken izin verdiklerin", apps: "Bu uygulamalarda sormadan tıklar ve yazar: {apps}. Oradaki bir düğmenin ne yaptığını Vunemi denetleyemez; yalnız güvendiğin uygulamaları seç.", files: "Bu dosya ve klasörleri sormadan değiştirir: {files}.", revoke: "{name} iznini kaldır" },
+    stop: { off: "Ayarlar › Bağlantılar › Masaüstü'nden Kontrol kapalı; görevin çalışması için açman gerekiyor.", permission: "Vunemi'nin Erişilebilirlik izni yok; görev izin istemeden durdu. İzni Sistem Ayarları › Gizlilik ve Güvenlik'ten verebilirsin.", busy: "Bu adım fare ve klavye gerektiriyor, ama {minutes} dakika boyunca Mac boşta ve kilitsiz olmadı. Görev burada durdu." },
+    stopped: "“{title}” durdu",
     badge: { task: "Vunemi çalıştırır", shortcut: "Kısayol · Siri ile de çalışır" },
     shortcut: {
       when: "Sen çalıştırınca: Kısayollar'dan, Siri'yle ya da menü çubuğundan",

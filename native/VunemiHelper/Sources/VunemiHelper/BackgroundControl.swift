@@ -1,11 +1,21 @@
 import Foundation
 
-/// A deliberately bounded capability set. No keyboard, pointer or activation
-/// fallback is authorised by a successful semantic background operation.
+/// Never controlled in the background, whatever the role. The same list as
+/// BLOCKED_BUNDLES in packages/mac/src/policy.ts, which also matches by name.
+let backgroundOffLimits = [
+    "com.apple.Terminal", "com.googlecode.iterm2", "co.zeit.hyper", "dev.warp.Warp", "net.kovidgoyal.kitty", "io.alacritty", "com.github.wez.wezterm",
+    "com.apple.keychainaccess", "com.apple.Passwords", "com.1password", "com.agilebits.onepassword", "com.bitwarden", "com.dashlane",
+    "com.github.Electron", "com.vunemi", "com.openai.codex", "com.apple.systempreferences", "com.apple.SystemSettings",
+    "com.apple.ScriptEditor2", "com.apple.Automator", "com.apple.dt.Xcode",
+]
+
+/// A deliberately bounded capability set: press a plain button, set the value
+/// of a plain text area or field. A subrole means a window control or a secure
+/// field. No keyboard, pointer or activation fallback is authorised by a
+/// successful semantic background operation.
 func backgroundCapability(bundle: String, role: String, action: String, subrole: String = "") -> Bool {
-    guard subrole.isEmpty else { return false }
-    return (bundle == "com.apple.calculator" && role == "AXButton" && action == "press") ||
-    (bundle == "com.apple.TextEdit" && role == "AXTextArea" && action == "set-value")
+    guard subrole.isEmpty, !bundle.isEmpty, !backgroundOffLimits.contains(where: { bundle.lowercased().hasPrefix($0.lowercased()) }) else { return false }
+    return (role == "AXButton" && action == "press") || ((role == "AXTextArea" || role == "AXTextField") && action == "set-value")
 }
 
 func requireBackgroundTarget(target: Int32, foreground: Int32?) throws {

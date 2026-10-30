@@ -1,3 +1,4 @@
+import {BLOCKED_BUNDLES} from './policy.js';
 /** A display projection of one native observation, never authority to dispatch input. */
 export interface BackgroundCapabilities {
  version:1;
@@ -10,13 +11,14 @@ export interface BackgroundCapabilities {
 const record=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 export function backgroundCapabilities(value:unknown):BackgroundCapabilities|null {
  if(!record(value)||value.controlMode!=='backgroundStrict'||typeof value.snapshotId!=='string'||!value.snapshotId.trim()||value.snapshotId.length>200||!Number.isSafeInteger(value.windowId)||Number(value.windowId)<=0||typeof value.bundleId!=='string'||!value.bundleId||value.bundleId.length>200||!Array.isArray(value.targets)||value.targets.length>4096)return null;
- const observed=new Set<'press'|'set-value'>(),refs=new Set<number>();
+ const observed=new Set<'press'|'set-value'>(),refs=new Set<number>(),bundle=value.bundleId.toLowerCase(),offLimits=BLOCKED_BUNDLES.some(b=>bundle.startsWith(b.toLowerCase()));
  for(const target of value.targets){
   if(!record(target)||!Number.isSafeInteger(target.ref)||Number(target.ref)<=0||refs.has(Number(target.ref))||typeof target.role!=='string'||typeof target.label!=='string'||!Array.isArray(target.backgroundActions)||target.backgroundActions.some(action=>action!=='press'&&action!=='set-value')||(target.subrole!==undefined&&typeof target.subrole!=='string')||(target.enabled!==undefined&&typeof target.enabled!=='boolean'))return null;
   refs.add(Number(target.ref));
   if(target.enabled===false||target.subrole)continue;
-  if(value.bundleId==='com.apple.calculator'&&target.role==='AXButton'&&target.backgroundActions.includes('press'))observed.add('press');
-  if(value.bundleId==='com.apple.TextEdit'&&target.role==='AXTextArea'&&target.backgroundActions.includes('set-value'))observed.add('set-value');
+  if(offLimits)continue;
+  if(target.role==='AXButton'&&target.backgroundActions.includes('press'))observed.add('press');
+  if((target.role==='AXTextArea'||target.role==='AXTextField')&&target.backgroundActions.includes('set-value'))observed.add('set-value');
  }
  const observedActions=(['press','set-value'] as const).filter(action=>observed.has(action));
  return {version:1,controlMode:'backgroundStrict',status:observedActions.length?'observed':'no-actions-observed',observedActions,unsupportedActions:['menu','scroll','drag'],reasonCode:observedActions.length?'eligible-targets-observed':'no-eligible-targets-observed'};

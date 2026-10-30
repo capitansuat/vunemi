@@ -1245,6 +1245,8 @@ export const messages: Catalogue = {
     backgroundOnlyBlocked: "Esta solicitud requiere control en segundo plano. Se bloqueó una alternativa que podría cambiar el foco; no se envió ninguna entrada.",
     backgroundAttemptStopped: "El control en segundo plano no terminó de forma segura. No se repitió la acción ni se cambió al primer plano. Revise el destino antes de continuar.",
     rejectionStopped: "La acción fue rechazada. La tarea se detuvo.",
+    grantUncertain: "El resultado de {tool} es incierto. No se repitió y la tarea se desactivó; compruébalo y vuelve a activarla en Ajustes › Tareas programadas.",
+    grantDid: "Herramientas que funcionaron hasta aquí: {tools}.",
     deliverySavedOne: "Se guardó 1 archivo.",
     deliverySavedMany: "Se guardaron {count} archivos.",
     deliveryVerifiedOne: "Se guardó 1 archivo y se comprobó su contenido.",
@@ -1449,6 +1451,9 @@ export const messages: Catalogue = {
       shell: "Esto es un terminal o una app que ejecuta código. Vunemi no escribe aquí: manejar un shell desharía de una sola pulsación la decisión de mantener el shell cerrado. El usuario lo hace por su cuenta.",
       secrets: "Esta app guarda contraseñas. Vunemi no lee ni escribe contraseñas; si hace falta, el usuario las introduce por su cuenta.",
       control: "Esta app es la propia superficie de control de Vunemi o los ajustes del sistema. El agente no puede manejar sus propios permisos ni aprobaciones.",
+      notScheduled: "{app} no se puede dar a una tarea programada: sin nadie delante, un clic ahí podría enviar algo o gastar dinero.",
+      notInstalled: "No se encontró ninguna app instalada llamada «{app}».",
+      whichOne: "«{app}» coincide con más de una app: {apps}. Di cuál es con su nombre completo.",
     },
   },
 
@@ -1729,6 +1734,9 @@ export const messages: Catalogue = {
     unit: { hours: { one: "{count} hora", other: "{count} horas" }, days: { one: "{count} día", other: "{count} días" }, weeks: { one: "{count} semana", other: "{count} semanas" } },
   },
   automations: {
+    allowed: { heading: "Lo que permitiste al configurarla", apps: "En estas apps hace clic y escribe sin preguntar: {apps}. Vunemi no puede comprobar qué hace un botón ahí; elige solo apps en las que confíes.", files: "Cambia estos archivos y carpetas sin preguntar: {files}.", revoke: "Retirar {name}" },
+    stop: { off: "Control está desactivado en Ajustes › Conexiones › Escritorio; tiene que estar activado para esto.", permission: "Vunemi no tiene el permiso de Accesibilidad; la tarea se detuvo sin pedirlo. Puedes darlo en Ajustes del Sistema › Privacidad y seguridad.", busy: "Este paso necesita el ratón y el teclado, pero el Mac no estuvo inactivo y desbloqueado durante {minutes} minutos. La tarea se detuvo aquí." },
+    stopped: "«{title}» se detuvo",
     badge: { task: "Lo ejecuta Vunemi", shortcut: "Atajo · también funciona con Siri" },
     shortcut: {
       when: "Cuando lo ejecutas: desde Atajos, con Siri o desde la barra de menús",

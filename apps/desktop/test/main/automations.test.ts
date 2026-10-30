@@ -3,7 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setLocale } from "@vunemi/i18n";
-import { AutomationStore, CATCH_UP_MS, createAutomationTools, describeSchedule, latestSlot, nextSlot, scheduledGoal, Scheduler, suggestion, summaryLine, validSchedule, validScope, AUTOMATION_INSTRUCTIONS, type AutomationStatus } from "../../src/main/automations.js";
+import { backgroundOnly } from "../../../../packages/agent-core/src/background-intent.js";
+import { type GrantLookup, AutomationStore, CATCH_UP_MS, createAutomationTools, describeSchedule, latestSlot, nextSlot, scheduledGoal, Scheduler, suggestion, summaryLine, validSchedule, validScope, AUTOMATION_INSTRUCTIONS, type AutomationStatus } from "../../src/main/automations.js";
 
 const at = (y: number, mo: number, d: number, h = 0, mi = 0) => new Date(y, mo - 1, d, h, mi).getTime();
 const HOUR = 3_600_000;
@@ -315,5 +316,67 @@ describe("a damaged automations file", () => {
     expect(readFileSync(`${file}.unreadable`, "utf8")).toBe('{"items": [{"id": "a"');
     expect(JSON.parse(readFileSync(file, "utf8")).items).toHaveLength(1);
     expect(existsSync(`${file}.tmp`)).toBe(false);
+  });
+});
+
+describe("what a task is allowed at set-up", () => {
+  let dir: string;
+  let store: AutomationStore;
+  const lookup: GrantLookup = {
+    apps: async (names) => names.map((name) => {
+      if (name === "Mail") throw new Error("Mail can't be given to a scheduled task.");
+      return { name, bundleId: `org.example.${name}` };
+    }),
+    files: (paths) => paths.map((path) => `/resolved${path}`),
+  };
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "vunemi-grant-"));
+    store = new AutomationStore(join(dir, "automations.json"));
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+  const args = { title: "Report", task: "Update the report", schedule: { kind: "daily", time: "09:00" } };
+  const ctx = { signal: new AbortController().signal } as never;
+
+  it("the card names the apps and files, and that is what is stored", async () => {
+    setLocale("en");
+    const [create] = createAutomationTools(store, () => at(2026, 9, 25, 8), undefined, () => lookup);
+    const a = { ...args, apps: ["Numbers"], files: ["/report.xlsx"] };
+    expect(await create!.check!(a as never, ctx)).toBeNull();
+    const card = await create!.preview!(a as never);
+    expect(card).toContain("Numbers");
+    expect(card).toContain("/resolved/report.xlsx");
+    await create!.run(a as never, ctx);
+    expect(store.list()[0]).toMatchObject({ apps: [{ name: "Numbers", bundleId: "org.example.Numbers" }], files: ["/resolved/report.xlsx"] });
+  });
+
+  it("an app that can't be allowed is refused before any card", async () => {
+    const [create] = createAutomationTools(store, () => at(2026, 9, 25, 8), undefined, () => lookup);
+    expect(await create!.check!({ ...args, apps: ["Mail"] } as never, ctx)).toMatch(/Mail can't be given/);
+  });
+
+  it("a task with none stays as it was", async () => {
+    const [create] = createAutomationTools(store, () => at(2026, 9, 25, 8), undefined, () => lookup);
+    await create!.run(args as never, ctx);
+    expect(store.list()[0]).not.toHaveProperty("apps");
+    expect(store.list()[0]).not.toHaveProperty("files");
+  });
+
+  it("survives a restart, and can be taken back one at a time", () => {
+    const item = store.add({ title: "T", task: "t", schedule: { kind: "daily", time: "09:00" }, apps: [{ name: "A", bundleId: "a" }, { name: "B", bundleId: "b" }], files: ["/f"] }, 1);
+    const again = new AutomationStore(join(dir, "automations.json"));
+    expect(again.get(item.id)?.apps).toHaveLength(2);
+    again.revoke(item.id, { bundleId: "a" });
+    expect(again.get(item.id)?.apps).toEqual([{ name: "B", bundleId: "b" }]);
+    again.revoke(item.id, { bundleId: "b" });
+    again.revoke(item.id, { file: "/f" });
+    expect(again.get(item.id)).not.toHaveProperty("apps");
+    expect(again.get(item.id)).not.toHaveProperty("files");
+  });
+
+  it("the goal tells the model the order, without turning on the agent's background-only mode", () => {
+    const goal = scheduledGoal({ title: "T", task: "t", createdAt: 1, apps: [{ name: "Numbers", bundleId: "x" }], files: ["/f"] });
+    expect(goal).toContain("Numbers");
+    expect(goal).toContain("/f");
+    expect(backgroundOnly(goal)).toBe(false);
   });
 });

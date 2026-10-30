@@ -74,6 +74,23 @@ export interface ApprovalRequest {
   reason: string;
 }
 
+/**
+ * What the user allowed when they set a scheduled task up: tools and targets
+ * that need no card when it runs, since nobody is there to answer one. Code
+ * decides each call from the arguments; the model only proposes them. It never
+ * opens delete, pay or anything the Sentinel denies.
+ */
+export interface StandingGrant {
+  /** A send-class or foreground tool this task may have. */
+  covers(tool: string): boolean;
+  /** Before a call goes further; may wait. `stop` ends the run with that reason, `refuse` only answers the call. */
+  before(tool: string, args: unknown, signal: AbortSignal): Promise<{ stop: string } | { refuse: string } | null>;
+  /** This exact call was allowed at set-up. Any other call that would show a card is refused. */
+  allows(tool: string, args: unknown): Promise<boolean>;
+  /** A call's outcome is uncertain: the run stops, and the task must not repeat it unseen. */
+  onUncertain?(): void;
+}
+
 export interface RunOptions {
   quotedSource?:QuotedSource;
   taskPermissions?:{store:TaskPermissionStore;sessionId:string;epoch:()=>TaskPermissionEpoch};
@@ -203,6 +220,8 @@ export interface RunOptions {
    * while no one watches, and their words must not be able to act.
    */
   unattended?: boolean;
+  /** With `unattended`: what this task's set-up allowed beyond that. */
+  standingGrant?: StandingGrant;
   /**
    * Only tools registered under these connection sources (a source or its
    * parts: "calendar" covers "calendar:read"), plus Vunemi's own core tools.
@@ -499,8 +518,14 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   let backgroundBlocked = false;
   let requiredBackgroundTool: string | undefined;
   let toolChoiceFailure: Extract<AgentEvent, {type:"run.finished"}>["toolChoiceFailure"];
+  // Reported with the stop: why it stopped, whatever finished the run.
+  let grantStop: string | null = null;
+  const stopForGrant = (reason: string): void => { grantStop = reason; approvalRejected = true; };
+  const neverRuns = (tool: ToolDef, actionClass: ActionClass): boolean =>
+    opts.unattended === true && UNATTENDED_NEVER.has(actionClass) && !(actionClass === "outbound" && opts.standingGrant?.covers(tool.name));
   const withinRun = (tool: ToolDef): boolean =>
-    !(opts.unattended === true && UNATTENDED_NEVER.has(tool.actionClass)) &&
+    !neverRuns(tool, tool.actionClass) &&
+    !(opts.unattended === true && tool.takesForeground === true && !opts.standingGrant?.covers(tool.name)) &&
     !(opts.unattended === true && (tool.name === "ask_choice" || tool.name === "present_options")) &&
     (!opts.onlySources || inSources(tools.sourceOf(tool.name), opts.onlySources));
   const areaMode = opts.areas !== undefined && opts.shownTools !== undefined;
@@ -690,6 +715,10 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   });
 
   const finish = (status: RunStatus, detail: string): RunResult => {
+    if (status === "stopped" && grantStop) {
+      const did = trackedTasks.find((t) => t.activeRunId === runId)?.operations.filter((o) => o.status === "completed" && o.actionClass !== "read").map((o) => o.tool) ?? [];
+      detail = did.length ? `${grantStop}\n${t("agent.grantDid", { tools: [...new Set(did)].join(", ") })}` : grantStop;
+    }
     if(status==="done"&&trackedTasks.find(t=>t.activeRunId===runId)?.operations.some(o=>o.status==="completed"&&requiresOutcomeEvidence(o.tool)&&!validOutcomeEvidence(o.outcomeEvidence,o.tool)))detail=t("outcomeProgress.reviewNeeded");
     opts.taskPermissions?.store.expire(status==="stopped"?"stopped":"run-ended");
     emit({ type: "run.finished", runId, status, detail, ...(toolChoiceFailure && {toolChoiceFailure}), at: now() });
@@ -1621,8 +1650,18 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     if (travelShown && tools.sourceOf(call.name)?.split(":")[0] === "browser") {
       return fail(call, "Travel options were just shown to the user as cards. Do not open or use websites in this turn: end it with a short summary and let the user choose an option. The chosen offer opens for them. Nothing was done.", false);
     }
-    if (!withinRun(tool) || (opts.unattended === true && UNATTENDED_NEVER.has(actionClass))) {
+    if (!withinRun(tool) || neverRuns(tool, actionClass)) {
       return fail(call, `${call.name} can't run in a scheduled task: scheduled tasks never send, delete or pay, and use only the connections they were set up with. Nothing was done. Say so in your answer.`, false);
+    }
+    if (opts.standingGrant && parsed.ok) {
+      // A check that can't answer allows nothing.
+      const held = await opts.standingGrant.before(call.name, parsed.value, signal).catch(() => ({ refuse: `${call.name} could not be checked against what the user allowed. Nothing was done.` }));
+      if (signal.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
+      if (held && "stop" in held) {
+        stopForGrant(held.stop);
+        return fail(call, `${held.stop} The task is stopped. Nothing was done in this step.`, false);
+      }
+      if (held) return fail(call, held.refuse, false);
     }
     // Refused before running: says nothing about whether the calendar can be read.
     const misfit = argumentMisfit(tool, parsed.value);
@@ -1918,6 +1957,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       }
       const output = `Error: ${message}`;
       const deliveryUnknown=err instanceof Error&&'deliveryUnknown' in err&&err.deliveryUnknown===true;
+      if (deliveryUnknown && opts.standingGrant) { opts.standingGrant.onUncertain?.(); stopForGrant(t("agent.grantUncertain", { tool: call.name })); }
       emit({ type: "tool.finished", runId, callId: call.id, ok: false, output, ...(deliveryUnknown?{deliveryUnknown:true as const}:actionClass === "read" && !(err instanceof Error && "retryable" in err && err.retryable===false) ? {retryable:true} : {}), durationMs: now() - started });
       return output;
     } finally {if(permissionTicket)opts.taskPermissions!.store.finish(permissionTicket);}
@@ -1946,6 +1986,16 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     if (verdict.kind === "allow") return null;
     if (verdict.kind === "deny") {
       return `Blocked: ${verdict.reason} Tell the user this step needs to be done by them.`;
+    }
+    if (opts.standingGrant && opts.unattended === true) {
+      // Nobody is there to read a warning, and what it warns about was not what they allowed.
+      if (verdict.alert === true) {
+        stopForGrant(verdict.reason);
+        return `${verdict.reason} The task is stopped. Nothing was done in this step.`;
+      }
+      if (!(await opts.standingGrant.allows(tool.name, args).catch(() => false))) return `${tool.name} with these arguments is not what the user allowed when setting this task up, so it can't run without them. Nothing was done. Say so in your answer.`;
+      approved(false);
+      return null;
     }
     if (!tool.taskPermission && tool.allowSessionApproval && scope && grants.has(scope) && (!strict || freshResumeScopes.has(scope)) && verdict.alert !== true) {
       approved(false, undefined, () => grants.has(scope!));

@@ -1245,6 +1245,8 @@ export const messages: Catalogue = {
     backgroundOnlyBlocked: "This request requires background control. A fallback that could change focus was blocked; no input was sent.",
     backgroundAttemptStopped: "Background control did not complete safely. No repeat or foreground fallback was sent. Inspect the target before continuing.",
     rejectionStopped: "The user declined this action. The task was stopped.",
+    grantUncertain: "The result of {tool} is uncertain. It wasn't repeated and the task was switched off; check it, then switch the task back on in Settings › Scheduled tasks.",
+    grantDid: "Tools that worked up to this point: {tools}.",
     deliverySavedOne: "Saved 1 file.",
     deliverySavedMany: "Saved {count} files.",
     deliveryVerifiedOne: "Saved 1 file and checked its contents.",
@@ -1449,6 +1451,9 @@ export const messages: Catalogue = {
       shell: "This is a terminal or an app that runs code. Vunemi doesn't type here: driving a shell would undo, in one keystroke, the decision to keep the shell closed. The user does this themselves.",
       secrets: "This app stores passwords. Vunemi neither reads nor types passwords; the user enters them if needed.",
       control: "This app is Vunemi's own control surface or the system settings. The agent can't drive its own permissions or approvals.",
+      notScheduled: "{app} can't be given to a scheduled task: with nobody there, a click in it could send something or spend money.",
+      notInstalled: "No installed app called “{app}” was found.",
+      whichOne: "“{app}” matches more than one app: {apps}. Say which one by its full name.",
     },
   },
 
@@ -1729,6 +1734,9 @@ export const messages: Catalogue = {
     unit: { hours: { one: "{count} hour", other: "{count} hours" }, days: { one: "{count} day", other: "{count} days" }, weeks: { one: "{count} week", other: "{count} weeks" } },
   },
   automations: {
+    allowed: { heading: "What you allowed when setting it up", apps: "In these apps it clicks and types without asking: {apps}. Vunemi can't check what a button there does, so choose only apps you trust.", files: "It changes these files and folders without asking: {files}.", revoke: "Take back {name}" },
+    stop: { off: "Control is off under Settings › Connections › Desktop; it has to be on for this.", permission: "Vunemi doesn't have the Accessibility permission, so the task stopped without asking for it. You can grant it in System Settings › Privacy & Security.", busy: "This step needs the mouse and keyboard, but the Mac wasn't idle and unlocked for {minutes} minutes. The task stopped here." },
+    stopped: "“{title}” stopped",
     badge: { task: "Vunemi runs it", shortcut: "Shortcut · works with Siri too" },
     shortcut: {
       when: "When you run it: from Shortcuts, with Siri or from the menu bar",

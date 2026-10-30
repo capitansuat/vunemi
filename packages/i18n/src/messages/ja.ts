@@ -1245,6 +1245,8 @@ export const messages: Catalogue = {
     backgroundOnlyBlocked: "このリクエストにはバックグラウンド操作が必要です。フォーカスを変更する可能性がある代替操作をブロックしました。入力は送信していません。",
     backgroundAttemptStopped: "バックグラウンド操作を安全に完了できませんでした。再実行や前面への切り替えは行っていません。続行する前に対象を確認してください。",
     rejectionStopped: "操作が拒否されました。タスクを停止しました。",
+    grantUncertain: "{tool} の結果が不確かです。再試行はせず、タスクをオフにしました。確認してから、設定 › 予定されたタスクでオンに戻してください。",
+    grantDid: "ここまでに動作したツール: {tools}。",
     deliverySavedOne: "ファイルを1件保存しました。",
     deliverySavedMany: "ファイルを{count}件保存しました。",
     deliveryVerifiedOne: "ファイルを1件保存し、内容を確認しました。",
@@ -1449,6 +1451,9 @@ export const messages: Catalogue = {
       shell: "これはターミナル、またはコードを実行するアプリです。Vunemi はここには入力しません。シェルを操作すれば、シェルを閉じておくという判断をキー 1 つで覆すことになるからです。これはユーザが自分で行います。",
       secrets: "このアプリはパスワードを保管しています。Vunemi はパスワードを読むことも入力することもしません。必要ならユーザが自分で入力します。",
       control: "このアプリは Vunemi 自身の操作画面、またはシステム設定です。エージェントは自分の権限や承認を操作できません。",
+      notScheduled: "{app} はスケジュールタスクに任せられません。誰もいないときに、そこでのクリックが何かを送信したりお金を使ったりするおそれがあります。",
+      notInstalled: "「{app}」という名前のインストール済みアプリが見つかりません。",
+      whichOne: "「{app}」は複数のアプリに一致します: {apps}。正式な名前で指定してください。",
     },
   },
 
@@ -1729,6 +1734,9 @@ export const messages: Catalogue = {
     unit: { hours: { other: "{count} 時間" }, days: { other: "{count} 日" }, weeks: { other: "{count} 週間" } },
   },
   automations: {
+    allowed: { heading: "設定時に許可した内容", apps: "これらのアプリでは確認なしでクリックと入力を行います: {apps}。そこにあるボタンの動作を Vunemi は確認できないため、信頼できるアプリだけを選んでください。", files: "これらのファイルとフォルダを確認なしで変更します: {files}。", revoke: "{name} の許可を取り消す" },
+    stop: { off: "設定 › 接続 › デスクトップの「操作」がオフです。これにはオンにする必要があります。", permission: "Vunemi にアクセシビリティの権限がないため、タスクは権限を求めずに停止しました。システム設定 › プライバシーとセキュリティで許可できます。", busy: "この手順にはマウスとキーボードが必要ですが、{minutes} 分間 Mac がアイドルかつロック解除の状態になりませんでした。タスクはここで停止しました。" },
+    stopped: "「{title}」が停止しました",
     badge: { task: "Vunemi が実行", shortcut: "ショートカット · Siri でも使えます" },
     shortcut: {
       when: "自分で実行したとき：「ショートカット」、Siri、またはメニューバーから",

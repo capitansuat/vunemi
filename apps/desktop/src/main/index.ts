@@ -17,10 +17,10 @@ import { fileURLToPath } from "node:url";
 import { appMenuTemplate } from "./app-menu.js";
 import { followLanguage } from "./system-language.js";
 import { toolAreas } from "./areas.js";
-import { TaskPermissionStore, taskProgressTool, choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import { type StandingGrant, TaskPermissionStore, taskProgressTool, choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
 import { BrowserController, checkNavigation, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
-import { Helper } from "@vunemi/mac";
+import { Helper, scheduledApp } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
 import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
@@ -64,7 +64,8 @@ import { generalInstructions, recall } from "./memory/recall.js";
 import { propose, type Proposal } from "./memory/propose.js";
 import { memoryRememberTool } from "./memory/tool.js";
 import { Soul, SOUL_MAX, soulInstructions } from "./soul.js";
-import { AutomationStore, describeSchedule, nextSlot, Scheduler, scheduledGoal, summaryLine, SUGGESTIONS, validSchedule, type Automation, type AutomationSetup, type AutomationStatus } from "./automations.js";
+import { createStandingGrant, openQuietly } from "./scheduled-grant.js";
+import { AutomationStore, describeSchedule, grantLines, nextSlot, Scheduler, scheduledGoal, summaryLine, SUGGESTIONS, validSchedule, type Automation, type AutomationSetup, type AutomationStatus, type GrantLookup } from "./automations.js";
 import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRefusal, setupView, shortcutDraft, shortcutViews, summarizeScope, withWhen } from "./automation-library.js";
 import { ShortcutInstaller } from "./shortcut-install.js";
 import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t, tIn, type Locale } from "@vunemi/i18n";
@@ -476,6 +477,8 @@ const addonTools = registerAddonTools({
 const connectors = buildConnectors({
   automations,
   // Set up further down, beside the scope lookup it needs; a tool asks for it only when it is called.
+  automationGrants: () => automationGrants,
+  scheduledApps: () => scheduledApps,
   ...(settings.automationLibrary && { automationSetup: () => automationSetup, shortcutBuild: (draft, signal) => shortcutInstaller.install(draft, signal) }),
   library: { library, sources: librarySources, current: () => conversations.currentId },
   tools,
@@ -708,6 +711,7 @@ function record(event: AgentEvent): void {
 }
 
 const sessionOptions: SessionOptions = {
+  standingGrant: () => currentGrant,
   validateQuotedSource: source => validateQuotedSource(source, conversations.currentId, conversations.peek(conversations.currentId)?.events ?? []),
   taskPermissions:{store:taskPermissions,sessionId:()=>conversations.currentId,epoch:()=>({...taskPermissionEpoch})},
   tools,
@@ -969,6 +973,8 @@ const automationViews = (): AutomationView[] => {
     const next = item.enabled ? nextSlot(item.schedule, Math.max(item.createdAt, item.lastSlot ?? 0), now) : null;
     return {
       id: item.id, title: item.title, task: item.task, when: describeSchedule(item.schedule), enabled: item.enabled,
+      ...(item.apps && { apps: item.apps }),
+      ...(item.files && { files: item.files }),
       ...(next !== null && { next }),
       ...(item.lastRunAt !== undefined && { lastRunAt: item.lastRunAt }),
       ...(item.lastStatus && { lastStatus: item.lastStatus }),
@@ -977,6 +983,19 @@ const automationViews = (): AutomationView[] => {
 };
 
 nativeRecipesRuntime=installNativeRecipes({helper,helperPath,roots,session,sentinel,connectors,locked:()=>appLock.isLocked,handle,send,conversation:async title=>{if(session.running)throw Error(t("main.stopFirst"));conversations.create(title);await switchConversation([]);syncProjectFolders();send(CH.sessionsChanged,sessionList());}});
+
+/** While a scheduled task set up for some apps runs, those apps: the desktop tools refuse every other. */
+let scheduledApps: ReadonlySet<string> | null = null;
+/** What the scheduled task now running was allowed. */
+let currentGrant: StandingGrant | null = null;
+const automationGrants: GrantLookup = {
+  async apps(names) {
+    if (!connectors.isOn("desktop") || !connectors.isPartOn("desktop", "act")) throw new Error(t("automations.stop.off"));
+    const found = await Promise.all(names.map((name) => scheduledApp(name, { running: () => helper.apps() })));
+    return [...new Map(found.map((app) => [app.bundleId, app] as const)).values()];
+  },
+  files: (paths) => [...new Set(paths.map((path) => roots.resolve(path, "write")))],
+};
 
 const scheduler = new Scheduler({
   store: automations,
@@ -994,7 +1013,37 @@ const scheduler = new Scheduler({
     new Notification({ title: t("automations.notify"), body: appLock.isLocked ? "" : item.title }).show();
     // The user is not watching: say so, so the model neither waits for a reply nor mistakes old wording for new.
     const goal = scheduledGoal(item);
-    const status = await session.start(goal, model, [], { unattended: true, waitLimitMs: SCHEDULED_WAIT_MS, ...(item.scope && { onlySources: item.scope }) });
+    const standingGrant = createStandingGrant(item, {
+      permitted: async () => (await helper.permissions()).accessibility,
+      inputIdle: () => helper.inputIdle(),
+      unlocked: async () => ((await helper.call("background_environment")) as { unlocked?: boolean }).unlocked === true,
+      controlOn: () => connectors.isOn("desktop") && connectors.isPartOn("desktop", "act"),
+      resolve: (path) => roots.resolve(path, "write"),
+      // Uncertain means someone has to look before it acts on that app again.
+      onUncertain: () => automations.update(item.id, { enabled: false }),
+    });
+    if (item.apps?.length) {
+      scheduledApps = new Set(item.apps.map((grant) => grant.bundleId));
+      await openQuietly(item, () => helper.apps(), new AbortController().signal);
+    }
+    currentGrant = standingGrant ?? null;
+    let status: Awaited<ReturnType<typeof session.start>>;
+    try {
+      status = await session.start(goal, model, [], {
+        unattended: true,
+        waitLimitMs: SCHEDULED_WAIT_MS,
+        ...(item.scope && { onlySources: item.apps?.length ? [...item.scope, "desktop"] : item.scope }),
+        ...(standingGrant && { standing: { covered: standingGrant.covered } }),
+      });
+    } finally {
+      scheduledApps = null;
+      currentGrant = null;
+    }
+    if (status === "stopped" && standingGrant) {
+      const stopped = new Notification({ title: t("automations.stopped", { title: item.title }), body: appLock.isLocked ? "" : summaryLine(session.lastDetail) });
+      stopped.on("click", showWindow);
+      stopped.show();
+    }
     if (status === "done") {
       // What it found, where the user will see it; nothing of it while Vunemi is locked.
       const done = new Notification({ title: t("automations.finished", { title: item.title }), body: appLock.isLocked ? "" : summaryLine(session.lastAnswer) });
@@ -1036,7 +1085,21 @@ const automationSetup: AutomationSetup = {
     return withWhen(asked, chosen);
   },
 };
-handle(CH.automationsSummarize, (_e, args: unknown) => (settings.automationLibrary ? setupView(args, lookScope) : null));
+handle(CH.automationsSummarize, async (_e, args: unknown) => {
+  if (!settings.automationLibrary) return null;
+  const view = setupView(args, lookScope);
+  const a = (args ?? {}) as Record<string, unknown>;
+  // The same lookup the task is saved with, so the summary says what will be stored.
+  try {
+    const lines = grantLines({
+      ...(Array.isArray(a.apps) && { apps: await automationGrants.apps(a.apps.map(String)) }),
+      ...(Array.isArray(a.files) && { files: automationGrants.files(a.files.map(String)) }),
+    });
+    return { ...view, lines: [...lines.map((text) => ({ does: true, text })), ...view.lines] };
+  } catch (e) {
+    return { ...view, refused: e instanceof Error ? e.message : String(e) };
+  }
+});
 handle(CH.automationsAdjust, async (_e, args: unknown, when: unknown, callId:string, rawOwner:unknown) => {
   const owner=resolutionOwner(rawOwner);
   if (!settings.automationLibrary||!await session.canResolveApproval(callId,owner)) return false;
@@ -1086,6 +1149,10 @@ handle(CH.automationsUndoDelete, () => {
   return automationViews();
 });
 handle(CH.automationsRun, (_e, id: string) => scheduler.runNow(String(id)));
+handle(CH.automationsRevoke, (_e, id: string, what: { bundleId?: unknown; file?: unknown }) => {
+  automations.revoke(String(id), { ...(typeof what?.bundleId === "string" && { bundleId: what.bundleId }), ...(typeof what?.file === "string" && { file: what.file }) });
+  return automationViews();
+});
 
 /**
  * Files the user attached to a message become readable — each one alone,

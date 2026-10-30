@@ -594,6 +594,10 @@ func handle(_ request: JSON) {
         case "background_environment":
             respond(id:id,result:readBackgroundEnvironment())
 
+        case "input_idle":
+            // Hardware input only: what the helper posts itself must not look like the user.
+            respond(id:id,result:["seconds":CGEventSource.secondsSinceLastEventType(.hidSystemState,eventType:CGEventType(rawValue:UInt32.max)!)])
+
         case "permissions":
             respond(id: id, result: permissions(prompt: args["prompt"] as? Bool ?? false))
 

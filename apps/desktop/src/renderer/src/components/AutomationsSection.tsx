@@ -1,6 +1,6 @@
 import { NativeRecipePermissions } from "./NativeRecipePermissions.js";
 import { useEffect, useState } from "react";
-import { Play, Trash2 } from "lucide-react";
+import { Play, Trash2, X } from "lucide-react";
 import { formatDate, t } from "@vunemi/i18n";
 import type { AutomationView } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
@@ -64,6 +64,21 @@ export function AutomationRow({ row, act, onDeleted }: { row: AutomationView; ac
         <Switch on={row.enabled} label={row.title} disabled={false} onChange={(next) => act(() => window.vunemi.setAutomationEnabled(row.id, next))} />
       </div>
       <p className="mt-2 text-[11.5px] text-muted">{t("taskPermissions.schedulerRestriction")}</p>
+      {(row.apps?.length || row.files?.length) ? (
+        <div className="mt-2">
+          <div className="text-[11.5px] font-medium text-faint">{t("automations.allowed.heading")}</div>
+          <ul className="mt-1 flex flex-wrap gap-1">
+            {[...(row.apps ?? []).map((app) => ({ key: app.bundleId, name: app.name, what: { bundleId: app.bundleId } })), ...(row.files ?? []).map((file) => ({ key: file, name: file, what: { file } }))].map((item) => (
+              <li key={item.key} className="inline-flex max-w-full items-center gap-1 rounded-md border border-line px-1.5 py-0.5 text-[11.5px] text-muted">
+                <span className="truncate">{item.name}</span>
+                <button type="button" aria-label={t("automations.allowed.revoke", { name: item.name })} onClick={() => act(() => window.vunemi.revokeAutomation(row.id, item.what))} className="shrink-0 rounded hover:text-danger">
+                  <X size={11} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <div className="mt-2 flex justify-end gap-1">
         <button type="button" onClick={() => act(() => window.vunemi.runAutomation(row.id))} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-muted hover:bg-surface-2 hover:text-fg">
           <Play size={12} /> {t("automations.runNow")}

@@ -26,6 +26,12 @@ export type Schedule =
 
 export type AutomationStatus = "done" | "stopped" | "error" | "missed" | "noModel";
 
+/** An app the user allowed a scheduled task to act in, when they set it up. */
+export interface AppGrant {
+  name: string;
+  bundleId: string;
+}
+
 export interface Automation {
   id: string;
   title: string;
@@ -36,6 +42,10 @@ export interface Automation {
    * every connection that is on. Either way it never sends, deletes or pays.
    */
   scope?: string[];
+  /** Apps it acts in without a card; only the user's approval of the set-up card puts one here. */
+  apps?: AppGrant[];
+  /** Files and folders it changes without a card, the same way. */
+  files?: string[];
   schedule: Schedule;
   enabled: boolean;
   createdAt: number;
@@ -172,9 +182,9 @@ export class AutomationStore {
     return found && { ...found };
   }
 
-  add(input: { title: string; task: string; schedule: Schedule; scope?: string[] }, now: number): Automation {
+  add(input: { title: string; task: string; schedule: Schedule; scope?: string[]; apps?: AppGrant[]; files?: string[] }, now: number): Automation {
     const scope = validScope(input.scope);
-    const item: Automation = { id: randomUUID(), title: input.title, task: input.task, ...(scope && { scope }), schedule: input.schedule, enabled: true, createdAt: now };
+    const item: Automation = { id: randomUUID(), title: input.title, task: input.task, ...(scope && { scope }), ...(input.apps?.length && { apps: input.apps }), ...(input.files?.length && { files: input.files }), schedule: input.schedule, enabled: true, createdAt: now };
     this.items.push(item);
     this.save();
     return { ...item };
@@ -184,6 +194,17 @@ export class AutomationStore {
     const item = this.items.find((a) => a.id === id);
     if (!item) return;
     Object.assign(item, change);
+    this.save();
+  }
+
+  /** Takes back one app or file it was allowed. Adding one takes a new set-up card; there is no way back in here. */
+  revoke(id: string, what: { bundleId?: string; file?: string }): void {
+    const item = this.items.find((a) => a.id === id);
+    if (!item) return;
+    const apps = item.apps?.filter((app) => app.bundleId !== what.bundleId);
+    const files = item.files?.filter((file) => file !== what.file);
+    if (apps?.length) item.apps = apps; else delete item.apps;
+    if (files?.length) item.files = files; else delete item.files;
     this.save();
   }
 
@@ -343,8 +364,13 @@ export const AUTOMATION_INSTRUCTIONS = `Scheduled tasks:
 export const SCHEDULED_RUN = "Scheduled task running now:";
 
 /** The goal a scheduled run is started with. */
-export function scheduledGoal(item: Pick<Automation, "title" | "task" | "createdAt">): string {
-  return `${SCHEDULED_RUN} "${item.title}", set up by the user on ${new Date(item.createdAt).toDateString()}. Do the task itself now; it is already scheduled, so don't schedule anything:\n${item.task}`;
+export function scheduledGoal(item: Pick<Automation, "title" | "task" | "createdAt" | "apps" | "files">): string {
+  const apps = item.apps?.map((app) => app.name).join(", ");
+  const files = item.files?.join(", ");
+  const allowed = apps || files
+    ? `\n\nWhen setting this up the user allowed it to act, without being asked, ${[apps && `in these apps: ${apps}`, files && `on these files and folders: ${files}`].filter(Boolean).join("; ")}. Anything else is refused. Change saved files with the file tools whenever that does the job. Otherwise read the app first with the tool that leaves the mouse and keyboard alone and use what it lists. Use desktop_focus, desktop_click, desktop_type or desktop_key only for a step that can't be done that way: they wait until the user leaves the Mac alone. If a step can't be done, end by saying what was done and what wasn't.`
+    : "";
+  return `${SCHEDULED_RUN} "${item.title}", set up by the user on ${new Date(item.createdAt).toDateString()}. Do the task itself now; it is already scheduled, so don't schedule anything:\n${item.task}${allowed}`;
 }
 
 /**
@@ -366,8 +392,38 @@ export interface AutomationSetup {
   schedule(args: Record<string, unknown>, asked: Schedule, runId?:string,callId?:string): Schedule;
 }
 
+/** Turns what a set-up call names into what is stored and shown; throws a plain reason for one that can't be allowed. */
+export interface GrantLookup {
+  apps(names: readonly string[]): Promise<AppGrant[]>;
+  files(paths: readonly string[]): string[];
+}
+
+const strings = (value: unknown, max: number, what: string): string[] => {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > max || !value.every((v) => typeof v === "string" && v.trim())) throw new Error(`${what} must be a list of at most ${max} names.`);
+  return value as string[];
+};
+
+/** The lines a set-up card adds for what it allows, in the user's language. */
+export function grantLines(grant: { apps?: AppGrant[]; files?: string[] }): string[] {
+  return [
+    ...(grant.apps?.length ? [t("automations.allowed.apps", { apps: grant.apps.map((app) => app.name).join(", ") })] : []),
+    ...(grant.files?.length ? [t("automations.allowed.files", { files: grant.files.join(", ") })] : []),
+  ];
+}
+
 /** With `setup`, a task is set up with a scope and the user approves it on a summary made from that scope. */
-export function createAutomationTools(store: AutomationStore, now: () => number = Date.now, setup?: () => AutomationSetup): ToolDef[] {
+export function createAutomationTools(store: AutomationStore, now: () => number = Date.now, setup?: () => AutomationSetup, grants?: () => GrantLookup): ToolDef[] {
+  const grantOf = async (a: Record<string, unknown>): Promise<{ apps?: AppGrant[]; files?: string[] }> => {
+    const appNames = strings(a.apps, 8, "apps"), filePaths = strings(a.files, 16, "files");
+    if (!grants) {
+      if (appNames.length || filePaths.length) throw new Error("This task can't be set up to act in apps or on files here.");
+      return {};
+    }
+    const apps = appNames.length ? await grants().apps(appNames) : [];
+    const files = filePaths.length ? grants().files(filePaths) : [];
+    return { ...(apps.length && { apps }), ...(files.length && { files }) };
+  };
   /** The scope a call names; it has to name one when the library is on. */
   const scopeOf = (a: Record<string, unknown>): string[] | undefined => {
     if (!setup) return undefined;
@@ -399,15 +455,20 @@ export function createAutomationTools(store: AutomationStore, now: () => number 
             },
             explanation: { type: "string", description: "One or two plain sentences for the user, in their language: what it does each time and what it touches." },
           }),
+          ...(grants && {
+            apps: { type: "array", items: { type: "string" }, description: "Apps each run clicks or types in. No mail, messaging, browser or payment apps. Omit if it only reads or edits saved files." },
+            files: { type: "array", items: { type: "string" }, description: "Files or folders each run changes, full paths. Omit if none." },
+          }),
         },
         required: ["title", "task", "schedule", ...(setup ? ["scope"] : [])],
       },
       actionClass: "write-local",
       alwaysAsk: true,
       // A scope a scheduled task may not have is refused before the user is asked anything.
-      check: (a) => {
+      check: async (a) => {
         try {
           scopeOf(a);
+          await grantOf(a);
           return null;
         } catch (e) {
           return (e as Error).message;
@@ -421,7 +482,9 @@ export function createAutomationTools(store: AutomationStore, now: () => number 
           // The run will refuse it; the card says so rather than hide it behind "?".
           when = t("automations.badSchedule");
         }
-        return t("automations.preview", { title: String(a.title ?? "").slice(0, 80), when, task: String(a.task ?? "").slice(0, 400).replace(/[.。]+\s*$/, "") });
+        const base = t("automations.preview", { title: String(a.title ?? "").slice(0, 80), when, task: String(a.task ?? "").slice(0, 400).replace(/[.。]+\s*$/, "") });
+        const allowed = grantLines(await grantOf(a).catch(() => ({})));
+        return allowed.length ? [base, ...allowed].join(" ") : base;
       },
       async run(a,ctx) {
         const title = String(a.title ?? "").trim();
@@ -435,8 +498,9 @@ export function createAutomationTools(store: AutomationStore, now: () => number 
         const created = now();
         const next = nextSlot(schedule, created, created);
         if (next === null) throw new Error("That time has already passed; give a time in the future.");
-        const item = store.add({ title, task, schedule, ...(scope && { scope }) }, created);
-        return `Scheduled "${item.title}" (${JSON.stringify(schedule)}). Next run: ${new Date(next).toString()}. It runs while Vunemi is open and can't send, delete or pay; if the task needs that, tell the user that part won't be done.`;
+        const grant = await grantOf(a);
+        const item = store.add({ title, task, schedule, ...(scope && { scope }), ...grant }, created);
+        return `Scheduled "${item.title}" (${JSON.stringify(schedule)}). Next run: ${new Date(next).toString()}. It runs while Vunemi is open and can't send, delete or pay; if the task needs that, tell the user that part won't be done.${grant.apps || grant.files ? " What it may act on is listed in Settings › Scheduled tasks, where the user can take it back." : ""}`;
       },
     },
     {
