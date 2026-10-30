@@ -17,7 +17,7 @@ export function singleOfficeEditWorkflow(goal:string):{path:string;steps:string[
  const path=allPaths[0]!,name=path.split('/').at(-1)!;
  const remaining=goal.split(path).join('').split(name).join('');
  if(/[\p{L}\p{N}_.-]+\.(?:docx|xlsx|pptx)\b/iu.test(remaining))return null;
- const instruction=unquoted.replace(/yeni\s+(?:bir\s+)?kopya\s+yerine/giu,'');
+ const instruction=unquoted.replace(/yeni\s+(?:bir\s+)?kopya\s+yerine/giu,'').replace(/yeni\s+(?:bir\s+)?(?:kopya|dosya)\s+(?:oluştur|olustur|yap|aç|ac|üret|uret)(?:ma|me|madan|meden)(?![\p{L}])/giu,'').replace(/(?:do not|don't|never|without)\s+(?:create|creating|make|making)\s+(?:a\s+)?new\s+(?:copy|file)|\bno\s+new\s+(?:copy|file)/giu,'');
  const intent=instruction.replace(/(?<![\p{L}\p{N}_.])(?:~\/|\/)[^\s"'“”`]+/gu,'');
  if(/e-?posta|email|\bsend\b|gönder|gonder|her\s+gün|her\s+gun|\bdaily\b|schedule|zamanla|takvim|yükle|yukle|publish|paylaş|paylas|özetle|ozetle|summari[sz]e/iu.test(intent))return null;
  if(/(?:sadece|yalnızca)\s+oku|read[ -]only|inspect only|yeni\s+(?:bir\s+)?(?:kopya|dosya)|new copy|save as|farklı\s+(?:bir\s+)?(?:ad|dosya)/iu.test(intent))return null;
