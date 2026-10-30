@@ -684,7 +684,7 @@ func handle(_ request: JSON) {
             try checkBackgroundSession()
             try requireBackgroundTarget(target:observed.pid,foreground:foreground)
             guard let cursor=CGEvent(source:nil)?.location else { throw Failure("Cursor state unavailable; no input sent.") }
-            let operationId=UUID().uuidString
+            let operationId=UUID().uuidString,started=Date()
             let delivery:AXError
             if action == "press" { delivery=AXUIElementPerformAction(element,"AXPress" as CFString) }
             else {
@@ -697,8 +697,8 @@ func handle(_ request: JSON) {
             do { result=try describe(pid:observed.pid,part:"window",windowId:observed.window.id,background:true) }
             catch { result=["status":"unknown","reasonCode":"post-observation-unavailable","detail":String(describing:error)] }
             let afterForeground=focusedApplicationPID()
-            let foregroundChanged=foreground != afterForeground
-            let cursorChanged=cursor != CGEvent(source:nil)?.location
+            let foregroundChanged=backgroundForegroundDisturbed(before:foreground,after:afterForeground,target:observed.pid,userActed:userActed(since:started))
+            let cursorChanged=backgroundCursorDisturbed(before:cursor,after:CGEvent(source:nil)?.location,userMoved:userMovedPointer(since:started))
             result["operationId"]=operationId; result["backend"]="ax";result["controlMode"]="backgroundStrict"
             result["foregroundBefore"]=foreground.map { Int($0) as Any } ?? NSNull(); result["foregroundAfter"]=afterForeground.map { Int($0) as Any } ?? NSNull()
             result["foregroundChanged"]=foregroundChanged;result["cursorChanged"]=cursorChanged;result["cleanup"]="complete"

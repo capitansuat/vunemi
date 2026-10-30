@@ -379,4 +379,10 @@ describe("what a task is allowed at set-up", () => {
     expect(goal).toContain("/f");
     expect(backgroundOnly(goal)).toBe(false);
   });
+
+  it("a task that repeats says earlier results are expected; one that runs once doesn't", () => {
+    const item = { title: "T", task: "t", createdAt: 1 };
+    expect(scheduledGoal({ ...item, schedule: { kind: "daily", time: "09:00" } })).toContain("runs repeatedly");
+    expect(scheduledGoal({ ...item, schedule: { kind: "once", at: "2026-11-01T09:00" } })).not.toContain("runs repeatedly");
+  });
 });

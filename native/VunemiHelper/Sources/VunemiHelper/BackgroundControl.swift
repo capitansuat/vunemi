@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 /// Never controlled in the background, whatever the role. The same list as
 /// BLOCKED_BUNDLES in packages/mac/src/policy.ts, which also matches by name.
@@ -45,6 +46,31 @@ func verifiedForegroundPID(ax:Int32?,workspace:Int32?,workspaceActive:Bool) -> I
     guard workspaceActive,let workspace else {return nil}
     guard ax == nil || ax == workspace else {return nil}
     return workspace
+}
+
+private func secondsSinceHardware(_ types: [CGEventType]) -> Double {
+    types.map { CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: $0) }.min() ?? .infinity
+}
+/// The user's own hand on the mouse since this moment. Hardware events only: a
+/// background operation posts none, so these can't be what it did.
+func userMovedPointer(since started: Date) -> Bool {
+    secondsSinceHardware([.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]) <= Date().timeIntervalSince(started) + 0.05
+}
+/// Any input from the user since this moment: a click or a key can switch apps.
+func userActed(since started: Date) -> Bool {
+    secondsSinceHardware([CGEventType(rawValue: UInt32.max)!]) <= Date().timeIntervalSince(started) + 0.05
+}
+/// The pointer moved and the user didn't move it: the operation did.
+func backgroundCursorDisturbed(before: CGPoint, after: CGPoint?, userMoved: Bool) -> Bool {
+    guard let after else { return true }
+    return before != after && !userMoved
+}
+/// The front app changed and it wasn't the user going to another app. Their
+/// target coming to the front stays uncertain: the operation may have raised it.
+func backgroundForegroundDisturbed(before: Int32?, after: Int32?, target: Int32, userActed: Bool) -> Bool {
+    guard before != after else { return false }
+    guard let after, after != target else { return true }
+    return !userActed
 }
 
 /// A successful AX return cannot certify an operation that disturbed user input.

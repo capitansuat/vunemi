@@ -74,7 +74,7 @@ func performExtendedBackground(_ args:JSON,validateOnly:Bool) throws -> JSON {
  let foreground=focusedApplicationPID();try requireBackgroundTarget(target:observed.pid,foreground:foreground);try checkBackgroundSession()
  guard let cursor=CGEvent(source:nil)?.location else{throw Failure("Cursor state unavailable; no input sent.")}
  AXUIElementSetMessagingTimeout(element,0.5)
- let action=args["action"] as! String,operationId=UUID().uuidString
+ let action=args["action"] as! String,operationId=UUID().uuidString,started=Date()
  let delivery:AXError
  var owner:AXUIElement?
  if action=="scroll-position" {delivery=AXUIElementSetAttributeValue(element,"AXValue" as CFString,NSNumber(value:(args["position"] as! NSNumber).doubleValue))}
@@ -92,7 +92,7 @@ func performExtendedBackground(_ args:JSON,validateOnly:Bool) throws -> JSON {
  var result:JSON
  do{result=try describe(pid:observed.pid,part:"window",windowId:observed.window.id,background:true)}catch{result=["status":"unknown","reasonCode":"post-observation-unavailable"]}
  let afterForeground=focusedApplicationPID(),afterCursor=CGEvent(source:nil)?.location
- let changed=foreground != afterForeground,cursorChanged=afterCursor == nil || cursor != afterCursor
+ let changed=backgroundForegroundDisturbed(before:foreground,after:afterForeground,target:observed.pid,userActed:userActed(since:started)),cursorChanged=backgroundCursorDisturbed(before:cursor,after:afterCursor,userMoved:userMovedPointer(since:started))
  result["app"]=NSRunningApplication(processIdentifier:observed.pid)?.localizedName ?? "";result["operationId"]=operationId;result["backend"]="native-ax";result["controlMode"]="backgroundStrict";result["foregroundBefore"]=foreground.map{Int($0) as Any} ?? NSNull();result["foregroundAfter"]=afterForeground.map{Int($0) as Any} ?? NSNull();result["foregroundChanged"]=changed;result["cursorChanged"]=cursorChanged
  if delivery != .success || changed || cursorChanged || (try? checkBackgroundSession()) == nil || result["status"] as? String == "unknown" {result["status"]="unknown";result["reasonCode"]=changed ? "foreground-changed" : cursorChanged ? "cursor-changed" : delivery != .success ? "ax-error-\(delivery.rawValue)" : "post-observation-unavailable"}
  else if action=="scroll-position",let actual=finiteAXNumber(attribute(element,"AXValue")),let requested=finiteAXNumber(args["position"] as CFTypeRef?),abs(actual-requested)<0.000001 {result["status"]="verified";result["position"]=actual}

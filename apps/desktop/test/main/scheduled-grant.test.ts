@@ -43,13 +43,10 @@ describe("what a task was allowed", () => {
     expect(await grant.allows("system_run", { path: "/Out/a.md" })).toBe(false);
   });
 
-  it("a TextEdit document tool needs TextEdit and its file", async () => {
-    const without = createStandingGrant({ apps: [EXCEL], files: ["/Docs"] }, deps())!;
-    expect(without.covers("desktop_background_document")).toBe(false);
-    const withApp = createStandingGrant({ apps: [{ name: "TextEdit", bundleId: "com.apple.TextEdit" }], files: ["/Docs"] }, deps())!;
-    expect(withApp.covers("desktop_background_document")).toBe(true);
-    expect(await withApp.allows("desktop_background_document", { path: "/Docs/a.txt" })).toBe(true);
-    expect(await withApp.allows("desktop_background_document", { path: "/Else/a.txt" })).toBe(false);
+  it("the TextEdit document tool stays out: saving through it can raise a macOS permission prompt nobody is there for", async () => {
+    const grant = createStandingGrant({ apps: [{ name: "TextEdit", bundleId: "com.apple.TextEdit" }], files: ["/Docs"] }, deps())!;
+    expect(grant.covers("desktop_background_document")).toBe(false);
+    expect(await grant.allows("desktop_background_document", { path: "/Docs/a.txt" })).toBe(false);
   });
 });
 

@@ -364,13 +364,15 @@ export const AUTOMATION_INSTRUCTIONS = `Scheduled tasks:
 export const SCHEDULED_RUN = "Scheduled task running now:";
 
 /** The goal a scheduled run is started with. */
-export function scheduledGoal(item: Pick<Automation, "title" | "task" | "createdAt" | "apps" | "files">): string {
+export function scheduledGoal(item: Pick<Automation, "title" | "task" | "createdAt" | "apps" | "files"> & { schedule?: Schedule }): string {
   const apps = item.apps?.map((app) => app.name).join(", ");
   const files = item.files?.join(", ");
   const allowed = apps || files
     ? `\n\nWhen setting this up the user allowed it to act, without being asked, ${[apps && `in these apps: ${apps}`, files && `on these files and folders: ${files}`].filter(Boolean).join("; ")}. Anything else is refused. Change saved files with the file tools whenever that does the job. Otherwise read the app first with the tool that leaves the mouse and keyboard alone and use what it lists. Use desktop_focus, desktop_click, desktop_type or desktop_key only for a step that can't be done that way: they wait until the user leaves the Mac alone. If a step can't be done, end by saying what was done and what wasn't.`
     : "";
-  return `${SCHEDULED_RUN} "${item.title}", set up by the user on ${new Date(item.createdAt).toDateString()}. Do the task itself now; it is already scheduled, so don't schedule anything:\n${item.task}${allowed}`;
+  // A file check took a second run's line for a mistake and removed it.
+  const repeats = item.schedule?.kind === "once" ? "" : "\n\nThis task runs repeatedly: what earlier runs left in a file is expected, not a mistake to correct.";
+  return `${SCHEDULED_RUN} "${item.title}", set up by the user on ${new Date(item.createdAt).toDateString()}. Do the task itself now; it is already scheduled, so don't schedule anything:\n${item.task}${repeats}${allowed}`;
 }
 
 /**
@@ -500,7 +502,7 @@ export function createAutomationTools(store: AutomationStore, now: () => number 
         if (next === null) throw new Error("That time has already passed; give a time in the future.");
         const grant = await grantOf(a);
         const item = store.add({ title, task, schedule, ...(scope && { scope }), ...grant }, created);
-        return `Scheduled "${item.title}" (${JSON.stringify(schedule)}). Next run: ${new Date(next).toString()}. It runs while Vunemi is open and can't send, delete or pay; if the task needs that, tell the user that part won't be done.${grant.apps || grant.files ? " What it may act on is listed in Settings › Scheduled tasks, where the user can take it back." : ""}`;
+        return `Scheduled "${item.title}" (${JSON.stringify(schedule)}). Next run: ${new Date(next).toString()}. It runs while Vunemi is open and can't send, delete or pay; if the task needs that, tell the user that part won't be done.${grant.apps || grant.files ? " What it may act on is listed in Settings › Scheduled tasks, where the user can take it back." : ""} Setting it up was the whole request: don't do the task now and plan nothing more, just tell the user.`;
       },
     },
     {

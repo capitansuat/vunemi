@@ -17,11 +17,8 @@ import type { Automation } from "./automations.js";
 const LEAVES_INPUT_ALONE = new Set(["desktop_background_click", "desktop_background_set_text", "desktop_background_append_text", "desktop_background_scroll_position", "desktop_background_menu_open", "desktop_background_menu_select"]);
 const TAKES_INPUT = new Set(["desktop_describe", "desktop_focus", "desktop_click", "desktop_type", "desktop_key"]);
 /** Tools whose whole effect is on the files their path arguments name. */
-const FILE_TOOLS = new Set(["files_write", "files_edit", "excel_read_range", "excel_write_range", "word_read", "word_export_pdf", "powerpoint_outline", "document_make", "document_convert", "document_read", "document_edit", "sheet_make", "slides_make", "slides_read", "slides_edit", "desktop_background_document"]);
+const FILE_TOOLS = new Set(["files_write", "files_edit", "excel_read_range", "excel_write_range", "word_read", "word_export_pdf", "powerpoint_outline", "document_make", "document_convert", "document_read", "document_edit", "sheet_make", "slides_make", "slides_read", "slides_edit"]);
 const PATH_ARGS = ["path", "out", "output", "input", "source", "from", "to"];
-/** The tool that needs one app to be allowed, on top of its file. */
-const TEXTEDIT = "com.apple.TextEdit";
-
 export const IDLE_SECONDS = 10;
 export const IDLE_WAIT_MS = 30 * 60_000;
 const POLL_MS = 5_000;
@@ -78,7 +75,7 @@ export function createStandingGrant(item: Pick<Automation, "apps" | "files">, de
     }
   };
 
-  const covered = apps.length === 0 ? [] : [...LEAVES_INPUT_ALONE, ...TAKES_INPUT, ...(apps.some((app) => app.bundleId === TEXTEDIT) ? ["desktop_background_document"] : [])];
+  const covered = apps.length === 0 ? [] : [...LEAVES_INPUT_ALONE, ...TAKES_INPUT];
   return {
     covered,
     covers: (tool) => covered.includes(tool),

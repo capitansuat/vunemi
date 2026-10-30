@@ -1,4 +1,5 @@
 import XCTest
+import CoreGraphics
 @testable import VunemiHelper
 final class BackgroundControlTests: XCTestCase {
     func testCursorChangeNeverBecomesKnownBackgroundDelivery() {
@@ -7,6 +8,20 @@ final class BackgroundControlTests: XCTestCase {
         XCTAssertTrue(backgroundDeliveryUncertain(deliverySucceeded:false,foregroundChanged:false,cursorChanged:false,sessionVerified:true))
         XCTAssertTrue(backgroundDeliveryUncertain(deliverySucceeded:true,foregroundChanged:false,cursorChanged:false,sessionVerified:false))
         XCTAssertFalse(backgroundDeliveryUncertain(deliverySucceeded:true,foregroundChanged:false,cursorChanged:false,sessionVerified:true))
+    }
+    func testTheUsersOwnMouseIsNotTheOperationMovingIt() {
+        let a = CGPoint(x: 1, y: 1), b = CGPoint(x: 9, y: 9)
+        XCTAssertFalse(backgroundCursorDisturbed(before: a, after: b, userMoved: true))
+        XCTAssertTrue(backgroundCursorDisturbed(before: a, after: b, userMoved: false))
+        XCTAssertFalse(backgroundCursorDisturbed(before: a, after: a, userMoved: false))
+        XCTAssertTrue(backgroundCursorDisturbed(before: a, after: nil, userMoved: true))
+    }
+    func testTheUserSwitchingAppsIsNotTheOperationRaisingOne() {
+        XCTAssertFalse(backgroundForegroundDisturbed(before: 7, after: 8, target: 42, userActed: true))
+        XCTAssertTrue(backgroundForegroundDisturbed(before: 7, after: 8, target: 42, userActed: false))
+        XCTAssertTrue(backgroundForegroundDisturbed(before: 7, after: 42, target: 42, userActed: true))
+        XCTAssertTrue(backgroundForegroundDisturbed(before: 7, after: nil, target: 42, userActed: true))
+        XCTAssertFalse(backgroundForegroundDisturbed(before: 7, after: 7, target: 42, userActed: false))
     }
     func testLockedOrUnknownSessionNeverAllowsBackgroundInput() {
         XCTAssertThrowsError(try requireBackgroundSession(onConsole: true, locked: true))

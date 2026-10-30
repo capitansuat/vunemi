@@ -45,7 +45,7 @@ export function backgroundDocumentTool(helper:Helper,ensurePermission:()=>Promis
   const rpc=async(op:string,payload:Record<string,unknown>,effect=false)=>{
    active();await ensurePermission();active();
    try{const result=await helper.call(op,payload,{signal:ctx.signal,assertActive:ctx.assertToolActive,timeoutMs:op==='background_save_document'?60_000:20_000,ownerRunId:ctx.runId,...(op!=='background_open_document'&&leaseTarget?{target:leaseTarget}:{})}) as Observation;
-    if(result.deliveryUnknown===true||result.cursorChanged===true||result.foregroundChanged===true)throw Object.assign(Error('Background document delivery is uncertain; no further input sent.'),{deliveryUnknown:true,noInputSent:false});
+    if(result.deliveryUnknown===true||result.cursorChanged===true||result.foregroundChanged===true)throw Object.assign(Error(`Background document delivery is uncertain (${String((result as {reasonCode?:unknown}).reasonCode??result.status??'unknown')}); no further input sent.`),{deliveryUnknown:true,noInputSent:false});
     if(typeof result.documentPath==='string')result.documentPath=await realpath(result.documentPath);
     return result;}
    catch(e){if(effect&&!(e instanceof Error&&(('noInputSent' in e&&e.noInputSent===true)||('nativeRejection' in e&&e.nativeRejection===true))))throw Object.assign(e instanceof Error?e:Error(String(e)),{deliveryUnknown:true});throw e;}
