@@ -1,84 +1,84 @@
 {
-  "currentRelease": "0.2.4",
+  "currentRelease": "0.2.5",
   "releases": [
     {
-      "version": "0.2.4",
+      "version": "0.2.5",
       "updateTo": {
-        "version": "0.2.4",
-        "name": "Vunemi 0.2.4",
-        "pub_date": "2026-10-30T00:00:00Z",
+        "version": "0.2.5",
+        "name": "Vunemi 0.2.5",
+        "pub_date": "2026-10-31T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.4/Vunemi-0.2.4-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.5/Vunemi-0.2.5-arm64.zip"
       }
     }
   ],
   "sizeMb": 143,
   "notes": {
     "en": [
-      "Scheduled tasks can now work in the apps and on the files you name when you set them up, with no approval card each time, so they finish while you're away. Settings shows what each one may touch, and you can take it back.",
-      "Background control now reaches beyond Calculator and TextEdit: Vunemi can press plain buttons and change text fields in other apps without taking your mouse or keyboard. What an app exposes varies; Excel doesn't expose its cells, so Vunemi changes the saved file.",
-      "The Activity log now groups rows by the request that set them off, and you can search it. It had grown to hundreds of rows with no way to find one.",
-      "An old uncertain result from an app that has since closed no longer blocks opening a document in the background. The record stays, and nothing is repeated."
+      "Vunemi can now compress and open files itself: zip, 7z and tar, and it opens RAR. A request like “zip this folder so I can attach it” used to stop at that step, because Vunemi had no tool for it; reading, writing and moving files already worked and haven't changed.",
+      "It uses the archive tool built into macOS, inside a sandbox, and keeps an opened archive only if all of it opened. Password-protected archives and split RARs aren't opened, and a damaged RAR isn't always noticed.",
+      "When the focused field in a Mac app is a password field, Vunemi now stops and types nothing. Passwords are yours to enter; the browser and background control already worked this way.",
+      "When Vunemi changes a file that already exists, its output row now says Changed instead of Created."
     ],
     "de": [
-      "Geplante Aufgaben können jetzt in den Apps und mit den Dateien arbeiten, die du beim Einrichten nennst, ohne jedes Mal eine Bestätigung, und werden so fertig, während du weg bist. Die Einstellungen zeigen, was jede darf, und du kannst es zurücknehmen.",
-      "Die Hintergrundsteuerung reicht jetzt über Rechner und TextEdit hinaus: Vunemi kann in anderen Apps einfache Tasten drücken und Textfelder ändern, ohne Maus oder Tastatur zu belegen. Das hängt von der App ab; Excel gibt seine Zellen nicht frei, also wird die gespeicherte Datei geändert.",
-      "Das Aktivitätsprotokoll gruppiert Zeilen jetzt nach der auslösenden Anfrage und lässt sich durchsuchen. Es war auf Hunderte Zeilen angewachsen, ohne dass man eine finden konnte.",
-      "Ein altes unsicheres Ergebnis aus einer inzwischen geschlossenen App blockiert nicht mehr das Öffnen eines Dokuments im Hintergrund. Der Eintrag bleibt, und nichts wird wiederholt."
+      "Vunemi kann Dateien jetzt selbst komprimieren und öffnen: zip, 7z und tar, außerdem öffnet es RAR. „Pack diesen Ordner als Zip, ich will ihn anhängen“ blieb bisher hier stehen, weil das Werkzeug fehlte; Dateien lesen, schreiben und verschieben ging schon und bleibt unverändert.",
+      "Vunemi nutzt das in macOS eingebaute Archivwerkzeug in einer Sandbox und behält ein geöffnetes Archiv nur, wenn es vollständig aufging. Passwortgeschützte Archive und mehrteilige RAR werden nicht geöffnet, und ein beschädigtes RAR fällt nicht immer auf.",
+      "Ist das aktive Feld in einer Mac-App ein Passwortfeld, hält Vunemi jetzt an und tippt nichts. Passwörter gibst du selbst ein; im Browser und bei der Hintergrundsteuerung war das schon so.",
+      "Ändert Vunemi eine vorhandene Datei, steht in der Ergebniszeile jetzt Geändert statt Erstellt."
     ],
     "es": [
-      "Las tareas programadas ahora pueden trabajar en las apps y los archivos que nombres al configurarlas, sin tarjeta de aprobación cada vez, así que terminan mientras no estás. Ajustes muestra qué puede tocar cada una, y puedes retirarlo.",
-      "El control en segundo plano ya va más allá de Calculadora y TextEdit: Vunemi puede pulsar botones sencillos y cambiar campos de texto en otras apps sin ocupar tu ratón ni tu teclado. Depende de la app; Excel no expone sus celdas, así que se cambia el archivo guardado.",
-      "El Registro de actividad ahora agrupa las filas por la petición que las inició, y se puede buscar. Había llegado a cientos de filas sin forma de encontrar una.",
-      "Un resultado incierto antiguo de una app ya cerrada ya no impide abrir un documento en segundo plano. El registro se queda y nada se repite."
+      "Vunemi ya puede comprimir y abrir archivos por sí mismo: zip, 7z y tar, y también abre RAR. Una petición como «comprime esta carpeta para adjuntarla» se quedaba en ese paso, porque Vunemi no tenía una herramienta para ello; leer, escribir y mover archivos ya funcionaba y no ha cambiado.",
+      "Usa la herramienta de archivos integrada en macOS, dentro de un sandbox, y solo conserva un archivo abierto si se abrió entero. No abre archivos protegidos con contraseña ni RAR divididos, y un RAR dañado no siempre se detecta.",
+      "Cuando el campo activo de una app de Mac es un campo de contraseña, Vunemi ahora se detiene y no escribe nada. Las contraseñas las escribes tú; el navegador y el control en segundo plano ya funcionaban así.",
+      "Cuando Vunemi cambia un archivo que ya existe, su fila de resultado ahora dice Modificado en lugar de Creado."
     ],
     "fr": [
-      "Les tâches planifiées peuvent maintenant travailler dans les apps et sur les fichiers que vous nommez à leur création, sans carte d'approbation à chaque fois, et se terminent donc en votre absence. Les Réglages montrent ce que chacune peut toucher, et vous pouvez le retirer.",
-      "Le contrôle en arrière-plan dépasse Calculette et TextEdit : Vunemi peut appuyer sur de simples boutons et modifier des champs de texte dans d'autres apps sans prendre souris ni clavier. Cela varie selon l'app ; Excel n'expose pas ses cellules, le fichier enregistré est donc modifié.",
-      "Le Journal d'activité regroupe maintenant les lignes par la demande qui les a déclenchées, et il peut être recherché. Il avait atteint des centaines de lignes sans moyen d'en retrouver une.",
-      "Un ancien résultat incertain d'une app fermée depuis ne bloque plus l'ouverture d'un document en arrière-plan. L'entrée reste, et rien n'est répété."
+      "Vunemi peut désormais compresser et ouvrir des fichiers lui-même : zip, 7z et tar, et il ouvre aussi les RAR. « Compresse ce dossier pour que je le joigne » s'arrêtait là, faute d'outil ; lire, écrire et déplacer des fichiers fonctionnait déjà et n'a pas changé.",
+      "Vunemi utilise l'outil d'archive intégré à macOS, dans un bac à sable, et ne garde une archive ouverte que si elle s'est ouverte entièrement. Les archives protégées par mot de passe et les RAR fractionnés ne sont pas ouverts, et un RAR endommagé n'est pas toujours détecté.",
+      "Quand le champ actif d'une app Mac est un champ de mot de passe, Vunemi s'arrête désormais et ne saisit rien. C'est à vous de saisir vos mots de passe ; le navigateur et le contrôle en arrière-plan fonctionnaient déjà ainsi.",
+      "Quand Vunemi modifie un fichier existant, sa ligne de résultat indique désormais Modifié au lieu de Créé."
     ],
     "it": [
-      "Le attività pianificate ora possono lavorare nelle app e sui file che nomini quando le imposti, senza scheda di approvazione ogni volta, e così finiscono mentre sei via. Le Impostazioni mostrano cosa può toccare ognuna, e puoi revocarlo.",
-      "Il controllo in background va ora oltre Calcolatrice e TextEdit: Vunemi può premere pulsanti semplici e cambiare campi di testo in altre app senza occupare mouse e tastiera. Dipende dall'app; Excel non espone le sue celle, quindi viene cambiato il file salvato.",
-      "Il Registro attività ora raggruppa le righe per la richiesta che le ha avviate e si può cercare. Era arrivato a centinaia di righe senza modo di trovarne una.",
-      "Un vecchio risultato incerto di un'app ormai chiusa non impedisce più di aprire un documento in background. La voce resta e nulla viene ripetuto."
+      "Vunemi ora può comprimere e aprire i file da solo: zip, 7z e tar, e apre anche i RAR. Una richiesta come «comprimi questa cartella così la allego» si fermava a quel passaggio, perché Vunemi non aveva uno strumento per farlo; leggere, scrivere e spostare i file funzionava già e non è cambiato.",
+      "Usa lo strumento di archiviazione integrato in macOS, in una sandbox, e tiene un archivio aperto solo se si è aperto per intero. Non apre archivi protetti da password né RAR divisi, e un RAR danneggiato non viene sempre notato.",
+      "Quando il campo attivo di un'app Mac è un campo password, Vunemi ora si ferma e non scrive nulla. Le password le inserisci tu; il browser e il controllo in background funzionavano già così.",
+      "Quando Vunemi cambia un file che esiste già, la sua riga di risultato ora dice Modificato invece di Creato."
     ],
     "tr": [
-      "Zamanlanmış görevler artık kurarken adını verdiğin uygulamalarda ve dosyalarda her seferinde onay kartı göstermeden çalışabiliyor, böylece sen yokken bitiyor. Ayarlar her görevin neye dokunabileceğini gösterir, izni geri alabilirsin.",
-      "Arka plan kontrolü artık Hesap Makinesi ve TextEdit ile sınırlı değil: Vunemi başka uygulamalarda da faren ve klavyen meşgul olmadan düz düğmelere basabiliyor, metin alanlarını değiştirebiliyor. Bu uygulamaya göre değişir; Excel hücrelerini açmıyor, bu yüzden kayıtlı dosya değiştirilir.",
-      "Etkinlik günlüğü artık satırları onları başlatan isteğe göre grupluyor ve aranabiliyor. Yüzlerce satıra ulaşmıştı ve birini bulmanın yolu yoktu.",
-      "Kapanmış bir uygulamadan kalan eski belirsiz sonuç artık arka planda belge açmayı engellemiyor. Kayıt yerinde kalıyor, hiçbir şey tekrarlanmıyor."
+      "Vunemi artık dosyaları kendisi sıkıştırıp açabiliyor: zip, 7z ve tar; RAR'ı da açıyor. “Bu klasörü zip'le, ekleyeceğim” gibi bir istek o adımda kalıyordu, çünkü Vunemi'nin bunun için aracı yoktu; dosya okuma, yazma ve taşıma zaten çalışıyordu ve değişmedi.",
+      "macOS'un kendi arşiv aracını sandbox içinde kullanır ve bir arşivi yalnız tamamı açıldıysa bırakır. Parola korumalı arşivleri ve parçalı RAR'ları açmaz; bozuk bir RAR her zaman fark edilmez.",
+      "Bir Mac uygulamasında odaktaki alan parola alanıysa Vunemi artık durur ve hiçbir şey yazmaz. Parolayı sen girersin; tarayıcı ve arka plan kontrolü zaten böyle çalışıyordu.",
+      "Vunemi var olan bir dosyayı değiştirdiğinde çıktı satırı artık Oluşturuldu değil, Değiştirildi diyor."
     ],
     "pt": [
-      "As tarefas agendadas agora podem trabalhar nos apps e nos arquivos que você nomear ao criá-las, sem cartão de aprovação a cada vez, e assim terminam enquanto você está fora. Os Ajustes mostram o que cada uma pode tocar, e você pode retirar.",
-      "O controle em segundo plano agora vai além da Calculadora e do TextEdit: o Vunemi pode apertar botões simples e mudar campos de texto em outros apps sem ocupar seu mouse ou teclado. Depende do app; o Excel não expõe as células, então o arquivo salvo é alterado.",
-      "O Registro de atividades agora agrupa as linhas pelo pedido que as iniciou, e pode ser pesquisado. Ele tinha chegado a centenas de linhas sem como achar uma.",
-      "Um resultado incerto antigo de um app já fechado não impede mais abrir um documento em segundo plano. O registro fica, e nada é repetido."
+      "O Vunemi agora consegue compactar e abrir arquivos sozinho: zip, 7z e tar, e também abre RAR. Um pedido como “compacte esta pasta para eu anexar” parava nessa etapa, porque o Vunemi não tinha uma ferramenta para isso; ler, gravar e mover arquivos já funcionava e não mudou.",
+      "Ele usa a ferramenta de compactação do próprio macOS, dentro de um sandbox, e só mantém um arquivo aberto se ele abriu por inteiro. Arquivos protegidos por senha e RAR divididos não são abertos, e um RAR danificado nem sempre é percebido.",
+      "Quando o campo em foco em um app do Mac é um campo de senha, o Vunemi agora para e não digita nada. As senhas você digita; o navegador e o controle em segundo plano já funcionavam assim.",
+      "Quando o Vunemi muda um arquivo que já existe, a linha de resultado agora diz Alterado em vez de Criado."
     ],
     "ru": [
-      "Запланированные задачи теперь могут работать в приложениях и файлах, которые вы назвали при настройке, без карточки подтверждения каждый раз, и поэтому завершаются без вас. В настройках видно, что может затрагивать каждая, и это можно отозвать.",
-      "Фоновое управление теперь не ограничено Калькулятором и TextEdit: Vunemi может нажимать простые кнопки и менять текстовые поля в других приложениях, не занимая мышь и клавиатуру. Это зависит от приложения; Excel не открывает свои ячейки, поэтому меняется сохранённый файл.",
-      "Журнал действий теперь группирует строки по запросу, с которого они начались, и по нему можно искать. Он вырос до сотен строк, и найти нужную было невозможно.",
-      "Старый неясный результат из уже закрытого приложения больше не мешает открывать документ в фоне. Запись остаётся, и ничего не повторяется."
+      "Теперь Vunemi сам сжимает и открывает файлы: zip, 7z и tar, а также открывает RAR. Просьба вроде «упакуй эту папку в zip, я её прикреплю» раньше останавливалась на этом шаге, потому что у Vunemi не было такого инструмента; чтение, запись и перемещение файлов уже работали и не изменились.",
+      "Vunemi использует встроенный в macOS инструмент архивов внутри песочницы и оставляет открытый архив, только если он открылся полностью. Архивы с паролем и многотомные RAR не открываются, а повреждённый RAR замечается не всегда.",
+      "Если активное поле в приложении Mac — поле пароля, Vunemi теперь останавливается и ничего не вводит. Пароли вводите вы сами; в браузере и при фоновом управлении так было и раньше.",
+      "Когда Vunemi меняет уже существующий файл, в строке результата теперь написано «Изменено», а не «Создано»."
     ],
     "zh": [
-      "定时任务现在可以在你设置时指定的应用和文件上操作，不必每次显示批准卡片，因此能在你不在时完成。“设置”会显示每个任务可以触及的内容，你可以撤销。",
-      "后台控制不再限于计算器和 TextEdit：Vunemi 可以在其他应用中按下普通按钮、修改文本字段，而不占用你的鼠标和键盘。具体取决于应用；Excel 不开放单元格，因此会修改已保存的文件。",
-      "活动日志现在按发起请求对各行分组，并且可以搜索。它此前已增长到数百行，却无法找到其中一行。",
-      "已关闭应用留下的旧的不确定结果不再阻止在后台打开文档。记录会保留，也不会重复任何操作。"
+      "Vunemi 现在可以自己压缩和打开文件：zip、7z 和 tar，也能打开 RAR。像“把这个文件夹压缩一下，我要附上”这样的请求以前会停在这一步，因为 Vunemi 没有相应的工具；读取、写入和移动文件本来就能用，也没有变化。",
+      "它在沙盒中使用 macOS 自带的归档工具，只有全部打开成功才保留结果。受密码保护的归档和分卷 RAR 不会打开，损坏的 RAR 也不一定能被发现。",
+      "当 Mac 应用中获得焦点的是密码字段时，Vunemi 现在会停下，不输入任何内容。密码由你自己输入；浏览器和后台控制本来就是这样。",
+      "当 Vunemi 更改已存在的文件时，结果行现在显示“已更改”，而不是“已创建”。"
     ],
     "ja": [
-      "スケジュールタスクは、設定時に指定したアプリとファイルで、毎回の承認カードなしに作業できるようになりました。そのため不在中に完了します。設定で各タスクが触れる範囲を確認でき、取り消すこともできます。",
-      "バックグラウンド操作が計算機と TextEdit 以外にも広がりました。マウスとキーボードを奪わずに、他のアプリの通常のボタンを押し、テキスト欄を変更できます。アプリによって異なり、Excel はセルを公開していないため、保存済みファイルを変更します。",
-      "アクティビティログは、きっかけになった依頼ごとに行をまとめ、検索できるようになりました。数百行に増えても、目的の行を探す方法がありませんでした。",
-      "すでに閉じたアプリの古い不確かな結果が、バックグラウンドでの書類の表示を妨げなくなりました。記録は残り、何も繰り返しません。"
+      "Vunemi がファイルの圧縮と展開を自分でできるようになりました。zip、7z、tar に対応し、RAR も開けます。",
+      "「このフォルダを zip にして、添付します」のような依頼は、これまで専用のツールがなかったためその段階で止まっていました。ファイルの読み書きと移動はすでに動いており、変更はありません。macOS 内蔵のアーカイブツールをサンドボックス内で使い、全体を開けたときだけ結果を残します。パスワード付きのアーカイブと分割された RAR は開かず、破損した RAR に気づけないこともあります。",
+      "Mac アプリでフォーカスされている欄がパスワード欄なら、Vunemi は止まり、何も入力しなくなりました。パスワードはご自身で入力してください。ブラウザとバックグラウンド操作はすでにこの動作でした。",
+      "Vunemi が既存のファイルを変更したとき、結果の行に「作成済み」ではなく「変更済み」と表示されるようになりました。"
     ],
     "ko": [
-      "예약된 작업은 이제 설정할 때 지정한 앱과 파일에서 매번 승인 카드 없이 작업할 수 있으므로 자리를 비운 동안 끝납니다. 설정에서 각 작업이 다룰 수 있는 항목을 확인하고 취소할 수 있습니다.",
-      "백그라운드 제어가 이제 계산기와 TextEdit를 넘어섭니다. Vunemi는 마우스와 키보드를 차지하지 않고 다른 앱의 일반 버튼을 누르고 텍스트 입력란을 바꿀 수 있습니다. 앱마다 다르며, Excel은 셀을 공개하지 않으므로 저장된 파일을 변경합니다.",
-      "활동 기록이 이제 줄을 시작한 요청별로 묶고 검색할 수 있습니다. 수백 줄로 늘어났지만 원하는 줄을 찾을 방법이 없었습니다.",
-      "이미 닫힌 앱에서 남은 오래된 불확실한 결과가 더 이상 백그라운드 문서 열기를 막지 않습니다. 기록은 남고 아무것도 반복되지 않습니다."
+      "이제 Vunemi가 파일을 직접 압축하고 열 수 있습니다. zip, 7z, tar를 지원하며 RAR도 엽니다.",
+      "“이 폴더를 압축해 줘, 첨부할 거야” 같은 요청은 전용 도구가 없어 그 단계에서 멈췄습니다. 파일 읽기, 쓰기, 이동은 이미 동작했고 달라지지 않았습니다. macOS에 내장된 압축 도구를 샌드박스 안에서 사용하며, 전체가 열렸을 때만 결과를 남깁니다. 암호로 보호된 압축 파일과 분할 RAR은 열지 않으며, 손상된 RAR을 항상 알아채지는 못합니다.",
+      "Mac 앱에서 포커스된 칸이 암호 칸이면 Vunemi는 이제 멈추고 아무것도 입력하지 않습니다. 암호는 직접 입력하십시오. 브라우저와 백그라운드 제어는 이미 이렇게 동작했습니다.",
+      "Vunemi가 이미 있는 파일을 변경하면 결과 행에 이제 생성됨 대신 변경됨이 표시됩니다."
     ]
   }
 }

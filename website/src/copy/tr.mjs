@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.4'ün yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.5'in yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.4'ü Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.5'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.2.4: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.2.5: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -137,7 +137,7 @@ export default {
     connIntro: "Her bağlantı sen açana kadar kapalıdır. Kapalı bir bağlantı modele görünmez; araçları hiç çağrılamaz. Birçoğunda okuma ve değiştirme için ayrı anahtarlar var.",
     partsLabel: "Anahtarlar",
     connections: [
-      { name: "Dosyalar", body: "Masaüstü, Belgeler ve İndirilenler klasörlerin; başka hiçbir yer. Bir dosyayı taşırken yedek alınır ve orada zaten olan bir dosyanın üzerine asla yazılmaz.", parts: "Okuma · Yazma (geri alınabilir; silinenler Çöp'e gider) · Dönüştürme (resim, ses, belge)" },
+      { name: "Dosyalar", body: "Masaüstü, Belgeler ve İndirilenler klasörlerin; başka hiçbir yer. Bir dosyayı taşırken yedek alınır ve orada zaten olan bir dosyanın üzerine asla yazılmaz. Arşiv de oluşturup açar, böylece “bu klasörü zip'le” sohbette biter; bu olmadan Finder'la elle yapılır.", parts: "Okuma · Yazma (geri alınabilir; silinenler Çöp'e gider) · Dönüştürme (resim, ses, belge)" },
       { name: "Tarayıcı", body: "Chrome veya Safari'nden ayrı, Vunemi penceresindeki bir tarayıcı. Bir kez giriş yap, oturumun açık kalsın; istediğin an Kontrolü al.", parts: "Sayfa okuma · Tıklama ve yazma" },
       { name: "Uçuş ve otel", body: "Google Flights ve Trivago'da arar, seçenekleri kart olarak gösterir. Bir kartı seçince teklifi sohbetin yanında açılır. Rotan ya da gideceğin yer, tarihler ve kişi sayısı Google'a ya da Trivago'ya gider. Vunemi rezervasyon ya da ödeme yapmaz.", parts: "Google Flights · Trivago" },
       { name: "E-posta", body: "Mac'teki Mail uygulamasındaki hesaplar (parola gerekmez), Gmail (uygulama şifresiyle), diğer IMAP/SMTP hesapları ve Outlook (kendi Microsoft Entra uygulama kimliğinle). Giden e-posta Giden Kutusu'nda 45 saniye bekler. Tek kullanımlık kodlar ve giriş bağlantıları modele asla gösterilmez.", parts: "Okuma · Taslak · Gönderme · Düzenleme" },
@@ -188,10 +188,10 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Zamanlanmış görevler artık kurarken adını verdiğin uygulamalarda ve dosyalarda her seferinde onay kartı göstermeden çalışabiliyor, böylece sen yokken bitiyor. Ayarlar her görevin neye dokunabileceğini gösterir, izni geri alabilirsin.",
-      "Arka plan kontrolü artık Hesap Makinesi ve TextEdit ile sınırlı değil: Vunemi başka uygulamalarda da faren ve klavyen meşgul olmadan düz düğmelere basabiliyor, metin alanlarını değiştirebiliyor. Bu uygulamaya göre değişir; Excel hücrelerini açmıyor, bu yüzden kayıtlı dosya değiştirilir.",
-      "Etkinlik günlüğü artık satırları onları başlatan isteğe göre grupluyor ve aranabiliyor. Yüzlerce satıra ulaşmıştı ve birini bulmanın yolu yoktu.",
-      "Kapanmış bir uygulamadan kalan eski belirsiz sonuç artık arka planda belge açmayı engellemiyor. Kayıt yerinde kalıyor, hiçbir şey tekrarlanmıyor.",
+      "Vunemi artık dosyaları kendisi sıkıştırıp açabiliyor: zip, 7z ve tar; RAR'ı da açıyor. “Bu klasörü zip'le, ekleyeceğim” gibi bir istek o adımda kalıyordu, çünkü Vunemi'nin bunun için aracı yoktu; dosya okuma, yazma ve taşıma zaten çalışıyordu ve değişmedi.",
+      "macOS'un kendi arşiv aracını sandbox içinde kullanır ve bir arşivi yalnız tamamı açıldıysa bırakır. Parola korumalı arşivleri ve parçalı RAR'ları açmaz; bozuk bir RAR her zaman fark edilmez.",
+      "Bir Mac uygulamasında odaktaki alan parola alanıysa Vunemi artık durur ve hiçbir şey yazmaz. Parolayı sen girersin; tarayıcı ve arka plan kontrolü zaten böyle çalışıyordu.",
+      "Vunemi var olan bir dosyayı değiştirdiğinde çıktı satırı artık Oluşturuldu değil, Değiştirildi diyor.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi : un assistant personnel qui fonctionne sur votre Mac", description: "Vunemi aide au quotidien. Son IA fonctionne sur votre Mac, sans compte cloud Vunemi. Vous choisissez les services externes à connecter." },
-    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.2.4." },
+    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.2.5." },
     screens: { title: "Captures de Vunemi", description: "De vraies captures de l'app Vunemi pour Mac, réalisées avec des données d'exemple." },
-    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.2.4 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
+    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.2.5 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
   },
   hero: {
     eyebrow: "Assistant personnel pour Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tout ce que Vunemi sait faire",
-    intro: "Vunemi 0.2.4 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
+    intro: "Vunemi 0.2.5 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
     chatTitle: "Travailler avec Vunemi",
     chat: [
       { title: "D'abord le plan", body: "Pour une tâche en plusieurs étapes, Vunemi peut d'abord présenter son plan. Lancez-le, modifiez les étapes ou annulez." },
@@ -137,7 +137,7 @@ export default {
     connIntro: "Chaque connexion reste désactivée tant que vous ne l'activez pas. Une connexion désactivée est invisible pour le modèle : ses outils ne peuvent pas être appelés du tout. Beaucoup ont des interrupteurs distincts pour la lecture et la modification.",
     partsLabel: "Interrupteurs",
     connections: [
-      { name: "Fichiers", body: "Vos dossiers Bureau, Documents et Téléchargements, rien d'autre. Le déplacement d'un fichier garde une sauvegarde et n'écrase jamais un fichier déjà présent.", parts: "Lecture · Écriture (annulable ; les suppressions vont à la Corbeille) · Conversion (images, audio, documents)" },
+      { name: "Fichiers", body: "Vos dossiers Bureau, Documents et Téléchargements, rien d'autre. Le déplacement d'un fichier garde une sauvegarde et n'écrase jamais un fichier déjà présent. Vunemi crée et ouvre aussi des archives, pour que « compresse ce dossier » aboutisse dans la conversation ; sinon, le Finder le fait à la main.", parts: "Lecture · Écriture (annulable ; les suppressions vont à la Corbeille) · Conversion (images, audio, documents)" },
       { name: "Navigateur", body: "Un navigateur dans la fenêtre de Vunemi, distinct de votre Chrome ou Safari. Connectez-vous une fois et restez connecté ; reprenez la main quand vous voulez.", parts: "Lecture des pages · Clics et saisie" },
       { name: "Vols et hôtels", body: "Recherche sur Google Flights et Trivago et présente les options sous forme de cartes. Choisir une carte ouvre son offre à côté de la conversation. Votre itinéraire ou destination, vos dates et le nombre de voyageurs sont envoyés à Google ou à Trivago. Vunemi ne réserve pas et ne paie pas.", parts: "Google Flights · Trivago" },
       { name: "E-mail", body: "Les comptes de l'app Mail de votre Mac (sans mot de passe), Gmail (avec un mot de passe d'application), d'autres comptes IMAP/SMTP et Outlook (avec votre propre ID d'application Microsoft Entra). Le courrier sortant attend 45 secondes dans la boîte d'envoi. Les codes à usage unique et les liens de connexion ne sont jamais montrés au modèle.", parts: "Lecture · Brouillons · Envoi · Classement" },
@@ -186,10 +186,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Nouveautés de cette version",
     highlights: [
-      "Les tâches planifiées peuvent maintenant travailler dans les apps et sur les fichiers que vous nommez à leur création, sans carte d'approbation à chaque fois, et se terminent donc en votre absence. Les Réglages montrent ce que chacune peut toucher, et vous pouvez le retirer.",
-      "Le contrôle en arrière-plan dépasse Calculette et TextEdit : Vunemi peut appuyer sur de simples boutons et modifier des champs de texte dans d'autres apps sans prendre souris ni clavier. Cela varie selon l'app ; Excel n'expose pas ses cellules, le fichier enregistré est donc modifié.",
-      "Le Journal d'activité regroupe maintenant les lignes par la demande qui les a déclenchées, et il peut être recherché. Il avait atteint des centaines de lignes sans moyen d'en retrouver une.",
-      "Un ancien résultat incertain d'une app fermée depuis ne bloque plus l'ouverture d'un document en arrière-plan. L'entrée reste, et rien n'est répété.",
+      "Vunemi peut désormais compresser et ouvrir des fichiers lui-même : zip, 7z et tar, et il ouvre aussi les RAR. « Compresse ce dossier pour que je le joigne » s'arrêtait là, faute d'outil ; lire, écrire et déplacer des fichiers fonctionnait déjà et n'a pas changé.",
+      "Vunemi utilise l'outil d'archive intégré à macOS, dans un bac à sable, et ne garde une archive ouverte que si elle s'est ouverte entièrement. Les archives protégées par mot de passe et les RAR fractionnés ne sont pas ouverts, et un RAR endommagé n'est pas toujours détecté.",
+      "Quand le champ actif d'une app Mac est un champ de mot de passe, Vunemi s'arrête désormais et ne saisit rien. C'est à vous de saisir vos mots de passe ; le navigateur et le contrôle en arrière-plan fonctionnaient déjà ainsi.",
+      "Quand Vunemi modifie un fichier existant, sa ligne de résultat indique désormais Modifié au lieu de Créé.",
     ],
     title: "Télécharger Vunemi",
     intro: "Gratuit et open source. Pour les Mac avec puce Apple et macOS 14 ou ultérieur.",

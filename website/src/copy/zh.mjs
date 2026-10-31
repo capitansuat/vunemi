@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.2.4 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.2.5 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.2.4，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.2.5，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.2.4：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.2.5：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -137,7 +137,7 @@ export default {
     connIntro: "每个连接在你打开之前都是关闭的。关闭的连接对模型不可见，其工具根本无法调用。很多连接对“读取”和“修改”设有单独的开关。",
     partsLabel: "开关",
     connections: [
-      { name: "文件", body: "只限你的桌面、文稿和下载文件夹。移动文件时会保留备份，绝不会覆盖已经存在的文件。", parts: "读取 · 写入（可撤销；删除的内容进入废纸篓）· 转换（图片、音频、文档）" },
+      { name: "文件", body: "只限你的桌面、文稿和下载文件夹。移动文件时会保留备份，绝不会覆盖已经存在的文件。它还能创建和打开归档，“把这个文件夹压缩一下”可以直接在对话中完成；没有这项功能时，也可以在访达中手动完成。", parts: "读取 · 写入（可撤销；删除的内容进入废纸篓）· 转换（图片、音频、文档）" },
       { name: "浏览器", body: "Vunemi 窗口中的浏览器，与你的 Chrome 或 Safari 分开。登录一次即可保持登录；随时可以接管控制。", parts: "读取网页 · 点击和输入" },
       { name: "航班和酒店", body: "在 Google Flights 和 Trivago 搜索，并以卡片展示结果。选择一张卡片即可在对话旁打开对应报价。你的航线或目的地、日期和人数会发送给 Google 或 Trivago。Vunemi 不会预订或付款。", parts: "Google Flights · Trivago" },
       { name: "邮件", body: "Mac 上“邮件”App 中的账户（无需密码）、Gmail（使用应用专用密码）、其他 IMAP/SMTP 账户，以及 Outlook（使用你自己的 Microsoft Entra 应用 ID）。发出的邮件会在发件箱等待 45 秒。一次性验证码和登录链接绝不会显示给模型。", parts: "读取 · 草稿 · 发送 · 整理" },
@@ -186,10 +186,10 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "定时任务现在可以在你设置时指定的应用和文件上操作，不必每次显示批准卡片，因此能在你不在时完成。“设置”会显示每个任务可以触及的内容，你可以撤销。",
-      "后台控制不再限于计算器和 TextEdit：Vunemi 可以在其他应用中按下普通按钮、修改文本字段，而不占用你的鼠标和键盘。具体取决于应用；Excel 不开放单元格，因此会修改已保存的文件。",
-      "活动日志现在按发起请求对各行分组，并且可以搜索。它此前已增长到数百行，却无法找到其中一行。",
-      "已关闭应用留下的旧的不确定结果不再阻止在后台打开文档。记录会保留，也不会重复任何操作。",
+      "Vunemi 现在可以自己压缩和打开文件：zip、7z 和 tar，也能打开 RAR。像“把这个文件夹压缩一下，我要附上”这样的请求以前会停在这一步，因为 Vunemi 没有相应的工具；读取、写入和移动文件本来就能用，也没有变化。",
+      "它在沙盒中使用 macOS 自带的归档工具，只有全部打开成功才保留结果。受密码保护的归档和分卷 RAR 不会打开，损坏的 RAR 也不一定能被发现。",
+      "当 Mac 应用中获得焦点的是密码字段时，Vunemi 现在会停下，不输入任何内容。密码由你自己输入；浏览器和后台控制本来就是这样。",
+      "当 Vunemi 更改已存在的文件时，结果行现在显示“已更改”，而不是“已创建”。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

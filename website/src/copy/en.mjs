@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.4 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.5 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.4 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.5 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.2.4 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.2.5 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -139,7 +139,7 @@ export default {
     connIntro: "Each connection is off until you turn it on. A connection that is off is invisible to the model: its tools can't be called at all. Many have separate switches for reading and for changing.",
     partsLabel: "Switches",
     connections: [
-      { name: "Files", body: "Your Desktop, Documents and Downloads folders, nothing else. Moving a file keeps a backup and never overwrites a file that is already there.", parts: "Reading · Writing (undoable; deletes go to the Trash) · Converting (images, audio, documents)" },
+      { name: "Files", body: "Your Desktop, Documents and Downloads folders, nothing else. Moving a file keeps a backup and never overwrites a file that is already there. It also makes and opens archives, so “zip this folder” finishes in the chat; without that, Finder still does it by hand.", parts: "Reading · Writing (undoable; deletes go to the Trash) · Converting (images, audio, documents)" },
       { name: "Browser", body: "A browser inside Vunemi's window, separate from your Chrome or Safari. Sign in once and stay signed in; press Take control at any time.", parts: "Reading pages · Clicking and typing" },
       { name: "Flights and hotels", body: "Searches Google Flights and Trivago and shows the options as cards. Choosing a card opens its offer beside the chat. Your route or destination, dates and traveller count go to Google or Trivago. Vunemi does not book or pay.", parts: "Google Flights · Trivago" },
       { name: "Mail", body: "The accounts in the Mac's Mail app (no password needed), Gmail (with an app password), other IMAP/SMTP accounts, and Outlook (with your own Microsoft Entra app ID). Outgoing mail waits 45 seconds in the Outbox. One-time codes and sign-in links are never shown to the model.", parts: "Reading · Drafts · Sending · Organising" },
@@ -190,10 +190,10 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "Scheduled tasks can now work in the apps and on the files you name when you set them up, with no approval card each time, so they finish while you're away. Settings shows what each one may touch, and you can take it back.",
-      "Background control now reaches beyond Calculator and TextEdit: Vunemi can press plain buttons and change text fields in other apps without taking your mouse or keyboard. What an app exposes varies; Excel doesn't expose its cells, so Vunemi changes the saved file.",
-      "The Activity log now groups rows by the request that set them off, and you can search it. It had grown to hundreds of rows with no way to find one.",
-      "An old uncertain result from an app that has since closed no longer blocks opening a document in the background. The record stays, and nothing is repeated.",
+      "Vunemi can now compress and open files itself: zip, 7z and tar, and it opens RAR. A request like “zip this folder so I can attach it” used to stop at that step, because Vunemi had no tool for it; reading, writing and moving files already worked and haven't changed.",
+      "It uses the archive tool built into macOS, inside a sandbox, and keeps an opened archive only if all of it opened. Password-protected archives and split RARs aren't opened, and a damaged RAR isn't always noticed.",
+      "When the focused field in a Mac app is a password field, Vunemi now stops and types nothing. Passwords are yours to enter; the browser and background control already worked this way.",
+      "When Vunemi changes a file that already exists, its output row now says Changed instead of Created.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],

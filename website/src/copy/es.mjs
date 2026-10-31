@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un asistente personal que funciona en tu Mac", description: "Vunemi ayuda con las tareas diarias. La IA funciona en tu Mac, sin cuenta en la nube de Vunemi. Tú eliges qué servicios externos conectar." },
-    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.2.4." },
+    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.2.5." },
     screens: { title: "Pantallas de Vunemi", description: "Pantallas reales de la app Vunemi para Mac, capturadas con datos de ejemplo." },
-    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.2.4 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
+    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.2.5 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
   },
   hero: {
     eyebrow: "Asistente personal para Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Todo lo que puede hacer Vunemi",
-    intro: "Vunemi 0.2.4 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
+    intro: "Vunemi 0.2.5 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
     chatTitle: "Trabajar con Vunemi",
     chat: [
       { title: "Primero, el plan", body: "En una tarea de varios pasos, Vunemi puede mostrarte antes el plan. Adelante, edita los pasos o cancela." },
@@ -137,7 +137,7 @@ export default {
     connIntro: "Cada conexión está apagada hasta que la activas. Una conexión apagada es invisible para el modelo: sus herramientas no se pueden usar en absoluto. Muchas tienen interruptores separados para leer y para cambiar.",
     partsLabel: "Interruptores",
     connections: [
-      { name: "Archivos", body: "Tus carpetas Escritorio, Documentos y Descargas, nada más. Al mover un archivo se guarda una copia de seguridad y nunca se sobrescribe un archivo que ya esté ahí.", parts: "Lectura · Escritura (se puede deshacer; lo borrado va a la Papelera) · Conversión (imágenes, audio, documentos)" },
+      { name: "Archivos", body: "Tus carpetas Escritorio, Documentos y Descargas, nada más. Al mover un archivo se guarda una copia de seguridad y nunca se sobrescribe un archivo que ya esté ahí. También crea y abre archivos comprimidos, para que «comprime esta carpeta» termine en el chat; sin eso, se hace a mano en el Finder.", parts: "Lectura · Escritura (se puede deshacer; lo borrado va a la Papelera) · Conversión (imágenes, audio, documentos)" },
       { name: "Navegador", body: "Un navegador dentro de la ventana de Vunemi, separado de tu Chrome o Safari. Inicia sesión una vez y sigue conectado; toma el control cuando quieras.", parts: "Leer páginas · Hacer clic y escribir" },
       { name: "Vuelos y hoteles", body: "Busca en Google Flights y Trivago y muestra las opciones como tarjetas. Al elegir una tarjeta, su oferta se abre junto al chat. Tu ruta o destino, las fechas y el número de viajeros se envían a Google o a Trivago. Vunemi no reserva ni paga.", parts: "Google Flights · Trivago" },
       { name: "Correo", body: "Las cuentas de la app Mail de tu Mac (sin contraseña), Gmail (con contraseña de aplicación), otras cuentas IMAP/SMTP y Outlook (con tu propio ID de aplicación de Microsoft Entra). El correo saliente espera 45 segundos en la Bandeja de salida. Los códigos de un solo uso y los enlaces de acceso nunca se muestran al modelo.", parts: "Lectura · Borradores · Envío · Organización" },
@@ -186,10 +186,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novedades de esta versión",
     highlights: [
-      "Las tareas programadas ahora pueden trabajar en las apps y los archivos que nombres al configurarlas, sin tarjeta de aprobación cada vez, así que terminan mientras no estás. Ajustes muestra qué puede tocar cada una, y puedes retirarlo.",
-      "El control en segundo plano ya va más allá de Calculadora y TextEdit: Vunemi puede pulsar botones sencillos y cambiar campos de texto en otras apps sin ocupar tu ratón ni tu teclado. Depende de la app; Excel no expone sus celdas, así que se cambia el archivo guardado.",
-      "El Registro de actividad ahora agrupa las filas por la petición que las inició, y se puede buscar. Había llegado a cientos de filas sin forma de encontrar una.",
-      "Un resultado incierto antiguo de una app ya cerrada ya no impide abrir un documento en segundo plano. El registro se queda y nada se repite.",
+      "Vunemi ya puede comprimir y abrir archivos por sí mismo: zip, 7z y tar, y también abre RAR. Una petición como «comprime esta carpeta para adjuntarla» se quedaba en ese paso, porque Vunemi no tenía una herramienta para ello; leer, escribir y mover archivos ya funcionaba y no ha cambiado.",
+      "Usa la herramienta de archivos integrada en macOS, dentro de un sandbox, y solo conserva un archivo abierto si se abrió entero. No abre archivos protegidos con contraseña ni RAR divididos, y un RAR dañado no siempre se detecta.",
+      "Cuando el campo activo de una app de Mac es un campo de contraseña, Vunemi ahora se detiene y no escribe nada. Las contraseñas las escribes tú; el navegador y el control en segundo plano ya funcionaban así.",
+      "Cuando Vunemi cambia un archivo que ya existe, su fila de resultado ahora dice Modificado en lugar de Creado.",
     ],
     title: "Descarga Vunemi",
     intro: "Gratis y de código abierto. Para Mac con Apple Silicon y macOS 14 o posterior.",
