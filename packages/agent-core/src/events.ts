@@ -209,8 +209,8 @@ export interface Artifact {
  * titles here are for the person.
  */
 export type Produced =
-  /** A file in the user's own folders. */
-  | { kind: "file"; path: string }
+  /** A file in the user's own folders; `replaced` when it was already there and this changed it. */
+  | { kind: "file"; path: string; replaced?: boolean }
   /** A draft saved in a mailbox. */
   | { kind: "draft"; account: string; subject: string; to: string[] }
   /** A calendar event it created. */

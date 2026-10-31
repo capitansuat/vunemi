@@ -52,7 +52,7 @@ export function createSafeOfficeEdits(roots:Roots,backupDir:string){
     if(snapshot(plan.backupPath!).hash!==plan.snapshot.hash)throw Error('Office backup differs from approved original; replacement refused.');
     active();if(roots.resolve(plan.input,'write')!==plan.path||JSON.stringify(snapshot(plan.path))!==JSON.stringify(plan.snapshot))throw Error('Office target changed before commit; original preserved.');
     // Atomic publication, but Node has no filesystem compare-and-swap against external writers.
-    renameSync(stage,plan.path);committed=true;const original=plan.backupPath!;ctx.offerUndo(t('files.undo.restore',{name:basename(plan.path)}),async()=>{copyFileSync(original,plan.path);});ctx.produced?.({kind:'file',path:plan.path});const directory=openSync(dirname(plan.path),'r');try{fsyncSync(directory);}finally{closeSync(directory);}
+    renameSync(stage,plan.path);committed=true;const original=plan.backupPath!;ctx.offerUndo(t('files.undo.restore',{name:basename(plan.path)}),async()=>{copyFileSync(original,plan.path);});ctx.produced?.({kind:'file',path:plan.path,replaced:true});const directory=openSync(dirname(plan.path),'r');try{fsyncSync(directory);}finally{closeSync(directory);}
    }catch(error){if(committed)throw Object.assign(error instanceof Error?error:Error(String(error)),{deliveryUnknown:true,backupPath:plan.backupPath});throw error;}finally{if(existsSync(stage))unlinkSync(stage);}
   }
  };

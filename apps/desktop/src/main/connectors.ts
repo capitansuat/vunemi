@@ -15,7 +15,8 @@ import {PersistentMoveGuard} from './semantic-move-guard.js';
 
 import type { ToolDef, ToolRegistry } from "@vunemi/agent-core";
 import { randomUUID } from "node:crypto";
-import { join } from "node:path";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
 import { APP_GUIDE_INDEX, createEverydayTools, createWhatsAppTool, createShortcutTools, SHORTCUTS_INSTRUCTIONS, SHORTCUT_BUILD_INSTRUCTIONS, type ShortcutBuilt, type ShortcutDraft, createFinderTools, createGuideTool, createNotesTools, createOfficeTools, createRunner, createGeneralTools, onDemand, ScriptableCatalog, FINDER_INSTRUCTIONS, NOTES_INSTRUCTIONS } from "@vunemi/apps";
 import { BROWSER_INSTRUCTIONS, type BrowserController, createBrowserTools, type TrustedSites } from "@vunemi/browser";
 import { Connectors, type Capability, type Connector, type ConnectorStatus } from "@vunemi/connectors";
@@ -27,6 +28,7 @@ import { unsealed } from "./mcp-secrets.js";
 import type { VaultClient } from "@vunemi/vault";
 import { mailAddressOf, type StoredAppleMailAccount, type StoredMailAccount } from "./settings.js";
 import { vaultMcpIO } from "./remote-mcp.js";
+import { runSandboxed } from "./addons/sandbox.js";
 import { renderOfficePdf } from "./office-pdf.js";
 import { travelConnectors } from "./travel.js";
 import type { FetchPage } from "./flights/search.js";
@@ -322,7 +324,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       get provides() { return [t("connectors.files.provides.read"), t("connectors.files.provides.write"), t("connectors.files.provides.convert")]; },
       capabilities: [
         part("connectors.files.read", { id: "read", tools: ["files_list", "files_search", "files_read"], defaultOn: true }),
-        part("connectors.files.write", { id: "write", tools: ["files_write", "files_edit", "files_move", "files_trash"], defaultOn: false }),
+        part("connectors.files.write", { id: "write", tools: ["files_write", "files_edit", "files_move", "files_trash", "files_compress", "files_extract"], defaultOn: false }),
         part("connectors.files.convert", { id: "convert", tools: ["system_run"], defaultOn: false }),
       ],
       needs: { kind: "permission", get what() { return t("connectors.files.needs"); } },
@@ -331,7 +333,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: FILE_INSTRUCTIONS,
       status: async () => ({ state: "ready" }),
-      tools: () => createFileTools({ roots: opts.roots, shadowDir: opts.shadowDir, atomicMoveAdapter, moveAdmission:(path,body,signal)=>opts.helper.admitJournal(path,body,signal), moveGuard }),
+      tools: () => createFileTools({ roots: opts.roots, shadowDir: opts.shadowDir, archives: { workDir: join(dirname(opts.shadowDir), "archive-jobs"), run: (program, args, run) => runSandboxed(program, args, { ...run, home: homedir(), engineDir: "/usr/bin" }) }, atomicMoveAdapter, moveAdmission:(path,body,signal)=>opts.helper.admitJournal(path,body,signal), moveGuard }),
     },
 
     {

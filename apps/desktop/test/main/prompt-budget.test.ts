@@ -37,14 +37,15 @@ const LIMITS = {
   guide: 2_000,
   /**
    * System prompt, every connection's instructions and every tool shown, all
-   * switched on (40,347; 39,037 before the History connection, which is off
+   * switched on (41,162; 40,392 before the archive tools, kept short because
+   * every conversation pays for them; 39,037 before the History connection, which is off
    * until the user switches it on, and 40,045 before add-ons: with none
    * downloaded, one line names them and where to get them, so a request for
    * a presentation is answered with that and not with "I can't". 40,263
    * before that line also named the add-ons being updated, which it does
    * only in the minutes after Vunemi itself was updated).
    */
-  total: 40_400,
+  total: 41_200,
   /**
    * With areas: a conversation's first prompt with one area picked, the
    * largest (13,171, browser). Was 11,743 before the browser's rule on

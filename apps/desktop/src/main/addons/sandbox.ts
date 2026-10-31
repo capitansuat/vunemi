@@ -16,6 +16,8 @@ export interface SandboxPaths {
   job: string;
   /** Where the program is installed: read only. */
   engineDir: string;
+  /** Other files and folders it was handed: read only. */
+  reads?: readonly string[];
 }
 
 export interface SandboxRun extends SandboxPaths {
@@ -46,7 +48,7 @@ export function sandboxProfile(p: SandboxPaths): string {
     `(deny file-read* (subpath ${quoted(p.home)}) (subpath "/Users") (subpath "/Volumes") (subpath "/private/var/folders") (subpath "/private/tmp"))`,
     // The loader walks down to the program through the folders above it.
     `(allow file-read-metadata (subpath ${quoted(p.home)}) (subpath "/Users") (subpath "/private/var/folders") (subpath "/private/tmp"))`,
-    `(allow file-read* (subpath ${quoted(p.engineDir)}) (subpath ${quoted(p.job)}))`,
+    `(allow file-read* (subpath ${quoted(p.engineDir)}) (subpath ${quoted(p.job)})${(p.reads ?? []).map((path) => ` (subpath ${quoted(path)})`).join("")})`,
     "(deny file-write*)",
     `(allow file-write* (subpath ${quoted(p.job)}) (literal "/dev/null") (literal "/dev/dtracehelper"))`,
   ].join("\n");

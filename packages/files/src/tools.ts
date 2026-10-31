@@ -28,6 +28,7 @@ import { t } from "@vunemi/i18n";
 import { readOffice } from "./office-read.js";
 import { csvIssue } from "./csv.js";
 import { verifyText, type TextChecks } from "./verification.js";
+import { archiveProblem, archiveStem, canMake, compressToArchive, extractArchive, isArchive, listArchive, type ArchiveTools } from "./archive.js";
 
 const exec = promisify(execFile);
 
@@ -95,6 +96,7 @@ export const FILE_INSTRUCTIONS = `Working with files:
 - files_edit changes one exact piece of a file. Use it for small changes to long files: copy old_text exactly from files_read, with enough lines around it to be unique.
 - files_move: approve, backup, no-overwrite; no drag/retry.
 - files_trash moves something to the Trash. Nothing is ever deleted for good.
+- files_compress and files_extract make and open archives (zip, 7z, tar; RAR opens only). files_read lists one. Password-protected or split: tell the user, don't retry.
 - system_run starts one of a few converters with plain arguments. There is no shell: no pipes, no redirection, no wildcards.`;
 
 export interface FileToolOptions {
@@ -107,6 +109,8 @@ export interface FileToolOptions {
   moveJournalPath?: string;
   moveAdmission?: <T>(path:string,body:(assertCurrent:()=>void)=>Promise<T>|T,signal?:AbortSignal)=>Promise<T>;
   moveGuard?: import("@vunemi/agent-core").SemanticMoveGuard;
+  /** Without these, there are no archive tools and files_read doesn't look inside archives. */
+  archives?: ArchiveTools;
 }
 
 /**
@@ -136,7 +140,7 @@ function modified(path: string): number {
 
 const DOCUMENT_KINDS = new Set(["pdf", "docx", "doc", "xlsx", "xls", "pptx", "ppt", "txt", "csv", "rtf", "pages", "numbers", "key", "jpg", "jpeg", "png", "heic"]);
 
-export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJournalPath, moveAdmission, moveGuard, mdfind = "/usr/bin/mdfind" }: FileToolOptions): ToolDef[] {
+export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJournalPath, moveAdmission, moveGuard, archives, mdfind = "/usr/bin/mdfind" }: FileToolOptions): ToolDef[] {
   const shadow = new Shadow(shadowDir);
   const short = (path: string) => path.replace(homedir(), "~");
 
@@ -262,6 +266,13 @@ export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJourn
         const stat = statOrExplain(file, short, roots);
         if (stat.isDirectory()) return `${short(file)} is a folder. Use files_list.`;
 
+        if (archives && isArchive(file)) {
+          if (args.checks) throw new Error("Text checks cannot verify an archive.");
+          const listing = await listArchive(archives, file, ctx.signal);
+          const shown = listing.names.slice(0, MAX_LIST);
+          return `${short(file)} is an archive: ${listing.files} files, ${bytes(listing.bytes)} unpacked. Use files_extract to open it.\n${shown.join("\n")}${listing.names.length > shown.length ? `\n[… the first ${shown.length} of ${listing.names.length} entries]` : ""}`;
+        }
+
         const ext = extname(file).toLowerCase();
         // A picture is shown, not read: a model that sees gets it after
         // this step, and one that doesn't is told so.
@@ -371,7 +382,7 @@ export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJourn
             }
           }
         });
-        ctx.produced?.({ kind: "file", path: file });
+        ctx.produced?.({ kind: "file", path: file, ...(existed ? { replaced: true } : {}) });
         return `Wrote ${short(file)} (${content.length} characters${existed ? ", old version kept" : ", new file"}${made.length > 0 ? `, made ${made.map(short).join(", ")}` : ""}).`;
       },
     },
@@ -427,7 +438,7 @@ export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJourn
         ctx.offerUndo(t("files.undo.restore", { name: basename(file) }), async () => {
           if (copy) shadow.restore(copy, file);
         });
-        ctx.produced?.({ kind: "file", path: file });
+        ctx.produced?.({ kind: "file", path: file, replaced: true });
         return `Changed ${short(file)}: ${lineCount(before)} line(s) replaced with ${lineCount(after)}${copy ? ", old version kept" : ""}.`;
       },
     },
@@ -457,6 +468,8 @@ export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJourn
         return `Moved ${short(file)} to the Trash. It was not permanently deleted.`;
       },
     },
+
+    ...(archives ? archiveTools(archives, roots, short) : []),
 
     {
       name: "system_run",
@@ -565,6 +578,124 @@ export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJourn
 }
 
 /** The first `length` bytes of a file, without reading the rest. */
+/** Taking back a new archive or folder: it goes to the Trash, with whatever the user put in it since. */
+function trashOnUndo(path: string): () => Promise<void> {
+  return async () => {
+    if (existsSync(path)) renameSync(path, join(homedir(), ".Trash", uniqueIn(join(homedir(), ".Trash"), basename(path))));
+  };
+}
+
+/** Where an archive opens: a new folder beside it, or in the folder named; never one that is there already. */
+function extractTarget(roots: Roots, file: string, out: unknown): string {
+  const wanted = typeof out === "string" && out.trim() !== "" ? roots.resolve(out) : null;
+  if (wanted && !existsSync(wanted)) {
+    const made = missingFolders(dirname(wanted));
+    if (made.length > MAX_NEW_FOLDERS) throw new PathRefused(t("files.tooDeep", { path: dirname(wanted), count: MAX_NEW_FOLDERS }));
+    return wanted;
+  }
+  if (wanted && !statSync(wanted).isDirectory()) throw new PathRefused(t("files.exists", { path: basename(wanted) }));
+  const folder = wanted ?? dirname(file);
+  return roots.resolve(join(folder, uniqueIn(folder, archiveStem(file))));
+}
+
+/** Where a new archive goes: beside what it holds unless told otherwise, and never over a file. */
+function compressTarget(roots: Roots, sources: readonly string[], out: unknown): string {
+  const named = sources.length === 1 ? `${basename(sources[0]!)}.zip` : "Archive.zip";
+  const wanted = typeof out === "string" && out.trim() !== "" ? roots.resolve(out) : null;
+  const inFolder = wanted && existsSync(wanted) && statSync(wanted).isDirectory();
+  const folder = !wanted ? dirname(sources[0]!) : inFolder ? wanted : dirname(wanted);
+  const name = !wanted || inFolder ? named : basename(wanted);
+  return roots.resolve(join(folder, uniqueIn(folder, name)));
+}
+
+function archiveTools(archives: ArchiveTools, roots: Roots, short: (path: string) => string): ToolDef[] {
+  const sourcesOf = (paths: unknown): string[] => (Array.isArray(paths) ? paths : [paths]).filter((path) => typeof path === "string" && path !== "").map((path) => roots.resolve(path as string, "read"));
+  return [
+    {
+      name: "files_compress",
+      description: "Make an archive. out's ending picks the type: .zip (default), .7z, .tar, .tar.gz, .tar.bz2, .tar.xz.",
+      parameters: {
+        type: "object",
+        properties: {
+          paths: { type: "array", items: { type: "string" } },
+          out: { type: "string", description: "New archive, or a folder for it." },
+        },
+        required: ["paths"],
+      },
+      actionClass: "write-local",
+      check(args: { paths: string[]; out?: string }) {
+        try {
+          const sources = sourcesOf(args.paths);
+          if (sources.length === 0) return t("files.pathNeeded");
+          for (const source of sources) if (!existsSync(source)) return t("files.missing", { path: short(source) });
+          return canMake(compressTarget(roots, sources, args.out)) ? null : t("files.archiveWriteUnsupported");
+        } catch (error) {
+          return error instanceof Error ? error.message : String(error);
+        }
+      },
+      async preview(args: { paths: string[]; out?: string }) {
+        const sources = sourcesOf(args.paths);
+        return t("files.preview.compress", { to: short(compressTarget(roots, sources, args.out)), from: sources.map((source) => basename(source)).join(", ") }).slice(0, 240);
+      },
+      async run(args: { paths: string[]; out?: string }, ctx) {
+        const sources = sourcesOf(args.paths);
+        if (sources.length === 0) throw new PathRefused(t("files.pathNeeded"));
+        for (const source of sources) if (!existsSync(source)) throw new PathRefused(t("files.missing", { path: short(source) }));
+        const target = compressTarget(roots, sources, args.out);
+        const { bytes: size } = await compressToArchive(archives, sources, target, ctx.signal);
+        ctx.offerUndo(t("files.undo.toTrash", { name: basename(target) }), trashOnUndo(target));
+        ctx.produced?.({ kind: "file", path: target });
+        return `Made ${short(target)} (${bytes(size)}) from ${sources.length} item(s).`;
+      },
+    },
+    {
+      name: "files_extract",
+      description: "Open an archive into a new folder: all of it, or nothing.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string" },
+          out: { type: "string", description: "New folder, or a folder to make it in." },
+        },
+        required: ["path"],
+      },
+      actionClass: "write-local",
+      check(args: { path: string; out?: string }) {
+        try {
+          const file = roots.resolve(args.path, "read");
+          if (!existsSync(file)) return t("files.missing", { path: short(file) });
+          extractTarget(roots, file, args.out);
+          return archiveProblem(file);
+        } catch (error) {
+          return error instanceof Error ? error.message : String(error);
+        }
+      },
+      async preview(args: { path: string; out?: string }) {
+        const file = roots.resolve(args.path, "read");
+        const to = short(extractTarget(roots, file, args.out));
+        try {
+          const listing = await listArchive(archives, file);
+          return t("files.preview.extractDetail", { path: short(file), to, count: listing.files, size: bytes(listing.bytes) });
+        } catch {
+          // Says so when it runs, and keeps nothing.
+          return t("files.preview.extract", { path: short(file), to });
+        }
+      },
+      async run(args: { path: string; out?: string }, ctx) {
+        const file = roots.resolve(args.path, "read");
+        if (!existsSync(file)) throw new PathRefused(t("files.missing", { path: short(file) }));
+        const target = extractTarget(roots, file, args.out);
+        const made = missingFolders(dirname(target));
+        for (const folder of made) mkdirSync(folder);
+        const opened = await extractArchive(archives, file, target, { signal: ctx.signal });
+        ctx.offerUndo(t("files.undo.toTrash", { name: basename(target) }), trashOnUndo(target));
+        ctx.produced?.({ kind: "file", path: target });
+        return `Opened ${short(file)} into ${short(target)}: ${opened.files} files, ${bytes(opened.bytes)}.${opened.dropped > 0 ? ` Left out ${opened.dropped} link(s) or special file(s) that pointed outside it.` : ""}${opened.unchecked ? " RAR damage can go unnoticed, so don't say the contents were verified." : ""}`;
+      },
+    },
+  ];
+}
+
 function readStart(file: string, length: number): Buffer {
   const buffer = Buffer.alloc(length);
   const fd = openSync(file, "r");

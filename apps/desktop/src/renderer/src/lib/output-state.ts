@@ -1,5 +1,5 @@
 import { type Produced, type TaskRecord } from '@vunemi/agent-core';
-export type OutputState = 'created'|'checked'|'savedChecked'|'draft'|'added'|'downloaded'|'uncertain';
+export type OutputState = 'created'|'changed'|'checked'|'savedChecked'|'draft'|'added'|'downloaded'|'uncertain';
 /** Display only typed receipt evidence. Model prose and mere produced metadata
  * never establish content review, disk save or message delivery. */
 export function outputState(item:Produced,tasks:readonly TaskRecord[]):OutputState {
@@ -15,8 +15,8 @@ export function outputState(item:Produced,tasks:readonly TaskRecord[]):OutputSta
       const e=op.desktopEvidence;
       if(e?.kind==='verified-save'&&e.version===1&&e.bundleId==='com.apple.TextEdit'&&e.processStartedAt>0&&e.windowId>0&&e.fieldRef>0&&!!e.windowTitle&&!!e.operationId&&/^[a-f0-9]{64}$/.test(e.valueHash)&&e.diskHash===e.valueHash)return 'savedChecked';
       if(op.fileEvidence?.kind==='verified-read'&&op.fileEvidence.review?.version===1&&op.fileEvidence.review.fingerprint)return 'checked';
-      if(op.actionClass!=='read'||op.fileEvidence?.kind==='write')return 'created';
+      if(op.actionClass!=='read'||op.fileEvidence?.kind==='write')return item.replaced?'changed':'created';
     }
   }
-  return 'created';
+  return item.replaced?'changed':'created';
 }
