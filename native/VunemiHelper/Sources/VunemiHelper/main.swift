@@ -742,6 +742,7 @@ func handle(_ request: JSON) {
             let observed=try validateObservation(args,app:found,activate:true)
             guard let expected=observed.focused, let current=focusedElement(observed.pid), CFEqual(expected,current) else { throw Failure("Metin odağı değişti; yeniden gözlemle. Input gönderilmedi.") }
             guard text.count<=2000 else { throw Failure("Text input is limited to 2000 characters per action; nothing was typed.") }
+            guard !typingRefused(role:string(expected,"AXRole"),subrole:string(expected,"AXSubrole")) else { throw Failure("The focused field is a password field. Nothing was typed; the user enters passwords themselves.") }
             try typeText(text) {
                 guard AXIsProcessTrusted(), focusedApplicationPID()==observed.pid,
                       let focus=focusedElement(observed.pid), CFEqual(expected,focus),

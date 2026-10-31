@@ -19,6 +19,11 @@ func backgroundCapability(bundle: String, role: String, action: String, subrole:
     return (role == "AXButton" && action == "press") || ((role == "AXTextArea" || role == "AXTextField") && action == "set-value")
 }
 
+/// Passwords are the user's to enter, in whichever way the agent would reach the field.
+func typingRefused(role: String?, subrole: String?) -> Bool {
+    subrole == "AXSecureTextField" || role == "AXSecureTextField"
+}
+
 func requireBackgroundTarget(target: Int32, foreground: Int32?) throws {
     guard let foreground, foreground != target else {
         throw Failure("Background control yielded to the user, or foreground state is unavailable. No input sent; observe before resuming.")

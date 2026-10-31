@@ -2,6 +2,13 @@ import XCTest
 import CoreGraphics
 @testable import VunemiHelper
 final class BackgroundControlTests: XCTestCase {
+    func testTypingStopsAtAPasswordField() {
+        XCTAssertTrue(typingRefused(role: "AXTextField", subrole: "AXSecureTextField"))
+        XCTAssertTrue(typingRefused(role: "AXSecureTextField", subrole: nil))
+        XCTAssertFalse(typingRefused(role: "AXTextField", subrole: nil))
+        XCTAssertFalse(typingRefused(role: "AXTextArea", subrole: "AXSearchField"))
+        XCTAssertFalse(typingRefused(role: nil, subrole: nil))
+    }
     func testCursorChangeNeverBecomesKnownBackgroundDelivery() {
         XCTAssertTrue(backgroundDeliveryUncertain(deliverySucceeded:true,foregroundChanged:false,cursorChanged:true,sessionVerified:true))
         XCTAssertTrue(backgroundDeliveryUncertain(deliverySucceeded:true,foregroundChanged:true,cursorChanged:false,sessionVerified:true))
