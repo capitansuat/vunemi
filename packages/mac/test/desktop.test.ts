@@ -247,6 +247,17 @@ describe("desktop tools", () => {
     expect(helper.calls.map((c) => c.op)).toEqual(["click", "describe"]);
   });
 
+  it("says what approve all would reach only after native validation", async () => {
+    const tool = tools.get("desktop_type")!;
+    const args = { app: "Notes", text: "x", snapshotId: "observed-1" };
+    expect(await tool.approveAll?.(args)).toBeUndefined();
+    await tool.check?.(args as never, undefined as never);
+    expect(await tool.approveAll?.(args)).toEqual({ key: "app:com.apple.Notes", app: "Notes" });
+    const key = { app: "Notes", combo: "cmd+delete", snapshotId: "observed-1" };
+    await tools.get("desktop_key")!.check?.(key as never, undefined as never);
+    expect(await tools.get("desktop_key")!.approveAll?.(key)).toBeUndefined();
+  });
+
   it("gives long typing time to finish and calls one that was cut off uncertain", async () => {
     helper.after = { text: '[1] TextArea "a"', count: 1, changed: '+ [1] TextArea "a"', inputValues: ["a".repeat(2000)] };
     await call("desktop_type", { app: "Notes", text: "a".repeat(2000), snapshotId:"observed-1" });

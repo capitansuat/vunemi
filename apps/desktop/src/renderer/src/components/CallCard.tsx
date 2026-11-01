@@ -192,6 +192,7 @@ export function ApprovalCard({ call }: { call: CallView }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expired,setExpired]=useState(false);
+  const offersAll = call.approveAll !== undefined && !call.switchedOff && !call.alert;
   const Icon = CLASS_ICON[call.actionClass];
   const args = call.args && typeof call.args === "object" ? call.args as Record<string, unknown> : {};
   const exports = Array.isArray(args.outputs) ? args.outputs.flatMap(value =>
@@ -201,7 +202,7 @@ export function ApprovalCard({ call }: { call: CallView }) {
     .join(" · ");
 
   let sending=false;
-  const act = (kind: "approve" | "approve_always" | "reject") => {
+  const act = (kind: "approve" | "approve_always" | "approve_all" | "reject") => {
     const owner=current();
     if(!owner||busy||expired||sending)return;
     if(kind==="approve"&&scope==="run"&&!offer)return;
@@ -250,6 +251,7 @@ export function ApprovalCard({ call }: { call: CallView }) {
         {offer.effect==='file-read'&&<p className="text-muted">{t("taskPermissions.fileSameVersion")}</p>}
       </fieldset>}
       <p className="mt-2 text-[12px] leading-relaxed text-muted">{t("approvalContext.once")}</p>
+      {offersAll && <p className="mt-1 text-[12px] leading-relaxed text-muted">{call.approveAll!.app ? t("call.approveAllNoteApp", { app: call.approveAll!.app }) : t("call.approveAllNote")}</p>}
       {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
       {expired&&<p role="status">{callStatusLabel('cancelled')}</p>}
       <div className="mt-3 flex flex-wrap gap-2">
@@ -272,6 +274,16 @@ export function ApprovalCard({ call }: { call: CallView }) {
             {call.switchedOff ? t("call.switchAlways") : t("call.approveAlways")}
           </button>
         )}
+        {offersAll && (
+          <button
+            type="button"
+            disabled={busy||expired||!call.requestId}
+            onClick={() => act("approve_all")}
+            className="rounded-lg border border-line-strong bg-surface px-3.5 py-1.5 text-[13px] text-fg transition-colors hover:bg-surface-2 disabled:opacity-50"
+          >
+            {t("call.approveAll")}
+          </button>
+        )}
         <button
           type="button"
           disabled={busy||expired||!call.requestId}
@@ -281,6 +293,35 @@ export function ApprovalCard({ call }: { call: CallView }) {
           {call.switchedOff ? t("call.keepOff") : t("call.reject")}
         </button>
       </div>
+    </div>
+  );
+}
+
+/** "Approve all in this task" is on, and how to take it back while the task runs. */
+export function ApprovedAllRow({ runId }: { runId: string }) {
+  const end = useStore((s) => s.endApproveAll);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-[12px] text-muted">
+      <Hand size={13} strokeWidth={2.2} />
+      <span>{t("call.approveAllActive")}</span>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => {
+          setBusy(true);
+          setError(null);
+          end(runId).catch((e: unknown) => {
+            setBusy(false);
+            setError(e instanceof Error ? e.message : String(e));
+          });
+        }}
+        className="ml-auto rounded px-2 py-0.5 text-fg transition-colors hover:bg-surface-2 disabled:opacity-50"
+      >
+        {t("call.approveAllEnd")}
+      </button>
+      {error && <p role="alert" className="w-full text-danger">{error}</p>}
     </div>
   );
 }

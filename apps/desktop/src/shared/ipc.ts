@@ -584,6 +584,7 @@ export interface VunemiApi {
   pauseRun(): Promise<void>;
   resumeRun(): Promise<void>;
   resolveApproval(callId: string, decision: ApprovalDecision, owner:ResolutionOwner): Promise<boolean>;
+  endApproveAll(runId:string):Promise<boolean>;
   resolveTaskApproval(request:ScopedApprovalRequest):Promise<void>;
   listTaskPermissions(request:{sessionId:string;runId:string|null}):Promise<TaskPermissionsSnapshot>;
   revokeTaskPermission(request:TaskPermissionRevokeRequest):Promise<TaskPermissionsSnapshot>;
@@ -862,6 +863,7 @@ export const CH = {
   pauseRun: "run:pause",
   resumeRun: "run:resume",
   resolveApproval: "approval:resolve",
+  endApproveAll: "approval:end-all",
   resolveTaskApproval: "task-permissions:approve",
   listTaskPermissions: "task-permissions:list",
   revokeTaskPermission: "task-permissions:revoke",

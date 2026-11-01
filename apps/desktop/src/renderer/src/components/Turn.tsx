@@ -9,7 +9,7 @@ import { ChevronRight, CircleStop, FileText, TriangleAlert } from "lucide-react"
 import { Mochi } from "./Mochi.js";
 import { activeTurnAction, draftText, runStats, type CompactionView, type RunView, type StepView } from "../lib/fold.js";
 import { formatMs, formatTokens, runStatusLabel, shortModelName } from "../lib/labels.js";
-import { CallCard } from "./CallCard.js";
+import { ApprovedAllRow, CallCard } from "./CallCard.js";
 import { MentionIcon } from "./MentionMenu.js";
 import { ChoiceCard } from "./ChoiceCard.js";
 import { TaskSummary } from "./TaskSummary.js";
@@ -111,6 +111,7 @@ export const Turn = memo(function Turn({ run, replies, task, recovery = false, a
       {run.memory && run.memory.proposals.length > 0 && <MemoryProposals runId={run.runId} proposals={run.memory.proposals} />}
       {run.notes && run.notes.length > 0 && <SavedNotes notes={run.notes} />}
       {run.compaction && <Compaction c={run.compaction} />}
+      {active && run.status === "running" && run.approvedAll && <ApprovedAllRow runId={run.runId} />}
       {action && <div data-turn-actions id={task?.waitingPlan&&action.kind==='plan'?attentionTaskAnchor(task.id):undefined} data-task-id={task?.waitingPlan&&action.kind==='plan'?task.id:undefined} tabIndex={task?.waitingPlan&&action.kind==='plan'?-1:undefined} aria-label={task?.waitingPlan&&action.kind==='plan'?task.goal:undefined} className="space-y-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ember">
         {action.kind==='plan'?<PlanCard key={`${run.runId}:plan:${action.plan.requestId??'history'}`} plan={action.plan}/>:action.kind==='choice'?<ChoiceCard key={`${run.runId}:choice:${action.choice.callId}:${action.choice.requestId??'history'}`} choice={action.choice}/>:<CallCard key={`${run.runId}:${action.kind}:${action.call.callId}:${action.call.requestId??'history'}`} call={action.call} waitingFor={action.kind} showFiles={showFiles}/>}
       </div>}

@@ -1206,11 +1206,12 @@ function resolutionOwner(raw:unknown):{runId:string;requestId:string}{
  return {runId:x.runId,requestId:x.requestId};
 }
 handle(CH.resolveApproval, async (_e, callId: string, decision: ApprovalDecision, owner:unknown) => {
- if(!decision||!['approve','approve_always','reject'].includes(decision.kind))throw Error('Invalid approval decision.');
+ if(!decision||!['approve','approve_always','approve_all','reject'].includes(decision.kind))throw Error('Invalid approval decision.');
  const bound=resolutionOwner(owner),accepted=await session.resolveApproval(callId,decision,bound);
  if(accepted)adjustedSetup.settle(callId,bound,decision.kind!=='reject');
  return accepted;
 });
+handle(CH.endApproveAll,(_e,runId:unknown)=>typeof runId==='string'?session.endApproveAll(runId):false);
 handle(CH.resolveTaskApproval,(_e,request:unknown)=>session.resolveTaskApproval(scopedApprovalRequest(request)));
 handle(CH.listTaskPermissions,(_e,request:unknown)=>session.listTaskPermissions(permissionListRequest(request)));
 handle(CH.revokeTaskPermission,(_e,request:unknown)=>session.revokeTaskPermission(permissionRevokeRequest(request)));

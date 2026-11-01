@@ -1,4 +1,4 @@
-import {createModel,type ChatModel,type ChatRequest,type ToolContext,type ToolDef,type ActionClass} from '@vunemi/agent-core';
+import {approveAllCover,createModel,type ChatModel,type ChatRequest,type ToolContext,type ToolDef,type ActionClass} from '@vunemi/agent-core';
 import type {SessionOptions} from './session.js';
 import type {SessionConfiguration,SessionBrokerMessage,SessionContextMethod,SessionToolMetadata} from '../shared/session-coordinator.js';
 interface Handle {tool:ToolDef;source:string;revision:number;args:Record<string,unknown>;serialized:string;runId:string;used:boolean}
@@ -31,6 +31,7 @@ export class SessionServiceBroker {
    const [name,id,args]=a as [string,string,Record<string,unknown>];const h=this.handles.get(`${request.runId}:${id}`);if(!h||h.tool.name!==name||h.runId!==request.runId||h.serialized!==JSON.stringify(args))throw Error('Prepared tool owner or arguments changed.');this.assertHandle(h,channel,request.op==='tool.run');
    const guard=()=>this.assertHandle(h,channel,request.op==='tool.run');checkContext.assertToolActive=guard;
    if(request.op==='tool.check')return done(h.tool.check?.(h.args,checkContext)??null);
+   if(request.op==='tool.approveAll')return done(approveAllCover(h.tool,h.args).then(cover=>cover??null));
    if(request.op==='tool.permission.prepare')return done(h.tool.taskPermission?.prepare(h.args,checkContext)??null);
    if(request.op==='tool.permission.revalidate')return done(h.tool.taskPermission?.revalidate(h.args,a[4] as never,checkContext)??false);
    if(request.op!=='tool.run'||h.used)throw Error('Tool handle already consumed.');h.used=true;

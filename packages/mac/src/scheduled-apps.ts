@@ -49,6 +49,11 @@ async function bundlesShownAs(wanted: string): Promise<string[]> {
 
 export interface AppLookup { running(): Promise<MacApp[]>; folders?: readonly string[] }
 
+/** The LSApplicationCategoryType in the app's bundle. */
+export async function appCategory(app: Pick<MacApp, "name" | "bundleId">, folders: readonly string[] = FOLDERS): Promise<string | undefined> {
+  return (await Promise.all(bundlesNamed(app.name, folders).map(readBundle))).find((b) => b?.bundleId === app.bundleId)?.category;
+}
+
 /** The app these words mean, if a scheduled task may act in it; throws a plain reason. */
 export async function scheduledApp(wanted: string, look: AppLookup): Promise<{ name: string; bundleId: string }> {
   const name = wanted.trim();
@@ -71,7 +76,7 @@ export async function scheduledApp(wanted: string, look: AppLookup): Promise<{ n
   if (unique.length > 1) throw new Error(t("mac.policy.whichOne", { app: name, apps: unique.map((a) => a.name).join(", ") }));
   const app = unique[0]!;
   // An open app's category is in its bundle, like a closed one's.
-  const category = found[0]?.category ?? (await Promise.all(bundlesNamed(app.name, look.folders ?? FOLDERS).map(readBundle))).find((b) => b?.bundleId === app.bundleId)?.category;
+  const category = found[0]?.category ?? await appCategory(app, look.folders);
   const blocked = notScheduledReason({ ...app, ...(category && { category }) });
   if (blocked) throw new Error(blocked);
   return { name: app.name, bundleId: app.bundleId };

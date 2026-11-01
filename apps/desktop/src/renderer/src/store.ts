@@ -206,6 +206,7 @@ interface State extends NativeRecipeState {
   taskApprovalStopped: boolean;
   refreshTaskPermissions(): Promise<void>;
   applyTaskPermissions(snapshot: TaskPermissionsSnapshot): void;
+  endApproveAll(runId: string): Promise<void>;
   revokeTaskPermission(grantId: string): Promise<void>;
   approveTaskPermission(callId: string, offer: TaskPermissionOfferView): Promise<void>;
   decide(callId: string, decision: ApprovalDecision, owner:ResolutionOwner): Promise<boolean>;
@@ -454,6 +455,9 @@ export const useStore = create<State>((set, get) => ({
     const state=get(),call=state.runs.flatMap(r=>r.steps.flatMap(s=>s.calls)).find(c=>c.callId===callId&&c.taskPermissionOffer?.offerId===offer.offerId);
     if(!call||currentPermissionOffer(state,{...call,taskPermissionOffer:offer})===undefined)return;
     await window.vunemi.resolveTaskApproval({sessionId:offer.sessionId,runId:offer.runId,callId,decision:{kind:'approve_run',offerId:offer.offerId,offerRevision:offer.revision}});
+  },
+  async endApproveAll(runId) {
+    await window.vunemi.endApproveAll(runId);
   },
   async revokeTaskPermission(grantId) {
     const generation=permissionGeneration;

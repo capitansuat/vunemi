@@ -4,6 +4,9 @@
  * tool names, so a new tool can't slip past the gate by being unfamiliar.
  */
 
+/** `app` is the name the card shows, when the approval reaches an app and not only local work. */
+export interface ApproveAllCover { key: string; app?: string }
+
 export type ActionClass =
   /** Reads state; no side effects. */
   | "read"
@@ -137,6 +140,8 @@ export interface ToolDef<Args = Record<string, unknown>> {
   resolveFile?(args: Args): string;
   /** Show the existing "approve for this conversation" choice for this scope. */
   allowSessionApproval?: true;
+  /** What "approve all in this task" means for this call; nothing when it needs its own card. */
+  approveAll?(args: Args): ApproveAllCover | null | undefined | Promise<ApproveAllCover | null | undefined>;
   /**
    * The group this tool belongs to when it is shown only on request: its
    * definition reaches the model after a guide tool opens the group, which

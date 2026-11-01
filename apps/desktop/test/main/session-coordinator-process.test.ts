@@ -57,3 +57,25 @@ it('real worker matches a Craft output written as ~/ with the file the tool prod
  await f.host.start('Make a synthetic workbook','synthetic:model');
  expect(make).toHaveBeenCalledOnce();expect(f.events.find(e=>e.type==='tool.finished')).toMatchObject({ok:true});
 },15000);
+it('approve all crosses the real worker: later steps skip the card until Ask again, and it dies with the run',async()=>{
+ const effect=vi.fn(async()=> 'Synthetic edit');let calls=0;const tools=new ToolRegistry().register({name:'files_edit',description:'Edit synthetic fixture',parameters:{type:'object',properties:{value:{type:'string'}},required:['value']},actionClass:'write-local',alwaysAsk:true,run:effect});
+ const f=setup(async()=>{calls++;return calls>=3?result('Finished'):{...result(''),toolCalls:[{id:'synthetic-'+calls,name:'files_edit',argumentsText:`{"value":"v${calls}"}`}]};},tools);
+ f.options.authorize=(req:any)=>req.alwaysAsk?{kind:'ask',reason:'Synthetic approval required'} as never:{kind:'allow'};
+ const cards=()=>f.events.filter(e=>e.type==='approval.required') as Extract<AgentEvent,{type:'approval.required'}>[];
+ const started=f.host.start('Edit the synthetic fixture','synthetic:model');await vi.waitFor(()=>expect(cards()).toHaveLength(1),{timeout:10000});
+ expect(cards()[0]!.approveAll).toEqual({});
+ expect(await f.host.resolveApproval(cards()[0]!.callId,{kind:'approve_all'},{runId:cards()[0]!.runId,requestId:cards()[0]!.requestId!})).toBe(true);
+ expect(await started).toBe('done');expect(effect).toHaveBeenCalledTimes(2);expect(cards()).toHaveLength(1);expect(await f.host.endApproveAll(cards()[0]!.runId)).toBe(true);
+ const again=f.host.start('Edit it once more','synthetic:model');calls=0;await vi.waitFor(()=>expect(cards()).toHaveLength(2),{timeout:10000});const next=cards()[1]!;await f.host.resolveApproval(next.callId,{kind:'reject'},{runId:next.runId,requestId:next.requestId!});await again;expect(effect).toHaveBeenCalledTimes(2);
+},15000);
+it('Ask again empties it in the real worker and a stale run id changes nothing',async()=>{
+ const effect=vi.fn(async()=> 'Synthetic edit');let calls=0,hold:((v:any)=>void)|undefined;const tools=new ToolRegistry().register({name:'files_edit',description:'Edit synthetic fixture',parameters:{type:'object',properties:{value:{type:'string'}},required:['value']},actionClass:'write-local',alwaysAsk:true,run:effect});
+ const f=setup(async()=>{calls++;if(calls===2)await new Promise(resolve=>{hold=resolve;});return calls>=4?result('Finished'):{...result(''),toolCalls:[{id:'synthetic-'+calls,name:'files_edit',argumentsText:`{"value":"v${calls}"}`}]};},tools);
+ f.options.authorize=(req:any)=>req.alwaysAsk?{kind:'ask',reason:'Synthetic approval required'} as never:{kind:'allow'};
+ const cards=()=>f.events.filter(e=>e.type==='approval.required') as Extract<AgentEvent,{type:'approval.required'}>[];
+ const started=f.host.start('Edit the synthetic fixture','synthetic:model');await vi.waitFor(()=>expect(cards()).toHaveLength(1),{timeout:10000});const first=cards()[0]!;
+ await f.host.resolveApproval(first.callId,{kind:'approve_all'},{runId:first.runId,requestId:first.requestId!});await vi.waitFor(()=>expect(hold).toBeDefined(),{timeout:10000});
+ expect(await f.host.endApproveAll('another-run')).toBe(false);expect(await f.host.endApproveAll(first.runId)).toBe(true);expect(await f.host.endApproveAll(first.runId)).toBe(false);
+ hold!(undefined);await vi.waitFor(()=>expect(cards()).toHaveLength(2),{timeout:10000});expect(effect).toHaveBeenCalledOnce();expect(f.events.filter(e=>e.type==='approval.all_ended')).toHaveLength(1);
+ const second=cards()[1]!;await f.host.resolveApproval(second.callId,{kind:'reject'},{runId:second.runId,requestId:second.requestId!});await started;expect(effect).toHaveBeenCalledOnce();
+},15000);

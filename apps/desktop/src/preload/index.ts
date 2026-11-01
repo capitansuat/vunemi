@@ -37,6 +37,7 @@ const api: VunemiApi = {
   pauseRun: () => ipcRenderer.invoke(CH.pauseRun),
   resumeRun: () => ipcRenderer.invoke(CH.resumeRun),
   resolveApproval: (callId, decision, owner) => ipcRenderer.invoke(CH.resolveApproval, callId, decision, owner),
+  endApproveAll:runId=>ipcRenderer.invoke(CH.endApproveAll,runId),
   resolveTaskApproval:request=>ipcRenderer.invoke(CH.resolveTaskApproval,request),
   listTaskPermissions:request=>ipcRenderer.invoke(CH.listTaskPermissions,request),
   revokeTaskPermission:request=>ipcRenderer.invoke(CH.revokeTaskPermission,request),

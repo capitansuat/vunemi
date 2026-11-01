@@ -77,6 +77,8 @@ export type AgentEvent =
       alert?: boolean;
       /** The tool asks every time; "always allow" does not apply. */
       alwaysAsk?: boolean;
+      /** This card can also approve the rest of the task; `app` is the app that would reach. */
+      approveAll?: { app?: string };
       preview?: string;
       /**
        * The tool is switched off, and this is its connection and part in the
@@ -90,6 +92,8 @@ export type AgentEvent =
       callId: string;
       decision: ApprovalDecision;
     }
+  /** "Approve all in this task" is over before the task is: every step asks again. */
+  | { type: "approval.all_ended"; runId: string; at: number }
   /**
    * A tool needs the user to do something only they may do (a CAPTCHA, a
    * login) and is waiting. The UI shows where and offers Continue / Cancel.
@@ -232,6 +236,8 @@ export type ApprovalDecision =
   | { kind: "approve" }
   /** Approve and stop asking for this tool for the rest of the session. */
   | { kind: "approve_always" }
+  /** Approve and stop asking for what approveAllCover reaches, until this task ends. */
+  | { kind: "approve_all" }
   | { kind: "reject"; note?: string };
 
 export type EmitFn = (event: AgentEvent) => void;

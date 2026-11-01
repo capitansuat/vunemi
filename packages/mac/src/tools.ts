@@ -21,9 +21,10 @@ import {backgroundDocumentTool} from './document.js';
 import {calculatorMultiply} from "./calculator.js";
 import {BACKGROUND_ONLY} from "./control-mode.js";
 import { join } from "node:path";
-import type { ToolContext, ToolDef, DesktopEvidence } from "@vunemi/agent-core";
+import type { ApproveAllCover, ToolContext, ToolDef, DesktopEvidence } from "@vunemi/agent-core";
 import {createHash} from 'node:crypto';
 import { Helper, type MacApp } from "./helper.js";
+import { inputCover } from "./approve-all.js";
 import { blockedExamples, blockedReason } from "./policy.js";
 import { t } from "@vunemi/i18n";
 
@@ -111,6 +112,13 @@ export function createDesktopTools({ helper, onPermissionNeeded, onScreenPermiss
   // Prepared only by native validation, never from a model-supplied app label.
   const validatedScopes = new WeakMap<object,string>();
   const approvalScope = (args: object) => validatedScopes.get(args);
+  // Also set by native validation only: what "approve all" reaches for these arguments.
+  const inputCovers = new WeakMap<object,ApproveAllCover>();
+  const coverInput = async (args:object,app:MacApp,word?:string) => {
+    const cover=await inputCover(app,word);
+    if(cover)inputCovers.set(args,cover);else inputCovers.delete(args);
+  };
+  const approveAll = (args: object) => inputCovers.get(args);
   type BackgroundArgs = {app:string;snapshotId?:string;ref:number;label:string;expectedValue?:string;text?:string;windowTitle?:string};
   const backgroundScopes = new WeakMap<object,string>();
   // Handles retain exact observed strings locally. Native validation still
@@ -129,6 +137,7 @@ export function createDesktopTools({ helper, onPermissionNeeded, onScreenPermiss
     const result=await helper.call("validate_background",{app:String(app.pid),snapshotId:requireSnapshot(args.snapshotId),ref:args.ref,label:requireLabel(args.label),action,...(action==="set-value"?replacement(args):{})}) as {pid:number;bundleId:string;processStartedAt:number;windowId:number;controlMode:string};
     if(result.pid!==app.pid || result.bundleId!==app.bundleId || !result.processStartedAt || !result.windowId || result.controlMode!=="backgroundStrict") throw new Error("Background target identity unavailable; no input sent.");
     backgroundScopes.set(args,`mac-background:${result.bundleId}:${result.pid}:${result.processStartedAt}:${result.windowId}`);
+    await coverInput(args,app,args.label);
     return null;
   }
   function replacement(args:BackgroundArgs) {
@@ -153,13 +162,15 @@ export function createDesktopTools({ helper, onPermissionNeeded, onScreenPermiss
     if(result.foregroundChanged || result.cursorChanged || result.deliveryUnknown || !["verified","delivered"].includes(result.status))throw Object.assign(new Error(`Background operation ${result.status ?? "unknown"}. Observe before any retry; never repeat uncertain delivery.\n${JSON.stringify(result)}`),{deliveryUnknown:true});
     return JSON.stringify(result);
   }
-  async function checkInput(args: {app:string;snapshotId?:string;ref?:number;label?:string}):Promise<string|null> {
+  async function checkInput(args: {app:string;snapshotId?:string;ref?:number;label?:string;combo?:string}):Promise<string|null> {
     validatedScopes.delete(args);
+    inputCovers.delete(args);
     await ensurePermission();
     const app=await target(args.app);
     const observed=await helper.call("validate_snapshot",{app:String(app.pid),snapshotId:requireSnapshot(args.snapshotId),...(args.ref!==undefined&&{ref:args.ref,label:requireLabel(args.label)})}) as {pid:number;bundleId:string;processStartedAt:number};
     if(observed.pid!==app.pid || observed.bundleId!==app.bundleId || !observed.processStartedAt) return "Desktop target identity unavailable; no input sent.";
     validatedScopes.set(args,`mac-desktop:${observed.bundleId}:${observed.pid}:${observed.processStartedAt}`);
+    await coverInput(args,app,args.label??args.combo);
     return null;
   }
   let screenPermissionRequested = false;
@@ -271,22 +282,22 @@ export function createDesktopTools({ helper, onPermissionNeeded, onScreenPermiss
     {
       name:"desktop_background_click",description:"Press a listed button without activation or mouse events. Delivered is not verified: read and check the actual result.",
       parameters:{type:"object",properties:{app:{type:"string"},snapshotId:snapshotParameter,ref:{type:"integer"},label:{type:"string"}},required:["app","snapshotId","ref","label"]},
-      actionClass:"outbound",onDemand:"desktop",alwaysAsk:true,check:(args:BackgroundArgs)=>backgroundCheck(args,"press"),untrustedOutput:true,
+      actionClass:"outbound",onDemand:"desktop",alwaysAsk:true,approveAll,check:(args:BackgroundArgs)=>backgroundCheck(args,"press"),untrustedOutput:true,
       async preview(args:BackgroundArgs){return `Background AX press: ${String(args.app)} — ${String(args.label)}`;},
       run:(args:BackgroundArgs,ctx:ToolContext)=>backgroundRun(args,ctx,"press")
     },
     {
       name:"desktop_background_set_text",description:"Replace a listed text field's complete value without keyboard, activation or clipboard. Requires exact current expectedValue; returns independent readback.",
       parameters:{type:"object",properties:{app:{type:"string"},snapshotId:snapshotParameter,ref:{type:"integer"},label:{type:"string",description:"Copy the selected targets entry's label exactly, including newlines and …; never use role or value."},expectedValue:{type:"string",description:"Copy that target's complete value exactly, including the final newline. Never use label or trim."},text:{type:"string",maxLength:2000}},required:["app","snapshotId","ref","label","expectedValue","text"]},
-      actionClass:"outbound",onDemand:"desktop",alwaysAsk:true,check:(args:BackgroundArgs)=>backgroundCheck(args,"set-value"),untrustedOutput:true,
+      actionClass:"outbound",onDemand:"desktop",alwaysAsk:true,approveAll,check:(args:BackgroundArgs)=>backgroundCheck(args,"set-value"),untrustedOutput:true,
       async preview(args:BackgroundArgs){return `Background text replacement: ${String(args.app)} — ${String(args.text??"").slice(0,200)}`;},
       run:(args:BackgroundArgs,ctx:ToolContext)=>backgroundRun(args,ctx,"set-value")
     },
     {
       name:"desktop_background_append_text",description:"Append exact text to an observed targetId. Existing text stays local; no activation or keyboard. Include required newlines in text. Native checks the original value after approval and reads back the result.",
       parameters:{type:"object",properties:{targetId:{type:"string"},text:{type:"string",maxLength:2000}},required:["targetId","text"]},
-      actionClass:"outbound",onDemand:"desktop",alwaysAsk:true,untrustedOutput:true,
-      async check(args:AppendArgs){backgroundScopes.delete(args);const resolved=appendReplacement(args);await backgroundCheck(resolved,"set-value");backgroundScopes.set(args,backgroundScopes.get(resolved)!);return null;},
+      actionClass:"outbound",onDemand:"desktop",alwaysAsk:true,approveAll,untrustedOutput:true,
+      async check(args:AppendArgs){backgroundScopes.delete(args);inputCovers.delete(args);const resolved=appendReplacement(args);await backgroundCheck(resolved,"set-value");backgroundScopes.set(args,backgroundScopes.get(resolved)!);const cover=inputCovers.get(resolved);if(cover)inputCovers.set(args,cover);return null;},
       async preview(args:AppendArgs){const resolved=appendReplacement(args);return `Background append: ${resolved.app} — ${resolved.windowTitle??"observed window"} — ${args.text}`;},
       async run(args:AppendArgs,ctx:ToolContext){
         const resolved=appendReplacement(args);appendTargets.delete(args.targetId);
@@ -435,7 +446,7 @@ export function createDesktopTools({ helper, onPermissionNeeded, onScreenPermiss
       },
       // A click in someone's mail client can send; treat it like one.
       actionClass: "outbound",
-      alwaysAsk: true, check: checkInput,
+      alwaysAsk: true, approveAll, check: checkInput,
       // The reply quotes the window, which says whatever its author wrote.
       untrustedOutput: true,
       async preview(args: { app: string; ref: number; label?:string }) {
@@ -473,7 +484,7 @@ export function createDesktopTools({ helper, onPermissionNeeded, onScreenPermiss
         required: ["app", "text", "snapshotId"],
       },
       actionClass: "outbound",
-      alwaysAsk: true, check: checkInput,
+      alwaysAsk: true, approveAll, check: checkInput,
       untrustedOutput: true,
       async preview(args: { app: string; text: string }) {
         const text = String(args.text ?? "");
@@ -508,7 +519,7 @@ export function createDesktopTools({ helper, onPermissionNeeded, onScreenPermiss
         required: ["app", "combo", "snapshotId"],
       },
       actionClass: "outbound",
-      alwaysAsk: true, check: checkInput,
+      alwaysAsk: true, approveAll, check: checkInput,
       untrustedOutput: true,
       async preview(args: { app: string; combo: string }) {
         return t("mac.desktop.preview.key", { app: String(args.app), combo: String(args.combo) });

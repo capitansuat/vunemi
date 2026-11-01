@@ -26,6 +26,7 @@ import { addressesIn, unseenLinks } from "./links.js";
 import { actionPermissionQuestion, bareQuestion, comparisonTable, listChoiceInput, prepareChoice, sectionChoiceInput, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
 import { planNote, proposePlan, worthPlanning } from "./plan.js";
+import { approveAllCover, LOCAL_WORK } from "./approve-all.js";
 import { GUARD_NOTE, suspectInstructions } from "./guard.js";
 import { mentionParts, mentionSource, type RunMention } from "./mentions.js";
 import { maskSecrets } from "./secrets.js";
@@ -199,6 +200,8 @@ export interface RunOptions {
    * it survives across runs; the loop adds to it on `approve_always`.
    */
   sessionGrants?: Set<string>;
+  /** What "approve all in this task" covers so far. Dies with the run; the session can empty it. */
+  approvedAll?: Set<string>;
   /**
    * On-demand tool groups already opened in this conversation (see
    * ToolDef.onDemand); tools add to it. Without it every tool is shown.
@@ -403,6 +406,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const scopedCalls=new Map<string,{grantId:string;descriptor:TaskPermissionDescriptor;epoch:TaskPermissionEpoch}>();
   const policy = opts.policy ?? DEFAULT_POLICY;
   const grants = opts.sessionGrants ?? new Set<string>();
+  const approvedAll = opts.approvedAll ?? new Set<string>();
   const freshResumeScopes = new Set<string>();
   let approvalRejected = false;
   const maxSteps = opts.maxSteps ?? 25;
@@ -1958,6 +1962,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       const output = `Error: ${message}`;
       const deliveryUnknown=err instanceof Error&&'deliveryUnknown' in err&&err.deliveryUnknown===true;
       if (deliveryUnknown && opts.standingGrant) { opts.standingGrant.onUncertain?.(); stopForGrant(t("agent.grantUncertain", { tool: call.name })); }
+      // What happened is unknown, so whatever comes next is the user's call again.
+      if (deliveryUnknown && approvedAll.size > 0) { approvedAll.clear(); emit({ type: "approval.all_ended", runId, at: now() }); }
       emit({ type: "tool.finished", runId, callId: call.id, ok: false, output, ...(deliveryUnknown?{deliveryUnknown:true as const}:actionClass === "read" && !(err instanceof Error && "retryable" in err && err.retryable===false) ? {retryable:true} : {}), durationMs: now() - started });
       return output;
     } finally {if(permissionTicket)opts.taskPermissions!.store.finish(permissionTicket);}
@@ -2001,6 +2007,13 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       approved(false, undefined, () => grants.has(scope!));
       return null;
     }
+    // A warning and a resumed run are always the user's call, whatever they pressed before.
+    const cover = strict || verdict.alert === true || opts.unattended === true ? undefined : await approveAllCover(tool, args);
+    if (signal.aborted) throw signal.reason ?? new Error("Stopped.");
+    if (cover && approvedAll.has(cover.key)) {
+      approved(false, undefined, () => approvedAll.has(cover.key));
+      return null;
+    }
 
     const { reason } = verdict;
     const alert = verdict.alert === true;
@@ -2030,6 +2043,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       ...(taskPermissionOffer && {taskPermissionOffer}),
       ...(alert && { alert: true }),
       ...(alwaysAsk && !tool.allowSessionApproval && { alwaysAsk: true }),
+      ...(cover && { approveAll: cover.app === undefined ? {} : { app: cover.app } }),
       ...(preview !== undefined && { preview }),
     });
     const decision = await Promise.race([
@@ -2049,6 +2063,12 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       const grantId=opts.taskPermissions.store.approve(decision.offerId,decision.offerRevision,permissionOwner,call.id);
       scopedCalls.set(call.id,{grantId,descriptor,epoch:permissionEpoch});
       approved(false,undefined,()=>opts.taskPermissions!.store.match(permissionOwner,tool.name,descriptor!,permissionEpochFor(tool))===grantId);
+      return null;
+    }
+    if (decision.kind === "approve_all") {
+      if (!cover) return "Invalid approval decision. Nothing was done; a new valid decision is required.";
+      approvedAll.add(cover.key).add(LOCAL_WORK);
+      approved(false, undefined, () => approvedAll.has(cover.key));
       return null;
     }
     approved(alert, () => {
@@ -2449,6 +2469,7 @@ function runtimeApprovalDecision(value:unknown,scoped:boolean):value is Approval
  if(!value||typeof value!=='object'||Array.isArray(value)||![Object.prototype,null].includes(Object.getPrototypeOf(value)))return false;
  const decision=value as Record<string,unknown>,keys=Object.keys(decision);
  if(decision.kind==='approve'||decision.kind==='approve_always')return keys.length===1;
+ if(decision.kind==='approve_all')return scoped&&keys.length===1;
  if(decision.kind==='reject')return keys.every(key=>key==='kind'||key==='note')&&(decision.note===undefined||typeof decision.note==='string'&&decision.note.length<=1000);
  return scoped&&decision.kind==='approve_run'&&keys.length===3&&keys.every(key=>['kind','offerId','offerRevision'].includes(key))&&typeof decision.offerId==='string'&&!!decision.offerId.length&&Number.isSafeInteger(decision.offerRevision)&&Number(decision.offerRevision)>0;
 }

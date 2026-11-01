@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {AgentSession,type SessionOptions} from '../main/session.js';
 import {setLocale,isLocale} from '@vunemi/i18n';
 import {Roots} from '@vunemi/files';
-import {ToolRegistry,TaskPermissionStore,copyQuotedSource,tasksFromEvents,type ChatModel,type ChatRequest,type ToolContext,type ToolDef,type AgentEvent,type OutputKeeper,type TaskPermissionEpoch} from '@vunemi/agent-core';
+import {ToolRegistry,TaskPermissionStore,copyQuotedSource,tasksFromEvents,type ApproveAllCover,type ChatModel,type ChatRequest,type ToolContext,type ToolDef,type AgentEvent,type OutputKeeper,type TaskPermissionEpoch} from '@vunemi/agent-core';
 import {SESSION_COMMANDS,sessionError,fromSessionError,type SessionConfiguration,type SessionState,type SessionService,type SessionContextMethod} from '../shared/session-coordinator.js';
 /**
  * The agent names a file through these tools with arguments it made itself,
@@ -33,6 +33,7 @@ export function serveSessionCoordinator(port:SessionWorkerPort):()=>void{
   const proxy:ToolDef={...meta.definition,...(meta.wantedFor&&{wantedFor:new RegExp(meta.wantedFor.source,meta.wantedFor.flags)}),...(meta.avoidFor&&{avoidFor:new RegExp(meta.avoidFor.source,meta.avoidFor.flags)}),
    preview:async args=>{const h=handle(args);if(!h.prepared)h.prepared=await rpc('tool.prepare',argsFor(args));return h.prepared.preview;},
    classify:args=>{const p=handle(args).prepared;if(!p)throw Error('Tool not prepared.');return p.actionClass;},alwaysAskWhen:args=>handle(args).prepared?.alwaysAsk===true,approvalScope:args=>handle(args).prepared?.scope,resolveFile:args=>{const path=handle(args).prepared?.path;if(path)return path;const access=FILE_ACCESS[meta.definition.name];if(!access||!fileRoots)throw Error('File not prepared.');return fileRoots.resolve(String(args.path??''),access);},
+   approveAll:async args=>await rpc('tool.approveAll',argsFor(args)) as ApproveAllCover|null,
    check:async(args,c)=>{if(!handle(args).prepared)handle(args).prepared=await rpc('tool.prepare',argsFor(args),c?.signal);return rpc('tool.check',argsFor(args,c?.userGoal),c?.signal);},
    run:async(args,ctx)=>{const id=randomUUID();contexts.set(id,ctx);try{const result=await rpc('tool.run',[...argsFor(args,ctx.userGoal),id,{taskReceipts:ctx.taskReceipts?.(),desktopDocumentState:ctx.desktopDocumentState?.()},ctx.callId],ctx.signal);handle(args).modelOutputs.set(result.output,result.modelOutput);return result.output;}finally{contexts.delete(id);}},
    forModel:raw=>raw,

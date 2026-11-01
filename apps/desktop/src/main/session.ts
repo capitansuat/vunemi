@@ -185,6 +185,8 @@ export class AgentSession {
   private readonly pendingPermissionOffers=new Map<string,TaskPermissionOfferView>();
   private activePermissionSessionId:string|null=null;
   private readonly pending = new Map<string, DecisionWait<ApprovalDecision>>();
+  private approvedAll = new Set<string>();
+  private approvedAllRun: string | null = null;
   private readonly handoffs = new Map<string, DecisionWait<HandoffOutcome>>();
   private readonly issuedRequests=new Map<string,RequestOwner>();
   private readonly choices = new Map<string, { owner:RequestOwner; card: ChoiceCard; resolve: (answer: ChoiceAnswer) => void }>();
@@ -394,6 +396,7 @@ export class AgentSession {
     const permissionSessionId=this.opts.taskPermissions?.sessionId();
     this.activePermissionSessionId=permissionSessionId??null;
     const preparationStartedAt=Date.now();
+    this.approvedAll = new Set();
     const ctrl = new AbortController();
     this.active = ctrl;
     let status: RunStatus | null = null;
@@ -451,7 +454,7 @@ export class AgentSession {
         tools: this.opts.tools,
         ...(this.opts.keptOutputs && { keptOutputs: this.opts.keptOutputs }),
         emit: event => {
-          if (event.type === "run.started") ownerRunId = event.runId;
+          if (event.type === "run.started") { ownerRunId = event.runId; this.approvedAllRun = event.runId; }
           this.emit(event);
         },
         history: this.history,
@@ -463,6 +466,7 @@ export class AgentSession {
         planEveryTask: this.opts.planBeforeRun?.() === true,
         maxSteps: 30,
         sessionGrants: this.opts.grants,
+        approvedAll: this.approvedAll,
         openedTools: this.openedTools,
         ...(this.opts.areas && { areas: this.opts.areas(), shownTools: this.shownTools }),
         authorize: this.opts.authorize,
@@ -731,13 +735,19 @@ export class AgentSession {
   }
   revokeTaskPermission(request:TaskPermissionRevokeRequest):TaskPermissionsSnapshot{return this.permissionOwner(request.sessionId,request.runId).revoke(request);}
 
+  /** "Ask again": the next step of this task gets a card. */
+  endApproveAll(runId:string):boolean{
+    if(typeof runId!=='string'||runId!==this.approvedAllRun||this.approvedAll.size===0)return false;
+    this.approvedAll.clear();this.emit({type:"approval.all_ended",runId,at:Date.now()});return true;
+  }
+
   /** A preview/adjustment may check ownership without consuming the decision. */
   canResolveApproval(callId:string,owner:RequestOwner):boolean{
     const pending=this.pending.get(callId);return !!pending&&this.requestCurrent(owner,pending.owner);
   }
   resolveApproval(callId: string, decision: ApprovalDecision,owner:RequestOwner): boolean {
     if(decision?.kind==="approve_run")throw new Error("Scoped approvals require the scoped channel.");
-    if(!decision||typeof decision!=='object'||Array.isArray(decision)||![Object.prototype,null].includes(Object.getPrototypeOf(decision))||!['approve','approve_always','reject'].includes(decision.kind)||Object.keys(decision).some(key=>key!=='kind'&&(decision.kind!=='reject'||key!=='note'))||decision.kind==='reject'&&decision.note!==undefined&&(typeof decision.note!=='string'||decision.note.length>1000))return false;
+    if(!decision||typeof decision!=='object'||Array.isArray(decision)||![Object.prototype,null].includes(Object.getPrototypeOf(decision))||!['approve','approve_always','approve_all','reject'].includes(decision.kind)||Object.keys(decision).some(key=>key!=='kind'&&(decision.kind!=='reject'||key!=='note'))||decision.kind==='reject'&&decision.note!==undefined&&(typeof decision.note!=='string'||decision.note.length>1000))return false;
     const pending=this.pending.get(callId);if(!pending||!this.canResolveApproval(callId,owner))return false;
     this.pendingPermissionOffers.delete(callId);this.pending.delete(callId);pending.resolve(decision);return true;
   }

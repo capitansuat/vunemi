@@ -21,7 +21,7 @@ import { closeSync, mkdirSync, openSync, readdirSync, rmdirSync, readFileSync, r
 import { homedir } from "node:os";
 import { basename, dirname, extname, join, relative } from "node:path";
 import { promisify } from "node:util";
-import type { ToolDef } from "@vunemi/agent-core";
+import { LOCAL_WORK, type ToolDef } from "@vunemi/agent-core";
 import { localName, PathRefused, Roots } from "./roots.js";
 import { Shadow } from "./shadow.js";
 import { t } from "@vunemi/i18n";
@@ -323,6 +323,8 @@ export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJourn
     {
       name: "files_write",
       resolveFile(args: {path:string}) { return roots.resolve(args.path); },
+      // Replacing a file keeps its own card, even after "approve all".
+      approveAll(args: {path:string}) { return existsSync(roots.resolve(args.path)) ? undefined : { key: LOCAL_WORK }; },
       description: "Write a text file, replacing what was there. The old contents are kept so the user can undo it.",
       parameters: {
         type: "object",

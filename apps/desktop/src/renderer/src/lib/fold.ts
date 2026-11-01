@@ -27,6 +27,8 @@ export interface CallView {
   flagged?: string;
   /** "Always allow" does not apply to this call. */
   alwaysAsk?: boolean;
+  /** The card can approve the rest of the task; `app` is the app that would reach. */
+  approveAll?: { app?: string };
   /** The tool is switched off; this is its connection and part, and the card offers to switch it on. */
   switchedOff?: string;
   /** Set while the call waits for the user to do something themselves (a CAPTCHA, a login). */
@@ -89,6 +91,8 @@ export interface RunView {
   quotedSource?: QuotedSource;
   /** Latest actual user request; resolution never revives an older request. */
   pendingAction?: {kind:"plan"|"approval"|"handoff"|"choice";callId?:string;requestId?:string};
+  /** "Approve all in this task" is on; ends with the task. */
+  approvedAll?: boolean;
   runId: string;
   /** First request's TTFT; later source/output reviews must not replace it. */
   firstTokenMs?: number | null;
@@ -228,10 +232,13 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
         taskPermissionOffer: e.taskPermissionOffer,
         ...(e.alert === true && { alert: true }),
         ...(e.alwaysAsk === true && { alwaysAsk: true }),
+        ...(e.approveAll && { approveAll: e.approveAll }),
         ...(e.switchedOff !== undefined && { switchedOff: e.switchedOff }),
       }));
     case "approval.resolved":
-      return updateCall(run, e.callId, (c) => ({ ...c, status: decisionStatus(e.decision) }));
+      return updateCall(e.decision.kind === "approve_all" ? { ...run, approvedAll: true } : run, e.callId, (c) => ({ ...c, status: decisionStatus(e.decision) }));
+    case "approval.all_ended":
+      return { ...run, approvedAll: false };
     case "handoff.required":
       return updateCall(run, e.callId, (c) => ({ ...c, handoff: e.reason,requestId:'requestId' in e&&typeof e.requestId==='string'?e.requestId:undefined }));
     case "handoff.resolved":
