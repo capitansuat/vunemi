@@ -172,6 +172,7 @@ export default {
       { title: "Uygulama kilidi", body: "Vunemi'yi Touch ID veya Mac parolanla kilitle." },
       { title: "Verin, kararın", body: "Bir oturumu, bir notu ya da her şeyi unut. Hafızadaki bir not hiçbir izin vermez; sayfalardan, e-postalardan ya da dosyalardan gelen sözler asla not olamaz." },
       { title: "Bu çalıştırmanın izinleri", body: "Vunemi bir dosyayı okumak ya da bir pencereye bakmak istediğinde her okumayı tek tek onaylamak yerine bir kez ya da görevin geri kalanı için, en çok 8 kez izin verebilirsin. Değişen bir dosya yeni izin ister, bir izni istediğin an geri alabilirsin ve hiçbiri zamanlanmış işlere geçmez." },
+      { title: "Bir işte hepsini onayla", body: "Bazı işler art arda çok sayıda küçük onay ister; her birine basmak, devrettiğin işin önüne geçer. Normal bir kartta işin geri kalanını onaylayabilirsin: o uygulama ve yerel değişiklikler iş bitene kadar sormaz. Gönderme, silme, bir dosyanın üstüne yazma, e-posta, mesajlaşma ve tarayıcı uygulamaları ve uyarılar yine sorar. Yine sor ile geri alırsın; Vunemi bir adımın sonucunu anlayamazsa kendiliğinden biter. Kullanmak zorunda değilsin: bu olmadan her adım ayrı ayrı sorar." },
       { title: "Emin değilse tekrarlamaz", body: "Vunemi bir işlemin gerçekleşip gerçekleşmediğini anlayamazsa onu yeniden yapmaz. Görev Sonuç belirsiz olarak işaretlenir ve yeniden başlatmadan sonra da sen kontrol edene kadar bekler." },
     ],
     extras: [

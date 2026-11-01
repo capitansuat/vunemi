@@ -174,6 +174,7 @@ export default {
       { title: "App lock", body: "Lock Vunemi with Touch ID or your Mac password." },
       { title: "Your data, your call", body: "Forget one session, one note or everything. A note from memory never grants a permission, and words from pages, mail or files can never become one." },
       { title: "Run permissions", body: "When Vunemi asks to read a file or look at a window, you can allow it once or for the rest of the task, up to 8 times, instead of approving every read. A changed file needs new permission, you can revoke one at any time, and none carries over to scheduled tasks." },
+      { title: "Approve all in a task", body: "Some tasks ask for many small approvals in a row, and pressing each one gets in the way of the work you handed over. On an ordinary card you can approve the rest of the task: that app and local changes stop asking until the task ends. Sending, deleting, replacing a file, mail, messaging and browser apps, and warnings still ask. Ask again takes it back, and it ends by itself if Vunemi can't tell whether a step took effect. You never have to use it: without it, every step asks on its own." },
       { title: "No repeats when unsure", body: "If Vunemi can't tell whether an action took effect, it does not do it again. The task is marked Result uncertain and waits for you to check, even after a restart." },
     ],
     extras: [

@@ -172,6 +172,7 @@ export default {
       { title: "Bloqueio do app", body: "Bloqueie o Vunemi com o Touch ID ou a senha do Mac." },
       { title: "Seus dados, sua decisão", body: "Esqueça uma sessão, uma nota ou tudo. Uma nota da memória nunca concede permissão, e palavras de páginas, e-mails ou arquivos nunca viram uma nota." },
       { title: "Permissões desta execução", body: "Quando o Vunemi pede para ler um arquivo ou olhar uma janela, você pode permitir uma vez ou pelo resto da tarefa, até 8 vezes, em vez de aprovar cada leitura. Um arquivo alterado precisa de nova permissão, você pode revogar qualquer uma a qualquer momento e nenhuma passa para as tarefas agendadas." },
+      { title: "Aprovar tudo em uma tarefa", body: "Algumas tarefas pedem muitas aprovações pequenas em sequência, e clicar em cada uma atrapalha o trabalho que você delegou. Em um cartão comum, você pode aprovar o resto da tarefa: esse app e as alterações locais param de perguntar até ela terminar. Enviar, excluir, substituir um arquivo, apps de e-mail, de mensagens e navegadores, e os avisos continuam perguntando. Perguntar de novo desfaz isso, e termina sozinho se o Vunemi não conseguir saber se uma etapa teve efeito. Você nunca precisa usar: sem isso, cada etapa pergunta separadamente." },
       { title: "Sem repetição na dúvida", body: "Se o Vunemi não consegue saber se uma ação teve efeito, ele não a faz de novo. A tarefa fica marcada como «Resultado incerto» e espera você conferir, mesmo depois de reiniciar." },
     ],
     extras: [

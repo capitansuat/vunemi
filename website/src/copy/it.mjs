@@ -172,6 +172,7 @@ export default {
       { title: "Blocco dell'app", body: "Blocca Vunemi con Touch ID o la password del Mac." },
       { title: "I tuoi dati, la tua scelta", body: "Dimentica una sessione, una nota o tutto. Una nota della memoria non concede mai un permesso, e le parole di pagine, email o file non possono mai diventarne una." },
       { title: "Permessi di questa esecuzione", body: "Quando Vunemi chiede di leggere un file o di osservare una finestra, puoi consentirlo una volta o per il resto dell'attività, fino a 8 volte, invece di approvare ogni lettura. Un file modificato richiede un nuovo permesso, puoi revocarne uno in qualsiasi momento e nessuno passa alle attività programmate." },
+      { title: "Approva tutto in un’attività", body: "Alcune attività chiedono molte piccole approvazioni di seguito, e premerle una per una intralcia il lavoro che hai affidato. In una scheda normale puoi approvare il resto dell’attività: quell’app e le modifiche locali non chiedono più fino alla fine. Invio, eliminazione, sostituzione di un file, app di posta, messaggistica e browser, e gli avvisi chiedono comunque. Chiedi di nuovo lo annulla, e termina da solo se Vunemi non riesce a capire se un passaggio ha avuto effetto. Non sei mai obbligato a usarlo: senza, ogni passaggio chiede da solo." },
       { title: "Niente ripetizioni nel dubbio", body: "Se Vunemi non può sapere se un'azione ha avuto effetto, non la ripete. L'attività viene segnata come «Risultato incerto» e aspetta che tu controlli, anche dopo un riavvio." },
     ],
     extras: [
