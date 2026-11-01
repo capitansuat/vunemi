@@ -59,7 +59,11 @@ function desktopFieldEvidence(observed:NativeBackgroundObservation,ref?:number):
 /** The helper's words for an unchanged window. */
 const NO_CHANGE = "(değişiklik yok)";
 /** Typed text is looked for by its start; a long paste wraps and scrolls. */
-
+/** Typing checks focus and window before every character: 26 ms each when measured, more on a busy Mac. */
+const typingTimeoutMs = (text: string): number => 20_000 + text.length * 60;
+/** Stopped partway: some of the text may be in the field. */
+const typingCutOff = (error: unknown): boolean =>
+  /may be partial|Native execution timeout/.test(String(error)) || (error instanceof Error && error.message === t("mac.helper.timeout", { op: "type" }));
 
 export interface DesktopToolOptions {
   moveGuard?: import("@vunemi/agent-core").SemanticMoveGuard;
@@ -86,14 +90,16 @@ export function afterAction(result: { text: string; changed: string | null; inpu
     return `Could not read the window afterwards (${result.message}). The action may have closed it or moved focus; describe the app again before going on.`;
   }
   const lines: string[] = [];
+  const probe = typed ?? "";
+  const values=result.inputValues ?? [...result.text.matchAll(/^\s*\[\d+\]\s+(?:TextField|TextArea|StaticText|ComboBox)\s+"([^"\n]*)"/gm)].map(m=>m[1]!);
+  const appears = probe.trim() !== "" && values.some(value=>value.includes(probe));
   if (result.changed === null) lines.push("There was no earlier look at this window to compare with; describe it to check the result.");
-  else if (result.changed === NO_CHANGE) lines.push("Nothing in the window changed. The action probably had no effect: don't report it as done; describe the window and try another way.");
+  // The outline cuts long labels short, so text added far along a field doesn't show in it.
+  else if (result.changed === NO_CHANGE) { if (!appears) lines.push("Nothing in the window changed. The action probably had no effect: don't report it as done; describe the window and try another way."); }
   else lines.push(`What changed (refs are current):\n${result.changed.slice(0, MAX_TREE_CHARS)}`);
   if (typed !== undefined) {
-    const probe = typed;
     if (probe.trim()) {
-      const values=result.inputValues ?? [...result.text.matchAll(/^\s*\[\d+\]\s+(?:TextField|TextArea|StaticText|ComboBox)\s+"([^"\n]*)"/gm)].map(m=>m[1]!);
-      lines.push(values.some(value=>value.includes(probe))
+      lines.push(appears
         ? "The typed text now appears in the window."
         : "The typed text does not appear in the window's text. It may have gone elsewhere or the field hides it; check before going on.");
     }
@@ -479,8 +485,8 @@ export function createDesktopTools({ helper, onPermissionNeeded, onScreenPermiss
         const text = String(args.text ?? "");
         if(ctx.signal.aborted)return "Stopped.";
         let acted: Observation;
-        try { acted = await helper.call("type", { app: String(app.pid), text, snapshotId: requireSnapshot(args.snapshotId) },{signal:ctx.signal,assertActive:ctx.assertToolActive}) as Observation; }
-        catch (error) { throw /may be partial/.test(String(error)) ? Object.assign(error as Error,{deliveryUnknown:true}) : error; }
+        try { acted = await helper.call("type", { app: String(app.pid), text, snapshotId: requireSnapshot(args.snapshotId) },{signal:ctx.signal,assertActive:ctx.assertToolActive,timeoutMs:typingTimeoutMs(text)}) as Observation; }
+        catch (error) { throw typingCutOff(error) ? Object.assign(error as Error,{deliveryUnknown:true}) : error; }
         const after=await lookAgain(app, ctx.signal, text, acted.windowId, acted.part);
         if(after.includes("The typed text does not appear") || after.includes("Could not read the window afterwards"))throw Object.assign(new Error(`Text input was not confirmed. Do not blindly repeat it; inspect current state.\n${after}`),{deliveryUnknown:true});
         return `Typed into ${app.name}.\n${after}`;

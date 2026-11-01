@@ -9,6 +9,7 @@ import { existsSync, chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
+import { t } from "@vunemi/i18n";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { afterAction, blockedReason, createDesktopTools, Helper } from "../src/index.js";
 
@@ -73,7 +74,9 @@ class FakeHelper extends Helper {
   calendars = false;
   reminders = false;
   /** What the next describe says; a thrown error when it's an Error. */
-  after: { text: string; count: number; changed: string | null } | Error = { text: '[1] Button "Yeni not"', count: 1, changed: '+ Button "Kaydet"' };
+  after: { text: string; count: number; changed: string | null; inputValues?: string[] } | Error = { text: '[1] Button "Yeni not"', count: 1, changed: '+ Button "Kaydet"' };
+  typeTimeoutMs: number | undefined;
+  typeError: Error | undefined;
 
   constructor() {
     super("/does/not/exist");
@@ -99,8 +102,9 @@ class FakeHelper extends Helper {
     ];
   }
 
-  override async call(op: string, args: Record<string, unknown> = {}): Promise<unknown> {
+  override async call(op: string, args: Record<string, unknown> = {}, opts: { timeoutMs?: number } = {}): Promise<unknown> {
     this.calls.push({ op, args });
+    if(op === "type") { this.typeTimeoutMs = opts.timeoutMs; if(this.typeError) throw this.typeError; }
     if(op === "validate_snapshot") return {pid:501,bundleId:"com.apple.Notes",processStartedAt:this.processStartedAt};
     if(op === "request_screen_recording") { if(this.grantScreenOnRequest)this.screenRecording=true; return {asked:this.screenRecording}; }
     if (op === "describe") {
@@ -243,6 +247,20 @@ describe("desktop tools", () => {
     expect(helper.calls.map((c) => c.op)).toEqual(["click", "describe"]);
   });
 
+  it("gives long typing time to finish and calls one that was cut off uncertain", async () => {
+    helper.after = { text: '[1] TextArea "a"', count: 1, changed: '+ [1] TextArea "a"', inputValues: ["a".repeat(2000)] };
+    await call("desktop_type", { app: "Notes", text: "a".repeat(2000), snapshotId:"observed-1" });
+    // 26 ms a character was measured on 1 November; the old limit of 20 s stopped at about 770.
+    expect(helper.typeTimeoutMs).toBeGreaterThan(2000 * 40);
+    for (const message of ["Native execution timeout.", t("mac.helper.timeout", { op: "type" })]) {
+      helper.typeError = new Error(message);
+      await expect(call("desktop_type", { app: "Notes", text: "a".repeat(2000), snapshotId:"observed-1" })).rejects.toMatchObject({ deliveryUnknown: true });
+    }
+    helper.typeError = new Error("Text focus changed. Observe again. No input was sent.");
+    const refused = await call("desktop_type", { app: "Notes", text: "a", snapshotId:"observed-1" }).catch((error: unknown) => error as { deliveryUnknown?: boolean });
+    expect((refused as { deliveryUnknown?: boolean }).deliveryUnknown).toBeUndefined();
+  });
+
   it("looks again after typing and keys, and checks the typed text landed", async () => {
     helper.after = { text: '[1] TextField "Başlık: alışveriş listesi"', count: 1, changed: '+ TextField "Başlık: alışveriş listesi"' };
     const typed = await call("desktop_type", { app: "Notes", text: "alışveriş listesi", snapshotId:"observed-1" });
@@ -344,6 +362,12 @@ describe("the second look", () => {
     expect(afterAction({ text: "", changed: null })).toMatch(/no earlier look/);
     expect(afterAction({ text: "", changed: "(değişiklik yok)" })).toMatch(/probably had no effect/);
     expect(afterAction({ text: "", changed: "- Sheet" })).toBe("What changed (refs are current):\n- Sheet");
+  });
+
+  it("doesn't call typing ineffective when the outline cuts a long field short", () => {
+    const said = afterAction({ text: '[1] TextArea "uzun metin…"', changed: "(değişiklik yok)", inputValues: ["uzun metin ve sonunda yazılan"] }, "yazılan");
+    expect(said).not.toMatch(/probably had no effect/);
+    expect(said).toContain("appears in the window");
   });
 
   it("does not verify partial text or a matching button caption as typed content",()=>{
