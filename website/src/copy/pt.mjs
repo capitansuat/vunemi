@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: um assistente pessoal que roda no seu Mac", description: "O Vunemi ajuda nas tarefas do dia a dia. A IA roda no seu Mac, sem conta na nuvem do Vunemi. Você escolhe quais serviços externos conectar." },
-    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.2.5 faz." },
+    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.2.6 faz." },
     screens: { title: "Telas do Vunemi", description: "Telas reais do app Vunemi para Mac, capturadas com dados de exemplo." },
-    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.2.5 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
+    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.2.6 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
   },
   hero: {
     eyebrow: "Assistente pessoal para Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tudo o que o Vunemi faz",
-    intro: "O Vunemi 0.2.5 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
+    intro: "O Vunemi 0.2.6 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
     chatTitle: "Trabalhando com o Vunemi",
     chat: [
       { title: "Primeiro o plano", body: "Numa tarefa com vários passos, o Vunemi pode mostrar o plano antes. Siga em frente, edite os passos ou cancele." },
@@ -187,10 +187,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Novidades desta versão",
     highlights: [
-      "O Vunemi agora consegue compactar e abrir arquivos sozinho: zip, 7z e tar, e também abre RAR. Um pedido como “compacte esta pasta para eu anexar” parava nessa etapa, porque o Vunemi não tinha uma ferramenta para isso; ler, gravar e mover arquivos já funcionava e não mudou.",
-      "Ele usa a ferramenta de compactação do próprio macOS, dentro de um sandbox, e só mantém um arquivo aberto se ele abriu por inteiro. Arquivos protegidos por senha e RAR divididos não são abertos, e um RAR danificado nem sempre é percebido.",
-      "Quando o campo em foco em um app do Mac é um campo de senha, o Vunemi agora para e não digita nada. As senhas você digita; o navegador e o controle em segundo plano já funcionavam assim.",
-      "Quando o Vunemi muda um arquivo que já existe, a linha de resultado agora diz Alterado em vez de Criado.",
+      "No cartão de aprovação de uma tarefa, agora você pode aprovar o resto: esse app e as alterações locais param de perguntar até ela terminar. Algumas tarefas pediam muitas aprovações pequenas em sequência, o que atrapalhava o trabalho; sem isso, cada etapa pergunta separadamente, como antes.",
+      "Enviar, excluir, substituir um arquivo, apps de e-mail, de mensagens e navegadores, e os avisos continuam perguntando. Perguntar de novo desfaz isso, e termina sozinho se o Vunemi não conseguir saber se uma etapa teve efeito.",
+      "Um texto longo digitado em um app do Mac (cerca de 770 caracteres ou mais) parava no meio porque o tempo da etapa acabava. Agora ele recebe um tempo proporcional ao tamanho; se mesmo assim for cortado, o Vunemi informa que a etapa pode estar incompleta, em vez de dá-la como concluída.",
     ],
     title: "Baixe o Vunemi",
     intro: "Gratuito e de código aberto. Para Macs com Apple Silicon e macOS 14 ou posterior.",

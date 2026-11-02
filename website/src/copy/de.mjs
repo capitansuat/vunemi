@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.2.5 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.2.6 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.2.5 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.2.6 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.2.5 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.2.6 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -187,10 +187,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Vunemi kann Dateien jetzt selbst komprimieren und öffnen: zip, 7z und tar, außerdem öffnet es RAR. „Pack diesen Ordner als Zip, ich will ihn anhängen“ blieb bisher hier stehen, weil das Werkzeug fehlte; Dateien lesen, schreiben und verschieben ging schon und bleibt unverändert.",
-      "Vunemi nutzt das in macOS eingebaute Archivwerkzeug in einer Sandbox und behält ein geöffnetes Archiv nur, wenn es vollständig aufging. Passwortgeschützte Archive und mehrteilige RAR werden nicht geöffnet, und ein beschädigtes RAR fällt nicht immer auf.",
-      "Ist das aktive Feld in einer Mac-App ein Passwortfeld, hält Vunemi jetzt an und tippt nichts. Passwörter gibst du selbst ein; im Browser und bei der Hintergrundsteuerung war das schon so.",
-      "Ändert Vunemi eine vorhandene Datei, steht in der Ergebniszeile jetzt Geändert statt Erstellt.",
+      "Auf der Freigabekarte einer Aufgabe kannst du jetzt den Rest der Aufgabe freigeben: Diese App und lokale Änderungen fragen bis zum Ende nicht mehr. Manche Aufgaben verlangten viele kleine Freigaben hintereinander, und das störte die Arbeit; ohne das fragt jeder Schritt wie bisher einzeln.",
+      "Senden, Löschen, das Ersetzen einer Datei, Mail-, Nachrichten- und Browser-Apps sowie Warnungen fragen weiterhin. Mit „Wieder fragen“ nimmst du es zurück, und es endet von selbst, wenn Vunemi nicht erkennen kann, ob ein Schritt gewirkt hat.",
+      "Langer Text, der in eine Mac-App getippt wird (ab etwa 770 Zeichen), brach mittendrin ab, weil dem Schritt die Zeit ausging. Jetzt bekommt er Zeit passend zu seiner Länge; wird er trotzdem abgeschnitten, meldet Vunemi den Schritt als möglicherweise unvollständig statt als erledigt.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

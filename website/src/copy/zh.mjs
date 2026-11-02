@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.2.5 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.2.6 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.2.5，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.2.6，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.2.5：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.2.6：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -187,10 +187,9 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "Vunemi 现在可以自己压缩和打开文件：zip、7z 和 tar，也能打开 RAR。像“把这个文件夹压缩一下，我要附上”这样的请求以前会停在这一步，因为 Vunemi 没有相应的工具；读取、写入和移动文件本来就能用，也没有变化。",
-      "它在沙盒中使用 macOS 自带的归档工具，只有全部打开成功才保留结果。受密码保护的归档和分卷 RAR 不会打开，损坏的 RAR 也不一定能被发现。",
-      "当 Mac 应用中获得焦点的是密码字段时，Vunemi 现在会停下，不输入任何内容。密码由你自己输入；浏览器和后台控制本来就是这样。",
-      "当 Vunemi 更改已存在的文件时，结果行现在显示“已更改”，而不是“已创建”。",
+      "现在可以在任务的批准卡片上批准任务的其余部分：在任务结束前，该应用和本地更改不再询问。有些任务会连续请求许多小批准，逐个点按会妨碍工作；不使用此功能时，每一步仍像以前一样单独询问。",
+      "发送、删除、替换文件、邮件、消息和浏览器应用以及警告仍会询问。“重新询问”可撤销此操作；如果 Vunemi 无法判断某一步是否生效，它也会自动结束。",
+      "在 Mac 应用中输入较长的文本（约 770 个字符以上）时，曾因该步骤超时而中途停止。现在会按文本长度给予足够时间；如果仍被中断，Vunemi 会说明这一步可能只完成了一部分，而不是报告已完成。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

@@ -1,84 +1,73 @@
 {
-  "currentRelease": "0.2.5",
+  "currentRelease": "0.2.6",
   "releases": [
     {
-      "version": "0.2.5",
+      "version": "0.2.6",
       "updateTo": {
-        "version": "0.2.5",
-        "name": "Vunemi 0.2.5",
-        "pub_date": "2026-10-31T00:00:00Z",
+        "version": "0.2.6",
+        "name": "Vunemi 0.2.6",
+        "pub_date": "2026-11-02T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.5/Vunemi-0.2.5-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.6/Vunemi-0.2.6-arm64.zip"
       }
     }
   ],
   "sizeMb": 143,
   "notes": {
     "en": [
-      "Vunemi can now compress and open files itself: zip, 7z and tar, and it opens RAR. A request like “zip this folder so I can attach it” used to stop at that step, because Vunemi had no tool for it; reading, writing and moving files already worked and haven't changed.",
-      "It uses the archive tool built into macOS, inside a sandbox, and keeps an opened archive only if all of it opened. Password-protected archives and split RARs aren't opened, and a damaged RAR isn't always noticed.",
-      "When the focused field in a Mac app is a password field, Vunemi now stops and types nothing. Passwords are yours to enter; the browser and background control already worked this way.",
-      "When Vunemi changes a file that already exists, its output row now says Changed instead of Created."
+      "On a task's approval card you can now approve the rest of the task: that app and local changes stop asking until the task ends. Some tasks asked for many small approvals in a row, and pressing each one got in the way; without it, every step still asks on its own, as before.",
+      "Sending, deleting, replacing a file, mail, messaging and browser apps, and warnings still ask. Ask again takes it back, and it ends by itself if Vunemi can't tell whether a step took effect.",
+      "Long text typed into a Mac app (about 770 characters or more) used to stop partway because the step ran out of time. It now gets time in proportion to its length, and if it is still cut off, Vunemi reports the step as possibly incomplete instead of done."
     ],
     "de": [
-      "Vunemi kann Dateien jetzt selbst komprimieren und öffnen: zip, 7z und tar, außerdem öffnet es RAR. „Pack diesen Ordner als Zip, ich will ihn anhängen“ blieb bisher hier stehen, weil das Werkzeug fehlte; Dateien lesen, schreiben und verschieben ging schon und bleibt unverändert.",
-      "Vunemi nutzt das in macOS eingebaute Archivwerkzeug in einer Sandbox und behält ein geöffnetes Archiv nur, wenn es vollständig aufging. Passwortgeschützte Archive und mehrteilige RAR werden nicht geöffnet, und ein beschädigtes RAR fällt nicht immer auf.",
-      "Ist das aktive Feld in einer Mac-App ein Passwortfeld, hält Vunemi jetzt an und tippt nichts. Passwörter gibst du selbst ein; im Browser und bei der Hintergrundsteuerung war das schon so.",
-      "Ändert Vunemi eine vorhandene Datei, steht in der Ergebniszeile jetzt Geändert statt Erstellt."
+      "Auf der Freigabekarte einer Aufgabe kannst du jetzt den Rest der Aufgabe freigeben: Diese App und lokale Änderungen fragen bis zum Ende nicht mehr. Manche Aufgaben verlangten viele kleine Freigaben hintereinander, und das störte die Arbeit; ohne das fragt jeder Schritt wie bisher einzeln.",
+      "Senden, Löschen, das Ersetzen einer Datei, Mail-, Nachrichten- und Browser-Apps sowie Warnungen fragen weiterhin. Mit „Wieder fragen“ nimmst du es zurück, und es endet von selbst, wenn Vunemi nicht erkennen kann, ob ein Schritt gewirkt hat.",
+      "Langer Text, der in eine Mac-App getippt wird (ab etwa 770 Zeichen), brach mittendrin ab, weil dem Schritt die Zeit ausging. Jetzt bekommt er Zeit passend zu seiner Länge; wird er trotzdem abgeschnitten, meldet Vunemi den Schritt als möglicherweise unvollständig statt als erledigt."
     ],
     "es": [
-      "Vunemi ya puede comprimir y abrir archivos por sí mismo: zip, 7z y tar, y también abre RAR. Una petición como «comprime esta carpeta para adjuntarla» se quedaba en ese paso, porque Vunemi no tenía una herramienta para ello; leer, escribir y mover archivos ya funcionaba y no ha cambiado.",
-      "Usa la herramienta de archivos integrada en macOS, dentro de un sandbox, y solo conserva un archivo abierto si se abrió entero. No abre archivos protegidos con contraseña ni RAR divididos, y un RAR dañado no siempre se detecta.",
-      "Cuando el campo activo de una app de Mac es un campo de contraseña, Vunemi ahora se detiene y no escribe nada. Las contraseñas las escribes tú; el navegador y el control en segundo plano ya funcionaban así.",
-      "Cuando Vunemi cambia un archivo que ya existe, su fila de resultado ahora dice Modificado en lugar de Creado."
+      "En la tarjeta de aprobación de una tarea ahora puedes aprobar el resto: esa app y los cambios locales dejan de preguntar hasta que termine. Algunas tareas pedían muchas aprobaciones pequeñas seguidas, lo que estorbaba el trabajo; sin esto, cada paso sigue preguntando por separado, como antes.",
+      "Enviar, eliminar, reemplazar un archivo, las apps de correo, mensajería y navegadores, y las advertencias siguen preguntando. Volver a preguntar lo deshace, y termina solo si Vunemi no puede saber si un paso surtió efecto.",
+      "Un texto largo escrito en una app del Mac (unos 770 caracteres o más) se quedaba a medias porque al paso se le acababa el tiempo. Ahora recibe tiempo según su longitud; si aun así se corta, Vunemi indica que el paso puede estar incompleto en lugar de darlo por hecho."
     ],
     "fr": [
-      "Vunemi peut désormais compresser et ouvrir des fichiers lui-même : zip, 7z et tar, et il ouvre aussi les RAR. « Compresse ce dossier pour que je le joigne » s'arrêtait là, faute d'outil ; lire, écrire et déplacer des fichiers fonctionnait déjà et n'a pas changé.",
-      "Vunemi utilise l'outil d'archive intégré à macOS, dans un bac à sable, et ne garde une archive ouverte que si elle s'est ouverte entièrement. Les archives protégées par mot de passe et les RAR fractionnés ne sont pas ouverts, et un RAR endommagé n'est pas toujours détecté.",
-      "Quand le champ actif d'une app Mac est un champ de mot de passe, Vunemi s'arrête désormais et ne saisit rien. C'est à vous de saisir vos mots de passe ; le navigateur et le contrôle en arrière-plan fonctionnaient déjà ainsi.",
-      "Quand Vunemi modifie un fichier existant, sa ligne de résultat indique désormais Modifié au lieu de Créé."
+      "Sur la carte d’approbation d’une tâche, vous pouvez désormais approuver le reste : cette app et les modifications locales ne demandent plus jusqu’à la fin. Certaines tâches demandaient beaucoup de petites approbations à la suite, ce qui gênait le travail ; sans cela, chaque étape demande séparément.",
+      "L’envoi, la suppression, le remplacement d’un fichier, les apps de mail, de messagerie et les navigateurs, ainsi que les avertissements, demandent toujours. Demander à nouveau l’annule, et cela prend fin tout seul si Vunemi ne peut pas savoir si une étape a abouti.",
+      "Un long texte saisi dans une app Mac (environ 770 caractères ou plus) s’arrêtait en cours de route, faute de temps pour l’étape. Il dispose maintenant d’un délai proportionnel à sa longueur ; s’il est tout de même coupé, Vunemi signale l’étape comme peut-être incomplète au lieu de la dire terminée."
     ],
     "it": [
-      "Vunemi ora può comprimere e aprire i file da solo: zip, 7z e tar, e apre anche i RAR. Una richiesta come «comprimi questa cartella così la allego» si fermava a quel passaggio, perché Vunemi non aveva uno strumento per farlo; leggere, scrivere e spostare i file funzionava già e non è cambiato.",
-      "Usa lo strumento di archiviazione integrato in macOS, in una sandbox, e tiene un archivio aperto solo se si è aperto per intero. Non apre archivi protetti da password né RAR divisi, e un RAR danneggiato non viene sempre notato.",
-      "Quando il campo attivo di un'app Mac è un campo password, Vunemi ora si ferma e non scrive nulla. Le password le inserisci tu; il browser e il controllo in background funzionavano già così.",
-      "Quando Vunemi cambia un file che esiste già, la sua riga di risultato ora dice Modificato invece di Creato."
+      "Nella scheda di approvazione di un’attività ora puoi approvare il resto: quell’app e le modifiche locali non chiedono più fino alla fine. Alcune attività chiedevano molte piccole approvazioni di seguito, e questo intralciava il lavoro; senza, ogni passaggio chiede da solo, come prima.",
+      "Invio, eliminazione, sostituzione di un file, app di posta, messaggistica e browser, e gli avvisi chiedono comunque. Chiedi di nuovo lo annulla, e termina da solo se Vunemi non riesce a capire se un passaggio ha avuto effetto.",
+      "Un testo lungo digitato in un’app per Mac (circa 770 caratteri o più) si fermava a metà perché il passaggio esauriva il tempo. Ora riceve un tempo proporzionato alla lunghezza; se viene comunque interrotto, Vunemi segnala il passaggio come forse incompleto invece che concluso."
     ],
     "tr": [
-      "Vunemi artık dosyaları kendisi sıkıştırıp açabiliyor: zip, 7z ve tar; RAR'ı da açıyor. “Bu klasörü zip'le, ekleyeceğim” gibi bir istek o adımda kalıyordu, çünkü Vunemi'nin bunun için aracı yoktu; dosya okuma, yazma ve taşıma zaten çalışıyordu ve değişmedi.",
-      "macOS'un kendi arşiv aracını sandbox içinde kullanır ve bir arşivi yalnız tamamı açıldıysa bırakır. Parola korumalı arşivleri ve parçalı RAR'ları açmaz; bozuk bir RAR her zaman fark edilmez.",
-      "Bir Mac uygulamasında odaktaki alan parola alanıysa Vunemi artık durur ve hiçbir şey yazmaz. Parolayı sen girersin; tarayıcı ve arka plan kontrolü zaten böyle çalışıyordu.",
-      "Vunemi var olan bir dosyayı değiştirdiğinde çıktı satırı artık Oluşturuldu değil, Değiştirildi diyor."
+      "Bir işin onay kartında artık işin geri kalanını onaylayabilirsin: o uygulama ve yerel değişiklikler iş bitene kadar sormaz. Bazı işler art arda çok sayıda küçük onay istiyordu ve her birine basmak işin önüne geçiyordu; bunu kullanmazsan her adım eskisi gibi ayrı ayrı sorar.",
+      "Gönderme, silme, bir dosyanın üstüne yazma, e-posta, mesajlaşma ve tarayıcı uygulamaları ve uyarılar yine sorar. Yine sor ile geri alırsın; Vunemi bir adımın sonucunu anlayamazsa kendiliğinden biter.",
+      "Bir Mac uygulamasına yazılan uzun metin (yaklaşık 770 karakter ve üstü) adımın süresi dolduğu için yarıda kalıyordu. Artık uzunluğuna göre süre alıyor; yine de kesilirse Vunemi adımı bitti diye değil, yarım kalmış olabilir diye bildiriyor."
     ],
     "pt": [
-      "O Vunemi agora consegue compactar e abrir arquivos sozinho: zip, 7z e tar, e também abre RAR. Um pedido como “compacte esta pasta para eu anexar” parava nessa etapa, porque o Vunemi não tinha uma ferramenta para isso; ler, gravar e mover arquivos já funcionava e não mudou.",
-      "Ele usa a ferramenta de compactação do próprio macOS, dentro de um sandbox, e só mantém um arquivo aberto se ele abriu por inteiro. Arquivos protegidos por senha e RAR divididos não são abertos, e um RAR danificado nem sempre é percebido.",
-      "Quando o campo em foco em um app do Mac é um campo de senha, o Vunemi agora para e não digita nada. As senhas você digita; o navegador e o controle em segundo plano já funcionavam assim.",
-      "Quando o Vunemi muda um arquivo que já existe, a linha de resultado agora diz Alterado em vez de Criado."
+      "No cartão de aprovação de uma tarefa, agora você pode aprovar o resto: esse app e as alterações locais param de perguntar até ela terminar. Algumas tarefas pediam muitas aprovações pequenas em sequência, o que atrapalhava o trabalho; sem isso, cada etapa pergunta separadamente, como antes.",
+      "Enviar, excluir, substituir um arquivo, apps de e-mail, de mensagens e navegadores, e os avisos continuam perguntando. Perguntar de novo desfaz isso, e termina sozinho se o Vunemi não conseguir saber se uma etapa teve efeito.",
+      "Um texto longo digitado em um app do Mac (cerca de 770 caracteres ou mais) parava no meio porque o tempo da etapa acabava. Agora ele recebe um tempo proporcional ao tamanho; se mesmo assim for cortado, o Vunemi informa que a etapa pode estar incompleta, em vez de dá-la como concluída."
     ],
     "ru": [
-      "Теперь Vunemi сам сжимает и открывает файлы: zip, 7z и tar, а также открывает RAR. Просьба вроде «упакуй эту папку в zip, я её прикреплю» раньше останавливалась на этом шаге, потому что у Vunemi не было такого инструмента; чтение, запись и перемещение файлов уже работали и не изменились.",
-      "Vunemi использует встроенный в macOS инструмент архивов внутри песочницы и оставляет открытый архив, только если он открылся полностью. Архивы с паролем и многотомные RAR не открываются, а повреждённый RAR замечается не всегда.",
-      "Если активное поле в приложении Mac — поле пароля, Vunemi теперь останавливается и ничего не вводит. Пароли вводите вы сами; в браузере и при фоновом управлении так было и раньше.",
-      "Когда Vunemi меняет уже существующий файл, в строке результата теперь написано «Изменено», а не «Создано»."
+      "На карточке одобрения задачи теперь можно одобрить остаток задачи: это приложение и локальные изменения больше не спрашивают до её конца. Некоторые задачи просили много мелких одобрений подряд, и нажимать каждое мешало работе; без этого каждый шаг, как и раньше, спрашивает отдельно.",
+      "Отправка, удаление, замена файла, приложения почты, сообщений и браузеры, а также предупреждения по-прежнему спрашивают. «Спрашивать снова» отменяет это, и всё заканчивается само, если Vunemi не может понять, сработал ли шаг.",
+      "Длинный текст, вводимый в приложение Mac (примерно от 770 символов), обрывался на середине, потому что у шага заканчивалось время. Теперь время зависит от длины текста; если ввод всё же прервётся, Vunemi сообщит, что шаг мог выполниться не полностью, а не что он завершён."
     ],
     "zh": [
-      "Vunemi 现在可以自己压缩和打开文件：zip、7z 和 tar，也能打开 RAR。像“把这个文件夹压缩一下，我要附上”这样的请求以前会停在这一步，因为 Vunemi 没有相应的工具；读取、写入和移动文件本来就能用，也没有变化。",
-      "它在沙盒中使用 macOS 自带的归档工具，只有全部打开成功才保留结果。受密码保护的归档和分卷 RAR 不会打开，损坏的 RAR 也不一定能被发现。",
-      "当 Mac 应用中获得焦点的是密码字段时，Vunemi 现在会停下，不输入任何内容。密码由你自己输入；浏览器和后台控制本来就是这样。",
-      "当 Vunemi 更改已存在的文件时，结果行现在显示“已更改”，而不是“已创建”。"
+      "现在可以在任务的批准卡片上批准任务的其余部分：在任务结束前，该应用和本地更改不再询问。有些任务会连续请求许多小批准，逐个点按会妨碍工作；不使用此功能时，每一步仍像以前一样单独询问。",
+      "发送、删除、替换文件、邮件、消息和浏览器应用以及警告仍会询问。“重新询问”可撤销此操作；如果 Vunemi 无法判断某一步是否生效，它也会自动结束。",
+      "在 Mac 应用中输入较长的文本（约 770 个字符以上）时，曾因该步骤超时而中途停止。现在会按文本长度给予足够时间；如果仍被中断，Vunemi 会说明这一步可能只完成了一部分，而不是报告已完成。"
     ],
     "ja": [
-      "Vunemi がファイルの圧縮と展開を自分でできるようになりました。zip、7z、tar に対応し、RAR も開けます。",
-      "「このフォルダを zip にして、添付します」のような依頼は、これまで専用のツールがなかったためその段階で止まっていました。ファイルの読み書きと移動はすでに動いており、変更はありません。macOS 内蔵のアーカイブツールをサンドボックス内で使い、全体を開けたときだけ結果を残します。パスワード付きのアーカイブと分割された RAR は開かず、破損した RAR に気づけないこともあります。",
-      "Mac アプリでフォーカスされている欄がパスワード欄なら、Vunemi は止まり、何も入力しなくなりました。パスワードはご自身で入力してください。ブラウザとバックグラウンド操作はすでにこの動作でした。",
-      "Vunemi が既存のファイルを変更したとき、結果の行に「作成済み」ではなく「変更済み」と表示されるようになりました。"
+      "タスクの承認カードで、タスクの残りをまとめて承認できるようになりました。そのアプリとローカルの変更については、タスクが終わるまで確認しません。小さな承認を続けて求めるタスクでは、一つずつ押すことが作業の妨げになっていました。使わない場合は、これまでどおり手順ごとに確認します。",
+      "送信、削除、ファイルの置き換え、メール・メッセージ・ブラウザのアプリ、警告は引き続き確認します。「再度確認する」で取り消せます。手順が反映されたか Vunemi が判断できない場合は自動的に終了します。",
+      "Mac のアプリに長い文章（約 770 文字以上）を入力すると、手順の時間切れで途中で止まっていました。現在は文章の長さに応じた時間が与えられます。それでも途中で切れた場合、Vunemi は完了とは伝えず、途中までしか入力されていない可能性があると伝えます。"
     ],
     "ko": [
-      "이제 Vunemi가 파일을 직접 압축하고 열 수 있습니다. zip, 7z, tar를 지원하며 RAR도 엽니다.",
-      "“이 폴더를 압축해 줘, 첨부할 거야” 같은 요청은 전용 도구가 없어 그 단계에서 멈췄습니다. 파일 읽기, 쓰기, 이동은 이미 동작했고 달라지지 않았습니다. macOS에 내장된 압축 도구를 샌드박스 안에서 사용하며, 전체가 열렸을 때만 결과를 남깁니다. 암호로 보호된 압축 파일과 분할 RAR은 열지 않으며, 손상된 RAR을 항상 알아채지는 못합니다.",
-      "Mac 앱에서 포커스된 칸이 암호 칸이면 Vunemi는 이제 멈추고 아무것도 입력하지 않습니다. 암호는 직접 입력하십시오. 브라우저와 백그라운드 제어는 이미 이렇게 동작했습니다.",
-      "Vunemi가 이미 있는 파일을 변경하면 결과 행에 이제 생성됨 대신 변경됨이 표시됩니다."
+      "작업 승인 카드에서 이제 작업의 나머지를 한꺼번에 승인할 수 있습니다. 작업이 끝날 때까지 해당 앱과 로컬 변경은 묻지 않습니다. 어떤 작업은 작은 승인을 연달아 요청해 하나씩 누르는 것이 일에 방해가 되었습니다. 사용하지 않으면 이전처럼 단계마다 따로 묻습니다.",
+      "보내기, 삭제, 파일 덮어쓰기, 메일·메시지·브라우저 앱, 경고는 계속 묻습니다. 다시 묻기로 취소할 수 있으며, Vunemi가 단계의 결과를 알 수 없으면 저절로 끝납니다.",
+      "Mac 앱에 긴 글(약 770자 이상)을 입력하면 단계의 시간이 다 되어 중간에 멈추곤 했습니다. 이제 글 길이에 맞춰 시간이 주어집니다. 그래도 중간에 끊기면 Vunemi는 완료했다고 하지 않고 일부만 입력되었을 수 있다고 알립니다."
     ]
   }
 }

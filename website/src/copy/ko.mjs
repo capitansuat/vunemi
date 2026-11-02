@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.5의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.6의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.5를 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.6을 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.2.5 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.2.6 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -187,10 +187,9 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "이제 Vunemi가 파일을 직접 압축하고 열 수 있습니다. zip, 7z, tar를 지원하며 RAR도 엽니다.",
-      "“이 폴더를 압축해 줘, 첨부할 거야” 같은 요청은 전용 도구가 없어 그 단계에서 멈췄습니다. 파일 읽기, 쓰기, 이동은 이미 동작했고 달라지지 않았습니다. macOS에 내장된 압축 도구를 샌드박스 안에서 사용하며, 전체가 열렸을 때만 결과를 남깁니다. 암호로 보호된 압축 파일과 분할 RAR은 열지 않으며, 손상된 RAR을 항상 알아채지는 못합니다.",
-      "Mac 앱에서 포커스된 칸이 암호 칸이면 Vunemi는 이제 멈추고 아무것도 입력하지 않습니다. 암호는 직접 입력하십시오. 브라우저와 백그라운드 제어는 이미 이렇게 동작했습니다.",
-      "Vunemi가 이미 있는 파일을 변경하면 결과 행에 이제 생성됨 대신 변경됨이 표시됩니다.",
+      "작업 승인 카드에서 이제 작업의 나머지를 한꺼번에 승인할 수 있습니다. 작업이 끝날 때까지 해당 앱과 로컬 변경은 묻지 않습니다. 어떤 작업은 작은 승인을 연달아 요청해 하나씩 누르는 것이 일에 방해가 되었습니다. 사용하지 않으면 이전처럼 단계마다 따로 묻습니다.",
+      "보내기, 삭제, 파일 덮어쓰기, 메일·메시지·브라우저 앱, 경고는 계속 묻습니다. 다시 묻기로 취소할 수 있으며, Vunemi가 단계의 결과를 알 수 없으면 저절로 끝납니다.",
+      "Mac 앱에 긴 글(약 770자 이상)을 입력하면 단계의 시간이 다 되어 중간에 멈추곤 했습니다. 이제 글 길이에 맞춰 시간이 주어집니다. 그래도 중간에 끊기면 Vunemi는 완료했다고 하지 않고 일부만 입력되었을 수 있다고 알립니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",
