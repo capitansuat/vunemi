@@ -17,7 +17,10 @@ beforeEach(()=>{holder.hooks=[];holder.index=0;setLocale('en');});
 it('offers it, says what stays out, and sends the decision',()=>{
  const f=setup(),card=f.draw();
  expect(text(card)).toContain("TextEdit and local changes won't ask again. Sending and deleting still ask.");
- buttons(card).find(b=>b.props.children==='Approve all in this task').props.onClick();
+ const all=buttons(card).find(b=>b.props.children==='Approve all in this task');
+ // Not quieter than Approve: the first installed test went by without anyone seeing it.
+ expect(all.props.className).toBe(buttons(card).find(b=>b.props.children==='Approve').props.className);
+ all.props.onClick();
  expect(holder.state.decide).toHaveBeenCalledWith('c',{kind:'approve_all'},expect.anything());
 });
 it('leaves it off local-only wording when no app is reached',()=>{

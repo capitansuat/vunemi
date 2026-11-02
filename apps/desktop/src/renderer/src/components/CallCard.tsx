@@ -279,7 +279,8 @@ export function ApprovalCard({ call }: { call: CallView }) {
             type="button"
             disabled={busy||expired||!call.requestId}
             onClick={() => act("approve_all")}
-            className="rounded-lg border border-line-strong bg-surface px-3.5 py-1.5 text-[13px] text-fg transition-colors hover:bg-surface-2 disabled:opacity-50"
+            // As plain as Approve: a quieter button went unseen in the first installed test.
+            className="rounded-lg bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {t("call.approveAll")}
           </button>
