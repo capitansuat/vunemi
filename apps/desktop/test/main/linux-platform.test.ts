@@ -28,6 +28,7 @@ describe("connections on Linux", () => {
       expect(shown.tools()).toEqual([]);
       expect(shown.capabilities ?? []).toEqual([]);
       expect(shown.defaultOn).toBe(false);
+      expect(shown.unavailable).toBe(t("linux.connection"));
       expect(await shown.status()).toEqual({ state: "blocked", reason: t("linux.connection") });
     }
   });

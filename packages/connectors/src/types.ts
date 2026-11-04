@@ -117,6 +117,12 @@ export interface ConnectorDef {
   defaultOn: boolean;
   /** An off built-in source may still be offered for one user-approved call. */
   requestableWhenOff?: boolean;
+  /**
+   * Set when this system cannot offer the connection at all (a macOS-only
+   * connection on Linux): why, in the user's words. It cannot be switched on,
+   * and the list says so instead of offering to.
+   */
+  unavailable?: string;
   /** Built now, or contributed later by an MCP server the user adds. */
   origin: "builtin" | "mcp";
   /**

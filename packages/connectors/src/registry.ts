@@ -163,6 +163,7 @@ export class Connectors {
 
   isOn(id: string): boolean {
     const connector = this.items.get(id);
+    if (connector?.unavailable) return false;
     return this.chosen[id] ?? connector?.defaultOn ?? false;
   }
 
@@ -176,6 +177,8 @@ export class Connectors {
 
   setOn(id: string, on: boolean): void {
     const connector = this.need(id);
+    // Not on this system: it can be switched off, never on.
+    if (on && connector.unavailable) throw new Error(connector.unavailable);
     this.chosen[id] = on;
     // Switching the connection off takes every part with it; switching it on
     // restores each part to what the user last chose for that part.
@@ -344,6 +347,6 @@ export class Connectors {
 }
 
 function definitionOf(connector: Connector) {
-  const { id, label, group, description, provides, needs, defaultOn, origin, instructions } = connector;
-  return { id, label, group, description, provides, needs, defaultOn, origin, ...(instructions && { instructions }) };
+  const { id, label, group, description, provides, needs, defaultOn, origin, instructions, unavailable } = connector;
+  return { id, label, group, description, provides, needs, defaultOn, origin, ...(instructions && { instructions }), ...(unavailable && { unavailable }) };
 }

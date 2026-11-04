@@ -6,6 +6,7 @@ import {requireAttentionTarget} from "./attention-navigation.js";
 import {AttentionSeen,requireAttentionDismissal} from "./attention-seen.js";
 import {AutomationAdjustment} from "./automation-adjustment.js";
 import {installNativeRecipes} from './native-recipes/install.js';
+import {installNativeRecipesUnavailable} from './native-recipes/unavailable.js';
 import {assertModelRecoveryAllowed} from './task-recovery.js';
 import {scopedApprovalRequest,permissionListRequest,permissionRevokeRequest} from "./task-permissions-ipc.js";
 import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeImage, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
@@ -860,7 +861,9 @@ function sourceOf(tool: string): string {
 
 /** The menu bar's menus, in the app's language. */
 function setAppMenu(): void {
-  if (process.platform !== "darwin") return;
+  // Elsewhere Electron would show its own English File/Edit/View bar; the
+  // window needs none (copy, paste and undo work in the page without it).
+  if (process.platform !== "darwin") return Menu.setApplicationMenu(null);
   Menu.setApplicationMenu(Menu.buildFromTemplate(appMenuTemplate()));
   app.setAboutPanelOptions({ applicationName: "Vunemi" });
 }
@@ -1016,7 +1019,9 @@ const automationViews = (): AutomationView[] => {
   });
 };
 
-nativeRecipesRuntime=installNativeRecipes({helper,helperPath,roots,session,sentinel,connectors,locked:()=>appLock.isLocked,handle,send,conversation:async title=>{if(session.running)throw Error(t("main.stopFirst"));conversations.create(title);await switchConversation([]);syncProjectFolders();send(CH.sessionsChanged,sessionList());}});
+// Recipes drive Mac apps through the Swift helper; elsewhere the window is told they are not offered.
+if(!platform.features.backgroundRecipes)installNativeRecipesUnavailable(handle,()=>t("linux.backgroundRecipes"));
+else nativeRecipesRuntime=installNativeRecipes({helper,helperPath,roots,session,sentinel,connectors,locked:()=>appLock.isLocked,handle,send,conversation:async title=>{if(session.running)throw Error(t("main.stopFirst"));conversations.create(title);await switchConversation([]);syncProjectFolders();send(CH.sessionsChanged,sessionList());}});
 
 /** While a scheduled task set up for some apps runs, those apps: the desktop tools refuse every other. */
 let scheduledApps: ReadonlySet<string> | null = null;
@@ -2147,7 +2152,8 @@ async function offerMoveToApplications(): Promise<boolean> {
   const offer = shouldOfferMove({
     packaged: app.isPackaged,
     platform: process.platform,
-    inApplications: app.isInApplicationsFolder(),
+    // A macOS-only call: elsewhere there is no Applications folder to move to.
+    inApplications: platform.id === "darwin" && app.isInApplicationsFolder(),
     testBuild: isLocalTestBuild(ownManifest()),
   });
   if (!offer) return false;

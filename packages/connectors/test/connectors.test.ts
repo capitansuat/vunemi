@@ -466,3 +466,23 @@ describe("parts", () => {
     ).toThrow(/files_yaz/);
   });
 });
+
+describe("a connection this system can't offer", () => {
+  it("stays off whatever was remembered, can't be switched on, and says why", async () => {
+    const tools = new ToolRegistry();
+    const connectors = new Connectors({ tools, remembered: { masaustu: true } });
+    connectors.add(fake("masaustu", { unavailable: "Not available on Linux yet.", tools: () => [] }));
+    expect(connectors.isOn("masaustu")).toBe(false);
+    expect(() => connectors.setOn("masaustu", true)).toThrow("Not available on Linux yet.");
+    connectors.setOn("masaustu", false);
+    const [row] = await connectors.list();
+    expect(row).toMatchObject({ id: "masaustu", unavailable: "Not available on Linux yet.", status: { state: "off" }, toolCount: 0 });
+  });
+
+  it("changes nothing for a connection without it", async () => {
+    const connectors = new Connectors({ tools: new ToolRegistry() });
+    connectors.add(fake("posta"));
+    expect(connectors.isOn("posta")).toBe(true);
+    expect((await connectors.list())[0]).not.toHaveProperty("unavailable");
+  });
+});

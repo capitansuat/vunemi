@@ -250,7 +250,8 @@ function Row({
 }) {
   const Icon = ICONS[row.id] ?? (row.origin === "mcp" ? Unplug : Globe);
   const on = row.status.state !== "off";
-  const blocked = row.status.state === "blocked" ? row.status : row.id === "desktop" ? row.permissionStatus ?? null : null;
+  // Not on this system at all (a macOS-only connection on Linux): said in place of the switch.
+  const blocked = row.unavailable ? { state: "blocked" as const, reason: row.unavailable } : row.status.state === "blocked" ? row.status : row.id === "desktop" ? row.permissionStatus ?? null : null;
 
   return (
     <li id={`connection-${row.id}`} className="rounded-xl border border-line bg-surface">
@@ -278,7 +279,7 @@ function Row({
 
         <div className="flex shrink-0 items-center gap-2">
           {busy && <Loader2 size={14} className="animate-spin text-faint" />}
-          {!on ? (
+          {row.unavailable && !on ? null : !on ? (
             <button
               type="button"
               disabled={disabled}

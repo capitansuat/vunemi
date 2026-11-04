@@ -271,6 +271,7 @@ export function unavailableHere(connector: Connector): Connector {
     needs: { kind: "none" },
     defaultOn: false,
     origin: "builtin",
+    get unavailable() { return t("linux.connection"); },
     status: async () => ({ state: "blocked", reason: t("linux.connection") }),
     tools: () => [],
   };
