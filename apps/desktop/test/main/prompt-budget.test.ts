@@ -89,6 +89,8 @@ async function compose() {
   const history = { offAtFirst: !connectors.isOn("history"), hiddenWhileOff: tools.get("library_open") === undefined };
   // Everything switched on: the most a user can carry.
   for (const view of await connectors.list()) {
+    // Not on this system (macOS-only connections on Linux): they can't be switched on.
+    if (view.unavailable) continue;
     connectors.setOn(view.id, true);
     for (const part of view.parts) connectors.setPartOn(view.id, part.id, true);
   }
