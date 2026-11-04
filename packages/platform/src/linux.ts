@@ -47,4 +47,5 @@ export const linux: Platform = {
   systemRunPrograms: LINUX_PROGRAMS,
   vaultKey: "safe-storage",
   fileSearch: "walk",
+  documentText: "portable",
 };

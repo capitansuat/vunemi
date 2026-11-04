@@ -169,6 +169,9 @@ importers:
       '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@vunemi/platform':
+        specifier: workspace:*
+        version: link:../platform
     devDependencies:
       vitest:
         specifier: 5.0.3

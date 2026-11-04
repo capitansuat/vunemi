@@ -96,4 +96,6 @@ export interface Platform extends PlatformInfo {
   vaultKey: "keychain-helper" | "safe-storage";
   /** How files_search finds files: Spotlight, or by walking the open folders. */
   fileSearch: "spotlight" | "walk";
+  /** How files_read turns documents into text: PDFKit and textutil, or poppler's pdftotext and Vunemi's own .docx reader. */
+  documentText: "macos" | "portable";
 }

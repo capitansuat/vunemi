@@ -5,7 +5,8 @@ import { t } from "@vunemi/i18n";
  * has to be undoable.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, linkSync, unlinkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { crc32 } from "node:zlib";
+import { chmodSync, existsSync, linkSync, unlinkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
@@ -42,6 +43,49 @@ function minimalPdf(text: string): Buffer {
   for (const at of offsets) pdf += `${String(at).padStart(10, "0")} 00000 n \n`;
   pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
   return Buffer.from(pdf, "latin1");
+}
+
+const mac = process.platform === "darwin";
+
+/**
+ * Off macOS there is no textutil: a stand-in with its command line
+ * ("-convert <format> <file>" writes <stem>.<format> beside it) lets the
+ * system_run tests check the same walls with the system's own rules.
+ */
+function standInConverter(dir: string): Record<string, { path: string; what: string }> {
+  const path = join(dir, "convert-stand-in");
+  writeFileSync(path, '#!/bin/sh\nin="$3"\nout="${in%.*}.$2"\nprintf "{\\\\rtf1 %s}" "$(cat "$in")" > "$out"\n');
+  chmodSync(path, 0o755);
+  return { textutil: { path, what: "convert document formats" }, sips: { path, what: "convert and scale images" } };
+}
+
+/** A .docx with one paragraph, zipped here (stored, no compression), so no converter is needed to make one. */
+function minimalDocx(text: string): Buffer {
+  const files: [string, string][] = [
+    ["[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/></Types>'],
+    ["word/document.xml", `<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>${text}</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>hücre</w:t></w:r><w:r><w:tab/><w:t>iki</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:body></w:document>`],
+  ];
+  const locals: Buffer[] = [];
+  const centrals: Buffer[] = [];
+  let offset = 0;
+  for (const [name, body] of files) {
+    const data = Buffer.from(body, "utf8");
+    const nameBytes = Buffer.from(name, "utf8");
+    const sum = crc32(data);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(0x0800, 6); local.writeUInt16LE(0, 8);
+    local.writeUInt32LE(sum, 14); local.writeUInt32LE(data.length, 18); local.writeUInt32LE(data.length, 22); local.writeUInt16LE(nameBytes.length, 26);
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0); central.writeUInt16LE(20, 4); central.writeUInt16LE(20, 6); central.writeUInt16LE(0x0800, 8);
+    central.writeUInt32LE(sum, 16); central.writeUInt32LE(data.length, 20); central.writeUInt32LE(data.length, 24); central.writeUInt16LE(nameBytes.length, 28); central.writeUInt32LE(offset, 42);
+    locals.push(local, nameBytes, data);
+    centrals.push(central, nameBytes);
+    offset += local.length + nameBytes.length + data.length;
+  }
+  const directory = Buffer.concat(centrals);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(files.length, 8); end.writeUInt16LE(files.length, 10); end.writeUInt32LE(directory.length, 12); end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...locals, directory, end]);
 }
 
 // Test-only no-clobber hardlink adapter. Native fd-relative atomic rename is tested in Swift.
@@ -90,15 +134,17 @@ describe("file tools", () => {
     home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-files-")));
     testHome.path = join(home, "SyntheticHome");
     mkdirSync(join(testHome.path, ".Trash"), { recursive: true });
+    // The freedesktop Trash follows XDG_DATA_HOME: never the real user's here.
+    if (!mac) process.env.XDG_DATA_HOME = join(testHome.path, ".local", "share");
     root = join(home, "Belgeler");
     mkdirSync(root, { recursive: true });
     undos = [];
     made = [];
     tools = new Map(
-      createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots: new Roots([root]), shadowDir: join(home, "shadow") }).map((t) => [t.name, t]),
+      createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots: new Roots([root]), shadowDir: join(home, "shadow"), ...(!mac && { programs: standInConverter(home) }) }).map((t) => [t.name, t]),
     );
   });
-  afterEach(() => { rmSync(home, { recursive: true, force: true }); testHome.path = ""; });
+  afterEach(() => { rmSync(home, { recursive: true, force: true }); testHome.path = ""; if (!mac) delete process.env.XDG_DATA_HOME; });
 
   // -- the walls ---------------------------------------------------------------
 
@@ -231,7 +277,7 @@ describe("file tools", () => {
 
   // -- documents ---------------------------------------------------------------
 
-  it("reads a Word document's text itself, writing nothing beside it", async () => {
+  it.runIf(mac)("reads a Word document's text itself, writing nothing beside it", async () => {
     writeFileSync(join(root, "not.txt"), "Seviye süreci yılı artırır.");
     execFileSync("/usr/bin/textutil", ["-convert", "docx", join(root, "not.txt"), "-output", join(root, "Level_Process.docx")]);
     rmSync(join(root, "not.txt"));
@@ -239,7 +285,45 @@ describe("file tools", () => {
     expect(readdirSync(root)).toEqual(["Level_Process.docx"]);
   });
 
-  it("reads a PDF's text itself", async () => {
+  it.runIf(!mac)("reads a Word document's text itself without a converter, paragraphs and tables", async () => {
+    writeFileSync(join(root, "Level_Process.docx"), minimalDocx("Seviye süreci yılı artırır."));
+    expect(await call("files_read", { path: "Level_Process.docx" })).toBe("Seviye süreci yılı artırır.\nhücre\tiki");
+    expect(readdirSync(root)).toEqual(["Level_Process.docx"]);
+  });
+
+  it.runIf(!mac)("says plainly that .doc, .rtf and .odt are read on macOS only for now", async () => {
+    writeFileSync(join(root, "eski.rtf"), "{\\rtf1 x}");
+    await expect(call("files_read", { path: "eski.rtf" })).rejects.toThrow(/macOS/);
+  });
+
+  it.runIf(!mac)("sends a file to the freedesktop Trash, and undo brings it back", async () => {
+    writeFileSync(join(root, "gereksiz.md"), "x");
+    await call("files_trash", { path: join(root, "gereksiz.md") });
+    const trash = join(testHome.path, ".local", "share", "Trash");
+    expect(existsSync(join(root, "gereksiz.md"))).toBe(false);
+    expect(readFileSync(join(trash, "files", "gereksiz.md"), "utf8")).toBe("x");
+    expect(readFileSync(join(trash, "info", "gereksiz.md.trashinfo"), "utf8")).toContain(`Path=${encodeURI(join(realpathSync(root), "gereksiz.md"))}`);
+    await undos[0]!.undo();
+    expect(readFileSync(join(root, "gereksiz.md"), "utf8")).toBe("x");
+    expect(readdirSync(join(trash, "info"))).toEqual([]);
+  });
+
+  it.runIf(!mac)("finds files by name and by the words in plain text, inside the open folders only", async () => {
+    mkdirSync(join(root, "alt", ".gizli"), { recursive: true });
+    writeFileSync(join(root, "fatura-7429.pdf"), "%PDF");
+    writeFileSync(join(root, "alt", "not.md"), "Fatura 7429 ödendi");
+    writeFileSync(join(root, "alt", ".gizli", "fatura-7429.txt"), "x");
+    writeFileSync(join(home, "fatura-7429.txt"), "outside");
+    const out = String(await call("files_search", { query: "fatura 7429" }));
+    expect(out).toContain("alt/not.md");
+    expect(out).not.toContain(".gizli");
+    expect(out).not.toContain(join(home, "fatura-7429.txt"));
+    const kind = String(await call("files_search", { query: "*.pdf" }));
+    expect(kind).toContain("fatura-7429.pdf");
+    expect(kind).not.toContain("not.md");
+  });
+
+  it.skipIf(!mac && !existsSync("/usr/bin/pdftotext"))("reads a PDF's text itself", async () => {
     writeFileSync(join(root, "surec.pdf"), minimalPdf("Level Process"));
     expect(await call("files_read", { path: "surec.pdf" })).toContain("Level Process");
     expect(readdirSync(root)).toEqual(["surec.pdf"]);
@@ -476,7 +560,7 @@ describe("similarNames", () => {
 });
 
 describe("files_search", () => {
-  it("asks Spotlight with fixed arguments and shows only what is inside the open folders", async () => {
+  it.runIf(mac)("asks Spotlight with fixed arguments and shows only what is inside the open folders", async () => {
     const home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-search-")));
     const root = join(home, "Belgeler");
     mkdirSync(root);

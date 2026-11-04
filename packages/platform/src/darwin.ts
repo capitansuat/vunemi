@@ -71,4 +71,5 @@ export const darwin: Platform = {
   systemRunPrograms: DARWIN_PROGRAMS,
   vaultKey: "keychain-helper",
   fileSearch: "spotlight",
+  documentText: "macos",
 };
