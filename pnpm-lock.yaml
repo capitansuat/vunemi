@@ -195,6 +195,9 @@ importers:
         specifier: workspace:*
         version: link:../i18n
     devDependencies:
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
       vitest:
         specifier: 5.0.3
         version: 5.0.3(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0))
