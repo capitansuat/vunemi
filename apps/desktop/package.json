@@ -3,6 +3,7 @@
   "version": "0.2.6",
   "private": true,
   "license": "GPL-3.0-only",
+  "homepage": "https://vunemi.com",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
@@ -59,24 +60,26 @@
     ],
     "extraResources": [
       {
-        "from": "../../native/VunemiVaultHelper/.build/release/VunemiVaultHelper",
-        "to": "VunemiVaultHelper"
-      },
-      {
-        "from": "../../native/VunemiHelper/.build/release/VunemiHelper",
-        "to": "VunemiHelper"
-      },
-      {
-        "from": "../../native/VunemiRecorder/.build/release/VunemiRecorder",
-        "to": "VunemiRecorder"
-      },
-      {
         "from": "resources",
         "to": ".",
         "filter": ["tray*.png"]
       }
     ],
     "mac": {
+      "extraResources": [
+        {
+          "from": "../../native/VunemiVaultHelper/.build/release/VunemiVaultHelper",
+          "to": "VunemiVaultHelper"
+        },
+        {
+          "from": "../../native/VunemiHelper/.build/release/VunemiHelper",
+          "to": "VunemiHelper"
+        },
+        {
+          "from": "../../native/VunemiRecorder/.build/release/VunemiRecorder",
+          "to": "VunemiRecorder"
+        }
+      ],
       "icon": "build/icon.png",
       "category": "public.app-category.productivity",
       "target": [
@@ -105,6 +108,36 @@
         "NSDownloadsFolderUsageDescription": "Vunemi puts what it downloads here and reads it from here.",
         "LSMinimumSystemVersion": "14.0"
       }
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Office",
+      "executableName": "vunemi",
+      "publish": [],
+      "artifactName": "Vunemi-${version}-linux-${arch}.${ext}",
+      "maintainer": "Vunemi <9051434+capitansuat@users.noreply.github.com>",
+      "vendor": "Vunemi",
+      "synopsis": "A personal assistant that runs on local models",
+      "description": "Vunemi is a personal assistant that runs on local models. Your files and mail stay on your computer; the model runs there too.",
+      "desktop": {
+        "entry": {
+          "Name": "Vunemi",
+          "StartupWMClass": "Vunemi"
+        }
+      },
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "deb": {
+      "recommends": ["gnome-keyring | kwalletmanager", "poppler-utils"]
     },
     "electronFuses": {
       "runAsNode": false,

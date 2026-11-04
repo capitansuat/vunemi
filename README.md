@@ -61,6 +61,29 @@ bash scripts/package.sh
 open ~/.vunemi-build/mac-arm64/Vunemi.app
 ```
 
+### Linux (preview)
+
+A first Linux build (x64; arm64 when built on an arm64 machine) has
+everything that does not need macOS itself: chat and tasks with approval
+cards, files, mail over IMAP/Gmail/Outlook, the browser, connectors and MCP,
+scheduled tasks, memory, the vault and local models. Mac apps, Shortcuts,
+desktop control, Calendar and Reminders, meeting recording, the app lock
+and add-ons say in the app that they are not on Linux yet.
+
+The vault keeps its key in your desktop's keyring (GNOME Keyring or
+KWallet). Without one it stores nothing. Reading PDFs uses `pdftotext`
+(poppler-utils). Vunemi does not update itself on Linux yet.
+
+To build an AppImage and a .deb you need Node 22+, pnpm 11, git, cmake
+and a C++ compiler:
+
+```bash
+pnpm install
+pnpm typecheck
+pnpm test
+bash scripts/package-linux.sh
+```
+
 ## Contributing
 
 Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md)

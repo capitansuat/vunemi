@@ -14,6 +14,7 @@
     "build:vault-helper": "cd native/VunemiVaultHelper && swift build -c release && codesign --force --sign - --identifier com.vunemi.vault-helper .build/release/VunemiVaultHelper",
     "predev": "node scripts/dev-permissions.mjs || true",
     "package": "bash scripts/package.sh",
+    "package:linux": "bash scripts/package-linux.sh",
     "signing-identity": "bash scripts/signing-identity.sh"
   },
   "devDependencies": {

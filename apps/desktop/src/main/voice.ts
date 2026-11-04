@@ -123,6 +123,9 @@ function voiceFor(locale: Locale): string | null {
 const SERVER_PATHS = platform.id === "darwin" ? ["/opt/homebrew/bin/whisper-server", "/usr/local/bin/whisper-server"] : ["/usr/local/bin/whisper-server", "/usr/bin/whisper-server"];
 
 /** Long enough to survive a pause in dictation, short enough to give the RAM back. */
+/** Answers are spoken with macOS's own voices (say); elsewhere there is nothing to speak with yet. */
+const CAN_SPEAK = platform.features.speakAloud;
+
 const IDLE_MS = 5 * 60_000;
 /** Loading a large model into Metal takes a couple of seconds, cold. */
 const READY_TIMEOUT_MS = 60_000;
@@ -200,13 +203,13 @@ export class Voice {
     this.binary ??= findBinary(this.builtIn);
     this.model ??= findModel(this.userData, this.shared);
     if (this.binary && this.model) {
-      return { canHear: true, canSpeak: true, engine: `whisper.cpp · ${modelLabel(this.model)}` };
+      return { canHear: true, canSpeak: CAN_SPEAK, engine: `whisper.cpp · ${modelLabel(this.model)}` };
     }
-    if (!this.binary) return { canHear: false, canSpeak: true, engine: "", hint: t("voiceEngine.noWhisper") };
+    if (!this.binary) return { canHear: false, canSpeak: CAN_SPEAK, engine: "", hint: t("voiceEngine.noWhisper") };
     const progress = this.downloading?.progress;
     return {
       canHear: false,
-      canSpeak: true,
+      canSpeak: CAN_SPEAK,
       engine: "",
       hint: t("voiceEngine.noModel", { size: megabytes(VOICE_MODEL.size) }),
       download: { bytes: VOICE_MODEL.size },
