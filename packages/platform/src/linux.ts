@@ -18,6 +18,7 @@ export const LINUX_FEATURES: PlatformFeatures = {
   backgroundRecipes: false,
   addons: false,
   inAppUpdates: false,
+  archives: false,
   atomicMove: false,
   speakAloud: false,
 };

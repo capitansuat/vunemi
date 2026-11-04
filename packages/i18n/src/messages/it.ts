@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "Non è stato possibile decomprimere il file scaricato.",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Non ancora disponibile su Linux: questa connessione richiede macOS.",
+    appleMail: "Gli account dell’app Mail non sono ancora disponibili su Linux. Aggiungi l’account con IMAP, Gmail o Outlook.",
+    meetings: "La registrazione delle riunioni non è ancora disponibile su Linux.",
+    appLock: "Il blocco dell’app non è ancora disponibile su Linux: si basa su Touch ID o sulla password del tuo Mac.",
+    addons: "I componenti aggiuntivi non sono ancora disponibili su Linux: funzionano nella sandbox di macOS.",
+    updates: "Su Linux Vunemi non si aggiorna ancora da solo. Le nuove versioni sono nella pagina dei download.",
+    updatesLink: "Apri la pagina dei download",
+    speakAloud: "La chat vocale legge le risposte ad alta voce, cosa non ancora disponibile su Linux. La dettatura funziona comunque.",
+    backgroundRecipes: "Le attività programmate nelle app per Mac (come TextEdit) non sono ancora disponibili su Linux.",
+    vault: {
+      noKeyring: "Nessun portachiavi di sistema trovato (safeStorage ha scelto \"{backend}\"), quindi la cassaforte non salverà nulla. Installa GNOME Keyring (libsecret) o KWallet, accedi di nuovo al desktop e riavvia Vunemi.",
+      keyUnreadable: "Il portachiavi di sistema non è riuscito ad aprire la chiave della cassaforte. I tuoi segreti salvati restano come sono; sblocca il portachiavi e riavvia Vunemi.",
+      unlockHint: "La cassaforte è bloccata. La chat resta disponibile. Sbloccala quando ti servono le chiavi salvate; il desktop potrebbe chiederti la password del portachiavi.",
+    },
+  },
 };

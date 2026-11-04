@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "다운로드한 파일의 압축을 풀 수 없습니다.",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Linux에서는 아직 사용할 수 없습니다. 이 연결에는 macOS가 필요합니다.",
+    appleMail: "Mail 앱 계정은 Linux에서 아직 사용할 수 없습니다. 대신 IMAP, Gmail 또는 Outlook으로 계정을 추가하십시오.",
+    meetings: "회의 녹음은 Linux에서 아직 사용할 수 없습니다.",
+    appLock: "앱 잠금은 Linux에서 아직 사용할 수 없습니다. Touch ID 또는 Mac 암호를 사용하는 기능입니다.",
+    addons: "추가 기능은 Linux에서 아직 사용할 수 없습니다. macOS의 샌드박스 안에서 실행되기 때문입니다.",
+    updates: "Linux에서는 Vunemi가 아직 스스로 업데이트하지 않습니다. 새 버전은 다운로드 페이지에 있습니다.",
+    updatesLink: "다운로드 페이지 열기",
+    speakAloud: "음성 대화는 답변을 소리 내어 읽지만, 이 기능은 Linux에서 아직 사용할 수 없습니다. 받아쓰기는 계속 사용할 수 있습니다.",
+    backgroundRecipes: "Mac 앱(예: TextEdit)의 예약 작업은 Linux에서 아직 사용할 수 없습니다.",
+    vault: {
+      noKeyring: "시스템 키링을 찾을 수 없어(safeStorage가 \"{backend}\"을(를) 선택했습니다) 보관함에 아무것도 저장하지 않습니다. GNOME Keyring(libsecret) 또는 KWallet을 설치하고 데스크톱에 다시 로그인한 다음 Vunemi를 다시 시작하십시오.",
+      keyUnreadable: "시스템 키링이 보관함 키를 열지 못했습니다. 저장된 비밀 정보는 그대로 보존됩니다. 키링 잠금을 해제한 다음 Vunemi를 다시 시작하십시오.",
+      unlockHint: "보관함이 잠겨 있습니다. 채팅은 계속 사용할 수 있습니다. 저장된 키가 필요할 때 잠금을 해제하십시오. 데스크톱에서 키링 암호를 요청할 수 있습니다.",
+    },
+  },
 };

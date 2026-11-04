@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "Não foi possível descompactar o arquivo baixado.",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Ainda não disponível no Linux: esta conexão precisa do macOS.",
+    appleMail: "Contas do app Mail ainda não estão disponíveis no Linux. Adicione a conta com IMAP, Gmail ou Outlook.",
+    meetings: "A gravação de reuniões ainda não está disponível no Linux.",
+    appLock: "O bloqueio do app ainda não está disponível no Linux: ele depende do Touch ID ou da senha do seu Mac.",
+    addons: "Os complementos ainda não estão disponíveis no Linux: eles rodam dentro da sandbox do macOS.",
+    updates: "O Vunemi ainda não se atualiza sozinho no Linux. As novas versões estão na página de download.",
+    updatesLink: "Abrir a página de download",
+    speakAloud: "A conversa por voz lê as respostas em voz alta, o que ainda não está disponível no Linux. O ditado continua funcionando.",
+    backgroundRecipes: "Tarefas agendadas em apps do Mac (como o TextEdit) ainda não estão disponíveis no Linux.",
+    vault: {
+      noKeyring: "Nenhum chaveiro do sistema foi encontrado (o safeStorage escolheu \"{backend}\"), então o cofre não vai salvar nada. Instale o GNOME Keyring (libsecret) ou o KWallet, entre de novo na sua sessão e reinicie o Vunemi.",
+      keyUnreadable: "O chaveiro do sistema não conseguiu abrir a chave do cofre. Seus segredos salvos continuam como estão; desbloqueie o seu chaveiro e reinicie o Vunemi.",
+      unlockHint: "O cofre está bloqueado. A conversa continua disponível. Desbloqueie quando precisar das chaves salvas; seu ambiente de trabalho pode pedir a senha do chaveiro.",
+    },
+  },
 };

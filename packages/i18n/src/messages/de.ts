@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "Die geladene Datei konnte nicht entpackt werden.",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Unter Linux noch nicht verfügbar: Diese Verbindung braucht macOS.",
+    appleMail: "Konten aus der Mail-App sind unter Linux noch nicht verfügbar. Füge das Konto stattdessen über IMAP, Gmail oder Outlook hinzu.",
+    meetings: "Die Aufnahme von Besprechungen ist unter Linux noch nicht verfügbar.",
+    appLock: "Die App-Sperre ist unter Linux noch nicht verfügbar: Sie nutzt Touch ID oder dein Mac-Passwort.",
+    addons: "Erweiterungen sind unter Linux noch nicht verfügbar: Sie laufen in der Sandbox von macOS.",
+    updates: "Vunemi aktualisiert sich unter Linux noch nicht selbst. Neue Versionen findest du auf der Download-Seite.",
+    updatesLink: "Download-Seite öffnen",
+    speakAloud: "Der Sprachchat liest Antworten vor; das ist unter Linux noch nicht verfügbar. Diktieren funktioniert weiterhin.",
+    backgroundRecipes: "Geplante Aufgaben in Mac-Apps (etwa TextEdit) sind unter Linux noch nicht verfügbar.",
+    vault: {
+      noKeyring: "Kein Schlüsselbund des Systems gefunden (safeStorage hat \"{backend}\" gewählt), daher speichert der Tresor nichts. Installiere GNOME Keyring (libsecret) oder KWallet, melde dich erneut am Desktop an und starte Vunemi dann neu.",
+      keyUnreadable: "Der Schlüsselbund des Systems konnte den Tresorschlüssel nicht öffnen. Deine gespeicherten Geheimnisse bleiben, wie sie sind; entsperre deinen Schlüsselbund und starte Vunemi dann neu.",
+      unlockHint: "Der Tresor ist gesperrt. Der Chat bleibt verfügbar. Entsperre ihn für gespeicherte Schlüssel; dein Desktop fragt möglicherweise nach dem Passwort deines Schlüsselbunds.",
+    },
+  },
 };

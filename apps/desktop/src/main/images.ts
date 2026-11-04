@@ -38,6 +38,22 @@ export async function loadImage(path: string, opts: { sips?: string } = {}): Pro
   }
 }
 
+/**
+ * The same, where there is no sips: `scale` turns the file into a JPEG no
+ * larger than MAX_SIDE on its long side (main passes Electron's nativeImage,
+ * which reads PNG and JPEG on Linux), or null when it can't.
+ */
+export async function loadImageWith(path: string, scale: (path: string, maxSide: number) => Buffer | null): Promise<ImageData | null> {
+  try {
+    const stat = statSync(path);
+    if (!stat.isFile() || stat.size > MAX_IMAGE_BYTES) return null;
+    const jpeg = scale(path, MAX_SIDE);
+    return jpeg && jpeg.length > 0 ? { mime: "image/jpeg", base64: jpeg.toString("base64") } : null;
+  } catch {
+    return null;
+  }
+}
+
 /** The longest text passed on from one picture. */
 export const MAX_IMAGE_TEXT = 20_000;
 /** Vision prepares its models on first use after a restart; that has taken a minute here. */

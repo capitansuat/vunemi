@@ -1983,5 +1983,22 @@ export const messages = {
     },
   },
 
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Linux'ta henüz yok: bu bağlantı macOS gerektiriyor.",
+    appleMail: "Mail uygulaması hesapları Linux'ta henüz yok. Hesabı bunun yerine IMAP, Gmail ya da Outlook ile ekle.",
+    meetings: "Toplantı kaydı Linux'ta henüz yok.",
+    appLock: "Uygulama kilidi Linux'ta henüz yok: Touch ID'ye ya da Mac parolana dayanıyor.",
+    addons: "Eklentiler Linux'ta henüz yok: macOS'in korumalı alanında çalışıyorlar.",
+    updates: "Vunemi Linux'ta henüz kendini güncellemiyor. Yeni sürümler indirme sayfasında.",
+    updatesLink: "İndirme sayfasını aç",
+    speakAloud: "Sesli sohbet yanıtları sesli okur; bu Linux'ta henüz yok. Dikte çalışmaya devam ediyor.",
+    backgroundRecipes: "Mac uygulamalarında zamanlanmış işler (TextEdit gibi) Linux'ta henüz yok.",
+    vault: {
+      noKeyring: "Sistem anahtarlığı bulunamadı (safeStorage \"{backend}\" seçti), bu yüzden kasa hiçbir şey kaydetmez. GNOME Keyring (libsecret) ya da KWallet kur, masaüstüne yeniden giriş yap, sonra Vunemi'yi yeniden başlat.",
+      keyUnreadable: "Sistem anahtarlığı kasa anahtarını açamadı. Kayıtlı sırların olduğu gibi duruyor; anahtarlığının kilidini aç, sonra Vunemi'yi yeniden başlat.",
+      unlockHint: "Kasa kilitli. Sohbeti kullanabilirsin. Kayıtlı anahtarlar gerektiğinde kasayı aç; masaüstün anahtarlık parolanı isteyebilir.",
+    },
+  },
   // @end
 } as const;

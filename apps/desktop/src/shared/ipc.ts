@@ -10,6 +10,7 @@ import type {NativeRecipeTargetView,NativeRecipeSetupInput,NativeRecipeReadOffer
  */
 
 import type { TaskPermissionOfferView, TaskPermissionView, TaskPermissionsSnapshot, TaskPermissionRevokeRequest, TaskRecord, QuotedSource, ActionClass, AgentEvent, ApprovalDecision, AutonomyPolicy, ChoiceAnswer, HandoffOutcome, MentionRef, PlanDecision, Produced, ProviderKind } from "@vunemi/agent-core";
+import type { PlatformInfo } from "@vunemi/platform";
 import type { ConnectorView, PrivacyPane } from "@vunemi/connectors";
 import type { OutboxEvent, Pending, UncertainSend } from "@vunemi/mail";
 import type { Locale } from "@vunemi/i18n";
@@ -187,6 +188,8 @@ export interface VaultStatus {
   /** False when this Mac has no secure storage, so nothing may be saved. */
   available: boolean;
   secrets: SecretInfo[];
+  /** Linux: why the system keyring can't keep the Vault's key, in the user's words. */
+  keyring?: string;
 }
 
 export interface ProviderStatus {
@@ -545,6 +548,8 @@ export interface UpdateStatus {
   installable: boolean;
   /** Nothing is running that a restart would cut short. */
   idle: boolean;
+  /** Where a new version is downloaded by hand, on systems where Vunemi does not update itself. */
+  downloadPage?: string;
 }
 
 /** Exposed on `window.vunemi` by the preload script. */
@@ -688,6 +693,10 @@ export interface VunemiApi {
   getUpdatesAuto(): Promise<boolean>;
   setUpdatesAuto(on: boolean): Promise<boolean>;
   onUpdates(listener: (status: UpdateStatus) => void): () => void;
+  /** Opens the download page in the browser, where the app doesn't update itself. */
+  openDownloadPage(): Promise<void>;
+  /** Which system this is and what it offers, so the window can say what is not available here. */
+  platformInfo(): Promise<PlatformInfo>;
   getAppearance(): Promise<Appearance>;
   setAppearance(appearance: Appearance): Promise<Appearance>;
   /** The language Vunemi speaks; main keeps it, the window follows. */
@@ -937,6 +946,8 @@ export const CH = {
   updatesAutoGet: "updates:auto-get",
   updatesAutoSet: "updates:auto-set",
   updatesChanged: "updates:changed",
+  updatesOpenDownloadPage: "updates:open-download-page",
+  platformInfo: "app:platform",
   appearanceGet: "appearance:get",
   appearanceSet: "appearance:set",
   searchLocationGet: "search-location:get",

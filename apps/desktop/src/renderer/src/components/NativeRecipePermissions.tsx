@@ -3,14 +3,18 @@ import { useState } from 'react';
 import { t } from '@vunemi/i18n';
 import { useStore } from '../store.js';
 import { NativeRecipeSetup } from './NativeRecipeSetup.js';
+import { useFeature } from '../lib/platform.js';
+import { NotOnThisSystem } from './NotOnThisSystem.js';
 export function NativeRecipePermissions({runIds}:{runIds?:string[]}) {
  useStore(s=>s.locale);
  const snapshot=useStore(s=>s.nativeRecipes),revoking=useStore(s=>s.nativeRecipeRevoking),error=useStore(s=>s.nativeRecipeActionError),loadError=useStore(s=>s.nativeRecipeLoadError);
  const [setup,setSetup]=useState(false);
+ // Recipes drive Mac apps through the helper; elsewhere setting one up is not offered.
+ const offered=useFeature('backgroundRecipes');
  const rows=snapshot?.recipes.filter(r=>!runIds||r.slots.some(s=>s.runId!==undefined&&runIds.includes(s.runId)));
  if(runIds&&!rows?.length)return null;
  return <section data-native-recipes-stream={snapshot?.streamId} data-native-recipes-revision={snapshot?.revision} className="my-4 space-y-3" aria-label={t('nativeRecipes.title')}>
- {!runIds&&<><h2 className="text-sm font-medium text-fg">{t('nativeRecipes.title')}</h2><button type="button" className="rounded-md border border-line px-3 py-1 text-sm text-fg" onClick={()=>setSetup(true)}>{t('nativeRecipes.setup')}</button>{setup&&<NativeRecipeSetup onClose={()=>setSetup(false)} />}</>}
+ {!runIds&&<><h2 className="text-sm font-medium text-fg">{t('nativeRecipes.title')}</h2>{offered?<button type="button" className="rounded-md border border-line px-3 py-1 text-sm text-fg" onClick={()=>setSetup(true)}>{t('nativeRecipes.setup')}</button>:<NotOnThisSystem text={t('linux.backgroundRecipes')} />}{setup&&<NativeRecipeSetup onClose={()=>setSetup(false)} />}</>}
  <ul className="space-y-2">{rows?.map(row=><li key={row.automationId} className="rounded-xl border border-line p-3 text-sm text-muted">
  <p className="break-all text-fg">{row.title} · <bdi>{row.target.path}</bdi></p><p role="status" aria-live="polite">{t(`nativeRecipes.authority.${row.authorityStatus}`)} · {t('nativeRecipes.remaining',{count:row.remainingSlots})}</p>
  <p>{t('nativeRecipes.expires',{at:nativeRecipeTime(row.expiresAt,row.timeZone)})}</p>

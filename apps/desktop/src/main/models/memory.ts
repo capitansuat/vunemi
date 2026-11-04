@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
 
 /**
  * What macOS says about memory, read with its own tools. A reading is null
@@ -74,5 +75,38 @@ export function macMemory(run: Run = execRun): MemoryReader {
     available: () => read("/usr/bin/vm_stat", [], parseVmStat),
     footprint: (pid) => read("/usr/bin/footprint", ["-p", String(pid)], parseFootprint),
     pressure: () => read("/usr/sbin/sysctl", ["-n", "kern.memorystatus_vm_pressure_level"], parsePressure),
+  };
+}
+
+/** MemAvailable from /proc/meminfo: the kernel's own estimate of what can be handed out without swapping. */
+export function parseMeminfo(text: string): number | null {
+  const m = /^MemAvailable:\s+(\d+)\s+kB$/m.exec(text);
+  return m ? Number(m[1]) * 1024 : null;
+}
+
+/** RssAnon from /proc/<pid>/status: the process's own memory, without the files it maps (a model's weights). */
+export function parseProcStatus(text: string): number | null {
+  const m = /^RssAnon:\s+(\d+)\s+kB$/m.exec(text);
+  return m ? Number(m[1]) * 1024 : null;
+}
+
+export type ReadText = (path: string) => Promise<string>;
+
+/**
+ * The same readings on Linux, from /proc. There is no pressure level like
+ * macOS's; the manager then goes by what is available.
+ */
+export function linuxMemory(read: ReadText = (path) => readFile(path, "utf8")): MemoryReader {
+  const get = async (path: string, parse: (text: string) => number | null): Promise<number | null> => {
+    try {
+      return parse(await read(path));
+    } catch {
+      return null;
+    }
+  };
+  return {
+    available: () => get("/proc/meminfo", parseMeminfo),
+    footprint: (pid) => (Number.isSafeInteger(pid) && pid > 0 ? get(`/proc/${pid}/status`, parseProcStatus) : Promise.resolve(null)),
+    pressure: async () => null,
   };
 }

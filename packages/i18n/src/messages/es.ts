@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "No se pudo descomprimir el archivo descargado.",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Aún no disponible en Linux: esta conexión necesita macOS.",
+    appleMail: "Las cuentas de la app Mail aún no están disponibles en Linux. Añade la cuenta con IMAP, Gmail u Outlook.",
+    meetings: "La grabación de reuniones aún no está disponible en Linux.",
+    appLock: "El bloqueo de la app aún no está disponible en Linux: depende de Touch ID o de la contraseña de tu Mac.",
+    addons: "Los complementos aún no están disponibles en Linux: se ejecutan dentro del entorno aislado de macOS.",
+    updates: "Vunemi aún no se actualiza solo en Linux. Las nuevas versiones están en la página de descargas.",
+    updatesLink: "Abrir la página de descargas",
+    speakAloud: "El chat por voz lee las respuestas en voz alta, algo que aún no está disponible en Linux. El dictado sigue funcionando.",
+    backgroundRecipes: "Las tareas programadas en apps de Mac (como TextEdit) aún no están disponibles en Linux.",
+    vault: {
+      noKeyring: "No se encontró ningún llavero del sistema (safeStorage eligió \"{backend}\"), así que la caja fuerte no guardará nada. Instala GNOME Keyring (libsecret) o KWallet, vuelve a iniciar sesión en tu escritorio y reinicia Vunemi.",
+      keyUnreadable: "El llavero del sistema no pudo abrir la clave de la caja fuerte. Tus secretos guardados se conservan tal cual; desbloquea tu llavero y reinicia Vunemi.",
+      unlockHint: "La caja fuerte está bloqueada. El chat sigue disponible. Desbloquéala cuando necesites las claves guardadas; tu escritorio puede pedirte la contraseña del llavero.",
+    },
+  },
 };

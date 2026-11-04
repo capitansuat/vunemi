@@ -40,6 +40,7 @@ import { OAUTH_CLIENTS, type OAuthClients } from "./oauth-clients.js";
 import { RemoteMailAccount } from "./remote-mail.js";
 import { AppleMailAccount, listMailAppAccounts } from "./apple-mail.js";
 import { t, type MessageKey } from "@vunemi/i18n";
+import { platform, type Platform } from "@vunemi/platform";
 
 export interface CatalogueOptions {
   tools: ToolRegistry;
@@ -247,6 +248,47 @@ function historyConnector(library: LibraryToolsOptions): Connector {
   };
 }
 
+/**
+ * Which built-in connections need macOS itself, by the platform feature that
+ * carries them. Where that feature is off they stay listed, so the user can
+ * see they exist, but say they are not on this system yet and give no tools.
+ */
+const NEEDS: Record<string, keyof Platform["features"]> = {
+  desktop: "desktopControl",
+  calendar: "systemCalendar",
+  reminders: "systemCalendar",
+  apps: "macApps",
+  shortcuts: "shortcuts",
+};
+
+export function unavailableHere(connector: Connector): Connector {
+  return {
+    id: connector.id,
+    get label() { return connector.label; },
+    group: connector.group,
+    get description() { return connector.description; },
+    get provides() { return connector.provides; },
+    needs: { kind: "none" },
+    defaultOn: false,
+    origin: "builtin",
+    status: async () => ({ state: "blocked", reason: t("linux.connection") }),
+    tools: () => [],
+  };
+}
+
+/** The connection as this system can offer it. On macOS, always the connection itself. */
+export function onThisSystem(connector: Connector, on: Platform = platform): Connector {
+  const feature = NEEDS[connector.id];
+  return feature && !on.features[feature] ? unavailableHere(connector) : connector;
+}
+
+/** Tools that need the Swift helper's host observation, or its atomic move. */
+const HELPER_TOOLS = new Set(["page_target_observe", "page_target_act", "files_move"]);
+/** Elsewhere those tools are left out rather than offered to refuse every call. */
+function withoutHelperTools(tools: ToolDef[], on: Platform = platform): ToolDef[] {
+  return on.features.desktopControl && on.features.atomicMove ? tools : tools.filter((tool) => !HELPER_TOOLS.has(tool.name));
+}
+
 export function buildConnectors(opts: CatalogueOptions): Connectors {
   const moveGuard=new PersistentMoveGuard(join(opts.shadowDir,'..','semantic-move-targets.json'));
   const atomicMoveAdapter: import('@vunemi/files').AtomicMoveAdapter = {async move(request) {
@@ -313,7 +355,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: BROWSER_INSTRUCTIONS,
       status: async () => ({ state: "ready" }),
-      tools: () => createBrowserTools(opts.browser, { shotDir: opts.shotDir }),
+      tools: () => withoutHelperTools(createBrowserTools(opts.browser, { shotDir: opts.shotDir })),
     },
 
     {
@@ -333,7 +375,8 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: FILE_INSTRUCTIONS,
       status: async () => ({ state: "ready" }),
-      tools: () => createFileTools({ roots: opts.roots, shadowDir: opts.shadowDir, archives: { workDir: join(dirname(opts.shadowDir), "archive-jobs"), run: (program, args, run) => runSandboxed(program, args, { ...run, home: homedir(), engineDir: "/usr/bin" }) }, atomicMoveAdapter, moveAdmission:(path,body,signal)=>opts.helper.admitJournal(path,body,signal), moveGuard }),
+      // Archives open inside macOS's sandbox (addons/sandbox.ts); without one they are not offered.
+      tools: () => withoutHelperTools(createFileTools({ roots: opts.roots, shadowDir: opts.shadowDir, ...(platform.features.archives && { archives: { workDir: join(dirname(opts.shadowDir), "archive-jobs"), run: (program, args, run) => runSandboxed(program, args, { ...run, home: homedir(), engineDir: "/usr/bin" }) } }), atomicMoveAdapter, moveAdmission:(path,body,signal)=>opts.helper.admitJournal(path,body,signal), moveGuard })),
     },
 
     {
@@ -446,7 +489,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
     ...travelConnectors({ countryCode: opts.countryCode, fetchPage: opts.fetchFlightPage }),
   ];
 
-  for (const connector of all) connectors.add(connector);
+  for (const connector of all) connectors.add(onThisSystem(connector));
 
   // Whatever the user plugged in themselves. Added last so a server cannot
   // take a built-in connection's id and quietly replace it.
@@ -491,7 +534,7 @@ export function sealedAway(server: McpServerConfig, reason: "connectors.mcpSecre
 export function mailProviderOptions(clients: OAuthClients) {
   return [
     // First: most people already have their mail in Mail, and it needs nothing typed.
-    { id: "applemail", get label() { return t("connectors.mail.appleMailLabel"); }, available: true, get note() { return t("connectors.mail.appleMailNote"); } },
+    { id: "applemail", get label() { return t("connectors.mail.appleMailLabel"); }, available: platform.features.appleMail, get note() { return platform.features.appleMail ? t("connectors.mail.appleMailNote") : t("linux.appleMail"); } },
     ...(clients.google ? [{ id: "google", get label() { return t("connectors.mail.googleLabel"); }, available: true, get note() { return t("connectors.mail.googleProviderNote"); } }] : []),
     ...(clients.microsoft ? [{ id: "microsoft", get label() { return t("connectors.mail.microsoftLabel"); }, available: true, get note() { return t("connectors.mail.microsoftProviderNote"); } }] : []),
     { id: "gmail", label: "Gmail", available: true, get note() { return t("connectors.mail.gmailNote"); } },
@@ -601,6 +644,7 @@ export function mailConnector(opts: CatalogueOptions): Connector {
       const known = ["applemail", "imap", "gmail", "outlook", ...(clients.google ? ["google"] : []), ...(clients.microsoft ? ["microsoft"] : [])];
       if (!known.includes(provider)) throw new Error(t("connectors.mail.noFlow", { provider }));
       if (provider === "applemail") {
+        if (!platform.features.appleMail) throw new Error(t("linux.appleMail"));
         if (!opts.saveMailAccounts) throw new Error(t("connectors.mail.noVault"));
         const name = String((input as { account?: unknown } | undefined)?.account ?? "").trim();
         const found = (await listMailAppAccounts(run)).find((item) => item.name === name);

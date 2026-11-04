@@ -33,6 +33,8 @@ export interface PlatformFeatures {
   addons: boolean;
   /** The updater that downloads and installs a new version itself. */
   inAppUpdates: boolean;
+  /** files_compress and files_extract: bsdtar runs inside macOS's sandbox. */
+  archives: boolean;
   /** files_move: needs the helper's atomic, no-overwrite move. */
   atomicMove: boolean;
   /** Reading answers aloud with the system's own voices. */
@@ -50,6 +52,7 @@ export const FEATURE_IDS = [
   "backgroundRecipes",
   "addons",
   "inAppUpdates",
+  "archives",
   "atomicMove",
   "speakAloud",
 ] as const satisfies readonly (keyof PlatformFeatures)[];

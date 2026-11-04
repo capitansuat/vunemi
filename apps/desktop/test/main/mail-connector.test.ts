@@ -1,3 +1,4 @@
+import { t } from "@vunemi/i18n";
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -40,7 +41,15 @@ describe("Mail app accounts in the mail connection", () => {
     expect(connector().c.providers?.[0]?.id).toBe("applemail");
   });
 
-  it("connects an account Mail has, without the Vault, and it is ready", async () => {
+  // The Mail app is macOS's; on Linux it is listed as unavailable and refused.
+  it.runIf(process.platform !== "darwin")("says the Mail app is not on Linux yet, and adds nothing", async () => {
+    const { c, saves } = connector();
+    expect(c.providers?.[0]).toMatchObject({ id: "applemail", available: false, note: t("linux.appleMail") });
+    await expect(c.addAccount!("applemail", { account: "iCloud" })).rejects.toThrow(t("linux.appleMail"));
+    expect(saves).toEqual([]);
+  });
+
+  it.runIf(process.platform === "darwin")("connects an account Mail has, without the Vault, and it is ready", async () => {
     const { c, saves } = connector();
     const added = await c.addAccount!("applemail", { account: "iCloud" });
     expect(added).toMatchObject({ label: "test@example.com", provider: "applemail", state: "ready" });

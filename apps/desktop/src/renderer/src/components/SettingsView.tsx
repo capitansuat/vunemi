@@ -18,6 +18,8 @@ import { MemorySection } from "./MemorySection.js";
 import { SoulSection } from "./SoulSection.js";
 import { AddonsSection } from "./AddonsSection.js";
 import { useStore, type SettingsSection as Section } from "../store.js";
+import { useFeature, usePlatform } from "../lib/platform.js";
+import { NotOnThisSystem } from "./NotOnThisSystem.js";
 import { UpdateAction } from "./UpdateAction.js";
 
 const SECTIONS: Section[] = ["permissions", "security", "connections", "addons", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "memory", "soul", "data", "updates"];
@@ -195,6 +197,7 @@ export function SettingsView() {
  * first — main won't change the setting without the owner's yes.
  */
 function SecuritySection() {
+  const lockOffered = useFeature("appLock");
   const [lock, setLock] = useState<LockState | null>(null);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -221,13 +224,19 @@ function SecuritySection() {
   return (
     <div className="mx-auto max-w-[620px]">
       <h2 className="text-[17px] font-semibold text-fg">{t("settings.sections.security")}</h2>
-      <p className="mt-1 text-[13px] text-muted">{t("settings.lock.intro")}</p>
-      <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-3">
-        <span className="text-[12.5px] text-fg">{t("settings.lock.label")}</span>
-        <Switch on={lock?.enabled ?? false} label={t("settings.lock.label")} disabled={!lock || asking} onChange={(next) => void change(next)} />
-      </div>
-      {asking && <p className="mt-3 text-[12px] text-muted">{t("settings.lock.asking")}</p>}
-      <p className="mt-3 text-[11.5px] text-faint">{t("settings.lock.note")}</p>
+      {lockOffered ? (
+        <>
+          <p className="mt-1 text-[13px] text-muted">{t("settings.lock.intro")}</p>
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-3">
+            <span className="text-[12.5px] text-fg">{t("settings.lock.label")}</span>
+            <Switch on={lock?.enabled ?? false} label={t("settings.lock.label")} disabled={!lock || asking} onChange={(next) => void change(next)} />
+          </div>
+          {asking && <p className="mt-3 text-[12px] text-muted">{t("settings.lock.asking")}</p>}
+          <p className="mt-3 text-[11.5px] text-faint">{t("settings.lock.note")}</p>
+        </>
+      ) : (
+        <NotOnThisSystem text={t("linux.appLock")} />
+      )}
       {error && <p role="alert" className="mt-3 text-[12px] text-danger">{error}</p>}
       <TrustedSites />
     </div>
@@ -333,6 +342,7 @@ const APPEARANCES: Appearance[] = ["system", "light", "dark"];
 /** Light or dark, or whatever the Mac is set to. Main applies it; the page follows. */
 /** Whether Vunemi looks for a new version, and a way to look now. */
 function UpdatesSection() {
+  const platform = usePlatform();
   const [auto, setAuto] = useState<boolean | null>(null);
   const [version, setVersion] = useState("");
   const [status, setStatus] = useState<UpdateStatus | null>(null);
@@ -362,6 +372,16 @@ function UpdatesSection() {
       <h2 className="text-[17px] font-semibold text-fg">{t("settings.sections.updates")}</h2>
       <p className="mt-1 text-[13px] text-muted">{t("settings.updates.intro")}</p>
       <p className="mt-4 text-[13px] text-fg">{t("settings.updates.current", { version })}</p>
+      {platform && !platform.features.inAppUpdates ? (
+        <NotOnThisSystem text={t("linux.updates")}>
+          {platform.downloadPage && (
+            <button type="button" onClick={() => void window.vunemi.openDownloadPage()}
+              className="mt-2 block rounded-md border border-line-strong px-3 py-1.5 text-fg">
+              {t("linux.updatesLink")}
+            </button>
+          )}
+        </NotOnThisSystem>
+      ) : (<>
       <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-3">
         <span className="text-[12.5px] text-fg">{t("settings.updates.auto")}</span>
         <Switch on={auto ?? true} label={t("settings.updates.auto")} disabled={auto === null} onChange={(next) => void window.vunemi.setUpdatesAuto(next).then(setAuto)} />
@@ -385,6 +405,7 @@ function UpdatesSection() {
           <UpdateAction status={status} roomy />
         </div>
       )}
+      </>)}
     </div>
   );
 }

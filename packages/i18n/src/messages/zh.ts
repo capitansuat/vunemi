@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "无法解压下载的文件。",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Linux 上暂不可用：此连接需要 macOS。",
+    appleMail: "“邮件”App 账户在 Linux 上暂不可用。请改用 IMAP、Gmail 或 Outlook 添加账户。",
+    meetings: "会议录制在 Linux 上暂不可用。",
+    appLock: "应用锁在 Linux 上暂不可用：它依赖触控 ID 或 Mac 密码。",
+    addons: "扩展在 Linux 上暂不可用：它们在 macOS 的沙盒中运行。",
+    updates: "Vunemi 在 Linux 上暂不会自动更新。新版本请到下载页面获取。",
+    updatesLink: "打开下载页面",
+    speakAloud: "语音对话会朗读回答，这在 Linux 上暂不可用。听写仍可使用。",
+    backgroundRecipes: "Mac App（如 TextEdit）中的定时任务在 Linux 上暂不可用。",
+    vault: {
+      noKeyring: "未找到系统密钥环（safeStorage 选择了“{backend}”），因此保险库不会保存任何内容。请安装 GNOME Keyring（libsecret）或 KWallet，重新登录桌面，然后重启 Vunemi。",
+      keyUnreadable: "系统密钥环无法打开保险库密钥。已保存的机密保持原样；请解锁密钥环，然后重启 Vunemi。",
+      unlockHint: "保险库已锁定，聊天仍可使用。需要已保存的密钥时请解锁；桌面环境可能会要求输入密钥环密码。",
+    },
+  },
 };

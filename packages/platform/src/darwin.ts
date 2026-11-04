@@ -19,6 +19,7 @@ export const DARWIN_FEATURES: PlatformFeatures = {
   backgroundRecipes: true,
   addons: true,
   inAppUpdates: true,
+  archives: true,
   atomicMove: true,
   speakAloud: true,
 };

@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "The downloaded file could not be unpacked.",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Not available on Linux yet: this connection needs macOS.",
+    appleMail: "Mail app accounts are not available on Linux yet. Add the account with IMAP, Gmail or Outlook instead.",
+    meetings: "Meeting recording is not available on Linux yet.",
+    appLock: "The app lock is not available on Linux yet: it relies on Touch ID or your Mac password.",
+    addons: "Add-ons are not available on Linux yet: they run inside macOS's sandbox.",
+    updates: "Vunemi doesn't update itself on Linux yet. New versions are on the download page.",
+    updatesLink: "Open the download page",
+    speakAloud: "Voice chat reads answers aloud, which is not available on Linux yet. Dictation still works.",
+    backgroundRecipes: "Scheduled work in Mac apps (such as TextEdit) is not available on Linux yet.",
+    vault: {
+      noKeyring: "No system keyring was found (safeStorage chose \"{backend}\"), so the vault won't save anything. Install GNOME Keyring (libsecret) or KWallet, sign in to your desktop again, then restart Vunemi.",
+      keyUnreadable: "The system keyring couldn't open the vault key. Your saved secrets are kept as they are; unlock your keyring, then restart Vunemi.",
+      unlockHint: "The vault is locked. Chat remains available. Unlock it when you need saved keys; your desktop may ask for your keyring password.",
+    },
+  },
 };

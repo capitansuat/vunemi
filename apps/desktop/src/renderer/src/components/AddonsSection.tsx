@@ -1,3 +1,5 @@
+import { useFeature } from "../lib/platform.js";
+import { NotOnThisSystem } from "./NotOnThisSystem.js";
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { getLocale, lower, t } from "@vunemi/i18n";
@@ -12,7 +14,19 @@ type Filter = "all" | "installed" | AddonCategory;
  * until the user presses Download, and removing one puts it in the Trash.
  * One the user has is updated by itself when Vunemi opens with a newer pin.
  */
+/** Add-ons run in macOS's sandbox; where there is none yet, the section says so. */
 export function AddonsSection() {
+  const offered = useFeature("addons");
+  if (offered) return <AddonsList />;
+  return (
+    <div className="mx-auto max-w-[620px]">
+      <h2 className="text-[17px] font-semibold text-fg">{t("settings.sections.addons")}</h2>
+      <NotOnThisSystem text={t("linux.addons")} />
+    </div>
+  );
+}
+
+function AddonsList() {
   const [list, setList] = useState<AddonView[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");

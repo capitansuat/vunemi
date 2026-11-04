@@ -50,6 +50,9 @@ importers:
       '@vunemi/mcp':
         specifier: workspace:*
         version: link:../../packages/mcp
+      '@vunemi/platform':
+        specifier: workspace:*
+        version: link:../../packages/platform
       '@vunemi/sentinel':
         specifier: workspace:*
         version: link:../../packages/sentinel

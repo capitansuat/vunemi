@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { loadImage, MAX_IMAGE_BYTES, readImageText } from "../../src/main/images.js";
+import { loadImage, loadImageWith, MAX_IMAGE_BYTES, MAX_SIDE, readImageText } from "../../src/main/images.js";
 
 let dir: string;
 beforeEach(() => {
@@ -21,8 +21,31 @@ function bigPng(): string {
   return big;
 }
 
+describe("loading an image for the model without sips", () => {
+  it("asks the scaler for at most MAX_SIDE pixels and passes on its JPEG", async () => {
+    const file = join(dir, "photo.png");
+    writeFileSync(file, "synthetic");
+    const asked: [string, number][] = [];
+    const image = await loadImageWith(file, (path, side) => { asked.push([path, side]); return Buffer.from("jpeg-bytes"); });
+    expect(asked).toEqual([[file, MAX_SIDE]]);
+    expect(image).toEqual({ mime: "image/jpeg", base64: Buffer.from("jpeg-bytes").toString("base64") });
+  });
+
+  it("gives nothing for what it can't decode, what is too big, or what is missing", async () => {
+    const file = join(dir, "x.heic");
+    writeFileSync(file, "synthetic");
+    expect(await loadImageWith(file, () => null)).toBeNull();
+    expect(await loadImageWith(file, () => { throw new Error("decoder"); })).toBeNull();
+    const huge = join(dir, "huge.png");
+    writeFileSync(huge, Buffer.alloc(MAX_IMAGE_BYTES + 1));
+    expect(await loadImageWith(huge, () => Buffer.from("x"))).toBeNull();
+    expect(await loadImageWith(join(dir, "missing.png"), () => Buffer.from("x"))).toBeNull();
+  });
+});
+
 describe("loading an image for the model", () => {
-  it("scales it to 1280 pixels on the long side, as JPEG", async () => {
+  // sips is macOS's; Linux scales with Electron's nativeImage through loadImageWith.
+  it.runIf(process.platform === "darwin")("scales it to 1280 pixels on the long side, as JPEG", async () => {
     const image = await loadImage(bigPng());
     expect(image?.mime).toBe("image/jpeg");
     const out = join(dir, "out.jpg");

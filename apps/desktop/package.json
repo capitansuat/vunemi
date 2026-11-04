@@ -24,6 +24,7 @@
     "@vunemi/mac": "workspace:*",
     "@vunemi/mail": "workspace:*",
     "@vunemi/mcp": "workspace:*",
+    "@vunemi/platform": "workspace:*",
     "@vunemi/sentinel": "workspace:*",
     "@vunemi/vault": "workspace:*",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, KeyRound, Plus, ShieldCheck, Trash2, TriangleAlert } from "lucide-react";
 import type { VaultStatus } from "../../../shared/ipc.js";
 import { formatDate, t } from "@vunemi/i18n";
+import { usePlatform } from "../lib/platform.js";
 
 const EMPTY: VaultStatus = { available: false, secrets: [] };
 
@@ -14,6 +15,8 @@ export function VaultView() {
   const [adding, setAdding] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // On Linux the key is the system keyring's, and the words say so.
+  const keyringKept = usePlatform()?.id === "linux";
 
   useEffect(() => {
     void window.vunemi.vaultStatus().then(setStatus);
@@ -51,7 +54,7 @@ export function VaultView() {
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2.5 text-[12.5px] text-fg">
             <TriangleAlert size={14} className="mt-0.5 shrink-0 text-danger" />
             <span>
-              {t("vault.unlockHint")}
+              {status.keyring ?? (keyringKept ? t("linux.vault.unlockHint") : t("vault.unlockHint"))}
               <button type="button" disabled={unlocking}
                 onClick={() => {setUnlocking(true);void run(() => window.vunemi.vaultUnlock()).finally(() => setUnlocking(false));}}
                 className="mt-2 block rounded-md border border-line-strong px-3 py-1.5 disabled:opacity-50">

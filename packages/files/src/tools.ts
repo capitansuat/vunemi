@@ -121,7 +121,7 @@ export function portableFileInstructions(mac: string, opts: { move: boolean; arc
 
 export const FILE_INSTRUCTIONS = platform.documentText === "macos"
   ? MAC_FILE_INSTRUCTIONS
-  : portableFileInstructions(MAC_FILE_INSTRUCTIONS, { move: platform.features.atomicMove, archives: false });
+  : portableFileInstructions(MAC_FILE_INSTRUCTIONS, { move: platform.features.atomicMove, archives: platform.features.archives });
 
 export interface FileToolOptions {
   roots: Roots;

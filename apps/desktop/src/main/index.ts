@@ -8,7 +8,7 @@ import {AutomationAdjustment} from "./automation-adjustment.js";
 import {installNativeRecipes} from './native-recipes/install.js';
 import {assertModelRecoveryAllowed} from './task-recovery.js';
 import {scopedApprovalRequest,permissionListRequest,permissionRevokeRequest} from "./task-permissions-ipc.js";
-import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
+import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeImage, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
 import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -26,6 +26,8 @@ import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type SpeakersView, type A
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
+import { platform, platformInfo } from "@vunemi/platform";
+import { linuxVaultKey, type LinuxKeyResult } from "./vault-key-linux.js";
 import { within } from "./shutdown.js";
 import { VaultHost } from "./vault-host.js";
 import { projectInstructions, ProjectStore } from "./projects.js";
@@ -51,14 +53,14 @@ import { MAX_TRUSTED_SITES, SettingsStore, validPolicy } from "./settings.js";
 import { migrateMcpSecrets, removeMcpSecrets, sealMcpServer, unsealed } from "./mcp-secrets.js";
 import { vaultMcpIO } from "./remote-mcp.js";
 import { checkAgentModel, modelConfig, probeProviders } from "./providers.js";
-import { forgetOldPictures, loadImage, readImageText } from "./images.js";
+import { forgetOldPictures, loadImage, loadImageWith, readImageText } from "./images.js";
 import type { AgentSession, SessionOptions } from "./session.js";
 import { SessionCoordinatorHost } from "./session-coordinator-host.js";
 import { SessionStore } from "./sessions.js";
 import { conversationTasks, meetingParts, mentionable, mentionRefs, mentionTexts } from "./mentions.js";
 import { MemoryStore } from "./memory/store.js";
 import { ModelManager } from "./models/manager.js";
-import { macMemory } from "./models/memory.js";
+import { linuxMemory, macMemory } from "./models/memory.js";
 import { Embedder } from "./memory/embedder.js";
 import { generalInstructions, recall } from "./memory/recall.js";
 import { propose, type Proposal } from "./memory/propose.js";
@@ -231,6 +233,16 @@ mkdirSync(shotDir, { recursive: true });
 // Small copies of found photos are for looking back a while, not for keeping.
 forgetOldPictures(join(shotDir, "photos"), 30 * 24 * 60 * 60_000);
 
+/** Scales a picture for the model without sips: Electron's own decoder (PNG and JPEG). */
+function scaleWithNativeImage(path: string, maxSide: number): Buffer | null {
+  const image = nativeImage.createFromPath(path);
+  if (image.isEmpty()) return null;
+  const { width, height } = image.getSize();
+  const factor = Math.min(1, maxSide / Math.max(width, height));
+  const scaled = factor < 1 ? image.resize({ width: Math.round(width * factor), height: Math.round(height * factor), quality: "good" }) : image;
+  return scaled.toJPEG(85);
+}
+
 // Everything the agent can reach, as one list the user controls. A switch
 // that is off takes its tools out of the model's reach entirely.
 const settings = new SettingsStore(app.getPath("userData"));
@@ -315,9 +327,34 @@ function languageInstructions(): string {
 // has finished evaluating; awaiting it here deadlocks, measured 23 Sep). So
 // the client reads as locked until then, and what needs a secret waits for
 // `vaultReady`: the outbox, the MCP migration, the memory check.
+/**
+ * Linux: the Vault key from safeStorage and the system keyring
+ * (vault-key-linux.ts). Main reads it only to hand it to the Vault process.
+ * Without a keyring there is no key, and the Vault refuses to store anything.
+ */
+let linuxKey: LinuxKeyResult | null = null;
+function readLinuxKey(): string | undefined {
+  try {
+    linuxKey = linuxVaultKey(safeStorage, app.getPath("userData"));
+  } catch (err) {
+    linuxKey = { ok: false, reason: "unreadable", detail: err instanceof Error ? err.message : String(err) };
+  }
+  if (!linuxKey.ok) console.error(`[vunemi] vault: no Linux key (${linuxKey.reason === "no-keyring" ? `no keyring; safeStorage backend "${linuxKey.backend}"` : linuxKey.detail})`);
+  return linuxKey.ok ? linuxKey.key.toString("base64") : undefined;
+}
+/** Why the Vault can't keep secrets on Linux, in the user's words; null when it can. */
+function linuxKeyProblem(): string | null {
+  if (platform.vaultKey !== "safe-storage" || !linuxKey || linuxKey.ok) return null;
+  return linuxKey.reason === "no-keyring" ? t("linux.vault.noKeyring", { backend: linuxKey.backend }) : t("linux.vault.keyUnreadable");
+}
 const vaultHost = new VaultHost({
   spawn: () => utilityProcess.fork(join(here, "vault.js"), [], { serviceName: "Vunemi Vault", stdio: "inherit" }),
-  init: () => ({ userData: app.getPath("userData"), helperPath: app.isPackaged ? join(process.resourcesPath, "VunemiVaultHelper") : join(here, "../../../../native/VunemiVaultHelper/.build/release/VunemiVaultHelper"), locale: getLocale() }),
+  init: () => platform.vaultKey === "safe-storage"
+    ? (() => {
+      const key = readLinuxKey();
+      return { userData: app.getPath("userData"), helperPath: "", locale: getLocale(), keySource: "safe-storage" as const, ...(key && { key }) };
+    })()
+    : { userData: app.getPath("userData"), helperPath: app.isPackaged ? join(process.resourcesPath, "VunemiVaultHelper") : join(here, "../../../../native/VunemiVaultHelper/.build/release/VunemiVaultHelper"), locale: getLocale() },
   log: (line) => console.error(line),
 });
 const vault = vaultHost.client;
@@ -620,10 +657,7 @@ embedded.onDownload((file) => {
     result: `${file.path} (${Math.max(1, Math.round(file.bytes / 1024))} KB) · ${file.url.slice(0, 200)}`,
     undo: {
       label: t("main.download.undo", { name: file.name }),
-      fn: async () => {
-        const trashed = join(app.getPath("home"), ".Trash", file.name);
-        if (existsSync(file.path) && !existsSync(trashed)) renameSync(file.path, trashed);
-      },
+      fn: async () => platform.trashDownload(file.path, file.name),
     },
   });
   artefacts.add(id, "page_download", [{ kind: "download", path: file.path }]);
@@ -686,7 +720,7 @@ const sessionList = (): SessionList => {
 };
 
 /** Measures the local models, fits the chat model's context, unloads idle ones under pressure (models/manager.ts). */
-const models = new ModelManager({ reader: macMemory(), totalMemory: totalmem() });
+const models = new ModelManager({ reader: platform.id === "darwin" ? macMemory() : linuxMemory(), totalMemory: totalmem() });
 
 // Vunemi's own model server, for people with no model server of their own.
 const engine: EngineService = new EngineService({
@@ -752,7 +786,7 @@ const sessionOptions: SessionOptions = {
   switchOn: (tool) => connectors.switchOnFor(tool),
   onUntrustedOutput: (text, tool) => sentinel.noteUntrusted(text, sourceOf(tool)),
   redact,
-  loadImage: (path) => loadImage(path),
+  loadImage: (path) => (platform.id === "darwin" ? loadImage(path) : loadImageWith(path, scaleWithNativeImage)),
   readImageText: (path) => readImageText(path),
   grants,
   onUndoOffered: (u) => activity.offerUndo(u.callId, u.label, u.undo),
@@ -852,8 +886,8 @@ function createWindow(): void {
     minWidth: 880,
     minHeight: 560,
     show: false,
-    titleBarStyle: "hiddenInset",
-    trafficLightPosition: { x: 16, y: 18 },
+    // macOS's inset traffic lights. Elsewhere these would leave a window with no frame and no buttons.
+    ...(platform.id === "darwin" && { titleBarStyle: "hiddenInset" as const, trafficLightPosition: { x: 16, y: 18 } }),
     // The page's own background, so nothing flashes before it paints.
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#15120f" : "#faf7f3",
     webPreferences: {
@@ -1426,6 +1460,7 @@ function tapsSupported(): boolean {
   return major > 14 || (major === 14 && minor >= 2);
 }
 const MEETING_ERRORS = {
+  platform: "linux.meetings",
   already: "meetings.error.already",
   macos: "meetings.error.macos",
   recorder: "meetings.error.recorder",
@@ -1473,7 +1508,7 @@ const meetings: MeetingService = new MeetingService({
     return { model, window };
   },
   words: meetingWords,
-  blocked: (): MeetingBlock | null => (!tapsSupported() ? "macos" : !recorder.available() ? "recorder" : !voice.status().canHear ? "voice" : null),
+  blocked: (): MeetingBlock | null => (!platform.features.meetings ? "platform" : !tapsSupported() ? "macos" : !recorder.available() ? "recorder" : !voice.status().canHear ? "voice" : null),
   onChange: (status) => {
     meetingsIndexed = false;
     presence.setRecording(status.recording ? () => void meetings.stop(meetingModel) : null);
@@ -1538,6 +1573,7 @@ handle(CH.meetingsGet, (_e, id: unknown) => {
 });
 handle(CH.meetingsStatus, () => meetingStatusView(meetings.status()));
 handle(CH.meetingsStart, async (_e, microphone: unknown) => {
+  if (!platform.features.meetings) throw new Error(t("linux.meetings"));
   try {
     await meetings.start(typeof microphone === "string" && microphone ? microphone : undefined);
   } catch (err) {
@@ -1559,6 +1595,8 @@ handle(CH.meetingsRetry, (_e, id: unknown, model: unknown) => {
 });
 handle(CH.meetingsRecover, (_e, model: unknown) => {
   meetingModel = modelSpec(model) ?? meetingModel;
+  // Nothing was ever recorded here.
+  if (!platform.features.meetings) return;
   void meetings.recover(meetingModel).catch((err: unknown) => console.error("[vunemi] meetings recovery:", err instanceof Error ? err.message : String(err)));
 });
 /**
@@ -1602,6 +1640,8 @@ const addonId = (id: unknown): AddonId => {
 };
 handle(CH.addons, () => addons.list());
 handle(CH.addonsInstall, async (_e, id: unknown) => {
+  // Add-ons run inside macOS's sandbox; there is none to run them in here yet.
+  if (!platform.features.addons) throw new Error(t("linux.addons"));
   await addons.install(addonId(id));
   return addons.list();
 });
@@ -1650,7 +1690,7 @@ handle(CH.meetingsExport, async (_e, id: unknown) => {
   return true;
 });
 handle(CH.meetingsLevels, () => meetings.levels());
-handle(CH.meetingsDevices, () => meetingCall(() => recorder.devices()));
+handle(CH.meetingsDevices, () => (platform.features.meetings ? meetingCall(() => recorder.devices()) : []));
 
 handle(CH.appVersion, () => app.getVersion());
 
@@ -1670,6 +1710,8 @@ function updateSource(): FeedSource | null {
     if (!local || !/^http:\/\/127\.0\.0\.1:\d+\/$/.test(local)) return null;
     return { feed: `${local}mac-arm64.json`, zip: (version) => `${local}Vunemi-${version}-arm64.zip` };
   }
+  // No updater on Linux yet: the window links to the download page instead.
+  if (!platform.features.inAppUpdates) return null;
   return app.isPackaged ? PRODUCTION : null;
 }
 
@@ -1703,7 +1745,11 @@ autoUpdater.on("before-quit-for-update", () => {
   updating = true;
 });
 
-const noUpdates = (): UpdateStatus => ({ phase: "idle", offer: null, error: null, checkedAt: null, installable: false, idle: true });
+const noUpdates = (): UpdateStatus => ({ phase: "idle", offer: null, error: null, checkedAt: null, installable: false, idle: true, ...(platform.downloadPage && { downloadPage: platform.downloadPage }) });
+handle(CH.updatesOpenDownloadPage, async () => {
+  if (platform.downloadPage) await shell.openExternal(platform.downloadPage);
+});
+handle(CH.platformInfo, () => platformInfo());
 handle(CH.updatesStatus, () => updates?.status() ?? noUpdates());
 handle(CH.updatesCheck, () => updates?.check(true) ?? noUpdates());
 handle(CH.updatesDownload, () => updates?.download() ?? noUpdates());
@@ -1755,6 +1801,8 @@ handle(CH.lockUnlock, async (): Promise<LockAttempt> => {
 });
 handle(CH.lockSet, async (_e, on: unknown): Promise<LockAttempt> => {
   if (typeof on !== "boolean") throw new Error(t("lock.error.error"));
+  // No Touch ID or password dialog to ask with here: turning it on would lock the user out.
+  if (on && !platform.features.appLock) throw new Error(t("linux.appLock"));
   const result = await appLock.setEnabled(on, t(on ? "lock.reason.turnOn" : "lock.reason.turnOff"), (next) => settings.setAppLock(next));
   send(CH.lockChanged, lockState());
   return lockAttempt(result);
@@ -2017,12 +2065,16 @@ handle(CH.voiceDownload, async () => {
 });
 handle(CH.voiceDownloadCancel, () => voice.cancelDownload());
 handle(CH.requestMic, async () => {
+  // Linux has no per-app microphone permission for Electron to ask for: the
+  // page's own getUserMedia is the only gate there.
+  if (platform.id !== "darwin") return true;
   // macOS asks the user once, and remembers; afterwards this is just a check.
   if (systemPreferences.getMediaAccessStatus("microphone") === "granted") return true;
   return systemPreferences.askForMediaAccess("microphone");
 });
 handle(CH.transcribe, async (_e, wav: ArrayBuffer) => voice.transcribe(Buffer.from(wav)));
 handle(CH.synthesize, async (_e, text: string) => {
+  if (!platform.features.speakAloud) throw new Error(t("linux.speakAloud"));
   const wav = await voice.synthesize(String(text));
   return wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength);
 });
@@ -2031,19 +2083,32 @@ handle(CH.stopSpeaking, () => voice.stopSpeaking());
 let vaultMigrationNeedsRestart = false;
 const vaultStatus = async (): Promise<VaultStatus> => {
   await vaultReady;
+  const keyring = linuxKeyProblem();
   return { available: vault.available, secrets: vault.list(),
     needsMigration: (await vault.sealedEntries()).some(entry => isLegacyCipher(entry.cipher)),
-    restartRequired: vaultMigrationNeedsRestart };
+    restartRequired: vaultMigrationNeedsRestart,
+    ...(keyring && { keyring }) };
 };
 handle(CH.vaultStatus, () => vaultStatus());
 handle(CH.vaultUnlock, async () => {
   await vaultReady;
+  if (platform.vaultKey === "safe-storage") {
+    // Asked again: a keyring unlocked since start-up can give the key now.
+    const key = vault.available ? undefined : readLinuxKey();
+    if (!vault.available && !key) throw new Error(linuxKeyProblem() ?? t("vaultStore.locked"));
+    await vault.call("unlock", [key], 30_000);
+    if (!vault.available) throw new Error(t("vaultStore.locked"));
+    return vaultStatus();
+  }
   await vault.call("unlock", [], 310_000);
   if (!vault.available) throw new Error(t("vaultStore.locked"));
   if (await migrateLegacySecrets()) vaultMigrationNeedsRestart = true;
   return vaultStatus();
 });
 handle(CH.vaultSet, async (_e, name: string, value: string, note?: string) => {
+  // Without a keyring, say what to install rather than only "unavailable".
+  const keyring = linuxKeyProblem();
+  if (keyring && !vault.available) throw new Error(keyring);
   await vault.set(String(name).trim(), String(value), note ? String(note).slice(0, 120) : undefined);
   return vaultStatus();
 });

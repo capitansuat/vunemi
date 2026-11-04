@@ -23,7 +23,8 @@ import type { Meeting, MeetingStore } from "./store.js";
 import { speakerLabel, summarise, type Headings, type Names } from "./summary.js";
 
 /** Why the Record button cannot record, or null when it can. */
-export type MeetingBlock = "macos" | "recorder" | "voice";
+/** "platform": this system has no meeting recorder (Linux, for now). */
+export type MeetingBlock = "platform" | "macos" | "recorder" | "voice";
 
 export interface MeetingStatus {
   recording: { id: string; startedAt: number; lines: Line[]; pending: number } | null;

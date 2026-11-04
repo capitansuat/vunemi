@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "ダウンロードしたファイルを展開できませんでした。",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Linux ではまだ利用できません。この接続には macOS が必要です。",
+    appleMail: "「メール」App のアカウントは Linux ではまだ利用できません。代わりに IMAP、Gmail、Outlook でアカウントを追加してください。",
+    meetings: "会議の録音は Linux ではまだ利用できません。",
+    appLock: "アプリのロックは Linux ではまだ利用できません。Touch ID または Mac のパスワードを使う機能です。",
+    addons: "アドオンは Linux ではまだ利用できません。macOS のサンドボックス内で動作するためです。",
+    updates: "Linux では Vunemi はまだ自動でアップデートされません。新しいバージョンはダウンロードページにあります。",
+    updatesLink: "ダウンロードページを開く",
+    speakAloud: "音声チャットは回答を読み上げますが、これは Linux ではまだ利用できません。音声入力は引き続き使えます。",
+    backgroundRecipes: "Mac App（TextEdit など）での予約作業は Linux ではまだ利用できません。",
+    vault: {
+      noKeyring: "システムのキーリングが見つからないため（safeStorage は「{backend}」を選びました）、保管庫には何も保存されません。GNOME Keyring（libsecret）または KWallet をインストールし、デスクトップにもう一度ログインしてから Vunemi を再起動してください。",
+      keyUnreadable: "システムのキーリングが保管庫のキーを開けませんでした。保存した秘密情報はそのまま残っています。キーリングのロックを解除してから Vunemi を再起動してください。",
+      unlockHint: "保管庫はロックされています。チャットは利用できます。保存したキーが必要な場合に解除してください。デスクトップがキーリングのパスワードを求めることがあります。",
+    },
+  },
 };

@@ -123,6 +123,8 @@ const api: VunemiApi = {
   installUpdate: () => ipcRenderer.invoke(CH.updatesInstall),
   getUpdatesAuto: () => ipcRenderer.invoke(CH.updatesAutoGet),
   setUpdatesAuto: (on) => ipcRenderer.invoke(CH.updatesAutoSet, on),
+  openDownloadPage: () => ipcRenderer.invoke(CH.updatesOpenDownloadPage),
+  platformInfo: () => ipcRenderer.invoke(CH.platformInfo),
   onUpdates: (listener) => {
     const handler = (_e: unknown, status: UpdateStatus) => listener(status);
     ipcRenderer.on(CH.updatesChanged, handler);

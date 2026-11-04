@@ -1,3 +1,4 @@
+import { useFeature } from "../lib/platform.js";
 import {quoteSourceAnchor} from "../lib/selection-followup.js";
 import {composerDrafts} from '../lib/composer-drafts.js';
 import { useShallow } from "zustand/react/shallow";
@@ -38,6 +39,7 @@ export function Composer() {
   const [offer, setOffer] = useState(false);
 
   const voice = useStore((s) => s.voice);
+  const speakAloud = useFeature("speakAloud");
   const dictated = useStore((s) => s.dictated);
   const suggested = useStore((s) => s.suggested);
 
@@ -384,10 +386,11 @@ export function Composer() {
                 // Without a speech model it offers the download, like the mic;
                 // a button that looks usable and does nothing reads as broken.
                 onClick={() => (offerable ? setOffer(true) : setHandsFree(!voice.handsFree))}
-                disabled={!canHear && !offerable}
+                // Voice chat answers out loud; where nothing can speak yet, it says so instead.
+                disabled={(!canHear && !offerable) || !speakAloud}
                 aria-pressed={voice.handsFree}
                 aria-label={t("composer.voice.handsFree")}
-                title={canHear ? t("composer.voice.handsFreeHint") : micTitle}
+                title={!speakAloud ? t("linux.speakAloud") : canHear ? t("composer.voice.handsFreeHint") : micTitle}
                 className={`grid size-8 place-items-center rounded-full border transition-colors disabled:opacity-40 ${
                   voice.handsFree ? "border-ember bg-ember-soft text-ember" : "border-line text-muted hover:text-fg"
                 }`}

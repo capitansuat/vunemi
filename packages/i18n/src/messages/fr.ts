@@ -1976,4 +1976,21 @@ export const messages: Catalogue = {
       unpack: "Le fichier téléchargé n'a pas pu être décompressé.",
     },
   },
+  /** What is not on Linux yet, said where the feature would be. */
+  linux: {
+    connection: "Pas encore disponible sous Linux : cette connexion nécessite macOS.",
+    appleMail: "Les comptes de l’app Mail ne sont pas encore disponibles sous Linux. Ajoutez plutôt le compte avec IMAP, Gmail ou Outlook.",
+    meetings: "L’enregistrement des réunions n’est pas encore disponible sous Linux.",
+    appLock: "Le verrouillage de l’app n’est pas encore disponible sous Linux : il repose sur Touch ID ou le mot de passe de votre Mac.",
+    addons: "Les extensions ne sont pas encore disponibles sous Linux : elles s’exécutent dans le bac à sable de macOS.",
+    updates: "Vunemi ne se met pas encore à jour tout seul sous Linux. Les nouvelles versions sont sur la page de téléchargement.",
+    updatesLink: "Ouvrir la page de téléchargement",
+    speakAloud: "La conversation vocale lit les réponses à voix haute, ce qui n’est pas encore disponible sous Linux. La dictée fonctionne toujours.",
+    backgroundRecipes: "Les tâches programmées dans les apps Mac (comme TextEdit) ne sont pas encore disponibles sous Linux.",
+    vault: {
+      noKeyring: "Aucun trousseau système n’a été trouvé (safeStorage a choisi « {backend} »), le coffre n’enregistre donc rien. Installez GNOME Keyring (libsecret) ou KWallet, reconnectez-vous à votre session, puis redémarrez Vunemi.",
+      keyUnreadable: "Le trousseau système n’a pas pu ouvrir la clé du coffre. Vos secrets enregistrés sont conservés tels quels ; déverrouillez votre trousseau, puis redémarrez Vunemi.",
+      unlockHint: "Le coffre est verrouillé. Le chat reste disponible. Déverrouillez-le quand vous avez besoin des clés enregistrées ; votre bureau peut vous demander le mot de passe de votre trousseau.",
+    },
+  },
 };

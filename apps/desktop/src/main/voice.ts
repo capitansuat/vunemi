@@ -25,6 +25,7 @@ import { createServer } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { getLocale, t, type Locale } from "@vunemi/i18n";
+import { platform } from "@vunemi/platform";
 
 import type { VoiceStatus } from "../shared/ipc.js";
 import { download, type DownloadProgress } from "./engine/download.js";
@@ -118,7 +119,8 @@ function voiceFor(locale: Locale): string | null {
   return installedVoices.has(name) ? name : null;
 }
 
-const SERVER_PATHS = ["/opt/homebrew/bin/whisper-server", "/usr/local/bin/whisper-server"];
+// A whisper-server the user installed themselves: Homebrew's on macOS, a distribution's or a local build on Linux.
+const SERVER_PATHS = platform.id === "darwin" ? ["/opt/homebrew/bin/whisper-server", "/usr/local/bin/whisper-server"] : ["/usr/local/bin/whisper-server", "/usr/bin/whisper-server"];
 
 /** Long enough to survive a pause in dictation, short enough to give the RAM back. */
 const IDLE_MS = 5 * 60_000;
