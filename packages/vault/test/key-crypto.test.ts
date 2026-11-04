@@ -6,7 +6,7 @@
  */
 import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { isLegacyCipher, KeyCrypto } from "../src/key-crypto.js";
+import { isLegacyCipher, KeyCrypto, LINUX_MAGIC } from "../src/key-crypto.js";
 
 const key = () => randomBytes(32);
 
@@ -63,5 +63,47 @@ describe("KeyCrypto", () => {
 
   it("rejects a key of the wrong size", () => {
     expect(() => new KeyCrypto().unlock(randomBytes(16))).toThrow();
+  });
+});
+
+describe("KeyCrypto on Linux", () => {
+  it("writes its own magic, so a Linux vault is never read as a macOS one", () => {
+    const linux = new KeyCrypto(LINUX_MAGIC);
+    linux.unlock(key());
+    const sealed = linux.encrypt("anahtar");
+    expect(sealed.subarray(0, 4).toString("ascii")).toBe("OCL1");
+    expect(linux.decrypt(sealed)).toBe("anahtar");
+    expect(isLegacyCipher(sealed)).toBe(false);
+  });
+
+  it("keeps macOS's format exactly as it was by default", () => {
+    const mac = new KeyCrypto();
+    mac.unlock(key());
+    expect(mac.encrypt("x").subarray(0, 4).toString("ascii")).toBe("OCK1");
+  });
+
+  it("tells the two apart instead of trying the wrong key", () => {
+    const k = key();
+    const mac = new KeyCrypto();
+    mac.unlock(k);
+    const linux = new KeyCrypto(LINUX_MAGIC);
+    linux.unlock(k);
+    expect(() => linux.decrypt(mac.encrypt("x"))).toThrow(/macOS Keychain/);
+    expect(() => mac.decrypt(linux.encrypt("x"))).toThrow(/Linux keyring/);
+  });
+
+  it("binds the magic into what GCM authenticates", () => {
+    const linux = new KeyCrypto(LINUX_MAGIC);
+    const k = key();
+    linux.unlock(k);
+    const sealed = linux.encrypt("x");
+    const relabelled = Buffer.concat([Buffer.from("OCK1"), sealed.subarray(4)]);
+    const mac = new KeyCrypto();
+    mac.unlock(k);
+    expect(() => mac.decrypt(relabelled)).toThrow();
+  });
+
+  it("knows no third format", () => {
+    expect(() => new KeyCrypto(Buffer.from("XXX1"))).toThrow(/Unknown vault format/);
   });
 });

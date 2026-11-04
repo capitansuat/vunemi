@@ -14,6 +14,12 @@
  *
  * Format: "OCK1" | 12-byte IV | 16-byte tag | ciphertext. The magic bytes
  * both version the format and tell it apart from safeStorage's "v10…".
+ *
+ * On Linux the key comes from Electron's safeStorage and the system keyring
+ * instead (see the desktop app's vault-key-linux.ts), and secrets are written
+ * as "OCL1" | IV | tag | ciphertext: the same scheme, under a magic of its
+ * own, so a vault.json carried between a Mac and a Linux machine is told
+ * apart rather than tried with the wrong key.
  */
 
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
@@ -21,17 +27,25 @@ import type { SecretCrypto } from "./vault.js";
 import { t } from "@vunemi/i18n";
 
 const MAGIC = Buffer.from("OCK1", "ascii");
+/** Written with a key kept by the Linux keyring through safeStorage. */
+export const LINUX_MAGIC = Buffer.from("OCL1", "ascii");
 const IV = 12;
 const TAG = 16;
 const KEY = 32;
 
-/** Written by the old scheme (safeStorage), not by this one. */
+/** Written by the old scheme (safeStorage), not by this one on either system. */
 export function isLegacyCipher(cipher: Buffer): boolean {
-  return !cipher.subarray(0, MAGIC.length).equals(MAGIC);
+  const head = cipher.subarray(0, MAGIC.length);
+  return !head.equals(MAGIC) && !head.equals(LINUX_MAGIC);
 }
 
 export class KeyCrypto implements SecretCrypto {
   private key: Buffer | null = null;
+
+  /** macOS's "OCK1" unless told otherwise; Linux passes LINUX_MAGIC. */
+  constructor(private readonly magic: Buffer = MAGIC) {
+    if (!magic.equals(MAGIC) && !magic.equals(LINUX_MAGIC)) throw new Error("Unknown vault format.");
+  }
 
   get available(): boolean {
     return this.key !== null;
@@ -46,19 +60,22 @@ export class KeyCrypto implements SecretCrypto {
     const key = this.need();
     const iv = randomBytes(IV);
     const cipher = createCipheriv("aes-256-gcm", key, iv);
-    cipher.setAAD(MAGIC);
+    cipher.setAAD(this.magic);
     const body = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
-    return Buffer.concat([MAGIC, iv, cipher.getAuthTag(), body]);
+    return Buffer.concat([this.magic, iv, cipher.getAuthTag(), body]);
   }
 
   decrypt(sealed: Buffer): string {
     if (isLegacyCipher(sealed)) throw new Error("legacy format: waiting for migration");
+    if (!sealed.subarray(0, this.magic.length).equals(this.magic)) {
+      throw new Error(this.magic.equals(MAGIC) ? "written with a Linux keyring key" : "written with a macOS Keychain key");
+    }
     const key = this.need();
     const iv = sealed.subarray(MAGIC.length, MAGIC.length + IV);
     const tag = sealed.subarray(MAGIC.length + IV, MAGIC.length + IV + TAG);
     const body = sealed.subarray(MAGIC.length + IV + TAG);
     const decipher = createDecipheriv("aes-256-gcm", key, iv);
-    decipher.setAAD(MAGIC);
+    decipher.setAAD(this.magic);
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(body), decipher.final()]).toString("utf8");
   }
