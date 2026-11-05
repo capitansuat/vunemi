@@ -4,19 +4,19 @@
  * language shows up as a hole, or as a literal "{nmae}", on someone's screen.
  */
 import { afterEach, describe, expect, it } from "vitest";
-import { LOCALES, formatDate, has, isLocale, lower, matchLocale, onLocaleChange, setLocale, t, getLocale } from "../src/index.js";
-import type { Catalogue } from "../src/types.js";
-import { messages as tr } from "../src/messages/tr.js";
-import { messages as en } from "../src/messages/en.js";
-import { messages as de } from "../src/messages/de.js";
-import { messages as fr } from "../src/messages/fr.js";
-import { messages as es } from "../src/messages/es.js";
-import { messages as it_ } from "../src/messages/it.js";
-import { messages as pt } from "../src/messages/pt.js";
-import { messages as ru } from "../src/messages/ru.js";
-import { messages as zh } from "../src/messages/zh.js";
-import { messages as ja } from "../src/messages/ja.js";
-import { messages as ko } from "../src/messages/ko.js";
+import { LOCALES, formatDate, getSystem, has, isLocale, lower, matchLocale, onLocaleChange, setLocale, setSystem, t, getLocale } from "../src/index.js";
+import type { Catalogue, SystemTexts } from "../src/types.js";
+import { messages as tr, onLinux as trLinux } from "../src/messages/tr.js";
+import { messages as en, onLinux as enLinux } from "../src/messages/en.js";
+import { messages as de, onLinux as deLinux } from "../src/messages/de.js";
+import { messages as fr, onLinux as frLinux } from "../src/messages/fr.js";
+import { messages as es, onLinux as esLinux } from "../src/messages/es.js";
+import { messages as it_, onLinux as itLinux } from "../src/messages/it.js";
+import { messages as pt, onLinux as ptLinux } from "../src/messages/pt.js";
+import { messages as ru, onLinux as ruLinux } from "../src/messages/ru.js";
+import { messages as zh, onLinux as zhLinux } from "../src/messages/zh.js";
+import { messages as ja, onLinux as jaLinux } from "../src/messages/ja.js";
+import { messages as ko, onLinux as koLinux } from "../src/messages/ko.js";
 
 const CATALOGUES: Record<string, Catalogue> = { en, de, fr, es, it: it_, pt, ru, zh, ja, ko };
 
@@ -43,7 +43,49 @@ function namesOf(entry: Entry): Set<string> {
   return new Set(texts.flatMap((text) => [...placeholders(text)]));
 }
 
-afterEach(() => setLocale("tr"));
+afterEach(() => {
+  setLocale("tr");
+  setSystem("darwin");
+});
+
+const ON_LINUX: Record<string, SystemTexts> = { tr: trLinux, en: enLinux, de: deLinux, fr: frLinux, es: esLinux, it: itLinux, pt: ptLinux, ru: ruLinux, zh: zhLinux, ja: jaLinux, ko: koLinux };
+const ALL: Record<string, Catalogue> = { tr: tr as Catalogue, ...CATALOGUES };
+
+describe("the Linux wording", () => {
+  it("covers the same keys in every language", () => {
+    const keys = Object.keys(trLinux).sort();
+    expect(keys.length).toBeGreaterThan(0);
+    for (const [lang, texts] of Object.entries(ON_LINUX)) expect(Object.keys(texts).sort(), lang).toEqual(keys);
+  });
+
+  it("only replaces keys that exist, keeping their placeholders", () => {
+    for (const [lang, texts] of Object.entries(ON_LINUX)) {
+      const base = new Map(entries(ALL[lang]));
+      for (const [key, text] of Object.entries(texts)) {
+        const original = base.get(key);
+        expect(typeof original, `${lang} ${key}`).toBe("string");
+        expect([...placeholders(text!)].sort(), `${lang} ${key}`).toEqual([...namesOf(original!)].sort());
+      }
+    }
+  });
+
+  it("no longer speaks of the Mac, Finder or ⌘", () => {
+    for (const [lang, texts] of Object.entries(ON_LINUX)) {
+      for (const [key, text] of Object.entries(texts)) expect(text, `${lang} ${key}`).not.toMatch(/Mac|Finder|访达|⌘|キーチェーン|키체인|钥匙串/);
+    }
+  });
+
+  it("is used only once the system is Linux", () => {
+    setLocale("en");
+    expect(getSystem()).toBe("darwin");
+    expect(t("engine.setup.title")).toBe("A model for this Mac");
+    setSystem("linux");
+    expect(t("engine.setup.title")).toBe("A model for this computer");
+    expect(t("modelsMemory.summary", { total: "16 GB", available: "9 GB" })).toBe("This computer: 16 GB · available now: 9 GB");
+    // A key without a Linux wording falls through to the catalogue.
+    expect(t("vault.unlock")).toBe(en.vault.unlock);
+  });
+});
 
 describe("catalogues", () => {
   it('localizes outcome progress and preserves exact target interpolation in every language',()=>{

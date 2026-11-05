@@ -1,4 +1,4 @@
-import type { Catalogue } from "../types.js";
+import type { Catalogue, SystemTexts } from "../types.js";
 
 export const messages: Catalogue = {
   quotedSource: {"action": "询问所选内容", "title": "引用文本", "remove": "移除引用", "source": "查看原始回答", "unsupported": "请在一条已完成的回答内选择文本。", "tooLong": "最多选择2,000个字符。", "placeholder": "输入关于这段引用的问题…", "show": "显示引用", "hide": "隐藏引用"},
@@ -1993,4 +1993,47 @@ export const messages: Catalogue = {
       unlockHint: "保险库已锁定，聊天仍可使用。需要已保存的密钥时请解锁；桌面环境可能会要求输入密钥环密码。",
     },
   },
+};
+
+/** The same texts where "this Mac", "Finder" or ⌘ don't fit: on Linux. */
+export const onLinux: SystemTexts = {
+  "app.debugPort.warning": "远程调试已打开（测试版本）：这台电脑上的其他程序可以控制此窗口及其批准卡片。测试结束后请退出并正常打开 Vunemi。",
+  "app.local": "模型和数据都留在这台电脑上。",
+  "app.projects.revealLabel": "在文件管理器中显示 {name}",
+  "composer.placeholder.running": "加入队列…（Ctrl+↵ 立即执行）",
+  "composer.hint.running": "↵ 加入队列 · Ctrl+↵ 插队 · Esc 停止",
+  "composer.hint.listening": "Esc 取消 · 你的声音不会离开这台电脑",
+  "composer.steerHint": "插队：停止当前任务，改做这件事（Ctrl+↵）",
+  "composer.voice.downloadNote": "语音输入需要一次性下载语音模型（{size} MB），它会保留在这台电脑上。",
+  "pane.blockedOwn": "{host} 是这台电脑自己的地址。Vunemi 的浏览器永远不会打开它。",
+  "model.sources.body": "只连接这台电脑上的服务器。请在各自的应用中启动服务器和模型。",
+  "activity.intro": "代理做过的每件事都在这里。记录保存在这台电脑上，关闭应用也不会删除。",
+  "artefacts.reveal": "在文件管理器中显示",
+  "vault.unlocking": "正在等待密钥环…",
+  "vault.intro": "把你的密钥放在这里。模型只会知道名称；值以加密形式保存，加密所用的密钥由系统密钥环保护，绝不会进入对话。即使它出现在某个页面上，也会在模型看到之前被替换成名称。",
+  "memory.search.body": "找到用其他说法、任何语言表达同一意思的笔记。一次性下载 {size}；在这台电脑上运行。",
+  "modelsMemory.summary": "这台电脑：{total} · 当前可用：{available}",
+  "settings.appearance.intro": "浅色或深色。“跟随系统”会使用桌面环境的设置。",
+  "settings.model.intro": "选择一个在这台电脑上运行的模型。",
+  "settings.trusted.note": "只有你能在这里添加网站，智能体不能。这台电脑自己的地址（localhost、127.0.0.1）永远不会打开。",
+  "settings.trusted.error.thisComputer": "这台电脑自己的地址不能设为受信任：Vunemi 自己的控制接口就在那里。",
+  "connections.computerNote": "Vunemi 可以在这台电脑上触碰什么。一份简短、固定的清单。",
+  "connections.mcp.commandNote": "“命令”选项会在这台电脑上运行你输入的程序。不使用 shell：这一行按空格拆分，所以 `;` 或 `|` 不起作用。",
+  "main.debugPort.refused": "Vunemi 在远程调试打开的状态下启动。这台电脑上的任何程序都可能控制它并回答其批准卡片，因此此版本不会以这种方式启动。请正常打开 Vunemi。",
+  "main.models.localOnly": "模型服务器只能是这台电脑上的 HTTP 地址。",
+  "main.models.localKinds": "只能使用这台电脑上的模型服务器。",
+  "main.mcpSecrets.needHttps": "带有机密值的连接需要 https:// 地址（这台电脑上的服务器除外）。",
+  "main.artefact.notOpenable": "此类文件不能从这里打开。请在文件管理器中显示，检查后自行打开。",
+  "files.wrongHome": "“{path}”指向这台电脑上不存在的个人文件夹。正确的路径是“{fixed}”，请使用它。",
+  "vaultStore.locked": "保险箱已锁定：尚未能从系统密钥环中取得密钥。",
+  "mail.outbox.notSent": "未发送：服务器从未接收此邮件，没有任何内容离开这台电脑。你可以重新发送。（{reason}）",
+  "connectors.history.description": "当请求涉及以前的会话或已录制的会议时，让 Vunemi 能找到它。每次请求只会附上最相关的几项的名称、日期和一行说明；只有需要时才会打开其中一项。任何内容都不会离开这台电脑。",
+  "engine.setup.title": "适合这台电脑的模型",
+  "engine.setup.body": "Vunemi 需要在这台电脑上有一个 AI 模型才能思考。模型在这台电脑上运行，你写的内容不会离开这里。",
+  "engine.search.reason.tooBig": "对这台电脑的内存来说太大。",
+  "engine.failedHint": "这台电脑的内存可能不够，试试更小的模型。",
+  "engine.installed.memory": "此长度约需 {need} 内存（这台电脑有 {total}）。越长一次能读的越多。",
+  "engine.installed.memoryTight": "此长度约需 {need}：超出这台电脑（{total}）能分给模型的内存。请选更短的长度。",
+  "engine.local.add": "从这台电脑添加 GGUF 文件…",
+  "engine.local.tooLarge": "{size} 超过这台电脑内存的一半（{budget}），会没有余地运行。",
 };

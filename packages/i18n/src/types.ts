@@ -23,3 +23,6 @@ type Paths<T, Prefix extends string = ""> = {
 
 /** Every key there is, checked where it is used. */
 export type MessageKey = Paths<typeof source>;
+
+/** Another wording for some keys on one system: Linux, where "this Mac" and "Finder" don't fit. */
+export type SystemTexts = Partial<Record<MessageKey, string>>;

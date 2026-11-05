@@ -13,20 +13,20 @@
  * resolved when a module loaded would stay in the language of that moment.
  */
 
-import { messages as tr } from "./messages/tr.js";
-import { messages as en } from "./messages/en.js";
-import { messages as de } from "./messages/de.js";
-import { messages as fr } from "./messages/fr.js";
-import { messages as es } from "./messages/es.js";
-import { messages as it } from "./messages/it.js";
-import { messages as pt } from "./messages/pt.js";
-import { messages as ru } from "./messages/ru.js";
-import { messages as zh } from "./messages/zh.js";
-import { messages as ja } from "./messages/ja.js";
-import { messages as ko } from "./messages/ko.js";
-import type { Catalogue, MessageKey, PluralForms } from "./types.js";
+import { messages as tr, onLinux as trLinux } from "./messages/tr.js";
+import { messages as en, onLinux as enLinux } from "./messages/en.js";
+import { messages as de, onLinux as deLinux } from "./messages/de.js";
+import { messages as fr, onLinux as frLinux } from "./messages/fr.js";
+import { messages as es, onLinux as esLinux } from "./messages/es.js";
+import { messages as it, onLinux as itLinux } from "./messages/it.js";
+import { messages as pt, onLinux as ptLinux } from "./messages/pt.js";
+import { messages as ru, onLinux as ruLinux } from "./messages/ru.js";
+import { messages as zh, onLinux as zhLinux } from "./messages/zh.js";
+import { messages as ja, onLinux as jaLinux } from "./messages/ja.js";
+import { messages as ko, onLinux as koLinux } from "./messages/ko.js";
+import type { Catalogue, MessageKey, PluralForms, SystemTexts } from "./types.js";
 
-export type { Catalogue, MessageKey, PluralForms } from "./types.js";
+export type { Catalogue, MessageKey, PluralForms, SystemTexts } from "./types.js";
 
 export interface LocaleInfo {
   code: Locale;
@@ -55,6 +55,28 @@ export const LOCALES = [
 export type Locale = (typeof LOCALES)[number]["code"];
 
 const CATALOGUES: Record<Locale, Catalogue> = { tr, en, de, fr, es, it, pt, ru, zh, ja, ko };
+
+/**
+ * Texts that say "this Mac" or "Finder" have a second wording for Linux.
+ * Each process is told its system once, before anything is shown; until then
+ * the Mac wording is used, as it always was.
+ */
+export type System = "darwin" | "linux";
+
+const ON_LINUX: Record<Locale, SystemTexts> = {
+  tr: trLinux, en: enLinux, de: deLinux, fr: frLinux, es: esLinux, it: itLinux,
+  pt: ptLinux, ru: ruLinux, zh: zhLinux, ja: jaLinux, ko: koLinux,
+};
+
+let system: System = "darwin";
+
+export function setSystem(next: System): void {
+  system = next;
+}
+
+export function getSystem(): System {
+  return system;
+}
 
 let current: Locale = "tr";
 const listeners = new Set<(locale: Locale) => void>();
@@ -103,7 +125,7 @@ export function t(key: MessageKey, vars?: Vars): string {
 
 /** The same in a given language, for text that follows its content (a meeting's), not the app. */
 export function tIn(locale: Locale, key: MessageKey, vars?: Vars): string {
-  const entry = lookup(CATALOGUES[locale], key) ?? lookup(CATALOGUES.en, key) ?? lookup(CATALOGUES.tr, key);
+  const entry = forSystem(locale, key) ?? lookup(CATALOGUES[locale], key) ?? lookup(CATALOGUES.en, key) ?? lookup(CATALOGUES.tr, key);
   if (entry === undefined) return key;
   const text = typeof entry === "string" ? entry : pluralOf(entry, Number(vars?.count ?? 0), locale);
   return vars ? fill(text, vars) : text;
@@ -112,6 +134,12 @@ export function tIn(locale: Locale, key: MessageKey, vars?: Vars): string {
 /** For keys built at run time, like a tool's name: is there a text for it? */
 export function has(key: string): key is MessageKey {
   return lookup(CATALOGUES.tr, key) !== undefined;
+}
+
+function forSystem(locale: Locale, key: MessageKey): string | undefined {
+  if (system !== "linux") return undefined;
+  const texts = ON_LINUX[locale];
+  return Object.hasOwn(texts, key) ? texts[key] : undefined;
 }
 
 function lookup(catalogue: Catalogue, key: string): string | PluralForms | undefined {

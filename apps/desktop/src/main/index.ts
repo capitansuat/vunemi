@@ -71,7 +71,7 @@ import { createStandingGrant, openQuietly } from "./scheduled-grant.js";
 import { AutomationStore, describeSchedule, grantLines, nextSlot, Scheduler, scheduledGoal, summaryLine, SUGGESTIONS, validSchedule, type Automation, type AutomationSetup, type AutomationStatus, type GrantLookup } from "./automations.js";
 import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRefusal, setupView, shortcutDraft, shortcutViews, summarizeScope, withWhen } from "./automation-library.js";
 import { ShortcutInstaller } from "./shortcut-install.js";
-import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, t, tIn, type Locale } from "@vunemi/i18n";
+import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, setSystem, t, tIn, type Locale } from "@vunemi/i18n";
 import { Recorder, recorderBinary } from "./meetings/recorder.js";
 import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
 import { SpeakerSeparator, speakersBinary } from "./meetings/speakers.js";
@@ -103,6 +103,9 @@ registerPreviewScheme();
 // its own ad-hoc Electron binary — and the installed Vunemi could not read
 // the secrets it had saved. The name decides both the data folder and the
 // "<name> Safe Storage" keychain entry, so it is set before either is used.
+// Texts that name the Mac have a Linux wording; told before anything is said.
+setSystem(platform.id);
+
 if (!app.isPackaged) {
   app.setName(`${app.getName()}-dev`);
   // VUNEMI_DEV_USER_DATA gives a development run a clean profile, to see what a
@@ -147,6 +150,8 @@ function ownManifest(): string {
 const debugPortOpen = app.isPackaged && remoteDebugging(process.argv);
 if (debugPortOpen) {
   if (!isLocalTestBuild(ownManifest())) {
+    // Nothing else has read the settings yet; the refusal still speaks the user's language.
+    setLocale(startupLocale(new SettingsStore(app.getPath("userData")).language));
     dialog.showErrorBox("Vunemi", t("main.debugPort.refused"));
     app.exit(1);
   } else {
@@ -252,7 +257,12 @@ nativeTheme.themeSource = settings.appearance;
 
 // The language before anything says a word. Someone who never chose one gets
 // their Mac's, if Vunemi speaks it, and English if it does not.
-setLocale(settings.language ?? matchLocale(app.getPreferredSystemLanguages()) ?? "en");
+setLocale(startupLocale(settings.language));
+
+/** The chosen language; until one is chosen, the system's if Vunemi speaks it, else English. */
+function startupLocale(chosen: Locale | null): Locale {
+  return chosen ?? matchLocale(app.getPreferredSystemLanguages()) ?? "en";
+}
 // A chosen language is macOS's too, for the words it adds to the menus. Pages
 // keep being asked for in the Mac's own language, as before.
 if (process.platform === "darwin" && settings.language) {

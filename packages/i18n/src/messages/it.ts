@@ -1,4 +1,4 @@
-import type { Catalogue } from "../types.js";
+import type { Catalogue, SystemTexts } from "../types.js";
 
 export const messages: Catalogue = {
   quotedSource: {"action": "Chiedi sulla selezione", "title": "Testo citato", "remove": "Rimuovi citazione", "source": "Vedi risposta originale", "unsupported": "Seleziona testo in una sola risposta completata.", "tooLong": "Seleziona al massimo 2.000 caratteri.", "placeholder": "Scrivi una domanda su questa citazione…", "show": "Mostra citazione", "hide": "Nascondi citazione"},
@@ -1993,4 +1993,47 @@ export const messages: Catalogue = {
       unlockHint: "La cassaforte è bloccata. La chat resta disponibile. Sbloccala quando ti servono le chiavi salvate; il desktop potrebbe chiederti la password del portachiavi.",
     },
   },
+};
+
+/** The same texts where "this Mac", "Finder" or ⌘ don't fit: on Linux. */
+export const onLinux: SystemTexts = {
+  "app.debugPort.warning": "Il debug remoto è aperto (versione di prova): un altro programma su questo computer può controllare questa finestra e le sue schede di approvazione. Finito il test, esci e riapri Vunemi normalmente.",
+  "app.local": "Il modello e i tuoi dati restano su questo computer.",
+  "app.projects.revealLabel": "Mostra {name} nel file manager",
+  "composer.placeholder.running": "Aggiungi alla coda… (Ctrl+↵ per subito)",
+  "composer.hint.running": "↵ mette in coda · Ctrl+↵ interrompe · Esc ferma",
+  "composer.hint.listening": "Esc annulla · la tua voce non lascia questo computer",
+  "composer.steerHint": "Interrompi: ferma l’attività in corso e fa questo al suo posto (Ctrl+↵)",
+  "composer.voice.downloadNote": "Per dettare, un modello vocale viene scaricato una volta ({size} MB) e resta su questo computer.",
+  "pane.blockedOwn": "{host} è l'indirizzo proprio di questo computer. Il browser di Vunemi non lo apre mai.",
+  "model.sources.body": "Si collega solo ai server su questo computer. Avvia il server e il modello nella loro app.",
+  "activity.intro": "Qui c’è tutto ciò che l’agente ha fatto. Il registro resta su questo computer e non si cancella chiudendo l’app.",
+  "artefacts.reveal": "Mostra nel file manager",
+  "vault.unlocking": "In attesa del portachiavi…",
+  "vault.intro": "Tieni qui le tue chiavi. Al modello viene detto solo il nome; il valore resta cifrato, la sua chiave è protetta dal portachiavi di sistema e non entra mai nella chat. Anche se compare in una pagina, viene sostituito dal suo nome prima che il modello lo veda.",
+  "memory.search.body": "Trova le note che dicono la stessa cosa con altre parole, in ogni lingua. Download unico di {size}; funziona su questo computer.",
+  "modelsMemory.summary": "Questo computer: {total} · libera ora: {available}",
+  "settings.appearance.intro": "Chiaro o scuro. Sistema segue l'impostazione del tuo desktop.",
+  "settings.model.intro": "Scegli un modello in esecuzione su questo computer.",
+  "settings.trusted.note": "Solo tu puoi aggiungere siti, qui. L'agente non può. Gli indirizzi propri di questo computer (localhost, 127.0.0.1) non vengono mai aperti.",
+  "settings.trusted.error.thisComputer": "Gli indirizzi propri di questo computer non possono essere attendibili: lì si trovano i controlli di Vunemi.",
+  "connections.computerNote": "Cosa può toccare Vunemi su questo computer. Un elenco breve e fisso.",
+  "connections.mcp.commandNote": "L’opzione Comando esegue su questo computer il programma che scrivi. Non si usa nessuna shell: la riga viene divisa sugli spazi, quindi `;` o `|` non fanno nulla.",
+  "main.debugPort.refused": "Vunemi è stato avviato con il debug remoto aperto. Qualsiasi programma su questo computer potrebbe controllarlo e rispondere alle sue schede di approvazione, quindi questa versione non si avvia così. Apri Vunemi normalmente.",
+  "main.models.localOnly": "Il server dei modelli può essere solo un indirizzo HTTP su questo computer.",
+  "main.models.localKinds": "Si possono usare solo server di modelli su questo computer.",
+  "main.mcpSecrets.needHttps": "Una connessione con valori segreti richiede un indirizzo https:// (tranne un server su questo computer).",
+  "main.artefact.notOpenable": "I file di questo tipo non si aprono da qui. Mostralo nel file manager, controllalo e aprilo tu.",
+  "files.wrongHome": "\"{path}\" indica una cartella Inizio che non esiste su questo computer. Il percorso giusto è \"{fixed}\". Usa quello.",
+  "vaultStore.locked": "La cassaforte è bloccata: la chiave non è ancora stata recuperata dal portachiavi di sistema.",
+  "mail.outbox.notSent": "Non inviato: il server non ha mai preso il messaggio, quindi nulla ha lasciato questo computer. Puoi inviarlo di nuovo. ({reason})",
+  "connectors.history.description": "Permette a Vunemi di trovare le sessioni precedenti e le riunioni registrate quando una richiesta ne riguarda una. Con ogni richiesta riceve solo nome, data e una riga delle poche pertinenti; ne apre una solo se serve. Nulla lascia questo computer.",
+  "engine.setup.title": "Un modello per questo computer",
+  "engine.setup.body": "Vunemi ha bisogno di un modello di IA su questo computer per ragionare. Il modello gira su questo computer; ciò che scrivi resta qui.",
+  "engine.search.reason.tooBig": "Troppo grande per la memoria di questo computer.",
+  "engine.failedHint": "Forse questo computer non ha abbastanza memoria; prova un modello più piccolo.",
+  "engine.installed.memory": "Circa {need} di memoria con questa lunghezza (questo computer ha {total}). Più lunga legge di più in una volta.",
+  "engine.installed.memoryTight": "Circa {need} con questa lunghezza: più di quanto questo computer ({total}) possa dare al modello. Scegli una lunghezza minore.",
+  "engine.local.add": "Aggiungi un file GGUF da questo computer…",
+  "engine.local.tooLarge": "{size} è più della metà della memoria di questo computer ({budget}); non resterebbe spazio per lavorare.",
 };

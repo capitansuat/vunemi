@@ -1,3 +1,5 @@
+import type { SystemTexts } from "../types.js";
+
 /**
  * The source catalogue. Every other language is typed against this one.
  * Placeholders are `{name}`; an object with `other` is a plural, picked by
@@ -2002,3 +2004,46 @@ export const messages = {
   },
   // @end
 } as const;
+
+/** The same texts where "this Mac", "Finder" or ⌘ don't fit: on Linux. */
+export const onLinux: SystemTexts = {
+  "app.debugPort.warning": "Uzaktan hata ayıklama açık (test sürümü): bu bilgisayardaki başka bir program bu pencereyi ve onay kartlarını yönetebilir. Test bitince çık ve Vunemi'yi normal biçimde aç.",
+  "app.local": "Model ve veriler bu bilgisayarda kalıyor.",
+  "app.projects.revealLabel": "{name} klasörünü dosya yöneticisinde göster",
+  "composer.placeholder.running": "Sıraya ekle… (Ctrl+↵ ile hemen)",
+  "composer.hint.running": "↵ sıraya ekler · Ctrl+↵ araya girer · Esc durdurur",
+  "composer.hint.listening": "Esc vazgeçer · ses bu bilgisayardan çıkmıyor",
+  "composer.steerHint": "Araya gir: çalışan işi durdurur ve bunu yapar (Ctrl+↵)",
+  "composer.voice.downloadNote": "Sesle yazmak için ses modeli bir kez indirilir ({size} MB) ve bu bilgisayarda kalır.",
+  "pane.blockedOwn": "{host} bu bilgisayarın kendi adresi. Vunemi'nin tarayıcısı onu hiçbir zaman açmaz.",
+  "model.sources.body": "Yalnızca bu bilgisayardaki sunuculara bağlanır. Sunucuyu ve modeli kendi uygulamasında başlat.",
+  "activity.intro": "Ajanın yaptığı her işlem burada. Kayıtlar bu bilgisayarda kalır; uygulama kapansa da silinmez.",
+  "artefacts.reveal": "Dosya yöneticisinde göster",
+  "vault.unlocking": "Anahtarlık bekleniyor…",
+  "vault.intro": "Anahtarlarını burada tut. Modele yalnızca adı söylenir; değeri şifreli durur, şifrenin anahtarını sistem anahtarlığı korur ve değer sohbete hiç girmez. Bir sayfada görünse bile, model görmeden önce adıyla değiştirilir.",
+  "memory.search.body": "Aynı şeyi başka sözlerle, hangi dilde olursa olsun anlatan notları bulur. Bir kerelik {size} indirme; bu bilgisayarda çalışır.",
+  "modelsMemory.summary": "Bu bilgisayar: {total} · şu an boş: {available}",
+  "settings.appearance.intro": "Açık ya da koyu. Sistem, masaüstünün ayarını izler.",
+  "settings.model.intro": "Bu bilgisayarda çalışan bir model seç.",
+  "settings.trusted.note": "Siteyi yalnız sen, buradan ekleyebilirsin; ajan ekleyemez. Bu bilgisayarın kendi adresleri (localhost, 127.0.0.1) hiçbir zaman açılmaz.",
+  "settings.trusted.error.thisComputer": "Bu bilgisayarın kendi adresleri güvenli listeye eklenemez: Vunemi'nin kendi denetimleri orada.",
+  "connections.computerNote": "Vunemi'nin bu bilgisayarda neye dokunabileceği. Kısa ve sabit bir liste.",
+  "connections.mcp.commandNote": "Komut seçeneği, yazdığın programı bu bilgisayarda çalıştırır. Kabuk kullanılmaz: yazdığın satır boşluklardan ayrılır, yani `;` ya da `|` bir şey yapmaz.",
+  "main.debugPort.refused": "Vunemi uzaktan hata ayıklama açıkken başlatıldı. Bu bilgisayardaki herhangi bir program onu yönetip onay kartlarını yanıtlayabilirdi; bu sürüm böyle açılmaz. Vunemi'yi normal biçimde aç.",
+  "main.models.localOnly": "Model sunucusu yalnızca bu bilgisayardaki bir HTTP adresi olabilir.",
+  "main.models.localKinds": "Yalnızca bu bilgisayardaki model sunucuları kullanılabilir.",
+  "main.mcpSecrets.needHttps": "Gizli değerleri olan bir bağlantının adresi https:// ile başlamalı (bu bilgisayardaki sunucular hariç).",
+  "main.artefact.notOpenable": "Bu tür dosyalar buradan açılmaz. Dosya yöneticisinde göster, bakıp kendin aç.",
+  "files.wrongHome": "\"{path}\" bu bilgisayarda olmayan bir ev klasörünü gösteriyor. Doğrusu: \"{fixed}\". Bu yolu kullan.",
+  "vaultStore.locked": "Kasa kilitli: anahtar sistem anahtarlığından henüz alınamadı.",
+  "mail.outbox.notSent": "Gönderilmedi: sunucu iletiyi hiç almadı, bu bilgisayardan bir şey çıkmadı. Yeniden gönderebilirsin. ({reason})",
+  "connectors.history.description": "Bir istek eski bir oturumla ya da kayıtlı bir toplantıyla ilgiliyse Vunemi'nin onu bulmasını sağlar. Her istekle yalnız en uygun birkaçının adı, tarihi ve tek satırı gider; gerekirse birini açar. Hiçbir şey bu bilgisayardan çıkmaz.",
+  "engine.setup.title": "Bu bilgisayar için bir model",
+  "engine.setup.body": "Vunemi'nin düşünmesi için bu bilgisayara bir yapay zekâ modeli gerekiyor. Model bu bilgisayarda çalışır; yazdıkların dışarı gitmez.",
+  "engine.search.reason.tooBig": "Bu bilgisayarın belleği için büyük.",
+  "engine.failedHint": "Bu bilgisayarın belleği yetmiyor olabilir; daha küçük bir model dene.",
+  "engine.installed.memory": "Bu uzunlukta yaklaşık {need} bellek (bu bilgisayarda {total} var). Uzun olursa bir seferde daha çok okur.",
+  "engine.installed.memoryTight": "Bu uzunlukta yaklaşık {need}: bu bilgisayarın ({total}) modele ayırabileceğinden fazla. Daha kısa bir uzunluk seç.",
+  "engine.local.add": "Bu bilgisayardan GGUF dosyası ekle…",
+  "engine.local.tooLarge": "{size}, bu bilgisayarın belleğinin yarısından ({budget}) fazla; çalışmaya yer kalmaz.",
+};

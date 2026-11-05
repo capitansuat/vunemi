@@ -8,7 +8,8 @@ import type { PlatformInfo } from "@vunemi/platform";
 let known: PlatformInfo | null = null;
 let asking: Promise<PlatformInfo> | null = null;
 
-function ask(): Promise<PlatformInfo> {
+/** Asks main, once; later calls share the answer. */
+export function ask(): Promise<PlatformInfo> {
   // A window without the bridge (a test, a preview) is treated as macOS was: nothing hidden.
   asking ??= typeof window.vunemi?.platformInfo === "function"
     ? window.vunemi.platformInfo().then((info) => (known = info))

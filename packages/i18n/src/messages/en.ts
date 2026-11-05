@@ -1,4 +1,4 @@
-import type { Catalogue } from "../types.js";
+import type { Catalogue, SystemTexts } from "../types.js";
 
 export const messages: Catalogue = {
   quotedSource: {"action": "Ask about selection", "title": "Quoted text", "remove": "Remove quote", "source": "View source answer", "unsupported": "Select text within one completed answer.", "tooLong": "Select at most 2,000 characters.", "placeholder": "Ask a question about this quote…", "show": "Show quote", "hide": "Hide quote"},
@@ -1993,4 +1993,47 @@ export const messages: Catalogue = {
       unlockHint: "The vault is locked. Chat remains available. Unlock it when you need saved keys; your desktop may ask for your keyring password.",
     },
   },
+};
+
+/** The same texts where "this Mac", "Finder" or ⌘ don't fit: on Linux. */
+export const onLinux: SystemTexts = {
+  "app.debugPort.warning": "Remote debugging is open (test build): another program on this computer can control this window and its approval cards. Quit and open Vunemi normally when testing is done.",
+  "app.local": "The model and your data stay on this computer.",
+  "app.projects.revealLabel": "Show {name} in the file manager",
+  "composer.placeholder.running": "Add to the queue… (Ctrl+↵ for right now)",
+  "composer.hint.running": "↵ queues · Ctrl+↵ interrupts · Esc stops",
+  "composer.hint.listening": "Esc cancels · your voice never leaves this computer",
+  "composer.steerHint": "Interrupt: stops the current task and does this instead (Ctrl+↵)",
+  "composer.voice.downloadNote": "To type by voice, a speech model is downloaded once ({size} MB) and stays on this computer.",
+  "pane.blockedOwn": "{host} is this computer's own address. Vunemi's browser never opens it.",
+  "model.sources.body": "Connects only to servers on this computer. Start the server and the model in their own app.",
+  "activity.intro": "Everything the agent did is here. The log stays on this computer and survives closing the app.",
+  "artefacts.reveal": "Show in the file manager",
+  "vault.unlocking": "Waiting for the keyring…",
+  "vault.intro": "Keep your keys here. The model is told only the name; the value stays encrypted, its key is guarded by your system keyring, and it never enters the chat. Even if it shows up on a page, it is replaced with its name before the model sees it.",
+  "memory.search.body": "Finds notes that mean the same thing in other words, in any language. One-time download of {size}; it runs on this computer.",
+  "modelsMemory.summary": "This computer: {total} · available now: {available}",
+  "settings.appearance.intro": "Light or dark. System follows your desktop's setting.",
+  "settings.model.intro": "Choose a model running on this computer.",
+  "settings.trusted.note": "Only you can add sites, here. The agent can't. This computer's own addresses (localhost, 127.0.0.1) are never opened.",
+  "settings.trusted.error.thisComputer": "This computer's own addresses can't be trusted: Vunemi's own controls live there.",
+  "connections.computerNote": "What Vunemi may touch on this computer. A short, fixed list.",
+  "connections.mcp.commandNote": "The command option runs the program you type on this computer. No shell is used: the line is split on spaces, so `;` or `|` do nothing.",
+  "main.debugPort.refused": "Vunemi was started with remote debugging open. Any program on this computer could then control it and answer its approval cards, so this build won't start that way. Open Vunemi normally.",
+  "main.models.localOnly": "The model server can only be an HTTP address on this computer.",
+  "main.models.localKinds": "Only model servers on this computer can be used.",
+  "main.mcpSecrets.needHttps": "A connection with secret values needs an https:// address (except a server on this computer).",
+  "main.artefact.notOpenable": "Files of this kind aren't opened from here. Show it in the file manager, check it, and open it yourself.",
+  "files.wrongHome": "\"{path}\" names a home folder that isn't on this computer. The right path is \"{fixed}\". Use that.",
+  "vaultStore.locked": "The vault is locked: the key couldn't be fetched from the system keyring yet.",
+  "mail.outbox.notSent": "Not sent: the server never took the message, so nothing left this computer. You can send it again. ({reason})",
+  "connectors.history.description": "Lets Vunemi find your earlier sessions and recorded meetings when a request is about one. With each request it gets only the name, date and one line of the few that fit; it opens one only when it needs it. Nothing leaves this computer.",
+  "engine.setup.title": "A model for this computer",
+  "engine.setup.body": "Vunemi needs an AI model on this computer to think with. The model runs on this computer; what you write stays here.",
+  "engine.search.reason.tooBig": "Too big for this computer's memory.",
+  "engine.failedHint": "This computer may not have enough memory; try a smaller model.",
+  "engine.installed.memory": "About {need} of memory at this length (this computer has {total}). Longer reads more at once.",
+  "engine.installed.memoryTight": "About {need} at this length: more than this computer ({total}) can give the model. Pick a shorter length.",
+  "engine.local.add": "Add a GGUF file from this computer…",
+  "engine.local.tooLarge": "{size} is more than half of this computer's memory ({budget}); it wouldn't leave room to work.",
 };

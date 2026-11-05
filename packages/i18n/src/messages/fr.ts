@@ -1,4 +1,4 @@
-import type { Catalogue } from "../types.js";
+import type { Catalogue, SystemTexts } from "../types.js";
 
 export const messages: Catalogue = {
   quotedSource: {"action": "Interroger la sélection", "title": "Texte cité", "remove": "Retirer la citation", "source": "Voir la réponse source", "unsupported": "Sélectionnez du texte dans une seule réponse terminée.", "tooLong": "Sélectionnez au plus 2 000 caractères.", "placeholder": "Posez une question sur cette citation…", "show": "Afficher la citation", "hide": "Masquer la citation"},
@@ -1993,4 +1993,47 @@ export const messages: Catalogue = {
       unlockHint: "Le coffre est verrouillé. Le chat reste disponible. Déverrouillez-le quand vous avez besoin des clés enregistrées ; votre bureau peut vous demander le mot de passe de votre trousseau.",
     },
   },
+};
+
+/** The same texts where "this Mac", "Finder" or ⌘ don't fit: on Linux. */
+export const onLinux: SystemTexts = {
+  "app.debugPort.warning": "Le débogage à distance est ouvert (version de test) : un autre programme de cet ordinateur peut piloter cette fenêtre et ses cartes d'approbation. Une fois le test fini, quittez et rouvrez Vunemi normalement.",
+  "app.local": "Le modèle et vos données restent sur cet ordinateur.",
+  "app.projects.revealLabel": "Afficher {name} dans le gestionnaire de fichiers",
+  "composer.placeholder.running": "Ajouter à la file… (Ctrl+↵ pour tout de suite)",
+  "composer.hint.running": "↵ met en file · Ctrl+↵ interrompt · Échap arrête",
+  "composer.hint.listening": "Échap annule · votre voix ne quitte pas cet ordinateur",
+  "composer.steerHint": "Interrompre : arrête la tâche en cours et fait ceci à la place (Ctrl+↵)",
+  "composer.voice.downloadNote": "Pour dicter, un modèle vocal est téléchargé une fois ({size} Mo) et reste sur cet ordinateur.",
+  "pane.blockedOwn": "{host} est l'adresse propre à cet ordinateur. Le navigateur de Vunemi ne l'ouvre jamais.",
+  "model.sources.body": "Se connecte uniquement aux serveurs de cet ordinateur. Démarrez le serveur et le modèle dans leur propre app.",
+  "activity.intro": "Tout ce que l’agent a fait se trouve ici. Le journal reste sur cet ordinateur et n’est pas effacé à la fermeture de l’app.",
+  "artefacts.reveal": "Afficher dans le gestionnaire de fichiers",
+  "vault.unlocking": "En attente du trousseau…",
+  "vault.intro": "Gardez vos clés ici. Le modèle ne connaît que le nom ; la valeur reste chiffrée, sa clé est protégée par le trousseau système, et elle n’entre jamais dans la discussion. Même si elle apparaît sur une page, elle est remplacée par son nom avant que le modèle ne la voie.",
+  "memory.search.body": "Trouve les notes qui disent la même chose avec d'autres mots, dans toutes les langues. Téléchargement unique de {size} ; fonctionne sur cet ordinateur.",
+  "modelsMemory.summary": "Cet ordinateur : {total} · disponible : {available}",
+  "settings.appearance.intro": "Clair ou sombre. Système suit le réglage de votre bureau.",
+  "settings.model.intro": "Choisissez un modèle qui tourne sur cet ordinateur.",
+  "settings.trusted.note": "Vous seul pouvez ajouter des sites, ici. L'agent ne le peut pas. Les adresses propres à cet ordinateur (localhost, 127.0.0.1) ne sont jamais ouvertes.",
+  "settings.trusted.error.thisComputer": "Les adresses propres à cet ordinateur ne peuvent pas être de confiance : les commandes de Vunemi s'y trouvent.",
+  "connections.computerNote": "Ce que Vunemi peut toucher sur cet ordinateur. Une liste courte et fixe.",
+  "connections.mcp.commandNote": "L’option Commande exécute le programme saisi sur cet ordinateur. Aucun shell n’est utilisé : la ligne est découpée sur les espaces, donc `;` ou `|` n’ont aucun effet.",
+  "main.debugPort.refused": "Vunemi a été lancé avec le débogage à distance ouvert. N'importe quel programme de cet ordinateur pourrait alors le piloter et répondre à ses cartes d'approbation ; cette version ne démarre donc pas ainsi. Ouvrez Vunemi normalement.",
+  "main.models.localOnly": "Le serveur de modèles ne peut être qu’une adresse HTTP sur cet ordinateur.",
+  "main.models.localKinds": "Seuls les serveurs de modèles de cet ordinateur peuvent être utilisés.",
+  "main.mcpSecrets.needHttps": "Une connexion avec des valeurs secrètes doit utiliser une adresse https:// (sauf un serveur sur cet ordinateur).",
+  "main.artefact.notOpenable": "Les fichiers de ce type ne s’ouvrent pas d’ici. Affichez-le dans le gestionnaire de fichiers, vérifiez-le et ouvrez-le vous-même.",
+  "files.wrongHome": "« {path} » désigne un dossier personnel qui n'existe pas sur cet ordinateur. Le bon chemin est « {fixed} ». Utilisez-le.",
+  "vaultStore.locked": "Le coffre est verrouillé : la clé n’a pas encore pu être récupérée dans le trousseau système.",
+  "mail.outbox.notSent": "Non envoyé : le serveur n'a jamais pris le message, rien n'a quitté cet ordinateur. Vous pouvez le renvoyer. ({reason})",
+  "connectors.history.description": "Permet à Vunemi de retrouver vos sessions passées et vos réunions enregistrées quand une demande en concerne une. Avec chaque demande, il ne reçoit que le nom, la date et une ligne des quelques-unes qui correspondent ; il n'en ouvre une que s'il en a besoin. Rien ne quitte cet ordinateur.",
+  "engine.setup.title": "Un modèle pour cet ordinateur",
+  "engine.setup.body": "Vunemi a besoin d'un modèle d'IA sur cet ordinateur pour réfléchir. Le modèle tourne sur cet ordinateur ; ce que vous écrivez reste ici.",
+  "engine.search.reason.tooBig": "Trop gros pour la mémoire de cet ordinateur.",
+  "engine.failedHint": "Cet ordinateur manque peut-être de mémoire ; essayez un modèle plus petit.",
+  "engine.installed.memory": "Environ {need} de mémoire à cette longueur (cet ordinateur a {total}). Plus long : il lit davantage d'un coup.",
+  "engine.installed.memoryTight": "Environ {need} à cette longueur : plus que ce que cet ordinateur ({total}) peut donner au modèle. Choisissez une longueur plus courte.",
+  "engine.local.add": "Ajouter un fichier GGUF de cet ordinateur…",
+  "engine.local.tooLarge": "{size} dépasse la moitié de la mémoire de cet ordinateur ({budget}) ; il ne resterait pas de place pour travailler.",
 };

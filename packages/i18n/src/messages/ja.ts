@@ -1,4 +1,4 @@
-import type { Catalogue } from "../types.js";
+import type { Catalogue, SystemTexts } from "../types.js";
 
 export const messages: Catalogue = {
   quotedSource: {"action": "選択範囲について質問", "title": "引用文", "remove": "引用を削除", "source": "元の回答を表示", "unsupported": "完了した1つの回答内でテキストを選択してください。", "tooLong": "2,000文字以内を選択してください。", "placeholder": "この引用について質問を入力…", "show": "引用を表示", "hide": "引用を非表示"},
@@ -1993,4 +1993,47 @@ export const messages: Catalogue = {
       unlockHint: "保管庫はロックされています。チャットは利用できます。保存したキーが必要な場合に解除してください。デスクトップがキーリングのパスワードを求めることがあります。",
     },
   },
+};
+
+/** The same texts where "this Mac", "Finder" or ⌘ don't fit: on Linux. */
+export const onLinux: SystemTexts = {
+  "app.debugPort.warning": "リモートデバッグが開いています（テストビルド）：このコンピュータの別のプログラムがこのウインドウと承認カードを操作できます。テストが終わったら終了し、通常の方法で開いてください。",
+  "app.local": "モデルとデータはこのコンピュータに残ります。",
+  "app.projects.revealLabel": "{name} をファイルマネージャで表示",
+  "composer.placeholder.running": "キューに追加…（Ctrl+↵ ですぐに実行）",
+  "composer.hint.running": "↵ キューに追加 · Ctrl+↵ 割り込み · Esc 停止",
+  "composer.hint.listening": "Esc キャンセル · 音声はこのコンピュータから出ません",
+  "composer.steerHint": "割り込む：実行中のタスクを止めて、代わりにこれを実行します（Ctrl+↵）",
+  "composer.voice.downloadNote": "音声入力には音声モデルを一度だけダウンロードします（{size} MB）。このコンピュータに保存されます。",
+  "pane.blockedOwn": "{host} はこのコンピュータ自身のアドレスです。Vunemi のブラウザは決して開きません。",
+  "model.sources.body": "このコンピュータ上のサーバにだけ接続します。サーバとモデルはそれぞれのアプリで起動してください。",
+  "activity.intro": "エージェントが行ったことはすべてここにあります。記録はこのコンピュータに残り、アプリを終了しても消えません。",
+  "artefacts.reveal": "ファイルマネージャで表示",
+  "vault.unlocking": "キーリングを待機中…",
+  "vault.intro": "キーはここに保管してください。モデルに伝わるのは名前だけです。値は暗号化されて保存され、その鍵はシステムのキーリングが守ります。値がチャットに入ることはありません。ページ上に現れても、モデルが見る前に名前に置き換えられます。",
+  "memory.search.body": "別の言葉や別の言語で同じ意味のメモを見つけます。{size} の一度きりのダウンロードで、このコンピュータ上で動作します。",
+  "modelsMemory.summary": "このコンピュータ：{total} · 現在の空き：{available}",
+  "settings.appearance.intro": "ライトまたはダーク。「システム」はデスクトップの設定に合わせます。",
+  "settings.model.intro": "このコンピュータで動作するモデルを選んでください。",
+  "settings.trusted.note": "サイトを追加できるのはあなただけで、ここからのみです。エージェントは追加できません。このコンピュータ自身のアドレス（localhost、127.0.0.1）は決して開きません。",
+  "settings.trusted.error.thisComputer": "このコンピュータ自身のアドレスは信頼済みにできません。Vunemi 自身の制御がそこにあるためです。",
+  "connections.computerNote": "Vunemi がこのコンピュータで触れてよいもの。短い固定の一覧です。",
+  "connections.mcp.commandNote": "「コマンド」を選ぶと、入力したプログラムをこのコンピュータで実行します。シェルは使いません。行は空白で区切られるため、`;` や `|` は何もしません。",
+  "main.debugPort.refused": "Vunemi がリモートデバッグを開いた状態で起動されました。このコンピュータの任意のプログラムが操作して承認カードに答えられるため、このビルドはその方法では起動しません。通常の方法で開いてください。",
+  "main.models.localOnly": "モデルサーバに指定できるのは、このコンピュータ上の HTTP アドレスだけです。",
+  "main.models.localKinds": "使えるのはこのコンピュータ上のモデルサーバだけです。",
+  "main.mcpSecrets.needHttps": "秘密の値を含む接続には https:// のアドレスが必要です（このコンピュータ上のサーバーを除く）。",
+  "main.artefact.notOpenable": "この種類のファイルはここからは開けません。ファイルマネージャで表示して確認し、自分で開いてください。",
+  "files.wrongHome": "「{path}」はこのコンピュータに存在しないホームフォルダを指しています。正しいパスは「{fixed}」です。こちらを使ってください。",
+  "vaultStore.locked": "金庫がロックされています：システムのキーリングからまだキーを取得できていません。",
+  "mail.outbox.notSent": "未送信：サーバーはメッセージを受け取っていないため、このコンピュータからは何も送られていません。もう一度送信できます。（{reason}）",
+  "connectors.history.description": "依頼が以前のセッションや録音した会議に関するとき、Vunemi がそれを見つけられるようにします。依頼ごとに渡されるのは、合いそうな数件の名前・日付・1行だけで、必要なときにだけ1件を開きます。このコンピュータの外には何も出ません。",
+  "engine.setup.title": "このコンピュータ用のモデル",
+  "engine.setup.body": "Vunemi が考えるには、このコンピュータに AI モデルが必要です。モデルはこのコンピュータで動き、書いた内容は外に出ません。",
+  "engine.search.reason.tooBig": "このコンピュータのメモリには大きすぎます。",
+  "engine.failedHint": "このコンピュータのメモリが足りないかもしれません。もっと小さいモデルを試してください。",
+  "engine.installed.memory": "この長さでメモリは約 {need}（このコンピュータは {total}）。長いほど一度に多く読めます。",
+  "engine.installed.memoryTight": "この長さでは約 {need}：このコンピュータ（{total}）がモデルに割り当てられる量を超えます。短い長さを選んでください。",
+  "engine.local.add": "このコンピュータから GGUF ファイルを追加…",
+  "engine.local.tooLarge": "{size} はこのコンピュータのメモリの半分（{budget}）を超えています。作業する余裕がなくなります。",
 };

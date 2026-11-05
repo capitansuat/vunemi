@@ -2,6 +2,8 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.js";
 import { LockScreen } from "./components/LockScreen.js";
+import { setSystem } from "@vunemi/i18n";
+import { ask as askPlatform } from "./lib/platform.js";
 import { useStore } from "./store.js";
 import type { LockState } from "../../shared/ipc.js";
 import "./styles.css";
@@ -44,6 +46,7 @@ function Root({ initialLock }: { initialLock: LockState }) {
 // The language first: drawn before it arrives, the window would flash
 // Turkish at someone who chose Japanese. The lock too, so a locked Vunemi
 // never flashes the conversation.
+// The system too: on Linux some texts are worded without the Mac.
 const unknownLock: LockState = { enabled: true, locked: true, away: false };
 void Promise.all([
   window.vunemi
@@ -51,6 +54,9 @@ void Promise.all([
     .then((locale) => useStore.getState().applyLocale(locale))
     .catch(() => undefined),
   window.vunemi.getLock().catch(() => unknownLock),
+  askPlatform()
+    .then((info) => setSystem(info.id))
+    .catch(() => undefined),
 ]).then(([, lock]) => {
   window.vunemi.onLanguage((locale) => useStore.getState().applyLocale(locale));
   createRoot(document.getElementById("root")!).render(

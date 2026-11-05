@@ -122,10 +122,10 @@ function voiceFor(locale: Locale): string | null {
 // A whisper-server the user installed themselves: Homebrew's on macOS, a distribution's or a local build on Linux.
 const SERVER_PATHS = platform.id === "darwin" ? ["/opt/homebrew/bin/whisper-server", "/usr/local/bin/whisper-server"] : ["/usr/local/bin/whisper-server", "/usr/bin/whisper-server"];
 
-/** Long enough to survive a pause in dictation, short enough to give the RAM back. */
 /** Answers are spoken with macOS's own voices (say); elsewhere there is nothing to speak with yet. */
 const CAN_SPEAK = platform.features.speakAloud;
 
+/** Long enough to survive a pause in dictation, short enough to give the RAM back. */
 const IDLE_MS = 5 * 60_000;
 /** Loading a large model into Metal takes a couple of seconds, cold. */
 const READY_TIMEOUT_MS = 60_000;

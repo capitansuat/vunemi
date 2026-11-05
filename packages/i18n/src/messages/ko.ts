@@ -1,4 +1,4 @@
-import type { Catalogue } from "../types.js";
+import type { Catalogue, SystemTexts } from "../types.js";
 
 export const messages: Catalogue = {
   quotedSource: {"action": "선택한 내용 질문", "title": "인용문", "remove": "인용 삭제", "source": "원본 답변 보기", "unsupported": "완료된 답변 하나 안에서 텍스트를 선택하세요.", "tooLong": "최대 2,000자를 선택하세요.", "placeholder": "이 인용문에 대해 질문하세요…", "show": "인용문 보기", "hide": "인용문 숨기기"},
@@ -1993,4 +1993,47 @@ export const messages: Catalogue = {
       unlockHint: "보관함이 잠겨 있습니다. 채팅은 계속 사용할 수 있습니다. 저장된 키가 필요할 때 잠금을 해제하십시오. 데스크톱에서 키링 암호를 요청할 수 있습니다.",
     },
   },
+};
+
+/** The same texts where "this Mac", "Finder" or ⌘ don't fit: on Linux. */
+export const onLinux: SystemTexts = {
+  "app.debugPort.warning": "원격 디버깅이 열려 있습니다(테스트 빌드): 이 컴퓨터의 다른 프로그램이 이 창과 승인 카드를 조종할 수 있습니다. 테스트가 끝나면 종료하고 평소대로 여십시오.",
+  "app.local": "모델과 데이터는 이 컴퓨터에 머뭅니다.",
+  "app.projects.revealLabel": "파일 관리자에서 {name} 보기",
+  "composer.placeholder.running": "대기열에 추가…(Ctrl+↵은 바로 실행)",
+  "composer.hint.running": "↵ 대기열에 추가 · Ctrl+↵ 끼어들기 · Esc 중단",
+  "composer.hint.listening": "Esc 취소 · 음성은 이 컴퓨터 밖으로 나가지 않습니다",
+  "composer.steerHint": "끼어들기: 실행 중인 작업을 멈추고 이것을 대신 합니다(Ctrl+↵)",
+  "composer.voice.downloadNote": "음성으로 입력하려면 음성 모델을 한 번 다운로드합니다({size}MB). 이 컴퓨터에 남습니다.",
+  "pane.blockedOwn": "{host}은(는) 이 컴퓨터 자체의 주소입니다. Vunemi의 브라우저는 이 주소를 절대 열지 않습니다.",
+  "model.sources.body": "이 컴퓨터에 있는 서버에만 연결합니다. 서버와 모델은 각자의 앱에서 시작하십시오.",
+  "activity.intro": "에이전트가 한 모든 일이 여기에 있습니다. 기록은 이 컴퓨터에 남으며 앱을 닫아도 지워지지 않습니다.",
+  "artefacts.reveal": "파일 관리자에서 보기",
+  "vault.unlocking": "키링 대기 중…",
+  "vault.intro": "키를 여기에 보관하십시오. 모델에는 이름만 알려집니다. 값은 암호화되어 보관되고 그 키는 시스템 키링이 보호하며, 값은 채팅에 절대 들어가지 않습니다. 어떤 페이지에 나타나더라도 모델이 보기 전에 이름으로 바뀝니다.",
+  "memory.search.body": "다른 말이나 다른 언어로 같은 뜻을 가진 메모를 찾습니다. {size} 한 번 다운로드하며 이 컴퓨터에서 실행됩니다.",
+  "modelsMemory.summary": "이 컴퓨터: {total} · 현재 사용 가능: {available}",
+  "settings.appearance.intro": "라이트 또는 다크. 시스템은 데스크톱 설정을 따릅니다.",
+  "settings.model.intro": "이 컴퓨터에서 실행되는 모델을 선택하십시오.",
+  "settings.trusted.note": "사이트는 사용자만 여기에서 추가할 수 있으며 에이전트는 추가할 수 없습니다. 이 컴퓨터 자체의 주소(localhost, 127.0.0.1)는 절대 열지 않습니다.",
+  "settings.trusted.error.thisComputer": "이 컴퓨터 자체의 주소는 신뢰할 수 없습니다. Vunemi 자체의 제어 기능이 그곳에 있습니다.",
+  "connections.computerNote": "Vunemi가 이 컴퓨터에서 건드릴 수 있는 것. 짧고 고정된 목록입니다.",
+  "connections.mcp.commandNote": "'명령' 옵션은 입력한 프로그램을 이 컴퓨터에서 실행합니다. 셸은 사용하지 않습니다. 한 줄을 공백으로 나누므로 `;`나 `|`는 아무 효과가 없습니다.",
+  "main.debugPort.refused": "Vunemi가 원격 디버깅이 열린 채로 시작되었습니다. 이 컴퓨터의 어떤 프로그램이든 이를 조종하고 승인 카드에 답할 수 있으므로 이 빌드는 그렇게 시작되지 않습니다. Vunemi를 평소대로 여십시오.",
+  "main.models.localOnly": "모델 서버는 이 컴퓨터의 HTTP 주소만 될 수 있습니다.",
+  "main.models.localKinds": "이 컴퓨터의 모델 서버만 사용할 수 있습니다.",
+  "main.mcpSecrets.needHttps": "비밀 값이 있는 연결에는 https:// 주소가 필요합니다(이 컴퓨터의 서버는 제외).",
+  "main.artefact.notOpenable": "이런 종류의 파일은 여기서 열 수 없습니다. 파일 관리자에서 보고 확인한 다음 직접 여십시오.",
+  "files.wrongHome": "\"{path}\"은(는) 이 컴퓨터에 없는 홈 폴더를 가리킵니다. 올바른 경로는 \"{fixed}\"입니다. 이 경로를 사용하십시오.",
+  "vaultStore.locked": "금고가 잠겨 있습니다. 아직 시스템 키링에서 키를 가져오지 못했습니다.",
+  "mail.outbox.notSent": "보내지 않음: 서버가 메시지를 받지 않았으므로 이 컴퓨터에서 아무것도 나가지 않았습니다. 다시 보낼 수 있습니다. ({reason})",
+  "connectors.history.description": "요청이 이전 세션이나 녹음된 회의에 관한 것일 때 Vunemi가 그것을 찾을 수 있게 합니다. 요청마다 가장 관련 있는 몇 개의 이름, 날짜, 한 줄만 전달되며, 필요할 때만 하나를 엽니다. 어떤 것도 이 컴퓨터 밖으로 나가지 않습니다.",
+  "engine.setup.title": "이 컴퓨터를 위한 모델",
+  "engine.setup.body": "Vunemi가 생각하려면 이 컴퓨터에 AI 모델이 필요합니다. 모델은 이 컴퓨터에서 실행되며, 작성한 내용은 밖으로 나가지 않습니다.",
+  "engine.search.reason.tooBig": "이 컴퓨터의 메모리에 비해 너무 큽니다.",
+  "engine.failedHint": "이 컴퓨터의 메모리가 부족할 수 있습니다. 더 작은 모델을 사용해 보십시오.",
+  "engine.installed.memory": "이 길이에서 메모리 약 {need} (이 컴퓨터는 {total}). 길수록 한 번에 더 많이 읽습니다.",
+  "engine.installed.memoryTight": "이 길이에서 약 {need}: 이 컴퓨터({total})가 모델에 줄 수 있는 양보다 많습니다. 더 짧은 길이를 고르십시오.",
+  "engine.local.add": "이 컴퓨터에서 GGUF 파일 추가…",
+  "engine.local.tooLarge": "{size}은(는) 이 컴퓨터 메모리의 절반({budget})보다 큽니다. 작업할 여유가 없습니다.",
 };
