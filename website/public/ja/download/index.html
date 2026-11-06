@@ -37,7 +37,7 @@
 <p class="lead">無料でオープンソース。Apple シリコン搭載、macOS 14 以降の Mac 向けです。</p>
 <div class="hero-actions"><a class="pill" href="https://github.com/capitansuat/vunemi/releases/download/v0.2.6/Vunemi-0.2.6-arm64.dmg"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>Mac 版をダウンロード</a></div>
 <p class="file">Vunemi 0.2.6 · Vunemi-0.2.6-arm64.dmg · 142 MB</p>
-<p class="release-links"><a href="https://github.com/capitansuat/vunemi/releases/tag/v0.2.6">リリースノート ↗</a><a href="https://github.com/capitansuat/vunemi">ソースコード ↗</a><a href="/docs/ja/">ガイド</a></p>
+<p class="release-links"><a href="https://github.com/capitansuat/vunemi/releases/tag/v0.2.6">リリースノート ↗</a><a href="https://github.com/capitansuat/vunemi">ソースコード ↗</a><a href="/docs/ja/">ガイド</a><a href="#linux">Linux 版 Vunemi（プレビュー）</a></p>
 </section>
 <section class="release-highlights" aria-labelledby="release-highlights-title">
 <h2 id="release-highlights-title">このバージョンの新機能 · 0.2.6</h2>
@@ -51,6 +51,16 @@
 <section class="panel-box"><h2>インストール</h2><ol class="install"><li>ダウンロードしたディスクイメージを開きます。</li><li>Vunemi を「アプリケーション」フォルダにドラッグします。</li><li>「アプリケーション」から Vunemi を開きます。開けないと表示された場合は、「システム設定 › プライバシーとセキュリティ」で「このまま開く」をクリックします。</li><li>最初の画面でモデルを選びます。Vunemi が Mac に合うものを提案します。</li></ol></section>
 <section class="panel-box"><h2>必要なもの</h2><ul><li>Apple シリコン搭載の Mac（M1 以降）</li><li>macOS 14 以降</li><li>モデル用の空き容量（ダウンロード前にアプリが各モデルのサイズを表示します）</li></ul><h3>アップデート</h3><p>0.1.8 以降は、新しいバージョンが出ると Vunemi がお知らせし、「アップデート」を押すと自動で更新します。それより前のバージョンからは、新しいディスクイメージを一度ダウンロードし、Vunemi を「アプリケーション」にドラッグして「置き換える」を選んでください。</p><h3>Vunemi を開くときに macOS がパスワードを求める場合</h3><p>Vunemi は金庫の鍵を Mac のキーチェーンに保存しています。Vunemi はまだ Apple のデベロッパ ID で署名されていないため、macOS はこの鍵を読み取る部品をコードそのもので識別します。その部品が変わるアップデートの後、macOS はログインパスワードを一度だけ求めます。パスワードを入力して「常に許可」を選ぶと、次にその部品が変わるアップデートまで再び求められることはありません。「許可」だけを選ぶと今回限りとなり、次回の起動時にまた求められます。この確認は macOS によるもので、Vunemi がパスワードを見ることはありません。</p><h3>SHA-256</h3><p class="checksum">9b7f68fb46a7b45bdef45313a842c7943513fe9ddc500eb8d578e6af392d16f8</p></section>
 </div>
+<section id="linux" class="linux-preview" aria-labelledby="linux-title">
+<h2 id="linux-title">Linux 版 Vunemi（プレビュー） · 0.2.6</h2>
+<p>Vunemi はこれまで Mac 専用でした。この最初の Linux 版では、64 ビットの Linux コンピュータで Vunemi を使い、まだ動かない部分を確かめられます。プレビュー版です。Ubuntu 22.04 の仮想ディスプレイで試しましたが、実際の Linux デスクトップや実際のモデルではまだ試していません。Mac 版アプリはこれによって変わりません。</p>
+<ul class="linux-files"><li><a class="pill small" href="https://github.com/capitansuat/vunemi/releases/download/v0.2.6-linux.1/Vunemi-0.2.6-linux-amd64.deb">.deb をダウンロード</a><p class="file">Vunemi-0.2.6-linux-amd64.deb · 105 MB</p><p class="checksum">SHA-256 e804939f8de91c0fc5d1fa8262fb80ac094bb8fafcb9a8b8f494ae0273b13a71</p></li><li><a class="pill small" href="https://github.com/capitansuat/vunemi/releases/download/v0.2.6-linux.1/Vunemi-0.2.6-linux-x86_64.AppImage">AppImage をダウンロード</a><p class="file">Vunemi-0.2.6-linux-x86_64.AppImage · 135 MB</p><p class="checksum">SHA-256 b6b2412b3bfbde15f52f89f200a71d2da14e63f5139d979b691be2cfefe4d761</p></li></ul>
+<div class="download-grid">
+<section class="panel-box"><h3>インストール</h3><ol class="install"><li>Ubuntu と Debian：.deb をダウンロードし、sudo apt install ./Vunemi-0.2.6-linux-amd64.deb でインストールします。必要なパッケージも一緒にインストールされます。</li><li>そのほかのディストリビューション：AppImage をダウンロードし、chmod +x で実行可能にしてから開きます。AppImage そのものはまだテストで開いていません。起動しない場合は、できれば .deb を使ってください。</li></ol><p>Linux 版は自動ではアップデートされません。次のバージョンはこのページからダウンロードしてください。</p></section>
+<section class="panel-box"><h3>必要なもの</h3><ul><li>64 ビットの x86 コンピュータ（ARM 版はまだありません）</li><li>Ubuntu 22.04 以降、Debian 12 以降、または glibc 2.34 以降のほかのディストリビューション</li></ul><p>Linux では、チャットとコンピュータ上のファイルを使うタスク、内蔵エンジン・Ollama・LM Studio によるローカルモデル、金庫を使えます。金庫には GNOME Keyring か KWallet が必要です。どちらもない場合、金庫はロックされたままですが、ほかの機能はすべて使えます。</p><p>Linux ではまだ使えないもの：Mac アプリとデスクトップの操作、ショートカット、カレンダーと Apple Mail、会議の録音、予定した作業、アドオン、アーカイブツール、読み上げ、アプリのロック、アプリ内からのアップデート。一部の文章にはまだ Mac、Finder、⌘ が出てきます。次の Linux 版で直ります。</p></section>
+</div>
+<p class="release-links"><a href="https://github.com/capitansuat/vunemi/releases/tag/v0.2.6-linux.1">Linux 版リリースノート ↗</a></p>
+</section>
 <section class="notes reveal"><h2>知っておきたいこと</h2><ul><li>結果はモデルと Mac の性能によって変わります。小さなモデルは複雑な作業で間違いが増えます。</li><li>Apple シリコン搭載、macOS 14 以降の Mac 向けです。</li><li>タスクは、スケジュールされたものも含めて Vunemi が開いている間に実行されます。</li><li>アプリは署名済みですが、まだ Apple の公証を受けていません。初回は「システム設定 › プライバシーとセキュリティ」で「このまま開く」をクリックする必要があるかもしれません。</li></ul></section>
 </main>
 <footer><a class="brand small" href="/ja/"><img src="/icon.svg" width="24" height="24" alt="">Vunemi</a><span>このサイトは Cookie やトラッキングスクリプトを使用していません。</span><span>© 2026 · <a href="https://github.com/capitansuat/vunemi">GitHub</a></span></footer>

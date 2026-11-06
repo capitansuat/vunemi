@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { review, translations } from "./content.mjs";
-import { release } from "../src/release.mjs";
+import { linuxRelease, release } from "../src/release.mjs";
 import { updateFeed } from "../src/update-feed.mjs";
 import { languages, pageNames, pagePath, renderPage, redirectPage, shotFiles } from "../src/pages.mjs";
 import { supportCopy } from "../src/support-copy.mjs";
@@ -166,6 +166,13 @@ function releaseCheck() {
   if (release.zip !== undefined) {
     if (release.zip !== `Vunemi-${release.version}-arm64.zip`) throw new Error(`Update zip ${release.zip} does not match ${release.version}`);
     if (!/^[a-f0-9]{64}$/.test(release.zipSha256 ?? "") || !(release.zipSizeMb > 0)) throw new Error("Update zip size or SHA-256 missing");
+  }
+  // The Linux preview: names follow its version, each file has a size and SHA-256.
+  const linuxNames = { deb: `Vunemi-${linuxRelease.version}-linux-amd64.deb`, appImage: `Vunemi-${linuxRelease.version}-linux-x86_64.AppImage` };
+  if (!linuxRelease.tag.startsWith(`v${linuxRelease.version}-linux.`)) throw new Error(`Linux tag ${linuxRelease.tag} does not match ${linuxRelease.version}`);
+  for (const file of linuxRelease.files) {
+    if (file.asset !== linuxNames[file.kind]) throw new Error(`Linux file ${file.asset} does not match ${linuxRelease.version}`);
+    if (!/^[a-f0-9]{64}$/.test(file.sha256) || !(file.sizeMb > 0)) throw new Error(`Linux file ${file.asset}: size or SHA-256 missing`);
   }
 }
 

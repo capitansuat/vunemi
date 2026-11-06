@@ -1,5 +1,6 @@
 // Renders the product pages for one locale as static HTML.
-import { release, repoUrl } from "./release.mjs";
+import { linuxRelease, release, repoUrl } from "./release.mjs";
+import { linuxCopy } from "./linux-copy.mjs";
 import { supportCopy } from "./support-copy.mjs";
 import { gatekeeperCopy } from "./gatekeeper-copy.mjs";
 
@@ -210,7 +211,7 @@ function download(t, lang) {
 <p class="lead">${esc(d.intro)}</p>
 <div class="hero-actions">${downloadButton(t)}</div>
 <p class="file">Vunemi ${release.version} · ${release.asset} · ${release.sizeMb} MB</p>
-<p class="release-links"><a href="${release.notes}">${esc(d.notes)} ↗</a><a href="${repoUrl}">${esc(d.source)} ↗</a><a href="/docs/${lang}/">${esc(d.guide)}</a></p>
+<p class="release-links"><a href="${release.notes}">${esc(d.notes)} ↗</a><a href="${repoUrl}">${esc(d.source)} ↗</a><a href="/docs/${lang}/">${esc(d.guide)}</a><a href="#linux">${esc(linuxCopy[lang].title)}</a></p>
 </section>
 <section class="release-highlights" aria-labelledby="release-highlights-title">
 <h2 id="release-highlights-title">${esc(d.highlightsTitle)} · ${release.version}</h2>
@@ -224,8 +225,27 @@ function download(t, lang) {
 <section class="panel-box"><h2>${esc(d.installTitle)}</h2><ol class="install">${d.install.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></section>
 <section class="panel-box"><h2>${esc(d.requirementsTitle)}</h2><ul>${d.requirements.map((r) => `<li>${esc(r)}</li>`).join("")}</ul><h3>${esc(d.updateTitle)}</h3><p>${esc(d.updateBody)}</p><h3>${esc(d.keychainTitle)}</h3><p>${esc(d.keychainBody)}</p><h3>${esc(d.checksum)}</h3><p class="checksum">${release.sha256}</p></section>
 </div>
+${linuxSection(lang)}
 ${notesSection(t)}
 </main>`;
+}
+
+// The Linux preview: its own files and copy; nothing above depends on it.
+function linuxSection(lang) {
+  const l = linuxCopy[lang];
+  const deb = linuxRelease.files.find((f) => f.kind === "deb");
+  const label = { deb: l.debButton, appImage: l.appImageButton };
+  const files = linuxRelease.files.map((f) => `<li><a class="pill small" href="${linuxRelease.url(f.asset)}">${esc(label[f.kind])}</a><p class="file">${f.asset} · ${f.sizeMb} MB</p><p class="checksum">SHA-256 ${f.sha256}</p></li>`).join("");
+  return `<section id="linux" class="linux-preview" aria-labelledby="linux-title">
+<h2 id="linux-title">${esc(l.title)} · ${linuxRelease.version}</h2>
+<p>${esc(l.why)}</p>
+<ul class="linux-files">${files}</ul>
+<div class="download-grid">
+<section class="panel-box"><h3>${esc(l.installTitle)}</h3><ol class="install">${l.install.map((s) => `<li>${esc(s.replace("{deb}", deb.asset))}</li>`).join("")}</ol><p>${esc(l.update)}</p></section>
+<section class="panel-box"><h3>${esc(l.needTitle)}</h3><ul>${l.need.map((n) => `<li>${esc(n)}</li>`).join("")}</ul><p>${esc(l.works)}</p><p>${esc(l.missing)}</p></section>
+</div>
+<p class="release-links"><a href="${linuxRelease.notes}">${esc(l.notes)} ↗</a></p>
+</section>`;
 }
 
 function support(_t, lang) {

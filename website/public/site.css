@@ -220,6 +220,13 @@ main { padding: 0 0 80px; }
 .panel-box p { margin: 0; }
 .install li { margin-bottom: 12px; padding-left: 4px; }
 .checksum { overflow-wrap: anywhere; font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.linux-preview { margin: 48px 0 0; padding: 30px; border-radius: 26px; border: 1px solid var(--line); }
+.linux-preview > h2 { margin: 0 0 12px; font-size: 24px; letter-spacing: -.02em; }
+.linux-preview > p { color: var(--muted); line-height: 1.6; }
+.linux-files { display: flex; flex-wrap: wrap; gap: 20px 36px; margin: 20px 0 0; padding: 0; list-style: none; }
+.linux-files li { min-width: 0; flex: 1 1 260px; }
+.linux-preview .download-grid { margin-top: 24px; }
+.linux-preview .panel-box p { margin-top: 12px; }
 
 .support-page { max-width: 760px; margin: auto; }
 .support-form { position: relative; display: grid; gap: 12px; margin: 32px 0 60px; padding: clamp(20px, 4vw, 36px); border: 1px solid var(--line); border-radius: 26px; background: var(--card); }
