@@ -92,6 +92,11 @@ export interface Settings {
   /** Tell the others in a meeting apart by voice once it is over. Off unless the user turns it on. */
   meetingSpeakers: boolean;
   /**
+   * Another assistant the user connected may read meetings through
+   * VunemiMeetings, which reads this key itself. Off unless the user turns it on.
+   */
+  meetingsShared: boolean;
+  /**
    * The automation library (its page, the recipes, the summary before a
    * task is set up). Off, with no switch in the window yet: it is turned on
    * in the file, for trying it out.
@@ -116,7 +121,7 @@ function cleanSites(value: unknown): string[] {
   return [...new Set(hosts)].slice(0, MAX_TRUSTED_SITES);
 }
 
-const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, searchLocation: { country: null, city: null }, appLock: false, trustedSites: [], appearance: "system", updatesCheck: true, meetingSpeakers: false, automationLibrary: false };
+const EMPTY: Settings = { connections: {}, mcpServers: [], policy: DEFAULT_POLICY, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: null, searchLocation: { country: null, city: null }, appLock: false, trustedSites: [], appearance: "system", updatesCheck: true, meetingSpeakers: false, meetingsShared: false, automationLibrary: false };
 
 /**
  * Settings that exist but can't be read. Everything falls back to its
@@ -174,6 +179,14 @@ export class SettingsStore {
 
   setMeetingSpeakers(on: boolean): void {
     this.replace({ ...this.current, meetingSpeakers: on });
+  }
+
+  get meetingsShared(): boolean {
+    return this.current.meetingsShared;
+  }
+
+  setMeetingsShared(on: boolean): void {
+    this.replace({ ...this.current, meetingsShared: on });
   }
 
   setPolicy(policy: AutonomyPolicy, planBeforeRun = false): void {
@@ -282,7 +295,7 @@ export class SettingsStore {
    * to read, nor stopped wanting the door shut.
    */
   reset(): void {
-    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, searchLocation: this.searchLocation, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck, meetingSpeakers: false, automationLibrary: this.current.automationLibrary });
+    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, searchLocation: this.searchLocation, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck, meetingSpeakers: false, meetingsShared: false, automationLibrary: this.current.automationLibrary });
   }
 
   private replace(next: Settings): void {
@@ -342,7 +355,7 @@ export class SettingsStore {
       const language = stored === undefined ? "tr" : isLocale(stored) ? stored : null;
       let searchLocation: SearchLocation = { country: null, city: null };
       try { searchLocation = validateSearchLocation((parsed as Settings).searchLocation); } catch { /* Missing/invalid profile does not imply any geography. */ }
-      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, searchLocation, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false, meetingSpeakers: (parsed as Settings).meetingSpeakers === true, automationLibrary: (parsed as Settings).automationLibrary === true };
+      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, searchLocation, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false, meetingSpeakers: (parsed as Settings).meetingSpeakers === true, meetingsShared: (parsed as Settings).meetingsShared === true, automationLibrary: (parsed as Settings).automationLibrary === true };
     } catch (err) {
       // No file yet is a first launch. A file that can't be read is not.
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { ...EMPTY };

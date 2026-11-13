@@ -1,5 +1,5 @@
 import type { AutonomyPolicy } from "@vunemi/agent-core";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -157,6 +157,21 @@ describe("update checks", () => {
     expect(new SettingsStore(dir).updatesCheck).toBe(false);
     writeFileSync(join(dir, "settings.json"), JSON.stringify({ updatesCheck: "no" }));
     expect(new SettingsStore(dir).updatesCheck).toBe(true);
+  });
+});
+
+describe("sharing meetings with other assistants", () => {
+  it("is off until turned on, off again after a reset, and on only for a boolean", () => {
+    const { dir, settings } = store();
+    expect(settings.meetingsShared).toBe(false);
+    settings.setMeetingsShared(true);
+    // VunemiMeetings reads this key from the file itself.
+    expect(JSON.parse(readFileSync(join(dir, "settings.json"), "utf8")).meetingsShared).toBe(true);
+    expect(new SettingsStore(dir).meetingsShared).toBe(true);
+    settings.reset();
+    expect(JSON.parse(readFileSync(join(dir, "settings.json"), "utf8")).meetingsShared).toBe(false);
+    writeFileSync(join(dir, "settings.json"), JSON.stringify({ meetingsShared: "true" }));
+    expect(new SettingsStore(dir).meetingsShared).toBe(false);
   });
 });
 

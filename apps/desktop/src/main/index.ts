@@ -23,7 +23,7 @@ import { BrowserController, checkNavigation, trustableHost } from "@vunemi/brows
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper, scheduledApp } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
+import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type MeetingsSharedView, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -73,6 +73,7 @@ import { RECIPES, recipeSchedule, recipeTask, recipeViews, scopeLookup, scopeRef
 import { ShortcutInstaller } from "./shortcut-install.js";
 import { formatDate, getLocale, isLocale, localeInfo, matchLocale, setLocale, setSystem, t, tIn, type Locale } from "@vunemi/i18n";
 import { Recorder, recorderBinary } from "./meetings/recorder.js";
+import { bridgeBinary, bridgeSetup } from "./meetings/bridge.js";
 import { MeetingService, type MeetingBlock, type MeetingStatus } from "./meetings/service.js";
 import { SpeakerSeparator, speakersBinary } from "./meetings/speakers.js";
 import { ADDONS } from "./addons/catalog.js";
@@ -1071,13 +1072,13 @@ const scheduler = new Scheduler({
       // Uncertain means someone has to look before it acts on that app again.
       onUncertain: () => automations.update(item.id, { enabled: false }),
     });
-    if (item.apps?.length) {
-      scheduledApps = new Set(item.apps.map((grant) => grant.bundleId));
-      await openQuietly(item, () => helper.apps(), new AbortController().signal);
-    }
-    currentGrant = standingGrant ?? null;
+    if (item.apps?.length) await openQuietly(item, () => helper.apps(), new AbortController().signal);
     let status: Awaited<ReturnType<typeof session.start>>;
     try {
+      // Set only for the run itself and always taken back: left behind, they
+      // would make the desktop tools refuse every other app until Vunemi restarts.
+      if (item.apps?.length) scheduledApps = new Set(item.apps.map((grant) => grant.bundleId));
+      currentGrant = standingGrant ?? null;
       status = await session.start(goal, model, [], {
         unattended: true,
         waitLimitMs: SCHEDULED_WAIT_MS,
@@ -1681,6 +1682,17 @@ handle(CH.meetingSpeakersDownload, async () => {
   return speakersView();
 });
 handle(CH.meetingSpeakersCancel, () => speakerSeparator.cancelDownload());
+
+/** Another assistant reading meetings (meetings/bridge.ts): the switch it obeys, and how to connect it. */
+const meetingsBridge = platform.features.meetings ? bridgeBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, repo: join(here, "../../../..") }) : null;
+const meetingsSharedView = (): MeetingsSharedView | null =>
+  meetingsBridge ? { on: settings.meetingsShared, ...bridgeSetup(meetingsBridge, app.getPath("userData"), homedir()) } : null;
+handle(CH.meetingsShared, () => meetingsSharedView());
+handle(CH.meetingsSharedSet, (_e, on: unknown) => {
+  if (!meetingsBridge) throw new Error(t("meetings.shared.unavailable"));
+  settings.setMeetingsShared(on === true);
+  return meetingsSharedView();
+});
 
 handle(CH.meetingsRename, (_e, id: unknown, title: unknown) => {
   if (typeof id === "string" && typeof title === "string") meetings.rename(id, title);

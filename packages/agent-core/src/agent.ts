@@ -743,7 +743,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
     if (unverifiedFiles.size || missingRequestedOutputs().length) return null;
     const task=trackedTasks.find(t=>t.activeRunId===runId),desktop=autoDesktop();
     const text = desktop&&task&&(!desktop.path||task.operations.some(o=>o.runId===runId&&o.status==='completed'&&o.desktopEvidence?.kind==='verified-save'))&&!task.operations.some(o=>o.status==='unknown')&&task.steps.every(s=>s.status==='completed'&&s.evidence==='tool_result')
-      ? desktop.path?`${desktop.title}: metin eklendi, kaydedildi ve diskte doğrulandı.`:`${desktop.title}: metin eklendi ve gerçek alan değeri doğrulandı.`
+      ? t(desktop.path?'agent.desktopPlan.doneSaved':'agent.desktopPlan.doneField',{title:desktop.title})
       : completedDelivery(task, readBackFiles);
     if (!text) return null;
     const stepId = `${runId}.s${index}`;

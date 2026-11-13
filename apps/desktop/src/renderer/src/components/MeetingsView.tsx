@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, Pencil, Search, Square, Users } from "lucide-react";
 import { RenameInput } from "./RenameInput.js";
-import type { MeetingLine, MeetingSpeaker, MeetingStatusView, MeetingSummaryView, MicrophoneView, SpeakersView } from "../../../shared/ipc.js";
+import type { MeetingLine, MeetingSpeaker, MeetingsSharedView, MeetingStatusView, MeetingSummaryView, MicrophoneView, SpeakersView } from "../../../shared/ipc.js";
 import { formatDate, getLocale, t } from "@vunemi/i18n";
 import { useStore } from "../store.js";
 import { MeetingPage, meetingTitle, stateLabel } from "./MeetingPage.js";
@@ -94,6 +94,7 @@ export function MeetingsView() {
         )}
         {!recording && status?.blocked && <p className="mt-2 text-[12.5px] text-muted">{status.blocked}</p>}
         {!recording && <SpeakersSetting />}
+        {!recording && <SharedSetting />}
         {error && (
           <p role="alert" className="mt-2 text-[12.5px] text-danger">
             {error}
@@ -255,6 +256,68 @@ function SpeakersSetting() {
     </section>
   );
 }
+
+/** Letting an assistant the user connected read meetings: off until they turn it on, with what to add to that assistant's settings. */
+export function SharedSetting() {
+  const [view, setView] = useState<MeetingsSharedView | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    void window.vunemi.meetingsShared().then(setView).catch(() => {});
+  }, []);
+
+  if (!view) return null;
+  const copy = (name: string, text: string) => {
+    void navigator.clipboard.writeText(text).then(() => setCopied(name), () => {});
+  };
+
+  return (
+    <section className="mt-4 rounded-xl border border-line bg-surface p-4">
+      <label className="flex items-center gap-2 text-[13px] font-medium text-fg">
+        <input
+          type="checkbox"
+          checked={view.on}
+          onChange={(e) => {
+            setError(null);
+            void window.vunemi.setMeetingsShared(e.target.checked).then(setView).catch((err: unknown) => setError(message(err)));
+          }}
+          className="size-3.5 accent-ember"
+        />
+        {t("meetings.shared.title")}
+      </label>
+      <p className="mt-1 text-[12px] text-muted">{t("meetings.shared.body")}</p>
+      {view.on && (
+        <div className="mt-3">
+          <p className="text-[12px] text-muted">{t("meetings.shared.setup")}</p>
+          {SHARED_WITH.map(({ name, file, text }) => (
+            <div key={name} className="mt-2">
+              <div className="flex items-center gap-2 text-[12px] text-fg">
+                <span className="font-medium">{name}</span>
+                <span className="text-muted">{file}</span>
+                <button type="button" onClick={() => copy(name, text(view))} className="ml-auto text-[12px] text-muted hover:text-fg">
+                  {copied === name ? t("meetings.copied") : t("meetings.copy")}
+                </button>
+              </div>
+              <pre className="mt-1 overflow-x-auto rounded-lg bg-surface-3 p-2.5 text-[11.5px] leading-relaxed text-fg">{text(view)}</pre>
+            </div>
+          ))}
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-[12px] text-danger">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** The assistants the setup is written out for, and the settings file each reads it from. */
+const SHARED_WITH: { name: string; file: string; text: (view: MeetingsSharedView) => string }[] = [
+  { name: "Claude", file: "claude_desktop_config.json", text: (view) => view.claude },
+  { name: "Codex", file: "~/.codex/config.toml", text: (view) => view.codex },
+];
 
 function elapsed(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000));

@@ -100,6 +100,8 @@ const api: VunemiApi = {
   setMeetingSpeakers: (on) => ipcRenderer.invoke(CH.meetingSpeakersSet, on),
   downloadMeetingSpeakers: () => ipcRenderer.invoke(CH.meetingSpeakersDownload),
   cancelMeetingSpeakers: () => ipcRenderer.invoke(CH.meetingSpeakersCancel),
+  meetingsShared: () => ipcRenderer.invoke(CH.meetingsShared),
+  setMeetingsShared: (on) => ipcRenderer.invoke(CH.meetingsSharedSet, on),
   onMeetingSpeakers: (listener) => {
     const handler = (_e: IpcRendererEvent, view: SpeakersView) => listener(view);
     ipcRenderer.on(CH.meetingSpeakersChanged, handler);

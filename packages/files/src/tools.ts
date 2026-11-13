@@ -246,7 +246,7 @@ export function createFileTools({ roots, shadowDir, atomicMoveAdapter, moveJourn
         const places = args.folder ? [roots.resolve(args.folder, "read")] : roots.list();
         const found: string[] = [];
         if (platform.fileSearch === "walk") {
-          const walked = walkSearch(places, words, { ...DEFAULT_WALK, maxFound: MAX_CANDIDATES, deadline: Date.now() + SEARCH_TIMEOUT_MS, ...(ctx.signal && { signal: ctx.signal }) });
+          const walked = await walkSearch(places, words, { ...DEFAULT_WALK, maxFound: MAX_CANDIDATES, deadline: Date.now() + SEARCH_TIMEOUT_MS, ...(ctx.signal && { signal: ctx.signal }) });
           for (const path of walked.found) {
             try {
               roots.resolve(path, "read");

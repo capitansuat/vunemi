@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createModel } from "@vunemi/agent-core";
+import { setLocale } from "@vunemi/i18n";
 import { checkAgentModel, DEFAULT_MODEL_SETTINGS, modelConfig, probeProviders, validateModelSettings } from "../../src/main/providers.js";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -34,6 +35,19 @@ describe("local model sources", () => {
       expect(() => validateModelSettings({ ...DEFAULT_MODEL_SETTINGS, endpoints: { ...DEFAULT_MODEL_SETTINGS.endpoints, lmstudio: bad } })).toThrow();
     }
     expect(() => modelConfig("openai:gpt-test", DEFAULT_MODEL_SETTINGS)).toThrow(/Yalnızca/);
+  });
+
+  it("says what is wrong with an address in the app's language", () => {
+    const withPath = { ...DEFAULT_MODEL_SETTINGS, endpoints: { ...DEFAULT_MODEL_SETTINGS.endpoints, lmstudio: "http://127.0.0.1:1234/api" } };
+    try {
+      setLocale("en");
+      expect(() => validateModelSettings(withPath)).toThrow("The model address must end with /v1.");
+      expect(() => validateModelSettings({ ollamaContextLength: 4096 })).toThrow("Invalid model settings.");
+      setLocale("de");
+      expect(() => validateModelSettings(withPath)).toThrow("Die Modelladresse muss mit /v1 enden.");
+    } finally {
+      setLocale("tr");
+    }
   });
 
   it("sends inference to the configured local port", async () => {

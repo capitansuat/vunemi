@@ -22,7 +22,7 @@ const NON_CHAT = /embed|embedding|rerank|whisper|tts/i;
 export function validateModelSettings(input: unknown): LocalModelSettings {
   if (!input || typeof input !== "object") throw new Error(t("main.models.invalid"));
   const raw = input as Partial<LocalModelSettings>;
-  if (!raw.endpoints || typeof raw.endpoints !== "object") throw new Error("Model adreslerini gir.");
+  if (!raw.endpoints || typeof raw.endpoints !== "object") throw new Error(t("main.models.invalid"));
   const endpoints = {} as LocalModelSettings["endpoints"];
   for (const kind of LOCAL) {
     const value = raw.endpoints[kind];
@@ -35,7 +35,7 @@ export function validateModelSettings(input: unknown): LocalModelSettings {
     }
     const path = url.pathname.replace(/\/+$/, "");
     if (kind === "ollama" && path) throw new Error(t("main.models.ollamaPath"));
-    if (kind !== "ollama" && path && path !== "/v1") throw new Error("Model adresi /v1 yoluyla bitmeli.");
+    if (kind !== "ollama" && path && path !== "/v1") throw new Error(t("main.models.v1Path"));
     endpoints[kind] = `${url.origin}${kind === "ollama" ? "" : "/v1"}`;
   }
   const context = raw.ollamaContextLength;

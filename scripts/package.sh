@@ -119,6 +119,18 @@ if grep -q -a -F "$HOME/" "$recorder_build"; then
   exit 1
 fi
 
+# What another assistant starts to read meetings. It holds no key and asks
+# macOS for nothing, so it too is simply built each time.
+meetings_src="$here/native/VunemiMeetings"
+meetings_build="$meetings_src/.build/release/VunemiMeetings"
+echo "› toplantı köprüsü derleniyor"
+(cd "$meetings_src" && swift build -c release -Xswiftc -file-prefix-map -Xswiftc "$meetings_src=." -Xswiftc -debug-prefix-map -Xswiftc "$meetings_src=.")
+strip -S "$meetings_build"
+if grep -q -a -F "$HOME/" "$meetings_build"; then
+  echo "! toplantı köprüsü derleme yolunu (kullanıcı klasörü) içeriyor"
+  exit 1
+fi
+
 bash "$here/scripts/build-vault-helper.sh" "$identity" "$developer_id"
 
 echo "› uygulama paketleniyor → $out"
@@ -183,6 +195,9 @@ codesign -dvvv "$app/Contents/Resources/VunemiHelper" 2>&1 | grep '^CDHash=' | s
 # Only the microphone; system audio is asked for by Vunemi, which starts it.
 codesign --force --options runtime "${timestamp[@]}" --entitlements "$recorder_entitlements" \
   --identifier com.vunemi.recorder --sign "$identity" "$app/Contents/Resources/VunemiRecorder"
+# No entitlements: it reads Vunemi's own files and answers on stdout.
+codesign --force --options runtime "${timestamp[@]}" \
+  --identifier com.vunemi.meetings --sign "$identity" "$app/Contents/Resources/VunemiMeetings"
 codesign --force --deep --options runtime "${timestamp[@]}" --entitlements "$entitlements" --sign "$identity" "$app"
 codesign --verify --deep --strict "$app"
 # Packaging must never silently replace the cached Keychain caller signature.

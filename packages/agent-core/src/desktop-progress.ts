@@ -1,3 +1,4 @@
+import {getLocale,LOCALES,tIn,type Locale} from '@vunemi/i18n';
 import type {TaskRecord,TaskProgressInput} from './tasks.js';
 /** Native-backed local receipts. Never inferred from model prose or JSON output. */
 export interface DesktopEvidence {
@@ -9,7 +10,7 @@ export interface DesktopEvidence {
 export interface DesktopAppendWorkflow {title:string;text:string;steps:string[];path?:string}
 /** A single explicit, bounded background append workflow. Arbitrary/edited
  * desktop plans retain manual progress; never guess what an app step means. */
-export function desktopDocumentWorkflow(goal:string):DesktopAppendWorkflow|null {
+export function desktopDocumentWorkflow(goal:string,locale:Locale=getLocale()):DesktopAppendWorkflow|null {
  if(!/\bTextEdit\b/i.test(goal)||!/arka\s*plan|background|oda[ğg].*değiş/iu.test(goal)||!/ekle|append/iu.test(goal)||!/kaydet|save/iu.test(goal))return null;
  const paths=[...new Set([...goal.matchAll(/(?:\/[^\s"“”«»`]+)+\.txt\b/gu)].map(m=>m[0]))];
  const quoted=[...goal.matchAll(/["“«]([^"”»]+)["”»]/gu)].map(m=>m[1]!).filter(v=>!paths.includes(v));
@@ -17,10 +18,11 @@ export function desktopDocumentWorkflow(goal:string):DesktopAppendWorkflow|null 
  const resources=[...new Set([...goal.matchAll(/[^\s/"“”«»`]+\.(?:txt|md|docx|rtf|pdf|csv|xlsx|pptx|json)\b/giu)].map(m=>m[0]))];
  if(resources.length!==1||/\b(?:Calculator|Outlook|Teams|Safari|Excel|email|gönder|sil|delete|send|upload|publish)\b/iu.test(goal))return null;
  const path=paths[0]!,title=path.split('/').at(-1)!;
- return {path,title,text:quoted[0]!,steps:[`${title}: belgeyi odağı değiştirmeden aç.`,`${title}: istenen metni tek kez ekle.`,`${title}: kaydet ve diskteki içeriği doğrula.`]};
+ return {path,title,text:quoted[0]!,steps:[tIn(locale,'agent.desktopPlan.open',{title}),tIn(locale,'agent.desktopPlan.addOnce',{title}),tIn(locale,'agent.desktopPlan.save',{title})]};
 }
-export function desktopAppendWorkflow(goal:string):DesktopAppendWorkflow|null {
- const document=desktopDocumentWorkflow(goal);if(document)return document;
+/** The plan's steps are written in the app's language; `locale` names another one. */
+export function desktopAppendWorkflow(goal:string,locale:Locale=getLocale()):DesktopAppendWorkflow|null {
+ const document=desktopDocumentWorkflow(goal,locale);if(document)return document;
  if(!/\bTextEdit\b/i.test(goal)||!/arka\s*plan|background/iu.test(goal)||!goal.includes('desktop_background_append_text')||!/yalnız|only/iu.test(goal))return null;
  if(/(?:\/|~\/)[^\s"“”«»`]*\.txt\b/u.test(goal))return null;
  const names=[...new Set([...goal.matchAll(/[^\s/"“”«»`]+\.txt\b/gu)].map(m=>m[0]))];
@@ -32,11 +34,16 @@ export function desktopAppendWorkflow(goal:string):DesktopAppendWorkflow|null {
  // Additional destinations/actions cannot be silently absorbed by this plan.
  if(/\b(?:Calculator|Outlook|Teams|Safari|Excel|mail|email|gönder|sil|delete|send|upload|publish)\b/iu.test(goal))return null;
  const title=names[0]!,text=texts[0]!;
- return {title,text,steps:[`${title}: doğru pencereyi gözle.`,`${title}: istenen metni arka planda ekle.`,`${title}: gerçek alan değerini doğrula.`]};
+ return {title,text,steps:[tIn(locale,'agent.desktopPlan.watch',{title}),tIn(locale,'agent.desktopPlan.addBackground',{title}),tIn(locale,'agent.desktopPlan.check',{title})]};
 }
 export function desktopBindings(task:TaskRecord):DesktopAppendWorkflow|null {
- const spec=desktopAppendWorkflow(task.goal);
- return spec&&task.planAccepted&&spec.steps.length===task.steps.length&&spec.steps.every((s,i)=>s===task.steps[i]!.title)?spec:null;
+ if(!task.planAccepted)return null;
+ // A task keeps the steps it was planned with: the language may have changed since.
+ for(const {code} of LOCALES){
+  const spec=desktopAppendWorkflow(task.goal,code);
+  if(spec&&spec.steps.length===task.steps.length&&spec.steps.every((s,i)=>s===task.steps[i]!.title))return spec;
+ }
+ return null;
 }
 export function validDesktopEvidence(e:DesktopEvidence):boolean {
  return e.version===1&&['observation','verified-append','verified-save'].includes(e.kind)&&e.bundleId==='com.apple.TextEdit'

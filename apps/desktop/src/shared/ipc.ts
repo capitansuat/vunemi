@@ -498,6 +498,18 @@ export interface SpeakersView {
   models: SpeakersStatus;
 }
 
+/**
+ * Letting another assistant (Claude, Codex) read meetings: whether the user
+ * allows it, and what they add to that assistant's settings to connect it.
+ */
+export interface MeetingsSharedView {
+  on: boolean;
+  /** For Claude's settings file, as JSON. */
+  claude: string;
+  /** For Codex's settings file, as TOML. */
+  codex: string;
+}
+
 export type MeetingState = "recording" | "transcribing" | "separating" | "summarising" | "done" | "failed";
 
 export interface MeetingSummaryView {
@@ -680,6 +692,9 @@ export interface VunemiApi {
   downloadMeetingSpeakers(): Promise<SpeakersView>;
   cancelMeetingSpeakers(): Promise<void>;
   onMeetingSpeakers(listener: (view: SpeakersView) => void): () => void;
+  /** Null where this build has no program for it. */
+  meetingsShared(): Promise<MeetingsSharedView | null>;
+  setMeetingsShared(on: boolean): Promise<MeetingsSharedView | null>;
   onMeetings(listener: (status: MeetingStatusView) => void): () => void;
   onMeetingLine(listener: (id: string, line: MeetingLine) => void): () => void;
   forgetEverything(): Promise<void>;
@@ -934,6 +949,8 @@ export const CH = {
   meetingSpeakersDownload: "meetings:speakers-download",
   meetingSpeakersCancel: "meetings:speakers-cancel",
   meetingSpeakersChanged: "meetings:speakers-changed",
+  meetingsShared: "meetings:shared",
+  meetingsSharedSet: "meetings:shared-set",
   meetingsChanged: "meetings:changed",
   meetingsLine: "meetings:line",
   forgetEverything: "data:forget-everything",

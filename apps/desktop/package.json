@@ -78,6 +78,10 @@
         {
           "from": "../../native/VunemiRecorder/.build/release/VunemiRecorder",
           "to": "VunemiRecorder"
+        },
+        {
+          "from": "../../native/VunemiMeetings/.build/release/VunemiMeetings",
+          "to": "VunemiMeetings"
         }
       ],
       "icon": "build/icon.png",

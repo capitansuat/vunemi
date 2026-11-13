@@ -8,6 +8,9 @@
  *
  * Symbolic links are not followed, hidden entries are skipped (as Spotlight
  * results were), and every hit is still checked by Roots by the caller.
+ *
+ * The walk runs where Vunemi's window is answered from, so it lets go every
+ * few milliseconds: the window stays alive and Stop reaches it.
  */
 import { closeSync, openSync, readSync, readdirSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -50,14 +53,25 @@ export interface WalkResult {
   cut: boolean;
 }
 
-export function walkSearch(places: string[], words: string, limits: WalkLimits): WalkResult {
+/** How long the walk holds on before it lets other work through. */
+const HOLD_MS = 12;
+
+export async function walkSearch(places: string[], words: string, limits: WalkLimits): Promise<WalkResult> {
   const match = walkMatcher(words);
   const found: string[] = [];
   let seen = 0;
   let cut = false;
+  let held = Date.now();
+  const breathe = async () => {
+    if (Date.now() - held < HOLD_MS) return;
+    await new Promise<void>((resume) => setImmediate(resume));
+    held = Date.now();
+    if (limits.signal?.aborted) throw limits.signal.reason ?? new Error("aborted");
+  };
   const queue = [...places];
   while (queue.length > 0) {
     if (limits.signal?.aborted) throw limits.signal.reason ?? new Error("aborted");
+    await breathe();
     if (found.length >= limits.maxFound || seen >= limits.maxEntries || Date.now() > limits.deadline) {
       cut = true;
       break;
@@ -81,6 +95,11 @@ export function walkSearch(places: string[], words: string, limits: WalkLimits):
         continue;
       }
       if (!entry.isFile()) continue;
+      await breathe();
+      if (Date.now() > limits.deadline) {
+        cut = true;
+        break;
+      }
       if (match.name(entry.name) || (match.text && TEXT.has(extname(entry.name).toLowerCase()) && contains(path, match.text, limits.maxTextBytes))) {
         found.push(path);
         if (found.length >= limits.maxFound) {
@@ -96,10 +115,12 @@ export function walkSearch(places: string[], words: string, limits: WalkLimits):
 function contains(path: string, test: (content: string) => boolean, max: number): boolean {
   let fd: number | null = null;
   try {
-    if (statSync(path).size > max) return false;
+    const size = statSync(path).size;
+    if (size > max) return false;
     fd = openSync(path, "r");
-    const buffer = Buffer.alloc(max);
-    const length = readSync(fd, buffer, 0, max, 0);
+    // As large as the file, not as the limit: a megabyte for every small file was most of the walk's time.
+    const buffer = Buffer.allocUnsafe(size);
+    const length = readSync(fd, buffer, 0, size, 0);
     const bytes = buffer.subarray(0, length);
     if (bytes.subarray(0, 8192).includes(0)) return false;
     return test(bytes.toString("utf8"));

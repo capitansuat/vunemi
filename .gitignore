@@ -8,6 +8,7 @@ coverage/
 native/VunemiHelper/.build/
 native/VunemiVaultHelper/.build/
 native/VunemiRecorder/.build/
+native/VunemiMeetings/.build/
 apps/desktop/release/
 
 # Conflict copies a sync service leaves next to files ("name 2.ts").
