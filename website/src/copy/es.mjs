@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un asistente personal que funciona en tu Mac", description: "Vunemi ayuda con las tareas diarias. La IA funciona en tu Mac, sin cuenta en la nube de Vunemi. Tú eliges qué servicios externos conectar." },
-    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.2.6." },
+    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.2.7." },
     screens: { title: "Pantallas de Vunemi", description: "Pantallas reales de la app Vunemi para Mac, capturadas con datos de ejemplo." },
-    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.2.6 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
+    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.2.7 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
   },
   hero: {
     eyebrow: "Asistente personal para Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Todo lo que puede hacer Vunemi",
-    intro: "Vunemi 0.2.6 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
+    intro: "Vunemi 0.2.7 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
     chatTitle: "Trabajar con Vunemi",
     chat: [
       { title: "Primero, el plan", body: "En una tarea de varios pasos, Vunemi puede mostrarte antes el plan. Adelante, edita los pasos o cancela." },
@@ -188,9 +188,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Novedades de esta versión",
     highlights: [
-      "En la tarjeta de aprobación de una tarea ahora puedes aprobar el resto: esa app y los cambios locales dejan de preguntar hasta que termine. Algunas tareas pedían muchas aprobaciones pequeñas seguidas, lo que estorbaba el trabajo; sin esto, cada paso sigue preguntando por separado, como antes.",
-      "Enviar, eliminar, reemplazar un archivo, las apps de correo, mensajería y navegadores, y las advertencias siguen preguntando. Volver a preguntar lo deshace, y termina solo si Vunemi no puede saber si un paso surtió efecto.",
-      "Un texto largo escrito en una app del Mac (unos 770 caracteres o más) se quedaba a medias porque al paso se le acababa el tiempo. Ahora recibe tiempo según su longitud; si aun así se corta, Vunemi indica que el paso puede estar incompleto en lugar de darlo por hecho.",
+      "Si también usas Claude o Codex, ahora puedes permitirle leer las reuniones que grabó Vunemi, también mientras se graba una, para no copiar la transcripción a mano. Está desactivado hasta que lo actives en Reuniones, y solo puede leer.",
+      "Lo que lee va al servicio de ese asistente, así que sale de tu Mac. Sin ello, todo en Vunemi funciona como antes y tus reuniones se quedan en tu Mac.",
+      "Dos mensajes sobre la dirección de un servidor de modelos y los pasos del plan para añadir texto a un documento de TextEdit en segundo plano salían siempre en turco; ahora siguen el idioma de la app. Una tarea programada que no puede empezar ya no deja activa su restricción de apps.",
     ],
     title: "Descarga Vunemi",
     intro: "Gratis y de código abierto. Para Mac con Apple Silicon y macOS 14 o posterior.",

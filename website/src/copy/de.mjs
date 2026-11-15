@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.2.6 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.2.7 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.2.6 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.2.7 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.2.6 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.2.7 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -188,9 +188,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Auf der Freigabekarte einer Aufgabe kannst du jetzt den Rest der Aufgabe freigeben: Diese App und lokale Änderungen fragen bis zum Ende nicht mehr. Manche Aufgaben verlangten viele kleine Freigaben hintereinander, und das störte die Arbeit; ohne das fragt jeder Schritt wie bisher einzeln.",
-      "Senden, Löschen, das Ersetzen einer Datei, Mail-, Nachrichten- und Browser-Apps sowie Warnungen fragen weiterhin. Mit „Wieder fragen“ nimmst du es zurück, und es endet von selbst, wenn Vunemi nicht erkennen kann, ob ein Schritt gewirkt hat.",
-      "Langer Text, der in eine Mac-App getippt wird (ab etwa 770 Zeichen), brach mittendrin ab, weil dem Schritt die Zeit ausging. Jetzt bekommt er Zeit passend zu seiner Länge; wird er trotzdem abgeschnitten, meldet Vunemi den Schritt als möglicherweise unvollständig statt als erledigt.",
+      "Wenn du auch Claude oder Codex nutzt, kannst du ihm jetzt erlauben, die von Vunemi aufgenommenen Besprechungen zu lesen, auch während einer Aufnahme. So musst du keine Mitschrift von Hand hinüberkopieren. Es ist aus, bis du es unter Besprechungen einschaltest, und es kann nur lesen.",
+      "Was es liest, geht an den Dienst dieses Assistenten und verlässt damit deinen Mac. Ohne es funktioniert in Vunemi alles wie bisher, und deine Besprechungen bleiben auf deinem Mac.",
+      "Zwei Meldungen zur Adresse eines Modellservers und die Planschritte beim Hinzufügen von Text zu einem TextEdit-Dokument im Hintergrund erschienen immer auf Türkisch; jetzt folgen sie der App-Sprache. Eine geplante Aufgabe, die nicht starten kann, lässt ihre App-Beschränkung nicht mehr bestehen.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

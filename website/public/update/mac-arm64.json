@@ -1,73 +1,73 @@
 {
-  "currentRelease": "0.2.6",
+  "currentRelease": "0.2.7",
   "releases": [
     {
-      "version": "0.2.6",
+      "version": "0.2.7",
       "updateTo": {
-        "version": "0.2.6",
-        "name": "Vunemi 0.2.6",
-        "pub_date": "2026-11-02T00:00:00Z",
+        "version": "0.2.7",
+        "name": "Vunemi 0.2.7",
+        "pub_date": "2026-11-15T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.6/Vunemi-0.2.6-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.7/Vunemi-0.2.7-arm64.zip"
       }
     }
   ],
-  "sizeMb": 143,
+  "sizeMb": 144,
   "notes": {
     "en": [
-      "On a task's approval card you can now approve the rest of the task: that app and local changes stop asking until the task ends. Some tasks asked for many small approvals in a row, and pressing each one got in the way; without it, every step still asks on its own, as before.",
-      "Sending, deleting, replacing a file, mail, messaging and browser apps, and warnings still ask. Ask again takes it back, and it ends by itself if Vunemi can't tell whether a step took effect.",
-      "Long text typed into a Mac app (about 770 characters or more) used to stop partway because the step ran out of time. It now gets time in proportion to its length, and if it is still cut off, Vunemi reports the step as possibly incomplete instead of done."
+      "If you also use Claude or Codex, you can now let it read the meetings Vunemi recorded, also while one is being recorded, so you don't copy a transcript across by hand. It is off until you turn it on in Meetings, and it can only read.",
+      "What it reads goes to that assistant's own service, so it leaves your Mac. Without it, everything in Vunemi works as before and your meetings stay on your Mac.",
+      "Two messages about a model server's address and the plan steps for adding text to a TextEdit document in the background always appeared in Turkish; they now follow the app's language. A scheduled task that cannot start no longer leaves its app restriction in force."
     ],
     "de": [
-      "Auf der Freigabekarte einer Aufgabe kannst du jetzt den Rest der Aufgabe freigeben: Diese App und lokale Änderungen fragen bis zum Ende nicht mehr. Manche Aufgaben verlangten viele kleine Freigaben hintereinander, und das störte die Arbeit; ohne das fragt jeder Schritt wie bisher einzeln.",
-      "Senden, Löschen, das Ersetzen einer Datei, Mail-, Nachrichten- und Browser-Apps sowie Warnungen fragen weiterhin. Mit „Wieder fragen“ nimmst du es zurück, und es endet von selbst, wenn Vunemi nicht erkennen kann, ob ein Schritt gewirkt hat.",
-      "Langer Text, der in eine Mac-App getippt wird (ab etwa 770 Zeichen), brach mittendrin ab, weil dem Schritt die Zeit ausging. Jetzt bekommt er Zeit passend zu seiner Länge; wird er trotzdem abgeschnitten, meldet Vunemi den Schritt als möglicherweise unvollständig statt als erledigt."
+      "Wenn du auch Claude oder Codex nutzt, kannst du ihm jetzt erlauben, die von Vunemi aufgenommenen Besprechungen zu lesen, auch während einer Aufnahme. So musst du keine Mitschrift von Hand hinüberkopieren. Es ist aus, bis du es unter Besprechungen einschaltest, und es kann nur lesen.",
+      "Was es liest, geht an den Dienst dieses Assistenten und verlässt damit deinen Mac. Ohne es funktioniert in Vunemi alles wie bisher, und deine Besprechungen bleiben auf deinem Mac.",
+      "Zwei Meldungen zur Adresse eines Modellservers und die Planschritte beim Hinzufügen von Text zu einem TextEdit-Dokument im Hintergrund erschienen immer auf Türkisch; jetzt folgen sie der App-Sprache. Eine geplante Aufgabe, die nicht starten kann, lässt ihre App-Beschränkung nicht mehr bestehen."
     ],
     "es": [
-      "En la tarjeta de aprobación de una tarea ahora puedes aprobar el resto: esa app y los cambios locales dejan de preguntar hasta que termine. Algunas tareas pedían muchas aprobaciones pequeñas seguidas, lo que estorbaba el trabajo; sin esto, cada paso sigue preguntando por separado, como antes.",
-      "Enviar, eliminar, reemplazar un archivo, las apps de correo, mensajería y navegadores, y las advertencias siguen preguntando. Volver a preguntar lo deshace, y termina solo si Vunemi no puede saber si un paso surtió efecto.",
-      "Un texto largo escrito en una app del Mac (unos 770 caracteres o más) se quedaba a medias porque al paso se le acababa el tiempo. Ahora recibe tiempo según su longitud; si aun así se corta, Vunemi indica que el paso puede estar incompleto en lugar de darlo por hecho."
+      "Si también usas Claude o Codex, ahora puedes permitirle leer las reuniones que grabó Vunemi, también mientras se graba una, para no copiar la transcripción a mano. Está desactivado hasta que lo actives en Reuniones, y solo puede leer.",
+      "Lo que lee va al servicio de ese asistente, así que sale de tu Mac. Sin ello, todo en Vunemi funciona como antes y tus reuniones se quedan en tu Mac.",
+      "Dos mensajes sobre la dirección de un servidor de modelos y los pasos del plan para añadir texto a un documento de TextEdit en segundo plano salían siempre en turco; ahora siguen el idioma de la app. Una tarea programada que no puede empezar ya no deja activa su restricción de apps."
     ],
     "fr": [
-      "Sur la carte d’approbation d’une tâche, vous pouvez désormais approuver le reste : cette app et les modifications locales ne demandent plus jusqu’à la fin. Certaines tâches demandaient beaucoup de petites approbations à la suite, ce qui gênait le travail ; sans cela, chaque étape demande séparément.",
-      "L’envoi, la suppression, le remplacement d’un fichier, les apps de mail, de messagerie et les navigateurs, ainsi que les avertissements, demandent toujours. Demander à nouveau l’annule, et cela prend fin tout seul si Vunemi ne peut pas savoir si une étape a abouti.",
-      "Un long texte saisi dans une app Mac (environ 770 caractères ou plus) s’arrêtait en cours de route, faute de temps pour l’étape. Il dispose maintenant d’un délai proportionnel à sa longueur ; s’il est tout de même coupé, Vunemi signale l’étape comme peut-être incomplète au lieu de la dire terminée."
+      "Si vous utilisez aussi Claude ou Codex, vous pouvez désormais l’autoriser à lire les réunions enregistrées par Vunemi, y compris pendant un enregistrement : plus besoin de copier une transcription à la main. C’est désactivé tant que vous ne l’activez pas dans Réunions, et il ne peut que lire.",
+      "Ce qu’il lit part vers le service de cet assistant et quitte donc votre Mac. Sans cela, tout fonctionne comme avant dans Vunemi et vos réunions restent sur votre Mac.",
+      "Deux messages sur l’adresse d’un serveur de modèles et les étapes du plan d’ajout de texte à un document TextEdit en arrière-plan s’affichaient toujours en turc ; ils suivent désormais la langue de l’app. Une tâche planifiée qui ne peut pas démarrer ne laisse plus sa restriction d’apps en vigueur."
     ],
     "it": [
-      "Nella scheda di approvazione di un’attività ora puoi approvare il resto: quell’app e le modifiche locali non chiedono più fino alla fine. Alcune attività chiedevano molte piccole approvazioni di seguito, e questo intralciava il lavoro; senza, ogni passaggio chiede da solo, come prima.",
-      "Invio, eliminazione, sostituzione di un file, app di posta, messaggistica e browser, e gli avvisi chiedono comunque. Chiedi di nuovo lo annulla, e termina da solo se Vunemi non riesce a capire se un passaggio ha avuto effetto.",
-      "Un testo lungo digitato in un’app per Mac (circa 770 caratteri o più) si fermava a metà perché il passaggio esauriva il tempo. Ora riceve un tempo proporzionato alla lunghezza; se viene comunque interrotto, Vunemi segnala il passaggio come forse incompleto invece che concluso."
+      "Se usi anche Claude o Codex, ora puoi permettergli di leggere le riunioni registrate da Vunemi, anche durante una registrazione, così non devi copiare la trascrizione a mano. È disattivato finché non lo attivi in Riunioni, e può solo leggere.",
+      "Ciò che legge va al servizio di quell’assistente, quindi esce dal tuo Mac. Senza, tutto in Vunemi funziona come prima e le tue riunioni restano sul tuo Mac.",
+      "Due messaggi sull’indirizzo di un server di modelli e i passaggi del piano per aggiungere testo a un documento TextEdit in background comparivano sempre in turco; ora seguono la lingua dell’app. Un’attività programmata che non riesce a partire non lascia più attiva la sua restrizione sulle app."
     ],
     "tr": [
-      "Bir işin onay kartında artık işin geri kalanını onaylayabilirsin: o uygulama ve yerel değişiklikler iş bitene kadar sormaz. Bazı işler art arda çok sayıda küçük onay istiyordu ve her birine basmak işin önüne geçiyordu; bunu kullanmazsan her adım eskisi gibi ayrı ayrı sorar.",
-      "Gönderme, silme, bir dosyanın üstüne yazma, e-posta, mesajlaşma ve tarayıcı uygulamaları ve uyarılar yine sorar. Yine sor ile geri alırsın; Vunemi bir adımın sonucunu anlayamazsa kendiliğinden biter.",
-      "Bir Mac uygulamasına yazılan uzun metin (yaklaşık 770 karakter ve üstü) adımın süresi dolduğu için yarıda kalıyordu. Artık uzunluğuna göre süre alıyor; yine de kesilirse Vunemi adımı bitti diye değil, yarım kalmış olabilir diye bildiriyor."
+      "Claude ya da Codex de kullanıyorsan, artık Vunemi'nin kaydettiği toplantıları okumasına izin verebilirsin; kayıt sürerken de. Böylece dökümü elle kopyalaman gerekmez. Toplantılar'da sen açana kadar kapalıdır ve yalnız okuyabilir.",
+      "Okuduğu şey o asistanın kendi hizmetine gider, yani Mac'inden çıkar. Bu olmadan Vunemi'deki her şey eskisi gibi çalışır ve toplantıların Mac'inde kalır.",
+      "Model sunucusunun adresiyle ilgili iki mesaj ve TextEdit belgesine arka planda metin ekleme planının adımları hep Türkçe çıkıyordu; artık uygulamanın dilinde. Başlayamayan zamanlanmış bir iş de uygulama kısıtını artık geride bırakmıyor."
     ],
     "pt": [
-      "No cartão de aprovação de uma tarefa, agora você pode aprovar o resto: esse app e as alterações locais param de perguntar até ela terminar. Algumas tarefas pediam muitas aprovações pequenas em sequência, o que atrapalhava o trabalho; sem isso, cada etapa pergunta separadamente, como antes.",
-      "Enviar, excluir, substituir um arquivo, apps de e-mail, de mensagens e navegadores, e os avisos continuam perguntando. Perguntar de novo desfaz isso, e termina sozinho se o Vunemi não conseguir saber se uma etapa teve efeito.",
-      "Um texto longo digitado em um app do Mac (cerca de 770 caracteres ou mais) parava no meio porque o tempo da etapa acabava. Agora ele recebe um tempo proporcional ao tamanho; se mesmo assim for cortado, o Vunemi informa que a etapa pode estar incompleta, em vez de dá-la como concluída."
+      "Se você também usa o Claude ou o Codex, agora pode permitir que ele leia as reuniões gravadas pelo Vunemi, inclusive durante uma gravação, para não precisar copiar a transcrição à mão. Fica desativado até você ativar em Reuniões, e ele só pode ler.",
+      "O que ele lê vai para o serviço desse assistente, portanto sai do seu Mac. Sem isso, tudo no Vunemi funciona como antes e suas reuniões ficam no seu Mac.",
+      "Duas mensagens sobre o endereço de um servidor de modelos e as etapas do plano para adicionar texto a um documento do TextEdit em segundo plano apareciam sempre em turco; agora seguem o idioma do app. Uma tarefa agendada que não consegue iniciar não deixa mais sua restrição de apps em vigor."
     ],
     "ru": [
-      "На карточке одобрения задачи теперь можно одобрить остаток задачи: это приложение и локальные изменения больше не спрашивают до её конца. Некоторые задачи просили много мелких одобрений подряд, и нажимать каждое мешало работе; без этого каждый шаг, как и раньше, спрашивает отдельно.",
-      "Отправка, удаление, замена файла, приложения почты, сообщений и браузеры, а также предупреждения по-прежнему спрашивают. «Спрашивать снова» отменяет это, и всё заканчивается само, если Vunemi не может понять, сработал ли шаг.",
-      "Длинный текст, вводимый в приложение Mac (примерно от 770 символов), обрывался на середине, потому что у шага заканчивалось время. Теперь время зависит от длины текста; если ввод всё же прервётся, Vunemi сообщит, что шаг мог выполниться не полностью, а не что он завершён."
+      "Если вы пользуетесь ещё и Claude или Codex, теперь можно разрешить ему читать встречи, записанные Vunemi, в том числе во время записи, чтобы не копировать расшифровку вручную. Это выключено, пока вы не включите его в разделе «Встречи», и ассистент может только читать.",
+      "Прочитанное уходит в сервис этого ассистента, то есть покидает ваш Mac. Без этого всё в Vunemi работает как раньше, а встречи остаются на вашем Mac.",
+      "Два сообщения об адресе сервера моделей и шаги плана при добавлении текста в документ TextEdit в фоне всегда показывались по-турецки; теперь они на языке приложения. Задача по расписанию, которая не смогла запуститься, больше не оставляет в силе своё ограничение по приложениям."
     ],
     "zh": [
-      "现在可以在任务的批准卡片上批准任务的其余部分：在任务结束前，该应用和本地更改不再询问。有些任务会连续请求许多小批准，逐个点按会妨碍工作；不使用此功能时，每一步仍像以前一样单独询问。",
-      "发送、删除、替换文件、邮件、消息和浏览器应用以及警告仍会询问。“重新询问”可撤销此操作；如果 Vunemi 无法判断某一步是否生效，它也会自动结束。",
-      "在 Mac 应用中输入较长的文本（约 770 个字符以上）时，曾因该步骤超时而中途停止。现在会按文本长度给予足够时间；如果仍被中断，Vunemi 会说明这一步可能只完成了一部分，而不是报告已完成。"
+      "如果你也使用 Claude 或 Codex，现在可以允许它读取 Vunemi 录制的会议，录制过程中也可以，这样就不用手动复制转写稿。在“会议”中打开之前，它一直是关闭的，而且只能读取。",
+      "它读取的内容会发送到该助手自己的服务，因此会离开你的 Mac。不使用它时，Vunemi 的一切照常工作，会议也留在你的 Mac 上。",
+      "关于模型服务器地址的两条提示，以及在后台向 TextEdit 文稿添加文本时的计划步骤，以前始终以土耳其语显示；现在会跟随应用的语言。无法启动的定时任务也不会再让它的应用限制继续生效。"
     ],
     "ja": [
-      "タスクの承認カードで、タスクの残りをまとめて承認できるようになりました。そのアプリとローカルの変更については、タスクが終わるまで確認しません。小さな承認を続けて求めるタスクでは、一つずつ押すことが作業の妨げになっていました。使わない場合は、これまでどおり手順ごとに確認します。",
-      "送信、削除、ファイルの置き換え、メール・メッセージ・ブラウザのアプリ、警告は引き続き確認します。「再度確認する」で取り消せます。手順が反映されたか Vunemi が判断できない場合は自動的に終了します。",
-      "Mac のアプリに長い文章（約 770 文字以上）を入力すると、手順の時間切れで途中で止まっていました。現在は文章の長さに応じた時間が与えられます。それでも途中で切れた場合、Vunemi は完了とは伝えず、途中までしか入力されていない可能性があると伝えます。"
+      "Claude や Codex も使っている場合は、Vunemi が録音した会議の読み取りを許可できるようになりました。録音中も読み取れるので、文字起こしを手でコピーする必要がありません。「会議」でオンにするまではオフで、できるのは読み取りだけです。",
+      "読み取った内容はそのアシスタントのサービスに送られるため、Mac の外に出ます。使わない場合、Vunemi はこれまでどおり動作し、会議は Mac に残ります。",
+      "モデルサーバーのアドレスに関する 2 つのメッセージと、バックグラウンドで TextEdit 書類にテキストを追加するときの計画の手順が、常にトルコ語で表示されていました。現在はアプリの言語で表示されます。開始できなかったスケジュールタスクのアプリ制限が残ることもなくなりました。"
     ],
     "ko": [
-      "작업 승인 카드에서 이제 작업의 나머지를 한꺼번에 승인할 수 있습니다. 작업이 끝날 때까지 해당 앱과 로컬 변경은 묻지 않습니다. 어떤 작업은 작은 승인을 연달아 요청해 하나씩 누르는 것이 일에 방해가 되었습니다. 사용하지 않으면 이전처럼 단계마다 따로 묻습니다.",
-      "보내기, 삭제, 파일 덮어쓰기, 메일·메시지·브라우저 앱, 경고는 계속 묻습니다. 다시 묻기로 취소할 수 있으며, Vunemi가 단계의 결과를 알 수 없으면 저절로 끝납니다.",
-      "Mac 앱에 긴 글(약 770자 이상)을 입력하면 단계의 시간이 다 되어 중간에 멈추곤 했습니다. 이제 글 길이에 맞춰 시간이 주어집니다. 그래도 중간에 끊기면 Vunemi는 완료했다고 하지 않고 일부만 입력되었을 수 있다고 알립니다."
+      "Claude나 Codex도 사용한다면 이제 Vunemi가 녹음한 회의를 읽도록 허용할 수 있습니다. 녹음 중에도 읽을 수 있어 녹취록을 직접 복사할 필요가 없습니다. 회의에서 켜기 전까지는 꺼져 있으며 읽기만 할 수 있습니다.",
+      "읽은 내용은 해당 어시스턴트의 서비스로 전송되므로 Mac 밖으로 나갑니다. 사용하지 않으면 Vunemi의 모든 기능은 이전과 같이 작동하고 회의는 Mac에 남습니다.",
+      "모델 서버 주소에 관한 메시지 두 개와 백그라운드에서 TextEdit 문서에 텍스트를 추가할 때의 계획 단계가 항상 터키어로 표시되었습니다. 이제 앱의 언어를 따릅니다. 시작하지 못한 예약된 작업의 앱 제한이 남아 있는 일도 없어졌습니다."
     ]
   }
 }

@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.6 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.7 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.6 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.7 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.2.6 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.2.7 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -192,9 +192,9 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "On a task's approval card you can now approve the rest of the task: that app and local changes stop asking until the task ends. Some tasks asked for many small approvals in a row, and pressing each one got in the way; without it, every step still asks on its own, as before.",
-      "Sending, deleting, replacing a file, mail, messaging and browser apps, and warnings still ask. Ask again takes it back, and it ends by itself if Vunemi can't tell whether a step took effect.",
-      "Long text typed into a Mac app (about 770 characters or more) used to stop partway because the step ran out of time. It now gets time in proportion to its length, and if it is still cut off, Vunemi reports the step as possibly incomplete instead of done.",
+      "If you also use Claude or Codex, you can now let it read the meetings Vunemi recorded, also while one is being recorded, so you don't copy a transcript across by hand. It is off until you turn it on in Meetings, and it can only read.",
+      "What it reads goes to that assistant's own service, so it leaves your Mac. Without it, everything in Vunemi works as before and your meetings stay on your Mac.",
+      "Two messages about a model server's address and the plan steps for adding text to a TextEdit document in the background always appeared in Turkish; they now follow the app's language. A scheduled task that cannot start no longer leaves its app restriction in force.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],

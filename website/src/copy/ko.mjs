@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.6의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.7의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.6을 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.7을 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.2.6 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.2.7 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -188,9 +188,9 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "작업 승인 카드에서 이제 작업의 나머지를 한꺼번에 승인할 수 있습니다. 작업이 끝날 때까지 해당 앱과 로컬 변경은 묻지 않습니다. 어떤 작업은 작은 승인을 연달아 요청해 하나씩 누르는 것이 일에 방해가 되었습니다. 사용하지 않으면 이전처럼 단계마다 따로 묻습니다.",
-      "보내기, 삭제, 파일 덮어쓰기, 메일·메시지·브라우저 앱, 경고는 계속 묻습니다. 다시 묻기로 취소할 수 있으며, Vunemi가 단계의 결과를 알 수 없으면 저절로 끝납니다.",
-      "Mac 앱에 긴 글(약 770자 이상)을 입력하면 단계의 시간이 다 되어 중간에 멈추곤 했습니다. 이제 글 길이에 맞춰 시간이 주어집니다. 그래도 중간에 끊기면 Vunemi는 완료했다고 하지 않고 일부만 입력되었을 수 있다고 알립니다.",
+      "Claude나 Codex도 사용한다면 이제 Vunemi가 녹음한 회의를 읽도록 허용할 수 있습니다. 녹음 중에도 읽을 수 있어 녹취록을 직접 복사할 필요가 없습니다. 회의에서 켜기 전까지는 꺼져 있으며 읽기만 할 수 있습니다.",
+      "읽은 내용은 해당 어시스턴트의 서비스로 전송되므로 Mac 밖으로 나갑니다. 사용하지 않으면 Vunemi의 모든 기능은 이전과 같이 작동하고 회의는 Mac에 남습니다.",
+      "모델 서버 주소에 관한 메시지 두 개와 백그라운드에서 TextEdit 문서에 텍스트를 추가할 때의 계획 단계가 항상 터키어로 표시되었습니다. 이제 앱의 언어를 따릅니다. 시작하지 못한 예약된 작업의 앱 제한이 남아 있는 일도 없어졌습니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",
