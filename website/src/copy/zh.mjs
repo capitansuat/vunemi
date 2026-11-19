@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.2.7 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.2.8 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.2.7，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.2.8，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -63,7 +63,7 @@ export default {
       { title: "定时任务", body: "让它每天早上做一份汇总，或每周检查一次。定时任务在 Vunemi 打开时运行，绝不会发送、删除或付款。", example: "每天早上 9 点汇总我的日历。" },
       { title: "给它看图片", body: "附上截图或照片。能看懂图片的模型会描述内容；换成其他模型，Vunemi 也能在你的 Mac 上读出图中的文字。", example: "这张截图里的错误是什么意思？" },
       { title: "记住你说过的话", body: "告诉它你喜欢的工作方式，或谁是谁；经你同意后，它会用你的原话记下来。每个回答都会显示它收到了哪些笔记；你可以在设置中编辑或删除。", example: "记住：我要 PDF 格式的报告。" },
-      { title: "录制会议", body: "点击“录制”以采集麦克风和 Mac 声音。Vunemi 在此 Mac 上生成文字记录和摘要；摘要完成后将音频移入废纸篓。需要 macOS 14.2 或更高版本。", example: "录制这场会议。" },
+      { title: "录制会议", body: "点击“录制”以采集麦克风和 Mac 声音。Vunemi 在此 Mac 上生成文字记录和摘要；摘要完成后将音频移入废纸篓。休息时可点“暂停”停止录制，点“继续”接着录制同一场会议。需要 macOS 14.2 或更高版本。", example: "录制这场会议。" },
       { title: "带入之前的工作", body: "输入 @，选择之前的会话或会议。其中的提问和回答，或会议的摘要，会随消息一起发送；每条消息最多五个。", example: "我们在 @罗马之行 里选了哪家酒店？" },
       { title: "制作文档，编辑照片和视频", body: "借助需要时再下载的扩展，Vunemi 可以撰写 Word 和 PDF 文档，制作带公式和图表的 Excel 工作簿，制作 PowerPoint 演示文稿，合并和拆分 PDF，编辑照片，剪辑短视频。每个结果都是一个新文件。", example: "把这张照片裁成正方形，再调亮一点。" },
     ],
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.2.7：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.2.8：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -188,9 +188,8 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "如果你也使用 Claude 或 Codex，现在可以允许它读取 Vunemi 录制的会议，录制过程中也可以，这样就不用手动复制转写稿。在“会议”中打开之前，它一直是关闭的，而且只能读取。",
-      "它读取的内容会发送到该助手自己的服务，因此会离开你的 Mac。不使用它时，Vunemi 的一切照常工作，会议也留在你的 Mac 上。",
-      "关于模型服务器地址的两条提示，以及在后台向 TextEdit 文稿添加文本时的计划步骤，以前始终以土耳其语显示；现在会跟随应用的语言。无法启动的定时任务也不会再让它的应用限制继续生效。",
+      "现在可以在会议录制中途暂停休息，再继续录制，在录制界面或菜单栏中都可以操作。暂停时，Vunemi 会释放麦克风和 Mac 的声音，期间不会录制任何内容。",
+      "无论暂停多少次，仍然是同一段录音、同一份文字记录和同一份摘要，休息前后说的话绝不会被写进同一行。计时只显示实际录制的时间，不含休息。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

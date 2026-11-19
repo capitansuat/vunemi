@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.7 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.8 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.7 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.8 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -65,7 +65,7 @@ export default {
       { title: "Repeat tasks on a schedule", body: "Ask for a morning summary or a weekly check. Scheduled tasks run while Vunemi is open, and they never send, delete or pay.", example: "Every morning at 9, sum up my calendar." },
       { title: "Show it a picture", body: "Attach a screenshot or a photo. Models that can see images describe them; with other models, Vunemi still reads the text in them on your Mac.", example: "What does the error in this screenshot mean?" },
       { title: "Remembers what you tell it", body: "Tell it how you like to work, or who is who, and it keeps a note in your own words once you say yes. Each answer says which notes it was given; edit or delete them in Settings.", example: "Remember: I want reports as PDF." },
-      { title: "Record a meeting", body: "Press Record to capture your microphone and the sound from your Mac. Vunemi writes a transcript and summary on this Mac; after a successful summary, it moves the audio to the Trash. Requires macOS 14.2 or later.", example: "Record this meeting." },
+      { title: "Record a meeting", body: "Press Record to capture your microphone and the sound from your Mac. Vunemi writes a transcript and summary on this Mac; after a successful summary, it moves the audio to the Trash. Pause stops recording for a break; Resume carries on in the same meeting. Requires macOS 14.2 or later.", example: "Record this meeting." },
       { title: "Bring in earlier work", body: "Type @ to pick an earlier session or a meeting. Its questions and answers, or the meeting's summary, go with your message; up to five at a time.", example: "Which hotel did we choose in @Rome trip?" },
       { title: "Make documents, edit photos and video", body: "With add-ons you download when you want them, Vunemi writes Word and PDF documents, makes Excel workbooks with formulas and charts, builds PowerPoint decks, joins and splits PDFs, edits photos and cuts short videos. Each result is a new file.", example: "Crop this photo to a square and brighten it a little." },
     ],
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.2.7 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.2.8 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -192,9 +192,8 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "If you also use Claude or Codex, you can now let it read the meetings Vunemi recorded, also while one is being recorded, so you don't copy a transcript across by hand. It is off until you turn it on in Meetings, and it can only read.",
-      "What it reads goes to that assistant's own service, so it leaves your Mac. Without it, everything in Vunemi works as before and your meetings stay on your Mac.",
-      "Two messages about a model server's address and the plan steps for adding text to a TextEdit document in the background always appeared in Turkish; they now follow the app's language. A scheduled task that cannot start no longer leaves its app restriction in force.",
+      "While a meeting is being recorded you can now pause it for a break and resume it, from the recording or the menu bar. Paused, Vunemi lets go of the microphone and the Mac's sound, so nothing is recorded in between.",
+      "However often you pause, it stays one recording, one transcript and one summary, and what was said before and after a break is never written as one line. The clock shows the recorded time, without the breaks.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],
