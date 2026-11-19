@@ -1964,7 +1964,7 @@ export const messages: Catalogue = {
   },
   addons: {
     intro: "추가 기능을 선택하면 지원되는 모든 로컬 편집 기능을 사용할 수 있습니다. 선택한 추가 기능만 다운로드합니다. 각각 별도의 프로그램으로, Vunemi가 시험한 사본을 Vunemi의 릴리스 페이지에서 한 번 다운로드하고 설치 전에 검증합니다. 이 Mac에서 네트워크 접근 없이 실행되며 Vunemi가 건네준 파일만 볼 수 있습니다.",
-    credit: "이 프로그램들은 ArtCraft 팀의 Craft 앱으로, MIT 또는 Apache-2.0 라이선스의 오픈 소스입니다. 아직 초기 단계라 결과가 Word, Excel, PowerPoint와 다를 수 있습니다.",
+    credit: "이 프로그램들은 ArtCraft 팀의 Craft 앱으로, MIT 또는 Apache-2.0 라이선스의 오픈 소스입니다. 아직 초기 단계라 결과가 Word, Excel, PowerPoint와 다를 수 있습니다. Markdown 변환은 Microsoft의 MarkItDown(MIT)이며, Vunemi가 자체 Python과 함께 패키징합니다.",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "추가 기능 검색",
     all: "전체",
@@ -1991,6 +1991,7 @@ export const messages: Catalogue = {
       drawing: { title: "그리기", body: "벡터 그림, 도형, 텍스트를 만들고 편집하며 SVG, PNG, PDF로 내보냅니다." },
       photo: { title: "사진 편집", body: "레이어, 보정, 조정, 효과로 이미지를 편집하고 형식을 변환합니다." },
       video: { title: "동영상 편집", body: "동영상 타임라인, 클립, 제목, 효과, 오디오를 편집하고 완성된 동영상을 내보냅니다." },
+      markdown: { title: "파일을 Markdown으로", body: "Word, Excel, PowerPoint, PDF, 웹 페이지, 전자책, Outlook 메시지를 제목·목록·표를 유지한 채 Markdown으로 변환합니다." },
     },
     failed: {
       space: "디스크 공간이 부족합니다.",

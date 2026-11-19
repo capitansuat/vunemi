@@ -11,6 +11,14 @@
  *
  * The first ones are the ArtCraft team's Craft apps (MIT or Apache-2.0), in
  * their headless command-line form.
+ *
+ * MarkItDown is the exception: Microsoft publishes it only as a Python
+ * package, so there is no program of theirs to keep. Vunemi builds one
+ * (scripts/build-markitdown.sh: their package and its dependencies, pinned by
+ * hash, with a Python of its own) and keeps that on the same shelf. It has no
+ * developer's signature to check; the size and SHA-256 here, which ship
+ * inside the signed app, are the whole check, as they are the first one for
+ * every other add-on.
  */
 
 import type { AddonCategory, AddonId } from "../../shared/ipc.js";
@@ -41,6 +49,8 @@ export interface AddonSource {
   binary: string;
   size: number;
   sha256: string;
+  /** The Apple team that signs the program; null for the one Vunemi builds itself (see above). */
+  team: string | null;
 }
 
 /** Where the copies are kept: releases of Vunemi's own repository, apart from the app's versions. */
@@ -52,7 +62,7 @@ export const ADDON_TEAM = "DJ6XS33FX8";
 const craft = (id: AddonId, category: AddonCategory, engine: string, version: string, size: number, sha256: string): AddonSource => {
   const name = engine.toLowerCase();
   const folder = `${name}-cli-${version}-macos-universal`;
-  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, shelf: "addons-2", file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256 };
+  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, shelf: "addons-2", file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256, team: ADDON_TEAM };
 };
 
 export const ADDONS: readonly AddonSource[] = [
@@ -63,6 +73,13 @@ export const ADDONS: readonly AddonSource[] = [
   craft("drawing", "images", "VectorCraft", "0.18.0", 115_481_401, "694d216cc0ac8ff32dc1c32ffa318da9e5229d58bc821e378eef6f3739286744"),
   craft("photo", "images", "PhotoCraft", "0.17.0", 106_003_284, "6edff99cc1977508bea9b5566f551374e7b8ef42a21502ee084a1d969f0d54c0"),
   craft("video", "video", "FilmCraft", "0.14.0", 93_928_472, "c9dc8dfd9c63edb2f793f0727dc9816e4432ea545fa8cd7331d242944d843087"),
+  {
+    id: "markdown", category: "office", engine: "MarkItDown", publisher: "Microsoft", licence: "MIT", repo: "microsoft/markitdown",
+    tag: "v0.1.9", shelf: "addons-3", file: "markitdown-0.1.9-macos-arm64.zip", folder: "markitdown-0.1.9-macos-arm64", binary: "markitdown",
+    // From scripts/build-markitdown.sh on an Apple Silicon Mac; the same lock gives the same zip.
+    size: 0, sha256: "",
+    team: null,
+  },
 ];
 
 export function addonUrl(a: AddonSource): string {

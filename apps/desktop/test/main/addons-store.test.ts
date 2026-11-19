@@ -26,6 +26,7 @@ const GRID: AddonSource = {
   binary: "gridcraft-cli",
   size: 1000,
   sha256: "a".repeat(64),
+  team: "DJ6XS33FX8",
 };
 
 let dir = "";
@@ -88,6 +89,13 @@ describe("add-ons", () => {
     expect(await a.install("sheets")).toEqual({ state: "failed", reason: "signature" });
     expect(a.binary("sheets")).toBeNull();
     expect(existsSync(join(dir, "sheets"))).toBe(false);
+  });
+
+  it("installs the add-on Vunemi builds itself on its checksum alone: it has no developer signature to ask for", async () => {
+    let checked = 0;
+    const a = addons({ catalog: [{ ...GRID, team: null }], signedBy: async () => (checked++, null) });
+    expect(await a.install("sheets")).toEqual({ state: "ready", version: "9.9.9" });
+    expect(checked).toBe(0);
   });
 
   it("names why a download failed, and can be tried again", async () => {

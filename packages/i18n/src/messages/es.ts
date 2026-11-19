@@ -1964,7 +1964,7 @@ export const messages: Catalogue = {
   },
   addons: {
     intro: "Elige complementos para acceder a todas sus funciones de edición local compatibles. Solo se descargan cuando los eliges. Cada una es un programa aparte: la copia con la que se probó Vunemi se descarga una vez desde la página de versiones de Vunemi y se comprueba antes de instalarse. Funcionan en este Mac sin acceso a la red y solo ven los archivos que Vunemi les entrega.",
-    credit: "Los programas son las apps Craft del equipo de ArtCraft, de código abierto con licencia MIT o Apache-2.0. Son jóvenes: el resultado puede diferir del de Word, Excel o PowerPoint.",
+    credit: "Los programas son las apps Craft del equipo de ArtCraft, de código abierto con licencia MIT o Apache-2.0. Son jóvenes: el resultado puede diferir del de Word, Excel o PowerPoint. La conversión a Markdown es MarkItDown de Microsoft (MIT), que Vunemi empaqueta con su propia copia de Python.",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "Buscar complementos",
     all: "Todos",
@@ -1991,6 +1991,7 @@ export const messages: Catalogue = {
       drawing: { title: "Dibujo", body: "Crea y edita dibujos vectoriales, formas y texto, y exporta SVG, PNG o PDF." },
       photo: { title: "Edición de fotos", body: "Edita imágenes con capas, retoques, ajustes y efectos, y convierte formatos." },
       video: { title: "Edición de vídeo", body: "Edita líneas de tiempo, clips, títulos, efectos y audio, y exporta vídeos terminados." },
+      markdown: { title: "Archivos a Markdown", body: "Convierte Word, Excel, PowerPoint, PDF, páginas web, libros electrónicos y mensajes de Outlook en Markdown, con sus títulos, listas y tablas." },
     },
     failed: {
       space: "No hay suficiente espacio en disco.",

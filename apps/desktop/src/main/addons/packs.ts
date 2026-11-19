@@ -21,6 +21,7 @@ import { PHOTO_GUIDE, photoTools } from "./tools/photo.js";
 import { SHEETS_GUIDE, sheetTools } from "./tools/sheets.js";
 import { SLIDES_GUIDE, slideTools } from "./tools/slides.js";
 import { VIDEO_GUIDE, videoTools } from "./tools/video.js";
+import { MARKDOWN_GUIDE, markdownTools } from "./tools/markdown.js";
 
 export interface AddonPack {
   id: AddonId;
@@ -89,6 +90,14 @@ export const PACKS: readonly AddonPack[] = [
     wanted: /(?<!\p{L})(?:video|mp4|montaj|kurgu)(?!\p{L})|视频|動画|동영상|видео/iu,
     tools: videoTools,
   },
+  {
+    id: "markdown", area: "markdown", name: "files to Markdown",
+    summary: "convert Office, PDF, HTML and more to Markdown",
+    guide: MARKDOWN_GUIDE,
+    // Not ".md" alone: a request to edit notes.md is not one to convert anything.
+    wanted: /(?<!\p{L})markdown|(?<!\p{L})md(?:'?(?:ye|ya|e|a)(?!\p{L})|\s+(?:dosya|format|olarak|file))|マークダウン|마크다운|маркдаун/iu,
+    tools: markdownTools,
+  },
 ];
 
 const sourceOf = (pack: AddonPack): string => `addon:${pack.id}`;
@@ -141,6 +150,7 @@ function fullGuide(pack: AddonPack): string {
     documents: 'commands --json', sheets: 'commands --json --search <feature>',
     slides: 'commands <feature>', pdf: 'tools', drawing: 'commands',
     photo: 'commands --json --filter <feature>', video: 'commands <feature> --json',
+    markdown: '--help',
   };
   return `Full engine access:\n- ${pack.id}_engine_help shows the installed CLI. ${pack.id}_engine_run reaches its complete supported command set, formats and options. The short tools below are conveniences, not feature limits. Discover commands with CLI args for ${catalogue[pack.id]}; do not guess command IDs or parameters.\n- Pass argv as args, source files as inputs {path,name}, inline assets/scripts as files {name,text}, and saved files or directories as outputs {name,path}. Names are relative to the temporary job; use them in argv and JSON parameters. Jobs do not persist between calls: export anything needed later, including linked assets. No outputs means only the isolated job changes.\n- Read the input structure first; use engine inspection/calculation to check requested changes, and render with the engine when a visual check is needed. A saved file counts as verified only after files_read with checks on it. Report unsupported operations and engine errors accurately.`;
 }

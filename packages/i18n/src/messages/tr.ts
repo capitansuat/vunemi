@@ -1972,7 +1972,7 @@ export const messages = {
   },
   addons: {
     intro: "Destekledikleri tüm yerel düzenleme özelliklerini kullanmak için eklentileri seç. Yalnızca seçtiğinde indirilirler. Her biri ayrı bir programdır: Vunemi'nin denediği kopya, Vunemi'nin kendi sürüm sayfasından bir kez indirilir ve kurulmadan önce doğrulanır. Bu Mac'te ağ erişimi olmadan çalışırlar ve yalnız Vunemi'nin verdiği dosyaları görürler.",
-    credit: "Programlar ArtCraft ekibinin Craft uygulamalarıdır; MIT ya da Apache-2.0 lisanslı açık kaynak. Henüz gençler: sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir.",
+    credit: "Programlar ArtCraft ekibinin Craft uygulamalarıdır; MIT ya da Apache-2.0 lisanslı açık kaynak. Henüz gençler: sonuç Word, Excel ya da PowerPoint'tekinden farklı olabilir. Markdown dönüştürme Microsoft'un MarkItDown'ıdır (MIT); Vunemi onu kendi Python kopyasıyla paketler.",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "Eklenti ara",
     all: "Tümü",
@@ -1999,6 +1999,7 @@ export const messages = {
       drawing: { title: "Çizim", body: "Vektör çizimlerini, şekilleri ve metinleri oluşturur ve düzenler; SVG, PNG veya PDF olarak dışa aktarır." },
       photo: { title: "Fotoğraf düzenleme", body: "Görselleri katmanlar, rötuş, ayarlar ve efektlerle düzenler, dosya biçimlerini dönüştürür." },
       video: { title: "Video kurgu", body: "Video zaman çizelgelerini, klipleri, başlıkları, efektleri ve sesi düzenler, tamamlanan videoları dışa aktarır." },
+      markdown: { title: "Dosyaları Markdown'a", body: "Word, Excel, PowerPoint, PDF, web sayfası, e-kitap ve Outlook iletilerini başlık, liste ve tablolarıyla Markdown'a dönüştürür." },
     },
     failed: {
       space: "Diskte yeterli yer yok.",
