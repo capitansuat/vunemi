@@ -85,6 +85,12 @@ fi
 # for as long as that stays the same, whatever the toolchain did.
 helper_src="$here/native/VunemiHelper"
 helper_key="$(node "$here/scripts/helper-source-key.mjs" "$helper_src" "$helper_entitlements" "$identity" "$developer_id")"
+# An empty or odd key would put every build in one shared cache slot and reuse
+# a stale signed helper whatever its sources say; refuse it instead.
+if ! [[ "$helper_key" =~ ^[0-9a-f]{16}$ ]]; then
+  echo "! yardımcı önbellek anahtarı hesaplanamadı: '$helper_key'" >&2
+  exit 1
+fi
 helper_cache="$out/helper-cache/$helper_key/VunemiHelper"
 helper_build="$helper_src/.build/release/VunemiHelper"
 

@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {readFileSync,readdirSync} from 'node:fs';
+import {readFileSync,readdirSync,realpathSync} from 'node:fs';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 
@@ -12,7 +12,9 @@ export function helperSourceKey(root,entitlements,identity,distribution){
  walk('Sources');add('entitlements',readFileSync(entitlements));add('signing',Buffer.from(JSON.stringify([identity,distribution,'paths-mapped-v2'])));
  return hash.digest('hex').slice(0,16);
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+// Node resolves symlinks for import.meta.url but not for argv[1]; compare real
+// paths, or a checkout reached through a symlink prints nothing at all.
+if(process.argv[1]&&import.meta.url===pathToFileURL(realpathSync(process.argv[1])).href){
  const args=process.argv.slice(2);if(args.length!==4)throw Error('Expected helper root, entitlements, identity and distribution.');
  process.stdout.write(helperSourceKey(...args)+'\n');
 }
