@@ -6,6 +6,10 @@
 // they grow, writes the meeting down, and drops what the microphone only
 // heard from the speakers.
 //
+// A pause lets go of both sources and keeps the files open; resuming takes
+// them again and appends. Paused time is not in the files, so the meeting
+// stays one recording and its times count only what was recorded.
+//
 // Kept apart from VunemiHelper on purpose: a new helper signature asks for
 // the Vault key again and has cost it its Accessibility permission before.
 // Like the helper it holds no policy; it records while asked and stops when
@@ -117,6 +121,18 @@ final class Sink {
         guard !pending.isEmpty else { return }
         handle.write(pending)
         pending.removeAll(keepingCapacity: true)
+    }
+
+    /// Writes out everything handed over so far, and starts the next audio
+    /// from a fresh converter: what came before a pause is not mixed into
+    /// what comes after it.
+    func drain() {
+        queue.sync {
+            flush()
+            converter = nil
+            converting = nil
+            level = 0
+        }
     }
 
     var state: (level: Float, seconds: Double) {
@@ -269,8 +285,10 @@ func defaultInput() -> AudioDeviceID? {
 final class Recording {
     private let others: Sink
     private let me: Sink
-    private let system: AnyObject
-    private let mic: MicCapture
+    private let microphone: String?
+    /// Both nil while paused.
+    private var system: AnyObject?
+    private var mic: MicCapture?
 
     init(dir: String, microphone: String?) throws {
         guard #available(macOS 14.2, *) else { throw Failure("macos") }
@@ -289,6 +307,44 @@ final class Recording {
         }
         others = try Sink(path: (dir as NSString).appendingPathComponent("system.pcm"), label: "system")
         me = try Sink(path: (dir as NSString).appendingPathComponent("mic.pcm"), label: "mic")
+        self.microphone = microphone
+        try capture()
+    }
+
+    var paused: Bool { mic == nil }
+
+    var levels: JSON {
+        if paused { return ["me": 0.0, "others": 0.0] }
+        return ["me": Double(me.state.level), "others": Double(others.state.level)]
+    }
+
+    var seconds: Double { max(me.state.seconds, others.state.seconds) }
+
+    /// Lets go of the microphone and the Mac's sound; the files stay open.
+    /// Returns once everything heard before it is in the files.
+    func pause() -> Double {
+        if !paused {
+            release()
+            me.drain()
+            others.drain()
+        }
+        return seconds
+    }
+
+    /// Takes both sources again and appends to the same files.
+    func resume() throws {
+        if paused { try capture() }
+    }
+
+    func stop() -> Double {
+        release()
+        me.close()
+        others.close()
+        return seconds
+    }
+
+    private func capture() throws {
+        guard #available(macOS 14.2, *) else { throw Failure("macos") }
         let system = try SystemCapture(sink: others)
         do {
             mic = try MicCapture(sink: me, device: microphone)
@@ -299,16 +355,11 @@ final class Recording {
         self.system = system
     }
 
-    var levels: JSON {
-        ["me": Double(me.state.level), "others": Double(others.state.level)]
-    }
-
-    func stop() -> Double {
-        mic.stop()
+    private func release() {
+        mic?.stop()
+        mic = nil
         if #available(macOS 14.2, *) { (system as? SystemCapture)?.stop() }
-        me.close()
-        others.close()
-        return max(me.state.seconds, others.state.seconds)
+        system = nil
     }
 }
 
@@ -332,6 +383,13 @@ func handle(_ request: JSON) {
             respond(id: id, result: ["started": true])
         case "levels":
             respond(id: id, result: recording?.levels ?? ["me": 0.0, "others": 0.0])
+        case "pause":
+            guard let recording else { throw Failure("Nothing is being recorded.") }
+            respond(id: id, result: ["paused": true, "seconds": recording.pause()])
+        case "resume":
+            guard let recording else { throw Failure("Nothing is being recorded.") }
+            try recording.resume()
+            respond(id: id, result: ["paused": false])
         case "stop":
             let seconds = recording?.stop() ?? 0
             recording = nil

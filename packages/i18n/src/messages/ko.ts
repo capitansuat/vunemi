@@ -706,6 +706,10 @@ export const messages: Catalogue = {
     record: "회의 녹음",
     stop: "중지",
     recording: "녹음 중",
+    pause: "일시 정지",
+    resume: "재개",
+    paused: "일시 정지됨",
+    pausedNote: "일시 정지됨: 마이크와 Mac의 소리를 녹음하지 않습니다. 재개하면 같은 회의를 이어서 녹음합니다.",
     reminder: "다른 참석자에게 회의가 녹음되고 있다고 알려 주세요.",
     me: "나",
     others: "다른 사람",
@@ -774,6 +778,9 @@ export const messages: Catalogue = {
     tray: {
       stop: "녹음 중지",
       recording: "회의 녹음 중",
+      pause: "녹음 일시 정지",
+      resume: "녹음 재개",
+      paused: "회의 녹음 일시 정지됨",
     },
   },
 

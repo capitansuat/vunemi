@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, Pencil, Search, Square, Users } from "lucide-react";
+import { Mic, Pause, Pencil, Play, Search, Square, Users } from "lucide-react";
 import { RenameInput } from "./RenameInput.js";
 import type { MeetingLine, MeetingSpeaker, MeetingsSharedView, MeetingStatusView, MeetingSummaryView, MicrophoneView, SpeakersView } from "../../../shared/ipc.js";
 import { formatDate, getLocale, t } from "@vunemi/i18n";
@@ -327,14 +327,16 @@ function elapsed(ms: number): string {
   return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-function Recording({ recording, onOpen }: { recording: NonNullable<MeetingStatusView["recording"]>; onOpen: () => void }) {
+export function Recording({ recording, onOpen }: { recording: NonNullable<MeetingStatusView["recording"]>; onOpen: () => void }) {
   const model = useStore((s) => s.model);
   const [lines, setLines] = useState<MeetingLine[]>(recording.lines);
   const [levels, setLevels] = useState({ me: 0, others: 0 });
   const [now, setNow] = useState(Date.now());
   const [stopping, setStopping] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const end = useRef<HTMLDivElement>(null);
+  const paused = recording.pausedAt !== null;
 
   useEffect(() => {
     setLines(recording.lines);
@@ -344,17 +346,34 @@ function Recording({ recording, onOpen }: { recording: NonNullable<MeetingStatus
   }, [recording.id]);
 
   useEffect(() => {
-    if (stopping) return;
+    if (stopping || paused) {
+      setLevels({ me: 0, others: 0 });
+      return;
+    }
+    // Back from a pause the clock goes on from now, not from before it.
+    setNow(Date.now());
     const timer = setInterval(() => {
       setNow(Date.now());
       void window.vunemi.meetingsLevels().then(setLevels, () => {});
     }, 200);
     return () => clearInterval(timer);
-  }, [stopping]);
+  }, [stopping, paused]);
 
   useEffect(() => {
     end.current?.scrollIntoView({ block: "nearest" });
   }, [lines.length]);
+
+  const pauseOrResume = async () => {
+    setError(null);
+    setSwitching(true);
+    try {
+      await (paused ? window.vunemi.meetingsResume() : window.vunemi.meetingsPause());
+    } catch (err) {
+      setError(message(err));
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   const stop = () => {
     setStopping(true);
@@ -365,12 +384,23 @@ function Recording({ recording, onOpen }: { recording: NonNullable<MeetingStatus
   return (
     <section className="mt-4 rounded-xl border border-line bg-surface p-4">
       <div className="flex items-center gap-3">
-        <span className={`size-2.5 rounded-full bg-danger ${stopping ? "" : "animate-pulse"}`} />
-        <span className="text-[13.5px] font-medium text-fg">{stopping ? t("meetings.state.transcribing") : t("meetings.recording")}</span>
-        <span className="font-mono text-[13px] tabular-nums text-muted">{elapsed(now - recording.startedAt)}</span>
+        <span className={`size-2.5 rounded-full ${paused && !stopping ? "bg-faint" : "bg-danger"} ${stopping || paused ? "" : "animate-pulse"}`} />
+        <span className="text-[13.5px] font-medium text-fg">
+          {stopping ? t("meetings.state.transcribing") : paused ? t("meetings.paused") : t("meetings.recording")}
+        </span>
+        <span className="font-mono text-[13px] tabular-nums text-muted">{elapsed((recording.pausedAt ?? now) - recording.startedAt - recording.pausedMs)}</span>
         <div className="ml-auto flex items-center gap-3">
           <Meter label={t("meetings.me")} value={levels.me} />
           <Meter label={t("meetings.others")} value={levels.others} />
+          <button
+            type="button"
+            onClick={() => void pauseOrResume()}
+            disabled={stopping || switching}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-1.5 text-[13px] text-fg transition-colors hover:bg-surface-2 disabled:opacity-50"
+          >
+            {paused ? <Play size={12} className="fill-current" /> : <Pause size={12} className="fill-current" />}
+            {paused ? t("meetings.resume") : t("meetings.pause")}
+          </button>
           <button
             type="button"
             onClick={stop}
@@ -382,7 +412,7 @@ function Recording({ recording, onOpen }: { recording: NonNullable<MeetingStatus
           </button>
         </div>
       </div>
-      <p className="mt-2 text-[12.5px] text-muted">{t("meetings.reminder")}</p>
+      <p className="mt-2 text-[12.5px] text-muted">{paused && !stopping ? t("meetings.pausedNote") : t("meetings.reminder")}</p>
       {error && (
         <p role="alert" className="mt-2 text-[12.5px] text-danger">
           {error}

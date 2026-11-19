@@ -8,6 +8,7 @@ import { createInterface } from "node:readline";
 const mode = process.env.FAKE_RECORDER_MODE ?? "ok";
 let dir = null;
 let seconds = 0;
+let paused = false;
 
 const reply = (id, result) => process.stdout.write(`${JSON.stringify({ id, ok: true, result })}\n`);
 const fail = (id, error) => process.stdout.write(`${JSON.stringify({ id, ok: false, error })}\n`);
@@ -33,7 +34,13 @@ lines.on("line", (line) => {
     seconds = 1.5;
     return reply(id, { started: true, microphone: args.microphone ?? null });
   }
-  if (op === "levels") return reply(id, { me: 0.25, others: 0.5 });
+  if (op === "levels") return reply(id, paused ? { me: 0, others: 0 } : { me: 0.25, others: 0.5 });
+  if (op === "pause" || op === "resume") {
+    if (!dir) return fail(id, "Nothing is being recorded.");
+    if (op === "resume" && mode === "no-resume") return fail(id, "System audio tap failed (-1)");
+    paused = op === "pause";
+    return reply(id, paused ? { paused, seconds } : { paused });
+  }
   if (op === "stop") {
     stop();
     return reply(id, { stopped: true, seconds });

@@ -706,6 +706,10 @@ export const messages: Catalogue = {
     record: "会議を録音",
     stop: "停止",
     recording: "録音中",
+    pause: "一時停止",
+    resume: "再開",
+    paused: "一時停止中",
+    pausedNote: "一時停止中：マイクと Mac の音声は録音されません。「再開」で同じ会議の録音を続けます。",
     reminder: "会議を録音していることをほかの参加者に伝えてください。",
     me: "自分",
     others: "相手",
@@ -774,6 +778,9 @@ export const messages: Catalogue = {
     tray: {
       stop: "録音を停止",
       recording: "会議を録音中",
+      pause: "録音を一時停止",
+      resume: "録音を再開",
+      paused: "会議の録音を一時停止中",
     },
   },
 

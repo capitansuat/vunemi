@@ -4,7 +4,8 @@
  * the helper.
  *
  * It is started for a recording and ended with it: closing its input stops
- * the recording, so Vunemi going away never leaves the microphone on.
+ * the recording, so Vunemi going away never leaves the microphone on. A
+ * pause lets go of the microphone too, and keeps the process and its files.
  */
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
@@ -61,6 +62,16 @@ export class Recorder {
 
   async levels(): Promise<Levels> {
     return (await this.call("levels")) as Levels;
+  }
+
+  /** Lets go of the microphone and the Mac's sound; resolves once what came before is in the files. */
+  async pause(): Promise<void> {
+    await this.call("pause");
+  }
+
+  /** Records again, on to the end of the same files. */
+  async resume(): Promise<void> {
+    await this.call("resume");
   }
 
   async stop(): Promise<{ seconds: number }> {

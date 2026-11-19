@@ -298,7 +298,7 @@ const appLock = new AppLock(() => settings.appLock, async (reason, signal): Prom
  * unlocked, which language to say so in — and to stop a run or stop talking.
  * The lock never stands between the user and silencing the agent.
  */
-const OPEN_WHILE_LOCKED = new Set<string>([CH.appVersion, CH.lockGet, CH.lockUnlock, CH.languageGet, CH.stopRun, CH.pauseRun, CH.stopSpeaking, CH.meetingsStop]);
+const OPEN_WHILE_LOCKED = new Set<string>([CH.appVersion, CH.lockGet, CH.lockUnlock, CH.languageGet, CH.stopRun, CH.pauseRun, CH.stopSpeaking, CH.meetingsStop, CH.meetingsPause]);
 
 /** ipcMain.handle, behind the lock. Every channel goes through here. */
 function handle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => unknown): void {
@@ -1527,7 +1527,16 @@ const meetings: MeetingService = new MeetingService({
   blocked: (): MeetingBlock | null => (!platform.features.meetings ? "platform" : !tapsSupported() ? "macos" : !recorder.available() ? "recorder" : !voice.status().canHear ? "voice" : null),
   onChange: (status) => {
     meetingsIndexed = false;
-    presence.setRecording(status.recording ? () => void meetings.stop(meetingModel) : null);
+    presence.setRecording(
+      status.recording
+        ? {
+            paused: status.recording.pausedAt !== null,
+            stop: () => void meetings.stop(meetingModel),
+            pause: () => void meetings.pause().catch((err: unknown) => console.error("[vunemi] meeting pause:", err)),
+            resume: () => void meetings.resume().catch((err: unknown) => console.error("[vunemi] meeting resume:", err)),
+          }
+        : null,
+    );
     send(CH.meetingsChanged, meetingStatusView(status));
   },
   onLine: (id, line) => send(CH.meetingsLine, { id, line }),
@@ -1600,6 +1609,9 @@ handle(CH.meetingsStart, async (_e, microphone: unknown) => {
   }
   return meetingStatusView(meetings.status());
 });
+// Only from the user's buttons, like Record and Stop.
+handle(CH.meetingsPause, () => meetingCall(() => meetings.pause()));
+handle(CH.meetingsResume, () => meetingCall(() => meetings.resume()));
 handle(CH.meetingsStop, (_e, model: unknown) => {
   meetingModel = modelSpec(model) ?? meetingModel;
   return meetingCall(() => meetings.stop(meetingModel));

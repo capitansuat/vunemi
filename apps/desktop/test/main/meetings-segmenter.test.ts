@@ -40,6 +40,25 @@ describe("Segmenter", () => {
     expect(segments[0]!.samples.length).toBe(Math.round((segments[0]!.end - segments[0]!.start) * RATE));
   });
 
+  it("closes the open stretch at a pause, and what follows starts a new one at the right time", () => {
+    const s = new Segmenter();
+    // Speech running into the pause, a few samples short of a frame included.
+    const before = s.push(join(quiet(1), tone(1), new Int16Array(7)));
+    expect(before).toHaveLength(0);
+    const atPause = s.cut();
+    expect(atPause).toHaveLength(1);
+    expect(atPause[0]!.start).toBeCloseTo(0.85, 1);
+    // Up to the last sample before the pause.
+    expect(atPause[0]!.end).toBeCloseTo(2 + 7 / RATE, 6);
+    expect(s.heard).toBeCloseTo(2 + 7 / RATE, 6);
+    // After the break: speech at once, with no pre-roll from before it.
+    const after = [...s.push(join(tone(1), quiet(1))), ...s.flush()];
+    expect(after).toHaveLength(1);
+    expect(after[0]!.start).toBeCloseTo(2 + 7 / RATE, 6);
+    expect(after[0]!.end).toBeCloseTo(3.6, 1);
+    expect(s.cut()).toEqual([]);
+  });
+
   it("cuts long speech at 20 seconds", () => {
     const segments = cut(tone(25));
     expect(segments).toHaveLength(2);
