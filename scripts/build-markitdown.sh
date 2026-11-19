@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Builds the MarkItDown add-on: Microsoft's MarkItDown (MIT), which turns
-# Office files, PDFs, web pages and more into Markdown, with a Python of its
-# own, as one zip for Vunemi's release page (the add-on shelf).
+# Builds MarkItDown, Microsoft's converter of Office files, PDFs, web pages
+# and more to Markdown (MIT), with a Python of its own, for the app's
+# resources. scripts/package.sh calls it; a development run uses the folder
+# it leaves in the build cache.
 #
-# Why Vunemi builds it. The other add-ons are their projects' own signed,
-# notarized programs. MarkItDown is published only as a Python package, so
-# there is no such program to take. This makes one, from pinned parts only:
+# MarkItDown is published only as a Python package, so this makes a program
+# of it, from pinned parts only:
 #
 #  * Python is python-build-standalone's build, pinned by SHA-256: it needs
 #    nothing that a Mac does not have.
@@ -13,15 +13,14 @@
 #    markitdown/requirements.lock, and only prebuilt wheels are accepted:
 #    nothing is compiled here, nothing is fetched that the lock did not name.
 #  * Only the extras for local files. Speech (Google), YouTube and Azure are
-#    left out; the add-on also runs with no network (see addons/sandbox.ts).
+#    left out; it also runs with no network (see apps/desktop/src/main/addons/sandbox.ts).
+#  * Vunemi runs it through markitdown/convert.py: several files in one run,
+#    so Python starts once for all of them.
 #
-# Run it on an Apple Silicon Mac: the result is tried there before it is
-# zipped. It prints the zip's size and SHA-256, which go into
-# apps/desktop/src/main/addons/catalog.ts after the zip is uploaded to the
-# shelf release.
+# Built once per version, like the engine; the same lock gives the same files.
 #
 # VUNEMI_MARKITDOWN_TARGET=x86_64-unknown-linux-gnu builds the same thing for
-# Linux, to try the tools there; it is not shipped.
+# Linux, to try it there; it is not shipped.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -37,13 +36,21 @@ esac
 
 out="${VUNEMI_BUILD_DIR:-$HOME/.vunemi-build}/markitdown"
 folder="markitdown-$version-$label"
-zip="$out/$folder.zip"
-stage="$out/stage"
+cache="$out/$version/$folder"
+stage="$out/.stage"
 py_file="cpython-$py_version+$py_release-$target-install_only_stripped.tar.gz"
+# What the build is made from: a change to any of these builds it again.
+inputs="$(cat "$0" "$here/markitdown/requirements.lock" "$here/markitdown/convert.py" "$here/markitdown/markitdown-LICENSE")"
 
 sha256() {
-  if command -v shasum >/dev/null; then shasum -a 256 "$1" | cut -d' ' -f1; else sha256sum "$1" | cut -d' ' -f1; fi
+  if command -v shasum >/dev/null; then shasum -a 256 "$@" | cut -d' ' -f1; else sha256sum "$@" | cut -d' ' -f1; fi
 }
+key="$(printf '%s' "$inputs" | sha256 -)"
+
+if [ -x "$cache/convert" ] && [ "$(cat "$cache/.built-from" 2>/dev/null)" = "$key" ]; then
+  echo "› MarkItDown hazır ($version)"
+  exit 0
+fi
 
 mkdir -p "$out"
 if [ ! -f "$out/$py_file" ] || [ "$(sha256 "$out/$py_file")" != "$py_sha" ]; then
@@ -85,28 +92,32 @@ rm -f "$lib/site-packages/olefile/olefile2.py"
 # model-building tools, which magika never loads; together about 50 MB.
 rm -rf "$lib/site-packages/sympy" "$lib/site-packages/mpmath" "$lib"/site-packages/onnxruntime/{transformers,tools,quantization}
 
-# Compiled once here: in the sandbox the folder is read only, and pandas or
-# sympy compiled again on every run would cost seconds each time.
-# -s: the compiled files name their sources from the add-on's folder, not this one.
+cp "$here/markitdown/convert.py" "$root/convert.py"
+# Compiled once here: in the sandbox the folder is read only, and pandas
+# compiled again on every run would cost seconds each time.
+# -s: the compiled files name their sources from this folder's own root, not the build folder.
 "$py" -I -B -m compileall -f -q -j 0 --invalidation-mode unchecked-hash -s "$root" "$lib" >/dev/null
 
-cat > "$root/markitdown" <<'LAUNCH'
+cat > "$root/convert" <<'LAUNCH'
 #!/bin/sh
-# Vunemi's MarkItDown add-on. -I: no environment variables, no user site, no
-# current folder on the import path; only this folder's Python and packages.
-exec "${0%/*}/python/bin/python3.12" -I -m markitdown "$@"
+# Vunemi's way into MarkItDown: convert IN OUT [IN OUT ...] (see convert.py).
+# -I: no environment variables, no user site, no current folder on the import
+# path; only this folder's Python and packages.
+exec "${0%/*}/python/bin/python3.12" -I "${0%/*}/convert.py" "$@"
 LAUNCH
-chmod 755 "$root/markitdown"
+chmod 755 "$root/convert"
 
 mkdir -p "$root/licenses"
 cp "$lib/LICENSE.txt" "$root/licenses/python-LICENSE.txt"
+# The wheel carries no licence file; this is the repository's LICENSE, as published.
+cp "$here/markitdown/markitdown-LICENSE" "$root/licenses/markitdown-LICENSE"
 cat > "$root/README.txt" <<EOF
 MarkItDown $version (https://github.com/microsoft/markitdown), MIT licence,
 Copyright (c) Microsoft Corporation, with Python $py_version from
 python-build-standalone $py_release. Built for Vunemi by scripts/build-markitdown.sh.
 
 Every package's licence is in its folder under
-python/lib/python3.12/site-packages/*.dist-info; Python's is in licenses/.
+python/lib/python3.12/site-packages/*.dist-info; Python's and MarkItDown's are in licenses/.
 EOF
 
 # The build folder is in this Mac's user folder; the shipped files must not name it.
@@ -116,50 +127,23 @@ if grep -r -q -a -F "$out" "$root"; then
   exit 1
 fi
 
-echo "› paketleniyor"
-rm -f "$zip"
-# The same files give the same zip: fixed times, sorted names, modes kept.
-"$py" -I - "$stage" "$folder" "$zip" <<'PY'
-import os, stat, sys, zipfile
-stage, folder, out = sys.argv[1:]
-entries = []
-for base, dirs, files in os.walk(os.path.join(stage, folder)):
-    dirs.sort()
-    for name in sorted(files):
-        entries.append(os.path.join(base, name))
-with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
-    for path in sorted(entries):
-        rel = os.path.relpath(path, stage)
-        info = zipfile.ZipInfo(rel, (1980, 1, 1, 0, 0, 0))
-        info.create_system = 3
-        if os.path.islink(path):
-            info.external_attr = (stat.S_IFLNK | 0o755) << 16
-            z.writestr(info, os.readlink(path))
-            continue
-        mode = os.stat(path).st_mode & 0o777
-        info.external_attr = (stat.S_IFREG | (0o755 if mode & 0o111 else 0o644)) << 16
-        info.compress_type = zipfile.ZIP_DEFLATED
-        with open(path, "rb") as f:
-            z.writestr(info, f.read())
-PY
-
-# Tried from the zip itself, unpacked the way Vunemi unpacks it, so what is
-# tried is what is shipped.
 native=no
 case "$target/$(uname -sm)" in "aarch64-apple-darwin/Darwin arm64"|"x86_64-unknown-linux-gnu/Linux x86_64") native=yes ;; esac
 if [ "$native" = yes ]; then
   echo "› deneniyor"
   try="$(mktemp -d)"
-  if [ -x /usr/bin/ditto ]; then /usr/bin/ditto -x -k "$zip" "$try"; else "$py" -I -c 'import sys,zipfile,os
-z=zipfile.ZipFile(sys.argv[1])
-for i in z.infolist():
-    z.extract(i, sys.argv[2]); os.chmod(os.path.join(sys.argv[2], i.filename), (i.external_attr >> 16) & 0o777)' "$zip" "$try"; fi
   printf '<html><body><h1>Vunemi</h1><table><tr><th>a</th><th>b</th></tr><tr><td>1</td><td>2</td></tr></table></body></html>' > "$try/t.html"
-  "$try/$folder/markitdown" "$try/t.html" -o "$try/t.md"
-  if ! grep -q "^# Vunemi" "$try/t.md" || ! grep -q "| a | b |" "$try/t.md"; then echo "! deneme çıktısı beklenen gibi değil:"; cat "$try/t.md"; rm -rf "$try"; exit 1; fi
+  # -B for the trial: the folder must stay as built, with no caches of the run.
+  said="$("$py" -I -B "$root/convert.py" "$try/t.html" "$try/t.md" "$try/none.docx" "$try/none.md")"
+  if ! grep -q "^# Vunemi" "$try/t.md" || ! grep -q "| a | b |" "$try/t.md" || [ "$(printf '%s\n' "$said" | grep -c '"ok": true')" != 1 ] || [ "$(printf '%s\n' "$said" | grep -c '"ok": false')" != 1 ]; then
+    echo "! deneme çıktısı beklenen gibi değil:"; printf '%s\n' "$said"; cat "$try/t.md" 2>/dev/null; rm -rf "$try"; exit 1
+  fi
   rm -rf "$try"
 fi
 
-echo "› hazır → $zip"
-echo "  boyut:   $(wc -c < "$zip" | tr -d ' ')"
-echo "  sha256:  $(sha256 "$zip")"
+printf '%s' "$key" > "$root/.built-from"
+rm -rf "$out/$version"
+mkdir -p "$out/$version"
+mv "$root" "$cache"
+rm -rf "$stage"
+echo "› MarkItDown hazır → $cache ($(du -sh "$cache" | cut -f1))"

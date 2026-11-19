@@ -167,7 +167,21 @@ speakers_cache="$out/speakers-cache/v1.13.8"
 cp -p "$speakers_cache/sherpa-onnx-offline-speaker-diarization" "$app/Contents/Resources/sherpa-onnx-offline-speaker-diarization"
 cp -p "$speakers_cache/LICENSE" "$app/Contents/Resources/licenses/sherpa-onnx-LICENSE"
 
+echo "› MarkItDown"
+bash "$here/scripts/build-markitdown.sh"
+markitdown_cache="$out/markitdown/0.1.9/markitdown-0.1.9-macos-arm64"
+rm -rf "$app/Contents/Resources/markitdown"
+cp -Rp "$markitdown_cache" "$app/Contents/Resources/markitdown"
+cp -p "$markitdown_cache/licenses/markitdown-LICENSE" "$app/Contents/Resources/licenses/markitdown-LICENSE"
+cp -p "$markitdown_cache/licenses/python-LICENSE.txt" "$app/Contents/Resources/licenses/python-LICENSE.txt"
+
 echo "› imzalanıyor (önce yardımcı ve motor, sonra uygulama) — kimlik: $identity"
+# MarkItDown's Python and its compiled modules: Vunemi's identity, without the
+# hardened runtime. Under it, library validation would refuse the modules,
+# which numpy, lxml and the rest built and signed themselves. It runs only
+# inside the add-on sandbox (no network, only the job's folder).
+find "$app/Contents/Resources/markitdown" -type f \( -name "*.so" -o -name "*.dylib" -o -name "python3.12" \) -print0 \
+  | xargs -0 codesign --force "${timestamp[@]}" --sign "$identity"
 # Hardened runtime and no entitlements: the engine needs none — it reads one
 # file and listens on 127.0.0.1.
 codesign --force --options runtime "${timestamp[@]}" --identifier com.vunemi.engine --sign "$identity" "$app/Contents/Resources/llama-server"

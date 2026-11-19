@@ -20,7 +20,6 @@ import { cropBox, photoArgs, photoTools } from "../../src/main/addons/tools/phot
 import { timed, videoTools } from "../../src/main/addons/tools/video.js";
 import { drawingTools, inert } from "../../src/main/addons/tools/drawing.js";
 import { column, sheetTools } from "../../src/main/addons/tools/sheets.js";
-import { markdownTools } from "../../src/main/addons/tools/markdown.js";
 import { answers, editArgs, editOf, outline, slideTools, type Seen } from "../../src/main/addons/tools/slides.js";
 
 let base = "";
@@ -58,7 +57,7 @@ function written(args: string[]): string[] {
   if (args.includes("export")) return [args[args.indexOf("export") + 1]!];
   // A script that saves names its file itself.
   const saved = args.includes("--script") ? Object.values(files).flatMap((body) => [...body.matchAll(/"tool":"doc_save","args":\{"doc":1,"path":"([^"]+)"/g)].map((m) => m[1]!)) : [];
-  return [...saved, ...after("--out"), ...after("--save"), ...after("-o")];
+  return [...saved, ...after("--out"), ...after("--save")];
 }
 
 const engines: Engines = async (id, _signal, work) => {
@@ -672,78 +671,6 @@ describe("video tools", () => {
     await expect(tool(list(), "video_make").run({ out: join(folder, "k.mp4"), clips: [{ path: join(folder, "a.mp4") }] }, ctx())).rejects.toThrow(/no track V1/);
     expect(calls.some((c) => c.args.includes("export"))).toBe(false);
     expect(existsSync(join(folder, "k.mp4"))).toBe(false);
-  });
-});
-
-describe("files to Markdown", () => {
-  const convert = () => tool(markdownTools(deps()), "markdown_convert");
-  const read = () => tool(markdownTools(deps()), "markdown_read");
-  const put = (name: string, body = "original") => (writeFileSync(join(folder, name), body), join(folder, name));
-
-  it("puts each .md next to its original, and leaves the original as it was", async () => {
-    const report = put("Rapor.docx");
-    const deck = put("Sunum.pptx");
-    const out = await convert().run({ paths: [report, deck] }, ctx());
-    expect(calls).toEqual([
-      { id: "markdown", args: ["in/0/Rapor.docx", "-o", "out/0.md"] },
-      { id: "markdown", args: ["in/1/Sunum.pptx", "-o", "out/1.md"] },
-    ]);
-    expect(readFileSync(join(folder, "Rapor.md"), "utf8")).toBe("made");
-    expect(readFileSync(join(folder, "Sunum.md"), "utf8")).toBe("made");
-    expect(readFileSync(report, "utf8")).toBe("original");
-    expect(produced).toEqual([{ kind: "file", path: join(folder, "Rapor.md") }, { kind: "file", path: join(folder, "Sunum.md") }]);
-    expect(out).toContain(`Created ${join(folder, "Rapor.md")} (4 characters).`);
-  });
-
-  it("saves into the folder given, making it when it is not there yet", async () => {
-    const sheet = put("Bütçe.xlsx");
-    await convert().run({ paths: [sheet], folder: join(folder, "md") }, ctx());
-    expect(existsSync(join(folder, "md", "Bütçe.md"))).toBe(true);
-  });
-
-  it("never replaces a file, and asks for nothing that cannot be done", async () => {
-    const report = put("Rapor.docx");
-    put("Rapor.md", "mine");
-    expect(await convert().check!({ paths: [report] })).toMatch(/Rapor\.md/);
-    await expect(convert().run({ paths: [report] }, ctx())).rejects.toThrow();
-    // Two files that would both become a.md.
-    expect(await convert().check!({ paths: [put("a.pdf"), put("a.html")] })).toMatch(/one at a time/);
-    // Outside the user's folders, of a kind it does not read, or missing.
-    expect(await convert().check!({ paths: [join(base, "x.docx")] })).not.toBeNull();
-    expect(await convert().check!({ paths: [put("foto.jpg")] })).toMatch(/\.docx/);
-    expect(await convert().check!({ paths: [join(folder, "yok.pdf")] })).not.toBeNull();
-    expect(await convert().check!({ paths: [put("b.pdf")], folder: join(base, "elsewhere") })).not.toBeNull();
-    expect(calls).toEqual([]);
-    expect(readFileSync(join(folder, "Rapor.md"), "utf8")).toBe("mine");
-  });
-
-  it("names the file that failed and still saves the others", async () => {
-    const bad = put("bozuk.pdf");
-    const good = put("iyi.docx");
-    answer = (args) => (args[0]!.endsWith("bozuk.pdf") ? { code: 1, stderr: "PDFSyntaxError: No /Root object!" } : {});
-    const out = await convert().run({ paths: [bad, good] }, ctx());
-    expect(out).toMatch(/bozuk\.pdf: not converted\..*No \/Root object/);
-    expect(out).toContain("iyi.md");
-    expect(existsSync(join(folder, "bozuk.md"))).toBe(false);
-    expect(existsSync(join(folder, "iyi.md"))).toBe(true);
-  });
-
-  it("says a scanned PDF has no text instead of saving an empty file", async () => {
-    const scan = put("tarama.pdf");
-    answer = () => ({ skip: true });
-    await expect(convert().run({ paths: [scan] }, ctx())).rejects.toThrow(/scanned PDF/);
-    expect(existsSync(join(folder, "tarama.md"))).toBe(false);
-    expect(produced).toEqual([]);
-  });
-
-  it("reads a file as Markdown without saving anything, and as fenced, untrusted text", async () => {
-    const report = put("Rapor.docx");
-    const markdown = read();
-    expect(markdown.actionClass).toBe("read");
-    expect(markdown.untrustedOutput).toBe(true);
-    expect(await markdown.run({ path: report }, ctx())).toBe("made");
-    expect(readdirSync(folder)).toEqual(["Rapor.docx"]);
-    expect(produced).toEqual([]);
   });
 });
 

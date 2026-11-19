@@ -1964,7 +1964,7 @@ export const messages: Catalogue = {
   },
   addons: {
     intro: "选择扩展，即可使用其支持的全部本地编辑功能。只有选中后才会下载。每一项都是独立的程序：Vunemi 测试时所用的那份副本会从 Vunemi 自己的发布页面下载一次，并在安装前经过校验。它们在这台 Mac 上运行，无法访问网络，只能看到 Vunemi 交给它们的文件。",
-    credit: "这些程序是 ArtCraft 团队的 Craft 应用，以 MIT 或 Apache-2.0 许可开源。它们还很新：结果可能与 Word、Excel 或 PowerPoint 不同。Markdown 转换使用 Microsoft 的 MarkItDown（MIT），由 Vunemi 连同自带的 Python 一起打包。",
+    credit: "这些程序是 ArtCraft 团队的 Craft 应用，以 MIT 或 Apache-2.0 许可开源。它们还很新：结果可能与 Word、Excel 或 PowerPoint 不同。",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "搜索扩展",
     all: "全部",
@@ -1991,7 +1991,6 @@ export const messages: Catalogue = {
       drawing: { title: "绘图", body: "创建和编辑矢量图形、形状和文字，并导出 SVG、PNG 或 PDF。" },
       photo: { title: "照片编辑", body: "通过图层、修饰、调整和效果编辑图像，并转换格式。" },
       video: { title: "视频剪辑", body: "编辑视频时间线、片段、标题、效果和音频，并导出完成的视频。" },
-      markdown: { title: "文件转 Markdown", body: "将 Word、Excel、PowerPoint、PDF、网页、电子书和 Outlook 邮件转换为 Markdown，保留标题、列表和表格。" },
     },
     failed: {
       space: "磁盘空间不足。",

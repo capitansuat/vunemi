@@ -81,6 +81,7 @@ import { Addons } from "./addons/store.js";
 import { clearJobs, createEngines } from "./addons/jobs.js";
 import { renderHtmlPicture } from "./office-pdf.js";
 import { addonAreas, addonInstructions, packIds, registerAddonTools } from "./addons/packs.js";
+import { markdownArea, markitdownDir, registerMarkdownTools } from "./markdown.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
 import { PRODUCTION, type FeedSource } from "./updates/feed.js";
@@ -523,6 +524,21 @@ const addonTools = registerAddonTools({
   paper: () => (["US", "CA", "MX", "PH", "CL", "CO", "VE"].includes(app.getLocaleCountryCode()) ? "Letter" : "A4"),
 });
 
+/**
+ * Files to Markdown: MarkItDown ships inside Vunemi and runs like an add-on,
+ * in the sandbox, from the app's resources (markdown.ts).
+ */
+const markitdown = markitdownDir({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir(), darwin: platform.id === "darwin" });
+registerMarkdownTools(tools, {
+  roots,
+  available: markitdown !== null,
+  engines: createEngines<"markdown">({
+    addons: { binary: () => (markitdown ? join(markitdown, "convert") : null), engineDir: () => markitdown ?? "" },
+    home: homedir(),
+    jobsDir: join(addonsDir, ".jobs"),
+  }),
+});
+
 const connectors = buildConnectors({
   automations,
   // Set up further down, beside the scope lookup it needs; a tool asks for it only when it is called.
@@ -764,7 +780,7 @@ const sessionOptions: SessionOptions = {
   fileRoots: () => roots.snapshot(),
   keptOutputs,
   // Each connection's guide travels with its tools (see areas.ts).
-  areas: () => [...toolAreas(connectors.reachable()), ...addonAreas(roots.list())],
+  areas: () => [...toolAreas(connectors.reachable()), ...addonAreas(roots.list()), markdownArea(roots.list())],
   emit: record,
   onRunSettled: async runId => {
     const settled=await Promise.allSettled([helper.releaseRun(runId),browser.releaseRun(runId)]);

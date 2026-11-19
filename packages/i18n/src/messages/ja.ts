@@ -1964,7 +1964,7 @@ export const messages: Catalogue = {
   },
   addons: {
     intro: "アドオンを選ぶと、対応するすべてのローカル編集機能を使えます。選んだアドオンだけをダウンロードします。それぞれ独立したプログラムで、Vunemi が動作を確認したコピーを Vunemi 自身のリリースページから一度だけダウンロードし、インストール前に検証します。この Mac 上でネットワークに接続せずに動作し、Vunemi が渡したファイルしか見えません。",
-    credit: "これらのプログラムは ArtCraft チームの Craft アプリで、MIT または Apache-2.0 ライセンスのオープンソースです。まだ新しいため、結果が Word、Excel、PowerPoint と異なることがあります。Markdown への変換は Microsoft の MarkItDown（MIT）で、Vunemi が専用の Python と一緒にパッケージしています。",
+    credit: "これらのプログラムは ArtCraft チームの Craft アプリで、MIT または Apache-2.0 ライセンスのオープンソースです。まだ新しいため、結果が Word、Excel、PowerPoint と異なることがあります。",
     from: "{engine} {version} · {publisher} · {licence} · {size}",
     search: "アドオンを検索",
     all: "すべて",
@@ -1991,7 +1991,6 @@ export const messages: Catalogue = {
       drawing: { title: "描画", body: "ベクター図形やテキストを作成・編集し、SVG、PNG、PDF に書き出せます。" },
       photo: { title: "写真編集", body: "レイヤー、レタッチ、調整、効果で画像を編集し、形式を変換できます。" },
       video: { title: "動画編集", body: "動画のタイムライン、クリップ、タイトル、効果、音声を編集し、完成した動画を書き出せます。" },
-      markdown: { title: "ファイルを Markdown に", body: "Word、Excel、PowerPoint、PDF、Web ページ、電子書籍、Outlook メッセージを、見出し・リスト・表を保ったまま Markdown に変換します。" },
     },
     failed: {
       space: "ディスクの空き容量が足りません。",

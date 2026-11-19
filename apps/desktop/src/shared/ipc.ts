@@ -460,7 +460,7 @@ export type SpeakersStatus =
   | { state: "ready"; bytes: number };
 
 /** An extra ability that is a download: a separate program Vunemi runs in a sandbox. */
-export type AddonId = "documents" | "sheets" | "slides" | "pdf" | "drawing" | "photo" | "video" | "markdown";
+export type AddonId = "documents" | "sheets" | "slides" | "pdf" | "drawing" | "photo" | "video";
 
 /** The shelf an add-on sits on in Settings. */
 export type AddonCategory = "office" | "images" | "video";
