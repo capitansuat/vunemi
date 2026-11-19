@@ -15,59 +15,48 @@
   "sizeMb": 144,
   "notes": {
     "en": [
-      "If you also use Claude or Codex, you can now let it read the meetings Vunemi recorded, also while one is being recorded, so you don't copy a transcript across by hand. It is off until you turn it on in Meetings, and it can only read.",
-      "What it reads goes to that assistant's own service, so it leaves your Mac. Without it, everything in Vunemi works as before and your meetings stay on your Mac.",
-      "Two messages about a model server's address and the plan steps for adding text to a TextEdit document in the background always appeared in Turkish; they now follow the app's language. A scheduled task that cannot start no longer leaves its app restriction in force."
+      "While a meeting is being recorded you can now pause it for a break and resume it, from the recording or the menu bar. Paused, Vunemi lets go of the microphone and the Mac's sound, so nothing is recorded in between.",
+      "However often you pause, it stays one recording, one transcript and one summary, and what was said before and after a break is never written as one line. The clock shows the recorded time, without the breaks."
     ],
     "de": [
-      "Wenn du auch Claude oder Codex nutzt, kannst du ihm jetzt erlauben, die von Vunemi aufgenommenen Besprechungen zu lesen, auch während einer Aufnahme. So musst du keine Mitschrift von Hand hinüberkopieren. Es ist aus, bis du es unter Besprechungen einschaltest, und es kann nur lesen.",
-      "Was es liest, geht an den Dienst dieses Assistenten und verlässt damit deinen Mac. Ohne es funktioniert in Vunemi alles wie bisher, und deine Besprechungen bleiben auf deinem Mac.",
-      "Zwei Meldungen zur Adresse eines Modellservers und die Planschritte beim Hinzufügen von Text zu einem TextEdit-Dokument im Hintergrund erschienen immer auf Türkisch; jetzt folgen sie der App-Sprache. Eine geplante Aufgabe, die nicht starten kann, lässt ihre App-Beschränkung nicht mehr bestehen."
+      "Eine laufende Besprechungsaufnahme lässt sich jetzt für eine Pause anhalten und fortsetzen, in der Aufnahme oder über die Menüleiste. Pausiert gibt Vunemi Mikrofon und Mac-Ton frei, dazwischen wird nichts aufgenommen.",
+      "Wie oft du auch pausierst: Es bleibt eine Aufnahme, ein Transkript und eine Zusammenfassung, und was vor und nach einer Pause gesagt wurde, landet nie in einer Zeile. Die Uhr zeigt die aufgenommene Zeit ohne die Pausen."
     ],
     "es": [
-      "Si también usas Claude o Codex, ahora puedes permitirle leer las reuniones que grabó Vunemi, también mientras se graba una, para no copiar la transcripción a mano. Está desactivado hasta que lo actives en Reuniones, y solo puede leer.",
-      "Lo que lee va al servicio de ese asistente, así que sale de tu Mac. Sin ello, todo en Vunemi funciona como antes y tus reuniones se quedan en tu Mac.",
-      "Dos mensajes sobre la dirección de un servidor de modelos y los pasos del plan para añadir texto a un documento de TextEdit en segundo plano salían siempre en turco; ahora siguen el idioma de la app. Una tarea programada que no puede empezar ya no deja activa su restricción de apps."
+      "Ahora puedes pausar la grabación de una reunión durante un descanso y reanudarla, desde la grabación o la barra de menús. En pausa, Vunemi suelta el micrófono y el sonido del Mac, así que no se graba nada entretanto.",
+      "Por muchas pausas que hagas, sigue siendo una sola grabación, una transcripción y un resumen, y lo dicho antes y después de un descanso nunca queda en la misma línea. El reloj muestra el tiempo grabado, sin los descansos."
     ],
     "fr": [
-      "Si vous utilisez aussi Claude ou Codex, vous pouvez désormais l’autoriser à lire les réunions enregistrées par Vunemi, y compris pendant un enregistrement : plus besoin de copier une transcription à la main. C’est désactivé tant que vous ne l’activez pas dans Réunions, et il ne peut que lire.",
-      "Ce qu’il lit part vers le service de cet assistant et quitte donc votre Mac. Sans cela, tout fonctionne comme avant dans Vunemi et vos réunions restent sur votre Mac.",
-      "Deux messages sur l’adresse d’un serveur de modèles et les étapes du plan d’ajout de texte à un document TextEdit en arrière-plan s’affichaient toujours en turc ; ils suivent désormais la langue de l’app. Une tâche planifiée qui ne peut pas démarrer ne laisse plus sa restriction d’apps en vigueur."
+      "Vous pouvez désormais mettre en pause l’enregistrement d’une réunion le temps d’une coupure, puis le reprendre, depuis l’enregistrement ou la barre des menus. En pause, Vunemi libère le micro et le son du Mac : rien n’est enregistré entre-temps.",
+      "Quel que soit le nombre de pauses, cela reste un seul enregistrement, une transcription et un résumé, et ce qui est dit avant et après une coupure n’est jamais écrit sur une même ligne. L’horloge affiche le temps enregistré, sans les pauses."
     ],
     "it": [
-      "Se usi anche Claude o Codex, ora puoi permettergli di leggere le riunioni registrate da Vunemi, anche durante una registrazione, così non devi copiare la trascrizione a mano. È disattivato finché non lo attivi in Riunioni, e può solo leggere.",
-      "Ciò che legge va al servizio di quell’assistente, quindi esce dal tuo Mac. Senza, tutto in Vunemi funziona come prima e le tue riunioni restano sul tuo Mac.",
-      "Due messaggi sull’indirizzo di un server di modelli e i passaggi del piano per aggiungere testo a un documento TextEdit in background comparivano sempre in turco; ora seguono la lingua dell’app. Un’attività programmata che non riesce a partire non lascia più attiva la sua restrizione sulle app."
+      "Ora puoi mettere in pausa la registrazione di una riunione durante una pausa e riprenderla, dalla registrazione o dalla barra dei menu. In pausa Vunemi rilascia il microfono e l’audio del Mac, quindi nel frattempo non si registra nulla.",
+      "Per quante pause tu faccia, resta una sola registrazione, una trascrizione e un riepilogo, e ciò che è stato detto prima e dopo una pausa non finisce mai sulla stessa riga. L’orologio mostra il tempo registrato, senza le pause."
     ],
     "tr": [
-      "Claude ya da Codex de kullanıyorsan, artık Vunemi'nin kaydettiği toplantıları okumasına izin verebilirsin; kayıt sürerken de. Böylece dökümü elle kopyalaman gerekmez. Toplantılar'da sen açana kadar kapalıdır ve yalnız okuyabilir.",
-      "Okuduğu şey o asistanın kendi hizmetine gider, yani Mac'inden çıkar. Bu olmadan Vunemi'deki her şey eskisi gibi çalışır ve toplantıların Mac'inde kalır.",
-      "Model sunucusunun adresiyle ilgili iki mesaj ve TextEdit belgesine arka planda metin ekleme planının adımları hep Türkçe çıkıyordu; artık uygulamanın dilinde. Başlayamayan zamanlanmış bir iş de uygulama kısıtını artık geride bırakmıyor."
+      "Kaydedilen bir toplantıyı artık ara için duraklatıp devam ettirebilirsin; kayıttan ya da menü çubuğundan. Duraklatınca Vunemi mikrofonu ve Mac sesini bırakır, aradaki hiçbir şey kaydedilmez.",
+      "Kaç kez duraklatırsan duraklat tek kayıt, tek döküm ve tek özet olarak kalır; aradan önce ve sonra söylenenler hiçbir zaman tek satırda birleşmez. Süre, aralar hariç kaydedilen zamanı gösterir."
     ],
     "pt": [
-      "Se você também usa o Claude ou o Codex, agora pode permitir que ele leia as reuniões gravadas pelo Vunemi, inclusive durante uma gravação, para não precisar copiar a transcrição à mão. Fica desativado até você ativar em Reuniões, e ele só pode ler.",
-      "O que ele lê vai para o serviço desse assistente, portanto sai do seu Mac. Sem isso, tudo no Vunemi funciona como antes e suas reuniões ficam no seu Mac.",
-      "Duas mensagens sobre o endereço de um servidor de modelos e as etapas do plano para adicionar texto a um documento do TextEdit em segundo plano apareciam sempre em turco; agora seguem o idioma do app. Uma tarefa agendada que não consegue iniciar não deixa mais sua restrição de apps em vigor."
+      "Agora você pode pausar a gravação de uma reunião durante um intervalo e retomá-la, pela gravação ou pela barra de menus. Em pausa, o Vunemi libera o microfone e o som do Mac, então nada é gravado nesse meio-tempo.",
+      "Não importa quantas vezes você pause: continua sendo uma gravação, uma transcrição e um resumo, e o que foi dito antes e depois de um intervalo nunca fica na mesma linha. O relógio mostra o tempo gravado, sem os intervalos."
     ],
     "ru": [
-      "Если вы пользуетесь ещё и Claude или Codex, теперь можно разрешить ему читать встречи, записанные Vunemi, в том числе во время записи, чтобы не копировать расшифровку вручную. Это выключено, пока вы не включите его в разделе «Встречи», и ассистент может только читать.",
-      "Прочитанное уходит в сервис этого ассистента, то есть покидает ваш Mac. Без этого всё в Vunemi работает как раньше, а встречи остаются на вашем Mac.",
-      "Два сообщения об адресе сервера моделей и шаги плана при добавлении текста в документ TextEdit в фоне всегда показывались по-турецки; теперь они на языке приложения. Задача по расписанию, которая не смогла запуститься, больше не оставляет в силе своё ограничение по приложениям."
+      "Запись встречи теперь можно поставить на паузу на время перерыва и продолжить — из окна записи или из строки меню. На паузе Vunemi отпускает микрофон и звук Mac, так что в перерыве ничего не записывается.",
+      "Сколько бы раз вы ни ставили паузу, это остаётся одна запись, одна расшифровка и одна сводка, а сказанное до и после перерыва никогда не попадает в одну строку. Часы показывают записанное время без перерывов."
     ],
     "zh": [
-      "如果你也使用 Claude 或 Codex，现在可以允许它读取 Vunemi 录制的会议，录制过程中也可以，这样就不用手动复制转写稿。在“会议”中打开之前，它一直是关闭的，而且只能读取。",
-      "它读取的内容会发送到该助手自己的服务，因此会离开你的 Mac。不使用它时，Vunemi 的一切照常工作，会议也留在你的 Mac 上。",
-      "关于模型服务器地址的两条提示，以及在后台向 TextEdit 文稿添加文本时的计划步骤，以前始终以土耳其语显示；现在会跟随应用的语言。无法启动的定时任务也不会再让它的应用限制继续生效。"
+      "现在可以在会议录制中途暂停休息，再继续录制，在录制界面或菜单栏中都可以操作。暂停时，Vunemi 会释放麦克风和 Mac 的声音，期间不会录制任何内容。",
+      "无论暂停多少次，仍然是同一段录音、同一份文字记录和同一份摘要，休息前后说的话绝不会被写进同一行。计时只显示实际录制的时间，不含休息。"
     ],
     "ja": [
-      "Claude や Codex も使っている場合は、Vunemi が録音した会議の読み取りを許可できるようになりました。録音中も読み取れるので、文字起こしを手でコピーする必要がありません。「会議」でオンにするまではオフで、できるのは読み取りだけです。",
-      "読み取った内容はそのアシスタントのサービスに送られるため、Mac の外に出ます。使わない場合、Vunemi はこれまでどおり動作し、会議は Mac に残ります。",
-      "モデルサーバーのアドレスに関する 2 つのメッセージと、バックグラウンドで TextEdit 書類にテキストを追加するときの計画の手順が、常にトルコ語で表示されていました。現在はアプリの言語で表示されます。開始できなかったスケジュールタスクのアプリ制限が残ることもなくなりました。"
+      "会議の録音中に、休憩のために一時停止して再開できるようになりました。録音画面からもメニューバーからも操作できます。一時停止中、Vunemi はマイクと Mac の音声を手放すため、その間は何も録音されません。",
+      "何度一時停止しても、録音・文字起こし・要約はそれぞれひとつのままで、休憩の前後の発言が 1 行にまとめられることはありません。時計には休憩を除いた録音時間が表示されます。"
     ],
     "ko": [
-      "Claude나 Codex도 사용한다면 이제 Vunemi가 녹음한 회의를 읽도록 허용할 수 있습니다. 녹음 중에도 읽을 수 있어 녹취록을 직접 복사할 필요가 없습니다. 회의에서 켜기 전까지는 꺼져 있으며 읽기만 할 수 있습니다.",
-      "읽은 내용은 해당 어시스턴트의 서비스로 전송되므로 Mac 밖으로 나갑니다. 사용하지 않으면 Vunemi의 모든 기능은 이전과 같이 작동하고 회의는 Mac에 남습니다.",
-      "모델 서버 주소에 관한 메시지 두 개와 백그라운드에서 TextEdit 문서에 텍스트를 추가할 때의 계획 단계가 항상 터키어로 표시되었습니다. 이제 앱의 언어를 따릅니다. 시작하지 못한 예약된 작업의 앱 제한이 남아 있는 일도 없어졌습니다."
+      "이제 회의를 녹음하는 중에 쉬는 시간 동안 일시 정지했다가 재개할 수 있습니다. 녹음 화면이나 메뉴 막대에서 할 수 있습니다. 일시 정지하면 Vunemi가 마이크와 Mac의 소리를 놓아 주므로 그사이에는 아무것도 녹음되지 않습니다.",
+      "몇 번을 일시 정지해도 녹음, 대화록, 요약은 하나로 유지되며, 쉬는 시간 전후에 한 말이 한 줄로 합쳐지지 않습니다. 시계에는 쉬는 시간을 뺀 녹음 시간이 표시됩니다."
     ]
   }
 }

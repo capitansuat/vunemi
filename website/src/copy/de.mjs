@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.2.7 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.2.8 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.2.7 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.2.8 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -63,7 +63,7 @@ export default {
       { title: "Aufgaben nach Plan", body: "Wünsch dir eine Morgenübersicht oder eine wöchentliche Prüfung. Geplante Aufgaben laufen, solange Vunemi geöffnet ist, und senden, löschen oder bezahlen nie.", example: "Fass jeden Morgen um 9 meinen Kalender zusammen." },
       { title: "Zeig ihm ein Bild", body: "Häng einen Screenshot oder ein Foto an. Modelle, die Bilder sehen können, beschreiben es; bei anderen liest Vunemi den Text darin trotzdem auf deinem Mac.", example: "Was bedeutet der Fehler in diesem Screenshot?" },
       { title: "Merkt sich, was du sagst", body: "Sag, wie du gern arbeitest oder wer wer ist, und Vunemi notiert es in deinen Worten, sobald du zustimmst. Jede Antwort zeigt, welche Notizen sie bekam; in den Einstellungen kannst du sie bearbeiten oder löschen.", example: "Merk dir: Berichte bitte als PDF." },
-      { title: "Besprechung aufzeichnen", body: "Mit Aufnahme werden Mikrofon und Mac-Ton erfasst. Vunemi erstellt Transkript und Zusammenfassung auf diesem Mac; nach erfolgreicher Zusammenfassung wandert das Audio in den Papierkorb. Erfordert macOS 14.2 oder neuer.", example: "Diese Besprechung aufzeichnen." },
+      { title: "Besprechung aufzeichnen", body: "Mit Aufnahme werden Mikrofon und Mac-Ton erfasst. Vunemi erstellt Transkript und Zusammenfassung auf diesem Mac; nach erfolgreicher Zusammenfassung wandert das Audio in den Papierkorb. Pausieren hält die Aufnahme für eine Pause an; Fortsetzen nimmt in derselben Besprechung weiter auf. Erfordert macOS 14.2 oder neuer.", example: "Diese Besprechung aufzeichnen." },
       { title: "Frühere Arbeit dazuholen", body: "Tippe @ und wähle eine frühere Sitzung oder eine Besprechung. Ihre Fragen und Antworten oder die Zusammenfassung der Besprechung gehen mit deiner Nachricht mit; bis zu fünf auf einmal.", example: "Welches Hotel haben wir in @Rom-Reise ausgewählt?" },
       { title: "Dokumente erstellen, Fotos und Videos bearbeiten", body: "Mit Erweiterungen, die du bei Bedarf lädst, schreibt Vunemi Word- und PDF-Dokumente, legt Excel-Tabellen mit Formeln und Diagrammen an, baut PowerPoint-Präsentationen, fügt PDFs zusammen und teilt sie, bearbeitet Fotos und schneidet kurze Videos. Jedes Ergebnis ist eine neue Datei.", example: "Schneide dieses Foto quadratisch zu und helle es etwas auf." },
     ],
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.2.7 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.2.8 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -188,9 +188,8 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Wenn du auch Claude oder Codex nutzt, kannst du ihm jetzt erlauben, die von Vunemi aufgenommenen Besprechungen zu lesen, auch während einer Aufnahme. So musst du keine Mitschrift von Hand hinüberkopieren. Es ist aus, bis du es unter Besprechungen einschaltest, und es kann nur lesen.",
-      "Was es liest, geht an den Dienst dieses Assistenten und verlässt damit deinen Mac. Ohne es funktioniert in Vunemi alles wie bisher, und deine Besprechungen bleiben auf deinem Mac.",
-      "Zwei Meldungen zur Adresse eines Modellservers und die Planschritte beim Hinzufügen von Text zu einem TextEdit-Dokument im Hintergrund erschienen immer auf Türkisch; jetzt folgen sie der App-Sprache. Eine geplante Aufgabe, die nicht starten kann, lässt ihre App-Beschränkung nicht mehr bestehen.",
+      "Eine laufende Besprechungsaufnahme lässt sich jetzt für eine Pause anhalten und fortsetzen, in der Aufnahme oder über die Menüleiste. Pausiert gibt Vunemi Mikrofon und Mac-Ton frei, dazwischen wird nichts aufgenommen.",
+      "Wie oft du auch pausierst: Es bleibt eine Aufnahme, ein Transkript und eine Zusammenfassung, und was vor und nach einer Pause gesagt wurde, landet nie in einer Zeile. Die Uhr zeigt die aufgenommene Zeit ohne die Pausen.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

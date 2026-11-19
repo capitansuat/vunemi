@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.7'nin yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.8'in yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.7'yi Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.8'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -63,7 +63,7 @@ export default {
       { title: "İşleri zamanla", body: "Sabah özeti ya da haftalık bir kontrol iste. Zamanlanmış işler Vunemi açıkken çalışır; asla gönderim, silme veya ödeme yapmaz.", example: "Her sabah 9'da takvimimi özetle." },
       { title: "Bir resim göster", body: "Ekran görüntüsü veya fotoğraf ekle. Görsel görebilen modeller onu anlatır; diğer modellerde de Vunemi içindeki yazıyı Mac'inde okur.", example: "Bu ekran görüntüsündeki hata ne anlama geliyor?" },
       { title: "Söylediklerini hatırlar", body: "Nasıl çalışmayı sevdiğini ya da kimin kim olduğunu söyle; onay verdiğinde bunu kendi sözlerinle not eder. Her yanıt hangi notların verildiğini gösterir; notları Ayarlar'da düzenleyip silebilirsin.", example: "Hatırla: raporları PDF olarak isterim." },
-      { title: "Toplantıyı kaydet", body: "Kaydet düğmesi mikrofonunu ve Mac sesini kaydeder. Vunemi dökümü ve özeti bu Mac’te oluşturur; özet başarıyla tamamlanınca ses dosyalarını Çöp’e taşır. macOS 14.2 veya sonrası gerekir.", example: "Bu toplantıyı kaydet." },
+      { title: "Toplantıyı kaydet", body: "Kaydet düğmesi mikrofonunu ve Mac sesini kaydeder. Vunemi dökümü ve özeti bu Mac’te oluşturur; özet başarıyla tamamlanınca ses dosyalarını Çöp’e taşır. Duraklat, ara boyunca kaydı durdurur; Devam et aynı toplantıya kaydetmeyi sürdürür. macOS 14.2 veya sonrası gerekir.", example: "Bu toplantıyı kaydet." },
       { title: "Önceki işi getir", body: "@ yazıp önceki bir oturumu ya da toplantıyı seç. Oturumun soruları ve yanıtları ya da toplantının özeti mesajınla birlikte gider; bir mesaja en çok beş tane.", example: "@Roma gezisi'nde hangi oteli seçmiştik?" },
       { title: "Belge hazırla, fotoğraf ve video düzenle", body: "İstediğinde indirdiğin eklentilerle Vunemi Word ve PDF belgeleri yazar, formüllü ve grafikli Excel tabloları yapar, PowerPoint sunumları hazırlar, PDF'leri birleştirip ayırır, fotoğraf düzenler ve kısa videolar kurgular. Her sonuç yeni bir dosyadır.", example: "Bu fotoğrafı kare kırp ve biraz aydınlat." },
     ],
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.2.7: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.2.8: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -190,9 +190,8 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Claude ya da Codex de kullanıyorsan, artık Vunemi'nin kaydettiği toplantıları okumasına izin verebilirsin; kayıt sürerken de. Böylece dökümü elle kopyalaman gerekmez. Toplantılar'da sen açana kadar kapalıdır ve yalnız okuyabilir.",
-      "Okuduğu şey o asistanın kendi hizmetine gider, yani Mac'inden çıkar. Bu olmadan Vunemi'deki her şey eskisi gibi çalışır ve toplantıların Mac'inde kalır.",
-      "Model sunucusunun adresiyle ilgili iki mesaj ve TextEdit belgesine arka planda metin ekleme planının adımları hep Türkçe çıkıyordu; artık uygulamanın dilinde. Başlayamayan zamanlanmış bir iş de uygulama kısıtını artık geride bırakmıyor.",
+      "Kaydedilen bir toplantıyı artık ara için duraklatıp devam ettirebilirsin; kayıttan ya da menü çubuğundan. Duraklatınca Vunemi mikrofonu ve Mac sesini bırakır, aradaki hiçbir şey kaydedilmez.",
+      "Kaç kez duraklatırsan duraklat tek kayıt, tek döküm ve tek özet olarak kalır; aradan önce ve sonra söylenenler hiçbir zaman tek satırda birleşmez. Süre, aralar hariç kaydedilen zamanı gösterir.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],
