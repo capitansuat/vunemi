@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：Mac の上で動くパーソナルアシスタント", description: "Vunemi は日々の作業を手伝います。AI は Mac 上で動作し、Vunemi のクラウドアカウントは不要です。外部サービスとの接続は自分で選べます。" },
-    features: { title: "Vunemi にできること", description: "メール、カレンダー、ファイル、Web、Mac のアプリ。承認カード、取り消し、はっきりした制限つき。Vunemi 0.2.8 の全機能です。" },
+    features: { title: "Vunemi にできること", description: "メール、カレンダー、ファイル、Web、Mac のアプリ。承認カード、取り消し、はっきりした制限つき。Vunemi 0.2.9 の全機能です。" },
     screens: { title: "Vunemi の画面", description: "Mac 版 Vunemi の実際の画面です。サンプルデータで撮影しています。" },
-    download: { title: "Mac 版 Vunemi をダウンロード", description: "Vunemi 0.2.8 をダウンロード。Apple シリコン搭載、macOS 14 以降の Mac 向け。無料でオープンソースです。" },
+    download: { title: "Mac 版 Vunemi をダウンロード", description: "Vunemi 0.2.9 をダウンロード。Apple シリコン搭載、macOS 14 以降の Mac 向け。無料でオープンソースです。" },
   },
   hero: {
     eyebrow: "Mac のためのパーソナルアシスタント",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi にできることのすべて",
-    intro: "Vunemi 0.2.8 の詳細です。使い方、接続できるもの、そしてあなたが主導権を保つしくみを紹介します。",
+    intro: "Vunemi 0.2.9 の詳細です。使い方、接続できるもの、そしてあなたが主導権を保つしくみを紹介します。",
     chatTitle: "Vunemi との作業",
     chat: [
       { title: "まず計画", body: "いくつかの手順が必要なタスクでは、Vunemi が先に計画を示せます。そのまま進める、手順を編集する、キャンセルする、から選べます。" },
@@ -188,8 +188,8 @@ export default {
   downloadPage: {
     highlightsTitle: "このバージョンの新機能",
     highlights: [
-      "会議の録音中に、休憩のために一時停止して再開できるようになりました。録音画面からもメニューバーからも操作できます。一時停止中、Vunemi はマイクと Mac の音声を手放すため、その間は何も録音されません。",
-      "何度一時停止しても、録音・文字起こし・要約はそれぞれひとつのままで、休憩の前後の発言が 1 行にまとめられることはありません。時計には休憩を除いた録音時間が表示されます。",
+      "文書、表計算、プレゼンテーション、PDF、描画、写真、動画のアドオンを、ArtCraft チームの最新バージョンに更新しました。",
+      "インストール済みのアドオンは、Vunemi を開いてしばらくすると自動で更新されます。うまくいかなかった場合は、「設定 › アドオン」から再度更新できます。",
     ],
     title: "Vunemi をダウンロード",
     intro: "無料でオープンソース。Apple シリコン搭載、macOS 14 以降の Mac 向けです。",

@@ -1,62 +1,62 @@
 {
-  "currentRelease": "0.2.8",
+  "currentRelease": "0.2.9",
   "releases": [
     {
-      "version": "0.2.8",
+      "version": "0.2.9",
       "updateTo": {
-        "version": "0.2.8",
-        "name": "Vunemi 0.2.8",
+        "version": "0.2.9",
+        "name": "Vunemi 0.2.9",
         "pub_date": "2026-11-19T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.8/Vunemi-0.2.8-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.9/Vunemi-0.2.9-arm64.zip"
       }
     }
   ],
   "sizeMb": 144,
   "notes": {
     "en": [
-      "While a meeting is being recorded you can now pause it for a break and resume it, from the recording or the menu bar. Paused, Vunemi lets go of the microphone and the Mac's sound, so nothing is recorded in between.",
-      "However often you pause, it stays one recording, one transcript and one summary, and what was said before and after a break is never written as one line. The clock shows the recorded time, without the breaks."
+      "The add-ons for documents, spreadsheets, presentations, PDFs, drawings, photos and video are updated to the latest versions from the ArtCraft team.",
+      "An add-on you already installed updates itself shortly after Vunemi opens. If that fails, Settings › Add-ons offers the update again."
     ],
     "de": [
-      "Eine laufende Besprechungsaufnahme lässt sich jetzt für eine Pause anhalten und fortsetzen, in der Aufnahme oder über die Menüleiste. Pausiert gibt Vunemi Mikrofon und Mac-Ton frei, dazwischen wird nichts aufgenommen.",
-      "Wie oft du auch pausierst: Es bleibt eine Aufnahme, ein Transkript und eine Zusammenfassung, und was vor und nach einer Pause gesagt wurde, landet nie in einer Zeile. Die Uhr zeigt die aufgenommene Zeit ohne die Pausen."
+      "Die Erweiterungen für Dokumente, Tabellen, Präsentationen, PDFs, Zeichnungen, Fotos und Videos sind auf die neuesten Versionen des ArtCraft-Teams aktualisiert.",
+      "Eine bereits installierte Erweiterung aktualisiert sich kurz nach dem Start von Vunemi von selbst. Klappt das nicht, bietet Einstellungen › Erweiterungen das Update erneut an."
     ],
     "es": [
-      "Ahora puedes pausar la grabación de una reunión durante un descanso y reanudarla, desde la grabación o la barra de menús. En pausa, Vunemi suelta el micrófono y el sonido del Mac, así que no se graba nada entretanto.",
-      "Por muchas pausas que hagas, sigue siendo una sola grabación, una transcripción y un resumen, y lo dicho antes y después de un descanso nunca queda en la misma línea. El reloj muestra el tiempo grabado, sin los descansos."
+      "Los complementos para documentos, hojas de cálculo, presentaciones, PDF, dibujos, fotos y vídeo se actualizan a las últimas versiones del equipo de ArtCraft.",
+      "Un complemento ya instalado se actualiza solo poco después de abrir Vunemi. Si falla, Ajustes › Complementos vuelve a ofrecer la actualización."
     ],
     "fr": [
-      "Vous pouvez désormais mettre en pause l’enregistrement d’une réunion le temps d’une coupure, puis le reprendre, depuis l’enregistrement ou la barre des menus. En pause, Vunemi libère le micro et le son du Mac : rien n’est enregistré entre-temps.",
-      "Quel que soit le nombre de pauses, cela reste un seul enregistrement, une transcription et un résumé, et ce qui est dit avant et après une coupure n’est jamais écrit sur une même ligne. L’horloge affiche le temps enregistré, sans les pauses."
+      "Les extensions pour les documents, feuilles de calcul, présentations, PDF, dessins, photos et vidéos passent aux dernières versions de l'équipe ArtCraft.",
+      "Une extension déjà installée se met à jour d'elle-même peu après l'ouverture de Vunemi. En cas d'échec, Réglages › Extensions propose à nouveau la mise à jour."
     ],
     "it": [
-      "Ora puoi mettere in pausa la registrazione di una riunione durante una pausa e riprenderla, dalla registrazione o dalla barra dei menu. In pausa Vunemi rilascia il microfono e l’audio del Mac, quindi nel frattempo non si registra nulla.",
-      "Per quante pause tu faccia, resta una sola registrazione, una trascrizione e un riepilogo, e ciò che è stato detto prima e dopo una pausa non finisce mai sulla stessa riga. L’orologio mostra il tempo registrato, senza le pause."
+      "I componenti aggiuntivi per documenti, fogli di calcolo, presentazioni, PDF, disegni, foto e video passano alle ultime versioni del team ArtCraft.",
+      "Un componente aggiuntivo già installato si aggiorna da solo poco dopo l'apertura di Vunemi. Se non riesce, Impostazioni › Componenti aggiuntivi propone di nuovo l'aggiornamento."
     ],
     "tr": [
-      "Kaydedilen bir toplantıyı artık ara için duraklatıp devam ettirebilirsin; kayıttan ya da menü çubuğundan. Duraklatınca Vunemi mikrofonu ve Mac sesini bırakır, aradaki hiçbir şey kaydedilmez.",
-      "Kaç kez duraklatırsan duraklat tek kayıt, tek döküm ve tek özet olarak kalır; aradan önce ve sonra söylenenler hiçbir zaman tek satırda birleşmez. Süre, aralar hariç kaydedilen zamanı gösterir."
+      "Belge, tablo, sunum, PDF, çizim, fotoğraf ve video eklentileri ArtCraft ekibinin en son sürümlerine güncellendi.",
+      "Kurulu bir eklenti, Vunemi açıldıktan kısa süre sonra kendiliğinden güncellenir. Bu olmazsa Ayarlar › Eklentiler güncellemeyi yeniden sunar."
     ],
     "pt": [
-      "Agora você pode pausar a gravação de uma reunião durante um intervalo e retomá-la, pela gravação ou pela barra de menus. Em pausa, o Vunemi libera o microfone e o som do Mac, então nada é gravado nesse meio-tempo.",
-      "Não importa quantas vezes você pause: continua sendo uma gravação, uma transcrição e um resumo, e o que foi dito antes e depois de um intervalo nunca fica na mesma linha. O relógio mostra o tempo gravado, sem os intervalos."
+      "Os complementos para documentos, planilhas, apresentações, PDFs, desenhos, fotos e vídeos foram atualizados para as versões mais recentes da equipe ArtCraft.",
+      "Um complemento que você já instalou se atualiza sozinho pouco depois de abrir o Vunemi. Se isso falhar, Ajustes › Complementos oferece a atualização de novo."
     ],
     "ru": [
-      "Запись встречи теперь можно поставить на паузу на время перерыва и продолжить — из окна записи или из строки меню. На паузе Vunemi отпускает микрофон и звук Mac, так что в перерыве ничего не записывается.",
-      "Сколько бы раз вы ни ставили паузу, это остаётся одна запись, одна расшифровка и одна сводка, а сказанное до и после перерыва никогда не попадает в одну строку. Часы показывают записанное время без перерывов."
+      "Дополнения для документов, таблиц, презентаций, PDF, рисунков, фото и видео обновлены до последних версий от команды ArtCraft.",
+      "Уже установленное дополнение обновляется само вскоре после запуска Vunemi. Если это не удалось, обновление снова будет доступно в «Настройки › Дополнения»."
     ],
     "zh": [
-      "现在可以在会议录制中途暂停休息，再继续录制，在录制界面或菜单栏中都可以操作。暂停时，Vunemi 会释放麦克风和 Mac 的声音，期间不会录制任何内容。",
-      "无论暂停多少次，仍然是同一段录音、同一份文字记录和同一份摘要，休息前后说的话绝不会被写进同一行。计时只显示实际录制的时间，不含休息。"
+      "文档、表格、演示文稿、PDF、绘图、照片和视频扩展已更新为 ArtCraft 团队的最新版本。",
+      "已安装的扩展会在 Vunemi 打开后不久自动更新。如果更新失败，可在“设置 › 扩展”中再次更新。"
     ],
     "ja": [
-      "会議の録音中に、休憩のために一時停止して再開できるようになりました。録音画面からもメニューバーからも操作できます。一時停止中、Vunemi はマイクと Mac の音声を手放すため、その間は何も録音されません。",
-      "何度一時停止しても、録音・文字起こし・要約はそれぞれひとつのままで、休憩の前後の発言が 1 行にまとめられることはありません。時計には休憩を除いた録音時間が表示されます。"
+      "文書、表計算、プレゼンテーション、PDF、描画、写真、動画のアドオンを、ArtCraft チームの最新バージョンに更新しました。",
+      "インストール済みのアドオンは、Vunemi を開いてしばらくすると自動で更新されます。うまくいかなかった場合は、「設定 › アドオン」から再度更新できます。"
     ],
     "ko": [
-      "이제 회의를 녹음하는 중에 쉬는 시간 동안 일시 정지했다가 재개할 수 있습니다. 녹음 화면이나 메뉴 막대에서 할 수 있습니다. 일시 정지하면 Vunemi가 마이크와 Mac의 소리를 놓아 주므로 그사이에는 아무것도 녹음되지 않습니다.",
-      "몇 번을 일시 정지해도 녹음, 대화록, 요약은 하나로 유지되며, 쉬는 시간 전후에 한 말이 한 줄로 합쳐지지 않습니다. 시계에는 쉬는 시간을 뺀 녹음 시간이 표시됩니다."
+      "문서, 스프레드시트, 프레젠테이션, PDF, 그리기, 사진, 동영상 추가 기능이 ArtCraft 팀의 최신 버전으로 업데이트되었습니다.",
+      "이미 설치한 추가 기능은 Vunemi를 연 뒤 잠시 후 저절로 업데이트됩니다. 실패하면 설정 › 추가 기능에서 다시 업데이트할 수 있습니다."
     ]
   }
 }
