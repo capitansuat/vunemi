@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.8의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.9의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.8을 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.9을 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.2.8 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.2.9 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -188,8 +188,8 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "이제 회의를 녹음하는 중에 쉬는 시간 동안 일시 정지했다가 재개할 수 있습니다. 녹음 화면이나 메뉴 막대에서 할 수 있습니다. 일시 정지하면 Vunemi가 마이크와 Mac의 소리를 놓아 주므로 그사이에는 아무것도 녹음되지 않습니다.",
-      "몇 번을 일시 정지해도 녹음, 대화록, 요약은 하나로 유지되며, 쉬는 시간 전후에 한 말이 한 줄로 합쳐지지 않습니다. 시계에는 쉬는 시간을 뺀 녹음 시간이 표시됩니다.",
+      "문서, 스프레드시트, 프레젠테이션, PDF, 그리기, 사진, 동영상 추가 기능이 ArtCraft 팀의 최신 버전으로 업데이트되었습니다.",
+      "이미 설치한 추가 기능은 Vunemi를 연 뒤 잠시 후 저절로 업데이트됩니다. 실패하면 설정 › 추가 기능에서 다시 업데이트할 수 있습니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",
