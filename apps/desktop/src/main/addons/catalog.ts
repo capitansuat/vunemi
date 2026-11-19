@@ -77,7 +77,7 @@ export const ADDONS: readonly AddonSource[] = [
     id: "markdown", category: "office", engine: "MarkItDown", publisher: "Microsoft", licence: "MIT", repo: "microsoft/markitdown",
     tag: "v0.1.9", shelf: "addons-3", file: "markitdown-0.1.9-macos-arm64.zip", folder: "markitdown-0.1.9-macos-arm64", binary: "markitdown",
     // From scripts/build-markitdown.sh on an Apple Silicon Mac; the same lock gives the same zip.
-    size: 0, sha256: "",
+    size: 114_592_483, sha256: "327939d8881007f9691a08fcd2f243132cdfbc196a79218401ab90df2b211837",
     team: null,
   },
 ];
