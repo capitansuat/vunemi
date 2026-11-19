@@ -37,7 +37,7 @@ export class Segmenter {
   private readonly minVoicedFrames: number;
 
   private carry = new Int16Array(0);
-  /** Samples consumed so far, always a whole number of frames. */
+  /** Samples consumed so far. */
   private position = 0;
   private preRoll: Int16Array[] = [];
   private open: { start: number; frames: Int16Array[]; length: number; voiced: number; silent: number } | null = null;
@@ -73,6 +73,24 @@ export class Segmenter {
       if (segment) done.push(segment);
     }
     this.carry = all.slice(offset);
+    return done;
+  }
+
+  /**
+   * At a pause: closes what was open, so speech before the pause and after
+   * it are never one stretch. The few samples short of a frame go in as a
+   * frame of their own, so nothing is lost and times still match the file.
+   */
+  cut(): Segment[] {
+    const done: Segment[] = [];
+    if (this.carry.length > 0) {
+      const segment = this.step(this.carry);
+      if (segment) done.push(segment);
+    }
+    this.carry = new Int16Array(0);
+    const segment = this.close();
+    if (segment) done.push(segment);
+    this.preRoll = [];
     return done;
   }
 

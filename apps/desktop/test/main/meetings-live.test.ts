@@ -111,6 +111,29 @@ describe("echo from the speakers", () => {
     expect(lines.map((l) => `${l.source}: ${l.text}`)).toEqual(["others: Bütçeyi cuma günü bitirelim.", "me: Bence perşembe daha iyi."]);
   });
 
+  it("writes down what was said before a pause during the break, and never joins it to what follows", async () => {
+    // Both sources stop mid-speech when the recorder pauses.
+    writeFileSync(join(dir, "mic.pcm"), Buffer.concat([silence(1), speech(1)]));
+    writeFileSync(join(dir, "system.pcm"), Buffer.concat([silence(1.5), speech(0.5)]));
+    let n = 0;
+    const { live, lines } = make(() => ({ text: ["Birinci.", "İkinci.", "Aradan sonra."][n++] ?? "Fazla." }));
+    live.start();
+    await live.pause();
+    for (let i = 0; i < 100 && lines.length < 2; i++) await new Promise((r) => setTimeout(r, 10));
+    // Both stretches open at the pause are written while the break goes on; the others' first, as always.
+    expect(lines.map((l) => l.source)).toEqual(["others", "me"]);
+    for (const line of lines) expect(line.end).toBeCloseTo(2, 1);
+
+    // After the break the recorder appends again; speech goes straight on.
+    appendFileSync(join(dir, "mic.pcm"), Buffer.concat([speech(1), silence(1)]));
+    appendFileSync(join(dir, "system.pcm"), silence(2));
+    await live.finish();
+    expect(lines).toHaveLength(3);
+    expect(lines[2]).toMatchObject({ source: "me", text: "Aradan sonra." });
+    // It starts where the pause was, not with the end of what came before it.
+    expect(lines[2]!.start).toBeCloseTo(2, 1);
+  });
+
   it("tells an echo by the words it shares", () => {
     expect(echoes("bütçeyi cuma bitirelim", "Bütçeyi cuma günü bitirelim.")).toBe(true);
     expect(echoes("Tamam, katılıyorum.", "Bütçeyi cuma günü bitirelim.")).toBe(false);

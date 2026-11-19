@@ -533,7 +533,16 @@ export interface MeetingView extends MeetingSummaryView {
 }
 
 export interface MeetingStatusView {
-  recording: { id: string; startedAt: number; lines: MeetingLine[]; pending: number } | null;
+  recording: {
+    id: string;
+    startedAt: number;
+    lines: MeetingLine[];
+    pending: number;
+    /** When the current pause began; null while recording. */
+    pausedAt: number | null;
+    /** Milliseconds spent in pauses that have ended. */
+    pausedMs: number;
+  } | null;
   /** Why the Record button cannot record, in words; null when it can. */
   blocked: string | null;
 }
@@ -667,6 +676,9 @@ export interface VunemiApi {
   meetingsStatus(): Promise<MeetingStatusView>;
   /** Only ever from the user's button. */
   meetingsStart(microphone?: string): Promise<MeetingStatusView>;
+  /** A break in the meeting: the microphone and the Mac's sound are let go of until resumed. */
+  meetingsPause(): Promise<void>;
+  meetingsResume(): Promise<void>;
   /** Stops recording; `model` writes the summary. Resolves when the meeting is finished. */
   meetingsStop(model: string | null): Promise<void>;
   meetingsRetry(id: string, model: string | null): Promise<void>;
@@ -929,6 +941,8 @@ export const CH = {
   meetingsStatus: "meetings:status",
   meetingsStart: "meetings:start",
   meetingsStop: "meetings:stop",
+  meetingsPause: "meetings:pause",
+  meetingsResume: "meetings:resume",
   meetingsRetry: "meetings:retry",
   meetingsRecover: "meetings:recover",
   meetingsRename: "meetings:rename",

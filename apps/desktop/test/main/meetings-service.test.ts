@@ -95,6 +95,48 @@ describe("MeetingService", () => {
     expect(s.status().recording).toBeNull();
   });
 
+  it("pauses for a break and resumes into the same meeting, and stops while paused", async () => {
+    const s = service();
+    await s.pause(); // nothing recorded: nothing happens
+    const meeting = await s.start();
+    writeFileSync(join(store.folder(meeting.id), "system.pcm"), speech(1.5));
+    await s.pause();
+    const paused = s.status().recording!;
+    expect(paused.id).toBe(meeting.id);
+    expect(paused.pausedAt).not.toBeNull();
+    expect(await s.levels()).toEqual({ me: 0, others: 0 });
+    await s.pause(); // already paused: the same pause goes on
+    expect(s.status().recording!.pausedAt).toBe(paused.pausedAt);
+
+    await new Promise((r) => setTimeout(r, 20));
+    await s.resume();
+    const resumed = s.status().recording!;
+    expect(resumed).toMatchObject({ id: meeting.id, pausedAt: null });
+    expect(resumed.pausedMs).toBeGreaterThanOrEqual(15);
+    expect(await s.levels()).toEqual({ me: 0.25, others: 0.5 });
+
+    await s.pause();
+    await s.stop("lmstudio:m");
+    const done = store.get(meeting.id)!;
+    expect(done.state).toBe("done");
+    expect(done.lines).toEqual([expect.objectContaining({ source: "others", text: "Bütçeyi konuştuk." })]);
+    expect(store.list()).toHaveLength(1);
+    expect(s.status().recording).toBeNull();
+  });
+
+  it("stays paused when the recorder cannot take the sound again", async () => {
+    process.env.FAKE_RECORDER_MODE = "no-resume";
+    const s = service();
+    await s.start();
+    await s.pause();
+    await expect(s.resume()).rejects.toThrow("System audio");
+    expect(s.status().recording!.pausedAt).not.toBeNull();
+    // A failed resume does not stand in the way of the next one, or of Stop.
+    await expect(s.resume()).rejects.toThrow("System audio");
+    await s.stop("lmstudio:m");
+    expect(s.status().recording).toBeNull();
+  });
+
   it("keeps the transcript when the summary fails, and tries again", async () => {
     const s = service();
     const meeting = await s.start();

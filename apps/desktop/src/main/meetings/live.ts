@@ -9,6 +9,9 @@
  * only after the system audio up to its end has been, and is dropped when it
  * repeats what the others said at the same time.
  *
+ * A pause leaves nothing in the files; the stretch open at it is closed, so
+ * what was said before and after a break is never written as one line.
+ *
  * The same class finishes a meeting Vunemi quit during: started on files
  * that are already complete, it reads them from the beginning.
  */
@@ -78,6 +81,8 @@ export class LiveTranscript {
   private busy = false;
   private finishing = false;
   private transcriptionFailures = 0;
+  /** Seconds of "Me" audio read at the last pause: the others' audio before it is all in. */
+  private cutAt = 0;
   /** The others' recent lines, to tell an echo from the user. */
   private others: Line[] = [];
 
@@ -119,6 +124,17 @@ export class LiveTranscript {
     if (this.timer) return;
     this.timer = setInterval(() => this.poll(), this.opts.pollMs ?? 500);
     this.timer.unref?.();
+  }
+
+  /**
+   * After the recorder paused: reads what it wrote up to the pause and
+   * closes the open stretches there. Whisper goes on with the queue.
+   */
+  async pause(): Promise<void> {
+    await this.poll();
+    for (const tail of this.tails) this.enqueue(tail.source, tail.segmenter.cut());
+    this.cutAt = this.tails[0]!.segmenter.heard;
+    this.work();
   }
 
   /** After the recorder stopped: reads the rest, closes the last stretches, waits for whisper. */
@@ -206,7 +222,7 @@ export class LiveTranscript {
     const index = this.queue.findIndex(
       ({ source, segment }) =>
         source === "others" ||
-        ((this.finishing || segment.end + ECHO_WINDOW <= others.settled || me.heard - segment.end > ECHO_WAIT) &&
+        ((this.finishing || segment.end <= this.cutAt || segment.end + ECHO_WINDOW <= others.settled || me.heard - segment.end > ECHO_WAIT) &&
           !this.queue.some((q) => q.source === "others" && q.segment.start <= segment.end + ECHO_WINDOW)),
     );
     return index === -1 ? undefined : this.queue.splice(index, 1)[0];

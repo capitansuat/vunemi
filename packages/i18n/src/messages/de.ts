@@ -706,6 +706,10 @@ export const messages: Catalogue = {
     record: "Besprechung aufnehmen",
     stop: "Stopp",
     recording: "Aufnahme läuft",
+    pause: "Pausieren",
+    resume: "Fortsetzen",
+    paused: "Pausiert",
+    pausedNote: "Pausiert: Mikrofon und Ton des Mac werden nicht aufgenommen. Fortsetzen setzt dieselbe Besprechung fort.",
     reminder: "Sag den anderen, dass die Besprechung aufgenommen wird.",
     me: "Ich",
     others: "Andere",
@@ -774,6 +778,9 @@ export const messages: Catalogue = {
     tray: {
       stop: "Aufnahme stoppen",
       recording: "Besprechung wird aufgenommen",
+      pause: "Aufnahme pausieren",
+      resume: "Aufnahme fortsetzen",
+      paused: "Besprechungsaufnahme pausiert",
     },
   },
 

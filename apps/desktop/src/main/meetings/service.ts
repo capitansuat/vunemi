@@ -9,6 +9,10 @@
  * Separating (telling the others apart, speakers.ts) is skipped unless the
  * user switched it on.
  *
+ * A recording can be paused for a break and resumed, as often as needed: the
+ * microphone and the Mac's sound are let go of meanwhile, and the meeting
+ * stays one recording, one transcript and one summary.
+ *
  * A failed summary keeps the transcript and can be tried again. After a
  * summary the audio goes to the Trash. A meeting Vunemi quit during is found
  * at the next launch and finished from its files.
@@ -27,7 +31,16 @@ import { speakerLabel, summarise, type Headings, type Names } from "./summary.js
 export type MeetingBlock = "platform" | "macos" | "recorder" | "voice";
 
 export interface MeetingStatus {
-  recording: { id: string; startedAt: number; lines: Line[]; pending: number } | null;
+  recording: {
+    id: string;
+    startedAt: number;
+    lines: Line[];
+    pending: number;
+    /** When the current pause began; null while recording. */
+    pausedAt: number | null;
+    /** Milliseconds spent in pauses that have ended. */
+    pausedMs: number;
+  } | null;
   blocked: MeetingBlock | null;
 }
 
@@ -57,9 +70,18 @@ export interface MeetingServiceOptions {
 
 const SUMMARY_TIMEOUT_MS = 30 * 60_000;
 
+interface Recording {
+  meeting: Meeting;
+  live: LiveTranscript;
+  pausedAt: number | null;
+  pausedMs: number;
+}
+
 export class MeetingService {
-  private recording: { meeting: Meeting; live: LiveTranscript } | null = null;
+  private recording: Recording | null = null;
   private stopping: Promise<void> | null = null;
+  /** The last pause or resume, so the next one, and Stop, wait for it. */
+  private switching: Promise<void> = Promise.resolve();
   /** Meetings being finished, so a second Try again waits for the first. */
   private readonly working = new Set<string>();
   /** Meetings in memory while recorded or finished: a rename must reach these, or their next save undoes it. */
@@ -70,7 +92,9 @@ export class MeetingService {
   status(): MeetingStatus {
     const r = this.recording;
     return {
-      recording: r ? { id: r.meeting.id, startedAt: r.meeting.startedAt, lines: r.meeting.lines, pending: r.live.pending } : null,
+      recording: r
+        ? { id: r.meeting.id, startedAt: r.meeting.startedAt, lines: r.meeting.lines, pending: r.live.pending, pausedAt: r.pausedAt, pausedMs: r.pausedMs }
+        : null,
       blocked: this.opts.blocked(),
     };
   }
@@ -97,7 +121,7 @@ export class MeetingService {
       transcribe: this.opts.transcribe,
       onLine: (line) => this.add(meeting, line),
     });
-    this.recording = { meeting, live };
+    this.recording = { meeting, live, pausedAt: null, pausedMs: 0 };
     try {
       await this.opts.recorder.start(store.folder(meeting.id), microphone);
     } catch (err) {
@@ -112,6 +136,31 @@ export class MeetingService {
     live.start();
     this.changed();
     return meeting;
+  }
+
+  /** A break: the microphone and the Mac's sound are let go of until resume(). Only from the user. */
+  pause(): Promise<void> {
+    return this.switch(async (current) => {
+      if (current.pausedAt !== null) return;
+      await this.opts.recorder.pause();
+      if (this.recording !== current || this.stopping) return;
+      current.pausedAt = Date.now();
+      this.changed();
+      // What was said up to the pause is written down while the break goes on.
+      await current.live.pause();
+    });
+  }
+
+  /** Back from a break: records again, into the same meeting. */
+  resume(): Promise<void> {
+    return this.switch(async (current) => {
+      if (current.pausedAt === null) return;
+      await this.opts.recorder.resume();
+      if (this.recording !== current || this.stopping) return;
+      current.pausedMs += Date.now() - current.pausedAt;
+      current.pausedAt = null;
+      this.changed();
+    });
   }
 
   /** Ends the recording; the transcript and summary follow. Resolves when the meeting is finished. */
@@ -129,7 +178,8 @@ export class MeetingService {
     return this.stopping;
   }
 
-  private async stopAndFinish(current: { meeting: Meeting; live: LiveTranscript }, spec: string | null): Promise<void> {
+  private async stopAndFinish(current: Recording, spec: string | null): Promise<void> {
+    await this.switching.catch(() => {});
     await this.opts.recorder.stop().catch(() => {});
     // The microphone is let go of now, not when Vunemi quits.
     this.opts.recorder.dispose();
@@ -245,7 +295,7 @@ export class MeetingService {
   }
 
   async levels(): Promise<Levels> {
-    if (!this.recording || this.stopping) return { me: 0, others: 0 };
+    if (!this.recording || this.stopping || this.recording.pausedAt !== null) return { me: 0, others: 0 };
     return this.opts.recorder.levels().catch(() => ({ me: 0, others: 0 }));
   }
 
@@ -255,6 +305,19 @@ export class MeetingService {
   }
 
   // -- internals -------------------------------------------------------------
+
+  /** One pause or resume at a time, on the meeting being recorded, never while it stops. */
+  private switch(work: (current: Recording) => Promise<void>): Promise<void> {
+    const next = this.switching
+      .catch(() => {})
+      .then(() => {
+        const current = this.recording;
+        if (!current || this.stopping) return;
+        return work(current);
+      });
+    this.switching = next;
+    return next;
+  }
 
   private add(meeting: Meeting, line: Line): void {
     meeting.lines.push(line);

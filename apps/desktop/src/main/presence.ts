@@ -25,6 +25,14 @@ export interface RunControls {
   locked?(): boolean;
 }
 
+/** A meeting being recorded, as the menu bar offers it. */
+export interface RecordingControls {
+  paused: boolean;
+  stop(): void;
+  pause(): void;
+  resume(): void;
+}
+
 export interface PresenceState {
   running: boolean;
   paused: boolean;
@@ -37,8 +45,8 @@ export class Presence {
   private tray: Tray | null = null;
   private state: PresenceState = { running: false, paused: false, waiting: 0, goal: "" };
   private readonly pending = new Set<string>();
-  /** While a meeting records: how to stop it from the menu bar. */
-  private stopRecording: (() => void) | null = null;
+  /** While a meeting records: how to pause, resume or stop it from the menu bar. */
+  private meeting: RecordingControls | null = null;
 
   constructor(
     private readonly controls: RunControls,
@@ -108,11 +116,19 @@ export class Presence {
     }
   }
 
-  /** A meeting started or stopped recording: the menu bar turns red and offers Stop while it does. */
-  setRecording(stop: (() => void) | null): void {
-    if ((stop === null) === (this.stopRecording === null)) return;
-    this.stopRecording = stop;
-    this.tray?.setImage(this.icon());
+  /**
+   * A meeting started, paused, resumed or stopped: the menu bar stays red
+   * until it ends, and offers Pause or Resume, and Stop, meanwhile.
+   */
+  setRecording(meeting: RecordingControls | null): void {
+    const was = this.meeting;
+    if (was === null && meeting === null) return;
+    if (was && meeting && was.paused === meeting.paused) {
+      this.meeting = meeting;
+      return;
+    }
+    this.meeting = meeting;
+    if ((was === null) !== (meeting === null)) this.tray?.setImage(this.icon());
     this.render();
   }
 
@@ -151,14 +167,18 @@ export class Presence {
     // Locked, the menu bar says what Vunemi is doing, never what about.
     const goal = this.controls.locked?.() === true ? "" : this.state.goal;
     tray.setToolTip(goal ? `Vunemi · ${status} · ${goal}` : `Vunemi · ${status}`);
-    const stopRecording = this.stopRecording;
-    if (stopRecording) tray.setToolTip(`Vunemi · ${t("meetings.tray.recording")}`);
+    const meeting = this.meeting;
+    const meetingStatus = meeting?.paused ? t("meetings.tray.paused") : t("meetings.tray.recording");
+    if (meeting) tray.setToolTip(`Vunemi · ${meetingStatus}`);
     tray.setContextMenu(
       Menu.buildFromTemplate([
-        ...(stopRecording
+        ...(meeting
           ? ([
-              { label: t("meetings.tray.recording"), enabled: false },
-              { label: t("meetings.tray.stop"), click: () => stopRecording() },
+              { label: meetingStatus, enabled: false },
+              meeting.paused
+                ? { label: t("meetings.tray.resume"), click: () => meeting.resume() }
+                : { label: t("meetings.tray.pause"), click: () => meeting.pause() },
+              { label: t("meetings.tray.stop"), click: () => meeting.stop() },
               { type: "separator" },
             ] as const)
           : []),
@@ -184,7 +204,7 @@ export class Presence {
 
   private icon(): NativeImage {
     // Red, in any menu bar, so a recording is never missed.
-    if (this.stopRecording) return nativeImage.createFromPath(join(this.iconDir, "trayRecording.png"));
+    if (this.meeting) return nativeImage.createFromPath(join(this.iconDir, "trayRecording.png"));
     const img = nativeImage.createFromPath(join(this.iconDir, "trayTemplate.png"));
     img.setTemplateImage(true); // follows the menu bar's light/dark
     return img;

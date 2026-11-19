@@ -706,6 +706,10 @@ export const messages: Catalogue = {
     record: "录制会议",
     stop: "停止",
     recording: "正在录制",
+    pause: "暂停",
+    resume: "继续",
+    paused: "已暂停",
+    pausedNote: "已暂停：不录制麦克风和 Mac 的声音。点“继续”会接着录制同一场会议。",
     reminder: "请告知其他参会者本次会议正在录制。",
     me: "我",
     others: "其他人",
@@ -774,6 +778,9 @@ export const messages: Catalogue = {
     tray: {
       stop: "停止录制",
       recording: "正在录制会议",
+      pause: "暂停录制",
+      resume: "继续录制",
+      paused: "会议录制已暂停",
     },
   },
 

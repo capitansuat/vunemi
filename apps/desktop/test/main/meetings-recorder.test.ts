@@ -51,6 +51,16 @@ describe("Recorder", () => {
     expect(await recorder.stop()).toEqual({ seconds: 1.5 });
   });
 
+  it("pauses and resumes the recording it holds", async () => {
+    recorder = new Recorder(FAKE);
+    await expect(recorder.pause()).rejects.toThrow("Nothing is being recorded.");
+    await recorder.start(dir);
+    await recorder.pause();
+    expect(await recorder.levels()).toEqual({ me: 0, others: 0 });
+    await recorder.resume();
+    expect(await recorder.levels()).toEqual({ me: 0.25, others: 0.5 });
+  });
+
   it("rejects a start the recorder refuses, with its reason", async () => {
     process.env.FAKE_RECORDER_MODE = "no-permission";
     recorder = new Recorder(FAKE);

@@ -712,6 +712,10 @@ export const messages = {
     record: "Toplantıyı kaydet",
     stop: "Durdur",
     recording: "Kaydediliyor",
+    pause: "Duraklat",
+    resume: "Devam et",
+    paused: "Duraklatıldı",
+    pausedNote: "Duraklatıldı: mikrofon ve Mac'in sesi kaydedilmiyor. Devam edince kayıt aynı toplantıya eklenir.",
     reminder: "Diğer katılımcılara toplantının kaydedildiğini söyle.",
     me: "Ben",
     others: "Diğerleri",
@@ -780,6 +784,9 @@ export const messages = {
     tray: {
       stop: "Kaydı durdur",
       recording: "Toplantı kaydediliyor",
+      pause: "Kaydı duraklat",
+      resume: "Kayda devam et",
+      paused: "Toplantı kaydı duraklatıldı",
     },
   },
 

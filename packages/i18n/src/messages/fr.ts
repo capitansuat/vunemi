@@ -706,6 +706,10 @@ export const messages: Catalogue = {
     record: "Enregistrer la réunion",
     stop: "Arrêter",
     recording: "Enregistrement",
+    pause: "Pause",
+    resume: "Reprendre",
+    paused: "En pause",
+    pausedNote: "En pause : ni le micro ni le son du Mac ne sont enregistrés. Reprendre poursuit la même réunion.",
     reminder: "Prévenez les autres que la réunion est enregistrée.",
     me: "Moi",
     others: "Les autres",
@@ -774,6 +778,9 @@ export const messages: Catalogue = {
     tray: {
       stop: "Arrêter l'enregistrement",
       recording: "Réunion en cours d'enregistrement",
+      pause: "Mettre l'enregistrement en pause",
+      resume: "Reprendre l'enregistrement",
+      paused: "Enregistrement de la réunion en pause",
     },
   },
 
