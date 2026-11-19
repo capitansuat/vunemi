@@ -32,8 +32,8 @@ it.skipIf(process.env.CRAFT_LIVE!=='1'||process.platform!=='darwin')('real gener
   const editArgs={path:deck,out:deck,replaceExisting:true,replace:[{find:'Sayısal sonuçlar',with:'Kontrol edilmiş sonuçlar'}]};
   expect(await editTool.check!(editArgs)).toBeNull();expect(await editTool.preview!(editArgs)).toContain('before-edit');
   await editTool.run(editArgs,ctx);
-  const backup=readdirSync(base).find(name=>name.startsWith('layout.before-edit-')&&name.endsWith('.pptx'))!;expect(backup).toBeTruthy();expect(createHash('sha256').update(readFileSync(join(base,backup))).digest('hex')).toBe(originalDeckHash);
-  copyFileSync(join(base,backup),join(evidence,'layout-before-edit.pptx'));copyFileSync(deck,join(evidence,'layout-edited.pptx'));
+  const backups=join(base,'.backups'),backup=readdirSync(backups).find(name=>name.startsWith('layout.before-edit-')&&name.endsWith('.pptx'))!;expect(backup).toBeTruthy();expect(createHash('sha256').update(readFileSync(join(backups,backup))).digest('hex')).toBe(originalDeckHash);
+  copyFileSync(join(backups,backup),join(evidence,'layout-before-edit.pptx'));copyFileSync(deck,join(evidence,'layout-edited.pptx'));
   expect(String(await reader.run({path:deck,checks:{contains:['Kontrol edilmiş sonuçlar','Toplam: 40']}},ctx))).not.toContain('Sayısal sonuçlar');
   await engines('documents',ctx.signal,async job=>{
    writeFileSync(join(job.dir,'table.md'),'# Report\n\n| Item | Value |\n|---|---|\n| Alfa | 12.50 |\n| Beta | 7.25 |\n| Gama | 20.25 |\n| **Total** | **40.00** |\n\n## Second table\n\n| Detail | Explanation |\n|---|---|\n| Note | A longer explanatory cell must be allowed to wrap naturally without a fixed row height cutting its contents. |\n');
