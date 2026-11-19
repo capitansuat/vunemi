@@ -1,15 +1,15 @@
 // The release the site offers. Update every field together for a new version,
 // after checking the asset on GitHub (name, size, SHA-256, signature).
 export const release = {
-  version: "0.2.8",
+  version: "0.2.9",
   date: "2026-11-19",
-  asset: "Vunemi-0.2.8-arm64.dmg",
+  asset: "Vunemi-0.2.9-arm64.dmg",
   sizeMb: 142,
-  sha256: "8009bf9641844cc0802fdd8dd72e75b20680bdc9380d7070fbf062b63a113f88",
+  sha256: "0000000000000000000000000000000000000000000000000000000000000000",
   // The zip an installed Vunemi updates itself from (0.1.8 on). Absent: no update feed.
-  zip: "Vunemi-0.2.8-arm64.zip",
+  zip: "Vunemi-0.2.9-arm64.zip",
   zipSizeMb: 144,
-  zipSha256: "b259549db6ae04853c834365f342cd754fa5bfe6e4272b7f6dc4346057bb22bf",
+  zipSha256: "0000000000000000000000000000000000000000000000000000000000000000",
   get zipUrl() { return `https://github.com/capitansuat/vunemi/releases/download/v${this.version}/${this.zip}`; },
   get url() { return `https://github.com/capitansuat/vunemi/releases/download/v${this.version}/${this.asset}`; },
   get notes() { return `https://github.com/capitansuat/vunemi/releases/tag/v${this.version}`; },

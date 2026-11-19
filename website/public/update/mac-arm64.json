@@ -1,14 +1,14 @@
 {
-  "currentRelease": "0.2.8",
+  "currentRelease": "0.2.9",
   "releases": [
     {
-      "version": "0.2.8",
+      "version": "0.2.9",
       "updateTo": {
-        "version": "0.2.8",
-        "name": "Vunemi 0.2.8",
+        "version": "0.2.9",
+        "name": "Vunemi 0.2.9",
         "pub_date": "2026-11-19T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.8/Vunemi-0.2.8-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.9/Vunemi-0.2.9-arm64.zip"
       }
     }
   ],
