@@ -81,6 +81,9 @@ find "$root/python" \( -name "tests" -o -name "test" \) -type d -path "*site-pac
 rm -rf "$lib/test"
 # olefile ships its old Python 2 module too; nothing imports it and it does not compile.
 rm -f "$lib/site-packages/olefile/olefile2.py"
+# onnxruntime (for magika, which tells file kinds apart) needs sympy only for its
+# model-building tools, which magika never loads; together about 50 MB.
+rm -rf "$lib/site-packages/sympy" "$lib/site-packages/mpmath" "$lib"/site-packages/onnxruntime/{transformers,tools,quantization}
 
 # Compiled once here: in the sandbox the folder is read only, and pandas or
 # sympy compiled again on every run would cost seconds each time.
