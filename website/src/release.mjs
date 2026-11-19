@@ -5,11 +5,11 @@ export const release = {
   date: "2026-11-19",
   asset: "Vunemi-0.2.9-arm64.dmg",
   sizeMb: 142,
-  sha256: "0000000000000000000000000000000000000000000000000000000000000000",
+  sha256: "54fb2e5c4cbe870a4f9a37a9b48b63f46fd3ebe2a0efc68e72f5d0d60670ac4f",
   // The zip an installed Vunemi updates itself from (0.1.8 on). Absent: no update feed.
   zip: "Vunemi-0.2.9-arm64.zip",
   zipSizeMb: 144,
-  zipSha256: "0000000000000000000000000000000000000000000000000000000000000000",
+  zipSha256: "dcf017a598629ecd4f800b490da888517b05cff38169b040c9b5df65e6835409",
   get zipUrl() { return `https://github.com/capitansuat/vunemi/releases/download/v${this.version}/${this.zip}`; },
   get url() { return `https://github.com/capitansuat/vunemi/releases/download/v${this.version}/${this.asset}`; },
   get notes() { return `https://github.com/capitansuat/vunemi/releases/tag/v${this.version}`; },
