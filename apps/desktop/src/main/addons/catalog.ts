@@ -11,14 +11,6 @@
  *
  * The first ones are the ArtCraft team's Craft apps (MIT or Apache-2.0), in
  * their headless command-line form.
- *
- * MarkItDown is the exception: Microsoft publishes it only as a Python
- * package, so there is no program of theirs to keep. Vunemi builds one
- * (scripts/build-markitdown.sh: their package and its dependencies, pinned by
- * hash, with a Python of its own) and keeps that on the same shelf. It has no
- * developer's signature to check; the size and SHA-256 here, which ship
- * inside the signed app, are the whole check, as they are the first one for
- * every other add-on.
  */
 
 import type { AddonCategory, AddonId } from "../../shared/ipc.js";
@@ -49,8 +41,6 @@ export interface AddonSource {
   binary: string;
   size: number;
   sha256: string;
-  /** The Apple team that signs the program; null for the one Vunemi builds itself (see above). */
-  team: string | null;
 }
 
 /** Where the copies are kept: releases of Vunemi's own repository, apart from the app's versions. */
@@ -62,24 +52,17 @@ export const ADDON_TEAM = "DJ6XS33FX8";
 const craft = (id: AddonId, category: AddonCategory, engine: string, version: string, size: number, sha256: string): AddonSource => {
   const name = engine.toLowerCase();
   const folder = `${name}-cli-${version}-macos-universal`;
-  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, shelf: "addons-2", file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256, team: ADDON_TEAM };
+  return { id, category, engine, publisher: "ArtCraft", licence: "MIT OR Apache-2.0", repo: `storytold/${name}`, tag: `v${version}`, shelf: "addons-4", file: `${folder}.zip`, folder, binary: `${name}-cli`, size, sha256 };
 };
 
 export const ADDONS: readonly AddonSource[] = [
-  craft("documents", "office", "WordCraft", "0.12.0", 94_748_190, "dc030590fdd9cb5971c38bc79cadecf30f68f6d46b67a456a8f53a46990b6de4"),
-  craft("sheets", "office", "GridCraft", "0.13.0", 11_835_794, "3db52969cf7621fdfdaebd123f72d5b1de343f63d3b52ec5a4a964f5605986ac"),
-  craft("slides", "office", "DeckCraft", "0.12.0", 93_735_843, "dfd374a5af7139344bf06fbb52beb6f0f255e54276ae20b5d457ce4f958a8322"),
-  craft("pdf", "office", "PdfCraft", "0.15.0", 83_973_078, "0304db20f3597e4e9ad3044d67f79cb89bdad49833c6ad7a60c0d0d6a7afaa50"),
-  craft("drawing", "images", "VectorCraft", "0.18.0", 115_481_401, "694d216cc0ac8ff32dc1c32ffa318da9e5229d58bc821e378eef6f3739286744"),
-  craft("photo", "images", "PhotoCraft", "0.17.0", 106_003_284, "6edff99cc1977508bea9b5566f551374e7b8ef42a21502ee084a1d969f0d54c0"),
-  craft("video", "video", "FilmCraft", "0.14.0", 93_928_472, "c9dc8dfd9c63edb2f793f0727dc9816e4432ea545fa8cd7331d242944d843087"),
-  {
-    id: "markdown", category: "office", engine: "MarkItDown", publisher: "Microsoft", licence: "MIT", repo: "microsoft/markitdown",
-    tag: "v0.1.9", shelf: "addons-3", file: "markitdown-0.1.9-macos-arm64.zip", folder: "markitdown-0.1.9-macos-arm64", binary: "markitdown",
-    // From scripts/build-markitdown.sh on an Apple Silicon Mac; the same lock gives the same zip.
-    size: 114_592_483, sha256: "327939d8881007f9691a08fcd2f243132cdfbc196a79218401ab90df2b211837",
-    team: null,
-  },
+  craft("documents", "office", "WordCraft", "0.18.1", 103_018_289, "34397cf6fcf73ee8ae8d53cab08fbdfc213262dbb6753c2965ebb7cde37b8616"),
+  craft("sheets", "office", "GridCraft", "0.19.1", 16_006_487, "7c2895ebad0bbd92b65c622ba7e22ada56e0498065dfdbd433111ba1e225eb8a"),
+  craft("slides", "office", "DeckCraft", "0.18.1", 94_288_920, "10992f73c88a4c0361dd0fec3a4d7490731ffb3ea9658ee2274b396e3341af00"),
+  craft("pdf", "office", "PdfCraft", "0.21.1", 92_333_447, "337a9f644744b57e10de41c57366e53c5ccf8840a4d5dc7322b17b9b83fdc2fa"),
+  craft("drawing", "images", "VectorCraft", "0.24.1", 133_990_423, "7f0c8261e5c831d9681e48272f9ba73bf8702dbf6ceb84f98177c7c007faddf2"),
+  craft("photo", "images", "PhotoCraft", "0.23.1", 120_474_491, "a6ecdc6d4add02881642bda0a0b191b4974118651f2ec5641dc71b2c3ff4b752"),
+  craft("video", "video", "FilmCraft", "0.20.1", 100_056_028, "1651d9defb54f853cbd69016428bb9f72a7bf26d56e4755b8e2a79535fd0ac82"),
 ];
 
 export function addonUrl(a: AddonSource): string {

@@ -3,7 +3,7 @@
  *
  * An add-on is ready only when the pinned release has been downloaded,
  * matched its SHA-256, unpacked, and shown to be signed by the team that
- * publishes it (when it has one: see catalog.ts). Everything before that happens in folders nothing runs from,
+ * publishes it. Everything before that happens in folders nothing runs from,
  * so a download that stopped halfway can never be mistaken for a program.
  */
 import { execFile } from "node:child_process";
@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import type { AddonFailure, AddonStatus, AddonView } from "../../shared/ipc.js";
 import { DownloadError, downloadPinned, type DownloadOptions, type PinnedFile } from "../engine/download.js";
-import { ADDONS, addonUrl, allowedAddonUrl, type AddonId, type AddonSource } from "./catalog.js";
+import { ADDONS, ADDON_TEAM, addonUrl, allowedAddonUrl, type AddonId, type AddonSource } from "./catalog.js";
 
 const exec = promisify(execFile);
 
@@ -183,8 +183,7 @@ export class Addons {
       await (this.opts.unpack ?? ditto)(zip, staging);
       const binary = join(staging, src.folder, src.binary);
       if (!existsSync(binary)) throw new InstallError("unpack");
-      // The one Vunemi builds has no developer's signature: its SHA-256, checked above, is the check (see catalog.ts).
-      if (src.team !== null && (await (this.opts.signedBy ?? teamOf)(binary)) !== src.team) throw new InstallError("signature");
+      if ((await (this.opts.signedBy ?? teamOf)(binary)) !== ADDON_TEAM) throw new InstallError("signature");
       // Earlier versions go first: the folder then holds this version and nothing else.
       for (const old of this.installed(src.id)) rmSync(join(this.home(src.id), old), { recursive: true, force: true });
       renameSync(staging, join(this.home(src.id), src.tag));
