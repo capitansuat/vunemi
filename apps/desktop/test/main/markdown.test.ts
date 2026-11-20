@@ -84,13 +84,24 @@ describe("markdown_convert", () => {
     expect(existsSync(join(folder, "md", "Bütçe.md"))).toBe(true);
   });
 
-  it("never replaces a file, and asks for nothing that cannot be done", async () => {
-    const convert = tool("markdown_convert");
+  it("never replaces a file: a name that is taken gets the original's kind in it", async () => {
     const report = put("Rapor.docx");
     put("Rapor.md", "mine");
-    expect(await convert.check!({ paths: [report] })).toMatch(/Rapor\.md/);
-    await expect(convert.run({ paths: [report] }, ctx())).rejects.toThrow();
-    expect(await convert.check!({ paths: [put("a.pdf"), put("a.html")] })).toMatch(/one at a time/);
+    await tool("markdown_convert").run({ paths: [report] }, ctx());
+    expect(readFileSync(join(folder, "Rapor.md"), "utf8")).toBe("mine");
+    expect(existsSync(join(folder, "Rapor.docx.md"))).toBe(true);
+    // Both names taken: refused, with what to do instead.
+    expect(await tool("markdown_convert").check!({ paths: [report] })).toMatch(/Rapor\.docx\.md.*folder/);
+  });
+
+  it("gives a .docx and a .pdf of the same name a .md each, in one call", async () => {
+    // Asked for rapor.docx and rapor.pdf at once, the model was refused and tried five times.
+    await tool("markdown_convert").run({ paths: [put("rapor.docx"), put("rapor.pdf"), put("tablo.xlsx")] }, ctx());
+    expect(readdirSync(folder).filter((name) => name.endsWith(".md")).sort()).toEqual(["rapor.docx.md", "rapor.pdf.md", "tablo.md"]);
+  });
+
+  it("asks for nothing that cannot be done", async () => {
+    const convert = tool("markdown_convert");
     expect(await convert.check!({ paths: [join(base, "x.docx")] })).not.toBeNull();
     expect(await convert.check!({ paths: [put("foto.jpg")] })).toMatch(/\.docx/);
     expect(await convert.check!({ paths: [join(folder, "yok.pdf")] })).not.toBeNull();
@@ -98,7 +109,6 @@ describe("markdown_convert", () => {
     expect(await convert.check!({ paths: [] })).toMatch(/paths/);
     expect(await convert.check!({ paths: Array.from({ length: 41 }, (_, i) => `f${i}.pdf`) })).toMatch(/At most 40/);
     expect(calls).toEqual([]);
-    expect(readFileSync(join(folder, "Rapor.md"), "utf8")).toBe("mine");
   });
 
   it("names the file that failed and still saves the others", async () => {
@@ -132,6 +142,12 @@ describe("markdown_read", () => {
     expect(await read.run({ path: put("Rapor.docx") }, ctx())).toBe("# in/0/Rapor.docx");
     expect(readdirSync(folder)).toEqual(["Rapor.docx"]);
     expect(produced).toEqual([]);
+  });
+
+  it("sends a file that is already text to files_read", async () => {
+    // The model asked markdown_read for rapor.md three times.
+    expect(await tool("markdown_read").check!({ path: put("rapor.md", "# R") })).toMatch(/already text.*files_read/);
+    expect(calls).toEqual([]);
   });
 
   it("gives a long file in parts", async () => {
