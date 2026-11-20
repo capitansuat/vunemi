@@ -229,3 +229,22 @@ export function pendingWriteProgress(task: TaskRecord | undefined): string[] {
  const recorded=new Set(task.steps.filter(s => s.status === "completed" && s.evidence === "tool_result").flatMap(s => s.receipts.map(r => r.callId)));
  return task.operations.filter(o => o.tool === "files_write" && o.status === "completed" && !recorded.has(o.callId)).map(o => o.callId);
 }
+
+/**
+ * The receipts that complete an unplanned task whose work was only reading:
+ * a question answered from files, a sheet or a page. The answer itself is
+ * the result, so step 1 (the goal) can be recorded from the reads. Null when
+ * anything was written or sent, anything is still pending or uncertain, or
+ * the last call failed, so the model's own check stays in charge of those.
+ */
+export function readAnswerReceipts(task: TaskRecord, runId: string): string[] | null {
+  if (task.planAccepted || task.steps.length !== 1 || task.steps[0]!.status === "completed") return null;
+  const work = task.operations.filter(o => !isTrackingTool(o.tool));
+  if (work.some(o => o.actionClass !== "read" || !["completed", "failed", "rejected", "cancelled"].includes(o.status))) return null;
+  const mine = work.filter(o => o.runId === runId);
+  if (mine.at(-1)?.status !== "completed") return null;
+  const receipts = mine.filter(o => o.status === "completed" && !requiresOutcomeEvidence(o.tool)).map(o => o.callId).slice(-30);
+  if (!receipts.length) return null;
+  try { validateTaskProgress(task, runId, { step: 1, status: "completed", evidenceCallIds: receipts }); } catch { return null; }
+  return receipts;
+}
