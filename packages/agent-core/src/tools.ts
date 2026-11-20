@@ -193,6 +193,16 @@ export interface ToolDef<Args = Record<string, unknown>> {
    */
   saves?: boolean;
   /**
+   * The files it produces are a program's conversion of existing files
+   * (MarkItDown turning a .docx into .md), not text the model wrote. Reading
+   * one back with checks skips the source review: that review looks for
+   * what a model invented, and a converter invents nothing. Given the
+   * converted file and no source text, the local reviewer called a correct
+   * conversion "fabricated" after 52 s; a second review took 285 s. A later
+   * files_write or files_edit to the same file brings the review back.
+   */
+  convertsFiles?: true;
+  /**
    * One line, in the user's language, saying what this call will do — shown
    * on approval cards instead of raw arguments ("Click: button 'Add to cart'").
    */

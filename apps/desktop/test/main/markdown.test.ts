@@ -182,6 +182,9 @@ describe("files to Markdown in Vunemi", () => {
     registerMarkdownTools(tools, { ...deps(), available: true });
     expect(tools.get("markdown_convert")?.onDemand).toBe("markdown");
     expect(tools.get("markdown_read")?.onDemand).toBe("markdown");
+    // Its .md files are MarkItDown's, not the model's: reading one back skips the source review.
+    expect(tools.get("markdown_convert")?.convertsFiles).toBe(true);
+    expect(tools.get("markdown_read")?.convertsFiles).toBeUndefined();
     expect(markdownArea([folder]).guide).toContain("markdown_convert");
   });
 
