@@ -86,6 +86,7 @@ import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
+import { TopicMeaning } from "./topics/meaning.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
 import { PRODUCTION, type FeedSource } from "./updates/feed.js";
@@ -553,6 +554,8 @@ const topicsRoot = (): string => {
   return made;
 };
 const topics = openTopicStore({ root: topicsRoot, dataDir: app.getPath("userData") });
+/** Search by meaning in topics' notes and sources (topics/meaning.ts). */
+const topicMeaning = topics ? new TopicMeaning(topics, meaning) : null;
 if (topics) {
   registerTopicTools(tools, {
     store: topics,
@@ -570,6 +573,7 @@ if (topics) {
     roots,
     convert: markitdown ? (from, signal) => convertToMarkdown(markdownEngines, from, signal) : null,
     trash: (path) => shell.trashItem(path),
+    find: (query, topic, limit) => topicMeaning!.find(query, topic, limit),
   });
 }
 /** "Shall I keep this in …?" asked under a run, until the user answers. Not kept past a restart. */
@@ -904,6 +908,7 @@ const sessionOptions: SessionOptions = {
   afterRun: ({ runId, model, words }) => {
     // Once this run has let go: what it said is in the library before the next request.
     setTimeout(tendLibrary, 0);
+    setTimeout(tendTopics, 0);
     const conversation = conversations.currentId;
     void propose({ model, messages: words, store: memory, meaning, signal: AbortSignal.timeout(120_000), sessionId: conversation })
       .then((found) => {
@@ -1743,6 +1748,12 @@ function tendLibrary(): void {
   void library.catchUp(idle);
 }
 
+/** Vectors for topic notes and sources added or changed, while nothing else runs (topics/meaning.ts). */
+function tendTopics(): void {
+  const idle = (): boolean => !session.running && session.queued.length === 0 && !meetings.isRecording && !meetings.summarising;
+  if (idle()) void topicMeaning?.catchUp(idle);
+}
+
 /** A correction to who said what, then the meeting as it now is. */
 const corrected = (id: unknown, change: (id: string) => void): Meeting | null => {
   if (typeof id !== "string") return null;
@@ -2320,6 +2331,7 @@ void app.whenReady().then(async () => {
   setAppMenu();
   presence.start();
   tendLibrary();
+  tendTopics();
   // Add-ons the user has, brought to the version this Vunemi was tested with.
   setTimeout(() => void addons.updateOutdated(), 20_000);
   // The Mac locking locks Vunemi too, when the user asked for a lock at all.

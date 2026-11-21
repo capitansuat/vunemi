@@ -190,6 +190,20 @@ describe("in a topic", () => {
     for (const name of ["topic_note_read", "topic_search", "topic_list"]) expect(tools.get(name)!.untrustedOutput, name).toBe(true);
   });
 
+  it("searches by meaning when it can, pointing into a source, and says what waits", async () => {
+    tools = make({
+      find: async (query, where, limit) => ({
+        hits: [{ kind: "source", topic: "Home renovation", title: "offer-2", snippet: `Seramik 60×60,\n\nmat. ${"x".repeat(600)}`, path: "/p", at: 12_400 }],
+        pending: query === "tiles" && where === "Home renovation" && limit === 10 ? 7 : 0,
+        byMeaning: true,
+      }),
+    });
+    const said = await run("topic_search", { query: "tiles" });
+    expect(said).toMatch(/^- source "offer-2" \(read from offset 12400\): Seramik 60×60, mat\. x+…$/m);
+    expect(said.split("\n")[0]!.length).toBeLessThan(470);
+    expect(said).toContain("[7 parts aren't searchable by meaning yet; they were searched by words.]");
+  });
+
   it("stops when the topic's folder is gone", async () => {
     rmSync(join(base, "Documents", "Vunemi Memory", "Home renovation"), { recursive: true });
     await expect(run("topic_note_write", { title: "A", text: "b" })).rejects.toThrow(/no longer in the topics folder/);

@@ -68,6 +68,8 @@ export interface TopicHit {
   title: string;
   snippet: string;
   path: string;
+  /** Where in the note or source the hit is, in characters, when known. */
+  at?: number;
 }
 
 /** A name for a folder or file that every Mac app, Obsidian and a Windows disk accept. */
@@ -149,8 +151,64 @@ CREATE TRIGGER IF NOT EXISTS files_au AFTER UPDATE ON files BEGIN
   INSERT INTO files_fts(files_fts, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
   INSERT INTO files_fts(rowid, title, body) VALUES (new.rowid, new.title, new.body);
 END;
-PRAGMA user_version = 1;
+CREATE TABLE IF NOT EXISTS parts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  path TEXT NOT NULL,
+  start INTEGER NOT NULL,
+  text TEXT NOT NULL,
+  vector BLOB,
+  vector_model TEXT
+);
+CREATE INDEX IF NOT EXISTS parts_path ON parts(path);
 `;
+/** Version 2 added parts: an index from before has none, so it is made again from the files. */
+const INDEX_VERSION = 2;
+
+/** A part of a note or source, embedded on its own: about this long. */
+export const PART_CHARS = 1_000;
+
+/**
+ * A text cut into parts for search by meaning: paragraphs together up to
+ * PART_CHARS, a longer paragraph by its lines, a longer line by length. A
+ * table cut in several keeps its header row in each, so a row still says
+ * what its columns are. `start` is where the part begins in the text.
+ */
+export function partsOf(text: string, max = PART_CHARS): { start: number; text: string }[] {
+  const pieces: { start: number; text: string }[] = [];
+  const blocks = [...text.matchAll(/[^\n]+(?:\n[^\n]+)*/g)].map((m) => ({ start: m.index!, text: m[0] }));
+  for (const block of blocks) {
+    if (block.text.length <= max) {
+      pieces.push(block);
+      continue;
+    }
+    const lines = [...block.text.matchAll(/[^\n]+/g)].flatMap((m) => {
+      // A line longer than a part is cut by length.
+      const cut: { start: number; text: string }[] = [];
+      for (let at = 0; at < m[0].length; at += max) cut.push({ start: block.start + m.index! + at, text: m[0].slice(at, at + max) });
+      return cut;
+    });
+    const table = lines.length > 2 && lines.every((l) => l.text.trimStart().startsWith("|"));
+    const head = table && lines[0]!.text.length + lines[1]!.text.length < max / 2 ? `${lines[0]!.text}\n${lines[1]!.text}\n` : "";
+    let group: { start: number; text: string } | null = null;
+    for (const line of head ? lines.slice(2) : lines) {
+      if (group && group.text.length + 1 + line.text.length <= max) group.text += `\n${line.text}`;
+      else {
+        if (group) pieces.push(group);
+        // The first part starts where the block does, header and all.
+        group = { start: group === null ? block.start : line.start, text: head + line.text };
+      }
+    }
+    if (group) pieces.push(group);
+  }
+  // Short paragraphs side by side make one part.
+  const parts: { start: number; text: string }[] = [];
+  for (const piece of pieces) {
+    const last = parts.at(-1);
+    if (last && last.text.length + 2 + piece.text.length <= max) last.text += `\n\n${piece.text}`;
+    else parts.push({ ...piece });
+  }
+  return parts.filter((p) => p.text.trim());
+}
 
 interface Row {
   path: string;
@@ -184,6 +242,9 @@ export class TopicStore {
     chmodSync(file, 0o600);
     this.db.exec("PRAGMA secure_delete = ON;");
     this.db.exec(SCHEMA);
+    if ((this.db.prepare("PRAGMA user_version").get() as { user_version: number }).user_version < INDEX_VERSION) {
+      this.db.exec(`DELETE FROM files; DELETE FROM parts; PRAGMA user_version = ${INDEX_VERSION};`);
+    }
     this.backups = join(opts.dataDir, "topic-backups");
   }
 
@@ -279,9 +340,17 @@ export class TopicStore {
           this.db
             .prepare("INSERT INTO files (path, topic_key, kind, title, title_key, body, size, mtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(path) DO UPDATE SET topic_key = excluded.topic_key, kind = excluded.kind, title = excluded.title, title_key = excluded.title_key, body = excluded.body, size = excluded.size, mtime = excluded.mtime")
             .run(path, topicKey, kind, title, keyOf(title), body, st.size, st.mtimeMs);
+          // New words, new parts: their vectors are made again (TopicMeaning.catchUp).
+          this.db.prepare("DELETE FROM parts WHERE path = ?").run(path);
+          const insert = this.db.prepare("INSERT INTO parts (path, start, text) VALUES (?, ?, ?)");
+          for (const part of partsOf(body)) insert.run(path, part.start, part.text);
         }
       }
-      for (const path of known.keys()) if (!seen.has(path)) this.db.prepare("DELETE FROM files WHERE path = ?").run(path);
+      for (const path of known.keys()) {
+        if (seen.has(path)) continue;
+        this.db.prepare("DELETE FROM files WHERE path = ?").run(path);
+        this.db.prepare("DELETE FROM parts WHERE path = ?").run(path);
+      }
       this.db.exec("COMMIT");
     } catch (err) {
       this.db.exec("ROLLBACK");
@@ -421,10 +490,71 @@ export class TopicStore {
 
   // -- search -------------------------------------------------------------------------
 
-  /** Notes and sources whose words match, best first; one topic, or all of them. */
-  search(query: string, topicName?: string, limit = SEARCH_HITS): TopicHit[] {
+  /** Brings the index up to date with every topic's files. */
+  refresh(): void {
+    for (const topic of this.listTopics()) this.sync(topic);
+  }
+
+  /** Parts with no vector of this model yet, with the title of what they are part of. */
+  missingParts(model: string, limit: number): { id: number; title: string; text: string }[] {
+    return this.db
+      .prepare("SELECT p.id, f.title, p.text FROM parts p JOIN files f ON f.path = p.path WHERE p.vector IS NULL OR p.vector_model IS NOT ? ORDER BY f.kind = 'source', p.id LIMIT ?")
+      .all(model, limit) as unknown as { id: number; title: string; text: string }[];
+  }
+
+  /** How many parts still wait for a vector: in one topic, or all. */
+  pendingParts(model: string, topicName?: string): number {
+    const where = topicName ? "AND f.topic_key = ?" : "";
+    const row = this.db
+      .prepare(`SELECT COUNT(*) AS n FROM parts p JOIN files f ON f.path = p.path WHERE (p.vector IS NULL OR p.vector_model IS NOT ?) ${where}`)
+      .get(...(topicName ? [model, keyOf(topicName)] : [model])) as { n: number };
+    return row.n;
+  }
+
+  /** Kept only while the part still holds the words it was made of. */
+  setPartVector(id: number, text: string, model: string, vector: Float32Array): void {
+    this.db.prepare("UPDATE parts SET vector = ?, vector_model = ? WHERE id = ? AND text = ?").run(new Uint8Array(vector.buffer, vector.byteOffset, vector.byteLength), model, id, text);
+  }
+
+  /** The parts nearest a query's vector, at most one per file, best first. */
+  nearestParts(query: Float32Array, model: string, topicName: string | undefined, limit: number): (TopicHit & { score: number })[] {
+    const topics = topicName ? [this.need(topicName)] : this.listTopics();
+    const names = new Map(topics.map((t) => [keyOf(t.name), t.name]));
+    const where = topicName ? "AND f.topic_key = ?" : "";
+    const rows = this.db
+      .prepare(`SELECT p.path, p.start, p.text, p.vector, f.kind, f.topic_key, f.title FROM parts p JOIN files f ON f.path = p.path WHERE p.vector_model = ? AND p.vector IS NOT NULL ${where}`)
+      .iterate(...(topicName ? [model, keyOf(topicName)] : [model])) as Iterable<{ path: string; start: number; text: string; vector: Uint8Array; kind: "note" | "source"; topic_key: string; title: string }>;
+    const best = new Map<string, TopicHit & { score: number }>();
+    for (const row of rows) {
+      const topic = names.get(row.topic_key);
+      if (!topic) continue;
+      const vector = new Float32Array(row.vector.buffer.slice(row.vector.byteOffset, row.vector.byteOffset + row.vector.byteLength));
+      let score = 0;
+      if (vector.length === query.length) for (let i = 0; i < vector.length; i++) score += vector[i]! * query[i]!;
+      const was = best.get(row.path);
+      if (!was || score > was.score) best.set(row.path, { kind: row.kind, topic, title: row.title, snippet: row.text, path: row.path, at: row.start, score });
+    }
+    return [...best.values()].filter((hit) => existsSync(hit.path)).sort((a, b) => b.score - a.score).slice(0, limit);
+  }
+
+  /**
+   * Notes and sources whose words match, best first; one topic, or all of
+   * them. `most`: only those holding at least half of the query's words, so
+   * a "for" or "için" alone finds nothing (meaning.ts, beside meaning).
+   */
+  search(query: string, topicName?: string, limit = SEARCH_HITS, most = false): TopicHit[] {
     const match = keywordQuery(query);
     if (!match) return [];
+    if (most) {
+      const fold = (text: string): string => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/ı/g, "i");
+      const stems = [...new Set(match.match(/"([^"]+)"/g)!.map((q) => fold(q.slice(1, -1))))];
+      const starts = stems.map((stem) => new RegExp(`(?<![\\p{L}\\p{N}])${stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "u"));
+      return this.search(query, topicName, limit * 3).filter((hit) => {
+        const row = this.db.prepare("SELECT title, body FROM files WHERE path = ?").get(hit.path) as { title: string; body: string } | undefined;
+        const text = row ? fold(`${row.title}\n${row.body}`) : "";
+        return starts.filter((re) => re.test(text)).length * 2 >= stems.length;
+      }).slice(0, limit);
+    }
     const topics = topicName ? [this.need(topicName)] : this.listTopics();
     for (const topic of topics) this.sync(topic);
     const names = new Map(topics.map((t) => [keyOf(t.name), t.name]));

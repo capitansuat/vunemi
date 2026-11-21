@@ -9,12 +9,15 @@ import { cosine } from "../memory/embedder.js";
 import type { Meaning } from "../memory/recall.js";
 
 /*
- * My call, not yet tuned on real topics: the best topic must reach this
- * score and stand above the next one by the margin. A miss costs nothing
- * (the user can pick the topic with "@"); a wrong ask costs one card.
+ * The best topic must reach this score and stand above the next one by the
+ * margin. Chosen on 4 topics, 6 requests that fit one and 4 that fit none,
+ * Turkish and English (21 Nov, Qwen3-Embedding-0.6B, topics-live.test.ts):
+ * fitting requests scored 0.43–0.50, at least 0.12 ahead of the next topic;
+ * the others at most 0.34, at most 0.05 ahead. A miss costs nothing (the
+ * user can pick the topic with "@"); a wrong ask costs one card.
  */
-export const SUGGEST_MIN = 0.5;
-export const SUGGEST_MARGIN = 0.04;
+export const SUGGEST_MIN = 0.38;
+export const SUGGEST_MARGIN = 0.08;
 const ABOUT_CHARS = 1_500;
 const TASK = "Given a request to an assistant, retrieve the description of the subject the request belongs to";
 
