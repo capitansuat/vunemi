@@ -27,13 +27,43 @@ it('fails honestly after bounded completion retries without repeating a write', 
  const result=await runAgent({model,tools,goal:'Write report.md',emit:e=>events.push(e),requestApproval:async()=>({kind:'approve'})});
  expect(result.status).toBe('failed');expect(calls).toBe(1);expect(turns).toBe(4);expect(tasksFromEvents(events)[0]?.status).toBe('failed');
 });
-it('keeps completion checks after a wrong tool name has been recovered', async () => {
- const events:AgentEvent[]=[];let turn=0;
+it('completes a read-only answer from its reads after a wrong tool name has been recovered', async () => {
+ const events:AgentEvent[]=[];let turn=0;const requests:ChatRequest[]=[];
  const tools=new ToolRegistry().register(taskProgressTool()).register({name:'files_read',description:'read',parameters:{type:'object',properties:{}},actionClass:'read',run:async()=> 'verified'});
- const turns=[{calls:[{id:'bad',name:'read',argumentsText:'{}'}]},{calls:[{id:'v',name:'files_read',argumentsText:'{}'}]},{text:'Done.'},{calls:[{id:'p',name:'task_update',argumentsText:'{"step":1,"status":"completed","evidenceCallIds":["v"]}'}]},{text:'Verified.'}];
+ const turns=[{calls:[{id:'bad',name:'read',argumentsText:'{}'}]},{calls:[{id:'v',name:'files_read',argumentsText:'{}'}]},{text:'Done.'}];
+ const model:ChatModel={id:'test',chat:async r=>{requests.push(r);const t=turns[turn++];if(!t)throw Error('exhausted');return {text:t.text??'',toolCalls:t.calls??[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}};}};
+ const result=await runAgent({model,tools,goal:'Read and verify',emit:e=>events.push(e),requestApproval:async()=>({kind:'approve'})});
+ expect(turn).toBe(3);expect(result).toMatchObject({status:'done',detail:'Done.'});
+ const task=tasksFromEvents(events)[0]!;
+ expect(task.status).toBe('completed');expect(task.steps[0]!.receipts.map(r=>r.callId)).toEqual(['v']);
+ expect(requests.some(r=>r.messages.some(m=>typeof m.content==='string'&&m.content.includes('unfinished')))).toBe(false);
+});
+// Live, three questions answered from rapor.md and tablo.xlsx each got the check, a task_update,
+// and the same answer again ("özet zaten verildi"), 50-60 s later.
+it('answers a question about a read file once, without the unfinished check', async () => {
+ const events:AgentEvent[]=[];let turn=0;const texts:string[]=[];
+ const tools=new ToolRegistry().register(taskProgressTool()).register({name:'files_read',description:'read',parameters:{type:'object',properties:{}},actionClass:'read',run:async()=> '| Bölge | Temmuz |\n| Marmara | 770 |'});
+ const turns=[{calls:[{id:'r',name:'files_read',argumentsText:'{"path":"/tmp/rapor.md"}'}]},{text:'Sütunlar: Bölge, Temmuz.'},{text:'Özet zaten verildi.'}];
  const model:ChatModel={id:'test',chat:async()=>{const t=turns[turn++];if(!t)throw Error('exhausted');return {text:t.text??'',toolCalls:t.calls??[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}};}};
- await runAgent({model,tools,goal:'Read and verify',emit:e=>events.push(e),requestApproval:async()=>({kind:'approve'})});
- expect(turn).toBe(5);expect(tasksFromEvents(events)[0]?.status).toBe('completed');
+ const result=await runAgent({model,tools,goal:'rapor.md dosyasındaki tabloyu özetle, hangi sütunda hangi değer var?',emit:e=>{events.push(e);if(e.type==='message.delta')texts.push(e.text);},requestApproval:async()=>({kind:'approve'})});
+ expect(turn).toBe(2);expect(result.detail).toBe('Sütunlar: Bölge, Temmuz.');expect(texts.join('')).not.toContain('zaten');
+ expect(tasksFromEvents(events)[0]?.status).toBe('completed');
+});
+it('still checks a read-only answer that follows a failed read', async () => {
+ let turn=0;const requests:ChatRequest[]=[];
+ const tools=new ToolRegistry().register(taskProgressTool()).register({name:'files_read',description:'read',parameters:{type:'object',properties:{}},actionClass:'read',run:async(a: {path?:string})=>{if(a.path==='/tmp/b.md')throw Object.assign(Error('missing'),{retryable:true});return 'a';}});
+ const turns=[{calls:[{id:'a',name:'files_read',argumentsText:'{"path":"/tmp/a.md"}'}]},{calls:[{id:'b',name:'files_read',argumentsText:'{"path":"/tmp/b.md"}'}]},{text:'Done.'},{text:'Done.'},{text:'Done.'}];
+ const model:ChatModel={id:'test',chat:async r=>{requests.push(r);const t=turns[turn++];if(!t)throw Error('exhausted');return {text:t.text??'',toolCalls:t.calls??[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}};}};
+ await runAgent({model,tools,goal:'Compare a.md and b.md',emit:()=>{},requestApproval:async()=>({kind:'approve'})});
+ expect(requests.some(r=>r.messages.some(m=>typeof m.content==='string'&&m.content.includes('unfinished')))).toBe(true);
+});
+it('still checks an answer after a write', async () => {
+ let turn=0;const requests:ChatRequest[]=[];
+ const tools=new ToolRegistry().register(taskProgressTool()).register({name:'notes_save',description:'save',parameters:{type:'object',properties:{}},actionClass:'write-local',run:async()=>'saved'});
+ const turns=[{calls:[{id:'w',name:'notes_save',argumentsText:'{}'}]},{text:'Saved.'},{text:'Saved.'},{text:'Saved.'}];
+ const model:ChatModel={id:'test',chat:async r=>{requests.push(r);const t=turns[turn++];if(!t)throw Error('exhausted');return {text:t.text??'',toolCalls:t.calls??[],usage:{promptTokens:1,completionTokens:1,ttftMs:1,tokensPerSec:1}};}};
+ await runAgent({model,tools,goal:'Save a note',emit:()=>{},requestApproval:async()=>({kind:'approve'})});
+ expect(requests.some(r=>r.messages.some(m=>typeof m.content==='string'&&m.content.includes('unfinished')))).toBe(true);
 });
 it('restores work tools from the original task when resuming a generic continue request', async () => {
  const previous=tasksFromEvents([{type:'run.started',runId:'old',goal:'Read report',model:'test',at:1},{type:'tool.proposed',runId:'old',stepId:'s',callId:'oldread',tool:'files_read',actionClass:'read',args:{}},{type:'tool.finished',runId:'old',callId:'oldread',ok:true,output:'read',durationMs:1},{type:'run.finished',runId:'old',status:'stopped',detail:'closed',at:2}])[0]!;

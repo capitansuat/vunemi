@@ -160,6 +160,8 @@ export function markdownTools(deps: MarkdownDeps): ToolDef[] {
         required: ["paths"],
       },
       actionClass: "write-local",
+      // MarkItDown writes what the file holds; reading the result back needs no review of invented content.
+      convertsFiles: true,
       preview: async (a) => {
         try {
           return asked(a).outs.map((out) => t("addons.preview.make", { path: short(out) })).join("\n");

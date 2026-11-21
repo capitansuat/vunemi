@@ -21,7 +21,7 @@ import { explicitWriteTargets } from "./file-target.js";
 import { reviewOutput, reviewFingerprint, reviewRequirements } from "./output-review.js";
 import { unsupportedYear } from "./output-grounding.js";
 import { completedDelivery } from "./delivery.js";
-import { pendingWriteProgress, isTrackingTool, foldTasks, TASK_RESUME_NOTE, taskResumeContext, validateTaskProgress, type TaskRecord } from "./tasks.js";
+import { pendingWriteProgress, isTrackingTool, foldTasks, TASK_RESUME_NOTE, taskResumeContext, validateTaskProgress, readAnswerReceipts, type TaskRecord } from "./tasks.js";
 import { addressesIn, unseenLinks } from "./links.js";
 import { actionPermissionQuestion, bareQuestion, comparisonTable, listChoiceInput, prepareChoice, sectionChoiceInput, tableChoiceInput, type ChoiceAnswer, type ChoiceEvidence } from "./choices.js";
 import { calibrate, capImages, compact, keepNewestImage, DEFAULT_CHARS_PER_TOKEN, defuseTags, estimateTokens, FALLBACK_WINDOW, isContextOverflow, messageChars, toolOutputChars, trimMiddle } from "./context.js";
@@ -441,6 +441,11 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const craftCallPaths = new Map<string, string[]>();
   const unverifiedFiles = new Set<string>(opts.resumeTask?.outputs.flatMap(o => o.kind === "file" ? [o.path] : []) ?? []);
   const readBackFiles = new Set<string>();
+  /** Files a converter (ToolDef.convertsFiles) made in this run, and nothing has written to since. */
+  const convertedFiles = new Set<string>();
+  const sameFile = (a:string,b:string) => a===b || (b.startsWith("~/")&&a.endsWith(b.slice(1))) || (a.startsWith("~/")&&b.endsWith(a.slice(1)));
+  const converted = (path:string|undefined) => !!path && [...convertedFiles].some(p=>sameFile(p,path));
+  const writtenTo = (path:string) => { for(const p of [...convertedFiles]) if(sameFile(p,path)) convertedFiles.delete(p); };
   const requestedTextOutputs=[...new Set(explicitWriteTargets(opts.resumeTask?.goal ?? opts.goal)
     .filter(path=>/\.(txt|md|csv|json|html|svg|docx|xlsx|pptx)$/i.test(path))
     .map(path=>canonicalFile("files_write",{path},path)))];
@@ -468,11 +473,11 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       }
     }
     if (event.type === "tool.finished" && event.ok) {
-      if(event.fileEvidence?.kind==='write')for(const path of event.fileEvidence.paths??[event.fileEvidence.path]){unverifiedFiles.add(path);readBackFiles.delete(path);}
+      if(event.fileEvidence?.kind==='write')for(const path of event.fileEvidence.paths??[event.fileEvidence.path]){unverifiedFiles.add(path);readBackFiles.delete(path);writtenTo(path);}
       if(event.fileEvidence?.kind==="source-read")freshSourcePaths.add(event.fileEvidence.path);
       const file = fileCalls.get(event.callId);
       if (file && ["files_write", "files_edit"].includes(file.tool)) {
-        unverifiedFiles.add(file.path); readBackFiles.delete(file.path);
+        unverifiedFiles.add(file.path); readBackFiles.delete(file.path); writtenTo(file.path);
         if(file.path.startsWith("~/")) for(const p of [...readBackFiles]) if(p.endsWith(file.path.slice(1))) { readBackFiles.delete(p); unverifiedFiles.add(p); }
       }
       if (file?.tool === "files_read" && file.checked) {
@@ -1011,7 +1016,13 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         const lastWork = task?.operations.filter(o => !isTrackingTool(o.tool) && tools.getAny(o.tool)).at(-1);
         const blocked = lastWork && (["rejected", "unknown"].includes(lastWork.status) || (lastWork.status === "failed" && !lastWork.retryable));
         if (blocked && approvalProse) return finish("failed", "The action is blocked or uncertain; no approval is pending. The application did not execute it.");
-        if (!blocked && (approvalProse || (tracking && (unverifiedFiles.size > 0 || missingRequestedOutputs().length > 0 || (hasWork && remaining.length > 0))))) {
+        // A question answered from what was read: the answer is the result, and step 1
+        // (the goal itself, with no plan) is recorded from the reads. Asking the model to
+        // record it instead brought the same answer back a second time, 50-60 s later.
+        const reads = !approvalProse && tracking && task && !unverifiedFiles.size && !requestedTextOutputs.length && !outcomePlan && !desktopWorkflow && !officeEdit && result.text.trim()
+          ? readAnswerReceipts(task, runId) : null;
+        if (reads) emit({ type: "task.progress", runId, step: 1, status: "completed", evidenceCallIds: reads, at: now() });
+        else if (!blocked && (approvalProse || (tracking && (unverifiedFiles.size > 0 || missingRequestedOutputs().length > 0 || (hasWork && remaining.length > 0))))) {
           if (completionNudges++ < 2 && index < maxSteps - 1) {
             convo.push({ role: "user", content: `[Vunemi check, not from the user] The task is unfinished. Call real action tools; their approval is handled by the application, never by a prose question. Complete all requested work and verify its outputs, then call task_update for the completed steps with successful receipts. Do not mark the whole goal completed after only one output. Do not repeat successful writes. Missing requested outputs (create and verify each): ${JSON.stringify(missingRequestedOutputs())}. Remaining plan steps: ${JSON.stringify(remaining)}. Saved files needing files_read with nonempty checks (reading them with an engine or another tool does not count): ${JSON.stringify([...unverifiedFiles])}. Successful receipts from this task: ${JSON.stringify(task?.operations.filter(o => o.status === "completed" && !isTrackingTool(o.tool) && (!requiresOutcomeEvidence(o.tool)||validOutcomeEvidence(o.outcomeEvidence,o.tool))).slice(-20).map(o => ({ tool: o.tool, callId: o.callId })) ?? [])}. If blocked, explain the specific obstacle honestly.` });
             continue;
@@ -1864,11 +1875,14 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         const original=(parsed.value as {path?:string}).path;
         const path=typeof original === "string" ? canonicalFile(tool.name,parsed.value as Record<string,unknown>,original) : original;
         const generated=trackedTasks.some(t => t.outputs.some(o => o.kind === "file" && (o.path === path || (path?.startsWith("~/") && o.path.endsWith(path.slice(1))))));
+        // A converter's output holds what the original holds: the checks for invented
+        // currencies, years and averages, and the source review, are for model-written text.
+        const conversion=generated&&converted(path);
         if(!generated) {
           sourceTexts.push(raw.slice(0,120_000));
           if(raw.length>120_000 || /\[… the (?:start|first)/.test(raw))completeSourceText=false;
         }
-        else {
+        else if(!conversion) {
           const currency=unsupportedCurrency(raw,opts.resumeTask?.goal ?? opts.goal,sourceTexts.join("\n"));
           if(currency){
             opts.onUntrustedOutput?.(raw,tool.name);
@@ -1878,7 +1892,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           if(year) throw new Error(officePath(path??'')?officeReviewFailure(path!,`Unsupported reporting year ${year}.`,officeRepairAdvice(path!)):`This saved output asserts unsupported reporting year ${year}. Remove it with files_edit and verify again.`);
           const average=wrongAverageMargin(raw,sourceTexts.join("\n"));if(average)throw new Error(average);
         }
-        if (generated && (parsed.value as {checks?:unknown}).checks && tools.getAny("files_read")?.parameters.properties?.checks) {
+        if (conversion && (parsed.value as {checks?:unknown}).checks && tools.getAny("files_read")?.parameters.properties?.checks) verifiedFileRead = true;
+        else if (generated && (parsed.value as {checks?:unknown}).checks && tools.getAny("files_read")?.parameters.properties?.checks) {
           if(!completeSourceText)throw new Error("Source verification needs complete source text; read smaller complete source files before certifying this output.");
           const task=trackedTasks.find(t=>t.activeRunId===runId), bindings=autoBindings();
           const checks=(parsed.value as {checks:Record<string,unknown>}).checks;
@@ -1926,6 +1941,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
         display ??= output;
         output += `\n[Vunemi successful call receipt: ${JSON.stringify(call.id)}]`;
       }
+      if (tool.convertsFiles) for (const item of made) if (item.kind === "file") convertedFiles.add(item.path);
       const craftPaths=craftOutputPaths(tool.name,parsed.value as Record<string,unknown>).map(path=>canonicalFile("files_write",{path},path));
       if(craftPaths.length && (craftPaths.some(path=>!made.some(item=>item.kind==='file'&&canonicalFile("files_write",{path:item.path},item.path)===path))||made.some(item=>item.kind==='file'&&!craftPaths.includes(canonicalFile("files_write",{path:item.path},item.path)))))throw Object.assign(new Error('Craft did not return matching production evidence for every declared output; inspect existing files before any retry.'),{deliveryUnknown:true});
       const file=fileCalls.get(call.id);
