@@ -9,6 +9,17 @@ final class BackgroundControlTests: XCTestCase {
         XCTAssertFalse(typingRefused(role: "AXTextArea", subrole: "AXSearchField"))
         XCTAssertFalse(typingRefused(role: nil, subrole: nil))
     }
+    func testKeysInAPasswordFieldLeaveItsTextAlone() {
+        for combo in ["a", "v", "cmd+v", "delete", "space", "cmd+a", "cmd+z", "ctrl+return", "", "shift+left"] {
+            XCTAssertTrue(keyRefused(role: "AXTextField", subrole: "AXSecureTextField", combo: combo), combo)
+        }
+        for combo in ["tab", "shift+tab", "escape", "return", "enter", "left", "down"] {
+            XCTAssertFalse(keyRefused(role: "AXTextField", subrole: "AXSecureTextField", combo: combo), combo)
+        }
+        XCTAssertTrue(keyRefused(role: "AXSecureTextField", subrole: nil, combo: "cmd+v"))
+        XCTAssertFalse(keyRefused(role: "AXTextField", subrole: nil, combo: "cmd+v"))
+        XCTAssertFalse(keyRefused(role: nil, subrole: nil, combo: "a"))
+    }
     func testCursorChangeNeverBecomesKnownBackgroundDelivery() {
         XCTAssertTrue(backgroundDeliveryUncertain(deliverySucceeded:true,foregroundChanged:false,cursorChanged:true,sessionVerified:true))
         XCTAssertTrue(backgroundDeliveryUncertain(deliverySucceeded:true,foregroundChanged:true,cursorChanged:false,sessionVerified:true))

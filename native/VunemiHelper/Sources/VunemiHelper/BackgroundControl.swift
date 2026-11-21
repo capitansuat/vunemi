@@ -24,6 +24,18 @@ func typingRefused(role: String?, subrole: String?) -> Bool {
     subrole == "AXSecureTextField" || role == "AXSecureTextField"
 }
 
+/// In a password field only keys that leave its text alone: moving out, or
+/// Return for what the user typed there. A letter, Delete or ⌘V would write
+/// into it, a pasted password included.
+func keyRefused(role: String?, subrole: String?, combo: String) -> Bool {
+    guard typingRefused(role: role, subrole: subrole) else { return false }
+    let parts = combo.lowercased().split(separator: "+").map(String.init)
+    guard let key = parts.last else { return true }
+    let modifiers = Set(parts.dropLast())
+    let leavesText = ["tab", "escape", "esc", "return", "enter", "left", "right", "up", "down"].contains(key)
+    return !leavesText || !(modifiers.isEmpty || (key == "tab" && modifiers == ["shift"]))
+}
+
 func requireBackgroundTarget(target: Int32, foreground: Int32?) throws {
     guard let foreground, foreground != target else {
         throw Failure("Background control yielded to the user, or foreground state is unavailable. No input sent; observe before resuming.")

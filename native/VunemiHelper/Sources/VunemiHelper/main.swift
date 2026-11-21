@@ -784,6 +784,7 @@ func handle(_ request: JSON) {
             let observed=try validateObservation(args,app:found,activate:true)
             let current=focusedElement(observed.pid)
             guard (observed.focused==nil && current==nil) || (observed.focused != nil && current != nil && CFEqual(observed.focused!,current!)) else { throw Failure("Tuş odağı değişti; yeniden gözlemle. Input gönderilmedi.") }
+            if let focus=current, keyRefused(role:string(focus,"AXRole"),subrole:string(focus,"AXSubrole"),combo:args["combo"] as? String ?? "") { throw Failure("The focused field is a password field. No key was pressed; the user enters passwords themselves.") }
             try pressKey(args["combo"] as? String ?? "")
             var result=observed.json;result["pressed"]=args["combo"] as? String ?? ""
             respond(id:id,result:result)
