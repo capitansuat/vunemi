@@ -36,9 +36,9 @@ export function SavedNotes({ notes }: { notes: NonNullable<RunView["notes"]> }) 
 }
 
 /** A project's notes: newest first, each with its day and a delete. */
-export function ProjectNotesView() {
-  const projectId = useStore((s) => s.notesProject);
-  const project = useStore((s) => s.sessions.projects.find((p) => p.id === s.notesProject));
+/** A project's work notes, on the Memory page. */
+export function ProjectNotes({ projectId }: { projectId: string }) {
+  const project = useStore((s) => s.sessions.projects.find((p) => p.id === projectId));
   const [notes, setNotes] = useState<WorkNoteView[]>([]);
   useEffect(() => {
     // Another project's notes must not show while this one's load, nor arrive late over them.
@@ -55,10 +55,10 @@ export function ProjectNotesView() {
       cancelled = true;
     };
   }, [projectId]);
-  if (!projectId || !project) return null;
+  if (!project) return null;
   return (
-    <div className="mx-auto w-full max-w-[760px] flex-1 overflow-y-auto px-6 py-6">
-      <h1 className="mb-4 text-[15px] font-semibold">{t("workNotes.title", { name: project.name })}</h1>
+    <div className="mx-auto max-w-[680px]">
+      <h2 className="mb-4 text-[17px] font-semibold text-fg">{t("workNotes.title", { name: project.name })}</h2>
       {notes.length === 0 && <p className="text-[13px] text-muted">{t("workNotes.empty")}</p>}
       <ul className="space-y-3">
         {notes.map((note) => (

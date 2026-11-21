@@ -103,10 +103,12 @@ function storeModel(spec: string | null): void {
  * user should never have to guess whether Vunemi is still listening.
  */
 /** Which view fills the main column. */
-export type View = "chat" | "artefacts" | "meetings" | "automations" | "settings" | "notes";
+export type View = "chat" | "memory" | "meetings" | "automations" | "settings";
+/** What the Memory page opens on, when another view sends the user there. */
+export type MemoryFocus = { kind: "general" } | { kind: "project"; id: string };
 
 /** Settings keeps everything besides the conversation and what it made, so the sidebar stays short. */
-export type SettingsSection = "permissions" | "security" | "connections" | "addons" | "vault" | "outbox" | "automations" | "activity" | "model" | "language" | "appearance" | "memory" | "soul" | "data" | "updates";
+export type SettingsSection = "permissions" | "security" | "connections" | "addons" | "vault" | "outbox" | "automations" | "activity" | "model" | "language" | "appearance" | "soul" | "data" | "updates";
 
 export type VoiceState = "off" | "listening" | "thinking" | "speaking";
 
@@ -165,8 +167,10 @@ interface State extends NativeRecipeState {
   view: View;
   /** The Settings section on screen, kept so another view can open Settings at the right place. */
   settingsSection: SettingsSection;
-  /** The project whose notes the notes view shows. */
-  notesProject: string | null;
+  /** Where the Memory page opens; it takes it and clears it. */
+  memoryFocus: MemoryFocus | null;
+  /** Activity opens on "Made by Vunemi"; it takes it and clears it. */
+  activityMade: boolean;
   /** A connection to open and show when Connections next appears. */
   connectionFocus: string | null;
   /** The automation library, null until the main process says whether this build has it. */
@@ -242,6 +246,10 @@ interface State extends NativeRecipeState {
   setView(view: View): void;
   openSettings(section: SettingsSection): void;
   openProjectNotes(projectId: string): void;
+  /** The Memory page, at General notes or a project's notes. */
+  openMemory(focus: MemoryFocus | null): void;
+  /** Settings › Activity, showing what Vunemi made. */
+  openMade(): void;
   /** Settings › Connections, with this one opened. */
   openConnection(id: string | null): void;
   refreshLibrary(): Promise<void>;
@@ -322,7 +330,8 @@ export const useStore = create<State>((set, get) => ({
   activity: [],
   view: "chat",
   settingsSection: "permissions",
-  notesProject: null,
+  memoryFocus: null,
+  activityMade: false,
   connectionFocus: null,
   library: null,
   recipeFocus: null,
@@ -850,7 +859,15 @@ export const useStore = create<State>((set, get) => ({
   },
 
   openProjectNotes(projectId) {
-    set({ view: "notes", notesProject: projectId });
+    set({ view: "memory", memoryFocus: { kind: "project", id: projectId } });
+  },
+
+  openMemory(focus) {
+    set({ view: "memory", memoryFocus: focus });
+  },
+
+  openMade() {
+    set({ view: "settings", settingsSection: "activity", activityMade: true });
   },
 
   openConnection(id) {

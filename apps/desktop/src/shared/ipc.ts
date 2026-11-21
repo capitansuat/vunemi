@@ -32,6 +32,67 @@ export interface MentionItem {
   at: number;
 }
 
+/** The Memory page's tree: every topic, with its notes and sources by title, newest first. */
+export interface TopicTreeView {
+  /** The folder in Documents the topics are in. */
+  root: string;
+  topics: {
+    name: string;
+    about: string;
+    updatedAt: number;
+    notes: { title: string; updatedAt: number }[];
+    sources: { name: string; updatedAt: number }[];
+  }[];
+  /** Whether files other than text can be added (MarkItDown in this build). */
+  canConvert: boolean;
+}
+
+export interface TopicNoteView {
+  topic: string;
+  title: string;
+  text: string;
+  by: "vunemi" | "user";
+  /** Where it came from: source names, or "conversation: <title>, <date>". */
+  sources: string[];
+  created: string;
+  updated: string;
+  /** Titles it links to with [[…]] that are notes of the topic. */
+  links: string[];
+  /** Titles it links to that aren't notes (yet). */
+  missing: string[];
+  linkedFrom: string[];
+  /** The file's time when read: saving refuses when it changed since. */
+  stamp: number;
+}
+
+export interface TopicSourceView {
+  topic: string;
+  name: string;
+  original: string;
+  /** Whether the file it was made from is still where it was. */
+  originalThere: boolean;
+  added: string;
+  bytes: number;
+  chars: number;
+  /** The Markdown, cut for showing when very long. */
+  text: string;
+  cut: boolean;
+}
+
+export interface TopicSearchView {
+  hits: { kind: "note" | "source"; topic: string; title: string; snippet: string }[];
+  /** Parts not yet searchable by meaning. */
+  pending: number;
+  byMeaning: boolean;
+}
+
+/** What adding files to a topic did, file by file. */
+export interface TopicAddedView {
+  added: string[];
+  already: string[];
+  failed: { file: string; error: string }[];
+}
+
 /** What the connections screen collects before a server can be added. */
 export interface NewMcpServer {
   label: string;
@@ -681,6 +742,25 @@ export interface VunemiApi {
   resolveTopic(runId: string, decision: "linked" | "skipped"): Promise<void>;
   /** Puts the open conversation in a topic, by name, or takes it out (null). */
   setTopic(name: string | null): Promise<SessionList>;
+  /** The Memory page (main/topics/page.ts). */
+  topicsTree(): Promise<TopicTreeView>;
+  topicsNote(topic: string, title: string): Promise<TopicNoteView | null>;
+  topicsSource(topic: string, name: string): Promise<TopicSourceView | null>;
+  topicsSearch(query: string, topic: string | null): Promise<TopicSearchView>;
+  /** The user's own note, new or edited; `was` is the title and stamp it had when opened. */
+  topicsSaveNote(topic: string, note: { title: string; text: string }, was: { title: string; stamp: number } | null): Promise<TopicNoteView>;
+  topicsDeleteNote(topic: string, title: string): Promise<void>;
+  topicsDeleteSource(topic: string, name: string): Promise<void>;
+  topicsCreate(name: string, about: string): Promise<void>;
+  topicsSetAbout(topic: string, about: string): Promise<void>;
+  /** Asks for files, then adds them as sources; null when the user cancels. */
+  topicsAddSources(topic: string): Promise<TopicAddedView | null>;
+  /** Shows the topic, or one of its notes or sources, in Finder. */
+  topicsReveal(topic: string, item: { kind: "note" | "source"; name: string } | null): Promise<void>;
+  topicsRevealOriginal(topic: string, name: string): Promise<void>;
+  /** The topic's folder to the Trash; its conversations leave it. */
+  topicsDelete(topic: string): Promise<void>;
+  onTopicsChanged(listener: () => void): () => void;
   memorySearch(): Promise<MemorySearchStatus>;
   memorySearchDownload(): Promise<MemorySearchStatus>;
   memorySearchCancel(): Promise<void>;
@@ -949,6 +1029,20 @@ export const CH = {
   memoryResolve: "memory:resolve",
   topicsResolve: "topics:resolve",
   topicsSet: "topics:set",
+  topicsTree: "topics:tree",
+  topicsNote: "topics:note",
+  topicsSource: "topics:source",
+  topicsSearch: "topics:search",
+  topicsSaveNote: "topics:save-note",
+  topicsDeleteNote: "topics:delete-note",
+  topicsDeleteSource: "topics:delete-source",
+  topicsCreate: "topics:create",
+  topicsSetAbout: "topics:set-about",
+  topicsAddSources: "topics:add-sources",
+  topicsReveal: "topics:reveal",
+  topicsRevealOriginal: "topics:reveal-original",
+  topicsDelete: "topics:delete",
+  topicsChanged: "topics:changed",
   memorySearch: "memory:search",
   memorySearchDownload: "memory:search-download",
   memorySearchCancel: "memory:search-cancel",

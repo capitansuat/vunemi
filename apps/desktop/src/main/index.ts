@@ -87,6 +87,7 @@ import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
 import { TopicMeaning } from "./topics/meaning.js";
+import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
 import { PRODUCTION, type FeedSource } from "./updates/feed.js";
@@ -553,7 +554,7 @@ const topicsRoot = (): string => {
   settings.setTopicsFolder(made);
   return made;
 };
-const topics = openTopicStore({ root: topicsRoot, dataDir: app.getPath("userData") });
+const topics = openTopicStore({ root: topicsRoot, dataDir: app.getPath("userData"), onChange: () => send(CH.topicsChanged, null) });
 /** Search by meaning in topics' notes and sources (topics/meaning.ts). */
 const topicMeaning = topics ? new TopicMeaning(topics, meaning) : null;
 if (topics) {
@@ -1554,6 +1555,44 @@ handle(CH.topicsSet, (_e, name: unknown) => {
   send(CH.sessionsChanged, list);
   return list;
 });
+/** The Memory page (topics/page.ts); without the topics index, an empty tree and nothing to change. */
+const memoryPage = topics
+  ? topicPage({
+      store: topics,
+      find: (query, topic, limit) => topicMeaning!.find(query, topic, limit),
+      convert: markitdown ? (from, signal) => convertToMarkdown(markdownEngines, from, signal) : null,
+      pickFiles: async (kinds) => {
+        // The paths come from the dialog the user answered, never from the window.
+        const options = { title: t("topics.page.addSources"), filters: [{ name: t("topics.page.files"), extensions: kinds }], properties: ["openFile", "multiSelections"] as ("openFile" | "multiSelections")[] };
+        const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
+        return result.canceled ? [] : result.filePaths;
+      },
+      trash: (path) => shell.trashItem(path),
+      reveal: (path) => shell.showItemInFolder(path),
+      leave: (topic) => {
+        conversations.renameTopic(topic, null);
+        send(CH.sessionsChanged, sessionList());
+      },
+      changed: () => send(CH.topicsChanged, null),
+    })
+  : null;
+const page = () => {
+  if (!memoryPage) throw new Error(t("topics.page.unavailable"));
+  return memoryPage;
+};
+handle(CH.topicsTree, () => (memoryPage ? memoryPage.tree() : { root: "", topics: [], canConvert: false }));
+handle(CH.topicsNote, (_e, topic: unknown, title: unknown) => page().note(topic, title));
+handle(CH.topicsSource, (_e, topic: unknown, name: unknown) => page().source(topic, name));
+handle(CH.topicsSearch, (_e, query: unknown, topic: unknown) => page().search(query, topic));
+handle(CH.topicsSaveNote, (_e, topic: unknown, note: unknown, was: unknown) => page().saveNote(topic, note, was));
+handle(CH.topicsDeleteNote, (_e, topic: unknown, title: unknown) => page().deleteNote(topic, title));
+handle(CH.topicsDeleteSource, (_e, topic: unknown, name: unknown) => page().deleteSource(topic, name));
+handle(CH.topicsCreate, (_e, name: unknown, about: unknown) => page().create(name, about));
+handle(CH.topicsSetAbout, (_e, topic: unknown, about: unknown) => page().setAbout(topic, about));
+handle(CH.topicsAddSources, (_e, topic: unknown) => page().addSources(topic));
+handle(CH.topicsReveal, (_e, topic: unknown, item: unknown) => page().reveal(topic, item));
+handle(CH.topicsRevealOriginal, (_e, topic: unknown, name: unknown) => page().revealOriginal(topic, name));
+handle(CH.topicsDelete, (_e, topic: unknown) => page().deleteTopic(topic));
 handle(CH.memorySearch, () => meaning.status());
 handle(CH.memorySearchDownload, async () => {
   try {

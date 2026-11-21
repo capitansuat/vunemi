@@ -8,7 +8,18 @@ import { Fragment, type ReactNode } from "react";
 import { t } from "@vunemi/i18n";
 import { cutAtUnverified, parseBlocks, plainMath } from "../lib/markdown";
 
-const INLINE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*\s][^*]*\*)|(\[[^\]]+\]\([^)\s]+\))/g;
+const INLINE = /(`[^`]+`)|(\[\[[^\]\n]+\]\])|(\*\*[^*]+\*\*)|(\*[^*\s][^*]*\*)|(\[[^\]]+\]\([^)\s]+\))/g;
+
+/** A [[Title]] between notes, as Obsidian writes it: the title it goes to, and what it shows. */
+export function wikiLink(token: string): { title: string; shown: string } {
+  const inner = token.slice(2, -2);
+  const [target = "", label] = inner.split("|");
+  const title = target.split(/[#^]/)[0]!.trim();
+  return { title, shown: (label ?? target).trim() || title };
+}
+
+/** What a [[link]] does: open the note it names, when there is one. */
+export type WikiLinks = { open: (title: string) => void; exists: (title: string) => boolean };
 
 /** An address the conversation never held: the model wrote it from memory. */
 function Unverified() {
@@ -30,7 +41,7 @@ function plain(text: string, unverified?: readonly string[]): ReactNode {
   ));
 }
 
-function inlineNodes(text: string, unverified?: readonly string[]): ReactNode[] {
+function inlineNodes(text: string, unverified?: readonly string[], wiki?: WikiLinks): ReactNode[] {
   const out: ReactNode[] = [];
   let last = 0;
   let key = 0;
@@ -43,6 +54,20 @@ function inlineNodes(text: string, unverified?: readonly string[]): ReactNode[] 
           <code className="rounded bg-surface-2 px-1 py-px font-mono text-[0.88em]">{tok.slice(1, -1)}</code>
           {unverified?.includes(tok.slice(1, -1)) && <Unverified />}
         </Fragment>,
+      );
+    } else if (tok.startsWith("[[")) {
+      const { title, shown } = wikiLink(tok);
+      // Outside the Memory page, or to a note that isn't there: the words alone.
+      out.push(
+        wiki?.exists(title) ? (
+          <button key={key++} type="button" onClick={() => wiki.open(title)} className="text-ember underline decoration-ember-line underline-offset-2">
+            {shown}
+          </button>
+        ) : (
+          <span key={key++} className={wiki ? "text-muted" : undefined} title={wiki ? t("topics.page.noNote", { title }) : undefined}>
+            {shown}
+          </span>
+        ),
       );
     } else if (tok.startsWith("**")) {
       out.push(<strong key={key++} className="font-semibold">{plain(tok.slice(2, -2), unverified)}</strong>);
@@ -70,8 +95,8 @@ function inlineNodes(text: string, unverified?: readonly string[]): ReactNode[] 
   return out;
 }
 
-export function Markdown({ text, unverified }: { text: string; unverified?: readonly string[] }) {
-  const inline = (part: string): ReactNode[] => inlineNodes(part, unverified);
+export function Markdown({ text, unverified, wiki }: { text: string; unverified?: readonly string[]; wiki?: WikiLinks }) {
+  const inline = (part: string): ReactNode[] => inlineNodes(part, unverified, wiki);
   return (
     <div className="selectable space-y-2.5 text-[14.5px] leading-[1.65] text-fg">
       {parseBlocks(text).map((b, i) => {

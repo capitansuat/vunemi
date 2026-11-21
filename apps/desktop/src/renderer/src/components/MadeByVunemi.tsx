@@ -1,6 +1,6 @@
 /**
- * Artefacts: what Vunemi made, in one place — the files it wrote, the drafts it
- * saved, the events it added, the files a page downloaded.
+ * What Vunemi made, as a filter of the Activity log: the files it wrote, the
+ * drafts it saved, the events it added, the files a page downloaded.
  *
  * The buttons are decided in main, per row: "open" only for documents,
  * pictures and media that are still inside the open folders, so nothing in
@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CalendarDays, CornerUpLeft, Download, ExternalLink, Eye, FileText, FolderOpen, Mail, Package } from "lucide-react";
+import { Bell, CalendarDays, CornerUpLeft, Download, ExternalLink, Eye, FileText, FolderOpen, Mail } from "lucide-react";
 import { useStore } from "../store.js";
 import type { Produced } from "@vunemi/agent-core";
 import type { ArtefactView } from "../../../shared/ipc.js";
@@ -27,7 +27,7 @@ const FILTERS: { key: Filter; match: (item: Produced) => boolean }[] = [
   { key: "downloads", match: (i) => i.kind === "download" },
 ];
 
-export function ArtefactsView() {
+export function MadeByVunemi() {
   const [rows, setRows] = useState<ArtefactView[] | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [busy, setBusy] = useState<string | null>(null);
@@ -56,16 +56,12 @@ export function ArtefactsView() {
   };
 
   return (
-    <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-[760px] px-6 pt-8 pb-10">
-        <h1 className="flex items-center gap-2 text-[17px] font-semibold tracking-tight text-fg">
-          <Package size={17} className="text-muted" /> {t("app.nav.artefacts")}
-        </h1>
-        <p className="mt-1 text-[13px] text-muted">
+    <div>
+        <p className="mt-4 text-[13px] text-muted">
           {t("artefacts.intro")}
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
             <button
               key={f.key}
@@ -117,7 +113,6 @@ export function ArtefactsView() {
             </section>
           ))
         )}
-      </div>
     </div>
   );
 }

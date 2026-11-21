@@ -7,14 +7,17 @@ import { groupByTask, matchesActivity, type ActivityTask } from "../lib/activity
 import { clock, groupByDay } from "../lib/time.js";
 import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
+import { MadeByVunemi } from "./MadeByVunemi.js";
 
-type Filter = "all" | "changes" | "page" | "refused";
+type Filter = "all" | "changes" | "page" | "refused" | "made";
 
 const FILTERS: { key: Filter; match: (e: ActivityEntry) => boolean }[] = [
   { key: "all", match: () => true },
   { key: "changes", match: (e) => CHANGING.has(e.actionClass) },
   { key: "page", match: (e) => e.tool.startsWith("page_") || e.tool.startsWith("tabs_") },
   { key: "refused", match: (e) => e.status === "refused" || e.status === "error" },
+  // Not entries of the log: what Vunemi made, listed on its own (MadeByVunemi).
+  { key: "made", match: () => false },
 ];
 
 const CHANGING = new Set<ActionClass>(["write-local", "destructive", "outbound", "financial"]);
@@ -22,7 +25,12 @@ const CHANGING = new Set<ActionClass>(["write-local", "destructive", "outbound",
 /** Everything the agent has done, kept apart from the conversation. */
 export function ActivityView() {
   const { activity, setActivity } = useStore();
-  const [filter, setFilter] = useState<Filter>("all");
+  // Opened from a task's "all outputs": straight to what Vunemi made.
+  const [filter, setFilter] = useState<Filter>(() => {
+    if (!useStore.getState().activityMade) return "all";
+    useStore.setState({ activityMade: false });
+    return "made";
+  });
   const [query, setQuery] = useState("");
   /** Tasks the user opened or closed, against how they start. */
   const [toggled, setToggled] = useState<ReadonlySet<string>>(new Set());
@@ -72,7 +80,7 @@ export function ActivityView() {
           {t("activity.intro")}
         </p>
 
-        <label className="mt-4 flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+        {filter !== "made" && <label className="mt-4 flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
           <Search size={14} className="shrink-0 text-faint" />
           <input
             type="search"
@@ -85,7 +93,7 @@ export function ActivityView() {
             aria-label={t("activity.search")}
             className="flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-faint"
           />
-        </label>
+        </label>}
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
@@ -107,7 +115,9 @@ export function ActivityView() {
 
         {error && <p className="mt-3 text-[12.5px] text-danger">{error}</p>}
 
-        {shown.length === 0 ? (
+        {filter === "made" ? (
+          <MadeByVunemi />
+        ) : shown.length === 0 ? (
           <p className="mt-8 text-[13px] text-faint">{searching ? t("activity.noResults") : t("activity.empty")}</p>
         ) : (
           days.map(([day, tasks]) => (

@@ -8,7 +8,7 @@ import { useStore } from "../store.js";
 /** "N notes from memory" under an answer: what the model was given, never a claim it used them. */
 export function MemoryNotice({ notes }: { notes: MemoryNote[] }) {
   const [open, setOpen] = useState(false);
-  const openSettings = useStore((s) => s.openSettings);
+  const openMemory = useStore((s) => s.openMemory);
   return (
     <div className="mt-2 text-[11.5px] text-faint">
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open}
@@ -21,7 +21,7 @@ export function MemoryNotice({ notes }: { notes: MemoryNote[] }) {
           <ul className="space-y-1">
             {notes.map((note) => <li key={note.id} className="selectable text-[12px] text-muted">{note.text}</li>)}
           </ul>
-          <button type="button" onClick={() => openSettings("memory")} className="mt-2 underline decoration-dotted hover:text-muted">
+          <button type="button" onClick={() => openMemory({ kind: "general" })} className="mt-2 underline decoration-dotted hover:text-muted">
             {t("memory.manage")}
           </button>
         </div>

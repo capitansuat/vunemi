@@ -227,6 +227,8 @@ export interface TopicStoreOptions {
   /** Vunemi's own data folder, for the index and replaced notes. */
   dataDir: string;
   now?: () => number;
+  /** After Vunemi changed a topic's files: the Memory page shows them again. */
+  onChange?: () => void;
 }
 
 export class TopicStore {
@@ -283,6 +285,7 @@ export class TopicStore {
     mkdirSync(join(dir, SOURCES), { recursive: true });
     this.inside(dir);
     writeFileSync(join(dir, ABOUT), writeFront({ topic: name, created: new Date(this.now()).toISOString() }, about || name));
+    this.opts.onChange?.();
     return this.topicAt(name);
   }
 
@@ -291,6 +294,7 @@ export class TopicStore {
     const file = join(topic.dir, ABOUT);
     const old = existsSync(file) ? parseNote(readFileSync(file, "utf8")).meta : {};
     atomicWrite(file, writeFront({ topic: topic.name, created: old.created ?? new Date(this.now()).toISOString() }, String(aboutIn ?? "").trim().slice(0, TOPIC_LIMITS.about) || topic.name));
+    this.opts.onChange?.();
     return this.topicAt(topic.name);
   }
 
@@ -402,6 +406,7 @@ export class TopicStore {
     const path = existing ?? join(topic.dir, NOTES, `${title}.md`);
     if (previous) this.keep(topic.name, title, previous);
     atomicWrite(path, writeFront({ title, created: typeof created === "string" ? created : at, updated: at, by: input.by, sources: input.sources }, text));
+    this.opts.onChange?.();
     return { note: this.noteAt(topic.name, path), replaced: previous !== null, previous };
   }
 
@@ -411,9 +416,8 @@ export class TopicStore {
     const path = this.notePath(topic, title);
     if (previous === null) {
       if (path) trash(path);
-      return;
-    }
-    atomicWrite(path ?? join(topic.dir, NOTES, `${cleanName(title, "title")}.md`), previous);
+    } else atomicWrite(path ?? join(topic.dir, NOTES, `${cleanName(title, "title")}.md`), previous);
+    this.opts.onChange?.();
   }
 
   /** The file a note of this title is in, any case; null when there is none. */
@@ -478,6 +482,7 @@ export class TopicStore {
     }
     const path = join(dir, `${name}.md`);
     atomicWrite(path, writeFront({ original: input.original, bytes: input.bytes, sha256: input.sha256, added: new Date(this.now()).toISOString() }, markdown));
+    this.opts.onChange?.();
     return { source: sourceAt(topic.name, path), added: true };
   }
 
@@ -486,6 +491,22 @@ export class TopicStore {
     const key = keyOf(String(name ?? "").trim().replace(/\.md$/i, ""));
     const path = mdFiles(join(topic.dir, SOURCES)).find((p) => keyOf(basename(p, ".md")) === key);
     return path ? { source: sourceAt(topic.name, path), text: parseNote(readFileSync(path, "utf8")).body } : null;
+  }
+
+  /** A topic's notes and sources by title, newest first, from the index: no file is read whole. */
+  outline(topicName: string): { notes: { title: string; path: string; mtime: number }[]; sources: { title: string; path: string; mtime: number }[] } {
+    const topic = this.need(topicName);
+    this.sync(topic);
+    const rows = this.db.prepare("SELECT kind, title, path, mtime FROM files WHERE topic_key = ? ORDER BY mtime DESC").all(keyOf(topic.name)) as unknown as { kind: "note" | "source"; title: string; path: string; mtime: number }[];
+    const of = (kind: string) => rows.filter((r) => r.kind === kind && existsSync(r.path)).map(({ title, path, mtime }) => ({ title, path, mtime }));
+    return { notes: of("note"), sources: of("source") };
+  }
+
+  /** The file of a source by name, any case; null when there is none. */
+  sourcePath(topicName: string, name: string): string | null {
+    const topic = this.need(topicName);
+    const key = keyOf(String(name ?? "").trim().replace(/\.md$/i, ""));
+    return mdFiles(join(topic.dir, SOURCES)).find((p) => keyOf(basename(p, ".md")) === key) ?? null;
   }
 
   // -- search -------------------------------------------------------------------------

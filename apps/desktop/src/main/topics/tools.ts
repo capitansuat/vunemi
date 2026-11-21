@@ -80,6 +80,51 @@ function sourceFiles(roots: Roots, input: unknown): string[] {
   });
 }
 
+/** One line per file, as the model is told; `made` are the new sources' files. */
+export async function addSourceFiles(
+  store: TopicStore,
+  convert: TopicToolsOptions["convert"],
+  topic: string,
+  from: readonly string[],
+  signal: AbortSignal,
+): Promise<{ lines: string[]; made: string[]; results: ({ path: string; name: string; added: boolean } | { path: string; error: string })[] }> {
+  const toConvert = from.filter((p) => !TEXT_KINDS.includes(extname(p).toLowerCase()));
+  const converted = toConvert.length && convert ? await convert(toConvert, signal) : [];
+  const lines: string[] = [];
+  const made: string[] = [];
+  const results: ({ path: string; name: string; added: boolean } | { path: string; error: string })[] = [];
+  for (const path of from) {
+    const index = toConvert.indexOf(path);
+    const one: Converted = index < 0 ? { markdown: readFileSync(path, "utf8") } : (converted[index] ?? { error: "Not converted." });
+    if ("error" in one) {
+      lines.push(`${short(path)}: not added. ${one.error}`);
+      results.push({ path, error: one.error });
+      continue;
+    }
+    const { source, added } = store.addSource(topic, { original: path, markdown: one.markdown, bytes: statSync(path).size, sha256: sha256Of(path) });
+    if (added) made.push(source.path);
+    results.push({ path, name: source.name, added });
+    lines.push(added ? `${short(path)}: added as the source "${source.name}" (${source.chars.toLocaleString("en")} characters).` : `${short(path)}: already in "${topic}" as "${source.name}".`);
+  }
+  return { lines, made, results };
+}
+
+/** Files the user picked themselves (the Memory page): kinds MarkItDown reads, not too large. */
+export function pickedSourceFiles(paths: readonly string[], canConvert: boolean): { ok: string[]; refused: { path: string; error: string }[] } {
+  const ok: string[] = [];
+  const refused: { path: string; error: string }[] = [];
+  for (const path of paths.slice(0, MAX_FILES)) {
+    const kind = extname(path).toLowerCase();
+    if (!TEXT_KINDS.includes(kind) && (!canConvert || !(MARKDOWN_KINDS as readonly string[]).includes(kind))) refused.push({ path, error: t("topics.page.kind") });
+    else if (statSync(path).size > MAX_BYTES) refused.push({ path, error: t("topics.page.tooLarge", { size: `${MAX_BYTES / 1_000_000} MB` }) });
+    else ok.push(path);
+  }
+  return { ok, refused };
+}
+
+/** What the Memory page's file picker offers. */
+export const SOURCE_KINDS = (canConvert: boolean): string[] => [...(canConvert ? MARKDOWN_KINDS : []), ...TEXT_KINDS].map((k) => k.slice(1));
+
 export function topicTools(opts: TopicToolsOptions): ToolDef[] {
   const now = opts.now ?? Date.now;
   const clean = async (text: string): Promise<string> => {
@@ -251,21 +296,7 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
       run: async (a, ctx) => {
         const topic = topicOf(opts);
         const from = sourceFiles(opts.roots, a.paths);
-        const toConvert = from.filter((p) => !TEXT_KINDS.includes(extname(p).toLowerCase()));
-        const converted = toConvert.length && opts.convert ? await opts.convert(toConvert, ctx.signal) : [];
-        const lines: string[] = [];
-        const made: string[] = [];
-        for (const path of from) {
-          const index = toConvert.indexOf(path);
-          const one: Converted = index < 0 ? { markdown: readFileSync(path, "utf8") } : (converted[index] ?? { error: "Not converted." });
-          if ("error" in one) {
-            lines.push(`${short(path)}: not added. ${one.error}`);
-            continue;
-          }
-          const { source, added } = opts.store.addSource(topic, { original: path, markdown: one.markdown, bytes: statSync(path).size, sha256: sha256Of(path) });
-          if (added) made.push(source.path);
-          lines.push(added ? `${short(path)}: added as the source "${source.name}" (${source.chars.toLocaleString("en")} characters).` : `${short(path)}: already in "${topic}" as "${source.name}".`);
-        }
+        const { lines, made } = await addSourceFiles(opts.store, opts.convert, topic, from, ctx.signal);
         if (made.length) {
           ctx.offerUndo(t("topics.undo.sources", { count: made.length }), async () => {
             for (const path of made) await opts.trash(path);

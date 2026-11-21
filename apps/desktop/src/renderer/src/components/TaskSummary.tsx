@@ -64,7 +64,7 @@ export const TaskSummary = memo(function TaskSummary({ task, artefacts, recovery
             {row?.canReveal && !row.missing && <button type="button" aria-label={`${t("artefacts.reveal")}: ${outputTitle(item)}`} disabled={busy !== null} onClick={() => void act(row.id, () => window.vunemi.revealArtefact(row.id))} className="rounded-md p-1.5 text-muted hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ember disabled:opacity-50"><FolderOpen size={13} aria-hidden="true" /></button>}
           </li>;
         })}</ul>
-        {task.outputs.length > 3 && <button type="button" onClick={() => useStore.getState().setView("artefacts")} className="mt-2 rounded text-[11.5px] text-muted underline focus-visible:ring-2 focus-visible:ring-ember">{t("chatTask.allOutputs")}</button>}
+        {task.outputs.length > 3 && <button type="button" onClick={() => useStore.getState().openMade()} className="mt-2 rounded text-[11.5px] text-muted underline focus-visible:ring-2 focus-visible:ring-ember">{t("chatTask.allOutputs")}</button>}
         {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
       </div>}
     </div>

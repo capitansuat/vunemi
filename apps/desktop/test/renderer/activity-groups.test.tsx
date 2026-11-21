@@ -6,7 +6,9 @@ import { groupByTask, matchesActivity } from "../../src/renderer/src/lib/activit
 
 const shown = vi.hoisted(() => ({ activity: [] as ActivityEntry[] }));
 vi.hoisted(() => vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => {} }));
-vi.mock("../../src/renderer/src/store.js", () => ({ useStore: () => ({ activity: shown.activity, setActivity: () => {} }) }));
+vi.mock("../../src/renderer/src/store.js", () => ({
+  useStore: Object.assign(() => ({ activity: shown.activity, setActivity: () => {} }), { getState: () => ({ activityMade: false }), setState: () => {} }),
+}));
 
 const entry = (id: string, runId: string, at: number, extra: Partial<ActivityEntry> = {}): ActivityEntry => ({
   id, runId, at, goal: `Goal ${runId}`, tool: "files_read", actionClass: "read", status: "ok", ...extra,

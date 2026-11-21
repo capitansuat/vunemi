@@ -146,6 +146,24 @@ const api: VunemiApi = {
   resolveMemory: (runId, proposalId, decision, text) => ipcRenderer.invoke(CH.memoryResolve, runId, proposalId, decision, text),
   resolveTopic: (runId, decision) => ipcRenderer.invoke(CH.topicsResolve, runId, decision),
   setTopic: (name) => ipcRenderer.invoke(CH.topicsSet, name),
+  topicsTree: () => ipcRenderer.invoke(CH.topicsTree),
+  topicsNote: (topic, title) => ipcRenderer.invoke(CH.topicsNote, topic, title),
+  topicsSource: (topic, name) => ipcRenderer.invoke(CH.topicsSource, topic, name),
+  topicsSearch: (query, topic) => ipcRenderer.invoke(CH.topicsSearch, query, topic),
+  topicsSaveNote: (topic, note, was) => ipcRenderer.invoke(CH.topicsSaveNote, topic, note, was),
+  topicsDeleteNote: (topic, title) => ipcRenderer.invoke(CH.topicsDeleteNote, topic, title),
+  topicsDeleteSource: (topic, name) => ipcRenderer.invoke(CH.topicsDeleteSource, topic, name),
+  topicsCreate: (name, about) => ipcRenderer.invoke(CH.topicsCreate, name, about),
+  topicsSetAbout: (topic, about) => ipcRenderer.invoke(CH.topicsSetAbout, topic, about),
+  topicsAddSources: (topic) => ipcRenderer.invoke(CH.topicsAddSources, topic),
+  topicsReveal: (topic, item) => ipcRenderer.invoke(CH.topicsReveal, topic, item),
+  topicsRevealOriginal: (topic, name) => ipcRenderer.invoke(CH.topicsRevealOriginal, topic, name),
+  topicsDelete: (topic) => ipcRenderer.invoke(CH.topicsDelete, topic),
+  onTopicsChanged: (listener) => {
+    const handler = () => listener();
+    ipcRenderer.on(CH.topicsChanged, handler);
+    return () => ipcRenderer.removeListener(CH.topicsChanged, handler);
+  },
   memorySearch: () => ipcRenderer.invoke(CH.memorySearch),
   memorySearchDownload: () => ipcRenderer.invoke(CH.memorySearchDownload),
   memorySearchCancel: () => ipcRenderer.invoke(CH.memorySearchCancel),

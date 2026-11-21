@@ -14,7 +14,6 @@ import { AutomationsSection } from "./AutomationsSection.js";
 import { ActivityView } from "./ActivityView.js";
 import { OutboxView } from "./OutboxView.js";
 import { VaultView } from "./VaultView.js";
-import { MemorySection } from "./MemorySection.js";
 import { SoulSection } from "./SoulSection.js";
 import { AddonsSection } from "./AddonsSection.js";
 import { useStore, type SettingsSection as Section } from "../store.js";
@@ -22,7 +21,7 @@ import { useFeature, usePlatform } from "../lib/platform.js";
 import { NotOnThisSystem } from "./NotOnThisSystem.js";
 import { UpdateAction } from "./UpdateAction.js";
 
-const SECTIONS: Section[] = ["permissions", "security", "connections", "addons", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "memory", "soul", "data", "updates"];
+const SECTIONS: Section[] = ["permissions", "security", "connections", "addons", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "soul", "data", "updates"];
 
 /** Sections that are whole views of their own, with their own scrolling. */
 const WHOLE: Partial<Record<Section, ComponentType>> = { connections: ConnectionsView, vault: VaultView, outbox: OutboxView, activity: ActivityView };
@@ -155,7 +154,6 @@ export function SettingsView() {
         {section === "language" && <LanguageSection />}
         {section === "appearance" && <AppearanceSection />}
         {section === "updates" && <UpdatesSection />}
-        {section === "memory" && <MemorySection />}
         {section === "soul" && <SoulSection />}
         {section === "addons" && <AddonsSection />}
         {section === "data" && (
@@ -166,7 +164,7 @@ export function SettingsView() {
               <button type="button" onClick={() => void useStore.getState().forgetSession()} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("settings.data.forgetSession")}</button>
               <button type="button" onClick={() => setSection("activity")} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("app.nav.activity")}</button>
               <button type="button" onClick={() => setSection("vault")} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("settings.data.openVault")}</button>
-              <button type="button" onClick={() => setSection("memory")} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("memory.title")}</button>
+              <button type="button" onClick={() => useStore.getState().openMemory({ kind: "general" })} className="rounded-lg border border-line px-3 py-2 text-[12px] text-fg">{t("memory.title")}</button>
             </div>
             <div className="mt-8 rounded-xl border border-danger/40 bg-danger/5 p-4">
               <h3 className="text-[13px] font-medium text-fg">{t("settings.data.forgetAll")}</h3>

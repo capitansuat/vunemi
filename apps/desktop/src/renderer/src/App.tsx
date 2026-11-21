@@ -1,11 +1,10 @@
 import { RecoveryActions } from "./components/RecoveryActions.js";
 import { taskSummary } from "./lib/task-summary.js";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowLeft, Bug, TriangleAlert, Lock, MessageSquare, Minimize2, Package, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, CalendarClock, Trash2, Users } from "lucide-react";
-import { ArtefactsView } from "./components/ArtefactsView.js";
+import { ArrowDown, ArrowLeft, BookMarked, Bug, TriangleAlert, Lock, MessageSquare, Minimize2, PanelLeftClose, PanelLeftOpen, PanelRight, Settings2, SquarePen, CalendarClock, Trash2, Users } from "lucide-react";
+import { MemoryView } from "./components/MemoryView.js";
 import { AutomationsView } from "./components/AutomationsView.js";
 import { MeetingsView } from "./components/MeetingsView.js";
-import { ProjectNotesView } from "./components/WorkNotes.js";
 import { BackgroundBrowsing, BrowserPane } from "./components/BrowserPane.js";
 import { PicturePane } from "./components/PicturePane.js";
 import { SitePane } from "./components/SitePane.js";
@@ -85,14 +84,12 @@ export function App() {
       <main className="flex min-w-0 flex-1 flex-col bg-bg">
         <DebugPortWarning />
         {view === "chat" ? <TopBar /> : <PageBar />}
-        {view === "artefacts" ? (
-          <ArtefactsView />
+        {view === "memory" ? (
+          <MemoryView />
         ) : view === "meetings" ? (
           <MeetingsView />
         ) : view === "automations" ? (
           <AutomationsView />
-        ) : view === "notes" ? (
-          <ProjectNotesView />
         ) : view === "settings" ? (
           <SettingsView />
         ) : (
@@ -145,7 +142,7 @@ function Sidebar() {
           <IconButton label={t("app.nav.unfold")} icon={PanelLeftOpen} onClick={() => setNavFolded(false)} />
           <IconButton label={t("app.newSession")} icon={SquarePen} onClick={() => void newSession()} disabled={running} />
           <ViewButton view="chat" label={t("app.nav.chat")} icon={MessageSquare} folded />
-          <ViewButton view="artefacts" label={t("app.nav.artefacts")} icon={Package} folded />
+          <ViewButton view="memory" label={t("app.nav.memory")} icon={BookMarked} folded />
           <ViewButton view="meetings" label={t("app.nav.meetings")} icon={Users} folded />
           {library && <ViewButton view="automations" label={t("app.nav.automations")} icon={CalendarClock} folded />}
         </div>
@@ -184,7 +181,7 @@ function Sidebar() {
 
       <div className="no-drag mt-3 px-2.5">
         <ViewButton view="chat" label={t("app.nav.chat")} icon={MessageSquare} />
-        <ViewButton view="artefacts" label={t("app.nav.artefacts")} icon={Package} />
+        <ViewButton view="memory" label={t("app.nav.memory")} icon={BookMarked} />
         <ViewButton view="meetings" label={t("app.nav.meetings")} icon={Users} />
         {library && <ViewButton view="automations" label={t("app.nav.automations")} icon={CalendarClock} />}
       </div>
@@ -230,7 +227,7 @@ function AppVersion() {
   );
 }
 
-function IconButton({ label, icon: Icon, onClick, disabled }: { label: string; icon: typeof Package; onClick: () => void; disabled?: boolean }) {
+function IconButton({ label, icon: Icon, onClick, disabled }: { label: string; icon: typeof BookMarked; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"
@@ -253,7 +250,7 @@ function ViewButton({
 }: {
   view: View;
   label: string;
-  icon: typeof Package;
+  icon: typeof BookMarked;
   folded?: boolean;
 }) {
   const { view: current, setView } = useStore(useShallow(s => ({ view: s.view, setView: s.setView, locale: s.locale })));

@@ -310,7 +310,7 @@ export const messages: Catalogue = {
     local: "モデルとデータはこの Mac に残ります。",
     nav: {
       chat: "チャット",
-      artefacts: "Vunemi が作ったもの",
+      memory: "メモリ",
       activity: "アクティビティ記録",
       vault: "金庫",
       connections: "接続",
@@ -619,6 +619,7 @@ export const messages: Catalogue = {
       changes: "変更",
       page: "ページ上の操作",
       refused: "拒否されたもの",
+      made: "Vunemi が作ったもの",
     },
     empty: "このフィルタに該当する記録はありません。",
     undone: "取り消し済み",
@@ -784,7 +785,7 @@ export const messages: Catalogue = {
     },
   },
 
-  topics: { folder: "Vunemi メモリ", gone: "そのトピックはもうメモリフォルダにありません。", ask: { question: "この会話をトピック「{topic}」に入れておきますか？", why: "残す価値のあることをそこにメモします。あなたも読んだり変更したりできます。", yes: "はい、入れておきます", no: "いいえ", linked: "この会話は「{topic}」に入っています。", expired: "この質問はもう受け付けていません。" }, chip: { title: "この会話はトピック「{topic}」に入っています", remove: "この会話を「{topic}」から外す" }, preview: { create: "トピック「{topic}」を作成してこの会話を追加", use: "この会話をトピック「{topic}」に追加" }, undo: { restore: "メモ「{title}」を元に戻す", remove: "メモ「{title}」を削除", sources: {"other":"追加した {count} 件のソースを削除"} } },
+  topics: { folder: "Vunemi メモリ", page: { byVunemi: "Vunemi が書きました", byYou: "あなたが書きました", topics: "トピック", about: "内容", aboutHint: "1〜2文で書きます。Vunemi はこれを見て、会話がここに属するかを判断します。", aboutWhy: "Vunemi はこの説明を読んで、会話がこのトピックに属するかを判断します。", addSources: "ファイルを追加", added: "追加しました：{names}", adding: "ファイルを追加しています…", already: "すでにトピックにあります：{names}", badName: "トピック名は空にできません。/ \\ : * ? \" < > | [ ] # ^ を含めたり、ピリオドで始めたり終えたりすることもできません。", badTitle: "メモのタイトルは空にできません。/ \\ : * ? \" < > | [ ] # ^ を含めたり、ピリオドで始めたり終えたりすることもできません。", byMeaning: "意味と言葉で見つかりました", byWords: "言葉で見つかりました", changed: "開いた後に、このメモが別の場所で変更されました。テキストをコピーしてから、メモを開き直してください。", changedOn: "{date} に変更", chars: "{count} 文字", create: "作成", cut: "ここには最初の部分だけを表示しています。ファイルにはすべて入っています。", delete: "削除", deleteNoteConfirm: "メモ「{title}」をゴミ箱に入れますか？", deleteSourceConfirm: "ソース「{name}」をゴミ箱に入れますか？元のファイルは残ります。", deleteTopic: "トピックを削除", deleteTopicConfirm: "「{topic}」のフォルダを、すべてのメモとソースごとゴミ箱に入れますか？", edit: "編集", editAbout: "説明を編集", editHint: "{count} / {max} 文字。Markdown です。別のメモへは [[タイトル]] でリンクします。", empty: "先にテキストを書いてください。", emptyTopic: "まだ何もありません。", exists: "「{topic}」というトピックはすでにあります。", files: "書類", folder: "フォルダ", from: "出典", full: "このトピックにはすでに {max} 件のメモがあります。先にいくつか削除してください。", general: "一般メモ", how: "メッセージ欄で @ を使って会話をトピックに入れるか、Vunemi に聞かれたら「はい」と答えます。Vunemi は会話や渡したファイルから残す価値のあることをメモします。ここではすべてを読み、変更し、削除できます。フォルダは Obsidian などの Markdown エディタでも開けます。", intro: "トピックとは、リフォーム、税金、研究テーマのように何度も取り組む事柄です。それぞれがこの Mac 上のメモとソースのフォルダです。", kind: "この種類のファイルは追加できません。", linkedFrom: "リンク元", madeFrom: "{file} から作成（{date}）", more: "その他", name: "名前", newNote: "新しいメモ", newTopic: "新しいトピック", noHits: "見つかりませんでした。", noNote: "「{title}」というメモはまだありません。", noTopics: "まだトピックがありません。", noteCount: {"other": "メモ {count} 件"}, noteGone: "このメモはもうありません。", notes: "メモ", originalGone: "元のファイルは元の場所にありません", pending: {"other": "{count} 個の部分はまだ意味で検索できません"}, projectNotes: "メモ · {name}", reveal: "Finder で表示", revealOriginal: "元のファイルを Finder で表示", search: "メモとソースを検索", searchFor: "「{query}」", showAll: "すべて表示", source: "ソース", sourceCount: {"other": "ソース {count} 件"}, sourceGone: "このソースはもうありません。", sourceWhy: "ファイルをテキストにした写しで、Vunemi が読んだり検索したりします。元のファイルを変更しても、こちらは変わりません。", sources: "ソース", taken: "「{title}」というメモはすでにあります。", text: "テキスト", textOnly: "このビルドで追加できるのはテキストと Markdown ファイルだけです。", title: "タイトル", toTrash: "ゴミ箱に入れる", tooLarge: "{size} を超えています。", tooLong: "メモは最大 {max} 文字です。", unavailable: "今はトピックのフォルダを開けません。" }, gone: "そのトピックはもうメモリフォルダにありません。", ask: { question: "この会話をトピック「{topic}」に入れておきますか？", why: "残す価値のあることをそこにメモします。あなたも読んだり変更したりできます。", yes: "はい、入れておきます", no: "いいえ", linked: "この会話は「{topic}」に入っています。", expired: "この質問はもう受け付けていません。" }, chip: { title: "この会話はトピック「{topic}」に入っています", remove: "この会話を「{topic}」から外す" }, preview: { create: "トピック「{topic}」を作成してこの会話を追加", use: "この会話をトピック「{topic}」に追加" }, undo: { restore: "メモ「{title}」を元に戻す", remove: "メモ「{title}」を削除", sources: {"other":"追加した {count} 件のソースを削除"} } },
   workNotes: { saved: "メモを保存しました：{title}", delete: "メモを削除", title: "メモ · {name}", open: "{name} のメモ", empty: "まだメモはありません。Vunemi は、このプロジェクトの今後の会話が知っておくべき決定や発見をここに記録します。", outside: "外部のコンテンツを参照：{sources}" },
   modelsMemory: { title: "現在メモリ上", chat: "チャットモデル", meaning: "意味検索", voice: "音声認識", notLoaded: "未読み込み", unmeasured: "測定できません", summary: "この Mac：{total} · 現在の空き：{available}", unloaded: "{time} · メモリ不足のため解放：{names}", lowered: "{time} · コンテキストを {context} に縮小" },
   soul: {
