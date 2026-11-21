@@ -9,6 +9,19 @@ import { defineConfig } from "electron-vite";
 // by hand: such a list is only ever noticed when a new package makes the app
 // fail to start, and it has to include packages reached indirectly too — the
 // browser's use of perception is as much a bundling problem as our own.
+// The dev server's hot reload talks over a WebSocket, hence ws: in the window's
+// content policy. A built window has nothing to connect to, so the build leaves
+// it out; if the policy's wording changes, the build stops rather than ship ws:.
+const releasePolicy = {
+  name: "vunemi-release-policy",
+  apply: "build" as const,
+  transformIndexHtml(html: string) {
+    const out = html.replace("connect-src 'self' ws:\"", "connect-src 'self'\"");
+    if (out === html) throw new Error("index.html: expected connect-src 'self' ws: in the content policy");
+    return out;
+  },
+};
+
 const packagesDir = resolve(import.meta.dirname, "../../packages");
 const workspacePackages = readdirSync(packagesDir, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
@@ -73,7 +86,7 @@ export default defineConfig({
     },
   },
   renderer: {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), releasePolicy],
     resolve: { alias: { "@": resolve("src/renderer/src") } },
   },
 });
