@@ -20,6 +20,8 @@ let calls: string[][];
 /** The user's shortcuts, as `shortcuts list` gives them one after another. */
 let lists: string[];
 let fails: string | null;
+/** The draft as plutil was given it, while it still existed. */
+let drafted: { xml: string; mode: number } | null;
 
 const installer = (over: { answerMs?: number } = {}) =>
   new ShortcutInstaller({
@@ -29,6 +31,7 @@ const installer = (over: { answerMs?: number } = {}) =>
     lookEveryMs: 5,
     exec: async (file, args) => {
       calls.push([file, ...args]);
+      if (args[0] === "-convert") drafted = { xml: readFileSync(args.at(-1)!, "utf8"), mode: statSync(args.at(-1)!).mode & 0o777 };
       if (fails && args[0] === fails) throw new Error("it went wrong");
       return args[0] === "list" ? (lists.length > 1 ? lists.shift()! : lists[0]!) : "";
     },
@@ -40,6 +43,7 @@ beforeEach(() => {
   calls = [];
   lists = ["Other\n"];
   fails = null;
+  drafted = null;
 });
 
 describe("ShortcutInstaller", () => {
@@ -50,12 +54,14 @@ describe("ShortcutInstaller", () => {
     const sign = calls.find((c) => c[1] === "sign")!;
     expect(sign.slice(1)).toEqual(["sign", "--mode", "anyone", "--input", join(dir, "unsigned", "Remind me.shortcut"), "--output", join(dir, "Remind me.shortcut")]);
     expect(calls.find((c) => c[0] === "/usr/bin/open")).toEqual(["/usr/bin/open", "-a", "Shortcuts", "--", join(dir, "Remind me.shortcut")]);
-    const xml = readFileSync(join(dir, "unsigned", "Remind me.xml"), "utf8");
-    expect(xml).toContain("<string>is.workflow.actions.addnewreminder</string>");
-    expect(xml).toContain("<string>Of what?</string>");
+    expect(drafted!.xml).toContain("<string>is.workflow.actions.addnewreminder</string>");
+    expect(drafted!.xml).toContain("<string>Of what?</string>");
     // The files are the user's alone.
     expect(statSync(dir).mode & 0o777).toBe(0o700);
-    expect(statSync(join(dir, "unsigned", "Remind me.xml")).mode & 0o777).toBe(0o600);
+    expect(drafted!.mode).toBe(0o600);
+    // Signed, the drafts are gone; the signed file is what was opened.
+    expect(existsSync(join(dir, "unsigned", "Remind me.xml"))).toBe(false);
+    expect(existsSync(join(dir, "unsigned", "Remind me.shortcut"))).toBe(false);
   });
 
   it("says so when the user does not add it, and stops looking", async () => {
@@ -80,6 +86,7 @@ describe("ShortcutInstaller", () => {
     fails = "sign";
     expect(await installer().install(draft)).toEqual({ state: "failed", name: "Remind me", reason: "it went wrong" });
     expect(done()).toEqual(["plutil -convert", "shortcuts sign", "open shortcuts://create-shortcut"]);
+    expect(existsSync(join(dir, "unsigned", "Remind me.xml"))).toBe(false);
   });
 
   it("builds anyway when the user's shortcuts can't be read beforehand", async () => {

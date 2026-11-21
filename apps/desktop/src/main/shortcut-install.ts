@@ -17,7 +17,7 @@
  */
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { compileShortcut, plistXml, ShortcutRefused, validShortcut, type ShortcutBuilt } from "@vunemi/apps";
 
@@ -70,17 +70,23 @@ export class ShortcutInstaller {
     const { name } = validShortcut(raw);
     const have = (): Promise<boolean> => this.names().then((names) => names.includes(name), () => false);
     if (await have()) return { state: "exists", name };
+    const unsigned = join(this.opts.dir, "unsigned");
+    const xml = join(unsigned, `${name}.xml`);
+    const draft = join(unsigned, `${name}.shortcut`);
     try {
       const { plist } = compileShortcut(raw, this.opts.uuid ?? randomUUID);
-      const unsigned = join(this.opts.dir, "unsigned");
       mkdirSync(unsigned, { recursive: true, mode: 0o700 });
       chmodSync(this.opts.dir, 0o700);
-      const xml = join(unsigned, `${name}.xml`);
-      const draft = join(unsigned, `${name}.shortcut`);
       const signed = join(this.opts.dir, `${name}.shortcut`);
-      writeFileSync(xml, plistXml(plist), { mode: 0o600 });
-      await this.exec(PLUTIL, ["-convert", "binary1", "-o", draft, "--", xml], 15_000);
-      await this.exec(SHORTCUTS, ["sign", "--mode", "anyone", "--input", draft, "--output", signed], SIGN_TIMEOUT_MS);
+      try {
+        writeFileSync(xml, plistXml(plist), { mode: 0o600 });
+        await this.exec(PLUTIL, ["-convert", "binary1", "-o", draft, "--", xml], 15_000);
+        await this.exec(SHORTCUTS, ["sign", "--mode", "anyone", "--input", draft, "--output", signed], SIGN_TIMEOUT_MS);
+      } finally {
+        // Only the signed file is opened; the drafts it was made from don't stay behind.
+        rmSync(xml, { force: true });
+        rmSync(draft, { force: true });
+      }
       await this.exec(OPEN, ["-a", "Shortcuts", "--", signed], 15_000);
     } catch (err) {
       if (err instanceof ShortcutRefused) throw err;
