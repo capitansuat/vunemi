@@ -7,7 +7,7 @@ import { foldTasks, tasksFromEvents, type QuotedSource, type TaskRecord, type Ag
 import type { ArtefactView, ActivityEntry, AutomationLibraryView, ContextInfo, EmbeddedState, EngineView, MentionRef, VunemiApi, ProviderStatus, QueuedMessage, SessionList, VoiceStatus } from "../../shared/ipc.js";
 import { earcon, HeldButton, record, type Recorder } from "./lib/audio.js";
 import { foldEvent, replyText, type RunView } from "./lib/fold.js";
-import { SentenceCutter, SpeechPlayer } from "./lib/speech.js";
+import { lastWords, SentenceCutter, SpeechPlayer } from "./lib/speech.js";
 import { getLocale, setLocale as setI18nLocale, t, type Locale } from "@vunemi/i18n";
 
 declare global {
@@ -783,7 +783,7 @@ export const useStore = create<State>((set, get) => ({
     }
     if (event.type === "run.finished" && get().voice.handsFree) {
       const said = replyText(get().runs.find((r) => r.runId === event.runId));
-      void finishTalking(event.runId, said || event.detail, set, get);
+      void finishTalking(event.runId, lastWords(said, event.status, event.detail), set, get);
     }
     set((s) => ({
       taskApprovalStopped:event.type==='run.started'?false:s.taskApprovalStopped,

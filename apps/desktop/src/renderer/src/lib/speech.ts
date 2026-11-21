@@ -14,6 +14,15 @@
 import { t } from "@vunemi/i18n";
 import { speakable } from "./fold.js";
 
+/**
+ * What is said when a turn ends without its reply having been said: the reply,
+ * else the run's own words (an error, say). Not after Stop: the user pressed it,
+ * and hearing "Stopped." read back adds nothing.
+ */
+export function lastWords(reply: string, status: string, detail: string): string {
+  return reply || (status === "stopped" ? "" : detail);
+}
+
 /** Where a sentence ends: its mark and what closes it, then a space; the full-width marks need no space. */
 const END = /[.!?…][)"'”’\]]*\s|[。！？]/g;
 /** Shorter than this is said together with what follows: "Evet." alone is a voice starting and stopping. */

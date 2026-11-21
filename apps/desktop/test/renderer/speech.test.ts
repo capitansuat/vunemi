@@ -4,7 +4,17 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setLocale } from "@vunemi/i18n";
-import { SentenceCutter, SpeechPlayer, type Playing } from "../../src/renderer/src/lib/speech.js";
+import { lastWords, SentenceCutter, SpeechPlayer, type Playing } from "../../src/renderer/src/lib/speech.js";
+
+describe("what is said when a voice turn ends", () => {
+  it("the reply, else the run's own words", () => {
+    expect(lastWords("Done, the note is saved.", "done", "Done.")).toBe("Done, the note is saved.");
+    expect(lastWords("", "failed", "The model server could not be reached.")).toBe("The model server could not be reached.");
+  });
+  it("nothing after Stop", () => {
+    expect(lastWords("", "stopped", "Durduruldu.")).toBe("");
+  });
+});
 
 /** A reply as a model writes it: a few characters at a time. */
 const written = (text: string, by = 3): string[] => {
