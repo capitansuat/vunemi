@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { inputCover, soundsLikeSendOrDelete } from "../src/approve-all.js";
 
 describe("what approve all reaches in an app", () => {
@@ -31,5 +34,32 @@ describe("what approve all reaches in an app", () => {
 
   it.each(["Save", "Kaydet", "Bold", "Align Left", "Undo", "cmd+s", "return", "Font", "Enregistrer", "Speichern", "保存", "저장"])("lets %s through", (word) => {
     expect(soundsLikeSendOrDelete(word)).toBe(false);
+  });
+});
+
+describe("an app whose name on screen isn't its folder's", () => {
+  const dir = mkdtempSync(join(tmpdir(), "vunemi-apps-"));
+  const bundle = (folder: string, bundleId: string, category: string) => {
+    mkdirSync(join(dir, `${folder}.app`, "Contents"), { recursive: true });
+    writeFileSync(join(dir, `${folder}.app`, "Contents", "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>${bundleId}</string><key>LSApplicationCategoryType</key><string>${category}</string></dict></plist>`);
+  };
+  bundle("Notes", "org.example.notes", "public.app-category.productivity");
+  bundle("MyBank", "org.example.bank", "public.app-category.finance");
+  // Spotlight stands in: it finds a bundle by id, whatever the app is called on screen.
+  const look = { folders: [dir], withId: async (id: string) => ({ "org.example.notes": [join(dir, "Notes.app")], "org.example.bank": [join(dir, "MyBank.app")] } as Record<string, string[]>)[id] ?? [] };
+  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+
+  it("is still covered when it is an ordinary app (Notlar for Notes)", async () => {
+    expect(await inputCover({ name: "Notlar", bundleId: "org.example.notes" }, undefined, look)).toEqual({ key: "app:org.example.notes", app: "Notlar" });
+  });
+
+  it("keeps its card when its category is finance, under any name", async () => {
+    expect(await inputCover({ name: "MyBank", bundleId: "org.example.bank" }, undefined, look)).toBeUndefined();
+    expect(await inputCover({ name: "Bankam", bundleId: "org.example.bank" }, undefined, look)).toBeUndefined();
+  });
+
+  it("keeps its card when its bundle can't be found", async () => {
+    expect(await inputCover({ name: "Somewhere", bundleId: "org.example.nowhere" }, undefined, look)).toBeUndefined();
   });
 });

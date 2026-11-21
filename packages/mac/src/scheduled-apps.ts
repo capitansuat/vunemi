@@ -47,11 +47,37 @@ async function bundlesShownAs(wanted: string): Promise<string[]> {
   }
 }
 
-export interface AppLookup { running(): Promise<MacApp[]>; folders?: readonly string[] }
+/** Spotlight's paths for a bundle id, for an app whose name on screen isn't its folder name. */
+async function bundlesWithId(bundleId: string): Promise<string[]> {
+  if (!/^[A-Za-z0-9.-]+$/.test(bundleId)) return [];
+  try {
+    const { stdout } = await run("/usr/bin/mdfind", [`kMDItemContentType == "com.apple.application-bundle" && kMDItemCFBundleIdentifier == "${bundleId}"`], { timeout: 5_000 });
+    return stdout.split("\n").filter((p) => p.endsWith(".app"));
+  } catch {
+    return [];
+  }
+}
+
+export interface AppLookup { running(): Promise<MacApp[]>; folders?: readonly string[]; withId?: (bundleId: string) => Promise<string[]> }
+
+/**
+ * An app's installed bundle, matched by its bundle id. Looked for by name first,
+ * then through Spotlight by id: on a Turkish Mac, Notes shows as "Notlar" but its
+ * folder is Notes.app. Undefined when neither finds it.
+ */
+export async function installedBundle(app: Pick<MacApp, "name" | "bundleId">, look: Pick<AppLookup, "folders" | "withId"> = {}): Promise<InstalledApp | undefined> {
+  const named = (await Promise.all(bundlesNamed(app.name, look.folders ?? FOLDERS).map(readBundle))).find((b) => b?.bundleId === app.bundleId);
+  if (named) return named;
+  for (const path of await (look.withId ?? bundlesWithId)(app.bundleId)) {
+    const bundle = await readBundle(path);
+    if (bundle?.bundleId === app.bundleId) return bundle;
+  }
+  return undefined;
+}
 
 /** The LSApplicationCategoryType in the app's bundle. */
-export async function appCategory(app: Pick<MacApp, "name" | "bundleId">, folders: readonly string[] = FOLDERS): Promise<string | undefined> {
-  return (await Promise.all(bundlesNamed(app.name, folders).map(readBundle))).find((b) => b?.bundleId === app.bundleId)?.category;
+export async function appCategory(app: Pick<MacApp, "name" | "bundleId">, look: Pick<AppLookup, "folders" | "withId"> = {}): Promise<string | undefined> {
+  return (await installedBundle(app, look))?.category;
 }
 
 /** The app these words mean, if a scheduled task may act in it; throws a plain reason. */
@@ -76,7 +102,7 @@ export async function scheduledApp(wanted: string, look: AppLookup): Promise<{ n
   if (unique.length > 1) throw new Error(t("mac.policy.whichOne", { app: name, apps: unique.map((a) => a.name).join(", ") }));
   const app = unique[0]!;
   // An open app's category is in its bundle, like a closed one's.
-  const category = found[0]?.category ?? await appCategory(app, look.folders);
+  const category = found[0]?.category ?? await appCategory(app, look);
   const blocked = notScheduledReason({ ...app, ...(category && { category }) });
   if (blocked) throw new Error(blocked);
   return { name: app.name, bundleId: app.bundleId };

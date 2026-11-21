@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { setLocale } from "@vunemi/i18n";
 import { Helper, type MacApp } from "../src/helper.js";
 import { notScheduledReason } from "../src/policy.js";
@@ -35,6 +38,19 @@ describe("finding the app a set-up names", () => {
     setLocale("en");
     await expect(scheduledApp("Safari", look([app("Safari", "com.apple.Safari")]))).rejects.toThrow(/can't be given/);
     await expect(scheduledApp("No Such App", look([]))).rejects.toThrow(/No installed app/);
+  });
+  it("an open finance app is refused under a name that isn't its folder's", async () => {
+    setLocale("en");
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-apps-"));
+    try {
+      mkdirSync(join(dir, "MyBank.app", "Contents"), { recursive: true });
+      writeFileSync(join(dir, "MyBank.app", "Contents", "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>org.example.bank</string><key>LSApplicationCategoryType</key><string>public.app-category.finance</string></dict></plist>`);
+      const withId = async (id: string) => (id === "org.example.bank" ? [join(dir, "MyBank.app")] : []);
+      await expect(scheduledApp("Bankam", { running: async () => [app("Bankam", "org.example.bank")], folders: [dir], withId })).rejects.toThrow(/can't be given/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
   it("two open apps of one name are never guessed between", async () => {
     await expect(scheduledApp("Same", look([app("Same", "org.one"), app("Same", "org.two")]))).rejects.toThrow(/more than one/);

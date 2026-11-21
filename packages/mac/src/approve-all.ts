@@ -7,7 +7,7 @@
 import type { ApproveAllCover } from "@vunemi/agent-core";
 import type { MacApp } from "./helper.js";
 import { notScheduledReason } from "./policy.js";
-import { appCategory } from "./scheduled-apps.js";
+import { installedBundle, type AppLookup } from "./scheduled-apps.js";
 
 const SENDS_OR_DELETES_LATIN_CYRILLIC = [
   "send", "submit", "post", "publish", "share", "reply", "forward", "delete", "remove", "erase", "trash", "discard", "empty", "pay", "buy", "purchase", "order", "checkout", "transfer", "backspace",
@@ -32,9 +32,12 @@ export function soundsLikeSendOrDelete(word: string): boolean {
 }
 
 /** `word` is the label of the control or the key combination this step would use. */
-export async function inputCover(app: Pick<MacApp, "name" | "bundleId">, word?: string): Promise<ApproveAllCover | undefined> {
+export async function inputCover(app: Pick<MacApp, "name" | "bundleId">, word?: string, look: Pick<AppLookup, "folders" | "withId"> = {}): Promise<ApproveAllCover | undefined> {
   if (word !== undefined && soundsLikeSendOrDelete(word)) return undefined;
-  const category = await appCategory(app).catch(() => undefined);
-  if (notScheduledReason({ ...app, ...(category && { category }) })) return undefined;
+  if (notScheduledReason(app)) return undefined;
+  // Its category decides too (finance, social networking): an app whose bundle
+  // can't be read keeps its card rather than pass for an ordinary one.
+  const bundle = await installedBundle(app, look).catch(() => undefined);
+  if (!bundle || notScheduledReason({ ...app, ...(bundle.category && { category: bundle.category }) })) return undefined;
   return { key: `app:${app.bundleId}`, app: app.name };
 }
