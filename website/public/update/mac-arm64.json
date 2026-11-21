@@ -1,62 +1,73 @@
 {
-  "currentRelease": "0.2.9",
+  "currentRelease": "0.3.0",
   "releases": [
     {
-      "version": "0.2.9",
+      "version": "0.3.0",
       "updateTo": {
-        "version": "0.2.9",
-        "name": "Vunemi 0.2.9",
-        "pub_date": "2026-11-19T00:00:00Z",
+        "version": "0.3.0",
+        "name": "Vunemi 0.3.0",
+        "pub_date": "2026-11-21T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.2.9/Vunemi-0.2.9-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.3.0/Vunemi-0.3.0-arm64.zip"
       }
     }
   ],
-  "sizeMb": 144,
+  "sizeMb": 241,
   "notes": {
     "en": [
-      "The add-ons for documents, spreadsheets, presentations, PDFs, drawings, photos and video are updated to the latest versions from the ArtCraft team.",
-      "An add-on you already installed updates itself shortly after Vunemi opens. If that fails, Settings › Add-ons offers the update again."
+      "Vunemi can now turn Word, PowerPoint, Excel and PDF files, web pages and more into Markdown files that keep their headings and tables, for a notes app or another assistant. It runs on your Mac without network access and never replaces a file.",
+      "Without it, Vunemi reads those files as before, but tables come through as plain lines. The converter is Microsoft's MarkItDown, built in with its own Python, so you install nothing; this makes the app and this update larger.",
+      "When Vunemi reads back a file it converted, it no longer calls it made up. A question about a file or a sheet no longer gets the same answer a second time, about a minute later."
     ],
     "de": [
-      "Die Erweiterungen für Dokumente, Tabellen, Präsentationen, PDFs, Zeichnungen, Fotos und Videos sind auf die neuesten Versionen des ArtCraft-Teams aktualisiert.",
-      "Eine bereits installierte Erweiterung aktualisiert sich kurz nach dem Start von Vunemi von selbst. Klappt das nicht, bietet Einstellungen › Erweiterungen das Update erneut an."
+      "Vunemi wandelt jetzt Word-, PowerPoint-, Excel- und PDF-Dateien, Webseiten und mehr in Markdown-Dateien um, mit Überschriften und Tabellen, etwa für eine Notiz-App oder einen anderen Assistenten. Das läuft auf deinem Mac ohne Netzwerkzugriff und ersetzt nie eine Datei.",
+      "Ohne das liest Vunemi diese Dateien wie bisher, aber Tabellen kommen als einfache Zeilen an. Der Umwandler ist Microsofts MarkItDown, eingebaut mit eigenem Python: Du installierst nichts. Dadurch sind die App und dieses Update größer.",
+      "Liest Vunemi eine selbst umgewandelte Datei erneut, hält es sie nicht mehr für erfunden. Eine Frage zu einer Datei oder Tabelle bekommt nicht mehr etwa eine Minute später dieselbe Antwort ein zweites Mal."
     ],
     "es": [
-      "Los complementos para documentos, hojas de cálculo, presentaciones, PDF, dibujos, fotos y vídeo se actualizan a las últimas versiones del equipo de ArtCraft.",
-      "Un complemento ya instalado se actualiza solo poco después de abrir Vunemi. Si falla, Ajustes › Complementos vuelve a ofrecer la actualización."
+      "Vunemi ahora convierte archivos de Word, PowerPoint, Excel y PDF, páginas web y más en archivos Markdown que conservan títulos y tablas, para una app de notas u otro asistente. Funciona en tu Mac sin acceso a la red y nunca reemplaza un archivo.",
+      "Sin ello, Vunemi lee esos archivos como antes, pero las tablas llegan como líneas sueltas. El conversor es MarkItDown de Microsoft, integrado con su propio Python: no instalas nada. Por eso la app y esta actualización pesan más.",
+      "Cuando Vunemi vuelve a leer un archivo que convirtió, ya no lo da por inventado. Una pregunta sobre un archivo o una hoja ya no recibe la misma respuesta una segunda vez, un minuto después."
     ],
     "fr": [
-      "Les extensions pour les documents, feuilles de calcul, présentations, PDF, dessins, photos et vidéos passent aux dernières versions de l'équipe ArtCraft.",
-      "Une extension déjà installée se met à jour d'elle-même peu après l'ouverture de Vunemi. En cas d'échec, Réglages › Extensions propose à nouveau la mise à jour."
+      "Vunemi convertit désormais les fichiers Word, PowerPoint, Excel et PDF, les pages web et plus encore en fichiers Markdown qui gardent titres et tableaux, pour une app de notes ou un autre assistant. Cela se fait sur votre Mac sans accès réseau et ne remplace jamais un fichier.",
+      "Sans cela, Vunemi lit ces fichiers comme avant, mais les tableaux arrivent en simples lignes. Le convertisseur est MarkItDown de Microsoft, intégré avec son propre Python : vous n’installez rien. L’app et cette mise à jour sont donc plus lourdes.",
+      "Quand Vunemi relit un fichier qu’il a converti, il ne le qualifie plus d’inventé. Une question sur un fichier ou une feuille ne reçoit plus la même réponse une seconde fois, environ une minute plus tard."
     ],
     "it": [
-      "I componenti aggiuntivi per documenti, fogli di calcolo, presentazioni, PDF, disegni, foto e video passano alle ultime versioni del team ArtCraft.",
-      "Un componente aggiuntivo già installato si aggiorna da solo poco dopo l'apertura di Vunemi. Se non riesce, Impostazioni › Componenti aggiuntivi propone di nuovo l'aggiornamento."
+      "Vunemi ora converte file Word, PowerPoint, Excel e PDF, pagine web e altro in file Markdown che mantengono titoli e tabelle, per un’app di note o un altro assistente. Funziona sul tuo Mac senza accesso alla rete e non sostituisce mai un file.",
+      "Senza, Vunemi legge questi file come prima, ma le tabelle arrivano come semplici righe. Il convertitore è MarkItDown di Microsoft, integrato con un suo Python: non devi installare nulla. Per questo l’app e questo aggiornamento sono più grandi.",
+      "Quando Vunemi rilegge un file che ha convertito, non lo considera più inventato. Una domanda su un file o un foglio non riceve più la stessa risposta una seconda volta, circa un minuto dopo."
     ],
     "tr": [
-      "Belge, tablo, sunum, PDF, çizim, fotoğraf ve video eklentileri ArtCraft ekibinin en son sürümlerine güncellendi.",
-      "Kurulu bir eklenti, Vunemi açıldıktan kısa süre sonra kendiliğinden güncellenir. Bu olmazsa Ayarlar › Eklentiler güncellemeyi yeniden sunar."
+      "Vunemi artık Word, PowerPoint, Excel ve PDF dosyalarını, web sayfalarını ve daha fazlasını başlıkları ve tablolarıyla Markdown dosyasına çevirebiliyor; not uygulaması ya da başka bir asistan için. Mac'inde, ağa çıkmadan çalışır ve hiçbir dosyanın yerine yazmaz.",
+      "Bu olmadan Vunemi bu dosyaları eskisi gibi okur, ama tablolar düz satır olarak gelir. Dönüştürücü Microsoft'un MarkItDown'ı; kendi Python'uyla uygulamanın içinde, yani hiçbir şey kurman gerekmez. Bu yüzden uygulama ve bu güncelleme daha büyük.",
+      "Vunemi çevirdiği bir dosyayı geri okuyunca artık onu uydurma saymıyor. Bir dosya ya da tablo hakkındaki soruya aynı cevap yaklaşık bir dakika sonra ikinci kez yazılmıyor."
     ],
     "pt": [
-      "Os complementos para documentos, planilhas, apresentações, PDFs, desenhos, fotos e vídeos foram atualizados para as versões mais recentes da equipe ArtCraft.",
-      "Um complemento que você já instalou se atualiza sozinho pouco depois de abrir o Vunemi. Se isso falhar, Ajustes › Complementos oferece a atualização de novo."
+      "O Vunemi agora converte arquivos do Word, PowerPoint, Excel e PDF, páginas da web e mais em arquivos Markdown que mantêm títulos e tabelas, para um app de notas ou outro assistente. Funciona no seu Mac sem acesso à rede e nunca substitui um arquivo.",
+      "Sem isso, o Vunemi lê esses arquivos como antes, mas as tabelas chegam como linhas soltas. O conversor é o MarkItDown da Microsoft, embutido com seu próprio Python: você não instala nada. Por isso o app e esta atualização ficaram maiores.",
+      "Quando o Vunemi lê de novo um arquivo que converteu, não o considera mais inventado. Uma pergunta sobre um arquivo ou uma planilha não recebe mais a mesma resposta uma segunda vez, cerca de um minuto depois."
     ],
     "ru": [
-      "Дополнения для документов, таблиц, презентаций, PDF, рисунков, фото и видео обновлены до последних версий от команды ArtCraft.",
-      "Уже установленное дополнение обновляется само вскоре после запуска Vunemi. Если это не удалось, обновление снова будет доступно в «Настройки › Дополнения»."
+      "Теперь Vunemi преобразует файлы Word, PowerPoint, Excel и PDF, веб-страницы и другое в файлы Markdown с заголовками и таблицами — например, для приложения заметок или другого ассистента. Это работает на вашем Mac без доступа к сети и никогда не заменяет файл.",
+      "Без этого Vunemi читает такие файлы как раньше, но таблицы приходят простыми строками. Преобразователь — MarkItDown от Microsoft, встроенный вместе со своим Python: устанавливать ничего не нужно. Поэтому приложение и это обновление стали больше.",
+      "Перечитывая преобразованный им файл, Vunemi больше не считает его выдуманным. На вопрос о файле или таблице больше не приходит тот же ответ второй раз, примерно через минуту."
     ],
     "zh": [
-      "文档、表格、演示文稿、PDF、绘图、照片和视频扩展已更新为 ArtCraft 团队的最新版本。",
-      "已安装的扩展会在 Vunemi 打开后不久自动更新。如果更新失败，可在“设置 › 扩展”中再次更新。"
+      "Vunemi 现在可以把 Word、PowerPoint、Excel 和 PDF 文件、网页等转换为保留标题和表格的 Markdown 文件，方便用于笔记应用或其他助手。转换在你的 Mac 上进行，不联网，也绝不替换任何文件。",
+      "不使用它时，Vunemi 照常读取这些文件，只是表格会变成普通的文本行。转换器是微软的 MarkItDown，连同它自己的 Python 一起内置在应用中，你无需安装任何东西；因此应用和这次更新的体积更大。",
+      "Vunemi 重新读取自己转换的文件时，不再把它当作编造的内容。关于文件或表格的问题，也不会在大约一分钟后再收到一遍相同的回答。"
     ],
     "ja": [
-      "文書、表計算、プレゼンテーション、PDF、描画、写真、動画のアドオンを、ArtCraft チームの最新バージョンに更新しました。",
-      "インストール済みのアドオンは、Vunemi を開いてしばらくすると自動で更新されます。うまくいかなかった場合は、「設定 › アドオン」から再度更新できます。"
+      "Word、PowerPoint、Excel、PDF のファイルや Web ページなどを、見出しと表を保った Markdown ファイルに変換できるようになりました。メモアプリや別のアシスタントで使えます。変換は Mac 上でネットワークに接続せずに行われ、ファイルを置き換えることはありません。",
+      "使わない場合も Vunemi はこれまでどおりこれらのファイルを読めますが、表はただの行になります。変換には Microsoft の MarkItDown を使い、専用の Python ごとアプリに組み込まれているため、何もインストールする必要はありません。その分、アプリとこのアップデートは大きくなります。",
+      "Vunemi が自分で変換したファイルを読み直したときに、作り話だと判断しなくなりました。ファイルやシートについての質問に、約 1 分後に同じ回答がもう一度表示されることもなくなりました。"
     ],
     "ko": [
-      "문서, 스프레드시트, 프레젠테이션, PDF, 그리기, 사진, 동영상 추가 기능이 ArtCraft 팀의 최신 버전으로 업데이트되었습니다.",
-      "이미 설치한 추가 기능은 Vunemi를 연 뒤 잠시 후 저절로 업데이트됩니다. 실패하면 설정 › 추가 기능에서 다시 업데이트할 수 있습니다."
+      "이제 Vunemi가 Word, PowerPoint, Excel, PDF 파일과 웹 페이지 등을 제목과 표를 유지한 Markdown 파일로 변환할 수 있습니다. 메모 앱이나 다른 어시스턴트에서 사용할 수 있습니다. 변환은 Mac에서 네트워크 없이 이루어지며 파일을 덮어쓰지 않습니다.",
+      "사용하지 않아도 Vunemi는 이전처럼 이 파일들을 읽지만 표는 단순한 줄로 들어옵니다. 변환기는 Microsoft의 MarkItDown이며 자체 Python과 함께 앱에 내장되어 있어 아무것도 설치할 필요가 없습니다. 그만큼 앱과 이번 업데이트의 크기가 커졌습니다.",
+      "Vunemi가 직접 변환한 파일을 다시 읽을 때 더 이상 지어낸 내용으로 판단하지 않습니다. 파일이나 시트에 관한 질문에 약 1분 뒤 같은 답변이 한 번 더 표시되는 일도 없어졌습니다."
     ]
   }
 }

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.2.9 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.3.0 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.2.9，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.3.0，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.2.9：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.3.0：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -138,7 +138,7 @@ export default {
     connIntro: "每个连接在你打开之前都是关闭的。关闭的连接对模型不可见，其工具根本无法调用。很多连接对“读取”和“修改”设有单独的开关。",
     partsLabel: "开关",
     connections: [
-      { name: "文件", body: "只限你的桌面、文稿和下载文件夹。移动文件时会保留备份，绝不会覆盖已经存在的文件。它还能创建和打开归档，“把这个文件夹压缩一下”可以直接在对话中完成；没有这项功能时，也可以在访达中手动完成。", parts: "读取 · 写入（可撤销；删除的内容进入废纸篓）· 转换（图片、音频、文档）" },
+      { name: "文件", body: "只限你的桌面、文稿和下载文件夹。移动文件时会保留备份，绝不会覆盖已经存在的文件。它还能创建和打开归档，“把这个文件夹压缩一下”可以直接在对话中完成；没有这项功能时，也可以在访达中手动完成。它还能把 Word、PowerPoint、Excel 和 PDF 文件、网页等转换为保留标题和表格的 Markdown，方便用于笔记应用或其他助手；转换在你的 Mac 上进行，不联网，也绝不替换任何文件。没有这项功能时，Vunemi 仍能读取这些文件，只是表格会变成普通的文本行。", parts: "读取 · 写入（可撤销；删除的内容进入废纸篓）· 转换（图片、音频、文档、Markdown）" },
       { name: "浏览器", body: "Vunemi 窗口中的浏览器，与你的 Chrome 或 Safari 分开。登录一次即可保持登录；随时可以接管控制。", parts: "读取网页 · 点击和输入" },
       { name: "航班和酒店", body: "在 Google Flights 和 Trivago 搜索，并以卡片展示结果。选择一张卡片即可在对话旁打开对应报价。你的航线或目的地、日期和人数会发送给 Google 或 Trivago。Vunemi 不会预订或付款。", parts: "Google Flights · Trivago" },
       { name: "邮件", body: "Mac 上“邮件”App 中的账户（无需密码）、Gmail（使用应用专用密码）、其他 IMAP/SMTP 账户，以及 Outlook（使用你自己的 Microsoft Entra 应用 ID）。发出的邮件会在发件箱等待 45 秒。一次性验证码和登录链接绝不会显示给模型。", parts: "读取 · 草稿 · 发送 · 整理" },
@@ -188,8 +188,9 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "文档、表格、演示文稿、PDF、绘图、照片和视频扩展已更新为 ArtCraft 团队的最新版本。",
-      "已安装的扩展会在 Vunemi 打开后不久自动更新。如果更新失败，可在“设置 › 扩展”中再次更新。",
+      "Vunemi 现在可以把 Word、PowerPoint、Excel 和 PDF 文件、网页等转换为保留标题和表格的 Markdown 文件，方便用于笔记应用或其他助手。转换在你的 Mac 上进行，不联网，也绝不替换任何文件。",
+      "不使用它时，Vunemi 照常读取这些文件，只是表格会变成普通的文本行。转换器是微软的 MarkItDown，连同它自己的 Python 一起内置在应用中，你无需安装任何东西；因此应用和这次更新的体积更大。",
+      "Vunemi 重新读取自己转换的文件时，不再把它当作编造的内容。关于文件或表格的问题，也不会在大约一分钟后再收到一遍相同的回答。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.2.9 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.3.0 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.2.9 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.3.0 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.2.9 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.3.0 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -140,7 +140,7 @@ export default {
     connIntro: "Each connection is off until you turn it on. A connection that is off is invisible to the model: its tools can't be called at all. Many have separate switches for reading and for changing.",
     partsLabel: "Switches",
     connections: [
-      { name: "Files", body: "Your Desktop, Documents and Downloads folders, nothing else. Moving a file keeps a backup and never overwrites a file that is already there. It also makes and opens archives, so “zip this folder” finishes in the chat; without that, Finder still does it by hand.", parts: "Reading · Writing (undoable; deletes go to the Trash) · Converting (images, audio, documents)" },
+      { name: "Files", body: "Your Desktop, Documents and Downloads folders, nothing else. Moving a file keeps a backup and never overwrites a file that is already there. It also makes and opens archives, so “zip this folder” finishes in the chat; without that, Finder still does it by hand. It can also turn Word, PowerPoint, Excel and PDF files, web pages and more into Markdown, keeping headings and tables, for a notes app or another assistant; this runs on your Mac without network access and never replaces a file. Without it, Vunemi still reads those files, but tables come through as plain lines.", parts: "Reading · Writing (undoable; deletes go to the Trash) · Converting (images, audio, documents, Markdown)" },
       { name: "Browser", body: "A browser inside Vunemi's window, separate from your Chrome or Safari. Sign in once and stay signed in; press Take control at any time.", parts: "Reading pages · Clicking and typing" },
       { name: "Flights and hotels", body: "Searches Google Flights and Trivago and shows the options as cards. Choosing a card opens its offer beside the chat. Your route or destination, dates and traveller count go to Google or Trivago. Vunemi does not book or pay.", parts: "Google Flights · Trivago" },
       { name: "Mail", body: "The accounts in the Mac's Mail app (no password needed), Gmail (with an app password), other IMAP/SMTP accounts, and Outlook (with your own Microsoft Entra app ID). Outgoing mail waits 45 seconds in the Outbox. One-time codes and sign-in links are never shown to the model.", parts: "Reading · Drafts · Sending · Organising" },
@@ -192,8 +192,9 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "The add-ons for documents, spreadsheets, presentations, PDFs, drawings, photos and video are updated to the latest versions from the ArtCraft team.",
-      "An add-on you already installed updates itself shortly after Vunemi opens. If that fails, Settings › Add-ons offers the update again.",
+      "Vunemi can now turn Word, PowerPoint, Excel and PDF files, web pages and more into Markdown files that keep their headings and tables, for a notes app or another assistant. It runs on your Mac without network access and never replaces a file.",
+      "Without it, Vunemi reads those files as before, but tables come through as plain lines. The converter is Microsoft's MarkItDown, built in with its own Python, so you install nothing; this makes the app and this update larger.",
+      "When Vunemi reads back a file it converted, it no longer calls it made up. A question about a file or a sheet no longer gets the same answer a second time, about a minute later.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],

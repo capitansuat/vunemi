@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: um assistente pessoal que roda no seu Mac", description: "O Vunemi ajuda nas tarefas do dia a dia. A IA roda no seu Mac, sem conta na nuvem do Vunemi. Você escolhe quais serviços externos conectar." },
-    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.2.9 faz." },
+    features: { title: "O que o Vunemi faz", description: "E-mail, agenda, arquivos, a web e seus apps do Mac, com cartões de aprovação, desfazer e limites claros. Tudo o que o Vunemi 0.3.0 faz." },
     screens: { title: "Telas do Vunemi", description: "Telas reais do app Vunemi para Mac, capturadas com dados de exemplo." },
-    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.2.9 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
+    download: { title: "Baixe o Vunemi para Mac", description: "Baixe o Vunemi 0.3.0 para Macs com Apple Silicon e macOS 14 ou posterior. Gratuito e de código aberto." },
   },
   hero: {
     eyebrow: "Assistente pessoal para Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tudo o que o Vunemi faz",
-    intro: "O Vunemi 0.2.9 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
+    intro: "O Vunemi 0.3.0 em detalhes: como você trabalha com ele, ao que ele se conecta e como você mantém o controle.",
     chatTitle: "Trabalhando com o Vunemi",
     chat: [
       { title: "Primeiro o plano", body: "Numa tarefa com vários passos, o Vunemi pode mostrar o plano antes. Siga em frente, edite os passos ou cancele." },
@@ -138,7 +138,7 @@ export default {
     connIntro: "Cada conexão fica desligada até você ligá-la. Uma conexão desligada é invisível para o modelo: suas ferramentas nem podem ser chamadas. Muitas têm chaves separadas para ler e para alterar.",
     partsLabel: "Chaves",
     connections: [
-      { name: "Arquivos", body: "Suas pastas Mesa, Documentos e Downloads, nada além disso. Ao mover um arquivo, uma cópia de segurança é guardada e um arquivo que já esteja lá nunca é substituído. Ele também cria e abre arquivos compactados, para que “compacte esta pasta” termine na conversa; sem isso, dá para fazer à mão no Finder.", parts: "Leitura · Gravação (dá para desfazer; o que for apagado vai para o Lixo) · Conversão (imagens, áudio, documentos)" },
+      { name: "Arquivos", body: "Suas pastas Mesa, Documentos e Downloads, nada além disso. Ao mover um arquivo, uma cópia de segurança é guardada e um arquivo que já esteja lá nunca é substituído. Ele também cria e abre arquivos compactados, para que “compacte esta pasta” termine na conversa; sem isso, dá para fazer à mão no Finder. Ele também converte para Markdown arquivos do Word, PowerPoint, Excel e PDF, páginas da web e mais, mantendo títulos e tabelas, para um app de notas ou outro assistente; isso acontece no seu Mac sem acesso à rede e nunca substitui um arquivo. Sem isso, o Vunemi continua lendo esses arquivos, mas as tabelas chegam como linhas soltas.", parts: "Leitura · Gravação (dá para desfazer; o que for apagado vai para o Lixo) · Conversão (imagens, áudio, documentos, Markdown)" },
       { name: "Navegador", body: "Um navegador dentro da janela do Vunemi, separado do seu Chrome ou Safari. Entre uma vez e continue conectado; assuma o controle quando quiser.", parts: "Leitura de páginas · Cliques e digitação" },
       { name: "Voos e hotéis", body: "Busca no Google Flights e no Trivago e mostra as opções como cartões. Ao escolher um cartão, a oferta abre ao lado do chat. Sua rota ou destino, as datas e o número de viajantes vão para o Google ou o Trivago. O Vunemi não reserva nem paga.", parts: "Google Flights · Trivago" },
       { name: "E-mail", body: "As contas do app Mail do seu Mac (sem senha), Gmail (com senha de app), outras contas IMAP/SMTP e Outlook (com seu próprio ID de aplicativo do Microsoft Entra). O e-mail enviado espera 45 segundos na Caixa de saída. Códigos de uso único e links de acesso nunca são mostrados ao modelo.", parts: "Leitura · Rascunhos · Envio · Organização" },
@@ -188,8 +188,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Novidades desta versão",
     highlights: [
-      "Os complementos para documentos, planilhas, apresentações, PDFs, desenhos, fotos e vídeos foram atualizados para as versões mais recentes da equipe ArtCraft.",
-      "Um complemento que você já instalou se atualiza sozinho pouco depois de abrir o Vunemi. Se isso falhar, Ajustes › Complementos oferece a atualização de novo.",
+      "O Vunemi agora converte arquivos do Word, PowerPoint, Excel e PDF, páginas da web e mais em arquivos Markdown que mantêm títulos e tabelas, para um app de notas ou outro assistente. Funciona no seu Mac sem acesso à rede e nunca substitui um arquivo.",
+      "Sem isso, o Vunemi lê esses arquivos como antes, mas as tabelas chegam como linhas soltas. O conversor é o MarkItDown da Microsoft, embutido com seu próprio Python: você não instala nada. Por isso o app e esta atualização ficaram maiores.",
+      "Quando o Vunemi lê de novo um arquivo que converteu, não o considera mais inventado. Uma pergunta sobre um arquivo ou uma planilha não recebe mais a mesma resposta uma segunda vez, cerca de um minuto depois.",
     ],
     title: "Baixe o Vunemi",
     intro: "Gratuito e de código aberto. Para Macs com Apple Silicon e macOS 14 ou posterior.",

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.2.9의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.3.0의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.2.9을 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.3.0을 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.2.9 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.3.0 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -138,7 +138,7 @@ export default {
     connIntro: "모든 연결은 켜기 전까지 꺼져 있습니다. 꺼진 연결은 모델에게 보이지 않으며, 그 도구는 아예 호출할 수 없습니다. 많은 연결이 읽기와 변경에 대해 스위치를 따로 둡니다.",
     partsLabel: "스위치",
     connections: [
-      { name: "파일", body: "데스크탑, 문서, 다운로드 폴더뿐, 다른 곳은 건드리지 않습니다. 파일을 옮길 때는 백업을 남기며, 이미 있는 파일을 덮어쓰지 않습니다. 압축 파일도 만들고 열 수 있어 “이 폴더를 압축해 줘”가 대화 안에서 끝납니다. 이 기능 없이도 Finder에서 직접 할 수 있습니다.", parts: "읽기 · 쓰기(되돌리기 가능, 삭제한 항목은 휴지통으로) · 변환(이미지, 오디오, 문서)" },
+      { name: "파일", body: "데스크탑, 문서, 다운로드 폴더뿐, 다른 곳은 건드리지 않습니다. 파일을 옮길 때는 백업을 남기며, 이미 있는 파일을 덮어쓰지 않습니다. 압축 파일도 만들고 열 수 있어 “이 폴더를 압축해 줘”가 대화 안에서 끝납니다. 이 기능 없이도 Finder에서 직접 할 수 있습니다. Word, PowerPoint, Excel, PDF 파일과 웹 페이지 등을 제목과 표를 유지한 Markdown으로 변환할 수도 있습니다. 메모 앱이나 다른 어시스턴트에서 쓰기 위한 것으로, 변환은 Mac에서 네트워크 없이 이루어지며 파일을 덮어쓰지 않습니다. 이 기능 없이도 Vunemi는 이 파일들을 읽지만 표는 단순한 줄로 들어옵니다.", parts: "읽기 · 쓰기(되돌리기 가능, 삭제한 항목은 휴지통으로) · 변환(이미지, 오디오, 문서, Markdown)" },
       { name: "브라우저", body: "Chrome이나 Safari와 분리된, Vunemi 창 안의 브라우저입니다. 한 번 로그인하면 계속 유지되고, 언제든 직접 조작할 수 있습니다.", parts: "페이지 읽기 · 클릭과 입력" },
       { name: "항공편과 호텔", body: "Google Flights와 Trivago에서 검색해 결과를 카드로 보여 줍니다. 카드를 선택하면 해당 제안이 채팅 옆에 열립니다. 경로나 목적지, 날짜, 인원수는 Google 또는 Trivago로 전송됩니다. Vunemi는 예약하거나 결제하지 않습니다.", parts: "Google Flights · Trivago" },
       { name: "이메일", body: "Mac의 Mail 앱에 있는 계정(암호 불필요), Gmail(앱 비밀번호 사용), 기타 IMAP/SMTP 계정, Outlook(본인의 Microsoft Entra 앱 ID 사용). 보내는 메일은 보낼 편지함에서 45초간 대기합니다. 일회용 코드와 로그인 링크는 모델에게 절대 보여 주지 않습니다.", parts: "읽기 · 초안 · 보내기 · 정리" },
@@ -188,8 +188,9 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "문서, 스프레드시트, 프레젠테이션, PDF, 그리기, 사진, 동영상 추가 기능이 ArtCraft 팀의 최신 버전으로 업데이트되었습니다.",
-      "이미 설치한 추가 기능은 Vunemi를 연 뒤 잠시 후 저절로 업데이트됩니다. 실패하면 설정 › 추가 기능에서 다시 업데이트할 수 있습니다.",
+      "이제 Vunemi가 Word, PowerPoint, Excel, PDF 파일과 웹 페이지 등을 제목과 표를 유지한 Markdown 파일로 변환할 수 있습니다. 메모 앱이나 다른 어시스턴트에서 사용할 수 있습니다. 변환은 Mac에서 네트워크 없이 이루어지며 파일을 덮어쓰지 않습니다.",
+      "사용하지 않아도 Vunemi는 이전처럼 이 파일들을 읽지만 표는 단순한 줄로 들어옵니다. 변환기는 Microsoft의 MarkItDown이며 자체 Python과 함께 앱에 내장되어 있어 아무것도 설치할 필요가 없습니다. 그만큼 앱과 이번 업데이트의 크기가 커졌습니다.",
+      "Vunemi가 직접 변환한 파일을 다시 읽을 때 더 이상 지어낸 내용으로 판단하지 않습니다. 파일이나 시트에 관한 질문에 약 1분 뒤 같은 답변이 한 번 더 표시되는 일도 없어졌습니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",

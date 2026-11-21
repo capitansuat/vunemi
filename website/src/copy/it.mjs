@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un assistente personale che funziona sul tuo Mac", description: "Vunemi aiuta nelle attività quotidiane. L’IA funziona sul tuo Mac, senza account cloud Vunemi. Scegli tu quali servizi esterni collegare." },
-    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.2.9." },
+    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.3.0." },
     screens: { title: "Schermate di Vunemi", description: "Schermate reali dell'app Vunemi per Mac, catturate con dati di esempio." },
-    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.2.9 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
+    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.3.0 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
   },
   hero: {
     eyebrow: "Assistente personale per Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tutto ciò che Vunemi sa fare",
-    intro: "Vunemi 0.2.9 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
+    intro: "Vunemi 0.3.0 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
     chatTitle: "Lavorare con Vunemi",
     chat: [
       { title: "Prima il piano", body: "Per un'attività con più passaggi, Vunemi può mostrarti prima il piano. Vai avanti, modifica i passaggi o annulla." },
@@ -138,7 +138,7 @@ export default {
     connIntro: "Ogni connessione resta spenta finché non la attivi. Una connessione spenta è invisibile al modello: i suoi strumenti non si possono proprio usare. Molte hanno interruttori separati per leggere e per modificare.",
     partsLabel: "Interruttori",
     connections: [
-      { name: "File", body: "Le cartelle Scrivania, Documenti e Download, nient'altro. Spostando un file si conserva una copia di backup e non si sovrascrive mai un file già presente. Crea e apre anche archivi, così «comprimi questa cartella» si conclude nella chat; altrimenti lo fai a mano nel Finder.", parts: "Lettura · Scrittura (annullabile; ciò che elimini va nel Cestino) · Conversione (immagini, audio, documenti)" },
+      { name: "File", body: "Le cartelle Scrivania, Documenti e Download, nient'altro. Spostando un file si conserva una copia di backup e non si sovrascrive mai un file già presente. Crea e apre anche archivi, così «comprimi questa cartella» si conclude nella chat; altrimenti lo fai a mano nel Finder. Converte anche in Markdown file Word, PowerPoint, Excel e PDF, pagine web e altro, mantenendo titoli e tabelle, per un’app di note o un altro assistente; lo fa sul tuo Mac senza accesso alla rete e non sostituisce mai un file. Senza, Vunemi legge comunque questi file, ma le tabelle arrivano come semplici righe.", parts: "Lettura · Scrittura (annullabile; ciò che elimini va nel Cestino) · Conversione (immagini, audio, documenti, Markdown)" },
       { name: "Browser", body: "Un browser nella finestra di Vunemi, separato dal tuo Chrome o Safari. Accedi una volta e resti connesso; prendi il controllo quando vuoi.", parts: "Lettura delle pagine · Clic e digitazione" },
       { name: "Voli e hotel", body: "Cerca su Google Flights e Trivago e mostra le opzioni come schede. Scegliendo una scheda, la sua offerta si apre accanto alla chat. Tratta o destinazione, date e numero di viaggiatori vanno a Google o a Trivago. Vunemi non prenota e non paga.", parts: "Google Flights · Trivago" },
       { name: "Email", body: "Gli account dell'app Mail del tuo Mac (senza password), Gmail (con password per app), altri account IMAP/SMTP e Outlook (con il tuo ID applicazione Microsoft Entra). La posta in uscita aspetta 45 secondi nella Posta in uscita. Codici monouso e link di accesso non vengono mai mostrati al modello.", parts: "Lettura · Bozze · Invio · Organizzazione" },
@@ -188,8 +188,9 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
-      "I componenti aggiuntivi per documenti, fogli di calcolo, presentazioni, PDF, disegni, foto e video passano alle ultime versioni del team ArtCraft.",
-      "Un componente aggiuntivo già installato si aggiorna da solo poco dopo l'apertura di Vunemi. Se non riesce, Impostazioni › Componenti aggiuntivi propone di nuovo l'aggiornamento.",
+      "Vunemi ora converte file Word, PowerPoint, Excel e PDF, pagine web e altro in file Markdown che mantengono titoli e tabelle, per un’app di note o un altro assistente. Funziona sul tuo Mac senza accesso alla rete e non sostituisce mai un file.",
+      "Senza, Vunemi legge questi file come prima, ma le tabelle arrivano come semplici righe. Il convertitore è MarkItDown di Microsoft, integrato con un suo Python: non devi installare nulla. Per questo l’app e questo aggiornamento sono più grandi.",
+      "Quando Vunemi rilegge un file che ha convertito, non lo considera più inventato. Una domanda su un file o un foglio non riceve più la stessa risposta una seconda volta, circa un minuto dopo.",
     ],
     title: "Scarica Vunemi",
     intro: "Gratuito e open source. Per Mac con Apple Silicon e macOS 14 o successivo.",

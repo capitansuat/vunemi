@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.2.9'un yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.3.0'ın yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.2.9'u Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.3.0'ı Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.2.9: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.3.0: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -138,7 +138,7 @@ export default {
     connIntro: "Her bağlantı sen açana kadar kapalıdır. Kapalı bir bağlantı modele görünmez; araçları hiç çağrılamaz. Birçoğunda okuma ve değiştirme için ayrı anahtarlar var.",
     partsLabel: "Anahtarlar",
     connections: [
-      { name: "Dosyalar", body: "Masaüstü, Belgeler ve İndirilenler klasörlerin; başka hiçbir yer. Bir dosyayı taşırken yedek alınır ve orada zaten olan bir dosyanın üzerine asla yazılmaz. Arşiv de oluşturup açar, böylece “bu klasörü zip'le” sohbette biter; bu olmadan Finder'la elle yapılır.", parts: "Okuma · Yazma (geri alınabilir; silinenler Çöp'e gider) · Dönüştürme (resim, ses, belge)" },
+      { name: "Dosyalar", body: "Masaüstü, Belgeler ve İndirilenler klasörlerin; başka hiçbir yer. Bir dosyayı taşırken yedek alınır ve orada zaten olan bir dosyanın üzerine asla yazılmaz. Arşiv de oluşturup açar, böylece “bu klasörü zip'le” sohbette biter; bu olmadan Finder'la elle yapılır. Word, PowerPoint, Excel ve PDF dosyalarını, web sayfalarını ve daha fazlasını başlıkları ve tablolarıyla Markdown'a da çevirir; not uygulaması ya da başka bir asistan için. Bu iş Mac'inde, ağa çıkmadan yapılır ve hiçbir dosyanın yerine yazılmaz. Bu olmadan da Vunemi bu dosyaları okur, ama tablolar düz satır olarak gelir.", parts: "Okuma · Yazma (geri alınabilir; silinenler Çöp'e gider) · Dönüştürme (resim, ses, belge, Markdown)" },
       { name: "Tarayıcı", body: "Chrome veya Safari'nden ayrı, Vunemi penceresindeki bir tarayıcı. Bir kez giriş yap, oturumun açık kalsın; istediğin an Kontrolü al.", parts: "Sayfa okuma · Tıklama ve yazma" },
       { name: "Uçuş ve otel", body: "Google Flights ve Trivago'da arar, seçenekleri kart olarak gösterir. Bir kartı seçince teklifi sohbetin yanında açılır. Rotan ya da gideceğin yer, tarihler ve kişi sayısı Google'a ya da Trivago'ya gider. Vunemi rezervasyon ya da ödeme yapmaz.", parts: "Google Flights · Trivago" },
       { name: "E-posta", body: "Mac'teki Mail uygulamasındaki hesaplar (parola gerekmez), Gmail (uygulama şifresiyle), diğer IMAP/SMTP hesapları ve Outlook (kendi Microsoft Entra uygulama kimliğinle). Giden e-posta Giden Kutusu'nda 45 saniye bekler. Tek kullanımlık kodlar ve giriş bağlantıları modele asla gösterilmez.", parts: "Okuma · Taslak · Gönderme · Düzenleme" },
@@ -190,8 +190,9 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Belge, tablo, sunum, PDF, çizim, fotoğraf ve video eklentileri ArtCraft ekibinin en son sürümlerine güncellendi.",
-      "Kurulu bir eklenti, Vunemi açıldıktan kısa süre sonra kendiliğinden güncellenir. Bu olmazsa Ayarlar › Eklentiler güncellemeyi yeniden sunar.",
+      "Vunemi artık Word, PowerPoint, Excel ve PDF dosyalarını, web sayfalarını ve daha fazlasını başlıkları ve tablolarıyla Markdown dosyasına çevirebiliyor; not uygulaması ya da başka bir asistan için. Mac'inde, ağa çıkmadan çalışır ve hiçbir dosyanın yerine yazmaz.",
+      "Bu olmadan Vunemi bu dosyaları eskisi gibi okur, ama tablolar düz satır olarak gelir. Dönüştürücü Microsoft'un MarkItDown'ı; kendi Python'uyla uygulamanın içinde, yani hiçbir şey kurman gerekmez. Bu yüzden uygulama ve bu güncelleme daha büyük.",
+      "Vunemi çevirdiği bir dosyayı geri okuyunca artık onu uydurma saymıyor. Bir dosya ya da tablo hakkındaki soruya aynı cevap yaklaşık bir dakika sonra ikinci kez yazılmıyor.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],
