@@ -8,7 +8,7 @@
  */
 
 import { readFileSync, renameSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { DEFAULT_POLICY, type Autonomy, type AutonomyPolicy } from "@vunemi/agent-core";
 import type { McpServerConfig } from "@vunemi/mcp";
 import { validateMailConfig, type ImapSmtpConfig } from "@vunemi/mail";
@@ -96,6 +96,11 @@ export interface Settings {
    * VunemiMeetings, which reads this key itself. Off unless the user turns it on.
    */
   meetingsShared: boolean;
+  /**
+   * The topics folder (topics/store.ts), once it was made: named in the app's
+   * language then, and kept where it is if the language changes later.
+   */
+  topicsFolder?: string;
   /**
    * The automation library (its page, the recipes, the summary before a
    * task is set up). Off, with no switch in the window yet: it is turned on
@@ -187,6 +192,15 @@ export class SettingsStore {
 
   setMeetingsShared(on: boolean): void {
     this.replace({ ...this.current, meetingsShared: on });
+  }
+
+  get topicsFolder(): string | undefined {
+    return this.current.topicsFolder;
+  }
+
+  setTopicsFolder(path: string): void {
+    if (!isAbsolute(path)) throw new Error("The topics folder must be a full path.");
+    this.replace({ ...this.current, topicsFolder: path });
   }
 
   setPolicy(policy: AutonomyPolicy, planBeforeRun = false): void {
@@ -295,7 +309,7 @@ export class SettingsStore {
    * to read, nor stopped wanting the door shut.
    */
   reset(): void {
-    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, searchLocation: this.searchLocation, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck, meetingSpeakers: false, meetingsShared: false, automationLibrary: this.current.automationLibrary });
+    this.replace({ connections: {}, mcpServers: [], policy: { ...DEFAULT_POLICY }, planBeforeRun: false, mailAccounts: [], modelSettings: DEFAULT_MODEL_SETTINGS, language: this.current.language, searchLocation: this.searchLocation, appLock: this.current.appLock, trustedSites: [], appearance: this.current.appearance, updatesCheck: this.current.updatesCheck, meetingSpeakers: false, meetingsShared: false, automationLibrary: this.current.automationLibrary, ...(this.current.topicsFolder && { topicsFolder: this.current.topicsFolder }) });
   }
 
   private replace(next: Settings): void {
@@ -355,7 +369,7 @@ export class SettingsStore {
       const language = stored === undefined ? "tr" : isLocale(stored) ? stored : null;
       let searchLocation: SearchLocation = { country: null, city: null };
       try { searchLocation = validateSearchLocation((parsed as Settings).searchLocation); } catch { /* Missing/invalid profile does not imply any geography. */ }
-      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, searchLocation, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false, meetingSpeakers: (parsed as Settings).meetingSpeakers === true, meetingsShared: (parsed as Settings).meetingsShared === true, automationLibrary: (parsed as Settings).automationLibrary === true };
+      return { connections: clean, mcpServers: servers.filter(isServer), policy: validPolicy(policy) ? closeMoney(policy) : { ...DEFAULT_POLICY }, planBeforeRun: (parsed as Settings).planBeforeRun === true, mailAccounts, modelSettings, language, searchLocation, appLock: (parsed as Settings).appLock === true, trustedSites: cleanSites((parsed as Settings).trustedSites), appearance: isAppearance((parsed as Settings).appearance) ? (parsed as Settings).appearance : "system", updatesCheck: (parsed as Settings).updatesCheck !== false, meetingSpeakers: (parsed as Settings).meetingSpeakers === true, meetingsShared: (parsed as Settings).meetingsShared === true, automationLibrary: (parsed as Settings).automationLibrary === true, ...(typeof (parsed as Settings).topicsFolder === "string" && isAbsolute((parsed as Settings).topicsFolder!) && { topicsFolder: (parsed as Settings).topicsFolder }) };
     } catch (err) {
       // No file yet is a first launch. A file that can't be read is not.
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { ...EMPTY };

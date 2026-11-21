@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "Loslassen: Die Datei wird an die Nachricht angehängt, und der Agent kann nur sie lesen.",
     removeFile: "Anhang {name} entfernen",
     mention: {
-      label: "Sitzung oder Besprechung einfügen",
-      none: "Keine passende Sitzung oder Besprechung",
+      label: "Sitzung oder Besprechung einfügen oder Thema wählen",
+      none: "Keine passende Sitzung, Besprechung oder Thema",
       full: "Pro Nachricht höchstens 5",
       remove: "{name} entfernen",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi Gedächtnis", gone: "Dieses Thema ist nicht mehr im Gedächtnisordner.", ask: { question: "Soll ich dieses Gespräch im Thema „{topic}“ festhalten?", why: "Ich notiere dort, was es wert ist, behalten zu werden; du kannst es lesen und ändern.", yes: "Ja, dort festhalten", no: "Nein", linked: "Dieses Gespräch gehört zum Thema „{topic}“.", expired: "Diese Frage ist nicht mehr offen." }, chip: { title: "Dieses Gespräch gehört zum Thema „{topic}“", remove: "Dieses Gespräch aus „{topic}“ herausnehmen" }, preview: { create: "Thema „{topic}“ anlegen und dieses Gespräch hinzufügen", use: "Dieses Gespräch zum Thema „{topic}“ hinzufügen" }, undo: { restore: "Notiz „{title}“ wiederherstellen", remove: "Notiz „{title}“ entfernen", sources: {"one":"Hinzugefügte Quelle entfernen","other":"{count} hinzugefügte Quellen entfernen"} } },
   workNotes: { saved: "Notiz gespeichert: {title}", delete: "Notiz löschen", title: "Notizen · {name}", open: "Notizen von {name}", empty: "Noch keine Notizen. Vunemi notiert hier Entscheidungen und Ergebnisse, die spätere Unterhaltungen in diesem Projekt kennen sollten.", outside: "Hat fremde Inhalte gesehen: {sources}" },
   modelsMemory: { title: "Jetzt im Speicher", chat: "Chatmodell", meaning: "Bedeutungssuche", voice: "Spracherkennung", notLoaded: "nicht geladen", unmeasured: "nicht messbar", summary: "Dieser Mac: {total} · jetzt frei: {available}", unloaded: "{time} · Speicher wurde knapp; entladen: {names}", lowered: "{time} · Kontext auf {context} gesenkt" },
   soul: {

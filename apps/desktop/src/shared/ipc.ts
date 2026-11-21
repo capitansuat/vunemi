@@ -19,8 +19,15 @@ export type { ConnectorView, PrivacyPane };
 export type { MentionRef, TaskPermissionOfferView, TaskPermissionView, TaskPermissionsSnapshot, TaskPermissionRevokeRequest };
 export type ScopedApprovalRequest={sessionId:string;runId:string;callId:string;decision:{kind:"approve_run";offerId:string;offerRevision:number}};
 
-/** Something "@" can bring into a message, as the menu lists it. An untitled meeting has an empty title. */
-export interface MentionItem extends MentionRef {
+/**
+ * Something "@" offers, as the menu lists it: a conversation or meeting to
+ * bring into a message, or a topic to put the conversation in (its id is its
+ * name). An untitled meeting has an empty title.
+ */
+export interface MentionItem {
+  kind: MentionRef["kind"] | "topic";
+  id: string;
+  title: string;
   /** When it was last worked on, or held. */
   at: number;
 }
@@ -50,6 +57,8 @@ export interface SessionSummary {
   interrupted?: { steps: number; at: number };
   /** The project it belongs to, if any. */
   projectId?: string;
+  /** The topic it is in, if any. */
+  topic?: string;
 }
 
 /** A project as the sidebar shows it. */
@@ -131,6 +140,8 @@ export interface SessionList {
   sessions: SessionSummary[];
   /** The project the current conversation works in, if any. */
   project?: string;
+  /** The topic the current conversation is in, if any. */
+  topic?: string;
   projects: ProjectView[];
 }
 
@@ -666,6 +677,10 @@ export interface VunemiApi {
   modelsMemory(): Promise<ModelsMemoryView>;
   /** The user's answer to a note proposed under a reply; `text` when they edited it. */
   resolveMemory(runId: string, proposalId: string, decision: "saved" | "skipped", text?: string): Promise<void>;
+  /** The user's answer to "Shall I keep this conversation in …?" */
+  resolveTopic(runId: string, decision: "linked" | "skipped"): Promise<void>;
+  /** Puts the open conversation in a topic, by name, or takes it out (null). */
+  setTopic(name: string | null): Promise<SessionList>;
   memorySearch(): Promise<MemorySearchStatus>;
   memorySearchDownload(): Promise<MemorySearchStatus>;
   memorySearchCancel(): Promise<void>;
@@ -932,6 +947,8 @@ export const CH = {
   workNotesDelete: "workNotes:delete",
   modelsMemory: "models:memory",
   memoryResolve: "memory:resolve",
+  topicsResolve: "topics:resolve",
+  topicsSet: "topics:set",
   memorySearch: "memory:search",
   memorySearchDownload: "memory:search-download",
   memorySearchCancel: "memory:search-cancel",

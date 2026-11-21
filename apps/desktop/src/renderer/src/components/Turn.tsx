@@ -16,6 +16,7 @@ import { TaskSummary } from "./TaskSummary.js";
 import type { TaskRecord } from "@vunemi/agent-core";
 import { PlanCard } from "./PlanCard.js";
 import { MemoryNotice, MemoryProposals } from "./MemoryNotes.js";
+import { TopicAsk } from "./TopicAsk.js";
 import { SavedNotes } from "./WorkNotes.js";
 import { Markdown } from "./Markdown.js";
 import { useStore } from "../store.js";
@@ -109,6 +110,7 @@ export const Turn = memo(function Turn({ run, replies, task, recovery = false, a
       {run.lowered && <Lowered l={run.lowered} />}
       {!live && run.memory && run.memory.given.length > 0 && <MemoryNotice notes={run.memory.given} />}
       {run.memory && run.memory.proposals.length > 0 && <MemoryProposals runId={run.runId} proposals={run.memory.proposals} />}
+      {run.topicAsk && <TopicAsk runId={run.runId} ask={run.topicAsk} />}
       {run.notes && run.notes.length > 0 && <SavedNotes notes={run.notes} />}
       {run.compaction && <Compaction c={run.compaction} />}
       {active && run.status === "running" && run.approvedAll && <ApprovedAllRow runId={run.runId} />}

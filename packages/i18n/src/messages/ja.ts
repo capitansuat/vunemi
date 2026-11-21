@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "ドロップ：ファイルがメッセージに添付され、エージェントはそのファイルだけを読めます。",
     removeFile: "添付ファイル {name} を削除",
     mention: {
-      label: "セッションや会議を取り込む",
-      none: "一致するセッションや会議がありません",
+      label: "セッションや会議を取り込む、またはトピックを選ぶ",
+      none: "一致するセッション、会議、トピックがありません",
       full: "1 つのメッセージに 5 つまで",
       remove: "{name} を削除",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi メモリ", gone: "そのトピックはもうメモリフォルダにありません。", ask: { question: "この会話をトピック「{topic}」に入れておきますか？", why: "残す価値のあることをそこにメモします。あなたも読んだり変更したりできます。", yes: "はい、入れておきます", no: "いいえ", linked: "この会話は「{topic}」に入っています。", expired: "この質問はもう受け付けていません。" }, chip: { title: "この会話はトピック「{topic}」に入っています", remove: "この会話を「{topic}」から外す" }, preview: { create: "トピック「{topic}」を作成してこの会話を追加", use: "この会話をトピック「{topic}」に追加" }, undo: { restore: "メモ「{title}」を元に戻す", remove: "メモ「{title}」を削除", sources: {"other":"追加した {count} 件のソースを削除"} } },
   workNotes: { saved: "メモを保存しました：{title}", delete: "メモを削除", title: "メモ · {name}", open: "{name} のメモ", empty: "まだメモはありません。Vunemi は、このプロジェクトの今後の会話が知っておくべき決定や発見をここに記録します。", outside: "外部のコンテンツを参照：{sources}" },
   modelsMemory: { title: "現在メモリ上", chat: "チャットモデル", meaning: "意味検索", voice: "音声認識", notLoaded: "未読み込み", unmeasured: "測定できません", summary: "この Mac：{total} · 現在の空き：{available}", unloaded: "{time} · メモリ不足のため解放：{names}", lowered: "{time} · コンテキストを {context} に縮小" },
   soul: {

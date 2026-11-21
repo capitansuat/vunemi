@@ -1,10 +1,10 @@
 /**
  * What "@" in the message box offers: earlier conversations and meetings to
- * bring into this message. It only shows and reports a pick; the composer
+ * bring into this message, and topics to put the conversation in. It only shows and reports a pick; the composer
  * owns the keys, since the text box keeps the focus throughout.
  */
 
-import { MessageSquare, Users } from "lucide-react";
+import { BookMarked, MessageSquare, Users } from "lucide-react";
 import { formatDate, t } from "@vunemi/i18n";
 import type { MentionItem } from "../../../shared/ipc.js";
 
@@ -14,6 +14,7 @@ export interface MenuItem extends MentionItem {
 }
 
 export function MentionIcon({ kind, size = 13 }: { kind: MentionItem["kind"]; size?: number }) {
+  if (kind === "topic") return <BookMarked size={size} className="shrink-0" />;
   return kind === "meeting" ? <Users size={size} className="shrink-0" /> : <MessageSquare size={size} className="shrink-0" />;
 }
 
@@ -37,7 +38,7 @@ export function MentionMenu({
       aria-label={t("composer.mention.label")}
       className="absolute bottom-full left-0 z-20 mb-2 w-[min(420px,100%)] rounded-xl border border-line bg-surface p-1.5 shadow-2xl"
     >
-      {full || items.length === 0 ? (
+      {items.length === 0 ? (
         <p className="px-2.5 py-1.5 text-[12.5px] text-faint">{t(full ? "composer.mention.full" : "composer.mention.none")}</p>
       ) : (
         items.map((item, index) => (

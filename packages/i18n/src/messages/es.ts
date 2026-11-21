@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "Suelta: el archivo se adjunta al mensaje y el agente solo puede leer ese archivo.",
     removeFile: "Quitar el adjunto {name}",
     mention: {
-      label: "Traer una sesión o reunión",
-      none: "Ninguna sesión o reunión coincide",
+      label: "Traer una sesión o reunión, o elegir un tema",
+      none: "Ninguna sesión, reunión o tema coincide",
       full: "Como máximo 5 por mensaje",
       remove: "Quitar {name}",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi Memoria", gone: "Ese tema ya no está en la carpeta de memoria.", ask: { question: "¿Guardo esta conversación en el tema «{topic}»?", why: "Anotaré allí lo que valga la pena conservar; podrás leerlo y cambiarlo.", yes: "Sí, guárdala ahí", no: "No", linked: "Esta conversación está en «{topic}».", expired: "Esta pregunta ya no está abierta." }, chip: { title: "Esta conversación está en el tema «{topic}»", remove: "Sacar esta conversación de «{topic}»" }, preview: { create: "Crear el tema «{topic}» y poner esta conversación en él", use: "Poner esta conversación en el tema «{topic}»" }, undo: { restore: "Restaurar la nota «{title}»", remove: "Quitar la nota «{title}»", sources: {"one":"Quitar la fuente añadida","other":"Quitar las {count} fuentes añadidas"} } },
   workNotes: { saved: "Nota guardada: {title}", delete: "Eliminar nota", title: "Notas · {name}", open: "Notas de {name}", empty: "Aún no hay notas. Vunemi anota aquí las decisiones y los hallazgos que las próximas conversaciones de este proyecto deben conocer.", outside: "Vio contenido externo: {sources}" },
   modelsMemory: { title: "Ahora en memoria", chat: "Modelo de chat", meaning: "Búsqueda por significado", voice: "Reconocimiento de voz", notLoaded: "sin cargar", unmeasured: "no se pudo medir", summary: "Este Mac: {total} · libre ahora: {available}", unloaded: "{time} · faltó memoria; descargado: {names}", lowered: "{time} · contexto reducido a {context}" },
   soul: {

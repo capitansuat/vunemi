@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "Déposez : le fichier est joint au message, et l’agent ne peut lire que lui.",
     removeFile: "Retirer la pièce jointe {name}",
     mention: {
-      label: "Ajouter une session ou une réunion",
-      none: "Aucune session ni réunion ne correspond",
+      label: "Ajouter une session ou une réunion, ou choisir un sujet",
+      none: "Aucune session, réunion ni sujet ne correspond",
       full: "5 au maximum par message",
       remove: "Retirer {name}",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi Mémoire", gone: "Ce sujet n’est plus dans le dossier de mémoire.", ask: { question: "Dois-je garder cette conversation dans le sujet « {topic} » ?", why: "J’y noterai ce qui mérite d’être gardé ; vous pourrez le lire et le modifier.", yes: "Oui, la garder là", no: "Non", linked: "Cette conversation est dans « {topic} ».", expired: "Cette question n’est plus ouverte." }, chip: { title: "Cette conversation est dans le sujet « {topic} »", remove: "Retirer cette conversation de « {topic} »" }, preview: { create: "Créer le sujet « {topic} » et y placer cette conversation", use: "Placer cette conversation dans le sujet « {topic} »" }, undo: { restore: "Rétablir la note « {title} »", remove: "Supprimer la note « {title} »", sources: {"one":"Retirer la source ajoutée","other":"Retirer les {count} sources ajoutées"} } },
   workNotes: { saved: "Note enregistrée : {title}", delete: "Supprimer la note", title: "Notes · {name}", open: "Notes de {name}", empty: "Pas encore de notes. Vunemi note ici les décisions et les trouvailles que les conversations suivantes de ce projet doivent connaître.", outside: "A vu du contenu extérieur : {sources}" },
   modelsMemory: { title: "En mémoire", chat: "Modèle de discussion", meaning: "Recherche par le sens", voice: "Reconnaissance vocale", notLoaded: "non chargé", unmeasured: "mesure impossible", summary: "Ce Mac : {total} · disponible : {available}", unloaded: "{time} · mémoire insuffisante ; déchargé : {names}", lowered: "{time} · contexte réduit à {context}" },
   soul: {

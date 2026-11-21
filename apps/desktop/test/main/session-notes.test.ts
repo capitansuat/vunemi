@@ -2,15 +2,15 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AgentEvent, ChatMessage, RunResult } from "@vunemi/agent-core";
 
-const seen: { goal: string; notesIndex?: string }[] = [];
+const seen: { goal: string; notesIndex?: string; wantAreas?: readonly string[] }[] = [];
 
 vi.mock("@vunemi/agent-core", async (importOriginal) => {
   const real = await importOriginal<typeof import("@vunemi/agent-core")>();
   return {
     ...real,
     createModel: (spec: string) => ({ id: spec, contextWindow: async () => 100_000, chat: async () => ({ text: "", toolCalls: [], usage: {} }) }),
-    runAgent: async (opts: { goal: string; notesIndex?: string; history?: ChatMessage[]; emit: (e: AgentEvent) => void }): Promise<RunResult> => {
-      seen.push({ goal: opts.goal, ...(opts.notesIndex && { notesIndex: opts.notesIndex }) });
+    runAgent: async (opts: { goal: string; notesIndex?: string; wantAreas?: readonly string[]; history?: ChatMessage[]; emit: (e: AgentEvent) => void }): Promise<RunResult> => {
+      seen.push({ goal: opts.goal, ...(opts.notesIndex && { notesIndex: opts.notesIndex }), ...(opts.wantAreas && { wantAreas: opts.wantAreas }) });
       const runId = `r${seen.length}`;
       opts.emit({ type: "run.started", runId, goal: opts.goal, model: "m", at: 0 });
       opts.emit({ type: "run.finished", runId, status: "done", detail: "", at: 0 });
@@ -41,5 +41,27 @@ describe("notes index in a conversation", () => {
     await session.start("yeni konuşma", "lmstudio:m");
     expect(seen.map((s) => s.notesIndex ?? null)).toEqual(["INDEX", null, "INDEX"]);
     expect(asked).toBe(2);
+  });
+
+  it("gives a topic's notes once it is joined, again for another topic, and keeps its tools at hand", async () => {
+    seen.length = 0;
+    let topic: string | null = null;
+    const session = new AgentSession({
+      tools: { list: () => [], get: () => undefined, register: () => {} } as never,
+      emit: () => {},
+      authorize: async () => ({ kind: "allow" }) as never,
+      onUntrustedOutput: () => {},
+      grants: new Set<string>(),
+      notesIndex: () => "PROJECT",
+      topicIndex: () => (topic ? { topic, text: `TOPIC ${topic}`, area: "topics" } : null),
+    });
+    await session.start("one", "lmstudio:m");
+    topic = "Home renovation";
+    await session.start("two", "lmstudio:m");
+    await session.start("three", "lmstudio:m");
+    topic = "Taxes";
+    await session.start("four", "lmstudio:m");
+    expect(seen.map((s) => s.notesIndex ?? null)).toEqual(["PROJECT", "TOPIC Home renovation", null, "TOPIC Taxes"]);
+    expect(seen.map((s) => s.wantAreas ?? null)).toEqual([null, ["topics"], ["topics"], ["topics"]]);
   });
 });

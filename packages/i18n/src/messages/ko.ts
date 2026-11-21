@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "놓기: 파일이 메시지에 첨부되며, 에이전트는 그 파일만 읽을 수 있습니다.",
     removeFile: "첨부 파일 {name} 제거",
     mention: {
-      label: "세션이나 회의 가져오기",
-      none: "일치하는 세션이나 회의가 없습니다",
+      label: "세션이나 회의 가져오기, 또는 주제 선택",
+      none: "일치하는 세션, 회의, 주제가 없습니다",
       full: "메시지 하나에 최대 5개",
       remove: "{name} 제거",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi 메모리", gone: "그 주제는 더 이상 메모리 폴더에 없습니다.", ask: { question: "이 대화를 ‘{topic}’ 주제에 넣어 둘까요?", why: "남길 만한 내용을 그곳에 메모하겠습니다. 직접 읽고 바꿀 수 있습니다.", yes: "예, 넣어 둡니다", no: "아니요", linked: "이 대화는 ‘{topic}’ 주제에 있습니다.", expired: "이 질문은 더 이상 열려 있지 않습니다." }, chip: { title: "이 대화는 ‘{topic}’ 주제에 있습니다", remove: "이 대화를 ‘{topic}’에서 빼기" }, preview: { create: "‘{topic}’ 주제를 만들고 이 대화를 추가", use: "이 대화를 ‘{topic}’ 주제에 추가" }, undo: { restore: "‘{title}’ 메모를 이전 상태로 복원", remove: "‘{title}’ 메모 삭제", sources: {"other":"추가한 소스 {count}개 삭제"} } },
   workNotes: { saved: "메모 저장됨: {title}", delete: "메모 삭제", title: "메모 · {name}", open: "{name} 메모", empty: "아직 메모가 없습니다. Vunemi는 이 프로젝트의 다음 대화가 알아야 할 결정과 발견을 여기에 기록합니다.", outside: "외부 콘텐츠를 봄: {sources}" },
   modelsMemory: { title: "현재 메모리", chat: "채팅 모델", meaning: "의미 검색", voice: "음성 인식", notLoaded: "로드 안 됨", unmeasured: "측정할 수 없음", summary: "이 Mac: {total} · 현재 사용 가능: {available}", unloaded: "{time} · 메모리 부족으로 해제: {names}", lowered: "{time} · 컨텍스트를 {context}(으)로 줄임" },
   soul: {

@@ -42,6 +42,10 @@ interface StoredSession {
   interrupted?: { steps: number; at: number };
   /** The project it belongs to, if any. */
   projectId?: string;
+  /** The topic it is in (topics/store.ts), by name, if any. */
+  topic?: string;
+  /** Vunemi has asked once whether it belongs in a topic; it doesn't ask again. */
+  topicAsked?: true;
 }
 
 /** A run in progress, as of its last step. */
@@ -54,6 +58,7 @@ interface Checkpoint {
   events: AgentEvent[];
   messages: ChatMessage[];
   projectId?: string;
+  topic?: string;
 }
 
 const CHECKPOINT = ".checkpoint";
@@ -188,7 +193,7 @@ export class SessionStore {
       } else this.checkpoint(messages);
     }
     // Notes proposed after the answer, and the user's yes or no, come once the task is over.
-    if (event.type === "memory.proposed" || event.type === "memory.resolved") this.save();
+    if (event.type === "memory.proposed" || event.type === "memory.resolved" || event.type === "topic.suggested" || event.type === "topic.resolved") this.save();
   }
 
   /** Keeps the run in progress, as of this step. */
@@ -198,6 +203,7 @@ export class SessionStore {
     const point: Checkpoint = {
       version: 1, id: s.id, title: s.title, createdAt: s.createdAt, at: this.now(), events: s.events, messages,
       ...(s.projectId && { projectId: s.projectId }),
+      ...(s.topic && { topic: s.topic }),
     };
     writeWhole(this.checkpointFile(s.id), JSON.stringify(point));
   }
@@ -222,7 +228,50 @@ export class SessionStore {
     if (title) this.current.title = title.slice(0, TITLE_CHARS);
     if (projectId) this.current.projectId = projectId;
     else delete this.current.projectId;
+    delete this.current.topic;
+    delete this.current.topicAsked;
     return this.current.id;
+  }
+
+  /** The topic the current conversation is in, if any. */
+  get currentTopic(): string | undefined {
+    return this.current.topic;
+  }
+
+  /** Whether Vunemi already asked if the current conversation belongs in a topic. */
+  get topicAsked(): boolean {
+    return this.current.topicAsked === true;
+  }
+
+  /** Puts the current conversation in a topic, or takes it out (null). Asked or chosen, it isn't asked again. */
+  setTopic(topic: string | null): void {
+    if (topic) this.current.topic = topic;
+    else delete this.current.topic;
+    this.current.topicAsked = true;
+    if (this.current.events.length > 0) this.save();
+  }
+
+  /** Vunemi asked and the user said no: it isn't asked again in this conversation. */
+  markTopicAsked(): void {
+    this.current.topicAsked = true;
+    if (this.current.events.length > 0) this.save();
+  }
+
+  /** A topic renamed or gone: every conversation in it follows, or leaves it. */
+  renameTopic(from: string, to: string | null): void {
+    const key = from.toLowerCase();
+    for (const summary of this.list()) {
+      if (summary.topic?.toLowerCase() !== key) continue;
+      const s = summary.id === this.current.id ? this.current : this.read(summary.id);
+      if (!s) continue;
+      if (to) s.topic = to;
+      else delete s.topic;
+      if (s !== this.current || s.events.length > 0) this.write(s);
+    }
+    if (this.current.topic?.toLowerCase() === key) {
+      if (to) this.current.topic = to;
+      else delete this.current.topic;
+    }
   }
 
   /** Makes a stored conversation current, and hands back what it needs to be shown and continued. */
@@ -322,6 +371,8 @@ export class SessionStore {
       events: [...point.events, { type: "run.finished", runId, status: "stopped", detail: t("sessions.interrupted"), at: point.at }],
       interrupted: { steps: tasksFromEvents(point.events).find(t => t.activeRunId === runId)?.steps.filter(s => s.status === "completed" && s.evidence === "tool_result").length ?? 0, at: point.at },
       ...((point.projectId ?? kept?.projectId) && { projectId: point.projectId ?? kept?.projectId }),
+      ...((point.topic ?? kept?.topic) && { topic: point.topic ?? kept?.topic }),
+      ...(kept?.topicAsked && { topicAsked: true as const }),
     });
     rmSync(this.checkpointFile(id), { force: true });
   }
@@ -348,6 +399,7 @@ function summaryOf(s: StoredSession): SessionSummary {
     runs: s.events.filter((e) => e.type === "run.started").length,
     ...(s.interrupted && { interrupted: s.interrupted }),
     ...(s.projectId && { projectId: s.projectId }),
+    ...(s.topic && { topic: s.topic }),
   };
 }
 

@@ -3,7 +3,7 @@ import {quoteSourceAnchor} from "../lib/selection-followup.js";
 import {composerDrafts} from '../lib/composer-drafts.js';
 import { useShallow } from "zustand/react/shallow";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowUp, AudioLines, Download, FileText, ListPlus, Mic, Paperclip, Pause, Play, Square, X } from "lucide-react";
+import { ArrowUp, AudioLines, BookMarked, Download, FileText, ListPlus, Mic, Paperclip, Pause, Play, Square, X } from "lucide-react";
 import { useStore } from "../store.js";
 import { Queue } from "./Queue.js";
 import { VoiceBar } from "./VoiceBar.js";
@@ -97,14 +97,37 @@ export function Composer() {
   );
   const full = mentions.length >= MAX_MENTIONS;
   const offered = query
-    ? filterMentions(named.filter((item) => !mentions.some((m) => m.kind === item.kind && m.id === item.id)), query.query, lower)
+    ? filterMentions(named.filter((item) => (item.kind === "topic" || !full) && !mentions.some((m) => m.kind === item.kind && m.id === item.id)), query.query, lower)
     : [];
   // Nothing matches and there is a space in it: a sentence that starts with "@", not a search.
   const menuOpen = query !== null && mentionable !== null && (offered.length > 0 || !/\s/.test(query.query));
-  const pickable = menuOpen && !full && offered.length > 0;
+  const pickable = menuOpen && offered.length > 0;
+
+  const topic = useStore((s) => s.sessions.topic);
+  const putInTopic = (name: string | null) => {
+    setError(null);
+    window.vunemi
+      .setTopic(name)
+      .then((sessions) => useStore.setState({ sessions }))
+      .catch((err: unknown) => setError(String(err instanceof Error ? err.message : err).replace(/^.*Error: /, "")));
+  };
 
   const pick = (item: MenuItem) => {
-    if (!query || full) return;
+    if (!query) return;
+    if (item.kind === "topic") {
+      // A topic isn't brought into the message: the conversation joins it, and the "@…" typed goes.
+      const rest = text.slice(caret).replace(/^\s+/, "");
+      const head = text.slice(0, query.start);
+      setText(head + rest);
+      setCaret(head.length);
+      putInTopic(item.id);
+      requestAnimationFrame(() => {
+        ref.current?.focus();
+        ref.current?.setSelectionRange(head.length, head.length);
+      });
+      return;
+    }
+    if (full) return;
     const next = insertMention(text, query.start, caret, item.name);
     setText(next.text);
     setCaret(next.caret);
@@ -188,7 +211,7 @@ export function Composer() {
     // A message with only files in it asks the obvious thing.
     const goal = text.trim() || t("composer.filesOnly");
     const attached = files;
-    const brought = mentions.map(({ kind, id, name }) => ({ kind, id, title: name }));
+    const brought = mentions.flatMap(({ kind, id, name }) => (kind === "topic" ? [] : [{ kind, id, title: name }]));
     setError(null);
     // Cleared only once it went: a refused attachment should still be there to fix.
     (now && running ? (quote?steer(goal,attached,brought,quote):steer(goal,attached,brought)) : (quote?send(goal,attached,brought,quote):send(goal,attached,brought)))
@@ -228,6 +251,23 @@ export function Composer() {
       >
         {menuOpen && <MentionMenu items={offered} active={active} full={full} onPick={pick} onHover={setActive} />}
         {dragging && <p className="px-4 pt-3 text-[12px] text-ember">{t("composer.drop")}</p>}
+        {topic && (
+          <div className="flex px-3 pt-3">
+            <span title={t("topics.chip.title", { topic })} className="flex max-w-[260px] items-center gap-1.5 rounded-lg border border-line bg-surface-2 py-1 pr-1 pl-2 text-[12px] text-fg">
+              <BookMarked size={13} className="shrink-0 text-muted" />
+              <span className="truncate">{topic}</span>
+              <button
+                type="button"
+                onClick={() => putInTopic(null)}
+                aria-label={t("topics.chip.remove", { topic })}
+                title={t("topics.chip.remove", { topic })}
+                className="grid size-5 shrink-0 place-items-center rounded text-faint hover:bg-surface-3 hover:text-fg"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          </div>
+        )}
         {(files.length > 0 || mentions.length > 0) && <p className="px-3 pt-3 text-[11.5px] text-muted">{t("composer.draftAttachments")}</p>}
         {(files.length > 0 || mentions.length > 0) && (
           <ul className="flex flex-wrap gap-1.5 px-3 pt-3">

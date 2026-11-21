@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "Drop: the file is attached to the message, and the agent can read only that file.",
     removeFile: "Remove the attachment {name}",
     mention: {
-      label: "Bring in a session or meeting",
-      none: "No session or meeting matches",
+      label: "Bring in a session or meeting, or pick a topic",
+      none: "No session, meeting or topic matches",
       full: "A message can bring in 5 at most",
       remove: "Remove {name}",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi Memory", gone: "That topic isn’t in the memory folder any more.", ask: { question: "Shall I keep this conversation in “{topic}”?", why: "I’d note what’s worth keeping from it there, where you can read and change it.", yes: "Yes, keep it there", no: "No", linked: "This conversation is in “{topic}”.", expired: "This question is no longer open." }, chip: { title: "This conversation is in the topic “{topic}”", remove: "Take this conversation out of “{topic}”" }, preview: { create: "Make the topic “{topic}” and put this conversation in it", use: "Put this conversation in the topic “{topic}”" }, undo: { restore: "Put the note “{title}” back as it was", remove: "Remove the note “{title}”", sources: {"one":"Remove the added source","other":"Remove the {count} added sources"} } },
   workNotes: { saved: "Note saved: {title}", delete: "Delete note", title: "Notes · {name}", open: "Notes of {name}", empty: "No notes yet. Vunemi notes decisions and findings here that later conversations in this project should know.", outside: "Saw outside content: {sources}" },
   modelsMemory: { title: "Now in memory", chat: "Chat model", meaning: "Meaning search", voice: "Speech recognition", notLoaded: "not loaded", unmeasured: "could not be measured", summary: "This Mac: {total} · available now: {available}", unloaded: "{time} · memory ran short; unloaded: {names}", lowered: "{time} · context lowered to {context}" },
   soul: {

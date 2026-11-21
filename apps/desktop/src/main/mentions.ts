@@ -33,12 +33,26 @@ export function mentionRefs(value: unknown): MentionRef[] {
   });
 }
 
-/** Newest first. Not the open conversation, one with nothing in it, or a meeting still recording. */
-export function mentionable(sessions: readonly SessionSummary[], meetings: readonly MeetingSummary[], currentId: string): MentionItem[] {
+/**
+ * Topics first, then the rest newest first. Not the open conversation, one
+ * with nothing in it, a meeting still recording, or the topic the
+ * conversation is already in.
+ */
+export function mentionable(
+  sessions: readonly SessionSummary[],
+  meetings: readonly MeetingSummary[],
+  currentId: string,
+  topics: readonly { name: string; updatedAt: number }[] = [],
+  currentTopic?: string,
+): MentionItem[] {
+  const inTopic = currentTopic?.normalize("NFC").toLowerCase();
   return [
-    ...sessions.filter((s) => s.id !== currentId && s.runs > 0).map((s) => ({ kind: "conversation" as const, id: s.id, title: s.title, at: s.updatedAt })),
-    ...meetings.filter((m) => m.state !== "recording").map((m) => ({ kind: "meeting" as const, id: m.id, title: m.title, at: m.startedAt })),
-  ].sort((a, b) => b.at - a.at);
+    ...topics.filter((t) => t.name.normalize("NFC").toLowerCase() !== inTopic).map((t) => ({ kind: "topic" as const, id: t.name, title: t.name, at: t.updatedAt })),
+    ...[
+      ...sessions.filter((s) => s.id !== currentId && s.runs > 0).map((s) => ({ kind: "conversation" as const, id: s.id, title: s.title, at: s.updatedAt })),
+      ...meetings.filter((m) => m.state !== "recording").map((m) => ({ kind: "meeting" as const, id: m.id, title: m.title, at: m.startedAt })),
+    ].sort((a, b) => b.at - a.at),
+  ];
 }
 
 /** One text per task: the request, the questions answered on the way, the final answer. */

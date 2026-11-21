@@ -57,6 +57,14 @@ describe("mentionable", () => {
       { kind: "conversation", id: "s_old001", title: "s_old001", at: 10 },
     ]);
   });
+
+  it("offers topics first, but not the one the conversation is already in", () => {
+    const items = mentionable([session("s_new001", 50)], [], "s_open01", [{ name: "Home renovation", updatedAt: 5 }, { name: "Taxes 2026", updatedAt: 1 }], "home renovation");
+    expect(items).toEqual([
+      { kind: "topic", id: "Taxes 2026", title: "Taxes 2026", at: 1 },
+      { kind: "conversation", id: "s_new001", title: "s_new001", at: 50 },
+    ]);
+  });
 });
 
 describe("conversationTasks", () => {

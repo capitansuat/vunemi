@@ -1979,6 +1979,16 @@ describe("areas: one tool list for the whole conversation", () => {
     expect(later.seen[0]!.messages.at(-1)!.content).toContain('"name":"page_describe"');
   });
 
+  it("adds the areas a conversation keeps at hand to what a task needs, but leaves a plain chat plain", async () => {
+    const task = scripted([{ text: "ok" }]);
+    await runAgent({ goal: "g", model: task.model, tools: registry(), areas: AREAS, shownTools: new Set(), pickAreas: async () => ["mail"], wantAreas: ["calendar", "nowhere"], emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(names(task.seen[0]!)).toContain("calendar_events");
+    expect(task.seen[0]!.messages[0]!.content).toContain("CALENDAR GUIDE");
+    const chat = scripted([{ text: "hi" }]);
+    await runAgent({ goal: "hello", model: chat.model, tools: registry(), areas: AREAS, shownTools: new Set(), pickAreas: async () => [], lightChat: true, wantAreas: ["calendar"], emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    expect(names(chat.seen[0]!)).not.toContain("calendar_events");
+  });
+
   it("opens an area on request without changing the list", async () => {
     const { promise, seen } = go(new Set(), [], [
       { calls: [{ name: "tools_open", argumentsText: '{"area":"calendar"}' }] },

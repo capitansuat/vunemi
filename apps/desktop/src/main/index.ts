@@ -81,7 +81,11 @@ import { Addons } from "./addons/store.js";
 import { clearJobs, createEngines } from "./addons/jobs.js";
 import { renderHtmlPicture } from "./office-pdf.js";
 import { addonAreas, addonInstructions, packIds, registerAddonTools } from "./addons/packs.js";
-import { markdownArea, markitdownDir, registerMarkdownTools } from "./markdown.js";
+import { convertToMarkdown, markdownArea, markitdownDir, registerMarkdownTools } from "./markdown.js";
+import { openTopicStore } from "./topics/store.js";
+import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
+import { topicIndex } from "./topics/index-text.js";
+import { suggestTopic } from "./topics/suggest.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
 import { PRODUCTION, type FeedSource } from "./updates/feed.js";
@@ -529,15 +533,68 @@ const addonTools = registerAddonTools({
  * in the sandbox, from the app's resources (markdown.ts).
  */
 const markitdown = markitdownDir({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir(), darwin: platform.id === "darwin" });
-registerMarkdownTools(tools, {
-  roots,
-  available: markitdown !== null,
-  engines: createEngines<"markdown">({
-    addons: { binary: () => (markitdown ? join(markitdown, "convert") : null), engineDir: () => markitdown ?? "" },
-    home: homedir(),
-    jobsDir: join(addonsDir, ".jobs"),
-  }),
+const markdownEngines = createEngines<"markdown">({
+  addons: { binary: () => (markitdown ? join(markitdown, "convert") : null), engineDir: () => markitdown ?? "" },
+  home: homedir(),
+  jobsDir: join(addonsDir, ".jobs"),
 });
+registerMarkdownTools(tools, { roots, available: markitdown !== null, engines: markdownEngines });
+
+/**
+ * Topic memory: Markdown folders in Documents that Vunemi keeps about the
+ * subjects the user chose (topics/store.ts). The folder is named in the app's
+ * language the first time, and stays where it is after that.
+ */
+const topicsRoot = (): string => {
+  const kept = settings.topicsFolder;
+  if (kept) return kept;
+  const made = join(app.getPath("documents"), t("topics.folder"));
+  settings.setTopicsFolder(made);
+  return made;
+};
+const topics = openTopicStore({ root: topicsRoot, dataDir: app.getPath("userData") });
+if (topics) {
+  registerTopicTools(tools, {
+    store: topics,
+    where: () => ({
+      conversationId: conversations.currentId,
+      conversationTitle: conversations.list().find((c) => c.id === conversations.currentId)?.title ?? "",
+      topic: conversations.currentTopic ?? null,
+    }),
+    link: (topic) => {
+      conversations.setTopic(topic);
+      send(CH.sessionsChanged, sessionList());
+    },
+    sources: () => sentinel.untrustedSources(),
+    redact: redactOrThrow,
+    roots,
+    convert: markitdown ? (from, signal) => convertToMarkdown(markdownEngines, from, signal) : null,
+    trash: (path) => shell.trashItem(path),
+  });
+}
+/** "Shall I keep this in …?" asked under a run, until the user answers. Not kept past a restart. */
+const topicAsks = new Map<string, { conversation: string; topic: string }>();
+/** Each topic's vector for the question, by its text (topics/suggest.ts). */
+const topicVectors = new Map<string, Float32Array>();
+/** The open conversation's topic, if it still exists: its name as the folder has it. */
+const currentTopic = () => {
+  const name = conversations.currentTopic;
+  return name && topics ? topics.findTopic(name) : null;
+};
+/**
+ * After a run in a conversation with no topic, asked once: does what the
+ * user asked fit one? Decided by meaning in code (topics/suggest.ts).
+ */
+async function askTopic(runId: string, request: string | undefined): Promise<void> {
+  if (!topics || !request || conversations.currentTopic || conversations.topicAsked) return;
+  const conversation = conversations.currentId;
+  const found = await suggestTopic(meaning, request, topics.listTopics(), topicVectors);
+  // The user moved on, or put it in a topic meanwhile: the question would be wrong.
+  if (!found || conversations.currentId !== conversation || conversations.currentTopic || conversations.topicAsked) return;
+  conversations.markTopicAsked();
+  topicAsks.set(runId, { conversation, topic: found });
+  record({ type: "topic.suggested", runId, topic: found, at: Date.now() });
+}
 
 const connectors = buildConnectors({
   automations,
@@ -743,6 +800,7 @@ const sessionList = (): SessionList => {
     sessions: conversations.list(),
     tasks: conversations.tasks(),
     ...(project && { project: project.id }),
+    ...(conversations.currentTopic && { topic: conversations.currentTopic }),
     projects: projects.views(),
   };
 };
@@ -780,7 +838,7 @@ const sessionOptions: SessionOptions = {
   fileRoots: () => roots.snapshot(),
   keptOutputs,
   // Each connection's guide travels with its tools (see areas.ts).
-  areas: () => [...toolAreas(connectors.reachable()), ...addonAreas(roots.list()), markdownArea(roots.list())],
+  areas: () => [...toolAreas(connectors.reachable()), ...addonAreas(roots.list()), markdownArea(roots.list()), ...(topics ? [topicsArea()] : [])],
   emit: record,
   onRunSettled: async runId => {
     const settled=await Promise.allSettled([helper.releaseRun(runId),browser.releaseRun(runId)]);
@@ -833,6 +891,10 @@ const sessionOptions: SessionOptions = {
     return refs.map((ref, i) => ({ ...ref, date: new Date(read[i]?.at ?? Date.now()).toISOString().slice(0, 10), text: texts[i] ?? null }));
   },
   notesIndex: () => (work ? notesIndex(work, currentProject()?.id) : null),
+  topicIndex: () => {
+    const topic = currentTopic();
+    return topic && topics ? { topic: topic.name, text: topicIndex(topics, topic.name), area: TOPICS_AREA } : null;
+  },
   libraryIndex: async (goal, given) => {
     if (!connectors.isOn("history")) return null;
     library.sync({ meetings: !meetingsIndexed });
@@ -851,6 +913,7 @@ const sessionOptions: SessionOptions = {
         record({ type: "memory.proposed", runId, proposals: found, at: Date.now() });
       })
       .catch((err: unknown) => console.error("[vunemi] memory proposals:", err instanceof Error ? err.message : String(err)));
+    void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
   },
 };
 const session = new SessionCoordinatorHost({
@@ -1463,6 +1526,29 @@ handle(CH.memoryResolve, async (_e, runId: unknown, proposalId: unknown, decisio
   proposals.delete(proposal.id);
   record({ type: "memory.resolved", runId: held.runId, proposalId: proposal.id, decision, ...(text && { text }), at: Date.now() });
 });
+handle(CH.topicsResolve, (_e, runId: unknown, decision: unknown) => {
+  const held = typeof runId === "string" ? topicAsks.get(runId) : undefined;
+  if (!held || held.conversation !== conversations.currentId) throw new Error(t("topics.ask.expired"));
+  if (decision !== "linked" && decision !== "skipped") throw new Error(t("topics.ask.expired"));
+  const topic = decision === "linked" ? topics?.findTopic(held.topic) : null;
+  if (decision === "linked" && !topic) throw new Error(t("topics.gone"));
+  topicAsks.delete(runId as string);
+  if (topic) conversations.setTopic(topic.name);
+  record({ type: "topic.resolved", runId: runId as string, topic: topic?.name ?? held.topic, decision, at: Date.now() });
+  send(CH.sessionsChanged, sessionList());
+});
+handle(CH.topicsSet, (_e, name: unknown) => {
+  if (name === null) conversations.setTopic(null);
+  else {
+    // Only a topic that is there, under the name its folder has.
+    const topic = typeof name === "string" && topics ? topics.findTopic(name) : null;
+    if (!topic) throw new Error(t("topics.gone"));
+    conversations.setTopic(topic.name);
+  }
+  const list = sessionList();
+  send(CH.sessionsChanged, list);
+  return list;
+});
 handle(CH.memorySearch, () => meaning.status());
 handle(CH.memorySearchDownload, async () => {
   try {
@@ -1606,7 +1692,7 @@ const meetingCall = async <T>(work: () => Promise<T>): Promise<T> => {
   }
 };
 handle(CH.meetingsList, (_e, query: unknown) => meetingList(query));
-handle(CH.mentionsList, () => mentionable(sessionList().sessions, meetingStore.list(), conversations.currentId));
+handle(CH.mentionsList, () => mentionable(sessionList().sessions, meetingStore.list(), conversations.currentId, topics?.listTopics() ?? [], conversations.currentTopic));
 handle(CH.meetingsGet, (_e, id: unknown) => {
   if (typeof id !== "string") return null;
   const m = meetingStore.get(id);

@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "Rilascia: il file viene allegato al messaggio e l’agente può leggere solo quello.",
     removeFile: "Rimuovi l’allegato {name}",
     mention: {
-      label: "Aggiungi una sessione o una riunione",
-      none: "Nessuna sessione o riunione corrisponde",
+      label: "Aggiungi una sessione o una riunione, o scegli un argomento",
+      none: "Nessuna sessione, riunione o argomento corrisponde",
       full: "Al massimo 5 per messaggio",
       remove: "Rimuovi {name}",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi Memoria", gone: "Questo argomento non è più nella cartella della memoria.", ask: { question: "Tengo questa conversazione nell’argomento «{topic}»?", why: "Lì annoterò ciò che vale la pena conservare; potrai leggerlo e modificarlo.", yes: "Sì, tienila lì", no: "No", linked: "Questa conversazione è in «{topic}».", expired: "Questa domanda non è più aperta." }, chip: { title: "Questa conversazione è nell’argomento «{topic}»", remove: "Togli questa conversazione da «{topic}»" }, preview: { create: "Crea l’argomento «{topic}» e mettici questa conversazione", use: "Metti questa conversazione nell’argomento «{topic}»" }, undo: { restore: "Ripristina la nota «{title}»", remove: "Rimuovi la nota «{title}»", sources: {"one":"Rimuovi la fonte aggiunta","other":"Rimuovi le {count} fonti aggiunte"} } },
   workNotes: { saved: "Nota salvata: {title}", delete: "Elimina nota", title: "Note · {name}", open: "Note di {name}", empty: "Ancora nessuna nota. Vunemi annota qui le decisioni e le scoperte che le prossime conversazioni di questo progetto devono conoscere.", outside: "Ha visto contenuti esterni: {sources}" },
   modelsMemory: { title: "Ora in memoria", chat: "Modello di chat", meaning: "Ricerca per significato", voice: "Riconoscimento vocale", notLoaded: "non caricato", unmeasured: "non misurabile", summary: "Questo Mac: {total} · libera ora: {available}", unloaded: "{time} · memoria scarsa; scaricato: {names}", lowered: "{time} · contesto ridotto a {context}" },
   soul: {

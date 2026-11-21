@@ -134,6 +134,19 @@ describe("foldEvent", () => {
     expect(run.memory!.proposals.map((p) => [p.text, p.state])).toEqual([["Wants reports as PDF", "saved"], ["Manager is Deniz", "skipped"]]);
   });
 
+  it("asks once to keep the conversation in a topic, and shows the answer", () => {
+    const asked = [
+      ...start,
+      { type: "run.finished", runId: "r", status: "done", detail: "ok", at: 2 },
+      { type: "topic.suggested", runId: "r", topic: "Home renovation", at: 3 },
+    ] as AgentEvent[];
+    expect(fold(asked)[0]!.topicAsk).toEqual({ topic: "Home renovation", state: "open" });
+    const answered = fold([...asked, { type: "topic.resolved", runId: "r", topic: "Home renovation", decision: "linked", at: 4 }])[0]!;
+    expect(answered.topicAsk).toEqual({ topic: "Home renovation", state: "linked" });
+    // An answer with no question under the run changes nothing.
+    expect(fold([...start, { type: "topic.resolved", runId: "r", topic: "X", decision: "skipped", at: 4 }])[0]!.topicAsk).toBeUndefined();
+  });
+
   it("builds a step with streamed thought and text", () => {
     const [run] = fold([
       ...start,

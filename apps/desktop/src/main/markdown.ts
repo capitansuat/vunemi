@@ -89,7 +89,7 @@ export function markdownTargets(roots: Roots, from: readonly string[], folder: u
 /** Already text: a model that asked for one as Markdown read it with files_read on the next try anyway. */
 const TEXT_KINDS = [".md", ".markdown", ".txt"];
 
-function sources(roots: Roots, input: unknown): string[] {
+export function markdownSources(roots: Roots, input: unknown): string[] {
   const list = Array.isArray(input) ? input : typeof input === "string" && input ? [input] : [];
   if (list.length === 0) throw new Error("paths must list the files to convert.");
   if (list.length > MAX_FILES) throw new Error(`At most ${MAX_FILES} files at a time.`);
@@ -118,6 +118,11 @@ export function reports(stdout: string): Report[] {
   });
 }
 
+/** Converts files to Markdown in one sandboxed run, for callers other than these tools (topics). */
+export function convertToMarkdown(engines: Engines<"markdown">, from: readonly string[], signal: AbortSignal): Promise<({ markdown: string } | { error: string })[]> {
+  return engines("markdown", signal, (job) => convertAll(job, from));
+}
+
 /**
  * Converts the files in one run. Each copy keeps its name, which MarkItDown
  * uses to tell the kind and which a .zip's listing shows.
@@ -144,7 +149,7 @@ async function convertAll(job: EngineJob, from: readonly string[]): Promise<Conv
 
 export function markdownTools(deps: MarkdownDeps): ToolDef[] {
   const asked = (a: Record<string, unknown>) => {
-    const from = sources(deps.roots, a.paths);
+    const from = markdownSources(deps.roots, a.paths);
     return { from, outs: markdownTargets(deps.roots, from, a.folder) };
   };
   return [
@@ -198,9 +203,9 @@ export function markdownTools(deps: MarkdownDeps): ToolDef[] {
       actionClass: "read",
       untrustedOutput: true,
       preview: async (a) => short(String(a.path ?? "")),
-      check: (a) => tried(() => sources(deps.roots, [a.path])),
+      check: (a) => tried(() => markdownSources(deps.roots, [a.path])),
       async run(a, ctx) {
-        const from = sources(deps.roots, [a.path]);
+        const from = markdownSources(deps.roots, [a.path]);
         const offset = Math.max(0, Math.floor(Number(a.offset ?? 0)) || 0);
         return deps.engines("markdown", ctx.signal, async (job) => {
           const [done] = await convertAll(job, from);

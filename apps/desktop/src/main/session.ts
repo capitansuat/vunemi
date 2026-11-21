@@ -54,6 +54,14 @@ import { t } from "@vunemi/i18n";
 import type { PreparedModel } from "./engine/service.js";
 import { MENTION_SHARE } from "./mentions.js";
 
+/** The topic a conversation is in, as a request is given it (topics/index-text.ts). */
+export interface TopicIndex {
+  topic: string;
+  text: string;
+  /** The tool area kept at hand while the conversation is in it. */
+  area: string;
+}
+
 export interface SessionOptions {
   onStateChanged?:()=>void;
   /** Trusted process-local provider proxy; credentials stay with the service broker. */
@@ -131,6 +139,11 @@ export interface SessionOptions {
    */
   notesIndex?: () => string | null;
   /**
+   * The topic the conversation is in: its note titles, given with the first
+   * request after the conversation joins it, and the area of its tools.
+   */
+  topicIndex?: () => TopicIndex | null;
+  /**
    * The earlier conversations and meetings a request may be about, as lines
    * for the model, and their ids; none of them in `given` (what this
    * conversation was told of before). Null when there are none, or the user
@@ -204,6 +217,8 @@ export class AgentSession {
   private readonly remembered = new Set<string>();
   /** The earlier conversations and meetings this one was already told of: not listed twice. */
   private readonly libraryGiven = new Set<string>();
+  /** The topic whose notes the history already lists. */
+  private topicGiven: string | null = null;
   /** Notes to announce once the run has its id. */
   private given: MemoryNote[] | null = null;
   /** A shorter context the last launch had to take; told to the run once it has an id. */
@@ -431,7 +446,9 @@ export class AgentSession {
         ? await this.opts.readMentions?.([...run.mentions], Math.floor(window * this.charsPerToken * MENTION_SHARE))
         : undefined;
       // Only a conversation's first request: added later, it would sit in the middle of the history.
-      const notesIndex = this.history.length === 0 ? (this.opts.notesIndex?.() ?? null) : null;
+      // A topic's notes come once it is joined, and again only for another topic.
+      const topic = this.opts.topicIndex?.() ?? null;
+      const notesIndex = [this.history.length === 0 ? this.opts.notesIndex?.() : null, topic && topic.topic !== this.topicGiven ? topic.text : null].filter(Boolean).join("\n\n") || null;
       // Not for a scheduled task (nobody asked it about the past), nor beside what the user brought in themselves.
       const library = run.unattended || run.mentions?.length ? null : await this.opts.libraryIndex?.(goal, this.libraryGiven).catch(() => null) ?? null;
       // Model/library preparation can await: the conversation may have changed meanwhile.
@@ -445,6 +462,7 @@ export class AgentSession {
         ...(undone.length > 0 && { undone }),
         ...(memory.length > 0 && { memory }),
         ...(notesIndex && { notesIndex }),
+        ...(topic && { wantAreas: [topic.area] }),
         ...(library && { libraryIndex: library.text }),
         ...(attachments.length > 0 && { attachments }),
         ...(mentions?.length && { mentions }),
@@ -508,6 +526,7 @@ export class AgentSession {
       else if (result.status === "stopped" || result.status === "max_steps") this.history = sealInterrupted(result.messages, INTERRUPTED);
       if (result.status !== "failed") for (const text of memory) this.remembered.add(text);
       if (result.status !== "failed") for (const id of library?.ids ?? []) this.libraryGiven.add(id);
+      if (result.status !== "failed") this.topicGiven = topic?.topic ?? null;
       this.opts.onHistory?.(this.history);
       if (result.status !== "failed") {
         // The run is over: nothing may pause it now, and the queue waits on compaction instead.
@@ -669,6 +688,7 @@ export class AgentSession {
       if (result.kind === "summarized") {
         this.remembered.clear();
         this.libraryGiven.clear();
+        this.topicGiven = null;
       }
       const redact = this.opts.redact ?? ((text: string) => text);
       this.opts.emit({
@@ -795,6 +815,7 @@ export class AgentSession {
     this.words = [];
     this.remembered.clear();
     this.libraryGiven.clear();
+    this.topicGiven = null;
     // A notice from a load in the previous conversation is not this one's.
     this.lowered = null;
   }

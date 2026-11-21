@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "松开：文件会附到消息中，代理只能读取这个文件。",
     removeFile: "移除附件 {name}",
     mention: {
-      label: "引入会话或会议",
-      none: "没有匹配的会话或会议",
+      label: "引入会话或会议，或选择主题",
+      none: "没有匹配的会话、会议或主题",
       full: "每条消息最多 5 个",
       remove: "移除 {name}",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi 记忆", gone: "该主题已不在记忆文件夹中。", ask: { question: "要把此对话放在主题“{topic}”中吗？", why: "我会在那里记下值得保留的内容，你可以查看和修改。", yes: "是，放在那里", no: "否", linked: "此对话在“{topic}”中。", expired: "此问题已不再开放。" }, chip: { title: "此对话在主题“{topic}”中", remove: "将此对话移出“{topic}”" }, preview: { create: "创建主题“{topic}”并将此对话放入其中", use: "将此对话放入主题“{topic}”" }, undo: { restore: "将笔记“{title}”恢复原样", remove: "移除笔记“{title}”", sources: {"other":"移除添加的 {count} 个来源"} } },
   workNotes: { saved: "已保存笔记：{title}", delete: "删除笔记", title: "笔记 · {name}", open: "{name} 的笔记", empty: "还没有笔记。Vunemi 会在这里记下本项目后续对话需要知道的决定和发现。", outside: "看过外部内容：{sources}" },
   modelsMemory: { title: "当前内存中", chat: "聊天模型", meaning: "语义搜索", voice: "语音识别", notLoaded: "未加载", unmeasured: "无法测量", summary: "这台 Mac：{total} · 当前可用：{available}", unloaded: "{time} · 内存不足；已卸载：{names}", lowered: "{time} · 上下文已降至 {context}" },
   soul: {

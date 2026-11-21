@@ -428,8 +428,8 @@ export const messages = {
     drop: "Bırak: dosya mesaja eklenir, ajan yalnızca onu okuyabilir.",
     removeFile: "{name} ekini kaldır",
     mention: {
-      label: "Oturum ya da toplantı getir",
-      none: "Eşleşen oturum ya da toplantı yok",
+      label: "Oturum ya da toplantı getir, ya da konu seç",
+      none: "Eşleşen oturum, toplantı ya da konu yok",
       full: "Bir mesaja en çok 5 tane getirilebilir",
       remove: "{name} öğesini kaldır",
     },
@@ -790,6 +790,7 @@ export const messages = {
     },
   },
 
+  topics: { folder: "Vunemi Hafıza", gone: "Bu konu artık hafıza klasöründe yok.", ask: { question: "Bu konuşmayı “{topic}” konusunda tutayım mı?", why: "İşe yarar bilgileri orada not alırım; notları sen de okuyup değiştirebilirsin.", yes: "Evet, orada tut", no: "Hayır", linked: "Bu konuşma “{topic}” konusunda.", expired: "Bu soru artık açık değil." }, chip: { title: "Bu konuşma “{topic}” konusunda", remove: "Bu konuşmayı “{topic}” konusundan çıkar" }, preview: { create: "“{topic}” konusunu aç ve bu konuşmayı ona ekle", use: "Bu konuşmayı “{topic}” konusuna ekle" }, undo: { restore: "“{title}” notunu eski haline getir", remove: "“{title}” notunu kaldır", sources: {"one":"Eklenen kaynağı kaldır","other":"Eklenen {count} kaynağı kaldır"} } },
   workNotes: { saved: "Not alındı: {title}", delete: "Notu sil", title: "Notlar · {name}", open: "{name} notları", empty: "Henüz not yok. Vunemi bu projede sonraki konuşmaların bilmesi gereken bir karar ya da bulgu olduğunda buraya not alır.", outside: "Dış içerik görmüş: {sources}" },
   modelsMemory: { title: "Şu an bellekte", chat: "Sohbet modeli", meaning: "Anlam araması", voice: "Ses tanıma", notLoaded: "kapalı", unmeasured: "ölçülemedi", summary: "Bu Mac: {total} · şu an boş: {available}", unloaded: "{time} · bellek daraldı; boşaltıldı: {names}", lowered: "{time} · bağlam {context} değerine indirildi" },
   soul: {

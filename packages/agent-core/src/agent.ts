@@ -129,6 +129,11 @@ export interface RunOptions {
    * library.ts). Given with the request, so nothing sent before changes.
    */
   libraryIndex?: string;
+  /**
+   * Tool areas this conversation keeps at hand, such as the topic it is in.
+   * Added to whatever the request needs; a plain chat stays plain.
+   */
+  wantAreas?: readonly string[];
   /** Files the user attached to the message, as absolute paths the file tools will read. */
   attachments?: string[];
   /**
@@ -615,6 +620,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       && opts.chatInstructions !== undefined && wanted.size === 1 && wanted.has("files")
       && (!opts.resumeTask || compactFileResume) && !opts.unattended && !opts.attachments?.length && !opts.mentions?.length && !opts.openPage;
     lightChat &&= wanted.size === 0;
+    if (!lightChat) for (const id of opts.wantAreas ?? []) if (areas.some((area) => area.id === id)) wanted.add(id);
     if (listed.size === 0) {
       const always = new Set(opts.compactTaskTools ? [] : areas.flatMap((a) => a.alwaysShown ?? []));
       const described = new Set(areas.map((a) => a.id));
@@ -703,6 +709,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   for (const tool of areaMode ? [] : tools.list()) {
     if (tool.onDemand && (namedTool(opts.goal, [tool.name]) || tool.wantedFor?.test(opts.goal))) openTools(tool.onDemand);
   }
+  for (const group of areaMode ? [] : opts.wantAreas ?? []) openTools(group);
   let charsPerToken = opts.charsPerToken ?? DEFAULT_CHARS_PER_TOKEN;
   const maxOut = opts.maxToolOutputChars ?? toolOutputChars(window, charsPerToken);
   const evidence: ChoiceEvidence = { pages: [], local: [] };

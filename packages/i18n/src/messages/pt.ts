@@ -422,8 +422,8 @@ export const messages: Catalogue = {
     drop: "Solte: o arquivo é anexado à mensagem, e o agente só pode ler esse arquivo.",
     removeFile: "Remover o anexo {name}",
     mention: {
-      label: "Trazer uma sessão ou reunião",
-      none: "Nenhuma sessão ou reunião corresponde",
+      label: "Trazer uma sessão ou reunião, ou escolher um tópico",
+      none: "Nenhuma sessão, reunião ou tópico corresponde",
       full: "No máximo 5 por mensagem",
       remove: "Remover {name}",
     },
@@ -784,6 +784,7 @@ export const messages: Catalogue = {
     },
   },
 
+  topics: { folder: "Vunemi Memória", gone: "Esse tópico não está mais na pasta de memória.", ask: { question: "Guardo esta conversa no tópico “{topic}”?", why: "Vou anotar lá o que vale a pena guardar; você pode ler e mudar.", yes: "Sim, guardar lá", no: "Não", linked: "Esta conversa está em “{topic}”.", expired: "Esta pergunta não está mais aberta." }, chip: { title: "Esta conversa está no tópico “{topic}”", remove: "Tirar esta conversa de “{topic}”" }, preview: { create: "Criar o tópico “{topic}” e colocar esta conversa nele", use: "Colocar esta conversa no tópico “{topic}”" }, undo: { restore: "Restaurar a nota “{title}”", remove: "Remover a nota “{title}”", sources: {"one":"Remover a fonte adicionada","other":"Remover as {count} fontes adicionadas"} } },
   workNotes: { saved: "Nota salva: {title}", delete: "Excluir nota", title: "Notas · {name}", open: "Notas de {name}", empty: "Ainda não há notas. O Vunemi anota aqui as decisões e descobertas que as próximas conversas deste projeto devem conhecer.", outside: "Viu conteúdo externo: {sources}" },
   modelsMemory: { title: "Na memória agora", chat: "Modelo de conversa", meaning: "Busca por significado", voice: "Reconhecimento de voz", notLoaded: "não carregado", unmeasured: "não foi possível medir", summary: "Este Mac: {total} · livre agora: {available}", unloaded: "{time} · faltou memória; descarregado: {names}", lowered: "{time} · contexto reduzido para {context}" },
   soul: {
