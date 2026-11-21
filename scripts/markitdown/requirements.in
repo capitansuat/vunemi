@@ -1,0 +1,4 @@
+# Local formats only. Left out on purpose: audio-transcription (sends audio to
+# Google's speech service), youtube-transcription (fetches from YouTube) and the
+# az-* extras (Azure cloud services). The add-on runs with no network at all.
+markitdown[pdf,docx,pptx,xlsx,xls,outlook]==0.1.9

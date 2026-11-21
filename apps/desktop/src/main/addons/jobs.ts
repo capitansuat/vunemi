@@ -18,10 +18,10 @@ export interface EngineJob {
 }
 
 /** Runs `work` with a fresh job for one add-on. Refuses when the add-on is not installed. */
-export type Engines = <T>(id: AddonId, signal: AbortSignal, work: (job: EngineJob) => Promise<T>) => Promise<T>;
+export type Engines<Id extends string = AddonId> = <T>(id: Id, signal: AbortSignal, work: (job: EngineJob) => Promise<T>) => Promise<T>;
 
-export interface EnginesOptions {
-  addons: { binary(id: AddonId): string | null; engineDir(id: AddonId): string };
+export interface EnginesOptions<Id extends string = AddonId> {
+  addons: { binary(id: Id): string | null; engineDir(id: Id): string };
   /** The user's home folder, which the program may not read. */
   home: string;
   /** Where job folders are made. */
@@ -30,7 +30,8 @@ export interface EnginesOptions {
   run?: typeof runSandboxed;
 }
 
-export function createEngines(opts: EnginesOptions): Engines {
+/** Id: an add-on, or another program run the same way (MarkItDown: see markdown.ts). */
+export function createEngines<Id extends string = AddonId>(opts: EnginesOptions<Id>): Engines<Id> {
   const run = opts.run ?? runSandboxed;
   return async (id, signal, work) => {
     const program = opts.addons.binary(id);
