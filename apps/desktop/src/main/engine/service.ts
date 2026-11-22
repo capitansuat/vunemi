@@ -7,7 +7,7 @@ import { CATALOG, contextFor, displayName, memoryBudget, modelId, recommend, sma
 import { download, DownloadError, freeBytesOf, partPath } from "./download.js";
 import { Engine, type Endpoint } from "./engine.js";
 import { isGguf, modelShape, type ModelShape } from "./gguf.js";
-import { ModelStore, projectorFile, type InstalledModel, type PendingDownload } from "./models.js";
+import { ModelStore, projectorFile, type InstalledModel, type PendingDownload, type ToolTest } from "./models.js";
 import { HF, inspectRepo, pickProjector, popularModels, searchModels, type HubOptions, type RepoFile } from "./search.js";
 import type { FitRequest } from "../models/manager.js";
 import { need } from "../models/memory.js";
@@ -213,7 +213,7 @@ export class EngineService {
     this.active.view = { ...this.active.view, state: "testing" };
     this.changed();
     const spec = PREFIX + id;
-    this.store.update(id, { toolTest: (await this.testTools(spec)) ? "ok" : "failed" });
+    this.store.update(id, { toolTest: await this.testTools(spec) });
     this.active = null;
     this.changed();
     return spec;
@@ -262,33 +262,39 @@ export class EngineService {
     this.active.view = { ...this.active.view, received: size, state: "testing" };
     this.changed();
     const spec = PREFIX + id;
-    this.store.update(id, { toolTest: (await this.testTools(spec)) ? "ok" : "failed" });
+    this.store.update(id, { toolTest: await this.testTools(spec) });
     this.active = null;
     this.changed();
     return spec;
   }
 
-  private testTools(spec: string): Promise<boolean> {
+  /**
+   * Whether the model calls a tool when asked; "unloadable" when the engine
+   * never got it loaded, as with a model type it doesn't know yet.
+   */
+  private testTools(spec: string): Promise<ToolTest> {
     return this.hold(async () => {
+      let loaded = false;
       for (let i = 0; i < TOOL_TEST_TRIES; i++) {
         try {
           await this.prepare(spec);
+          loaded = true;
           const endpoint = this.endpoint(spec);
-          if (endpoint && (await this.opts.testModel(spec, endpoint))) return true;
+          if (endpoint && (await this.opts.testModel(spec, endpoint))) return "ok";
         } catch {
           // A timeout or a refused first answer: try again.
         }
       }
-      return false;
+      return loaded ? "failed" : "unloadable";
     });
   }
 
   /** The answer of a test the user ran from Settings replaces the one from the download. */
-  recordToolTest(spec: string, ok: boolean): void {
+  recordToolTest(spec: string, result: ToolTest): void {
     if (!spec.startsWith(PREFIX)) return;
     const id = spec.slice(PREFIX.length);
     if (!this.store.get(id)) return;
-    this.store.update(id, { toolTest: ok ? "ok" : "failed" });
+    this.store.update(id, { toolTest: result });
     this.changed();
   }
 

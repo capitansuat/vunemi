@@ -1938,6 +1938,7 @@ export const messages: Catalogue = {
       addVision: "添加视觉 ({size})",
       confirmRemove: "删除 {name}？将释放 {size}。",
       toolFailed: "Vunemi 无法确认此模型能使用工具；没有工具就无法完成任务。",
+      unloadable: "Vunemi 的引擎无法加载此模型：可能还不支持这种模型类型，或者文件已损坏。",
       testAgain: "重新测试",
       context: "上下文长度",
       contextHint: "越长一次能读的内容越多，但占用的内存也越多。",

@@ -1938,6 +1938,7 @@ export const messages: Catalogue = {
       addVision: "비전 추가 ({size})",
       confirmRemove: "{name}을(를) 삭제할까요? {size}가 확보됩니다.",
       toolFailed: "Vunemi가 이 모델이 도구를 쓸 수 있는지 확인하지 못했습니다. 도구 없이는 작업을 할 수 없습니다.",
+      unloadable: "Vunemi 엔진이 이 모델을 불러오지 못했습니다. 이 모델 유형을 아직 지원하지 않거나 파일이 손상되었을 수 있습니다.",
       testAgain: "다시 테스트",
       context: "컨텍스트 길이",
       contextHint: "길수록 한 번에 더 많이 읽지만 메모리를 더 씁니다.",

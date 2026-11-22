@@ -1938,6 +1938,7 @@ export const messages: Catalogue = {
       addVision: "Sehen hinzufügen ({size})",
       confirmRemove: "{name} löschen? Das gibt {size} frei.",
       toolFailed: "Vunemi konnte nicht bestätigen, dass dieses Modell Werkzeuge nutzen kann; ohne sie kann es keine Aufgaben erledigen.",
+      unloadable: "Vunemis Engine konnte dieses Modell nicht laden: Sie unterstützt diesen Modelltyp vielleicht noch nicht, oder die Datei ist beschädigt.",
       testAgain: "Erneut testen",
       context: "Kontextlänge",
       contextHint: "Länger heißt: mehr auf einmal lesen, aber mehr Speicher.",

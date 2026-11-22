@@ -1063,9 +1063,15 @@ handle(CH.modelSettingsGet, () => settings.modelSettings);
 handle(CH.modelSettingsSet, (_e, input: unknown) => settings.setModelSettings(input as LocalModelSettings));
 // Held for the whole check: memory pressure must not stop the model between loading and answering.
 handle(CH.modelCheck, (_e, spec: string) => engine.hold(async () => {
-  await engine.prepare(String(spec));
+  try {
+    await engine.prepare(String(spec));
+  } catch {
+    // The engine's own line is English and technical; the list says it couldn't load the model.
+    engine.recordToolTest(String(spec), "unloadable");
+    throw new Error(t("engine.installed.unloadable"));
+  }
   const result = await checkAgentModel(String(spec), settings.modelSettings, (s) => engine.endpoint(s));
-  engine.recordToolTest(String(spec), result.toolCalled);
+  engine.recordToolTest(String(spec), result.toolCalled ? "ok" : "failed");
   return result;
 }));
 handle(CH.coordinatorStatus, () => coordinatorStatus(process.pid, app.getAppMetrics()));

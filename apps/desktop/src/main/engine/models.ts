@@ -10,12 +10,14 @@ import { partPath } from "./download.js";
  * before it is joined to a path.
  */
 
+export type ToolTest = "ok" | "failed" | "unloadable";
+
 export interface InstalledModel extends ModelSource {
   id: string;
   name: string;
   license: string;
-  /** Whether the model passed Vunemi's tool-calling test after download. */
-  toolTest?: "ok" | "failed";
+  /** Whether the model passed Vunemi's tool-calling test after download, or couldn't be loaded for it. */
+  toolTest?: ToolTest;
   /** The context length the user chose; when absent, one that suits this Mac's memory. */
   context?: number;
   /** The repository was asked and has no vision part: don't offer one. */

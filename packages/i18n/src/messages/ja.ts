@@ -1938,6 +1938,7 @@ export const messages: Catalogue = {
       addVision: "画像認識を追加 ({size})",
       confirmRemove: "{name} を削除しますか?{size} が空きます。",
       toolFailed: "このモデルがツールを使えるか確認できませんでした。ツールなしではタスクを実行できません。",
+      unloadable: "Vunemi のエンジンはこのモデルを読み込めませんでした。このモデルの種類にまだ対応していないか、ファイルが壊れている可能性があります。",
       testAgain: "もう一度テスト",
       context: "コンテキスト長",
       contextHint: "長いほど一度に多く読めますが、メモリを多く使います。",

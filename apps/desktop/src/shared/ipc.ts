@@ -490,7 +490,8 @@ export interface InstalledView {
   kvBytesPerToken?: number;
   /** The vision part's size, when it can be added and is known. */
   visionSize?: number;
-  toolTest?: "ok" | "failed";
+  /** "unloadable": the engine couldn't load the model to test it. */
+  toolTest?: "ok" | "failed" | "unloadable";
 }
 export interface DownloadView {
   id: string;

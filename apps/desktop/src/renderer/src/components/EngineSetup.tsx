@@ -304,7 +304,11 @@ function Installed() {
     setError(null);
     setTesting(id);
     // Main records the answer, and the list updates from it.
-    await window.vunemi.checkModel(`vunemi:${id}`).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+    await window.vunemi.checkModel(`vunemi:${id}`).catch((e: unknown) => {
+      const message = e instanceof Error ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(e);
+      // A model the engine can't load is said on its own line already.
+      if (message !== t("engine.installed.unloadable")) setError(message);
+    });
     setTesting(null);
   }
   return (
@@ -348,9 +352,9 @@ function Installed() {
               </select>
               <ContextMemory need={contextMemory(m.weights, m.kvBytesPerToken, m.context)} total={engine.totalMemory} locale={locale} />
             </label>
-            {m.toolTest === "failed" && (
+            {(m.toolTest === "failed" || m.toolTest === "unloadable") && (
               <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11.5px] text-danger">
-                {t("engine.installed.toolFailed")}
+                {t(m.toolTest === "unloadable" ? "engine.installed.unloadable" : "engine.installed.toolFailed")}
                 <button
                   type="button"
                   disabled={testing !== null}

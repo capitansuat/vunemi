@@ -111,13 +111,29 @@ describe("the engine service", () => {
     expect(other.view().installed[0]?.toolTest).toBe("failed");
   });
 
+  it("says so when the engine can't load the model at all, without asking it anything", async () => {
+    process.env.FAKE_ENGINE_MODE = "crash";
+    try {
+      const { service, testModel } = make();
+      await service.download({ repo: "org/tiny-GGUF" });
+      expect(testModel).not.toHaveBeenCalled();
+      expect(service.view().installed[0]?.toolTest).toBe("unloadable");
+      service.recordToolTest("vunemi:tiny-q4_k_m", "ok");
+      expect(service.view().installed[0]?.toolTest).toBe("ok");
+      service.recordToolTest("vunemi:tiny-q4_k_m", "unloadable");
+      expect(service.view().installed[0]?.toolTest).toBe("unloadable");
+    } finally {
+      delete process.env.FAKE_ENGINE_MODE;
+    }
+  });
+
   it("keeps the answer of a test run later from Settings", async () => {
     const { service } = make(vi.fn(async () => false));
     await service.download({ repo: "org/tiny-GGUF" });
-    service.recordToolTest("vunemi:tiny-q4_k_m", true);
+    service.recordToolTest("vunemi:tiny-q4_k_m", "ok");
     expect(service.view().installed[0]?.toolTest).toBe("ok");
-    service.recordToolTest("lmstudio:x", false); // not ours
-    service.recordToolTest("vunemi:gone", false);
+    service.recordToolTest("lmstudio:x", "failed"); // not ours
+    service.recordToolTest("vunemi:gone", "failed");
     expect(service.view().installed[0]?.toolTest).toBe("ok");
   });
 

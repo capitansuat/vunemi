@@ -1946,6 +1946,7 @@ export const messages = {
       addVision: "Görme ekle ({size})",
       confirmRemove: "{name} silinsin mi? {size} yer açılır.",
       toolFailed: "Vunemi bu modelin araç kullanabildiğini doğrulayamadı; araçsız görev yapamaz.",
+      unloadable: "Vunemi'nin motoru bu modeli yükleyemedi: bu model türünü henüz desteklemiyor olabilir ya da dosya bozuk olabilir.",
       testAgain: "Yeniden dene",
       context: "Bağlam uzunluğu",
       contextHint: "Uzun olursa bir seferde daha çok okur, ama daha çok bellek ister.",
