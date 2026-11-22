@@ -87,6 +87,7 @@ import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
 import { tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
+import { LinkedSync } from "./topics/linked.js";
 import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
@@ -557,6 +558,24 @@ const topicsRoot = (): string => {
 const topics = openTopicStore({ root: topicsRoot, dataDir: app.getPath("userData"), onChange: () => send(CH.topicsChanged, null) });
 /** Search by meaning in topics' notes and sources (topics/meaning.ts). */
 const topicMeaning = topics ? new TopicMeaning(topics, meaning) : null;
+/** The Memory page hears about a long folder pass at most this often, not after every batch. */
+const FOLDER_NEWS_MS = 5_000;
+let folderNewsAt = 0;
+/** Folders linked to topics, kept in the index while Vunemi is idle (topics/linked.ts). */
+const linkedSync = topics
+  ? new LinkedSync({
+      store: topics,
+      roots,
+      convert: markitdown ? (from, signal) => convertToMarkdown(markdownEngines, from, signal) : null,
+      cacheDir: join(app.getPath("userData"), "topic-cache"),
+      inMeaning: () => false,
+      onIndexed: () => {
+        if (Date.now() - folderNewsAt < FOLDER_NEWS_MS) return;
+        folderNewsAt = Date.now();
+        send(CH.topicsChanged, null);
+      },
+    })
+  : null;
 if (topics) {
   registerTopicTools(tools, {
     store: topics,
@@ -1578,6 +1597,8 @@ const memoryPage = topics
         // New sources wait for meaning search: start on them now, not after the next run.
         setTimeout(tendTopics, 0);
       },
+      roots,
+      linked: linkedSync,
     })
   : null;
 const page = () => {
@@ -1594,6 +1615,10 @@ handle(CH.topicsDeleteSource, (_e, topic: unknown, name: unknown) => page().dele
 handle(CH.topicsCreate, (_e, name: unknown, about: unknown) => page().create(name, about));
 handle(CH.topicsSetAbout, (_e, topic: unknown, about: unknown) => page().setAbout(topic, about));
 handle(CH.topicsAddSources, (_e, topic: unknown) => page().addSources(topic));
+handle(CH.topicsUnlink, (_e, topic: unknown, folder: unknown) => page().unlink(topic, folder));
+handle(CH.topicsRemoveCopies, (_e, topic: unknown) => page().removeCopies(topic));
+handle(CH.topicsFile, (_e, topic: unknown, name: unknown) => page().file(topic, name));
+handle(CH.topicsRevealFile, (_e, topic: unknown, name: unknown) => page().revealFile(topic, name));
 handle(CH.topicsReveal, (_e, topic: unknown, item: unknown) => page().reveal(topic, item));
 handle(CH.topicsRevealOriginal, (_e, topic: unknown, name: unknown) => page().revealOriginal(topic, name));
 handle(CH.topicsDelete, (_e, topic: unknown) => page().deleteTopic(topic));

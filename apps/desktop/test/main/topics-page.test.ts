@@ -5,7 +5,7 @@
  * meanwhile, and deletes go to the Trash.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setLocale } from "@vunemi/i18n";
@@ -21,6 +21,7 @@ let left: string[];
 let changes: number;
 let picked: string[];
 let page: ReturnType<typeof topicPage>;
+let refuse: boolean;
 
 const make = (over: Partial<TopicPageDeps> = {}) =>
   topicPage({
@@ -35,6 +36,13 @@ const make = (over: Partial<TopicPageDeps> = {}) =>
     reveal: (path) => revealed.push(path),
     leave: (topic) => left.push(topic),
     changed: () => changes++,
+    roots: {
+      resolve: (path: string) => {
+        if (refuse) throw new Error(`${path} is not open to Vunemi.`);
+        return path;
+      },
+    },
+    linked: null,
     ...over,
   });
 
@@ -47,6 +55,7 @@ beforeEach(() => {
   left = [];
   changes = 0;
   picked = [];
+  refuse = false;
   page = make();
   store.createTopic("Home renovation", "Bathroom and kitchen.");
 });
@@ -161,31 +170,66 @@ describe("the user's own changes", () => {
     writeFileSync(join(files, "notes.txt"), "Plain text");
     writeFileSync(join(files, "offer.pdf"), "%PDF");
     picked = [join(files, "notes.txt"), join(files, "offer.pdf")];
-    expect(await page.addSources("Home renovation")).toEqual({ added: ["notes"], already: [], failed: [{ file: "offer.pdf", error: "This kind of file can't be added." }], skipped: 0, left: 0, copies: 0, stopped: false });
+    expect(await page.addSources("Home renovation")).toEqual({ added: ["notes"], already: [], failed: [{ file: "offer.pdf", error: "This kind of file can't be added." }], skipped: 0, left: 0, copies: 0, stopped: false, linked: [] });
     expect(await page.addSources("Home renovation")).toMatchObject({ added: [], already: ["notes"] });
     picked = [];
     expect(await page.addSources("Home renovation")).toBeNull();
   });
 
-  it("adds a picked folder with its subfolders, leaving out hidden entries, links, packages and kinds it can't read", async () => {
+  it("links a picked folder instead of copying it, and copies files picked one by one", async () => {
     const tree = join(base, "Renovation");
     mkdirSync(join(tree, "Offers", "2026"), { recursive: true });
-    mkdirSync(join(tree, ".cache"));
-    mkdirSync(join(tree, "Pages.app"));
     writeFileSync(join(tree, "plan.md"), "# Plan");
     writeFileSync(join(tree, "Offers", "tiles.txt"), "Tiles offer");
     writeFileSync(join(tree, "Offers", "2026", "plumber.txt"), "Plumber offer");
     writeFileSync(join(tree, "Offers", "photo.jpg"), "not text");
-    writeFileSync(join(tree, ".hidden.txt"), "hidden");
-    writeFileSync(join(tree, ".cache", "c.txt"), "cache");
-    writeFileSync(join(tree, "Pages.app", "inside.txt"), "package");
-    symlinkSync(join(base, "Picked-elsewhere.txt"), join(tree, "link.txt"));
-    writeFileSync(join(base, "Picked-elsewhere.txt"), "linked");
+    mkdirSync(join(base, "Other"));
+    writeFileSync(join(base, "Other", "notes.txt"), "Plain text");
+    picked = [tree, join(base, "Other", "notes.txt")];
+    const view = await page.addSources("Home renovation");
+    expect(view).toMatchObject({ added: ["notes"], linked: [{ folder: tree, files: 3 }], failed: [] });
+    expect(store.linkedFolders("Home renovation").map((f) => f.path)).toEqual([tree]);
+    expect(readdirSync(join(base, "Memory", "Home renovation", "Sources"))).toEqual(["notes.md"]);
+    // Again: the folder is already there.
+    expect(await page.addSources("Home renovation")).toMatchObject({ linked: [], already: ["Renovation", "notes"] });
+  });
+
+  it("refuses a folder Vunemi may not read", async () => {
+    const tree = join(base, "Renovation");
+    mkdirSync(tree);
+    refuse = true;
     picked = [tree];
-    expect(await page.addSources("Home renovation")).toEqual({ added: ["plan", "tiles", "plumber"], already: [], failed: [], skipped: 1, left: 0, copies: 0, stopped: false });
-    expect(store.listSources("Home renovation").map((s) => s.original).sort()).toEqual(
-      [join(tree, "Offers", "2026", "plumber.txt"), join(tree, "Offers", "tiles.txt"), join(tree, "plan.md")].sort(),
-    );
+    expect((await page.addSources("Home renovation"))!.failed).toEqual([{ file: "Renovation", error: "Vunemi isn't allowed to read this folder." }]);
+    expect(store.linkedFolders("Home renovation")).toEqual([]);
+  });
+
+  it("unlinks a folder, and moves copies of linked files to the Trash only when asked", async () => {
+    const tree = join(base, "Renovation");
+    mkdirSync(tree);
+    writeFileSync(join(tree, "plan.md"), "# Plan");
+    store.setLinkedFolders("Home renovation", [{ path: tree, meaning: {} }]);
+    store.putLinked("Home renovation", { folder: tree, rel: "plan.md", path: join(tree, "plan.md"), title: "Plan", body: "# Plan", size: 6, mtime: 1, sha256: "p", parts: false });
+    store.addSource("Home renovation", { original: join(tree, "plan.html"), markdown: "Plan", bytes: 4, sha256: "q" });
+    expect(page.tree().topics[0]!.copies).toBe(1);
+    expect(page.tree().topics[0]!.folders).toEqual([{ path: tree, state: "ok", files: 0, indexed: 1 }]);
+    expect(trashed).toEqual([]);
+    expect(await page.removeCopies("Home renovation")).toBe(1);
+    expect(page.tree().topics[0]!.copies).toBe(0);
+    await page.unlink("Home renovation", tree);
+    expect(store.linkedFolders("Home renovation")).toEqual([]);
+    expect(existsSync(join(tree, "plan.md"))).toBe(true);
+  });
+
+  it("shows a linked file read only, and the original in Finder", () => {
+    const tree = join(base, "Renovation");
+    mkdirSync(tree);
+    writeFileSync(join(tree, "plan.md"), "# Plan");
+    store.setLinkedFolders("Home renovation", [{ path: tree, meaning: {} }]);
+    store.putLinked("Home renovation", { folder: tree, rel: "plan.md", path: join(tree, "plan.md"), title: "Plan", body: "# Plan\n\nTiles first", size: 6, mtime: 1, sha256: "p", parts: false });
+    expect(page.file("Home renovation", "Renovation/plan.md")).toMatchObject({ name: "Renovation/plan.md", folder: tree, rel: "plan.md", title: "Plan", text: "# Plan\n\nTiles first", cut: false, there: true });
+    page.revealFile("Home renovation", "Renovation/plan.md");
+    expect(revealed).toEqual([join(tree, "plan.md")]);
+    expect(page.file("Home renovation", "Renovation/nothing.md")).toBeNull();
   });
 
   it("adds one file a document from a folder, the text one first, but every file the user picked one by one", async () => {

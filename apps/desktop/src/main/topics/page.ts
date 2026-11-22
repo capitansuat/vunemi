@@ -6,11 +6,14 @@
  * written for the model.
  */
 import { existsSync, statSync } from "node:fs";
+import { basename } from "node:path";
+import type { Roots } from "@vunemi/files";
 import { t } from "@vunemi/i18n";
-import type { TopicAddedView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../shared/ipc.js";
+import type { TopicAddedView, TopicFileView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../shared/ipc.js";
+import type { LinkedSync } from "./linked.js";
 import type { TopicFound } from "./meaning.js";
 import { cleanName, linkedName, TOPIC_LIMITS, type TopicStore } from "./store.js";
-import { addSourceFiles, pickedSources, SOURCE_KINDS, type TopicToolsOptions } from "./tools.js";
+import { addSourceFiles, pickedSources, SOURCE_KINDS, type TopicToolsOptions, walkFolder } from "./tools.js";
 
 /** A source longer than this is shown cut; the file keeps all of it. */
 export const SHOWN_CHARS = 200_000;
@@ -28,6 +31,10 @@ export interface TopicPageDeps {
   leave: (topic: string) => void;
   /** Something changed that the page shows. */
   changed: () => void;
+  /** The folders Vunemi may read: a folder is linked only inside them. */
+  roots: Pick<Roots, "resolve">;
+  /** How each linked folder is doing (topics/linked.ts); null in a build without it. */
+  linked: Pick<LinkedSync, "state" | "counts"> | null;
 }
 
 const text = (value: unknown): string => (typeof value === "string" ? value : "");
@@ -82,6 +89,13 @@ export function topicPage(deps: TopicPageDeps) {
             updatedAt: topic.updatedAt,
             notes: outline.notes.map((n) => ({ title: n.title, updatedAt: n.mtime })),
             sources: outline.sources.map((s) => ({ name: s.title, updatedAt: s.mtime })),
+            folders: store.linkedFolders(topic.name).map((f) => ({
+              path: f.path,
+              state: deps.linked?.state(topic.name, f.path) ?? "ok",
+              files: deps.linked?.counts(topic.name, f.path).files ?? 0,
+              indexed: store.linkedRows(topic.name, f.path).length,
+            })),
+            copies: store.copiesInLinked(topic.name).length,
           };
         }),
       };
@@ -167,22 +181,92 @@ export function topicPage(deps: TopicPageDeps) {
       store.setAbout(topicOf(topicIn), text(about));
     },
 
+    /**
+     * Files picked one by one are copied in as sources; a picked folder is
+     * linked: its files stay where they are and are read there (the user's
+     * decision, 22 Nov).
+     */
     async addSources(topicIn: unknown): Promise<TopicAddedView | null> {
       const topic = topicOf(topicIn);
       const picked = await deps.pickFiles(SOURCE_KINDS(deps.convert !== null));
       if (picked.length === 0) return null;
-      const room = Math.max(0, TOPIC_LIMITS.sources - store.outline(topic).sources.length);
-      const { ok, refused, skipped, left, copies, stopped } = await pickedSources(picked, deps.convert !== null, room);
-      const name = (path: string) => path.split("/").pop() ?? path;
-      const view: TopicAddedView = { added: [], already: [], failed: refused.map((r) => ({ file: name(r.path), error: r.error })), skipped, left, copies, stopped };
-      if (ok.length === 0) return view;
-      const { results } = await addSourceFiles(store, deps.convert, topic, ok, AbortSignal.timeout(30 * 60_000));
-      for (const r of results) {
-        if ("error" in r) view.failed.push({ file: name(r.path), error: r.error });
-        else (r.added ? view.added : view.already).push(r.name);
+      const canConvert = deps.convert !== null;
+      const isFolder = (path: string) => existsSync(path) && statSync(path).isDirectory();
+      const view: TopicAddedView = { added: [], already: [], failed: [], skipped: 0, left: 0, copies: 0, stopped: false, linked: [] };
+      for (const folder of picked.filter(isFolder)) {
+        try {
+          deps.roots.resolve(folder, "read");
+        } catch {
+          view.failed.push({ file: basename(folder), error: t("topics.page.folderRefused") });
+          continue;
+        }
+        const now = store.linkedFolders(topic);
+        if (now.some((f) => folder === f.path || folder.startsWith(`${f.path}/`))) {
+          view.already.push(basename(folder));
+          continue;
+        }
+        let files = 0;
+        const walked = await walkFolder(folder, canConvert, () => files++);
+        view.skipped += walked.skipped;
+        view.copies += walked.copies;
+        view.stopped ||= walked.stopped;
+        // A folder inside the new one is covered by it.
+        store.setLinkedFolders(topic, [...now.filter((f) => !f.path.startsWith(`${folder}/`)), { path: folder, meaning: {} }]);
+        view.linked.push({ folder, files });
       }
-      deps.changed();
+      const single = picked.filter((path) => !isFolder(path));
+      if (single.length > 0) {
+        const room = Math.max(0, TOPIC_LIMITS.sources - store.outline(topic).sources.length);
+        const { ok, refused, left } = await pickedSources(single, canConvert, room);
+        view.failed.push(...refused.map((r) => ({ file: basename(r.path), error: r.error })));
+        view.left += left;
+        if (ok.length > 0) {
+          const { results } = await addSourceFiles(store, deps.convert, topic, ok, AbortSignal.timeout(30 * 60_000));
+          for (const r of results) {
+            if ("error" in r) view.failed.push({ file: basename(r.path), error: r.error });
+            else (r.added ? view.added : view.already).push(r.name);
+          }
+        }
+      }
+      if (view.linked.length > 0 || view.added.length > 0) deps.changed();
       return view;
+    },
+
+    /** The folder leaves the topic; its files stay where they are and leave search on the next pass. */
+    async unlink(topicIn: unknown, folder: unknown): Promise<void> {
+      const topic = topicOf(topicIn);
+      store.setLinkedFolders(topic, store.linkedFolders(topic).filter((f) => f.path !== text(folder)));
+      deps.changed();
+    },
+
+    /** Sources copied from files a linked folder holds, to the Trash: only when the user presses the button. */
+    async removeCopies(topicIn: unknown): Promise<number> {
+      const copies = store.copiesInLinked(topicOf(topicIn));
+      for (const path of copies) await deps.trash(path);
+      if (copies.length) deps.changed();
+      return copies.length;
+    },
+
+    file(topicIn: unknown, name: unknown): TopicFileView | null {
+      const topic = topicOf(topicIn);
+      const found = store.readLinked(topic, text(name));
+      if (!found) return null;
+      return {
+        topic,
+        name: linkedName(found.folder, found.rel),
+        folder: found.folder,
+        rel: found.rel,
+        title: found.title,
+        text: found.text.slice(0, SHOWN_CHARS),
+        cut: found.text.length > SHOWN_CHARS,
+        there: existsSync(found.path),
+      };
+    },
+
+    /** Finder, not open: the file is the user's, where it always was. */
+    revealFile(topicIn: unknown, name: unknown): void {
+      const found = store.readLinked(topicOf(topicIn), text(name));
+      if (found && existsSync(found.path)) deps.reveal(found.path);
     },
 
     reveal(topicIn: unknown, item: unknown): void {

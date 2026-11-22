@@ -8,9 +8,9 @@
  * Trash, and Finder shows where each file is.
  */
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { BookMarked, ChevronRight, FilePlus2, FileText, FolderOpen, FolderPlus, Library, NotebookPen, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { BookMarked, ChevronRight, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Library, Link2Off, NotebookPen, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { formatDate, t } from "@vunemi/i18n";
-import type { TopicAddedView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../../shared/ipc.js";
+import type { TopicAddedView, TopicFileView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
 import { Markdown } from "./Markdown.js";
 import { MemorySection } from "./MemorySection.js";
@@ -22,6 +22,7 @@ type Selected =
   | { kind: "note"; topic: string; title: string }
   | { kind: "newNote"; topic: string }
   | { kind: "source"; topic: string; name: string }
+  | { kind: "file"; topic: string; name: string }
   | { kind: "newTopic" }
   | { kind: "search"; query: string; topic: string | null }
   | { kind: "general" }
@@ -162,6 +163,7 @@ export function MemoryView() {
           <NoteEditor topic={selected.topic} note={null} onSaved={(note) => select({ kind: "note", topic: note.topic, title: note.title })} onCancel={() => select({ kind: "topic", topic: selected.topic })} />
         )}
         {selected.kind === "source" && <SourcePanel key={`${selected.topic}/${selected.name}`} topic={selected.topic} name={selected.name} version={version} onSelect={select} />}
+        {selected.kind === "file" && <FilePanel key={`${selected.topic}/${selected.name}`} topic={selected.topic} name={selected.name} version={version} onSelect={select} />}
         {selected.kind === "search" && <SearchPanel key={`${selected.topic}/${selected.query}`} query={selected.query} topic={selected.topic} version={version} onSelect={select} />}
         {selected.kind === "general" && <MemorySection title={t("topics.page.general")} />}
         {selected.kind === "project" && <ProjectNotes projectId={selected.id} />}
@@ -229,6 +231,14 @@ function TopicBranch({
               </NavRow>
             </li>
           ))}
+          {topic.folders.length > 0 && <li className="px-2 pt-1.5 pl-[22px] text-[10.5px] uppercase tracking-wide text-faint">{t("topics.page.folders")}</li>}
+          {topic.folders.map((f) => (
+            <li key={`f:${f.path}`}>
+              <NavRow depth={1} active={false} icon={<Folder size={12} />} onClick={() => onSelect({ kind: "topic", topic: topic.name })}>
+                {f.path.split("/").pop()}
+              </NavRow>
+            </li>
+          ))}
           {!all && (topic.notes.length > LISTED || topic.sources.length > LISTED) && (
             <li>
               <button type="button" onClick={() => setAll(true)} className="ml-[22px] py-1 text-[11.5px] text-muted underline decoration-dotted hover:text-fg">
@@ -236,7 +246,7 @@ function TopicBranch({
               </button>
             </li>
           )}
-          {topic.notes.length === 0 && topic.sources.length === 0 && <li className="py-1 pl-[30px] text-[11.5px] text-faint">{t("topics.page.emptyTopic")}</li>}
+          {topic.notes.length === 0 && topic.sources.length === 0 && topic.folders.length === 0 && <li className="py-1 pl-[30px] text-[11.5px] text-faint">{t("topics.page.emptyTopic")}</li>}
         </ul>
       )}
     </li>
@@ -267,6 +277,22 @@ function DeleteButton({ label, confirm, onDelete }: { label: string; confirm: st
       <span className="text-[12px] text-muted">{confirm}</span>
       <Button danger disabled={busy} onClick={() => { setBusy(true); void onDelete().finally(() => setBusy(false)); }} icon={<Trash2 size={12} />}>
         {t("topics.page.toTrash")}
+      </Button>
+      <Button onClick={() => setAsking(false)}>{t("common.cancel")}</Button>
+    </span>
+  );
+}
+
+/** An action that asks once more, on the spot, in its own words. */
+function ConfirmButton({ label, confirm, icon, onConfirm }: { label: string; confirm: string; icon: ReactNode; onConfirm: () => Promise<void> }) {
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  if (!asking) return <Button onClick={() => setAsking(true)} icon={icon}>{label}</Button>;
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      <span className="text-[12px] text-muted">{confirm}</span>
+      <Button disabled={busy} onClick={() => { setBusy(true); void onConfirm().finally(() => { setBusy(false); setAsking(false); }); }} icon={icon}>
+        {label}
       </Button>
       <Button onClick={() => setAsking(false)}>{t("common.cancel")}</Button>
     </span>
@@ -368,6 +394,9 @@ function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["top
       {busy && <p className="mt-3 text-[12px] text-muted">{t("topics.page.adding")}</p>}
       {added && (
         <div className="mt-3 rounded-lg border border-line bg-surface p-3 text-[12.5px]">
+          {added.linked.map((l) => (
+            <p key={`l:${l.folder}`} className="text-fg">{t("topics.page.linked", { count: l.files, folder: l.folder.split("/").pop() ?? l.folder })}</p>
+          ))}
           {added.added.length > 0 && <p className="text-fg">{t("topics.page.added", { names: someNames(added.added) })}</p>}
           {added.already.length > 0 && <p className="text-muted">{t("topics.page.already", { names: someNames(added.already) })}</p>}
           {added.failed.slice(0, NAMED).map((f, i) => (
@@ -381,6 +410,31 @@ function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["top
         </div>
       )}
       {error && <p role="alert" className="mt-3 text-[12px] text-danger">{error}</p>}
+      {topic.copies > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3 text-[12.5px] text-muted">
+          <span>{t("topics.page.copiesOffer", { count: topic.copies })}</span>
+          <Button disabled={busy} onClick={() => run(() => window.vunemi.topicsRemoveCopies(topic.name))} icon={<Trash2 size={12} />}>{t("topics.page.removeCopies")}</Button>
+        </div>
+      )}
+      {topic.folders.length > 0 && (
+        <section className="mt-7">
+          <h2 className="text-[11px] font-medium uppercase tracking-wide text-faint">{t("topics.page.folders")}</h2>
+          <ul className="mt-1.5 divide-y divide-line rounded-xl border border-line bg-surface">
+            {topic.folders.map((f) => (
+              <li key={f.path} className="flex flex-wrap items-center gap-2 px-3 py-2 text-[13px] text-fg">
+                <Folder size={13} className="shrink-0 text-faint" />
+                <span className="min-w-0 flex-1">
+                  <span className="selectable block truncate font-mono text-[12px]">{f.path}</span>
+                  <span className="block text-[11.5px] text-faint">
+                    {f.state === "missing" ? t("topics.page.folderMissing") : f.state === "refused" ? t("topics.page.folderRefused") : f.files > 0 && f.indexed < f.files ? t("topics.page.indexing", { indexed: f.indexed.toLocaleString(), files: f.files.toLocaleString() }) : t("topics.page.filesCount", { count: f.indexed })}
+                  </span>
+                </span>
+                <ConfirmButton label={t("topics.page.unlink")} confirm={t("topics.page.unlinkConfirm", { folder: f.path.split("/").pop() ?? f.path })} icon={<Link2Off size={12} />} onConfirm={() => window.vunemi.topicsUnlink(topic.name, f.path).catch((err: unknown) => setError(message(err)))} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {topic.notes.length > 0 && (
         <section className="mt-7">
           <h2 className="text-[11px] font-medium uppercase tracking-wide text-faint">{t("topics.page.notes")}</h2>
@@ -580,6 +634,42 @@ function SourcePanel({ topic, name, version, onSelect }: { topic: string; name: 
   );
 }
 
+/** A file of a linked folder: read where it is, never changed from here. */
+function FilePanel({ topic, name, version, onSelect }: { topic: string; name: string; version: number; onSelect: (s: Selected) => void }) {
+  const [file, setFile] = useState<TopicFileView | null | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let stale = false;
+    window.vunemi
+      .topicsFile(topic, name)
+      .then((f) => !stale && setFile(f))
+      .catch((err: unknown) => !stale && setError(message(err)));
+    return () => {
+      stale = true;
+    };
+  }, [topic, name, version]);
+  if (file === undefined) return error ? <p role="alert" className="text-[12px] text-danger">{error}</p> : null;
+  if (file === null) return <p className="text-[13px] text-faint">{t("topics.page.sourceGone")}</p>;
+  return (
+    <article className="max-w-[760px]">
+      <p className="text-[12px] text-faint">
+        <button type="button" onClick={() => onSelect({ kind: "topic", topic })} className="hover:text-fg">{topic}</button> · {t("topics.page.linkedFile")}
+      </p>
+      <h1 className="mt-0.5 text-[19px] font-semibold tracking-tight text-fg">{file.title}</h1>
+      <p className="selectable mt-1 font-mono text-[12px] text-faint">{file.name}</p>
+      <p className="mt-1 text-[12px] text-faint">{t("topics.page.linkedWhy")}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {file.there && <Button onClick={() => void window.vunemi.topicsRevealFile(topic, file.name)} icon={<FolderOpen size={13} />}>{t("topics.page.revealOriginal")}</Button>}
+      </div>
+      {!file.there && <p className="mt-3 text-[12px] text-faint">{t("topics.page.originalGone")}</p>}
+      <div className="mt-6 border-t border-line pt-5">
+        <Markdown text={file.text} />
+        {file.cut && <p className="mt-4 text-[12px] text-faint">{t("topics.page.cut")}</p>}
+      </div>
+    </article>
+  );
+}
+
 function SearchPanel({ query, topic, version, onSelect }: { query: string; topic: string | null; version: number; onSelect: (s: Selected) => void }) {
   const [found, setFound] = useState<TopicSearchView | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -613,12 +703,11 @@ function SearchPanel({ query, topic, version, onSelect }: { query: string; topic
                 <li key={`${h.topic}/${h.kind}/${h.title}`}>
                   <button
                     type="button"
-                    disabled={h.kind === "file"}
-                    onClick={() => h.kind !== "file" && onSelect(h.kind === "note" ? { kind: "note", topic: h.topic, title: h.title } : { kind: "source", topic: h.topic, name: h.title })}
+                    onClick={() => onSelect(h.kind === "note" ? { kind: "note", topic: h.topic, title: h.title } : h.kind === "file" ? { kind: "file", topic: h.topic, name: h.name ?? h.title } : { kind: "source", topic: h.topic, name: h.title })}
                     className="block w-full px-3.5 py-2.5 text-left hover:bg-surface-2"
                   >
                     <span className="flex items-center gap-2 text-[13px] text-fg">
-                      {h.kind === "note" ? <FileText size={13} className="shrink-0 text-faint" /> : <Library size={13} className="shrink-0 text-faint" />}
+                      {h.kind === "note" ? <FileText size={13} className="shrink-0 text-faint" /> : h.kind === "file" ? <Folder size={13} className="shrink-0 text-faint" /> : <Library size={13} className="shrink-0 text-faint" />}
                       <span className="truncate">{h.title}</span>
                       <span className="shrink-0 text-[11px] text-faint">{h.topic}</span>
                     </span>

@@ -42,6 +42,10 @@ export interface TopicTreeView {
     updatedAt: number;
     notes: { title: string; updatedAt: number }[];
     sources: { name: string; updatedAt: number }[];
+    /** Folders linked to the topic: read where they are, never copied. */
+    folders: { path: string; state: "ok" | "missing" | "refused"; files: number; indexed: number }[];
+    /** Sources that are copies of files a linked folder holds. */
+    copies: number;
   }[];
   /** Whether files other than text can be added (MarkItDown in this build). */
   canConvert: boolean;
@@ -79,6 +83,20 @@ export interface TopicSourceView {
   cut: boolean;
 }
 
+/** A file in a folder linked to a topic, shown read only. */
+export interface TopicFileView {
+  topic: string;
+  /** How it is named and opened: the folder's name, then its path inside it. */
+  name: string;
+  folder: string;
+  rel: string;
+  title: string;
+  text: string;
+  cut: boolean;
+  /** Whether the file is still where it was. */
+  there: boolean;
+}
+
 export interface TopicSearchView {
   /** A file is in a linked folder; `name` is how it is opened (folder name and path inside it). */
   hits: { kind: "note" | "source" | "file"; topic: string; title: string; snippet: string; name?: string }[];
@@ -100,6 +118,8 @@ export interface TopicAddedView {
   copies: number;
   /** The folders held too many entries to look through all of them. */
   stopped: boolean;
+  /** Folders linked, with the readable files found in them. */
+  linked: { folder: string; files: number }[];
 }
 
 /** What the connections screen collects before a server can be added. */
@@ -762,8 +782,13 @@ export interface VunemiApi {
   topicsDeleteSource(topic: string, name: string): Promise<void>;
   topicsCreate(name: string, about: string): Promise<void>;
   topicsSetAbout(topic: string, about: string): Promise<void>;
-  /** Asks for files, then adds them as sources; null when the user cancels. */
+  /** Asks for files or folders: files are added as sources, folders linked; null when the user cancels. */
   topicsAddSources(topic: string): Promise<TopicAddedView | null>;
+  topicsUnlink(topic: string, folder: string): Promise<void>;
+  /** Moves the sources that copy files of a linked folder to the Trash; how many. */
+  topicsRemoveCopies(topic: string): Promise<number>;
+  topicsFile(topic: string, name: string): Promise<TopicFileView | null>;
+  topicsRevealFile(topic: string, name: string): Promise<void>;
   /** Shows the topic, or one of its notes or sources, in Finder. */
   topicsReveal(topic: string, item: { kind: "note" | "source"; name: string } | null): Promise<void>;
   topicsRevealOriginal(topic: string, name: string): Promise<void>;
@@ -1048,6 +1073,10 @@ export const CH = {
   topicsCreate: "topics:create",
   topicsSetAbout: "topics:set-about",
   topicsAddSources: "topics:add-sources",
+  topicsUnlink: "topics:unlink",
+  topicsRemoveCopies: "topics:remove-copies",
+  topicsFile: "topics:file",
+  topicsRevealFile: "topics:reveal-file",
   topicsReveal: "topics:reveal",
   topicsRevealOriginal: "topics:reveal-original",
   topicsDelete: "topics:delete",

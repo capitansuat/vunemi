@@ -3,7 +3,7 @@
  * the index while Vunemi is idle, and never copied (topics/linked.ts).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PathRefused } from "@vunemi/files";
@@ -66,6 +66,18 @@ describe("a linked folder", () => {
     expect(store.search("alpha", "Library")).toMatchObject([{ kind: "file", title: "A", rel: "a.md" }]);
     expect(sync.counts("Library", dir)).toEqual({ files: 2, indexed: 2 });
     expect(sync.state("Library", dir)).toBe("ok");
+  });
+
+  it("leaves out hidden folders, links and app packages", async () => {
+    mkdirSync(join(dir, ".cache"));
+    writeFileSync(join(dir, ".cache", "c.txt"), "cache");
+    mkdirSync(join(dir, "Pages.app"));
+    writeFileSync(join(dir, "Pages.app", "inside.txt"), "package");
+    writeFileSync(join(base, "elsewhere.txt"), "linked");
+    symlinkSync(join(base, "elsewhere.txt"), join(dir, "link.txt"));
+    writeFileSync(join(dir, "plan.md"), "# Plan");
+    await sync.run(() => true);
+    expect(store.linkedRows("Library").map((r) => r.rel)).toEqual(["plan.md"]);
   });
 
   it("converts a file once, by its hash, and again only when it changes", async () => {
