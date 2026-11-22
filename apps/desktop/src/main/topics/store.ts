@@ -13,7 +13,7 @@
  */
 import { createHash, randomUUID } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { basename, extname, join, sep } from "node:path";
+import { basename, dirname, extname, join, sep } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { keywordQuery } from "../memory/store.js";
 
@@ -645,6 +645,38 @@ export class TopicStore {
     }
   }
 
+  /** A linked file by the name the tools give it (linkedName), with its text as indexed. */
+  readLinked(topicName: string, name: string): { folder: string; rel: string; path: string; title: string; text: string } | null {
+    const topicKey = keyOf(this.need(topicName).name);
+    const wanted = String(name ?? "").trim().replace(/^\/+/, "");
+    const rows = this.db.prepare("SELECT path, folder, rel, title, body FROM files WHERE topic_key = ? AND kind = 'linked' AND rel = ?").all(topicKey, wanted.slice(wanted.indexOf("/") + 1)) as { path: string; folder: string; rel: string; title: string; body: string }[];
+    const row = rows.find((r) => linkedName(r.folder, r.rel) === wanted);
+    return row ? { folder: row.folder, rel: row.rel, path: row.path, title: row.title, text: row.body } : null;
+  }
+
+  /**
+   * Sources copied from a file that a linked folder now holds (the same
+   * document: same folder, same name, any kind). Search shows the linked
+   * file; the Memory page offers to remove the copies.
+   */
+  copiesInLinked(topicName: string): string[] {
+    const topic = this.need(topicName);
+    this.sync(topic);
+    return [...this.copiesIn([keyOf(topic.name)])].filter((path) => existsSync(path));
+  }
+
+  private copiesIn(topicKeys: readonly string[]): Set<string> {
+    const out = new Set<string>();
+    for (const topicKey of topicKeys) {
+      const docs = new Set((this.db.prepare("SELECT path FROM files WHERE topic_key = ? AND kind = 'linked'").all(topicKey) as { path: string }[]).map((r) => docKey(r.path)));
+      if (docs.size === 0) continue;
+      for (const row of this.db.prepare("SELECT path, original FROM files WHERE topic_key = ? AND kind = 'source' AND original IS NOT NULL").all(topicKey) as { path: string; original: string }[]) {
+        if (docs.has(docKey(row.original))) out.add(row.path);
+      }
+    }
+    return out;
+  }
+
   /** A topic's linked files as indexed: all, or one folder's. */
   linkedRows(topicName: string, folder?: string): LinkedRow[] {
     const topicKey = keyOf(this.need(topicName).name);
@@ -691,9 +723,10 @@ export class TopicStore {
       .prepare(`SELECT p.path, p.start, p.text, p.vector, f.kind, f.topic_key, f.title, f.folder, f.rel FROM parts p JOIN files f ON f.path = p.path WHERE p.vector_model = ? AND p.vector IS NOT NULL ${where}`)
       .iterate(...(topicName ? [model, keyOf(topicName)] : [model])) as Iterable<{ path: string; start: number; text: string; vector: Uint8Array; kind: Row["kind"]; topic_key: string; title: string; folder: string | null; rel: string | null }>;
     const best = new Map<string, TopicHit & { score: number }>();
+    const copies = this.copiesIn([...names.keys()]);
     for (const row of rows) {
       const topic = names.get(row.topic_key);
-      if (!topic) continue;
+      if (!topic || copies.has(row.path)) continue;
       const vector = new Float32Array(row.vector.buffer.slice(row.vector.byteOffset, row.vector.byteOffset + row.vector.byteLength));
       let score = 0;
       if (vector.length === query.length) for (let i = 0; i < vector.length; i++) score += vector[i]! * query[i]!;
@@ -727,9 +760,18 @@ export class TopicStore {
     const rows = this.db
       .prepare(`SELECT f.kind, f.topic_key, f.title, f.path, f.folder, f.rel, snippet(files_fts, 1, '', '', '…', 16) AS snip FROM files_fts JOIN files f ON f.rowid = files_fts.rowid WHERE files_fts MATCH ? ${topicName ? "AND f.topic_key = ?" : ""} ORDER BY bm25(files_fts) LIMIT ?`)
       .all(...(topicName ? [match, keyOf(topicName), limit] : [match, limit])) as unknown as { kind: Row["kind"]; topic_key: string; title: string; path: string; folder: string | null; rel: string | null; snip: string }[];
-    return rows.filter((r) => names.has(r.topic_key) && existsSync(r.path)).map((r) => ({ ...hitKind(r), topic: names.get(r.topic_key)!, title: r.title, snippet: r.snip.replace(/\s+/g, " ").trim(), path: r.path }));
+    const copies = this.copiesIn([...names.keys()]);
+    return rows.filter((r) => names.has(r.topic_key) && !copies.has(r.path) && existsSync(r.path)).map((r) => ({ ...hitKind(r), topic: names.get(r.topic_key)!, title: r.title, snippet: r.snip.replace(/\s+/g, " ").trim(), path: r.path }));
   }
 }
+
+/** How the tools and the page name a linked file: its folder's name, then its path inside it. */
+export function linkedName(folder: string, rel: string): string {
+  return `${basename(folder)}/${rel}`;
+}
+
+/** One document's files share this: the folder and the name without its kind. */
+const docKey = (path: string): string => keyOf(join(dirname(path), basename(path, extname(path))));
 
 /** A file's text as a topic keeps it: at most TOPIC_LIMITS.sourceChars, saying where it was cut. */
 export function cutToSource(markdown: string): string {

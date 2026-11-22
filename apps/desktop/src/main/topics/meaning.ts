@@ -132,7 +132,10 @@ export class TopicMeaning {
       const near = this.store.nearestParts(vector!, this.model, topic, CANDIDATES).filter((hit) => hit.score >= PART_MIN);
       const all = new Map<string, TopicHit>();
       // By meaning the part itself is shown: it says more than a few words around a match.
-      for (const hit of near) all.set(hit.path, { kind: hit.kind, topic: hit.topic, title: hit.title, snippet: hit.snippet, path: hit.path, ...(hit.at !== undefined && { at: hit.at }) });
+      for (const hit of near) {
+        const { score: _score, ...shown } = hit;
+        all.set(hit.path, shown);
+      }
       for (const hit of byWords) if (!all.has(hit.path)) all.set(hit.path, hit);
       const ranked = fuse([byWords.map((h) => ({ id: h.path })), near.map((h) => ({ id: h.path }))]);
       return { hits: ranked.slice(0, limit).map((r) => all.get(r.id)!), pending: this.store.pendingParts(this.model, topic), byMeaning: true };

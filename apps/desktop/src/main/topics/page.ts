@@ -9,7 +9,7 @@ import { existsSync, statSync } from "node:fs";
 import { t } from "@vunemi/i18n";
 import type { TopicAddedView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../shared/ipc.js";
 import type { TopicFound } from "./meaning.js";
-import { cleanName, TOPIC_LIMITS, type TopicStore } from "./store.js";
+import { cleanName, linkedName, TOPIC_LIMITS, type TopicStore } from "./store.js";
 import { addSourceFiles, pickedSources, SOURCE_KINDS, type TopicToolsOptions } from "./tools.js";
 
 /** A source longer than this is shown cut; the file keeps all of it. */
@@ -115,7 +115,7 @@ export function topicPage(deps: TopicPageDeps) {
       const topic = topicIn === null || topicIn === undefined ? undefined : topicOf(topicIn);
       const found = deps.find ? await deps.find(words, topic, SEARCH_HITS) : { hits: store.search(words, topic, SEARCH_HITS), pending: 0, byMeaning: false };
       return {
-        hits: found.hits.map((h) => ({ kind: h.kind, topic: h.topic, title: h.title, snippet: h.snippet.replace(/\s+/g, " ").trim().slice(0, 300) })),
+        hits: found.hits.map((h) => ({ kind: h.kind, topic: h.topic, title: h.title, snippet: h.snippet.replace(/\s+/g, " ").trim().slice(0, 300), ...(h.kind === "file" && { name: linkedName(h.folder ?? "", h.rel ?? "") }) })),
         pending: found.pending,
         byMeaning: found.byMeaning,
       };

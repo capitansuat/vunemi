@@ -16,7 +16,7 @@ import type { Roots } from "@vunemi/files";
 import { t } from "@vunemi/i18n";
 import { short, source } from "../addons/tools/common.js";
 import { MARKDOWN_KINDS } from "../markdown.js";
-import { sha256Of, TOPIC_LIMITS, type TopicHit, type TopicNote, type TopicStore } from "./store.js";
+import { linkedName, sha256Of, TOPIC_LIMITS, type TopicHit, type TopicNote, type TopicStore } from "./store.js";
 import type { TopicFound } from "./meaning.js";
 
 export const TOPICS_AREA = "topics";
@@ -262,7 +262,13 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
         const topics = opts.store.listTopics();
         const here = opts.where().topic;
         if (topics.length === 0) return "There are no topics yet. The user can make one on the Memory page, or ask you to (topic_create).";
-        return topics.map((tp) => `- ${tp.name}${here && tp.name.toLowerCase() === here.toLowerCase() ? " (this conversation)" : ""}: ${tp.about.replace(/\s+/g, " ").slice(0, 200)} [${tp.notes} notes, ${tp.sources} sources]`).join("\n");
+        return topics
+          .map((tp) => {
+            const linked = opts.store.linkedRows(tp.name).length;
+            const files = linked ? `, ${linked === 1 ? "1 linked file" : `${linked} linked files`}` : "";
+            return `- ${tp.name}${here && tp.name.toLowerCase() === here.toLowerCase() ? " (this conversation)" : ""}: ${tp.about.replace(/\s+/g, " ").slice(0, 200)} [${tp.notes} notes, ${tp.sources} sources${files}]`;
+          })
+          .join("\n");
       },
     },
     {
@@ -378,12 +384,15 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
         const found = opts.find ? await opts.find(query, topic, SEARCH_HITS) : { hits: opts.store.search(query, topic, SEARCH_HITS), pending: 0, byMeaning: false };
         const waiting = found.pending > 0 ? `\n[${found.pending} parts aren't searchable by meaning yet; they were searched by words.]` : "";
         if (found.hits.length === 0) return `Nothing matches "${query}".${waiting}`;
-        const where = (h: TopicHit) => (h.kind === "source" && h.at !== undefined ? ` (read from offset ${h.at})` : "");
+        const where = (h: TopicHit) => (h.kind !== "note" && h.at !== undefined ? ` (read from offset ${h.at})` : "");
+        const named = (h: TopicHit) => (h.kind === "file" ? linkedName(h.folder ?? "", h.rel ?? "") : h.title);
+        // Pages first: what was already worked out, then the files it came from.
+        const hits = [...found.hits.filter((h) => h.kind === "note"), ...found.hits.filter((h) => h.kind !== "note")];
         const clip = (text: string) => {
           const flat = text.replace(/\s+/g, " ").trim();
           return flat.length > SNIPPET_CHARS ? `${flat.slice(0, SNIPPET_CHARS - 1)}…` : flat;
         };
-        return found.hits.map((h) => `- ${h.kind === "note" ? "note" : "source"} ${JSON.stringify(h.title)}${a.everywhere === true ? ` in ${h.topic}` : ""}${where(h)}: ${clip(h.snippet)}`).join("\n") + waiting;
+        return hits.map((h) => `- ${h.kind} ${JSON.stringify(named(h))}${a.everywhere === true ? ` in ${h.topic}` : ""}${where(h)}: ${clip(h.snippet)}`).join("\n") + waiting;
       },
     },
     {
@@ -424,7 +433,7 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
     },
     {
       name: "topic_source_read",
-      description: `Read a source of this conversation's topic, ${READ_CHARS.toLocaleString("en")} characters at a time from offset. ${RECORDS}`,
+      description: `Read a source or a linked file of this conversation's topic (by the name topic_search gives), ${READ_CHARS.toLocaleString("en")} characters at a time from offset. ${RECORDS}`,
       parameters: {
         type: "object",
         properties: { name: { type: "string" }, offset: { type: "integer", minimum: 0 } },
@@ -436,13 +445,19 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
       record: true,
       run: async (a) => {
         const topic = topicOf(opts);
-        const found = opts.store.readSource(topic, String(a.name ?? ""));
-        if (!found) throw new Error(`"${topic}" has no source called "${String(a.name ?? "")}". topic_list or topic_search show what is there.`);
+        const name = String(a.name ?? "");
+        const source = opts.store.readSource(topic, name);
+        const file = source ? null : opts.store.readLinked(topic, name);
+        if (!source && !file) throw new Error(`"${topic}" has no source or linked file called "${name}". topic_list or topic_search show what is there.`);
+        const text = source ? source.text : file!.text;
         const offset = Math.max(0, Math.floor(Number(a.offset ?? 0)) || 0);
-        const part = found.text.slice(offset, offset + READ_CHARS);
+        const part = text.slice(offset, offset + READ_CHARS);
         const end = offset + part.length;
-        const rest = end < found.text.length ? `\n\n[Characters ${offset}–${end} of ${found.text.length}. Call again with offset ${end} for more.]` : "";
-        return `${found.source.name} (from ${short(found.source.original)}, added ${found.source.added.slice(0, 10)})\n\n${part}${rest}`;
+        const rest = end < text.length ? `\n\n[Characters ${offset}–${end} of ${text.length}. Call again with offset ${end} for more.]` : "";
+        const head = source
+          ? `${source.source.name} (from ${short(source.source.original)}, added ${source.source.added.slice(0, 10)})`
+          : `${linkedName(file!.folder, file!.rel)} (in ${short(file!.folder)}, read where it is)`;
+        return `${head}\n\n${part}${rest}`;
       },
     },
   ];

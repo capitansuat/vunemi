@@ -221,3 +221,47 @@ describe("files a note is made of", () => {
     expect(parseNote(file).body.trim()).toBe("- Total");
   });
 });
+
+describe("linked folders", () => {
+  let ref: string;
+  const link = (rel: string, body: string, title = rel) => {
+    const path = join(ref, rel);
+    writeFileSync(path, body);
+    store.putLinked("Library", { folder: ref, rel, path, title, body, size: body.length, mtime: 1, sha256: rel, parts: false });
+  };
+
+  beforeEach(() => {
+    store.createTopic("Library", "Branches and loans");
+    topic = "Library";
+    ref = join(base, "library-reference");
+    mkdirSync(ref);
+    store.setLinkedFolders("Library", [{ path: ref, meaning: {} }]);
+  });
+
+  it("finds linked files and reads them by folder and path, fenced as untrusted", async () => {
+    link("loan-period-reference.md", "# Loan periods\n\n| QXA | Standard loan |", "Loan periods");
+    const out = String(await run("topic_search", { query: "standard loan" }));
+    expect(out).toContain('- file "library-reference/loan-period-reference.md"');
+    const read = String(await run("topic_source_read", { name: "library-reference/loan-period-reference.md" }));
+    expect(read).toContain("QXA");
+    expect(read.split("\n")[0]).toContain("library-reference/loan-period-reference.md");
+    expect(tools.get("topic_source_read")!.untrustedOutput).toBe(true);
+    expect(String(await run("topic_list", {}))).toContain("1 linked file");
+  });
+
+  it("shows the linked file, not its copy, when both are in the topic", () => {
+    link("a.md", "alpha library");
+    const sources = join(base, "Documents", "Vunemi Memory", "Library", "Sources");
+    store.addSource("Library", { original: join(ref, "a.html"), markdown: "alpha library", bytes: 1, sha256: "x" });
+    expect(store.copiesInLinked("Library")).toEqual([join(sources, "a.md")]);
+    expect(store.search("alpha", "Library").map((h) => h.kind)).toEqual(["file"]);
+  });
+
+  it("lists pages before files, each group in its own rank", async () => {
+    link("loans.md", "loan loan loan rules");
+    store.writeNote("Library", { title: "Loan", text: "- loan", by: "vunemi", sources: [] });
+    const lines = String(await run("topic_search", { query: "loan" })).split("\n");
+    expect(lines[0]).toMatch(/^- note /);
+    expect(lines[1]).toMatch(/^- file /);
+  });
+});
