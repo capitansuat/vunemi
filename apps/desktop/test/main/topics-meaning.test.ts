@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { partsOf, PART_CHARS, TopicStore } from "../../src/main/topics/store.js";
-import { PART_MIN, TopicMeaning } from "../../src/main/topics/meaning.js";
+import { PART_MIN, retryAfter, TopicMeaning } from "../../src/main/topics/meaning.js";
 import { TooLongError } from "../../src/main/memory/embedder.js";
 
 describe("cutting a text in parts", () => {
@@ -107,7 +107,7 @@ describe("searching a topic by meaning", () => {
     store.writeNote("Home renovation", { title: "Plumber", text: "Kerem fixes the leak", by: "vunemi", sources: [] });
     const { meaning, passages } = embedder();
     const topicMeaning = new TopicMeaning(store, meaning);
-    await topicMeaning.catchUp();
+    expect(await topicMeaning.catchUp()).toBe("done");
     expect(passages.sort()).toEqual(["Budget\nMoney for the bathroom", "Plumber\nKerem fixes the leak"]);
     await topicMeaning.catchUp();
     expect(passages).toHaveLength(2);
@@ -123,7 +123,7 @@ describe("searching a topic by meaning", () => {
     for (let i = 0; i < 40; i++) store.writeNote("Home renovation", { title: `Note ${i}`, text: `budget line ${i}`, by: "vunemi", sources: [] });
     const { meaning, passages } = embedder();
     let calls = 0;
-    await new TopicMeaning(store, meaning).catchUp(() => calls++ < 1);
+    expect(await new TopicMeaning(store, meaning).catchUp(() => calls++ < 1)).toBe("paused");
     expect(passages).toHaveLength(16);
     expect(store.pendingParts("qwen3-embedding-0.6b-q8_0", "Home renovation")).toBe(24);
   });
@@ -152,9 +152,13 @@ describe("searching a topic by meaning", () => {
     for (let i = 0; i < 3; i++) store.writeNote("Home renovation", { title: `Note ${i}`, text: `budget line ${i}`, by: "vunemi", sources: [] });
     let calls = 0;
     const down = { available: () => true, embed: async () => { calls++; throw new Error("The meaning model answered 500."); } };
-    await new TopicMeaning(store, down).catchUp();
+    expect(await new TopicMeaning(store, down).catchUp()).toBe("failed");
     expect(calls).toBe(1);
     expect(store.pendingParts("qwen3-embedding-0.6b-q8_0", "Home renovation")).toBe(3);
+  });
+
+  it("tries a failed pass again later, waiting longer each time, at most half an hour", () => {
+    expect([1, 2, 3, 4, 5, 6, 9].map((n) => retryAfter(n) / 60_000)).toEqual([1, 2, 4, 8, 16, 30, 30]);
   });
 
   it("leaves out what isn't about the query at all", async () => {

@@ -34,8 +34,16 @@ export interface TopicFound {
   byMeaning: boolean;
 }
 
+/** How a catch-up pass ended: nothing left, stepped aside for other work, or a request failed. */
+export type CatchUp = "done" | "paused" | "failed";
+
+/** Minutes before trying again after `failures` failed passes in a row: 1, 2, 4 … at most 30. */
+export function retryAfter(failures: number): number {
+  return Math.min(30, 2 ** Math.max(0, failures - 1)) * 60_000;
+}
+
 export class TopicMeaning {
-  private catching: Promise<void> | null = null;
+  private catching: Promise<CatchUp> | null = null;
 
   constructor(
     private readonly store: TopicStore,
@@ -45,16 +53,23 @@ export class TopicMeaning {
 
   /**
    * Makes the missing vectors, a batch at a time, for as long as `goOn`
-   * says. Call it when nothing else runs, and again after it stepped aside.
+   * says. Call it when nothing else runs, and again after it stepped aside
+   * ("paused") or failed: a failed request ends the pass.
    */
-  catchUp(goOn: () => boolean = () => true): Promise<void> {
-    if (!this.meaning.available()) return Promise.resolve();
-    this.catching ??= (async () => {
+  catchUp(goOn: () => boolean = () => true): Promise<CatchUp> {
+    if (!this.meaning.available()) return Promise.resolve("done");
+    this.catching ??= (async (): Promise<CatchUp> => {
       this.store.refresh();
-      while (goOn() && (await this.embedSome(EMBED_BATCH)) > 0);
+      for (;;) {
+        if (!goOn()) return "paused";
+        if ((await this.embedSome(EMBED_BATCH)) === 0) return "done";
+      }
     })()
-      // The model failed or was stopped: the next call takes it up again.
-      .catch(() => {})
+      .catch((error: unknown): CatchUp => {
+        // Said, so a pass that keeps failing can be told apart from one that waits.
+        console.error("[vunemi] topic meaning search:", error instanceof Error ? error.message : String(error));
+        return "failed";
+      })
       .finally(() => (this.catching = null));
     return this.catching;
   }

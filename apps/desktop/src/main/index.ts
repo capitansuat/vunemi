@@ -86,7 +86,7 @@ import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
-import { TopicMeaning } from "./topics/meaning.js";
+import { retryAfter, TopicMeaning } from "./topics/meaning.js";
 import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
@@ -1792,9 +1792,21 @@ function tendLibrary(): void {
 }
 
 /** Vectors for topic notes and sources added or changed, while nothing else runs (topics/meaning.ts). */
+let topicsRetry: NodeJS.Timeout | null = null;
+let topicsFailures = 0;
 function tendTopics(): void {
+  if (topicsRetry) clearTimeout(topicsRetry);
+  topicsRetry = null;
   const idle = (): boolean => !session.running && session.queued.length === 0 && !meetings.isRecording && !meetings.summarising;
-  if (idle()) void topicMeaning?.catchUp(idle);
+  if (!topicMeaning || !idle()) return;
+  void topicMeaning.catchUp(idle).then((how) => {
+    if (how === "done") topicsFailures = 0;
+    // One failed request ended the pass: without this the rest waited for the next run or restart.
+    if (how !== "failed" || topicsRetry) return;
+    topicsFailures++;
+    topicsRetry = setTimeout(tendTopics, retryAfter(topicsFailures));
+    topicsRetry.unref();
+  });
 }
 
 /** A correction to who said what, then the meeting as it now is. */
