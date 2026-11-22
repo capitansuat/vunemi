@@ -25,6 +25,21 @@ export const LINKED_BATCH = 20;
 const CONVERT_MS = 20 * 60_000;
 const TEXT = new Set([".md", ".markdown", ".txt"]);
 
+/**
+ * Search by meaning costs about 9 parts a second: a linked folder's top
+ * level and its subfolders of up to this many files have it unless the
+ * user switches them off; larger subfolders start off (the user's choice).
+ */
+export const MEANING_SUBFOLDER_MAX = 1_000;
+
+export const defaultMeaning = (subfolderFiles: number): boolean => subfolderFiles <= MEANING_SUBFOLDER_MAX;
+
+/** Whether a subfolder of a linked folder is searched by meaning: the user's switch, else its size. */
+export const meaningOn = (folder: LinkedFolder, subfolder: string, files: number): boolean => folder.meaning[subfolder] ?? defaultMeaning(files);
+
+/** A linked file's subfolder: the first folder of its path inside the linked one, "" at the top. */
+export const subfolderOf = (rel: string): string => (rel.includes("/") ? rel.slice(0, rel.indexOf("/")) : "");
+
 export type FolderState = "ok" | "missing" | "refused";
 export type SyncOutcome = "done" | "paused" | "failed";
 
@@ -35,8 +50,8 @@ export interface LinkedSyncOptions {
   convert: TopicToolsOptions["convert"];
   /** Where converted files are kept, by their SHA-256. */
   cacheDir: string;
-  /** Whether a file is searched by meaning too (its parts are made). */
-  inMeaning: (topic: string, folder: LinkedFolder, rel: string) => boolean;
+  /** Whether a file is searched by meaning too (its parts are made); by default meaningOn. */
+  inMeaning?: (topic: string, folder: LinkedFolder, rel: string) => boolean;
   /** After a batch was put in the index. */
   onIndexed?: (topic: string, paths: string[]) => void;
   log?: (line: string) => void;
@@ -55,6 +70,8 @@ export class LinkedSync {
   private running: Promise<SyncOutcome> | null = null;
   private readonly states = new Map<string, FolderState>();
   private readonly found = new Map<string, number>();
+  /** Each folder's subfolders and their readable files, from the last pass. */
+  private readonly subs = new Map<string, Record<string, number>>();
   /** Topics whose linked files changed since their Index was last made. */
   private readonly changed = new Set<string>();
   /** The page titles each topic's Index was last made with. */
@@ -72,6 +89,11 @@ export class LinkedSync {
   /** The readable files the last pass found in a folder, and how many of them the index holds. */
   counts(topic: string, folder: string): { files: number; indexed: number } {
     return { files: this.found.get(keyOf(topic, folder)) ?? 0, indexed: this.opts.store.linkedRows(topic, folder).length };
+  }
+
+  /** A folder's subfolders and how many readable files each held at the last pass; undefined before one. */
+  subfolders(topic: string, folder: string): Record<string, number> | undefined {
+    return this.subs.get(keyOf(topic, folder));
   }
 
   /** One pass over every topic's linked folders; a second call while one runs gets the same pass. */
@@ -136,6 +158,16 @@ export class LinkedSync {
       files.push({ path: join(folder.path, relative(real, path)), rel: relative(real, path).split(sep).join("/"), size, mtime });
     });
     this.found.set(key, files.length);
+    const subs: Record<string, number> = {};
+    for (const file of files) {
+      const sub = subfolderOf(file.rel);
+      if (sub) subs[sub] = (subs[sub] ?? 0) + 1;
+    }
+    this.subs.set(key, subs);
+    const inMeaning = this.opts.inMeaning ?? ((_topic: string, f: LinkedFolder, rel: string) => {
+      const sub = subfolderOf(rel);
+      return sub === "" || meaningOn(f, sub, subs[sub] ?? 0);
+    });
 
     const known = new Map(store.linkedRows(topic, folder.path).map((r) => [r.path, r]));
     const here = new Set(files.map((f) => f.path));
@@ -152,7 +184,7 @@ export class LinkedSync {
     for (let at = 0; at < todo.length; at += LINKED_BATCH) {
       if (!goOn()) return "paused";
       const batch = todo.slice(at, at + LINKED_BATCH);
-      const done = await this.batch(topic, folder, batch, known);
+      const done = await this.batch(topic, folder, batch, known, inMeaning);
       if (done.length) {
         this.changed.add(topic);
         this.opts.onIndexed?.(topic, done);
@@ -175,7 +207,7 @@ export class LinkedSync {
   }
 
   /** Reads a batch into the index; the paths it put there. */
-  private async batch(topic: string, folder: LinkedFolder, batch: Found[], known: Map<string, { sha256: string }>): Promise<string[]> {
+  private async batch(topic: string, folder: LinkedFolder, batch: Found[], known: Map<string, { sha256: string }>, inMeaning: NonNullable<LinkedSyncOptions["inMeaning"]>): Promise<string[]> {
     const { store } = this.opts;
     const done: string[] = [];
     const bodies = new Map<string, string>();
@@ -226,7 +258,7 @@ export class LinkedSync {
         size: file.size,
         mtime: file.mtime,
         sha256: hashes.get(file.path)!,
-        parts: this.opts.inMeaning(topic, folder, file.rel),
+        parts: inMeaning(topic, folder, file.rel),
       });
       done.push(file.path);
     }

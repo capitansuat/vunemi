@@ -43,7 +43,14 @@ export interface TopicTreeView {
     notes: { title: string; updatedAt: number }[];
     sources: { name: string; updatedAt: number }[];
     /** Folders linked to the topic: read where they are, never copied. */
-    folders: { path: string; state: "ok" | "missing" | "refused"; files: number; indexed: number }[];
+    folders: {
+      path: string;
+      state: "ok" | "missing" | "refused";
+      files: number;
+      indexed: number;
+      /** Its subfolders, the largest first, and whether each is searched by meaning. */
+      subfolders: { name: string; files: number; meaning: boolean }[];
+    }[];
     /** Sources that are copies of files a linked folder holds. */
     copies: number;
   }[];
@@ -797,6 +804,8 @@ export interface VunemiApi {
   /** Asks for files or folders: files are added as sources, folders linked; null when the user cancels. */
   topicsAddSources(topic: string): Promise<TopicAddedView | null>;
   topicsUnlink(topic: string, folder: string): Promise<void>;
+  /** Search by meaning on or off for one subfolder of a linked folder. */
+  topicsSetMeaning(topic: string, folder: string, subfolder: string, on: boolean): Promise<void>;
   /** Moves the sources that copy files of a linked folder to the Trash; how many. */
   topicsRemoveCopies(topic: string): Promise<number>;
   topicsFile(topic: string, name: string): Promise<TopicFileView | null>;
@@ -1086,6 +1095,7 @@ export const CH = {
   topicsSetAbout: "topics:set-about",
   topicsAddSources: "topics:add-sources",
   topicsUnlink: "topics:unlink",
+  topicsSetMeaning: "topics:set-meaning",
   topicsRemoveCopies: "topics:remove-copies",
   topicsFile: "topics:file",
   topicsRevealFile: "topics:reveal-file",

@@ -10,9 +10,9 @@ import { basename } from "node:path";
 import type { Roots } from "@vunemi/files";
 import { t } from "@vunemi/i18n";
 import type { TopicAddedView, TopicFileView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../shared/ipc.js";
-import type { LinkedSync } from "./linked.js";
+import { type LinkedSync, meaningOn, subfolderOf } from "./linked.js";
 import type { TopicFound } from "./meaning.js";
-import { cleanName, linkedName, TOPIC_LIMITS, type TopicStore } from "./store.js";
+import { cleanName, type LinkedFolder, linkedName, TOPIC_LIMITS, type TopicStore } from "./store.js";
 import { addSourceFiles, pickedSources, SOURCE_KINDS, type TopicToolsOptions, walkFolder } from "./tools.js";
 
 /** A source longer than this is shown cut; the file keeps all of it. */
@@ -34,7 +34,7 @@ export interface TopicPageDeps {
   /** The folders Vunemi may read: a folder is linked only inside them. */
   roots: Pick<Roots, "resolve">;
   /** How each linked folder is doing (topics/linked.ts); null in a build without it. */
-  linked: Pick<LinkedSync, "state" | "counts"> | null;
+  linked: Pick<LinkedSync, "state" | "counts" | "subfolders"> | null;
 }
 
 const text = (value: unknown): string => (typeof value === "string" ? value : "");
@@ -89,6 +89,21 @@ export function topicPage(deps: TopicPageDeps) {
     };
   };
 
+  /** A linked folder's subfolders, the largest first: by the last pass's count, else by what the index holds. */
+  const subfoldersOf = (topic: string, folder: LinkedFolder): { name: string; files: number; meaning: boolean }[] => {
+    let counts = deps.linked?.subfolders(topic, folder.path);
+    if (!counts) {
+      counts = {};
+      for (const row of store.linkedRows(topic, folder.path)) {
+        const sub = subfolderOf(row.rel);
+        if (sub) counts[sub] = (counts[sub] ?? 0) + 1;
+      }
+    }
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([name, files]) => ({ name, files, meaning: meaningOn(folder, name, files) }));
+  };
+
   return {
     tree(): TopicTreeView {
       return {
@@ -107,6 +122,7 @@ export function topicPage(deps: TopicPageDeps) {
               state: deps.linked?.state(topic.name, f.path) ?? "ok",
               files: deps.linked?.counts(topic.name, f.path).files ?? 0,
               indexed: store.linkedRows(topic.name, f.path).length,
+              subfolders: subfoldersOf(topic.name, f),
             })),
             copies: store.copiesInLinked(topic.name).length,
           };
@@ -246,6 +262,20 @@ export function topicPage(deps: TopicPageDeps) {
     },
 
     /** The folder leaves the topic; its files stay where they are and leave search on the next pass. */
+    /** The user's switch for a subfolder: its files' parts made from the index, or removed. */
+    setMeaning(topicIn: unknown, folderIn: unknown, subfolderIn: unknown, on: unknown): void {
+      const topic = topicOf(topicIn);
+      const folders = store.linkedFolders(topic);
+      const folder = folders.find((f) => f.path === text(folderIn));
+      const sub = text(subfolderIn);
+      if (!folder) throw new Error(t("topics.gone"));
+      if (!sub || sub.includes("/") || typeof on !== "boolean") throw new Error("Not a subfolder of the linked folder.");
+      store.setLinkedFolders(topic, folders.map((f) => (f === folder ? { ...f, meaning: { ...f.meaning, [sub]: on } } : f)));
+      store.setParts(topic, folder.path, store.linkedRows(topic, folder.path).map((r) => r.rel).filter((rel) => subfolderOf(rel) === sub), on);
+      // Turned on: the new parts are searched by meaning once Vunemi is idle.
+      deps.changed();
+    },
+
     async unlink(topicIn: unknown, folder: unknown): Promise<void> {
       const topic = topicOf(topicIn);
       store.setLinkedFolders(topic, store.linkedFolders(topic).filter((f) => f.path !== text(folder)));

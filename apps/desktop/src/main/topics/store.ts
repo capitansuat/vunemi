@@ -766,6 +766,31 @@ export class TopicStore {
     }
   }
 
+  /**
+   * Search by meaning on or off for some of a folder's linked files: parts
+   * made from the text the index holds, nothing read again; or removed,
+   * vectors with them.
+   */
+  setParts(topicName: string, folder: string, rels: readonly string[], on: boolean): void {
+    const topicKey = keyOf(this.need(topicName).name);
+    const wanted = new Set(rels);
+    const rows = (this.db.prepare("SELECT path, rel, body FROM files WHERE topic_key = ? AND kind = 'linked' AND folder = ?").all(topicKey, folder) as { path: string; rel: string; body: string }[]).filter((r) => wanted.has(r.rel));
+    const has = this.db.prepare("SELECT 1 FROM parts WHERE path = ? LIMIT 1");
+    const insert = this.db.prepare("INSERT INTO parts (path, start, text) VALUES (?, ?, ?)");
+    const drop = this.db.prepare("DELETE FROM parts WHERE path = ?");
+    this.db.exec("BEGIN");
+    try {
+      for (const row of rows) {
+        if (!on) drop.run(row.path);
+        else if (!has.get(row.path)) for (const part of partsOf(row.body)) insert.run(row.path, part.start, part.text);
+      }
+      this.db.exec("COMMIT");
+    } catch (err) {
+      this.db.exec("ROLLBACK");
+      throw err;
+    }
+  }
+
   /** A linked file touched but not changed: its new size and time, its words and vectors kept. */
   touchLinked(path: string, size: number, mtime: number): void {
     this.db.prepare("UPDATE files SET size = ?, mtime = ? WHERE path = ? AND kind = 'linked'").run(size, mtime, path);

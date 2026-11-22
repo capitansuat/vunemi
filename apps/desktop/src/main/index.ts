@@ -568,7 +568,6 @@ const linkedSync = topics
       roots,
       convert: markitdown ? (from, signal) => convertToMarkdown(markdownEngines, from, signal) : null,
       cacheDir: join(app.getPath("userData"), "topic-cache"),
-      inMeaning: () => false,
       onIndexed: () => {
         if (Date.now() - folderNewsAt < FOLDER_NEWS_MS) return;
         folderNewsAt = Date.now();
@@ -1616,6 +1615,7 @@ handle(CH.topicsCreate, (_e, name: unknown, about: unknown) => page().create(nam
 handle(CH.topicsSetAbout, (_e, topic: unknown, about: unknown) => page().setAbout(topic, about));
 handle(CH.topicsAddSources, (_e, topic: unknown) => page().addSources(topic));
 handle(CH.topicsUnlink, (_e, topic: unknown, folder: unknown) => page().unlink(topic, folder));
+handle(CH.topicsSetMeaning, (_e, topic: unknown, folder: unknown, subfolder: unknown, on: unknown) => page().setMeaning(topic, folder, subfolder, on));
 handle(CH.topicsRemoveCopies, (_e, topic: unknown) => page().removeCopies(topic));
 handle(CH.topicsFile, (_e, topic: unknown, name: unknown) => page().file(topic, name));
 handle(CH.topicsRevealFile, (_e, topic: unknown, name: unknown) => page().revealFile(topic, name));

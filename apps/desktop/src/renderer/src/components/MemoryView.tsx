@@ -430,6 +430,9 @@ function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["top
                   </span>
                 </span>
                 <ConfirmButton label={t("topics.page.unlink")} confirm={t("topics.page.unlinkConfirm", { folder: f.path.split("/").pop() ?? f.path })} icon={<Link2Off size={12} />} onConfirm={() => window.vunemi.topicsUnlink(topic.name, f.path).catch((err: unknown) => setError(message(err)))} />
+                {f.state === "ok" && f.subfolders.length > 0 && (
+                  <MeaningSwitches folder={f} onSet={(sub, on) => run(() => window.vunemi.topicsSetMeaning(topic.name, f.path, sub, on))} busy={busy} />
+                )}
               </li>
             ))}
           </ul>
@@ -671,6 +674,34 @@ function FilePanel({ topic, name, version, onSelect }: { topic: string; name: st
       <FileLinks label={t("topics.page.linkedFrom")} names={file.linkedFrom} onOpen={(n) => onSelect({ kind: "file", topic, name: n })} />
       <FileLinks label={t("topics.page.citedBy")} names={file.citedBy} onOpen={(title) => onSelect({ kind: "note", topic, title })} />
     </article>
+  );
+}
+
+/**
+ * Which subfolders of a linked folder are searched by meaning: the top
+ * level and small ones by default, large ones start off; word search
+ * covers them all either way.
+ */
+function MeaningSwitches({ folder, onSet, busy }: { folder: TopicTreeView["topics"][number]["folders"][number]; onSet: (subfolder: string, on: boolean) => void; busy: boolean }) {
+  const off = folder.subfolders.filter((s) => !s.meaning).reduce((sum, s) => sum + s.files, 0);
+  return (
+    <details className="basis-full pl-5 text-[12px] text-muted">
+      <summary className="cursor-default select-none text-faint hover:text-fg">
+        {t("topics.page.meaningFor")}
+        {off > 0 && <span> · {t("topics.page.meaningOff", { count: off })}</span>}
+      </summary>
+      <ul className="mt-1.5 grid gap-1 sm:grid-cols-2">
+        {folder.subfolders.map((s) => (
+          <li key={s.name}>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={s.meaning} disabled={busy} onChange={(e) => onSet(s.name, e.target.checked)} />
+              <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-fg">{s.name}</span>
+              <span className="shrink-0 text-[11px] text-faint">{t("topics.page.filesCount", { count: s.files })}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 

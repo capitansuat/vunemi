@@ -157,6 +157,7 @@ const api: VunemiApi = {
   topicsSetAbout: (topic, about) => ipcRenderer.invoke(CH.topicsSetAbout, topic, about),
   topicsAddSources: (topic) => ipcRenderer.invoke(CH.topicsAddSources, topic),
   topicsUnlink: (topic, folder) => ipcRenderer.invoke(CH.topicsUnlink, topic, folder),
+  topicsSetMeaning: (topic, folder, subfolder, on) => ipcRenderer.invoke(CH.topicsSetMeaning, topic, folder, subfolder, on),
   topicsRemoveCopies: (topic) => ipcRenderer.invoke(CH.topicsRemoveCopies, topic),
   topicsFile: (topic, name) => ipcRenderer.invoke(CH.topicsFile, topic, name),
   topicsRevealFile: (topic, name) => ipcRenderer.invoke(CH.topicsRevealFile, topic, name),

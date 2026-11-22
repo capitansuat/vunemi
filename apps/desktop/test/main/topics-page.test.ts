@@ -211,7 +211,7 @@ describe("the user's own changes", () => {
     store.putLinked("Home renovation", { folder: tree, rel: "plan.md", path: join(tree, "plan.md"), title: "Plan", body: "# Plan", size: 6, mtime: 1, sha256: "p", parts: false });
     store.addSource("Home renovation", { original: join(tree, "plan.html"), markdown: "Plan", bytes: 4, sha256: "q" });
     expect(page.tree().topics[0]!.copies).toBe(1);
-    expect(page.tree().topics[0]!.folders).toEqual([{ path: tree, state: "ok", files: 0, indexed: 1 }]);
+    expect(page.tree().topics[0]!.folders).toEqual([{ path: tree, state: "ok", files: 0, indexed: 1, subfolders: [] }]);
     expect(trashed).toEqual([]);
     expect(await page.removeCopies("Home renovation")).toBe(1);
     expect(page.tree().topics[0]!.copies).toBe(0);
@@ -255,6 +255,29 @@ describe("the user's own changes", () => {
     // The user's edit keeps what the page cites and its other names.
     await page.saveNote("Home renovation", { title: "Tiling", text: "changed" }, { title: "Tiling", stamp: page.note("Home renovation", "Tiling")!.stamp });
     expect(store.readNote("Home renovation", "Tiling")).toMatchObject({ text: "changed", aliases: ["tiles"], cites: [{ file: "Renovation/plan.md", heading: "Plan", sha256: "old" }] });
+  });
+
+  it("turns search by meaning on and off for a subfolder without reading its files again", async () => {
+    const tree = join(base, "Renovation");
+    mkdirSync(tree);
+    store.setLinkedFolders("Home renovation", [{ path: tree, meaning: {} }]);
+    const put = (rel: string, parts: boolean) =>
+      store.putLinked("Home renovation", { folder: tree, rel, path: join(tree, rel), title: rel, body: `words of ${rel}`, size: 1, mtime: 1, sha256: rel, parts });
+    put("plan.md", true);
+    put("big/a.md", false);
+    put("big/b.md", false);
+    const before = store.pendingParts("m", "Home renovation");
+    expect(page.tree().topics[0]!.folders[0]!.subfolders).toEqual([{ name: "big", files: 2, meaning: true }]);
+    page.setMeaning("Home renovation", tree, "big", false);
+    expect(store.linkedFolders("Home renovation")[0]!.meaning).toEqual({ big: false });
+    expect(page.tree().topics[0]!.folders[0]!.subfolders).toEqual([{ name: "big", files: 2, meaning: false }]);
+    expect(store.pendingParts("m", "Home renovation")).toBe(before);
+    page.setMeaning("Home renovation", tree, "big", true);
+    expect(store.pendingParts("m", "Home renovation")).toBe(before + 2);
+    page.setMeaning("Home renovation", tree, "big", false);
+    expect(store.pendingParts("m", "Home renovation")).toBe(before);
+    expect(changes).toBeGreaterThan(0);
+    expect(() => page.setMeaning("Home renovation", join(base, "elsewhere"), "big", true)).toThrow();
   });
 
   it("adds one file a document from a folder, the text one first, but every file the user picked one by one", async () => {

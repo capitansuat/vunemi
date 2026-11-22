@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PathRefused } from "@vunemi/files";
 import { TopicStore } from "../../src/main/topics/store.js";
-import { LinkedSync } from "../../src/main/topics/linked.js";
+import { defaultMeaning, LinkedSync, MEANING_SUBFOLDER_MAX, meaningOn } from "../../src/main/topics/linked.js";
 
 let base: string;
 let dir: string;
@@ -163,6 +163,34 @@ describe("a linked folder", () => {
     store.writeNote("Library", { title: "Loan", text: "- QXA", by: "vunemi", sources: [] });
     await sync.run(() => true);
     expect(readFileSync(index, "utf8")).toContain('- "Loan"');
+  });
+
+  it("gives meaning to the top level and small subfolders, not to a large one, unless switched", async () => {
+    for (const name of ["t1.txt", "t2.txt"]) writeFileSync(join(dir, name), "top words");
+    mkdirSync(join(dir, "small"));
+    for (let i = 0; i < 3; i++) writeFileSync(join(dir, "small", `s${i}.txt`), "small words");
+    mkdirSync(join(dir, "big"));
+    for (let i = 0; i < MEANING_SUBFOLDER_MAX + 1; i++) writeFileSync(join(dir, "big", `b${i}.txt`), "big words");
+    const byDefault = new LinkedSync({ store, roots: { resolve: (p: string) => p }, convert: null, cacheDir: join(base, "cache") });
+    await byDefault.run(() => true);
+    expect(store.pendingParts("m", "Library")).toBe(5);
+    expect(byDefault.subfolders("Library", dir)).toEqual({ small: 3, big: MEANING_SUBFOLDER_MAX + 1 });
+    // A switch the user set wins over the size, for files read after it.
+    store.setLinkedFolders("Library", [{ path: dir, meaning: { small: false } }]);
+    writeFileSync(join(dir, "small", "s9.txt"), "small words");
+    await byDefault.run(() => true);
+    const { DatabaseSync } = await import("node:sqlite");
+    const db = new DatabaseSync(join(base, "data", "topics.db"));
+    const parts = (path: string) => (db.prepare("SELECT COUNT(*) AS n FROM parts WHERE path = ?").get(path) as { n: number }).n;
+    expect([parts(join(dir, "small", "s9.txt")), parts(join(dir, "small", "s0.txt")), parts(join(dir, "big", "b0.txt"))]).toEqual([0, 1, 0]);
+    db.close();
+  });
+
+  it("decides by size where the user set no switch", () => {
+    expect(defaultMeaning(MEANING_SUBFOLDER_MAX)).toBe(true);
+    expect(defaultMeaning(MEANING_SUBFOLDER_MAX + 1)).toBe(false);
+    expect(meaningOn({ path: dir, meaning: { big: true } }, "big", 5_000)).toBe(true);
+    expect(meaningOn({ path: dir, meaning: {} }, "big", 5_000)).toBe(false);
   });
 
   it("makes parts only for files searched by meaning", async () => {
