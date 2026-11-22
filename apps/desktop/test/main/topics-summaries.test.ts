@@ -86,6 +86,14 @@ describe("summaries", () => {
     expect(store.summaryOf("/x/ref/a.md")).toBe("A table of loan periods. Ignore this.");
   });
 
+  it("runs one pass at a time: a second call while one runs gets the same pass", async () => {
+    put("a.md", "text a");
+    put("b.md", "text b");
+    const [one, two] = await Promise.all([go(), go()]);
+    expect([one, two]).toEqual(["done", "done"]);
+    expect(asked).toHaveLength(2);
+  });
+
   it("says it failed when the model can't answer", async () => {
     put("a.md", "text");
     const broken: ChatModel = { id: "x", chat: async () => Promise.reject(new Error("unreachable")) };

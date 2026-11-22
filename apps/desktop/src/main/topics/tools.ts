@@ -68,7 +68,7 @@ function topicOf(opts: TopicToolsOptions): string {
   return opts.store.findTopic(topic)!.name;
 }
 
-function shown(note: TopicNote, linkedFrom: string[], stale: string[] = []): string {
+function shown(note: TopicNote, linkedFrom: string[], stale: string[] = [], ambiguous: string[] = []): string {
   return [
     `${note.title} (${note.topic}; ${note.by === "vunemi" ? "written by Vunemi" : "written by the user"}, ${note.updated.slice(0, 10)})`,
     ...(note.aliases.length ? [`Other names: ${note.aliases.join(", ")}`] : []),
@@ -76,6 +76,7 @@ function shown(note: TopicNote, linkedFrom: string[], stale: string[] = []): str
     ...(note.cites.length ? [`Cites: ${note.cites.map((c) => (c.heading ? `${c.file} (${c.heading})` : c.file)).join("; ")}`] : []),
     ...(stale.length ? [`Cited files changed since this page was written: ${stale.join(", ")}. Read them again and update the page.`] : []),
     ...(linkedFrom.length ? [`Linked from: ${linkedFrom.join(", ")}`] : []),
+    ...ambiguous,
     "",
     note.text,
   ].join("\n");
@@ -365,6 +366,15 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
         }
         const same = opts.store.samePage(topic, String(a.title ?? ""), aliases);
         if (same) throw new Error(`"${same}" is already the page for this (its title or another name matches). Read it and update it under its title instead of writing a second page.`);
+        // An update keeps the page's other names and what it cited; a file cited again gets its hash now.
+        const old = opts.store.readNote(topic, String(a.title ?? ""));
+        if (old) {
+          const given = aliases.splice(0);
+          for (const alias of [...old.aliases, ...given]) if (!aliases.some((x) => x.toLowerCase() === alias.toLowerCase())) aliases.push(alias);
+          for (const cite of old.cites) if (!cites.some((c) => c.file === cite.file)) cites.push(cite);
+          aliases.splice(MAX_ALIASES);
+          cites.splice(MAX_CITES);
+        }
         const here = opts.where();
         const outside = opts.sources();
         const from = [
@@ -395,7 +405,12 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
         const title = String(a.title ?? "");
         const note = opts.store.readNote(topic, title);
         if (!note) throw new Error(`"${topic}" has no note titled "${title}". topic_search finds notes by words.`);
-        return shown(note, opts.store.backlinks(topic, note.title), opts.store.staleCites(topic, note));
+        // A [[link]] that two files answer to: say how to name the one meant.
+        const ambiguous = note.links.flatMap((link) => {
+          const to = opts.store.resolveWiki(topic, link);
+          return to?.kind === "ambiguous" ? [`[[${link}]] matches several files: ${to.names.join(", ")}. Link one as [[${to.names[0]!.replace(/\.[^./]+$/, "")}]].`] : [];
+        });
+        return shown(note, opts.store.backlinks(topic, note.title), opts.store.staleCites(topic, note), ambiguous);
       },
     },
     {

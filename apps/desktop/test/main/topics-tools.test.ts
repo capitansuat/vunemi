@@ -280,9 +280,9 @@ describe("linked folders", () => {
     await run("topic_note_write", { title: "Loan", text: "- QXA: standard", aliases: ["QXA", "loan rule"], cites: [{ file: "library-reference/loan-period-reference.md", heading: "Loan periods" }] });
     await expect(run("topic_note_write", { title: "QXA", text: "x" })).rejects.toThrow(/"Loan".*update/);
     await expect(run("topic_note_write", { title: "Loans", text: "x", aliases: ["Loan Rule"] })).rejects.toThrow(/"Loan".*update/);
-    // The same page, written again under its own title, is an update.
+    // The same page, written again under its own title, is an update; its other names stay.
     await run("topic_note_write", { title: "Loan", text: "- QXA: standard main", aliases: ["QXA"] });
-    expect(store.readNote("Library", "QXA")).toMatchObject({ title: "Loan", aliases: ["QXA"] });
+    expect(store.readNote("Library", "QXA")).toMatchObject({ title: "Loan", aliases: ["QXA", "loan rule"] });
   });
 
   it("records each cited file's hash, and says when one changed", async () => {
@@ -295,6 +295,28 @@ describe("linked folders", () => {
     const path = join(ref, "loan-period-reference.md");
     store.putLinked("Library", { folder: ref, rel: "loan-period-reference.md", path, title: "Loan periods", body: "# Loan periods\n\n| QXA | Standard |", size: 9, mtime: 2, sha256: "new", parts: false });
     expect(String(await run("topic_note_read", { title: "Loan" }))).toContain("changed since this page was written: library-reference/loan-period-reference.md");
+  });
+
+  it("keeps a page's other names and citations when an update leaves them out", async () => {
+    link("loan-period-reference.md", "# Loan periods", "Loan periods");
+    link("calendar.md", "# Calendar", "Calendar");
+    await run("topic_note_write", { title: "Loan", text: "- QXA", aliases: ["QXA"], cites: [{ file: "library-reference/loan-period-reference.md" }] });
+    await run("topic_note_write", { title: "Loan", text: "- QXA: standard", aliases: ["QXB"], cites: [{ file: "library-reference/calendar.md" }] });
+    expect(store.readNote("Library", "Loan")).toMatchObject({
+      aliases: ["QXA", "QXB"],
+      cites: [{ file: "library-reference/calendar.md" }, { file: "library-reference/loan-period-reference.md" }],
+    });
+  });
+
+  it("says which [[link]] matches two files and how to pick one", async () => {
+    mkdirSync(join(ref, "a"));
+    mkdirSync(join(ref, "b"));
+    link("a/readme.md", "# A");
+    link("b/readme.md", "# B");
+    await run("topic_note_write", { title: "Readmes", text: "See [[readme]]" });
+    expect(String(await run("topic_note_read", { title: "Readmes" }))).toContain(
+      "[[readme]] matches several files: library-reference/a/readme.md, library-reference/b/readme.md. Link one as [[library-reference/a/readme]].",
+    );
   });
 
   it("refuses a citation of a file the topic doesn't have", async () => {
