@@ -257,6 +257,12 @@ describe("the user's own changes", () => {
     expect(store.readNote("Home renovation", "Tiling")).toMatchObject({ text: "changed", aliases: ["tiles"], cites: [{ file: "Renovation/plan.md", heading: "Plan", sha256: "old" }] });
   });
 
+  it("shows what the last check found", () => {
+    const found = [{ kind: "orphan" as const, page: "Tiles" }];
+    page = make({ linked: { state: () => "ok", counts: () => ({ files: 0, indexed: 0 }), subfolders: () => undefined, checks: (topic: string) => (topic === "Home renovation" ? found : []) } });
+    expect(page.tree().topics[0]!.checks).toEqual(found);
+  });
+
   it("turns search by meaning on and off for a subfolder without reading its files again", async () => {
     const tree = join(base, "Renovation");
     mkdirSync(tree);

@@ -34,7 +34,7 @@ export interface TopicPageDeps {
   /** The folders Vunemi may read: a folder is linked only inside them. */
   roots: Pick<Roots, "resolve">;
   /** How each linked folder is doing (topics/linked.ts); null in a build without it. */
-  linked: Pick<LinkedSync, "state" | "counts" | "subfolders"> | null;
+  linked: Pick<LinkedSync, "state" | "counts" | "subfolders" | "checks"> | null;
 }
 
 const text = (value: unknown): string => (typeof value === "string" ? value : "");
@@ -125,6 +125,7 @@ export function topicPage(deps: TopicPageDeps) {
               subfolders: subfoldersOf(topic.name, f),
             })),
             copies: store.copiesInLinked(topic.name).length,
+            checks: deps.linked?.checks(topic.name) ?? [],
           };
         }),
       };

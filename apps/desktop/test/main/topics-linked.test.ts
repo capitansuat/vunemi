@@ -53,6 +53,15 @@ afterEach(() => {
   rmSync(base, { recursive: true, force: true });
 });
 
+/** Parts waiting for a vector, of linked files only: the topic's Index is a note with parts of its own. */
+const linkedParts = async (): Promise<number> => {
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = new DatabaseSync(join(base, "data", "topics.db"));
+  const { n } = db.prepare("SELECT COUNT(*) AS n FROM parts p JOIN files f ON f.path = p.path WHERE f.kind = 'linked' AND p.vector IS NULL").get() as { n: number };
+  db.close();
+  return n;
+};
+
 const later = (path: string) => {
   const t = new Date(Date.now() + 10_000);
   utimesSync(path, t, t);
@@ -173,7 +182,7 @@ describe("a linked folder", () => {
     for (let i = 0; i < MEANING_SUBFOLDER_MAX + 1; i++) writeFileSync(join(dir, "big", `b${i}.txt`), "big words");
     const byDefault = new LinkedSync({ store, roots: { resolve: (p: string) => p }, convert: null, cacheDir: join(base, "cache") });
     await byDefault.run(() => true);
-    expect(store.pendingParts("m", "Library")).toBe(5);
+    expect(await linkedParts()).toBe(5);
     expect(byDefault.subfolders("Library", dir)).toEqual({ small: 3, big: MEANING_SUBFOLDER_MAX + 1 });
     // A switch the user set wins over the size, for files read after it.
     store.setLinkedFolders("Library", [{ path: dir, meaning: { small: false } }]);
@@ -194,12 +203,18 @@ describe("a linked folder", () => {
     expect(meaningOn({ path: dir, meaning: {} }, "big", 5_000)).toBe(false);
   });
 
+  it("checks each topic after a pass", async () => {
+    rmSync(dir, { recursive: true });
+    await sync.run(() => true);
+    expect(sync.checks("Library")).toEqual([{ kind: "folder", path: dir, state: "missing" }]);
+  });
+
   it("makes parts only for files searched by meaning", async () => {
     writeFileSync(join(dir, "top.txt"), "top words");
     mkdirSync(join(dir, "big"));
     writeFileSync(join(dir, "big", "deep.txt"), "deep words");
     const meaning = new LinkedSync({ store, roots: { resolve: (p: string) => p }, convert: null, cacheDir: join(base, "cache"), inMeaning: (_t, _f, rel) => !rel.includes("/") });
     await meaning.run(() => true);
-    expect(store.pendingParts("m", "Library")).toBe(1);
+    expect(await linkedParts()).toBe(1);
   });
 });

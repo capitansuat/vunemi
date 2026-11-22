@@ -122,7 +122,7 @@ export function cleanName(value: unknown, what: "topic" | "title"): string {
 }
 
 /** Any case, in Turkish and English alike: İzmir, izmir and IZMIR are one name; so are ı and i. */
-const keyOf = (name: string): string => name.normalize("NFC").toLowerCase().replace(/ı/g, "i").normalize("NFD").replace(/̇/g, "").normalize("NFC");
+export const keyOf = (name: string): string => name.normalize("NFC").toLowerCase().replace(/ı/g, "i").normalize("NFD").replace(/̇/g, "").normalize("NFC");
 
 // -- Markdown with front matter ------------------------------------------------
 

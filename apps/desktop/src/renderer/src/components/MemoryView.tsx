@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BookMarked, ChevronRight, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Library, Link2Off, NotebookPen, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { formatDate, t } from "@vunemi/i18n";
-import type { TopicAddedView, TopicFileView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../../shared/ipc.js";
+import type { TopicAddedView, TopicCheckView, TopicFileView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
 import { Markdown } from "./Markdown.js";
 import { MemorySection } from "./MemorySection.js";
@@ -438,6 +438,7 @@ function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["top
           </ul>
         </section>
       )}
+      {topic.checks.length > 0 && <NeedsLook topic={topic.name} checks={topic.checks} onSelect={onSelect} />}
       {topic.notes.length > 0 && (
         <section className="mt-7">
           <h2 className="text-[11px] font-medium uppercase tracking-wide text-faint">{t("topics.page.notes")}</h2>
@@ -702,6 +703,43 @@ function MeaningSwitches({ folder, onSet, busy }: { folder: TopicTreeView["topic
         ))}
       </ul>
     </details>
+  );
+}
+
+/** What the last check found: a page to open where there is one; nothing is changed for the user. */
+function NeedsLook({ topic, checks, onSelect }: { topic: string; checks: TopicCheckView[]; onSelect: (s: Selected) => void }) {
+  const line = (c: TopicCheckView): { text: string; page: string | null } => {
+    switch (c.kind) {
+      case "deadLink":
+        return { text: t("topics.check.deadLink", { page: c.page, link: c.link }), page: c.page };
+      case "orphan":
+        return { text: t("topics.check.orphan", { page: c.page }), page: c.page };
+      case "samePage":
+        return { text: t("topics.check.samePage", { pages: c.pages.join(", ") }), page: c.pages[0] ?? null };
+      case "stale":
+        return { text: t("topics.check.stale", { page: c.page, files: c.files.join(", ") }), page: c.page };
+      case "folder":
+        return { text: t("topics.check.folder", { folder: c.path.split("/").pop() ?? c.path, why: t(c.state === "missing" ? "topics.page.folderMissing" : "topics.page.folderRefused") }), page: null };
+    }
+  };
+  return (
+    <section className="mt-7">
+      <h2 className="text-[11px] font-medium uppercase tracking-wide text-faint">{t("topics.page.needsLook")}</h2>
+      <ul className="mt-1.5 divide-y divide-line rounded-xl border border-line bg-surface">
+        {checks.map((c, i) => {
+          const { text, page } = line(c);
+          return (
+            <li key={i}>
+              {page ? (
+                <button type="button" onClick={() => onSelect({ kind: "note", topic, title: page })} className="w-full px-3 py-2 text-left text-[12.5px] text-muted hover:bg-surface-2 hover:text-fg">{text}</button>
+              ) : (
+                <p className="px-3 py-2 text-[12.5px] text-muted">{text}</p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

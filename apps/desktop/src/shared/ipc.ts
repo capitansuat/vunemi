@@ -53,10 +53,20 @@ export interface TopicTreeView {
     }[];
     /** Sources that are copies of files a linked folder holds. */
     copies: number;
+    /** From the last check, after a pass while Vunemi was idle. */
+    checks: TopicCheckView[];
   }[];
   /** Whether files other than text can be added (MarkItDown in this build). */
   canConvert: boolean;
 }
+
+/** Something on a topic's pages or folders that needs a look (topics/checks.ts). */
+export type TopicCheckView =
+  | { kind: "deadLink"; page: string; link: string }
+  | { kind: "orphan"; page: string }
+  | { kind: "samePage"; pages: string[] }
+  | { kind: "stale"; page: string; files: string[] }
+  | { kind: "folder"; path: string; state: "missing" | "refused" };
 
 export interface TopicNoteView {
   topic: string;

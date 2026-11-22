@@ -15,6 +15,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { basename, extname, join, relative, sep } from "node:path";
 import type { Roots } from "@vunemi/files";
 import { why } from "../markdown.js";
+import { checkTopic, type TopicCheck } from "./checks.js";
 import { INDEX_TITLE, writeIndex } from "./index-page.js";
 import { cutToSource, type LinkedFolder, type TopicStore } from "./store.js";
 import { type TopicToolsOptions, walkFolder } from "./tools.js";
@@ -74,6 +75,8 @@ export class LinkedSync {
   private readonly subs = new Map<string, Record<string, number>>();
   /** Topics whose linked files changed since their Index was last made. */
   private readonly changed = new Set<string>();
+  /** Each topic's checks, from its last pass. */
+  private readonly checked = new Map<string, TopicCheck[]>();
   /** The page titles each topic's Index was last made with. */
   private readonly pages = new Map<string, string>();
   private readonly log: (line: string) => void;
@@ -94,6 +97,11 @@ export class LinkedSync {
   /** A folder's subfolders and how many readable files each held at the last pass; undefined before one. */
   subfolders(topic: string, folder: string): Record<string, number> | undefined {
     return this.subs.get(keyOf(topic, folder));
+  }
+
+  /** What the last pass found to need a look in a topic. */
+  checks(topic: string): TopicCheck[] {
+    return this.checked.get(topic) ?? [];
   }
 
   /** One pass over every topic's linked folders; a second call while one runs gets the same pass. */
@@ -123,8 +131,17 @@ export class LinkedSync {
         if ((await this.folder(topic.name, folder, goOn)) === "paused") return "paused";
       }
       this.index(topic.name);
+      this.check(topic.name);
     }
     return "done";
+  }
+
+  private check(topic: string): void {
+    try {
+      this.checked.set(topic, checkTopic(this.opts.store, topic, (folder) => this.state(topic, folder)));
+    } catch (error) {
+      this.log(`[vunemi] topic checks: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /** The topic's Index made again when its files or its pages changed since it last was. */
