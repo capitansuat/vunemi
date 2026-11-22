@@ -17,6 +17,9 @@ import { basename, extname, join, sep } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { keywordQuery } from "../memory/store.js";
 
+/** How long a write waits for another program reading the index. */
+const BUSY_WAIT_MS = 1_000;
+
 export const TOPIC_LIMITS = { name: 80, title: 80, text: 4_000, notes: 500, sources: 200, sourceChars: 2_000_000, about: 1_000 } as const;
 const NOTES = "Notes";
 const SOURCES = "Sources";
@@ -243,6 +246,12 @@ export class TopicStore {
     this.db = new DatabaseSync(file);
     chmodSync(file, 0o600);
     this.db.exec("PRAGMA secure_delete = ON;");
+    /*
+     * Another program reading the index (a backup, a database viewer) held
+     * it long enough for a write to fail at once: "database is locked". A
+     * write waits a moment instead. It waits on the main thread, so briefly.
+     */
+    this.db.exec(`PRAGMA busy_timeout = ${BUSY_WAIT_MS};`);
     this.db.exec(SCHEMA);
     if ((this.db.prepare("PRAGMA user_version").get() as { user_version: number }).user_version < INDEX_VERSION) {
       this.db.exec(`DELETE FROM files; DELETE FROM parts; PRAGMA user_version = ${INDEX_VERSION};`);

@@ -5,6 +5,8 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { cleanName, linksIn, parseNote, TOPIC_LIMITS, TopicStore } from "../../src/main/topics/store.js";
@@ -180,5 +182,25 @@ describe("helpers", () => {
 
   it("finds links once each", () => {
     expect(linksIn("[[A]] [[a]] [[B|b]] [[C#x]] [[D^y]] [not] [[]]")).toEqual(["a", "B", "C", "D"]);
+  });
+});
+
+describe("the index while another program reads it", () => {
+  it("waits for the reader instead of failing at once", async () => {
+    store.createTopic("Home renovation", "");
+    store.writeNote("Home renovation", { title: "Tiles", text: "Matte, 60×60", by: "user", sources: [] });
+    // Another process holds a read lock for a moment, as a backup or viewer would.
+    const reader = spawn(process.execPath, ["-e", `
+      const { DatabaseSync } = require("node:sqlite");
+      const db = new DatabaseSync(process.argv[1]);
+      db.exec("BEGIN"); db.prepare("SELECT COUNT(*) FROM files").get();
+      process.stdout.write("held\\n");
+      setTimeout(() => { db.exec("COMMIT"); db.close(); }, 300);
+    `, join(base, "data", "topics.db")], { stdio: ["ignore", "pipe", "inherit"] });
+    await once(reader.stdout!, "data");
+    // Bringing the index up to date writes to it while the reader still holds it.
+    expect(() => store.refresh()).not.toThrow();
+    await once(reader, "exit");
+    expect(store.search("matte", "Home renovation", 5).map((h) => h.title)).toEqual(["Tiles"]);
   });
 });
