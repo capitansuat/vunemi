@@ -206,15 +206,16 @@ CREATE TABLE IF NOT EXISTS links (
 );
 CREATE INDEX IF NOT EXISTS links_src ON links(src);
 CREATE INDEX IF NOT EXISTS links_dst ON links(folder, dst_stem);
+-- By the file's rowid, not its path: a large folder has some 200,000 of
+-- these, and a path in each would add tens of megabytes to the index.
 CREATE TABLE IF NOT EXISTS codes (
-  topic_key TEXT NOT NULL,
+  file INTEGER NOT NULL,
   code TEXT NOT NULL,
-  path TEXT NOT NULL,
   count INTEGER NOT NULL,
   defined INTEGER NOT NULL
 );
-CREATE INDEX IF NOT EXISTS codes_code ON codes(topic_key, code);
-CREATE INDEX IF NOT EXISTS codes_path ON codes(path);
+CREATE INDEX IF NOT EXISTS codes_code ON codes(code);
+CREATE INDEX IF NOT EXISTS codes_file ON codes(file);
 `;
 /**
  * Version 2 added parts: an index from before has none, so it is made again
@@ -644,8 +645,9 @@ export class TopicStore {
         if (dst === "." || dst === ".." || dst.startsWith("../") || dst === row.rel) continue;
         link.run(topicKey, row.folder, row.path, dst, stemOf(dst));
       }
-      const code = this.db.prepare("INSERT INTO codes (topic_key, code, path, count, defined) VALUES (?, ?, ?, ?, ?)");
-      for (const use of codesOf(row.body)) code.run(topicKey, use.code, row.path, use.count, use.defined ? 1 : 0);
+      const { rowid } = this.db.prepare("SELECT rowid FROM files WHERE path = ?").get(row.path) as { rowid: number };
+      const code = this.db.prepare("INSERT INTO codes (file, code, count, defined) VALUES (?, ?, ?, ?)");
+      for (const use of codesOf(row.body)) code.run(rowid, use.code, use.count, use.defined ? 1 : 0);
       if (row.parts) {
         const insert = this.db.prepare("INSERT INTO parts (path, start, text) VALUES (?, ?, ?)");
         for (const part of partsOf(row.body)) insert.run(row.path, part.start, part.text);
@@ -668,9 +670,10 @@ export class TopicStore {
     this.db.exec("BEGIN");
     try {
       for (const path of paths) {
-        if (!this.db.prepare("DELETE FROM files WHERE path = ? AND topic_key = ? AND kind = 'linked'").run(path, topicKey).changes) continue;
-        this.db.prepare("DELETE FROM parts WHERE path = ?").run(path);
+        if (!this.db.prepare("SELECT 1 FROM files WHERE path = ? AND topic_key = ? AND kind = 'linked'").get(path, topicKey)) continue;
         this.forgetSkeleton(path);
+        this.db.prepare("DELETE FROM files WHERE path = ?").run(path);
+        this.db.prepare("DELETE FROM parts WHERE path = ?").run(path);
       }
       this.db.exec("COMMIT");
     } catch (err) {
@@ -681,7 +684,7 @@ export class TopicStore {
 
   private forgetSkeleton(path: string): void {
     this.db.prepare("DELETE FROM links WHERE src = ?").run(path);
-    this.db.prepare("DELETE FROM codes WHERE path = ?").run(path);
+    this.db.prepare("DELETE FROM codes WHERE file = (SELECT rowid FROM files WHERE path = ?)").run(path);
   }
 
   /** The files of its folder a linked file links to, in the order it does, each once. */
@@ -714,7 +717,7 @@ export class TopicStore {
   /** The linked files of a topic that use a code: those defining it first, then the most uses. */
   codeFiles(topicName: string, code: string, limit = 20): { path: string; folder: string; rel: string; title: string; count: number; defined: boolean }[] {
     const rows = this.db
-      .prepare("SELECT c.path, f.folder, f.rel, f.title, c.count, c.defined FROM codes c JOIN files f ON f.path = c.path WHERE c.topic_key = ? AND c.code = ? ORDER BY c.defined DESC, c.count DESC, c.path LIMIT ?")
+      .prepare("SELECT f.path, f.folder, f.rel, f.title, c.count, c.defined FROM codes c JOIN files f ON f.rowid = c.file WHERE f.topic_key = ? AND c.code = ? ORDER BY c.defined DESC, c.count DESC, f.path LIMIT ?")
       .all(keyOf(this.need(topicName).name), code, limit) as { path: string; folder: string; rel: string; title: string; count: number; defined: number }[];
     return rows.map((r) => ({ ...r, defined: r.defined === 1 }));
   }
