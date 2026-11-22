@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { partsOf, PART_CHARS, TopicStore } from "../../src/main/topics/store.js";
-import { PART_MIN, retryAfter, TopicMeaning } from "../../src/main/topics/meaning.js";
+import { PART_MIN, tendAgainIn, TopicMeaning } from "../../src/main/topics/meaning.js";
 import { TooLongError } from "../../src/main/memory/embedder.js";
 
 describe("cutting a text in parts", () => {
@@ -158,7 +158,13 @@ describe("searching a topic by meaning", () => {
   });
 
   it("tries a failed pass again later, waiting longer each time, at most half an hour", () => {
-    expect([1, 2, 3, 4, 5, 6, 9].map((n) => retryAfter(n) / 60_000)).toEqual([1, 2, 4, 8, 16, 30, 30]);
+    expect([1, 2, 3, 4, 5, 6, 9].map((n) => tendAgainIn("failed", n)! / 60_000)).toEqual([1, 2, 4, 8, 16, 30, 30]);
+  });
+
+  it("looks again in a minute while Vunemi is busy or a pass stepped aside, and stops when nothing is left", () => {
+    expect(tendAgainIn("busy", 0)).toBe(60_000);
+    expect(tendAgainIn("paused", 3)).toBe(60_000);
+    expect(tendAgainIn("done", 3)).toBeNull();
   });
 
   it("leaves out what isn't about the query at all", async () => {

@@ -37,9 +37,22 @@ export interface TopicFound {
 /** How a catch-up pass ended: nothing left, stepped aside for other work, or a request failed. */
 export type CatchUp = "done" | "paused" | "failed";
 
-/** Minutes before trying again after `failures` failed passes in a row: 1, 2, 4 … at most 30. */
-export function retryAfter(failures: number): number {
-  return Math.min(30, 2 ** Math.max(0, failures - 1)) * 60_000;
+/** Waiting for Vunemi to be free: how often to look again. */
+const BUSY_RECHECK_MS = 60_000;
+
+/**
+ * When to look again, or null: nothing is left.
+ * - busy: Vunemi was running a task; a pass may not start.
+ * - paused: a task started during the pass.
+ * - failed: `failures` passes in a row failed; 1, 2, 4 … at most 30 minutes.
+ * The end of a task is not a signal to rely on: it is told before the task
+ * lets go, when Vunemi still counts as busy (measured 22 Nov: the pass never
+ * started again and the parts waited until a restart).
+ */
+export function tendAgainIn(how: CatchUp | "busy", failures: number): number | null {
+  if (how === "done") return null;
+  if (how === "failed") return Math.min(30, 2 ** Math.max(0, failures - 1)) * 60_000;
+  return BUSY_RECHECK_MS;
 }
 
 export class TopicMeaning {
