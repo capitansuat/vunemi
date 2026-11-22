@@ -10,7 +10,7 @@ import { t } from "@vunemi/i18n";
 import type { TopicAddedView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../shared/ipc.js";
 import type { TopicFound } from "./meaning.js";
 import { cleanName, TOPIC_LIMITS, type TopicStore } from "./store.js";
-import { addSourceFiles, pickedSourceFiles, SOURCE_KINDS, type TopicToolsOptions } from "./tools.js";
+import { addSourceFiles, pickedSources, SOURCE_KINDS, type TopicToolsOptions } from "./tools.js";
 
 /** A source longer than this is shown cut; the file keeps all of it. */
 export const SHOWN_CHARS = 200_000;
@@ -20,7 +20,7 @@ export interface TopicPageDeps {
   store: TopicStore;
   find: ((query: string, topic: string | undefined, limit: number) => Promise<TopicFound>) | null;
   convert: TopicToolsOptions["convert"];
-  /** Asks the user for files of these kinds (extensions without the dot); [] when cancelled. */
+  /** Asks the user for files of these kinds (extensions without the dot) or folders; [] when cancelled. */
   pickFiles: (kinds: string[]) => Promise<string[]>;
   trash: (path: string) => Promise<void>;
   reveal: (path: string) => void;
@@ -171,9 +171,10 @@ export function topicPage(deps: TopicPageDeps) {
       const topic = topicOf(topicIn);
       const picked = await deps.pickFiles(SOURCE_KINDS(deps.convert !== null));
       if (picked.length === 0) return null;
-      const { ok, refused } = pickedSourceFiles(picked, deps.convert !== null);
+      const room = Math.max(0, TOPIC_LIMITS.sources - store.outline(topic).sources.length);
+      const { ok, refused, skipped, left, stopped } = await pickedSources(picked, deps.convert !== null, room);
       const name = (path: string) => path.split("/").pop() ?? path;
-      const view: TopicAddedView = { added: [], already: [], failed: refused.map((r) => ({ file: name(r.path), error: r.error })) };
+      const view: TopicAddedView = { added: [], already: [], failed: refused.map((r) => ({ file: name(r.path), error: r.error })), skipped, left, stopped };
       if (ok.length === 0) return view;
       const { results } = await addSourceFiles(store, deps.convert, topic, ok, AbortSignal.timeout(30 * 60_000));
       for (const r of results) {

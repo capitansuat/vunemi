@@ -30,6 +30,13 @@ type Selected =
 /** Notes and sources a topic lists before "Show all". */
 const LISTED = 40;
 const NOTE_MAX = 4_000;
+/** As TOPIC_LIMITS.sources and FOLDER_SCAN_LIMIT in the main process. */
+const SOURCE_MAX = 200;
+const FOLDER_SCAN_MAX = 20_000;
+/** Names an added-files box lists before "N more": a folder can bring hundreds. */
+const NAMED = 12;
+const someNames = (names: string[]): string =>
+  names.length > NAMED ? `${names.slice(0, NAMED).join(", ")}, ${t("topics.page.andMore", { count: names.length - NAMED })}` : names.join(", ");
 
 const message = (err: unknown): string => String(err instanceof Error ? err.message : err).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
 const day = (iso: string | number): string => formatDate(new Date(iso), { dateStyle: "medium" });
@@ -361,11 +368,15 @@ function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["top
       {busy && <p className="mt-3 text-[12px] text-muted">{t("topics.page.adding")}</p>}
       {added && (
         <div className="mt-3 rounded-lg border border-line bg-surface p-3 text-[12.5px]">
-          {added.added.length > 0 && <p className="text-fg">{t("topics.page.added", { names: added.added.join(", ") })}</p>}
-          {added.already.length > 0 && <p className="text-muted">{t("topics.page.already", { names: added.already.join(", ") })}</p>}
-          {added.failed.map((f) => (
-            <p key={f.file} className="text-danger">{f.file}: {f.error}</p>
+          {added.added.length > 0 && <p className="text-fg">{t("topics.page.added", { names: someNames(added.added) })}</p>}
+          {added.already.length > 0 && <p className="text-muted">{t("topics.page.already", { names: someNames(added.already) })}</p>}
+          {added.failed.slice(0, NAMED).map((f, i) => (
+            <p key={`${i}:${f.file}`} className="text-danger">{f.file}: {f.error}</p>
           ))}
+          {added.failed.length > NAMED && <p className="text-danger">{t("topics.page.andMore", { count: added.failed.length - NAMED })}</p>}
+          {added.skipped > 0 && <p className="text-muted">{t("topics.page.skipped", { count: added.skipped })}</p>}
+          {added.left > 0 && <p className="text-muted">{t("topics.page.left", { count: added.left, max: SOURCE_MAX })}</p>}
+          {added.stopped && <p className="text-muted">{t("topics.page.stopped", { max: FOLDER_SCAN_MAX.toLocaleString() })}</p>}
         </div>
       )}
       {error && <p role="alert" className="mt-3 text-[12px] text-danger">{error}</p>}

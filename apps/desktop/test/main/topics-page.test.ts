@@ -5,12 +5,13 @@
  * meanwhile, and deletes go to the Trash.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setLocale } from "@vunemi/i18n";
 import { TopicStore } from "../../src/main/topics/store.js";
 import { SHOWN_CHARS, topicPage, type TopicPageDeps } from "../../src/main/topics/page.js";
+import { FOLDER_SCAN_LIMIT, pickedSources } from "../../src/main/topics/tools.js";
 
 let base: string;
 let store: TopicStore;
@@ -160,10 +161,42 @@ describe("the user's own changes", () => {
     writeFileSync(join(files, "notes.txt"), "Plain text");
     writeFileSync(join(files, "offer.pdf"), "%PDF");
     picked = [join(files, "notes.txt"), join(files, "offer.pdf")];
-    expect(await page.addSources("Home renovation")).toEqual({ added: ["notes"], already: [], failed: [{ file: "offer.pdf", error: "This kind of file can't be added." }] });
+    expect(await page.addSources("Home renovation")).toEqual({ added: ["notes"], already: [], failed: [{ file: "offer.pdf", error: "This kind of file can't be added." }], skipped: 0, left: 0, stopped: false });
     expect(await page.addSources("Home renovation")).toMatchObject({ added: [], already: ["notes"] });
     picked = [];
     expect(await page.addSources("Home renovation")).toBeNull();
+  });
+
+  it("adds a picked folder with its subfolders, leaving out hidden entries, links, packages and kinds it can't read", async () => {
+    const tree = join(base, "Renovation");
+    mkdirSync(join(tree, "Offers", "2026"), { recursive: true });
+    mkdirSync(join(tree, ".cache"));
+    mkdirSync(join(tree, "Pages.app"));
+    writeFileSync(join(tree, "plan.md"), "# Plan");
+    writeFileSync(join(tree, "Offers", "tiles.txt"), "Tiles offer");
+    writeFileSync(join(tree, "Offers", "2026", "plumber.txt"), "Plumber offer");
+    writeFileSync(join(tree, "Offers", "photo.jpg"), "not text");
+    writeFileSync(join(tree, ".hidden.txt"), "hidden");
+    writeFileSync(join(tree, ".cache", "c.txt"), "cache");
+    writeFileSync(join(tree, "Pages.app", "inside.txt"), "package");
+    symlinkSync(join(base, "Picked-elsewhere.txt"), join(tree, "link.txt"));
+    writeFileSync(join(base, "Picked-elsewhere.txt"), "linked");
+    picked = [tree];
+    expect(await page.addSources("Home renovation")).toEqual({ added: ["plan", "tiles", "plumber"], already: [], failed: [], skipped: 1, left: 0, stopped: false });
+    expect(store.listSources("Home renovation").map((s) => s.original).sort()).toEqual(
+      [join(tree, "Offers", "2026", "plumber.txt"), join(tree, "Offers", "tiles.txt"), join(tree, "plan.md")].sort(),
+    );
+  });
+
+  it("adds no more files than the topic has room for, and stops looking through a huge folder", async () => {
+    const tree = join(base, "Many");
+    mkdirSync(tree);
+    for (let i = 0; i < 5; i++) writeFileSync(join(tree, `n${i}.txt`), `note ${i}`);
+    expect(await pickedSources([tree], false, 3)).toMatchObject({ ok: [0, 1, 2].map((i) => join(tree, `n${i}.txt`)), left: 2, stopped: false });
+    const huge = join(base, "Huge");
+    mkdirSync(huge);
+    for (let i = 0; i <= FOLDER_SCAN_LIMIT; i++) writeFileSync(join(huge, `x${String(i).padStart(5, "0")}.bin`), "");
+    expect(await pickedSources([huge], false, 200)).toMatchObject({ ok: [], skipped: FOLDER_SCAN_LIMIT, stopped: true });
   });
 
   it("shows in Finder only what the topic holds", () => {

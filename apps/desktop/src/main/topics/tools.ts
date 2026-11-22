@@ -8,8 +8,9 @@
  * write is in the conversation and the Activity log, and can be undone.
  * Making a topic, or putting this conversation in one, asks first.
  */
-import { extname } from "node:path";
+import { extname, join } from "node:path";
 import { readFileSync, statSync } from "node:fs";
+import { readdir } from "node:fs/promises";
 import { maskSecrets, type ToolArea, type ToolDef, type ToolRegistry } from "@vunemi/agent-core";
 import type { Roots } from "@vunemi/files";
 import { t } from "@vunemi/i18n";
@@ -109,17 +110,77 @@ export async function addSourceFiles(
   return { lines, made, results };
 }
 
-/** Files the user picked themselves (the Memory page): kinds MarkItDown reads, not too large. */
-export function pickedSourceFiles(paths: readonly string[], canConvert: boolean): { ok: string[]; refused: { path: string; error: string }[] } {
-  const ok: string[] = [];
-  const refused: { path: string; error: string }[] = [];
-  for (const path of paths.slice(0, MAX_FILES)) {
+/** How many entries a picked folder's tree is looked through, so a whole disk doesn't hold the page. */
+export const FOLDER_SCAN_LIMIT = 20_000;
+/** macOS packages look like files in Finder; they hold an app or a document's insides, not the user's files. */
+const PACKAGE_KINDS = new Set([".app", ".bundle", ".framework", ".plugin", ".kext", ".photoslibrary", ".musiclibrary", ".pages", ".numbers", ".key", ".xcodeproj", ".xcworkspace", ".lproj"]);
+
+export interface PickedSources {
+  ok: string[];
+  /** Files the user picked one by one that can't be added, with why. */
+  refused: { path: string; error: string }[];
+  /** Files inside the picked folders of a kind that can't be added: left out without a line each. */
+  skipped: number;
+  /** Files that would fit but are over `room`. */
+  left: number;
+  /** The folders hold more than FOLDER_SCAN_LIMIT entries; only part was looked through. */
+  stopped: boolean;
+}
+
+/**
+ * Files and folders the user picked themselves (the Memory page). A folder
+ * brings the files in it and in its subfolders: hidden entries, links and
+ * packages are not followed. Kinds MarkItDown reads, not too large, at most
+ * `room` files.
+ */
+export async function pickedSources(paths: readonly string[], canConvert: boolean, room: number): Promise<PickedSources> {
+  const out: PickedSources = { ok: [], refused: [], skipped: 0, left: 0, stopped: false };
+  const readable = (path: string) => {
     const kind = extname(path).toLowerCase();
-    if (!TEXT_KINDS.includes(kind) && (!canConvert || !(MARKDOWN_KINDS as readonly string[]).includes(kind))) refused.push({ path, error: t("topics.page.kind") });
-    else if (statSync(path).size > MAX_BYTES) refused.push({ path, error: t("topics.page.tooLarge", { size: `${MAX_BYTES / 1_000_000} MB` }) });
-    else ok.push(path);
+    return TEXT_KINDS.includes(kind) || (canConvert && (MARKDOWN_KINDS as readonly string[]).includes(kind));
+  };
+  const seen = new Set<string>();
+  const take = (path: string, picked: boolean) => {
+    if (seen.has(path)) return;
+    seen.add(path);
+    if (!readable(path)) {
+      if (picked) out.refused.push({ path, error: t("topics.page.kind") });
+      else out.skipped++;
+    } else if (statSync(path).size > MAX_BYTES) out.refused.push({ path, error: t("topics.page.tooLarge", { size: `${MAX_BYTES / 1_000_000} MB` }) });
+    else if (out.ok.length >= room) out.left++;
+    else out.ok.push(path);
+  };
+  let scanned = 0;
+  const walk = async (dir: string): Promise<void> => {
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return; // A folder macOS won't let Vunemi read is left out, like a hidden one.
+    }
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+    const dirs: string[] = [];
+    for (const entry of entries) {
+      if (out.stopped) return;
+      if (++scanned > FOLDER_SCAN_LIMIT) {
+        out.stopped = true;
+        return;
+      }
+      if (entry.name.startsWith(".") || entry.isSymbolicLink()) continue;
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!PACKAGE_KINDS.has(extname(entry.name).toLowerCase())) dirs.push(path);
+      } else if (entry.isFile()) take(path, false);
+    }
+    // Files of a folder first, then its subfolders, as Finder lists them.
+    for (const sub of dirs) await walk(sub);
+  };
+  for (const path of paths) {
+    if (out.stopped) break;
+    if (statSync(path).isDirectory()) await walk(path);
+    else take(path, true);
   }
-  return { ok, refused };
+  return out;
 }
 
 /** What the Memory page's file picker offers. */

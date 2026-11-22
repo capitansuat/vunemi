@@ -1563,7 +1563,7 @@ const memoryPage = topics
       convert: markitdown ? (from, signal) => convertToMarkdown(markdownEngines, from, signal) : null,
       pickFiles: async (kinds) => {
         // The paths come from the dialog the user answered, never from the window.
-        const options = { title: t("topics.page.addSources"), filters: [{ name: t("topics.page.files"), extensions: kinds }], properties: ["openFile", "multiSelections"] as ("openFile" | "multiSelections")[] };
+        const options = { title: t("topics.page.addSources"), filters: [{ name: t("topics.page.files"), extensions: kinds }], properties: ["openFile", "openDirectory", "multiSelections"] as ("openFile" | "openDirectory" | "multiSelections")[] };
         const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
         return result.canceled ? [] : result.filePaths;
       },

@@ -91,6 +91,12 @@ export interface TopicAddedView {
   added: string[];
   already: string[];
   failed: { file: string; error: string }[];
+  /** Files in the picked folders of a kind that can't be added. */
+  skipped: number;
+  /** Files not added because the topic would hold more sources than it can. */
+  left: number;
+  /** The folders held too many entries to look through all of them. */
+  stopped: boolean;
 }
 
 /** What the connections screen collects before a server can be added. */
