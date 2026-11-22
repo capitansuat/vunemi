@@ -437,7 +437,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ キューに追加 · ⌘↵ 割り込み · Esc 停止",
       listening: "Esc キャンセル · 音声はこの Mac から出ません",
-      idle: "↵ 送信 · ⇧↵ 改行 · @ でセッションや会議を取り込む",
+      idle: "↵ 送信 · ⇧↵ 改行 · @ でトピック・セッション・会議を取り込む",
     },
     steer: "割り込む",
     steerHint: "割り込む：実行中のタスクを止めて、代わりにこれを実行します（⌘↵）",

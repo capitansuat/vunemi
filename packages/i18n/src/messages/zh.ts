@@ -437,7 +437,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ 加入队列 · ⌘↵ 插队 · Esc 停止",
       listening: "Esc 取消 · 你的声音不会离开这台 Mac",
-      idle: "↵ 发送 · ⇧↵ 换行 · @ 引入会话或会议",
+      idle: "↵ 发送 · ⇧↵ 换行 · @ 引入主题、会话或会议",
     },
     steer: "插队",
     steerHint: "插队：停止当前任务，改做这件事（⌘↵）",

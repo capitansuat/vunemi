@@ -437,7 +437,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ 대기열에 추가 · ⌘↵ 끼어들기 · Esc 중단",
       listening: "Esc 취소 · 음성은 이 Mac 밖으로 나가지 않습니다",
-      idle: "↵ 보내기 · ⇧↵ 줄 바꿈 · @ 세션이나 회의 가져오기",
+      idle: "↵ 보내기 · ⇧↵ 줄 바꿈 · @ 주제, 세션이나 회의 가져오기",
     },
     steer: "끼어들기",
     steerHint: "끼어들기: 실행 중인 작업을 멈추고 이것을 대신 합니다(⌘↵)",

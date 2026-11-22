@@ -136,7 +136,17 @@ export function MemoryView() {
 
       <section className="scroll-thin min-w-0 flex-1 overflow-y-auto px-8 pt-8 pb-12">
         {selected.kind === "home" && <Home tree={tree} onNew={() => select({ kind: "newTopic" })} />}
-        {selected.kind === "newTopic" && <NewTopic onMade={(name) => select({ kind: "topic", topic: name })} onCancel={() => select({ kind: "home" })} />}
+        {selected.kind === "newTopic" && (
+          <NewTopic
+            onMade={async (name) => {
+              // The tree first: with the old one the new topic would count as gone and the page go home.
+              const fresh = await window.vunemi.topicsTree();
+              setTree(fresh);
+              select({ kind: "topic", topic: fresh.topics.find((tp) => tp.name.toLowerCase() === name.toLowerCase())?.name ?? name });
+            }}
+            onCancel={() => select({ kind: "home" })}
+          />
+        )}
         {selected.kind === "topic" && tree && (
           <TopicPanel key={selected.topic} topic={tree.topics.find((tp) => tp.name === selected.topic)} canConvert={tree.canConvert} onSelect={select} />
         )}
@@ -146,7 +156,7 @@ export function MemoryView() {
         )}
         {selected.kind === "source" && <SourcePanel key={`${selected.topic}/${selected.name}`} topic={selected.topic} name={selected.name} version={version} onSelect={select} />}
         {selected.kind === "search" && <SearchPanel key={`${selected.topic}/${selected.query}`} query={selected.query} topic={selected.topic} version={version} onSelect={select} />}
-        {selected.kind === "general" && <MemorySection />}
+        {selected.kind === "general" && <MemorySection title={t("topics.page.general")} />}
         {selected.kind === "project" && <ProjectNotes projectId={selected.id} />}
       </section>
     </div>
@@ -276,7 +286,7 @@ function Home({ tree, onNew }: { tree: TopicTreeView | null; onNew: () => void }
   );
 }
 
-function NewTopic({ onMade, onCancel }: { onMade: (name: string) => void; onCancel: () => void }) {
+function NewTopic({ onMade, onCancel }: { onMade: (name: string) => Promise<void>; onCancel: () => void }) {
   const [name, setName] = useState("");
   const [about, setAbout] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -437,7 +437,7 @@ export const messages: Catalogue = {
     hint: {
       running: "↵ met en file · ⌘↵ interrompt · Échap arrête",
       listening: "Échap annule · votre voix ne quitte pas ce Mac",
-      idle: "↵ envoyer · ⇧↵ nouvelle ligne · @ ajoute une session ou une réunion",
+      idle: "↵ envoyer · ⇧↵ nouvelle ligne · @ ajoute un sujet, une session ou une réunion",
     },
     steer: "Interrompre",
     steerHint: "Interrompre : arrête la tâche en cours et fait ceci à la place (⌘↵)",

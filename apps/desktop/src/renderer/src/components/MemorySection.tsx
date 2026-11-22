@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { getLocale, t } from "@vunemi/i18n";
 import type { MemoryNoteView, MemorySearchStatus } from "../../../shared/ipc.js";
 
-/** Settings › Memory: every note with the words it came from, and search by meaning. */
-export function MemorySection() {
+/** The general notes on the Memory page: every note with the words it came from, and search by meaning. */
+export function MemorySection({ title = t("memory.title") }: { title?: string }) {
   const [notes, setNotes] = useState<MemoryNoteView[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -31,7 +31,7 @@ export function MemorySection() {
 
   return (
     <div className="mx-auto max-w-[620px]">
-      <h2 className="text-[17px] font-semibold text-fg">{t("memory.title")}</h2>
+      <h2 className="text-[17px] font-semibold text-fg">{title}</h2>
       <p className="mt-1 text-[13px] text-muted">{t("memory.description")}</p>
       <MeaningSearch />
       {notes.length === 0 ? (

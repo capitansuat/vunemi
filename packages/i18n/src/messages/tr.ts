@@ -443,7 +443,7 @@ export const messages = {
     hint: {
       running: "↵ sıraya ekler · ⌘↵ araya girer · Esc durdurur",
       listening: "Esc vazgeçer · ses bu Mac'ten çıkmıyor",
-      idle: "↵ gönder · ⇧↵ yeni satır · @ oturum ya da toplantı getirir",
+      idle: "↵ gönder · ⇧↵ yeni satır · @ konu, oturum ya da toplantı getirir",
     },
     steer: "Araya gir",
     steerHint: "Araya gir: çalışan işi durdurur ve bunu yapar (⌘↵)",
