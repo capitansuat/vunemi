@@ -42,6 +42,14 @@ describe("codes", () => {
     expect(codesOf("Mentioned QXC only, and PDF or HTML files")).toEqual([{ code: "QXC", count: 1, defined: false }]);
   });
 
+  it("takes a code in a table row's first two cells as defined there, not one further along", () => {
+    expect(codesOf("| BR | QXA | Central | MAIN |")).toEqual([
+      { code: "BR", count: 1, defined: true },
+      { code: "QXA", count: 1, defined: true },
+      { code: "MAIN", count: 1, defined: false },
+    ]);
+  });
+
   it("keeps the codes a file uses most when it uses very many", () => {
     const many = Array.from({ length: 300 }, (_, i) => `C${String(i).padStart(3, "0")}`).join(" ") + " ZZZ ZZZ ZZZ";
     const codes = codesOf(many);

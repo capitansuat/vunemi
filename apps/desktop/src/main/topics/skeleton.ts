@@ -91,24 +91,31 @@ export function resolveLink(fromRel: string, target: string, rels: ReadonlySet<s
 export interface CodeUse {
   code: string;
   count: number;
-  /** In a heading or the first cell of a table row: where a code is usually defined. */
+  /** In a heading or the first two cells of a table row: where a code is usually defined. */
   defined: boolean;
+}
+
+/** Where a table row's first two cells end: its third bar, else the line's end. */
+function keyCellsEnd(line: string): number {
+  let bars = 0;
+  for (let i = 0; i < line.length; i++) if (line[i] === "|" && ++bars === 3) return i;
+  return line.length;
 }
 
 /** The codes a text uses, the most used first, at most CODES_MAX. */
 export function codesOf(markdown: string): CodeUse[] {
   const found = new Map<string, CodeUse>();
   for (const line of markdown.split("\n")) {
-    const trimmed = line.trimStart();
     const heading = HEADING.test(line);
-    // The first cell of a table row: "| QXB | Short loan |" defines QXB.
-    const firstCell = trimmed.startsWith("|") ? trimmed.slice(1).split("|")[0] ?? "" : "";
+    // A table row's first two cells: "| QXB | Short loan |" and "| BR | QXA | Central |"
+    // define QXB and QXA; a reference table often keys by a group, then the code.
+    const keyCells = line.trimStart().startsWith("|") ? keyCellsEnd(line) : -1;
     for (const m of line.matchAll(CODE)) {
       const code = m[0];
       if (CODE_STOP.has(code)) continue;
       const use = found.get(code) ?? { code, count: 0, defined: false };
       use.count++;
-      if (heading || (firstCell && m.index! >= line.indexOf("|") && m.index! < line.indexOf("|") + 1 + firstCell.length)) use.defined = true;
+      if (heading || m.index! < keyCells) use.defined = true;
       found.set(code, use);
     }
   }

@@ -22,6 +22,8 @@ import { type TopicToolsOptions, walkFolder } from "./tools.js";
 
 /** Files read between two looks at whether Vunemi is still idle. */
 export const LINKED_BATCH = 20;
+/** Skeletons made again from the index between two looks at whether Vunemi is idle. */
+const SKELETON_BATCH = 100;
 /** How long MarkItDown may take on one batch. */
 const CONVERT_MS = 20 * 60_000;
 const TEXT = new Set([".md", ".markdown", ".txt"]);
@@ -207,6 +209,15 @@ export class LinkedSync {
         this.opts.onIndexed?.(topic, done);
       }
       // Let the window and the next request in between batches.
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    // Files read under older skeleton rules: made again from the index's text, nothing read.
+    for (;;) {
+      const old = store.oldSkeletons(topic, folder.path, SKELETON_BATCH);
+      if (old.length === 0) break;
+      if (!goOn()) return "paused";
+      store.redoSkeletons(old);
+      this.changed.add(topic);
       await new Promise((resolve) => setImmediate(resolve));
     }
     return "done";

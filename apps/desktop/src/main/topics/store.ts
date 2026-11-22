@@ -190,7 +190,8 @@ CREATE TABLE IF NOT EXISTS ${name} (
   sha256 TEXT,
   original TEXT,
   outline TEXT,
-  summary TEXT
+  summary TEXT,
+  skeleton INTEGER NOT NULL DEFAULT 0
 );`;
 const SCHEMA = `
 ${FILES_TABLE("files")}
@@ -338,6 +339,8 @@ export class TopicStore {
     // A version 3 index from before outlines and summaries were kept.
     const columns = new Set((this.db.prepare("PRAGMA table_info(files)").all() as { name: string }[]).map((c) => c.name));
     for (const column of ["outline", "summary"]) if (!columns.has(column)) this.db.exec(`ALTER TABLE files ADD COLUMN ${column} TEXT`);
+    // Rows from before skeleton versions are made again from their text (topics/linked.ts).
+    if (!columns.has("skeleton")) this.db.exec("ALTER TABLE files ADD COLUMN skeleton INTEGER NOT NULL DEFAULT 0");
     if (version < INDEX_VERSION) {
       this.db.exec(`INSERT INTO files_fts(files_fts) VALUES('rebuild'); PRAGMA user_version = ${INDEX_VERSION};`);
       if (version === 2) this.originals();
@@ -744,19 +747,10 @@ export class TopicStore {
     this.db.exec("BEGIN");
     try {
       this.db
-        .prepare("INSERT INTO files (path, topic_key, kind, title, title_key, body, size, mtime, folder, rel, sha256, outline) VALUES (?, ?, 'linked', ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(path) DO UPDATE SET topic_key = excluded.topic_key, kind = excluded.kind, title = excluded.title, title_key = excluded.title_key, body = excluded.body, size = excluded.size, mtime = excluded.mtime, folder = excluded.folder, rel = excluded.rel, summary = CASE WHEN files.sha256 IS excluded.sha256 THEN files.summary ELSE NULL END, sha256 = excluded.sha256, outline = excluded.outline")
-        .run(row.path, topicKey, row.title, keyOf(row.title), row.body, row.size, row.mtime, row.folder, row.rel, row.sha256, JSON.stringify(outlineOf(row.body)));
+        .prepare("INSERT INTO files (path, topic_key, kind, title, title_key, body, size, mtime, folder, rel, sha256) VALUES (?, ?, 'linked', ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(path) DO UPDATE SET topic_key = excluded.topic_key, kind = excluded.kind, title = excluded.title, title_key = excluded.title_key, body = excluded.body, size = excluded.size, mtime = excluded.mtime, folder = excluded.folder, rel = excluded.rel, summary = CASE WHEN files.sha256 IS excluded.sha256 THEN files.summary ELSE NULL END, sha256 = excluded.sha256")
+        .run(row.path, topicKey, row.title, keyOf(row.title), row.body, row.size, row.mtime, row.folder, row.rel, row.sha256);
       this.db.prepare("DELETE FROM parts WHERE path = ?").run(row.path);
-      this.forgetSkeleton(row.path);
-      const link = this.db.prepare("INSERT INTO links (topic_key, folder, src, dst, dst_stem) VALUES (?, ?, ?, ?, ?)");
-      for (const target of linksOf(row.body)) {
-        const dst = target.startsWith("/") ? posix.normalize(target.slice(1)) : posix.normalize(posix.join(posix.dirname(row.rel), target));
-        if (dst === "." || dst === ".." || dst.startsWith("../") || stemOf(dst) === stemOf(row.rel)) continue;
-        link.run(topicKey, row.folder, row.path, dst, stemOf(dst));
-      }
-      const { rowid } = this.db.prepare("SELECT rowid FROM files WHERE path = ?").get(row.path) as { rowid: number };
-      const code = this.db.prepare("INSERT INTO codes (file, code, count, defined) VALUES (?, ?, ?, ?)");
-      for (const use of codesOf(row.body)) code.run(rowid, use.code, use.count, use.defined ? 1 : 0);
+      this.fillSkeleton(topicKey, row);
       if (row.parts) {
         const insert = this.db.prepare("INSERT INTO parts (path, start, text) VALUES (?, ?, ?)");
         for (const part of partsOf(row.body)) insert.run(row.path, part.start, part.text);
@@ -816,6 +810,43 @@ export class TopicStore {
     }
   }
 
+  /** A linked file's outline, links and codes from its text, by this version's rules. */
+  private fillSkeleton(topicKey: string, row: { path: string; folder: string; rel: string; body: string }): void {
+    this.forgetSkeleton(row.path);
+    const link = this.db.prepare("INSERT INTO links (topic_key, folder, src, dst, dst_stem) VALUES (?, ?, ?, ?, ?)");
+    for (const target of linksOf(row.body)) {
+      const dst = target.startsWith("/") ? posix.normalize(target.slice(1)) : posix.normalize(posix.join(posix.dirname(row.rel), target));
+      if (dst === "." || dst === ".." || dst.startsWith("../") || stemOf(dst) === stemOf(row.rel)) continue;
+      link.run(topicKey, row.folder, row.path, dst, stemOf(dst));
+    }
+    const { rowid } = this.db.prepare("SELECT rowid FROM files WHERE path = ?").get(row.path) as { rowid: number };
+    const code = this.db.prepare("INSERT INTO codes (file, code, count, defined) VALUES (?, ?, ?, ?)");
+    for (const use of codesOf(row.body)) code.run(rowid, use.code, use.count, use.defined ? 1 : 0);
+    this.db.prepare("UPDATE files SET outline = ?, skeleton = ? WHERE rowid = ?").run(JSON.stringify(outlineOf(row.body)), SKELETON_VERSION, rowid);
+  }
+
+  /** A folder's linked files whose skeleton was made under older rules. */
+  oldSkeletons(topicName: string, folder: string, limit: number): string[] {
+    const topicKey = keyOf(this.need(topicName).name);
+    return (this.db.prepare("SELECT path FROM files WHERE topic_key = ? AND kind = 'linked' AND folder = ? AND skeleton < ? LIMIT ?").all(topicKey, folder, SKELETON_VERSION, limit) as { path: string }[]).map((r) => r.path);
+  }
+
+  /** Makes linked files' skeletons again from the text the index holds: no file is read. */
+  redoSkeletons(paths: readonly string[]): void {
+    const get = this.db.prepare("SELECT path, topic_key, folder, rel, body FROM files WHERE path = ? AND kind = 'linked'");
+    this.db.exec("BEGIN");
+    try {
+      for (const path of paths) {
+        const row = get.get(path) as { path: string; topic_key: string; folder: string; rel: string; body: string } | undefined;
+        if (row) this.fillSkeleton(row.topic_key, row);
+      }
+      this.db.exec("COMMIT");
+    } catch (err) {
+      this.db.exec("ROLLBACK");
+      throw err;
+    }
+  }
+
   private forgetSkeleton(path: string): void {
     this.db.prepare("DELETE FROM links WHERE src = ?").run(path);
     this.db.prepare("DELETE FROM codes WHERE file = (SELECT rowid FROM files WHERE path = ?)").run(path);
@@ -851,7 +882,7 @@ export class TopicStore {
   /** The linked files of a topic that use a code: those defining it first, then the most uses. */
   codeFiles(topicName: string, code: string, limit = 20): { path: string; folder: string; rel: string; title: string; count: number; defined: boolean }[] {
     const rows = this.db
-      .prepare("SELECT f.path, f.folder, f.rel, f.title, c.count, c.defined FROM codes c JOIN files f ON f.rowid = c.file WHERE f.topic_key = ? AND c.code = ? ORDER BY c.defined DESC, c.count DESC, f.path LIMIT ?")
+      .prepare(`SELECT f.path, f.folder, f.rel, f.title, c.count, c.defined FROM codes c JOIN files f ON f.rowid = c.file WHERE f.topic_key = ? AND c.code = ? ORDER BY c.defined DESC, ${DATA_LAST}, c.count DESC, f.path LIMIT ?`)
       .all(keyOf(this.need(topicName).name), code, limit) as { path: string; folder: string; rel: string; title: string; count: number; defined: number }[];
     return rows.map((r) => ({ ...r, defined: r.defined === 1 }));
   }
@@ -892,7 +923,7 @@ export class TopicStore {
     const rows = this.db
       .prepare("SELECT c.code, COUNT(*) AS n FROM codes c JOIN files f ON f.rowid = c.file WHERE f.topic_key = ? GROUP BY c.code ORDER BY n DESC, c.code LIMIT ?")
       .all(topicKey, limit) as { code: string; n: number }[];
-    const defining = this.db.prepare("SELECT f.folder, f.rel FROM codes c JOIN files f ON f.rowid = c.file WHERE f.topic_key = ? AND c.code = ? AND c.defined = 1 ORDER BY c.count DESC, f.path LIMIT 1");
+    const defining = this.db.prepare(`SELECT f.folder, f.rel FROM codes c JOIN files f ON f.rowid = c.file WHERE f.topic_key = ? AND c.code = ? AND c.defined = 1 ORDER BY ${DATA_LAST}, c.count DESC, f.path LIMIT 1`);
     return rows.map((r) => {
       const at = defining.get(topicKey, r.code) as { folder: string; rel: string } | undefined;
       return { code: r.code, files: r.n, definedIn: at ? linkedName(at.folder, at.rel) : null };
@@ -1047,6 +1078,19 @@ export class TopicStore {
 export function linkedName(folder: string, rel: string): string {
   return `${basename(folder)}/${rel}`;
 }
+
+/**
+ * The rules the skeleton was made by: a row made under older ones is made
+ * again from its text while Vunemi is idle. 2: a code in a table row's
+ * second cell is defined there too.
+ */
+export const SKELETON_VERSION = 2;
+
+/**
+ * Data files (a CSV of 500 rows naming QXA) after the documents that
+ * explain a code, whatever the counts: an ORDER BY term over files f.
+ */
+const DATA_LAST = "(lower(f.rel) LIKE '%.csv' OR lower(f.rel) LIKE '%.tsv' OR lower(f.rel) LIKE '%.json' OR lower(f.rel) LIKE '%.xlsx' OR lower(f.rel) LIKE '%.xls')";
 
 /** A path without its kind: how a link to x.html reaches x.md. */
 const stemOf = (rel: string): string => {

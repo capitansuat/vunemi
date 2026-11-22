@@ -40,7 +40,7 @@ beforeEach(() => {
     },
     convert: async (from) => {
       convertCalls++;
-      return from.map((path) => (failFor && path.endsWith(failFor) ? { error: "Not a web page." } : { markdown: `# Converted\n\n${path.split("/").pop()} body` }));
+      return from.map((path) => (failFor && path.endsWith(failFor) ? { error: "Not a web page." } : { markdown: `# Converted\n\n${path.split("/").pop()} body\n\n| QXA | Standard |` }));
     },
     cacheDir: join(base, "cache"),
     inMeaning: () => false,
@@ -207,6 +207,21 @@ describe("a linked folder", () => {
     rmSync(dir, { recursive: true });
     await sync.run(() => true);
     expect(sync.checks("Library")).toEqual([{ kind: "folder", path: dir, state: "missing" }]);
+  });
+
+  it("makes a file's skeleton again from the index when the rules changed, reading no file", async () => {
+    writeFileSync(join(dir, "s.html"), "<h1>x</h1>");
+    await sync.run(() => true);
+    expect(store.codeFiles("Library", "QXA")).toHaveLength(1);
+    // As an index made under older rules: no codes, an older skeleton.
+    const { DatabaseSync } = await import("node:sqlite");
+    const db = new DatabaseSync(join(base, "data", "topics.db"));
+    db.exec("DELETE FROM codes; UPDATE files SET skeleton = 0;");
+    db.close();
+    const before = convertCalls;
+    await sync.run(() => true);
+    expect(store.codeFiles("Library", "QXA")).toHaveLength(1);
+    expect(convertCalls).toBe(before);
   });
 
   it("makes parts only for files searched by meaning", async () => {

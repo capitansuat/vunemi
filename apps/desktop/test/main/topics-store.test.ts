@@ -302,6 +302,14 @@ describe("the skeleton of linked files", () => {
     ]);
   });
 
+  it("puts a document defining a code before a data file that repeats it", () => {
+    store.createTopic("Library", "");
+    put("mappings.csv", Array.from({ length: 50 }, () => "| BR | QXA | x |").join("\n"));
+    put("loan-period-reference.md", "# Loans\n\n| BR | QXA | Central |");
+    expect(store.codeFiles("Library", "QXA").map((f) => f.path)).toEqual(["/ref/loan-period-reference.md", "/ref/mappings.csv"]);
+    expect(store.topCodes("Library", 5).find((c) => c.code === "QXA")?.definedIn).toBe("ref/loan-period-reference.md");
+  });
+
   it("forgets a file's links and codes when it leaves the index", () => {
     store.createTopic("Library", "");
     put("a.md", "# QXA\n\n[b](b.md)");
