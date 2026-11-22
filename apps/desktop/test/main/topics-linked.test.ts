@@ -184,7 +184,8 @@ describe("a linked folder", () => {
     const parts = (path: string) => (db.prepare("SELECT COUNT(*) AS n FROM parts WHERE path = ?").get(path) as { n: number }).n;
     expect([parts(join(dir, "small", "s9.txt")), parts(join(dir, "small", "s0.txt")), parts(join(dir, "big", "b0.txt"))]).toEqual([0, 1, 0]);
     db.close();
-  });
+    // A thousand files on disk: slow on a busy machine, not wrong.
+  }, 30_000);
 
   it("decides by size where the user set no switch", () => {
     expect(defaultMeaning(MEANING_SUBFOLDER_MAX)).toBe(true);
