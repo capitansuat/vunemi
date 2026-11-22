@@ -26,7 +26,7 @@ describe("where the engine lives", () => {
   });
 
   it("is built from the tag the app expects", () => {
-    const script = readFileSync(fileURLToPath(new URL("../../../../scripts/build-engine.sh", import.meta.url)), "utf8");
-    expect(script).toContain(`tag="\${VUNEMI_ENGINE_TAG:-${ENGINE_TAG}}"`);
+    const script = readFileSync(fileURLToPath(new URL("../../../../scripts/engine-version.sh", import.meta.url)), "utf8");
+    expect(script).toContain(`engine_tag="\${VUNEMI_ENGINE_TAG:-${ENGINE_TAG}}"`);
   });
 });

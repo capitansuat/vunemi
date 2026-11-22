@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-/** The llama.cpp release the engine is built from; scripts/build-engine.sh must agree. */
-export const ENGINE_TAG = "v0.5.0";
+/** The llama.cpp release the engine is built from; scripts/engine-version.sh must agree. */
+export const ENGINE_TAG = "b12633";
 
 /**
  * The installed app carries the engine in its resources; a development run

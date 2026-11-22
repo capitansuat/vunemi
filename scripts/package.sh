@@ -154,7 +154,8 @@ pnpm --filter @vunemi/desktop exec electron-builder --dir --publish never --conf
 
 echo "› motor"
 bash "$here/scripts/build-engine.sh"
-engine_cache="$out/engine-cache/v0.5.0"
+source "$here/scripts/engine-version.sh"
+engine_cache="$out/engine-cache/$engine_tag"
 cp -p "$engine_cache/llama-server" "$app/Contents/Resources/llama-server"
 mkdir -p "$app/Contents/Resources/licenses"
 cp -p "$engine_cache/LICENSE" "$app/Contents/Resources/licenses/llama.cpp-LICENSE"

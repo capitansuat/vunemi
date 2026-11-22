@@ -12,8 +12,9 @@
 #    Mac does not have.)
 set -euo pipefail
 
-tag="${VUNEMI_ENGINE_TAG:-v0.5.0}"
-commit="${VUNEMI_ENGINE_COMMIT:-7fe450e19305b828c199d602c23a8337aaa1f03b}"
+source "$(dirname "$0")/engine-version.sh"
+tag="$engine_tag"
+commit="$engine_commit"
 out="${VUNEMI_BUILD_DIR:-$HOME/.vunemi-build}"
 cache="$out/engine-cache/$tag"
 src="$out/engine-src/$tag"
