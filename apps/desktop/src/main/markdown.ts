@@ -118,6 +118,20 @@ export function reports(stdout: string): Report[] {
   });
 }
 
+/** Longest reason shown for a file that wasn't converted. */
+const WHY_CHARS = 200;
+
+/**
+ * Why a file wasn't converted, short and from its start. MarkItDown says
+ * "File conversion failed after N attempts:" and then a line for each
+ * converter it tried, "- CsvConverter threw …": the first says why.
+ */
+export function why(error: string): string {
+  const lines = error.split("\n").map((l) => l.replace(/^\s*-\s*/, "").trim()).filter(Boolean);
+  const reason = lines.find((l) => / threw /.test(l)) ?? lines.find((l) => !/^File conversion failed/.test(l)) ?? lines[0] ?? error.trim();
+  return reason.length > WHY_CHARS ? `${reason.slice(0, WHY_CHARS - 1)}…` : reason;
+}
+
 /** Converts files to Markdown in one sandboxed run, for callers other than these tools (topics). */
 export function convertToMarkdown(engines: Engines<"markdown">, from: readonly string[], signal: AbortSignal): Promise<({ markdown: string } | { error: string })[]> {
   return engines("markdown", signal, (job) => convertAll(job, from));
@@ -139,7 +153,7 @@ async function convertAll(job: EngineJob, from: readonly string[]): Promise<Conv
   return from.map((path, index) => {
     const line = lines[index];
     if (!line) return { error: t("apps.error.failed", { app: ENGINE, detail: said(result) }) };
-    if (!line.ok) return { error: t("apps.error.failed", { app: ENGINE, detail: line.error.split("\n").slice(-3).join(" ").slice(-300) }) };
+    if (!line.ok) return { error: t("apps.error.failed", { app: ENGINE, detail: why(line.error) }) };
     const made = join(job.dir, "out", `${index}.md`);
     const markdown = existsSync(made) ? readFileSync(made, "utf8") : "";
     if (!markdown.trim()) return { error: extname(path).toLowerCase() === ".pdf" ? "No text found: it may be a scanned PDF, and there is no OCR." : "No text found in the file." };

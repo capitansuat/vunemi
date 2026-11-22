@@ -39,12 +39,20 @@ export interface EmbedderOptions {
   download?: typeof download;
 }
 
-/** Notes and cut requests fit easily; a sequence must fit in one batch. */
-const CONTEXT = 512;
+/**
+ * A sequence must fit in one batch. A topic part is up to 1,000 characters,
+ * and a table of numbers is about one token a character: at 512, such parts
+ * were refused (measured 22 Nov: 525 tokens). 1,024 costs about 56 MB more
+ * while the model runs (412 to 468 MB footprint, measured on this Mac).
+ */
+const CONTEXT = 1024;
 /** Long requests are cut: the start says what they are about, and it must fit. */
 const MAX_QUERY_CHARS = 400;
 const IDLE_MS = 5 * 60_000;
 const REQUEST_MS = 30_000;
+
+/** A text the model can't take in one piece: cut it and try again. */
+export class TooLongError extends Error {}
 
 export class Embedder {
   private readonly engine: Engine;
@@ -134,6 +142,8 @@ export class Embedder {
         body: JSON.stringify({ model: EMBED_MODEL_ID, input }),
         signal: AbortSignal.timeout(REQUEST_MS),
       });
+      // llama-server answers 400 when a text is longer than the context.
+      if (res.status === 400) throw new TooLongError("A text is too long for the meaning model.");
       if (!res.ok) throw new Error(`The meaning model answered ${res.status}.`);
       this.engine.touch();
       const body = (await res.json()) as { data?: { index: number; embedding: number[] }[] };

@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { partsOf, PART_CHARS, TopicStore } from "../../src/main/topics/store.js";
 import { PART_MIN, TopicMeaning } from "../../src/main/topics/meaning.js";
+import { TooLongError } from "../../src/main/memory/embedder.js";
 
 describe("cutting a text in parts", () => {
   it("keeps short paragraphs together, and says where each part starts", () => {
@@ -125,6 +126,35 @@ describe("searching a topic by meaning", () => {
     await new TopicMeaning(store, meaning).catchUp(() => calls++ < 1);
     expect(passages).toHaveLength(16);
     expect(store.pendingParts("qwen3-embedding-0.6b-q8_0", "Home renovation")).toBe(24);
+  });
+
+  it("embeds the start of a part too long for the model, and goes on with the rest", async () => {
+    for (let i = 0; i < 3; i++) store.writeNote("Home renovation", { title: `Note ${i}`, text: `budget line ${i}`, by: "vunemi", sources: [] });
+    store.writeNote("Home renovation", { title: "Prices", text: "9".repeat(900), by: "vunemi", sources: [] });
+    const { meaning, passages } = embedder();
+    const asked: number[] = [];
+    const strict = {
+      available: meaning.available,
+      embed: async (texts: string[], as: "query" | "passage") => {
+        asked.push(texts.length);
+        if (texts.some((t) => t.length > 500)) throw new TooLongError("too long");
+        return meaning.embed(texts, as);
+      },
+    };
+    await new TopicMeaning(store, strict).catchUp();
+    expect(store.pendingParts("qwen3-embedding-0.6b-q8_0", "Home renovation")).toBe(0);
+    const prices = passages.find((p) => p.startsWith("Prices\n"))!;
+    expect(prices.length).toBeLessThanOrEqual(500);
+    expect(asked[0]).toBe(4);
+  });
+
+  it("stops at once when the model itself fails, not part by part", async () => {
+    for (let i = 0; i < 3; i++) store.writeNote("Home renovation", { title: `Note ${i}`, text: `budget line ${i}`, by: "vunemi", sources: [] });
+    let calls = 0;
+    const down = { available: () => true, embed: async () => { calls++; throw new Error("The meaning model answered 500."); } };
+    await new TopicMeaning(store, down).catchUp();
+    expect(calls).toBe(1);
+    expect(store.pendingParts("qwen3-embedding-0.6b-q8_0", "Home renovation")).toBe(3);
   });
 
   it("leaves out what isn't about the query at all", async () => {

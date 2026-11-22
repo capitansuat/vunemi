@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ToolRegistry, type Produced, type ToolContext, type ToolDef } from "@vunemi/agent-core";
 import { Roots } from "@vunemi/files";
 import type { Engines } from "../../src/main/addons/jobs.js";
-import { MARKDOWN_WANTED, markdownArea, markdownTools, markitdownDir, registerMarkdownTools, reports } from "../../src/main/markdown.js";
+import { MARKDOWN_WANTED, markdownArea, markdownTools, markitdownDir, registerMarkdownTools, reports, why } from "../../src/main/markdown.js";
 
 let base = "";
 let folder = "";
@@ -162,6 +162,12 @@ describe("markdown_read", () => {
 describe("files to Markdown in Vunemi", () => {
   it("reads the program's answers, one line a file, ignoring anything else it printed", () => {
     expect(reports('noise\n{"ok": true, "chars": 3}\n{"ok": false, "error": "E"}\n[1]\n')).toEqual([{ ok: true }, { ok: false, error: "E" }]);
+  });
+
+  it("says why a file wasn't converted from the start of the reason, short", () => {
+    const csv = "FileConversionException: File conversion failed after 2 attempts:\n - CsvConverter threw UnicodeDecodeError with message: 'ascii' codec can't decode byte 0xe2 in position 113871: ordinal not in range(128). The charset may have been automatically guessed incorrectly. If you didn't specify the charset, please retry with an explicitly defined one.\n - PlainTextConverter threw UnicodeDecodeError with message: 'ascii' codec can't decode byte 0xe2";
+    expect(why(csv)).toBe(`${"CsvConverter threw UnicodeDecodeError with message: 'ascii' codec can't decode byte 0xe2 in position 113871: ordinal not in range(128). The charset may have been automatically guessed incorrectly. If ".slice(0, 199)}…`);
+    expect(why("PDFSyntaxError: No /Root object!")).toBe("PDFSyntaxError: No /Root object!");
   });
 
   it("finds the program in the app's resources, or in the build cache, and only on a Mac", () => {

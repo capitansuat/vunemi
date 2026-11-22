@@ -1573,7 +1573,11 @@ const memoryPage = topics
         conversations.renameTopic(topic, null);
         send(CH.sessionsChanged, sessionList());
       },
-      changed: () => send(CH.topicsChanged, null),
+      changed: () => {
+        send(CH.topicsChanged, null);
+        // New sources wait for meaning search: start on them now, not after the next run.
+        setTimeout(tendTopics, 0);
+      },
     })
   : null;
 const page = () => {

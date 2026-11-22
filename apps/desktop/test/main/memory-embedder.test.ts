@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { serverArgs } from "../../src/main/engine/engine.js";
-import { cosine, EMBED_MODEL, Embedder } from "../../src/main/memory/embedder.js";
+import { cosine, EMBED_MODEL, Embedder, TooLongError } from "../../src/main/memory/embedder.js";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-llama-server.mjs", import.meta.url));
 let dir = "";
@@ -61,6 +61,14 @@ describe("the meaning model", () => {
     const [a, b] = await embedders[0]!.embed(["a", "b"], "passage");
     expect([...a!].map((x) => +x.toFixed(3))).toEqual([0, 0.6, 0.8]);
     expect(b).toEqual(a);
+  });
+
+  it("takes a whole topic part, and says when a text is too long", async () => {
+    withModel();
+    const embedder = make();
+    // A part is up to 1,000 characters; a table of numbers is about a token a character.
+    expect(await embedder.embed(["9".repeat(1000)], "passage")).toHaveLength(1);
+    await expect(embedder.embed(["9".repeat(1100)], "passage")).rejects.toBeInstanceOf(TooLongError);
   });
 
   it("refuses to embed without the model", async () => {

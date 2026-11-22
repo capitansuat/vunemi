@@ -5,11 +5,13 @@
  * there are, fused; parts still waiting are found by words meanwhile.
  * Without the embedder, search is by words alone.
  */
-import { EMBED_MODEL_ID } from "../memory/embedder.js";
+import { EMBED_MODEL_ID, TooLongError } from "../memory/embedder.js";
 import { fuse, type Meaning } from "../memory/recall.js";
 import type { TopicHit, TopicStore } from "./store.js";
 
 const EMBED_BATCH = 16;
+/** A part still too long when cut to this is left to words alone: something else is wrong. */
+const SHORTEST_CUT = 100;
 /** A search embeds this many waiting parts itself first: a source just added is found at once. */
 const SEARCH_EMBEDS = 64;
 const CANDIDATES = 20;
@@ -61,9 +63,29 @@ export class TopicMeaning {
   private async embedSome(limit: number): Promise<number> {
     const batch = this.store.missingParts(this.model, limit);
     if (batch.length === 0) return 0;
-    const vectors = await this.meaning.embed(batch.map(passage), "passage");
+    const texts = batch.map(passage);
+    let vectors: Float32Array[];
+    try {
+      vectors = await this.meaning.embed(texts, "passage");
+    } catch (error) {
+      // One part too long fails the whole batch, and the batch would come back every time.
+      if (!(error instanceof TooLongError)) throw error;
+      vectors = [];
+      for (const text of texts) vectors.push(await this.fitted(text));
+    }
     batch.forEach((part, i) => this.store.setPartVector(part.id, part.text, this.model, vectors[i]!));
     return batch.length;
+  }
+
+  /** The vector of the text, or of its start when the whole doesn't fit: the start still says what it is about. */
+  private async fitted(text: string): Promise<Float32Array> {
+    for (let cut = text; ; cut = cut.slice(0, Math.floor(cut.length * 0.75))) {
+      try {
+        return (await this.meaning.embed([cut], "passage"))[0]!;
+      } catch (error) {
+        if (!(error instanceof TooLongError) || cut.length <= SHORTEST_CUT) throw error;
+      }
+    }
   }
 
   /** Best first: found by words, by meaning, or both. */

@@ -29,6 +29,11 @@ createServer((req, res) => {
     req.on("data", (d) => { body += d; });
     req.on("end", () => {
       const { input } = JSON.parse(body);
+      // A character stands for a token: a text longer than the context is refused, as llama-server does.
+      if (input.some((text) => text.length > Number(arg("-c")))) {
+        res.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ error: { message: "request exceeds the available context size" } }));
+        return;
+      }
       // A made-up vector that shows which prefix and text came in.
       const data = input.map((text, index) => ({ index, embedding: [text.startsWith("Instruct: ") ? 3 : 0, text.startsWith("Instruct: ") ? 0 : 3, 4] }));
       res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ data: data.reverse() }));
