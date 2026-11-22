@@ -418,10 +418,12 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
         if (found.hits.length === 0) return `Nothing matches "${query}".${waiting}`;
         const where = (h: TopicHit) => (h.kind !== "note" && h.at !== undefined ? ` (read from offset ${h.at})` : "");
         const named = (h: TopicHit) => (h.kind === "file" ? linkedName(h.folder ?? "", h.rel ?? "") : h.title);
-        // A file's first heading says what it is about.
+        // A file's first heading and the line written about it say what it is about.
         const heading = (h: TopicHit) => {
-          const first = h.kind === "file" ? opts.store.outlineOf(h.path)[0] : undefined;
-          return first ? ` — ${first}` : "";
+          if (h.kind !== "file") return "";
+          const first = opts.store.outlineOf(h.path)[0];
+          const line = opts.store.summaryOf(h.path);
+          return `${first ? ` — ${first}` : ""}${line ? ` (${line})` : ""}`;
         };
         // The files defining a code the query names, then pages (what was
         // already worked out), then the files they came from.

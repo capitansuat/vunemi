@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { appMenuTemplate } from "./app-menu.js";
 import { followLanguage } from "./system-language.js";
 import { toolAreas } from "./areas.js";
-import { type StandingGrant, TaskPermissionStore, taskProgressTool, choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision } from "@vunemi/agent-core";
+import { type StandingGrant, TaskPermissionStore, taskProgressTool, choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision, type ChatModel } from "@vunemi/agent-core";
 import { BrowserController, checkNavigation, trustableHost } from "@vunemi/browser";
 import { projectFolderProblem, Roots } from "@vunemi/files";
 import { Helper, scheduledApp } from "@vunemi/mac";
@@ -88,6 +88,7 @@ import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
 import { combined, tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
 import { LinkedSync } from "./topics/linked.js";
+import { summarise } from "./topics/summaries.js";
 import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
@@ -925,6 +926,8 @@ const sessionOptions: SessionOptions = {
     return library.index(goal, new Set([...given, conversations.currentId]));
   },
   afterRun: ({ runId, model, words }) => {
+    // The model the user last ran with writes the lines about linked files while idle.
+    topicsModel = model;
     // Once this run has let go: what it said is in the library before the next request.
     setTimeout(tendLibrary, 0);
     setTimeout(tendTopics, 0);
@@ -1821,6 +1824,11 @@ let topicsRetry: NodeJS.Timeout | null = null;
 /** How often linked folders are looked at again for files changed outside Vunemi. */
 const FOLDERS_RESCAN_MS = 10 * 60_000;
 let topicsFailures = 0;
+/** The chat model of the last run: null until one ran, so nothing is written about files before. */
+let topicsModel: ChatModel | null = null;
+/** How long one pass of lines about files may take before it lets go. */
+const SUMMARIES_MS = 30 * 60_000;
+
 function tendTopics(): void {
   if (topicsRetry) clearTimeout(topicsRetry);
   topicsRetry = null;
@@ -1840,7 +1848,10 @@ function tendTopics(): void {
   void (async () => {
     // The folders first: what they hold is then searched by meaning in the same pass.
     const folders = linkedSync ? await linkedSync.run(idle) : "done";
-    return combined(folders, await topicMeaning.catchUp(idle));
+    const meant = combined(folders, await topicMeaning.catchUp(idle));
+    // A line about each file only once everything is searchable by meaning.
+    if (meant !== "done" || !topics || !idle()) return meant;
+    return summarise({ store: topics, model: topicsModel, goOn: idle, signal: AbortSignal.timeout(SUMMARIES_MS) });
   })().then(again);
 }
 

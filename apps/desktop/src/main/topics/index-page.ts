@@ -24,7 +24,7 @@ const LINE_MAX = 400;
 
 export interface IndexInput {
   folders: { name: string; files: number; subfolders: { name: string; files: number }[] }[];
-  hubs: { name: string; title: string; inbound: number }[];
+  hubs: { name: string; title: string; inbound: number; summary?: string | null }[];
   codes: { code: string; files: number; definedIn: string | null }[];
   pages: string[];
 }
@@ -51,7 +51,7 @@ export function indexPage(input: IndexInput): string {
         return clip(`- ${f.name}: ${n(f.files)} files, ${n(top)} at the top${named.length ? `; ${named.join(", ")}` : ""}`);
       }),
     },
-    { head: "## Most linked files", lines: input.hubs.map((h) => clip(`- ${h.name} ${JSON.stringify(h.title)}, linked from ${n(h.inbound)}`)) },
+    { head: "## Most linked files", lines: input.hubs.map((h) => clip(`- ${h.name} ${JSON.stringify(h.title)}, linked from ${n(h.inbound)}${h.summary ? `: ${h.summary}` : ""}`)) },
     { head: "## Codes", lines: input.codes.map((c) => clip(`- ${c.code}: in ${n(c.files)} files${c.definedIn ? `, defined in ${c.definedIn}` : ""}`)) },
     { head: "## Pages", lines: input.pages.map((p) => clip(`- ${JSON.stringify(p)}`)) },
   ];

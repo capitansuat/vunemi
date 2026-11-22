@@ -189,7 +189,8 @@ CREATE TABLE IF NOT EXISTS ${name} (
   rel TEXT,
   sha256 TEXT,
   original TEXT,
-  outline TEXT
+  outline TEXT,
+  summary TEXT
 );`;
 const SCHEMA = `
 ${FILES_TABLE("files")}
@@ -334,8 +335,9 @@ export class TopicStore {
     if (version === 2) this.fromVersion2();
     else if (version < 2) this.db.exec("DROP TABLE IF EXISTS files; DROP TABLE IF EXISTS files_fts; DROP TABLE IF EXISTS parts;");
     this.db.exec(SCHEMA);
-    // A version 3 index from before outlines were kept.
-    if (!(this.db.prepare("PRAGMA table_info(files)").all() as { name: string }[]).some((c) => c.name === "outline")) this.db.exec("ALTER TABLE files ADD COLUMN outline TEXT");
+    // A version 3 index from before outlines and summaries were kept.
+    const columns = new Set((this.db.prepare("PRAGMA table_info(files)").all() as { name: string }[]).map((c) => c.name));
+    for (const column of ["outline", "summary"]) if (!columns.has(column)) this.db.exec(`ALTER TABLE files ADD COLUMN ${column} TEXT`);
     if (version < INDEX_VERSION) {
       this.db.exec(`INSERT INTO files_fts(files_fts) VALUES('rebuild'); PRAGMA user_version = ${INDEX_VERSION};`);
       if (version === 2) this.originals();
@@ -742,7 +744,7 @@ export class TopicStore {
     this.db.exec("BEGIN");
     try {
       this.db
-        .prepare("INSERT INTO files (path, topic_key, kind, title, title_key, body, size, mtime, folder, rel, sha256, outline) VALUES (?, ?, 'linked', ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(path) DO UPDATE SET topic_key = excluded.topic_key, kind = excluded.kind, title = excluded.title, title_key = excluded.title_key, body = excluded.body, size = excluded.size, mtime = excluded.mtime, folder = excluded.folder, rel = excluded.rel, sha256 = excluded.sha256, outline = excluded.outline")
+        .prepare("INSERT INTO files (path, topic_key, kind, title, title_key, body, size, mtime, folder, rel, sha256, outline) VALUES (?, ?, 'linked', ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(path) DO UPDATE SET topic_key = excluded.topic_key, kind = excluded.kind, title = excluded.title, title_key = excluded.title_key, body = excluded.body, size = excluded.size, mtime = excluded.mtime, folder = excluded.folder, rel = excluded.rel, summary = CASE WHEN files.sha256 IS excluded.sha256 THEN files.summary ELSE NULL END, sha256 = excluded.sha256, outline = excluded.outline")
         .run(row.path, topicKey, row.title, keyOf(row.title), row.body, row.size, row.mtime, row.folder, row.rel, row.sha256, JSON.stringify(outlineOf(row.body)));
       this.db.prepare("DELETE FROM parts WHERE path = ?").run(row.path);
       this.forgetSkeleton(row.path);
@@ -864,22 +866,22 @@ export class TopicStore {
   }
 
   /** The linked files most linked to from their own folder, with how many files link to each. */
-  linkHubs(topicName: string, limit: number): { path: string; name: string; title: string; inbound: number }[] {
+  linkHubs(topicName: string, limit: number): { path: string; name: string; title: string; inbound: number; summary: string | null }[] {
     const topicKey = keyOf(this.need(topicName).name);
     const rows = this.db
       .prepare("SELECT folder, dst_stem, COUNT(DISTINCT src) AS n FROM links WHERE topic_key = ? GROUP BY folder, dst_stem ORDER BY n DESC, dst_stem LIMIT ?")
       .all(topicKey, limit * 2) as { folder: string; dst_stem: string; n: number }[];
-    const byStem = new Map<string, Map<string, { path: string; rel: string; title: string }>>();
-    const out: { path: string; name: string; title: string; inbound: number }[] = [];
+    const byStem = new Map<string, Map<string, { path: string; rel: string; title: string; summary: string | null }>>();
+    const out: { path: string; name: string; title: string; inbound: number; summary: string | null }[] = [];
     for (const row of rows) {
       let files = byStem.get(row.folder);
       if (!files) {
         files = new Map();
-        for (const f of this.db.prepare("SELECT path, rel, title FROM files WHERE folder = ? AND kind = 'linked'").all(row.folder) as { path: string; rel: string; title: string }[]) files.set(stemOf(f.rel), f);
+        for (const f of this.db.prepare("SELECT path, rel, title, summary FROM files WHERE folder = ? AND kind = 'linked'").all(row.folder) as { path: string; rel: string; title: string; summary: string | null }[]) files.set(stemOf(f.rel), f);
         byStem.set(row.folder, files);
       }
       const file = files.get(row.dst_stem);
-      if (file && out.length < limit) out.push({ path: file.path, name: linkedName(row.folder, file.rel), title: file.title, inbound: row.n });
+      if (file && out.length < limit) out.push({ path: file.path, name: linkedName(row.folder, file.rel), title: file.title, inbound: row.n, summary: file.summary || null });
     }
     return out;
   }
@@ -895,6 +897,24 @@ export class TopicStore {
       const at = defining.get(topicKey, r.code) as { folder: string; rel: string } | undefined;
       return { code: r.code, files: r.n, definedIn: at ? linkedName(at.folder, at.rel) : null };
     });
+  }
+
+  /** The next linked file searched by meaning that has no line about it yet, with the start of its text. */
+  nextToSummarise(chars: number): { path: string; name: string; title: string; sha256: string; text: string } | null {
+    const row = this.db
+      .prepare("SELECT f.path, f.folder, f.rel, f.title, f.sha256, substr(f.body, 1, ?) AS text FROM files f WHERE f.kind = 'linked' AND f.summary IS NULL AND EXISTS (SELECT 1 FROM parts p WHERE p.path = f.path) ORDER BY f.topic_key, f.folder, f.rel LIMIT 1")
+      .get(chars) as { path: string; folder: string; rel: string; title: string; sha256: string; text: string } | undefined;
+    return row ? { path: row.path, name: linkedName(row.folder, row.rel), title: row.title, sha256: row.sha256, text: row.text } : null;
+  }
+
+  /** The line about a linked file, kept only while the file is the one it was written from. Empty: none could be written. */
+  setSummary(path: string, sha256: string, text: string): void {
+    this.db.prepare("UPDATE files SET summary = ? WHERE path = ? AND sha256 = ?").run(text, path, sha256);
+  }
+
+  summaryOf(path: string): string | null {
+    const row = this.db.prepare("SELECT summary FROM files WHERE path = ?").get(path) as { summary: string | null } | undefined;
+    return row?.summary || null;
   }
 
   /** A linked file's headings, as kept when it was indexed. */

@@ -307,6 +307,12 @@ describe("linked folders", () => {
     expect(TOPICS_GUIDE).toMatch(/aliases/);
   });
 
+  it("shows the line about a file in its hit", async () => {
+    link("loan-period-reference.md", "# Loan periods\n\nstandard rows", "Loan periods");
+    store.setSummary(join(ref, "loan-period-reference.md"), "loan-period-reference.md", "A table of loan periods.");
+    expect(String(await run("topic_search", { query: "standard" }))).toContain('"library-reference/loan-period-reference.md" — Loan periods (A table of loan periods.):');
+  });
+
   it("lists pages before files, each group in its own rank", async () => {
     link("loans.md", "loan loan loan rules");
     store.writeNote("Library", { title: "Loan", text: "- loan", by: "vunemi", sources: [] });
