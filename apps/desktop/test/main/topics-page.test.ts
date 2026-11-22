@@ -230,6 +230,9 @@ describe("the user's own changes", () => {
     page.revealFile("Home renovation", "Renovation/plan.md");
     expect(revealed).toEqual([join(tree, "plan.md")]);
     expect(page.file("Home renovation", "Renovation/nothing.md")).toBeNull();
+    store.putLinked("Home renovation", { folder: tree, rel: "tiles.md", path: join(tree, "tiles.md"), title: "Tiles", body: "See [the plan](plan.md)", size: 6, mtime: 1, sha256: "t", parts: false });
+    expect(page.file("Home renovation", "Renovation/plan.md")).toMatchObject({ linksTo: [], linkedFrom: ["Renovation/tiles.md"], citedBy: [] });
+    expect(page.file("Home renovation", "Renovation/tiles.md")).toMatchObject({ linksTo: ["Renovation/plan.md"], linkedFrom: [] });
   });
 
   it("adds one file a document from a folder, the text one first, but every file the user picked one by one", async () => {

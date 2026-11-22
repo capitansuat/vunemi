@@ -257,6 +257,18 @@ describe("linked folders", () => {
     expect(store.search("alpha", "Library").map((h) => h.kind)).toEqual(["file"]);
   });
 
+  it("puts the file that defines a code first, and ends a read with its links", async () => {
+    link("loan-period-reference.md", "# Loan periods\n\n## QXA\n\n| QXA | Standard loan |", "Loan periods");
+    link("opening-hours-reference.md", "# Calendar\n\nAUM QXA QXA starts in September; see [loans](loan-period-reference.html).", "Calendar");
+    link("branch-reference.md", "# Library\n\n[[opening-hours-reference]]", "Library");
+    const first = String(await run("topic_search", { query: "QXA" })).split("\n")[0];
+    expect(first).toContain("loan-period-reference");
+    expect(first).toContain("Loan periods");
+    expect(String(await run("topic_source_read", { name: "library-reference/opening-hours-reference.md" }))).toMatch(
+      /Links to: library-reference\/loan-period-reference\.md\nLinked from: library-reference\/branch-reference\.md\nPages citing it: none/,
+    );
+  });
+
   it("lists pages before files, each group in its own rank", async () => {
     link("loans.md", "loan loan loan rules");
     store.writeNote("Library", { title: "Loan", text: "- loan", by: "vunemi", sources: [] });

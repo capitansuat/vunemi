@@ -518,18 +518,7 @@ function NotePanel({ topic, title, version, tree, onSelect }: { topic: string; t
           }}
         />
       </div>
-      {note.linkedFrom.length > 0 && (
-        <section className="mt-7 border-t border-line pt-3">
-          <h2 className="text-[11px] font-medium uppercase tracking-wide text-faint">{t("topics.page.linkedFrom")}</h2>
-          <ul className="mt-1.5 flex flex-wrap gap-1.5">
-            {note.linkedFrom.map((from) => (
-              <li key={from}>
-                <button type="button" onClick={() => onSelect({ kind: "note", topic, title: from })} className="rounded-md border border-line px-2 py-0.5 text-[12px] text-muted hover:bg-surface-2 hover:text-fg">{from}</button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <FileLinks label={t("topics.page.linkedFrom")} names={note.linkedFrom} onOpen={(title) => onSelect({ kind: "note", topic, title })} />
       <div className="mt-6 flex flex-wrap gap-2">
         <Button onClick={() => setEditing(true)} icon={<Pencil size={12} />}>{t("topics.page.edit")}</Button>
         <Button onClick={() => void window.vunemi.topicsReveal(topic, { kind: "note", name: note.title })} icon={<FolderOpen size={13} />}>{t("topics.page.reveal")}</Button>
@@ -666,7 +655,27 @@ function FilePanel({ topic, name, version, onSelect }: { topic: string; name: st
         <Markdown text={file.text} />
         {file.cut && <p className="mt-4 text-[12px] text-faint">{t("topics.page.cut")}</p>}
       </div>
+      <FileLinks label={t("topics.page.linksTo")} names={file.linksTo} onOpen={(n) => onSelect({ kind: "file", topic, name: n })} />
+      <FileLinks label={t("topics.page.linkedFrom")} names={file.linkedFrom} onOpen={(n) => onSelect({ kind: "file", topic, name: n })} />
+      <FileLinks label={t("topics.page.citedBy")} names={file.citedBy} onOpen={(title) => onSelect({ kind: "note", topic, title })} />
     </article>
+  );
+}
+
+/** A row of names to open: a linked file's links, or the pages citing it. */
+function FileLinks({ label, names, onOpen }: { label: string; names: string[]; onOpen: (name: string) => void }) {
+  if (names.length === 0) return null;
+  return (
+    <section className="mt-7 border-t border-line pt-3">
+      <h2 className="text-[11px] font-medium uppercase tracking-wide text-faint">{label}</h2>
+      <ul className="mt-1.5 flex flex-wrap gap-1.5">
+        {names.map((name) => (
+          <li key={name}>
+            <button type="button" onClick={() => onOpen(name)} className="rounded-md border border-line px-2 py-0.5 text-[12px] text-muted hover:bg-surface-2 hover:text-fg">{name}</button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

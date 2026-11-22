@@ -95,6 +95,10 @@ export interface TopicFileView {
   cut: boolean;
   /** Whether the file is still where it was. */
   there: boolean;
+  /** The files of its folder it links to and that link to it, by name; the pages citing it, by title. */
+  linksTo: string[];
+  linkedFrom: string[];
+  citedBy: string[];
 }
 
 export interface TopicSearchView {

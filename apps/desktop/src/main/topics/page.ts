@@ -260,6 +260,9 @@ export function topicPage(deps: TopicPageDeps) {
         text: found.text.slice(0, SHOWN_CHARS),
         cut: found.text.length > SHOWN_CHARS,
         there: existsSync(found.path),
+        linksTo: store.linkedNames(store.linksFrom(found.path)),
+        linkedFrom: store.linkedNames(store.linksTo(found.path)),
+        citedBy: [],
       };
     },
 

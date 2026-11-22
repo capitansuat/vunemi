@@ -276,3 +276,38 @@ PRAGMA user_version = 2;`;
     expect(store.search("zebra", "Library").map((h) => h.kind)).toEqual(["file"]);
   });
 });
+
+describe("the skeleton of linked files", () => {
+  const put = (rel: string, body: string) =>
+    store.putLinked("Library", { folder: "/ref", rel, path: `/ref/${rel}`, title: rel, body, size: body.length, mtime: 1, sha256: rel, parts: false });
+
+  it("knows what links where, both ways, also to a file indexed after the link", () => {
+    store.createTopic("Library", "");
+    put("calendar.md", "# Calendar\n\nSee [loans](loans/rule.html) and [[library]] and [web](https://x.org).");
+    put("loans/rule.md", "# Rules\n\n[back](../calendar.md)");
+    expect(store.linksFrom("/ref/calendar.md")).toEqual(["/ref/loans/rule.md"]);
+    put("library.md", "# Library");
+    expect(store.linksFrom("/ref/calendar.md")).toEqual(["/ref/loans/rule.md", "/ref/library.md"]);
+    expect(store.linksTo("/ref/calendar.md")).toEqual(["/ref/loans/rule.md"]);
+    expect(store.linksTo("/ref/library.md")).toEqual(["/ref/calendar.md"]);
+  });
+
+  it("finds the files that use a code, the one defining it first", () => {
+    store.createTopic("Library", "");
+    put("mentions.md", "QXA QXA QXA in the calendar");
+    put("loans.md", "# Loans\n\n| QXA | Standard loan |");
+    expect(store.codeFiles("Library", "QXA").map((f) => [f.path, f.defined])).toEqual([
+      ["/ref/loans.md", true],
+      ["/ref/mentions.md", false],
+    ]);
+  });
+
+  it("forgets a file's links and codes when it leaves the index", () => {
+    store.createTopic("Library", "");
+    put("a.md", "# QXA\n\n[b](b.md)");
+    put("b.md", "# B");
+    store.dropLinked("Library", ["/ref/a.md"]);
+    expect(store.linksTo("/ref/b.md")).toEqual([]);
+    expect(store.codeFiles("Library", "QXA")).toEqual([]);
+  });
+});
