@@ -3,7 +3,7 @@
  * the index while Vunemi is idle, and never copied (topics/linked.ts).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PathRefused } from "@vunemi/files";
@@ -152,6 +152,17 @@ describe("a linked folder", () => {
     expect(store.linkedRows("Library")).toHaveLength(20);
     expect(await sync.run(() => true)).toBe("done");
     expect(store.linkedRows("Library")).toHaveLength(50);
+  });
+
+  it("makes the topic's Index again after a pass that changed its files or pages", async () => {
+    const index = join(base, "Memory", "Library", "Notes", "Index.md");
+    writeFileSync(join(dir, "a.md"), "# A\n\n[b](b.md)");
+    writeFileSync(join(dir, "b.md"), "# B");
+    await sync.run(() => true);
+    expect(readFileSync(index, "utf8")).toContain("ref: 2 files");
+    store.writeNote("Library", { title: "Loan", text: "- QXA", by: "vunemi", sources: [] });
+    await sync.run(() => true);
+    expect(readFileSync(index, "utf8")).toContain('- "Loan"');
   });
 
   it("makes parts only for files searched by meaning", async () => {

@@ -19,6 +19,7 @@ import { MARKDOWN_KINDS } from "../markdown.js";
 import { linkedName, sha256Of, TOPIC_LIMITS, type TopicHit, type TopicNote, type TopicStore } from "./store.js";
 import type { TopicFound } from "./meaning.js";
 import { codesOf } from "./skeleton.js";
+import { INDEX_TITLE } from "./index-page.js";
 
 export const TOPICS_AREA = "topics";
 const MAX_FILES = 40;
@@ -334,6 +335,9 @@ export function topicTools(opts: TopicToolsOptions): ToolDef[] {
       },
       run: async (a, ctx) => {
         const topic = topicOf(opts);
+        if (opts.store.generatedNote(topic, String(a.title ?? "").trim())) {
+          throw new Error(`"${INDEX_TITLE}" is made by Vunemi from the topic's files and made again when they change. Write what you learned on a page of its own.`);
+        }
         const known = new Map(opts.store.listSources(topic).map((s) => [s.name.toLowerCase(), s.name]));
         const named = (Array.isArray(a.sources) ? a.sources : []).map((s) => String(s).trim().replace(/\.md$/i, "")).filter(Boolean);
         const unknown = named.filter((s) => !known.has(s.toLowerCase()));

@@ -15,6 +15,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { basename, extname, join, relative, sep } from "node:path";
 import type { Roots } from "@vunemi/files";
 import { why } from "../markdown.js";
+import { INDEX_TITLE, writeIndex } from "./index-page.js";
 import { cutToSource, type LinkedFolder, type TopicStore } from "./store.js";
 import { type TopicToolsOptions, walkFolder } from "./tools.js";
 
@@ -54,6 +55,10 @@ export class LinkedSync {
   private running: Promise<SyncOutcome> | null = null;
   private readonly states = new Map<string, FolderState>();
   private readonly found = new Map<string, number>();
+  /** Topics whose linked files changed since their Index was last made. */
+  private readonly changed = new Set<string>();
+  /** The page titles each topic's Index was last made with. */
+  private readonly pages = new Map<string, string>();
   private readonly log: (line: string) => void;
 
   constructor(private readonly opts: LinkedSyncOptions) {
@@ -87,12 +92,31 @@ export class LinkedSync {
       const linked = new Set(folders.map((f) => f.path));
       // An unlinked folder's files leave the index.
       const orphans = store.linkedRows(topic.name).filter((r) => !linked.has(r.folder)).map((r) => r.path);
-      if (orphans.length) store.dropLinked(topic.name, orphans);
+      if (orphans.length) {
+        store.dropLinked(topic.name, orphans);
+        this.changed.add(topic.name);
+      }
+      // Not made while a task waits: the topic stays marked for the next pass.
       for (const folder of folders) {
         if ((await this.folder(topic.name, folder, goOn)) === "paused") return "paused";
       }
+      this.index(topic.name);
     }
     return "done";
+  }
+
+  /** The topic's Index made again when its files or its pages changed since it last was. */
+  private index(topic: string): void {
+    const pages = this.opts.store.listNotes(topic).map((n) => n.title).filter((t) => t !== INDEX_TITLE).sort().join("\n");
+    if (!this.changed.has(topic) && this.pages.get(topic) === pages) return;
+    try {
+      writeIndex(this.opts.store, topic);
+      this.changed.delete(topic);
+      this.pages.set(topic, pages);
+    } catch (error) {
+      // The files stay searchable; the map is made again next pass.
+      this.log(`[vunemi] topic index: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   private async folder(topic: string, folder: LinkedFolder, goOn: () => boolean): Promise<SyncOutcome> {
@@ -116,7 +140,10 @@ export class LinkedSync {
     const known = new Map(store.linkedRows(topic, folder.path).map((r) => [r.path, r]));
     const here = new Set(files.map((f) => f.path));
     const gone = [...known.keys()].filter((path) => !here.has(path));
-    if (gone.length) store.dropLinked(topic, gone);
+    if (gone.length) {
+      store.dropLinked(topic, gone);
+      this.changed.add(topic);
+    }
 
     const todo = files.filter((f) => {
       const was = known.get(f.path);
@@ -126,7 +153,10 @@ export class LinkedSync {
       if (!goOn()) return "paused";
       const batch = todo.slice(at, at + LINKED_BATCH);
       const done = await this.batch(topic, folder, batch, known);
-      if (done.length) this.opts.onIndexed?.(topic, done);
+      if (done.length) {
+        this.changed.add(topic);
+        this.opts.onIndexed?.(topic, done);
+      }
       // Let the window and the next request in between batches.
       await new Promise((resolve) => setImmediate(resolve));
     }
@@ -137,7 +167,10 @@ export class LinkedSync {
   private away(topic: string, folder: string, state: FolderState): SyncOutcome {
     this.states.set(keyOf(topic, folder), state);
     const rows = this.opts.store.linkedRows(topic, folder).map((r) => r.path);
-    if (rows.length) this.opts.store.dropLinked(topic, rows);
+    if (rows.length) {
+      this.opts.store.dropLinked(topic, rows);
+      this.changed.add(topic);
+    }
     return "done";
   }
 

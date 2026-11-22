@@ -531,6 +531,32 @@ export class TopicStore {
     return { note: this.noteAt(topic.name, path), replaced: previous !== null, previous };
   }
 
+  /** Whether a note is one Vunemi makes by code (front matter `generated: true`), as the Index is. */
+  generatedNote(topicName: string, title: string): boolean {
+    const path = this.notePath(this.need(topicName), title);
+    return path !== null && parseNote(readFileSync(path, "utf8")).meta.generated === true;
+  }
+
+  /**
+   * Writes a note Vunemi makes by code, unless a note of that title is the
+   * user's (no \`generated: true\`). Not written when its text is the same.
+   */
+  writeGenerated(topicName: string, title: string, text: string): "written" | "unchanged" | "theirs" {
+    const topic = this.need(topicName);
+    const existing = this.notePath(topic, title);
+    if (existing) {
+      const { meta, body } = parseNote(readFileSync(existing, "utf8"));
+      if (meta.generated !== true) return "theirs";
+      if (body.trim() === text.trim()) return "unchanged";
+    }
+    mkdirSync(join(topic.dir, NOTES), { recursive: true });
+    this.inside(join(topic.dir, NOTES));
+    const path = existing ?? join(topic.dir, NOTES, `${cleanName(title, "title")}.md`);
+    atomicWrite(path, writeFront({ title, generated: true, by: "vunemi", updated: new Date(this.now()).toISOString() }, text));
+    this.opts.onChange?.();
+    return "written";
+  }
+
   /** Puts a note back as it was (undo): the old text, or no note when there was none. */
   restoreNote(topicName: string, title: string, previous: string | null, trash: (path: string) => void): void {
     const topic = this.need(topicName);
@@ -642,7 +668,7 @@ export class TopicStore {
       const link = this.db.prepare("INSERT INTO links (topic_key, folder, src, dst, dst_stem) VALUES (?, ?, ?, ?, ?)");
       for (const target of linksOf(row.body)) {
         const dst = target.startsWith("/") ? posix.normalize(target.slice(1)) : posix.normalize(posix.join(posix.dirname(row.rel), target));
-        if (dst === "." || dst === ".." || dst.startsWith("../") || dst === row.rel) continue;
+        if (dst === "." || dst === ".." || dst.startsWith("../") || stemOf(dst) === stemOf(row.rel)) continue;
         link.run(topicKey, row.folder, row.path, dst, stemOf(dst));
       }
       const { rowid } = this.db.prepare("SELECT rowid FROM files WHERE path = ?").get(row.path) as { rowid: number };
@@ -728,6 +754,40 @@ export class TopicStore {
     return paths.flatMap((path) => {
       const row = get.get(path) as { folder: string; rel: string } | undefined;
       return row ? [linkedName(row.folder, row.rel)] : [];
+    });
+  }
+
+  /** The linked files most linked to from their own folder, with how many files link to each. */
+  linkHubs(topicName: string, limit: number): { path: string; name: string; title: string; inbound: number }[] {
+    const topicKey = keyOf(this.need(topicName).name);
+    const rows = this.db
+      .prepare("SELECT folder, dst_stem, COUNT(DISTINCT src) AS n FROM links WHERE topic_key = ? GROUP BY folder, dst_stem ORDER BY n DESC, dst_stem LIMIT ?")
+      .all(topicKey, limit * 2) as { folder: string; dst_stem: string; n: number }[];
+    const byStem = new Map<string, Map<string, { path: string; rel: string; title: string }>>();
+    const out: { path: string; name: string; title: string; inbound: number }[] = [];
+    for (const row of rows) {
+      let files = byStem.get(row.folder);
+      if (!files) {
+        files = new Map();
+        for (const f of this.db.prepare("SELECT path, rel, title FROM files WHERE folder = ? AND kind = 'linked'").all(row.folder) as { path: string; rel: string; title: string }[]) files.set(stemOf(f.rel), f);
+        byStem.set(row.folder, files);
+      }
+      const file = files.get(row.dst_stem);
+      if (file && out.length < limit) out.push({ path: file.path, name: linkedName(row.folder, file.rel), title: file.title, inbound: row.n });
+    }
+    return out;
+  }
+
+  /** The codes most of a topic's linked files use, and the file defining each when one does. */
+  topCodes(topicName: string, limit: number): { code: string; files: number; definedIn: string | null }[] {
+    const topicKey = keyOf(this.need(topicName).name);
+    const rows = this.db
+      .prepare("SELECT c.code, COUNT(*) AS n FROM codes c JOIN files f ON f.rowid = c.file WHERE f.topic_key = ? GROUP BY c.code ORDER BY n DESC, c.code LIMIT ?")
+      .all(topicKey, limit) as { code: string; n: number }[];
+    const defining = this.db.prepare("SELECT f.folder, f.rel FROM codes c JOIN files f ON f.rowid = c.file WHERE f.topic_key = ? AND c.code = ? AND c.defined = 1 ORDER BY c.count DESC, f.path LIMIT 1");
+    return rows.map((r) => {
+      const at = defining.get(topicKey, r.code) as { folder: string; rel: string } | undefined;
+      return { code: r.code, files: r.n, definedIn: at ? linkedName(at.folder, at.rel) : null };
     });
   }
 

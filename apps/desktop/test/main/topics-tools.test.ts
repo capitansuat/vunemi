@@ -269,6 +269,12 @@ describe("linked folders", () => {
     );
   });
 
+  it("leaves the Index to code while it is generated", async () => {
+    link("a.md", "# A");
+    store.writeGenerated("Library", "Index", "# Index\n\nmap");
+    await expect(run("topic_note_write", { title: "index", text: "mine" })).rejects.toThrow(/made by Vunemi/);
+  });
+
   it("lists pages before files, each group in its own rank", async () => {
     link("loans.md", "loan loan loan rules");
     store.writeNote("Library", { title: "Loan", text: "- loan", by: "vunemi", sources: [] });
