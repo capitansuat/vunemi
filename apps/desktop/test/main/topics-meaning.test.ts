@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { partsOf, PART_CHARS, TopicStore } from "../../src/main/topics/store.js";
-import { PART_MIN, tendAgainIn, TopicMeaning } from "../../src/main/topics/meaning.js";
+import { combined, PART_MIN, tendAgainIn, TopicMeaning } from "../../src/main/topics/meaning.js";
 import { TooLongError } from "../../src/main/memory/embedder.js";
 
 describe("cutting a text in parts", () => {
@@ -159,6 +159,13 @@ describe("searching a topic by meaning", () => {
 
   it("tries a failed pass again later, waiting longer each time, at most half an hour", () => {
     expect([1, 2, 3, 4, 5, 6, 9].map((n) => tendAgainIn("failed", n)! / 60_000)).toEqual([1, 2, 4, 8, 16, 30, 30]);
+  });
+
+  it("combines a folder pass and a meaning pass into one next look", () => {
+    expect(combined("done", "done")).toBe("done");
+    expect(combined("paused", "done")).toBe("paused");
+    expect(combined("done", "failed")).toBe("failed");
+    expect(combined("failed", "paused")).toBe("failed");
   });
 
   it("looks again in a minute while Vunemi is busy or a pass stepped aside, and stops when nothing is left", () => {

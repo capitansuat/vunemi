@@ -86,7 +86,7 @@ import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
-import { tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
+import { combined, tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
 import { LinkedSync } from "./topics/linked.js";
 import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
@@ -1818,6 +1818,8 @@ function tendLibrary(): void {
 
 /** Vectors for topic notes and sources added or changed, while nothing else runs (topics/meaning.ts). */
 let topicsRetry: NodeJS.Timeout | null = null;
+/** How often linked folders are looked at again for files changed outside Vunemi. */
+const FOLDERS_RESCAN_MS = 10 * 60_000;
 let topicsFailures = 0;
 function tendTopics(): void {
   if (topicsRetry) clearTimeout(topicsRetry);
@@ -1827,14 +1829,19 @@ function tendTopics(): void {
   const again = (how: CatchUp | "busy"): void => {
     if (how === "done") topicsFailures = 0;
     if (how === "failed") topicsFailures++;
-    const wait = tendAgainIn(how, topicsFailures);
+    // Linked folders change without Vunemi: look at them again now and then.
+    const wait = tendAgainIn(how, topicsFailures) ?? (topics?.listTopics().some((tp) => topics.linkedFolders(tp.name).length > 0) ? FOLDERS_RESCAN_MS : null);
     // A newer call has already planned the next look.
     if (wait === null || topicsRetry) return;
     topicsRetry = setTimeout(tendTopics, wait);
     topicsRetry.unref();
   };
   if (!idle()) return again("busy");
-  void topicMeaning.catchUp(idle).then(again);
+  void (async () => {
+    // The folders first: what they hold is then searched by meaning in the same pass.
+    const folders = linkedSync ? await linkedSync.run(idle) : "done";
+    return combined(folders, await topicMeaning.catchUp(idle));
+  })().then(again);
 }
 
 /** A correction to who said what, then the meeting as it now is. */

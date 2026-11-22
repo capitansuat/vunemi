@@ -37,6 +37,13 @@ export interface TopicFound {
 /** How a catch-up pass ended: nothing left, stepped aside for other work, or a request failed. */
 export type CatchUp = "done" | "paused" | "failed";
 
+/** Two passes as one: a failure is said first, then a pause; done only when both are. */
+export function combined(a: CatchUp, b: CatchUp): CatchUp {
+  if (a === "failed" || b === "failed") return "failed";
+  if (a === "paused" || b === "paused") return "paused";
+  return "done";
+}
+
 /** Waiting for Vunemi to be free: how often to look again. */
 const BUSY_RECHECK_MS = 60_000;
 
