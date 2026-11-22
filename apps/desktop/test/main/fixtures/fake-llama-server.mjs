@@ -12,6 +12,18 @@ if (mode === "crash") {
   process.stderr.write("error: model does not fit in memory\n");
   process.exit(1);
 }
+if (mode === "unknown") {
+  // What llama-server prints for a model type it was built without.
+  process.stderr.write("llama_model_load: error loading model: error loading model architecture: unknown model architecture: 'inkling9'\n");
+  process.stderr.write("0.00.770.354 E srv  server_run_i: exiting due to model loading error\n");
+  process.exit(1);
+}
+if (mode === "nomem") {
+  process.stderr.write("ggml_backend_metal_buffer_type_alloc_buffer: error: failed to allocate buffer, size = 30000.00 MiB\n");
+  process.stderr.write("llama_model_load: error loading model: unable to allocate Metal buffer\n");
+  process.stderr.write("0.00.770.354 E srv  server_run_i: exiting due to model loading error\n");
+  process.exit(1);
+}
 let ready = mode !== "slow";
 if (mode === "slow") setTimeout(() => { ready = true; }, 400);
 

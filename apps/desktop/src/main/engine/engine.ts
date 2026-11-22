@@ -18,7 +18,11 @@ export interface EngineSnapshot {
   state: EngineStateName;
   model: string | null;
   error?: string;
+  /** Why it failed, when its output says: the memory ran out, or the model file couldn't be loaded. */
+  cause?: FailureCause;
 }
+
+export type FailureCause = "memory" | "model";
 
 export interface Endpoint {
   baseUrl: string;
@@ -192,7 +196,8 @@ export class Engine {
         this.current = null;
         child?.kill("SIGKILL");
         const message = err instanceof Error ? err.message : String(err);
-        this.set({ state: "failed", model: spec.id, error: message });
+        const cause = err instanceof Error ? (err.cause as FailureCause | undefined) : undefined;
+        this.set({ state: "failed", model: spec.id, error: message, ...(cause && { cause }) });
         throw err;
       },
     );
@@ -227,7 +232,10 @@ export class Engine {
 
     const deadline = Date.now() + (this.opts.readyTimeoutMs ?? READY_MS);
     while (Date.now() < deadline) {
-      if (exited) throw new Error(lastLine(tail) || STOPPED);
+      if (exited) {
+        const cause = causeOf(tail);
+        throw new Error(lastLine(tail) || STOPPED, cause ? { cause } : undefined);
+      }
       try {
         const res = await fetch(`http://127.0.0.1:${port}/health`, { signal: AbortSignal.timeout(2_000) });
         if (res.ok) return endpoint;
@@ -250,7 +258,8 @@ export class Engine {
       void this.launch(spec).catch(() => {});
       return;
     }
-    this.set({ state: "failed", model: spec.id, error: lastLine(tail) || "The engine stopped unexpectedly." });
+    const cause = causeOf(tail);
+    this.set({ state: "failed", model: spec.id, error: lastLine(tail) || "The engine stopped unexpectedly.", ...(cause && { cause }) });
   }
 
   private onIdle(): void {
@@ -285,6 +294,16 @@ function reapStale(pidFile: string, binary: string): void {
   } catch {
     // Already gone.
   }
+}
+
+/**
+ * What llama-server's output says about a failure. Memory first: a buffer it
+ * couldn't allocate is also reported as an error loading the model.
+ */
+function causeOf(tail: string): FailureCause | undefined {
+  if (/failed to allocate|out of memory|insufficient memory|not enough memory|unable to allocate/i.test(tail)) return "memory";
+  if (/unknown model architecture|check_tensor_dims|wrong number of tensors|invalid magic|error loading model/i.test(tail)) return "model";
+  return undefined;
 }
 
 function lastLine(text: string): string {

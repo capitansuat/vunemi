@@ -112,6 +112,17 @@ describe("the built-in engine", () => {
     expect(engine.snapshot.error).toMatch(/does not fit/);
   });
 
+  it("tells a model it can't load from one that doesn't fit in memory", async () => {
+    const unknown = make({ env: { ...process.env, FAKE_ENGINE_MODE: "unknown" } }).engine;
+    await expect(unknown.ensure(spec)).rejects.toThrow(/model loading error/);
+    expect(unknown.snapshot).toMatchObject({ state: "failed", cause: "model" });
+    await unknown.stop();
+
+    const nomem = make({ env: { ...process.env, FAKE_ENGINE_MODE: "nomem" } }).engine;
+    await expect(nomem.ensure(spec)).rejects.toThrow(/model loading error/);
+    expect(nomem.snapshot).toMatchObject({ state: "failed", cause: "memory" });
+  });
+
   it("is idle, not failed, when stopped while it loads", async () => {
     const { engine } = make({ env: { ...process.env, FAKE_ENGINE_MODE: "slow" } });
     const loading = engine.ensure(spec).then(() => "ready", () => "rejected");

@@ -507,7 +507,8 @@ export interface EngineView {
   available: boolean;
   /** This Mac's memory, for the context length's estimate. */
   totalMemory: number;
-  engine: { state: EngineStateName; model: string | null; error?: string };
+  /** cause: the memory ran out, or the engine couldn't load the model file. */
+  engine: { state: EngineStateName; model: string | null; error?: string; cause?: "memory" | "model" };
   recommended: CatalogView;
   /** The recommendation first, then each smaller model, one step at a time. */
   choices: CatalogView[];

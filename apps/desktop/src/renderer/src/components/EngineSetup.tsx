@@ -391,7 +391,8 @@ export function EngineBanner() {
   if (engine.engine.state === "failed") {
     return (
       <div className="mx-auto mb-2 w-full max-w-3xl px-4 text-[12.5px] text-danger">
-        {t("engine.failed", { error: engine.engine.error ?? "" })} <span className="text-muted">{t("engine.failedHint")}</span>
+        {t("engine.failed", { error: engine.engine.error ?? "" })}{" "}
+        <span className="text-muted">{t(engine.engine.cause === "model" ? "engine.installed.unloadable" : "engine.failedHint")}</span>
       </div>
     );
   }
