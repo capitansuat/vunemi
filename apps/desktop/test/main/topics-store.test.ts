@@ -311,3 +311,38 @@ describe("the skeleton of linked files", () => {
     expect(store.codeFiles("Library", "QXA")).toEqual([]);
   });
 });
+
+describe("pages over linked files", () => {
+  const put = (rel: string) =>
+    store.putLinked("Library", { folder: "/x/ref", rel, path: `/x/ref/${rel}`, title: rel, body: "text", size: 4, mtime: 1, sha256: rel, parts: false });
+
+  it("resolves [[stem]] to a page, then to a linked file, and asks for the folder when two match", () => {
+    store.createTopic("Library", "");
+    store.writeNote("Library", { title: "Loan", text: "- QXA", by: "vunemi", sources: [], aliases: ["QXA"] });
+    put("loan-period-reference.md");
+    put("a/readme.md");
+    put("b/readme.md");
+    expect(store.resolveWiki("Library", "Loan")).toEqual({ kind: "note", title: "Loan" });
+    expect(store.resolveWiki("Library", "qxa")).toEqual({ kind: "note", title: "Loan" });
+    expect(store.resolveWiki("Library", "loan-period-reference")).toEqual({ kind: "file", name: "ref/loan-period-reference.md" });
+    expect(store.resolveWiki("Library", "ref/a/readme")).toEqual({ kind: "file", name: "ref/a/readme.md" });
+    expect(store.resolveWiki("Library", "readme")).toEqual({ kind: "ambiguous", names: ["ref/a/readme.md", "ref/b/readme.md"] });
+    expect(store.resolveWiki("Library", "nowhere")).toBeNull();
+  });
+
+  it("reads a page whose front matter the user removed", () => {
+    store.createTopic("Library", "");
+    mkdirSync(join(root, "Library", "Notes"), { recursive: true });
+    writeFileSync(join(root, "Library", "Notes", "Plain.md"), "Just text");
+    expect(store.readNote("Library", "Plain")).toMatchObject({ aliases: [], cites: [] });
+  });
+
+  it("finds the page another page already is, by title or another name", () => {
+    store.createTopic("Library", "");
+    store.writeNote("Library", { title: "Loan", text: "- QXA", by: "vunemi", sources: [], aliases: ["QXA"] });
+    expect(store.samePage("Library", "qxa", [])).toBe("Loan");
+    expect(store.samePage("Library", "Rule", ["loan"])).toBe("Loan");
+    expect(store.samePage("Library", "Loan", ["QXA"])).toBeNull();
+    expect(store.samePage("Library", "Fees", [])).toBeNull();
+  });
+});

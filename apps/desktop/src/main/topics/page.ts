@@ -60,7 +60,16 @@ export function topicPage(deps: TopicPageDeps) {
   const noteView = (topic: string, title: string): TopicNoteView | null => {
     const note = store.readNote(topic, title);
     if (!note) return null;
-    const titles = new Set(store.outline(topic).notes.map((n) => n.title.toLowerCase()));
+    // Each [[link]] once: to a page (by its title or another name), to a linked file, or nowhere yet.
+    const links: string[] = [];
+    const files: { link: string; name: string }[] = [];
+    const missing: string[] = [];
+    for (const link of note.links) {
+      const to = store.resolveWiki(topic, link);
+      if (to?.kind === "note") links.push(link);
+      else if (to?.kind === "file") files.push({ link, name: to.name });
+      else missing.push(link);
+    }
     return {
       topic,
       title: note.title,
@@ -69,8 +78,12 @@ export function topicPage(deps: TopicPageDeps) {
       sources: note.sources,
       created: note.created,
       updated: note.updated,
-      links: note.links.filter((l) => titles.has(l.toLowerCase())),
-      missing: note.links.filter((l) => !titles.has(l.toLowerCase())),
+      links,
+      files,
+      missing,
+      aliases: note.aliases,
+      cites: note.cites.map((c) => ({ name: c.file, ...(c.heading ? { heading: c.heading } : {}) })),
+      stale: store.staleCites(topic, note),
       linkedFrom: store.backlinks(topic, note.title),
       stamp: statSync(note.path).mtimeMs,
     };
@@ -151,7 +164,7 @@ export function topicPage(deps: TopicPageDeps) {
       // A new title must be free: a rename or a new note never replaces another note.
       if ((!old || renamed) && store.readNote(topic, title)) throw new Error(t("topics.page.taken", { title }));
       if ((!old || renamed) && store.outline(topic).notes.length >= TOPIC_LIMITS.notes) throw new Error(t("topics.page.full", { max: TOPIC_LIMITS.notes }));
-      store.writeNote(topic, { title, text: body, by: "user", sources: old?.sources ?? [] });
+      store.writeNote(topic, { title, text: body, by: "user", sources: old?.sources ?? [], aliases: old?.aliases ?? [], cites: old?.cites ?? [] });
       if (renamed) await deps.trash(old.path);
       deps.changed();
       return noteView(topic, title)!;
@@ -262,7 +275,7 @@ export function topicPage(deps: TopicPageDeps) {
         there: existsSync(found.path),
         linksTo: store.linkedNames(store.linksFrom(found.path)),
         linkedFrom: store.linkedNames(store.linksTo(found.path)),
-        citedBy: [],
+        citedBy: store.citing(topic, linkedName(found.folder, found.rel)),
       };
     },
 

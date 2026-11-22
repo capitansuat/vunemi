@@ -11,7 +11,7 @@ import { Roots } from "@vunemi/files";
 import { setLocale } from "@vunemi/i18n";
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { parseNote, TopicStore } from "../../src/main/topics/store.js";
-import { topicTools, type TopicToolsOptions } from "../../src/main/topics/tools.js";
+import { TOPICS_GUIDE, topicTools, type TopicToolsOptions } from "../../src/main/topics/tools.js";
 
 let base: string;
 let files: string;
@@ -273,6 +273,38 @@ describe("linked folders", () => {
     link("a.md", "# A");
     store.writeGenerated("Library", "Index", "# Index\n\nmap");
     await expect(run("topic_note_write", { title: "index", text: "mine" })).rejects.toThrow(/made by Vunemi/);
+  });
+
+  it("refuses a second page for the same thing and names the page to update", async () => {
+    link("loan-period-reference.md", "# Loan periods\n\n| QXA | Standard loan |", "Loan periods");
+    await run("topic_note_write", { title: "Loan", text: "- QXA: standard", aliases: ["QXA", "loan rule"], cites: [{ file: "library-reference/loan-period-reference.md", heading: "Loan periods" }] });
+    await expect(run("topic_note_write", { title: "QXA", text: "x" })).rejects.toThrow(/"Loan".*update/);
+    await expect(run("topic_note_write", { title: "Loans", text: "x", aliases: ["Loan Rule"] })).rejects.toThrow(/"Loan".*update/);
+    // The same page, written again under its own title, is an update.
+    await run("topic_note_write", { title: "Loan", text: "- QXA: standard main", aliases: ["QXA"] });
+    expect(store.readNote("Library", "QXA")).toMatchObject({ title: "Loan", aliases: ["QXA"] });
+  });
+
+  it("records each cited file's hash, and says when one changed", async () => {
+    link("loan-period-reference.md", "# Loan periods\n\n| QXA | Standard loan |", "Loan periods");
+    await run("topic_note_write", { title: "Loan", text: "- QXA: standard", cites: [{ file: "library-reference/loan-period-reference.md", heading: "Loan periods" }] });
+    expect(store.readNote("Library", "Loan")!.cites).toEqual([{ file: "library-reference/loan-period-reference.md", heading: "Loan periods", sha256: "loan-period-reference.md" }]);
+    const read = String(await run("topic_note_read", { title: "Loan" }));
+    expect(read).toContain("Cites: library-reference/loan-period-reference.md (Loan periods)");
+    expect(read).not.toContain("changed since");
+    const path = join(ref, "loan-period-reference.md");
+    store.putLinked("Library", { folder: ref, rel: "loan-period-reference.md", path, title: "Loan periods", body: "# Loan periods\n\n| QXA | Standard |", size: 9, mtime: 2, sha256: "new", parts: false });
+    expect(String(await run("topic_note_read", { title: "Loan" }))).toContain("changed since this page was written: library-reference/loan-period-reference.md");
+  });
+
+  it("refuses a citation of a file the topic doesn't have", async () => {
+    await expect(run("topic_note_write", { title: "X", text: "y", cites: [{ file: "nowhere.md" }] })).rejects.toThrow(/no linked file or source/);
+  });
+
+  it("tells the model to start from the Index and keep one page per thing, with what it cites", () => {
+    expect(TOPICS_GUIDE).toMatch(/Index/);
+    expect(TOPICS_GUIDE).toMatch(/cites/);
+    expect(TOPICS_GUIDE).toMatch(/aliases/);
   });
 
   it("lists pages before files, each group in its own rank", async () => {

@@ -62,8 +62,16 @@ export interface TopicNoteView {
   updated: string;
   /** Titles it links to with [[…]] that are notes of the topic. */
   links: string[];
-  /** Titles it links to that aren't notes (yet). */
+  /** [[…]] that lead to a linked file, and the file's name. */
+  files: { link: string; name: string }[];
+  /** Titles it links to that aren't notes or files (yet). */
   missing: string[];
+  /** Other names of what the page is about. */
+  aliases: string[];
+  /** The files it cites, by the names the tools give them. */
+  cites: { name: string; heading?: string }[];
+  /** Cited files that changed since the page was written. */
+  stale: string[];
   linkedFrom: string[];
   /** The file's time when read: saving refuses when it changed since. */
   stamp: number;

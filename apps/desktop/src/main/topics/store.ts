@@ -52,6 +52,16 @@ export interface TopicNote {
   path: string;
   /** Titles it links to with [[…]]. */
   links: string[];
+  /** Other names of what the page is about: "loan rule", codes such as QXA. */
+  aliases: string[];
+  /** The files it was written from: a linked file or a source by name, the heading, its SHA-256 then. */
+  cites: TopicCite[];
+}
+
+export interface TopicCite {
+  file: string;
+  heading?: string;
+  sha256: string;
 }
 
 export interface TopicSource {
@@ -151,6 +161,17 @@ export function linksIn(body: string): string[] {
 }
 
 const strings = (value: unknown): string[] => (Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : []);
+
+/** Citations as front matter holds them; anything else there is left out. */
+const citesOf = (value: unknown): TopicCite[] =>
+  Array.isArray(value)
+    ? value.flatMap((v) => {
+        if (!v || typeof v !== "object") return [];
+        const { file, heading, sha256 } = v as Record<string, unknown>;
+        if (typeof file !== "string" || !file || typeof sha256 !== "string") return [];
+        return [{ file, ...(typeof heading === "string" && heading ? { heading } : {}), sha256 }];
+      })
+    : [];
 
 // -- the index ------------------------------------------------------------------
 
@@ -493,10 +514,66 @@ export class TopicStore {
       .sort((a, b) => b.updated.localeCompare(a.updated));
   }
 
+  /** By its title, else by one of its other names. */
   readNote(topicName: string, title: string): TopicNote | null {
     const topic = this.need(topicName);
     const path = this.notePath(topic, title);
-    return path ? this.noteAt(topic.name, path) : null;
+    if (path) return this.noteAt(topic.name, path);
+    const key = keyOf(String(title ?? "").replace(/\s+/g, " ").trim());
+    return key ? (this.listNotes(topic.name).find((n) => n.aliases.some((a) => keyOf(a) === key)) ?? null) : null;
+  }
+
+  /**
+   * The page that is already about this, when a new page would be a
+   * second one: its title or another name is the new title or one of the
+   * new names. The page of the same title is the one being updated.
+   */
+  samePage(topicName: string, title: string, aliases: readonly string[]): string | null {
+    const own = keyOf(String(title ?? "").replace(/\s+/g, " ").trim());
+    const wanted = new Set([own, ...aliases.map((a) => keyOf(String(a).replace(/\s+/g, " ").trim()))].filter(Boolean));
+    for (const note of this.listNotes(topicName)) {
+      if (keyOf(note.title) === own) continue;
+      if ([note.title, ...note.aliases].some((name) => wanted.has(keyOf(name)))) return note.title;
+    }
+    return null;
+  }
+
+  /** The files a page cites that changed since it was written, or are no longer there. */
+  staleCites(topicName: string, note: TopicNote): string[] {
+    return note.cites.filter((c) => this.citedHash(topicName, c.file) !== c.sha256).map((c) => c.file);
+  }
+
+  /** A cited file's SHA-256 now: a linked file by its name, else a source; null when there is none. */
+  citedHash(topicName: string, file: string): string | null {
+    const linked = this.readLinked(topicName, file);
+    if (linked) return (this.db.prepare("SELECT sha256 FROM files WHERE path = ?").get(linked.path) as { sha256: string | null } | undefined)?.sha256 ?? null;
+    return this.readSource(topicName, file)?.source.sha256 ?? null;
+  }
+
+  /** The pages citing a file, by title. */
+  citing(topicName: string, file: string): string[] {
+    return this.listNotes(topicName).filter((n) => n.cites.some((c) => c.file === file)).map((n) => n.title);
+  }
+
+  /**
+   * What a [[link]] leads to: a page by its title or another name, else a
+   * linked file by its path or name, with or without its folder's name or
+   * its kind. Two files of the same name: ambiguous, the folder decides.
+   */
+  resolveWiki(topicName: string, target: string): { kind: "note"; title: string } | { kind: "file"; name: string } | { kind: "ambiguous"; names: string[] } | null {
+    const wanted = String(target ?? "").replace(/\s+/g, " ").trim();
+    if (!wanted) return null;
+    const note = this.readNote(topicName, wanted);
+    if (note) return { kind: "note", title: note.title };
+    const key = keyOf(wanted);
+    const names = this.linkedRows(topicName)
+      .map((r) => linkedName(r.folder, r.rel))
+      .filter((name) => {
+        const rel = name.slice(name.indexOf("/") + 1);
+        return [name, stemOf(name), rel, stemOf(rel), posix.basename(rel), stemOf(posix.basename(rel))].some((form) => keyOf(form) === key);
+      });
+    if (names.length === 0) return null;
+    return names.length === 1 ? { kind: "file", name: names[0]! } : { kind: "ambiguous", names: names.sort() };
   }
 
   /** The notes of this topic that link to this one. */
@@ -509,7 +586,7 @@ export class TopicStore {
    * Writes a note under its title, replacing one of the same title. What it
    * replaced is kept in Vunemi's data folder and returned, for undo.
    */
-  writeNote(topicName: string, input: { title: string; text: string; by: NoteAuthor; sources: string[] }): { note: TopicNote; replaced: boolean; previous: string | null } {
+  writeNote(topicName: string, input: { title: string; text: string; by: NoteAuthor; sources: string[]; aliases?: string[]; cites?: TopicCite[] }): { note: TopicNote; replaced: boolean; previous: string | null } {
     const topic = this.need(topicName);
     const title = cleanName(input.title, "title");
     const text = String(input.text ?? "").trim();
@@ -526,7 +603,9 @@ export class TopicStore {
     const created = previous ? parseNote(previous).meta.created : undefined;
     const path = existing ?? join(topic.dir, NOTES, `${title}.md`);
     if (previous) this.keep(topic.name, title, previous);
-    atomicWrite(path, writeFront({ title, created: typeof created === "string" ? created : at, updated: at, by: input.by, sources: input.sources }, text));
+    const aliases = input.aliases?.length ? input.aliases : undefined;
+    const cites = input.cites?.length ? input.cites : undefined;
+    atomicWrite(path, writeFront({ title, aliases, created: typeof created === "string" ? created : at, updated: at, by: input.by, sources: input.sources, cites }, text));
     this.opts.onChange?.();
     return { note: this.noteAt(topic.name, path), replaced: previous !== null, previous };
   }
@@ -590,6 +669,8 @@ export class TopicStore {
       updated: iso(meta.updated, st.mtimeMs),
       path,
       links: linksIn(body),
+      aliases: strings(meta.aliases),
+      cites: citesOf(meta.cites),
     };
   }
 

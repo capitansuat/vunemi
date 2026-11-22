@@ -220,7 +220,7 @@ describe("the user's own changes", () => {
     expect(existsSync(join(tree, "plan.md"))).toBe(true);
   });
 
-  it("shows a linked file read only, and the original in Finder", () => {
+  it("shows a linked file read only, and the original in Finder", async () => {
     const tree = join(base, "Renovation");
     mkdirSync(tree);
     writeFileSync(join(tree, "plan.md"), "# Plan");
@@ -233,6 +233,28 @@ describe("the user's own changes", () => {
     store.putLinked("Home renovation", { folder: tree, rel: "tiles.md", path: join(tree, "tiles.md"), title: "Tiles", body: "See [the plan](plan.md)", size: 6, mtime: 1, sha256: "t", parts: false });
     expect(page.file("Home renovation", "Renovation/plan.md")).toMatchObject({ linksTo: [], linkedFrom: ["Renovation/tiles.md"], citedBy: [] });
     expect(page.file("Home renovation", "Renovation/tiles.md")).toMatchObject({ linksTo: ["Renovation/plan.md"], linkedFrom: [] });
+    store.writeNote("Home renovation", {
+      title: "Tiling",
+      text: "See [[plan]] and [[Budget]] and [[nowhere]]",
+      by: "vunemi",
+      sources: [],
+      aliases: ["tiles"],
+      cites: [{ file: "Renovation/plan.md", heading: "Plan", sha256: "old" }],
+    });
+    store.writeNote("Home renovation", { title: "Budget", text: "See [[tiles]]", by: "vunemi", sources: [] });
+    expect(page.note("Home renovation", "Tiling")).toMatchObject({
+      aliases: ["tiles"],
+      cites: [{ name: "Renovation/plan.md", heading: "Plan" }],
+      stale: ["Renovation/plan.md"],
+      links: ["Budget"],
+      files: [{ link: "plan", name: "Renovation/plan.md" }],
+      missing: ["nowhere"],
+    });
+    expect(page.note("Home renovation", "Budget")).toMatchObject({ links: ["tiles"], missing: [] });
+    expect(page.file("Home renovation", "Renovation/plan.md")).toMatchObject({ citedBy: ["Tiling"] });
+    // The user's edit keeps what the page cites and its other names.
+    await page.saveNote("Home renovation", { title: "Tiling", text: "changed" }, { title: "Tiling", stamp: page.note("Home renovation", "Tiling")!.stamp });
+    expect(store.readNote("Home renovation", "Tiling")).toMatchObject({ text: "changed", aliases: ["tiles"], cites: [{ file: "Renovation/plan.md", heading: "Plan", sha256: "old" }] });
   });
 
   it("adds one file a document from a folder, the text one first, but every file the user picked one by one", async () => {

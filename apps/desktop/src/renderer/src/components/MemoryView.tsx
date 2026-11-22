@@ -493,6 +493,7 @@ function NotePanel({ topic, title, version, tree, onSelect }: { topic: string; t
   }, [topic, title, version, editing]);
   const sources = useMemo(() => new Set((tree?.topics.find((tp) => tp.name === topic)?.sources ?? []).map((s) => s.name.toLowerCase())), [tree, topic]);
   const titles = useMemo(() => new Map((note?.links ?? []).map((l) => [l.toLowerCase(), l])), [note]);
+  const files = useMemo(() => new Map((note?.files ?? []).map((f) => [f.link.toLowerCase(), f.name])), [note]);
 
   if (note === undefined) return error ? <p role="alert" className="text-[12px] text-danger">{error}</p> : null;
   if (note === null) return <p className="text-[13px] text-faint">{t("topics.page.noteGone")}</p>;
@@ -508,16 +509,27 @@ function NotePanel({ topic, title, version, tree, onSelect }: { topic: string; t
       <p className="mt-1 text-[12px] text-faint">
         {t(note.by === "vunemi" ? "topics.page.byVunemi" : "topics.page.byYou")} · {t("topics.page.changedOn", { date: day(note.updated) })}
       </p>
+      {note.aliases.length > 0 && <p className="selectable mt-1 text-[12px] text-faint">{t("topics.page.aliases")}: {note.aliases.join(", ")}</p>}
       <Origins note={note} sources={sources} onSelect={onSelect} />
+      {note.stale.length > 0 && (
+        <p role="status" className="mt-3 rounded-md border border-line bg-surface-2 px-3 py-2 text-[12px] text-muted">
+          {t("topics.page.stale", { count: note.stale.length })}: {note.stale.join(", ")}
+        </p>
+      )}
       <div className="mt-5">
         <Markdown
           text={note.text}
           wiki={{
-            exists: (linked) => titles.has(linked.toLowerCase()),
-            open: (linked) => onSelect({ kind: "note", topic, title: titles.get(linked.toLowerCase()) ?? linked }),
+            exists: (linked) => titles.has(linked.toLowerCase()) || files.has(linked.toLowerCase()),
+            open: (linked) => {
+              const file = files.get(linked.toLowerCase());
+              onSelect(file ? { kind: "file", topic, name: file } : { kind: "note", topic, title: titles.get(linked.toLowerCase()) ?? linked });
+            },
           }}
         />
       </div>
+      {/* A linked file is named with its folder; a source has no slash in its name. */}
+      <FileLinks label={t("topics.page.cites")} names={[...new Set(note.cites.map((c) => c.name))]} onOpen={(name) => onSelect(name.includes("/") ? { kind: "file", topic, name } : { kind: "source", topic, name })} />
       <FileLinks label={t("topics.page.linkedFrom")} names={note.linkedFrom} onOpen={(title) => onSelect({ kind: "note", topic, title })} />
       <div className="mt-6 flex flex-wrap gap-2">
         <Button onClick={() => setEditing(true)} icon={<Pencil size={12} />}>{t("topics.page.edit")}</Button>
