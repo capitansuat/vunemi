@@ -66,13 +66,37 @@ export interface TopicSource {
 }
 
 export interface TopicHit {
-  kind: "note" | "source";
+  /** A file is in a folder linked to the topic, read where it is (topics/linked.ts). */
+  kind: "note" | "source" | "file";
   topic: string;
   title: string;
   snippet: string;
   path: string;
   /** Where in the note or source the hit is, in characters, when known. */
   at?: number;
+  /** A file's linked folder, and its path inside it. */
+  folder?: string;
+  rel?: string;
+}
+
+/**
+ * A folder linked to a topic: its files are searched and read where they
+ * are, never copied (tenami/docs/superpowers/specs/2026-11-22-topic-wiki-design.md).
+ * `meaning`: a top-level subfolder's search by meaning, where the user set it.
+ */
+export interface LinkedFolder {
+  path: string;
+  meaning: Record<string, boolean>;
+}
+
+/** A linked file as the index has it. */
+export interface LinkedRow {
+  path: string;
+  rel: string;
+  folder: string;
+  size: number;
+  mtime: number;
+  sha256: string;
 }
 
 /** A name for a folder or file that every Mac app, Obsidian and a Windows disk accept. */
@@ -129,17 +153,23 @@ const strings = (value: unknown): string[] => (Array.isArray(value) ? value.filt
 
 // -- the index ------------------------------------------------------------------
 
-const SCHEMA = `
-CREATE TABLE IF NOT EXISTS files (
+const FILES_TABLE = (name: string) => `
+CREATE TABLE IF NOT EXISTS ${name} (
   path TEXT PRIMARY KEY,
   topic_key TEXT NOT NULL,
-  kind TEXT NOT NULL CHECK (kind IN ('note', 'source')),
+  kind TEXT NOT NULL CHECK (kind IN ('note', 'source', 'linked')),
   title TEXT NOT NULL,
   title_key TEXT NOT NULL,
   body TEXT NOT NULL,
   size INTEGER NOT NULL,
-  mtime REAL NOT NULL
-);
+  mtime REAL NOT NULL,
+  folder TEXT,
+  rel TEXT,
+  sha256 TEXT,
+  original TEXT
+);`;
+const SCHEMA = `
+${FILES_TABLE("files")}
 CREATE INDEX IF NOT EXISTS files_topic ON files(topic_key, kind);
 CREATE VIRTUAL TABLE IF NOT EXISTS files_fts USING fts5(
   title, body, content='files', content_rowid='rowid', tokenize='unicode61 remove_diacritics 2'
@@ -164,8 +194,12 @@ CREATE TABLE IF NOT EXISTS parts (
 );
 CREATE INDEX IF NOT EXISTS parts_path ON parts(path);
 `;
-/** Version 2 added parts: an index from before has none, so it is made again from the files. */
-const INDEX_VERSION = 2;
+/**
+ * Version 2 added parts: an index from before has none, so it is made again
+ * from the files. Version 3 added linked files; one of version 2 is moved
+ * over with its vectors, which took an hour to make for 200 sources.
+ */
+const INDEX_VERSION = 3;
 
 /** A part of a note or source, embedded on its own: about this long. */
 export const PART_CHARS = 1_000;
@@ -216,7 +250,7 @@ export function partsOf(text: string, max = PART_CHARS): { start: number; text: 
 interface Row {
   path: string;
   topic_key: string;
-  kind: "note" | "source";
+  kind: "note" | "source" | "linked";
   title: string;
   title_key: string;
   body: string;
@@ -252,15 +286,45 @@ export class TopicStore {
      * write waits a moment instead. It waits on the main thread, so briefly.
      */
     this.db.exec(`PRAGMA busy_timeout = ${BUSY_WAIT_MS};`);
+    const version = (this.db.prepare("PRAGMA user_version").get() as { user_version: number }).user_version;
+    if (version === 2) this.fromVersion2();
+    else if (version < 2) this.db.exec("DROP TABLE IF EXISTS files; DROP TABLE IF EXISTS files_fts; DROP TABLE IF EXISTS parts;");
     this.db.exec(SCHEMA);
-    if ((this.db.prepare("PRAGMA user_version").get() as { user_version: number }).user_version < INDEX_VERSION) {
-      this.db.exec(`DELETE FROM files; DELETE FROM parts; PRAGMA user_version = ${INDEX_VERSION};`);
+    if (version < INDEX_VERSION) {
+      this.db.exec(`INSERT INTO files_fts(files_fts) VALUES('rebuild'); PRAGMA user_version = ${INDEX_VERSION};`);
+      if (version === 2) this.originals();
     }
     this.backups = join(opts.dataDir, "topic-backups");
   }
 
   close(): void {
     this.db.close();
+  }
+
+  /** Version 2's notes and sources into version 3's table, rows and parts kept. */
+  private fromVersion2(): void {
+    this.db.exec("BEGIN");
+    try {
+      this.db.exec(FILES_TABLE("files_v3"));
+      this.db.exec("INSERT INTO files_v3 (rowid, path, topic_key, kind, title, title_key, body, size, mtime) SELECT rowid, path, topic_key, kind, title, title_key, body, size, mtime FROM files");
+      // The old table's triggers and index go with it; SCHEMA makes them again.
+      this.db.exec("DROP TABLE files; ALTER TABLE files_v3 RENAME TO files;");
+      this.db.exec("COMMIT");
+    } catch (err) {
+      this.db.exec("ROLLBACK");
+      throw err;
+    }
+  }
+
+  /** Where each source came from, from its front matter: a sync would read it only once the file changes. */
+  private originals(): void {
+    const rows = this.db.prepare("SELECT path FROM files WHERE kind = 'source'").all() as { path: string }[];
+    const set = this.db.prepare("UPDATE files SET original = ? WHERE path = ?");
+    for (const { path } of rows) {
+      if (!existsSync(path)) continue;
+      const original = parseNote(readFileSync(path, "utf8")).meta.original;
+      if (typeof original === "string" && original) set.run(original, path);
+    }
   }
 
   get root(): string {
@@ -302,9 +366,30 @@ export class TopicStore {
     const topic = this.need(topicName);
     const file = join(topic.dir, ABOUT);
     const old = existsSync(file) ? parseNote(readFileSync(file, "utf8")).meta : {};
-    atomicWrite(file, writeFront({ topic: topic.name, created: old.created ?? new Date(this.now()).toISOString() }, String(aboutIn ?? "").trim().slice(0, TOPIC_LIMITS.about) || topic.name));
+    atomicWrite(file, writeFront({ topic: topic.name, created: old.created ?? new Date(this.now()).toISOString(), folders: old.folders }, String(aboutIn ?? "").trim().slice(0, TOPIC_LIMITS.about) || topic.name));
     this.opts.onChange?.();
     return this.topicAt(topic.name);
+  }
+
+  /** The folders linked to a topic, as its topic.md lists them. */
+  linkedFolders(topicName: string): LinkedFolder[] {
+    const file = join(this.need(topicName).dir, ABOUT);
+    const list = existsSync(file) ? parseNote(readFileSync(file, "utf8")).meta.folders : undefined;
+    if (!Array.isArray(list)) return [];
+    return list.flatMap((item): LinkedFolder[] => {
+      const it = item && typeof item === "object" ? (item as { path?: unknown; meaning?: unknown }) : null;
+      if (!it || typeof it.path !== "string" || !it.path) return [];
+      const meaning = it.meaning && typeof it.meaning === "object" ? Object.fromEntries(Object.entries(it.meaning).filter((e): e is [string, boolean] => typeof e[1] === "boolean")) : {};
+      return [{ path: it.path, meaning }];
+    });
+  }
+
+  setLinkedFolders(topicName: string, folders: readonly LinkedFolder[]): void {
+    const topic = this.need(topicName);
+    const file = join(topic.dir, ABOUT);
+    const old = existsSync(file) ? parseNote(readFileSync(file, "utf8")) : { meta: {}, body: topic.name };
+    atomicWrite(file, writeFront({ ...old.meta, topic: topic.name, folders: folders.map((f) => ({ path: f.path, meaning: f.meaning })) }, old.body.trim() || topic.name));
+    this.opts.onChange?.();
   }
 
   private topicAt(name: string): Topic {
@@ -336,7 +421,8 @@ export class TopicStore {
   /** Brings the index up to date with one topic's files: new, changed and gone. */
   private sync(topic: Topic): void {
     const topicKey = keyOf(topic.name);
-    const known = new Map((this.db.prepare("SELECT path, size, mtime FROM files WHERE topic_key = ?").all(topicKey) as unknown as Pick<Row, "path" | "size" | "mtime">[]).map((r) => [r.path, r]));
+    // Linked files are kept by their own sync (topics/linked.ts).
+    const known = new Map((this.db.prepare("SELECT path, size, mtime FROM files WHERE topic_key = ? AND kind != 'linked'").all(topicKey) as unknown as Pick<Row, "path" | "size" | "mtime">[]).map((r) => [r.path, r]));
     const seen = new Set<string>();
     this.db.exec("BEGIN");
     try {
@@ -350,9 +436,10 @@ export class TopicStore {
           if (was && was.size === st.size && was.mtime === st.mtimeMs) continue;
           const { meta, body } = parseNote(readFileSync(path, "utf8"));
           const title = kind === "note" && typeof meta.title === "string" && meta.title.trim() ? meta.title.trim() : basename(path, ".md");
+          const original = kind === "source" && typeof meta.original === "string" && meta.original ? meta.original : null;
           this.db
-            .prepare("INSERT INTO files (path, topic_key, kind, title, title_key, body, size, mtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(path) DO UPDATE SET topic_key = excluded.topic_key, kind = excluded.kind, title = excluded.title, title_key = excluded.title_key, body = excluded.body, size = excluded.size, mtime = excluded.mtime")
-            .run(path, topicKey, kind, title, keyOf(title), body, st.size, st.mtimeMs);
+            .prepare("INSERT INTO files (path, topic_key, kind, title, title_key, body, size, mtime, original) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(path) DO UPDATE SET topic_key = excluded.topic_key, kind = excluded.kind, title = excluded.title, title_key = excluded.title_key, body = excluded.body, size = excluded.size, mtime = excluded.mtime, original = excluded.original")
+            .run(path, topicKey, kind, title, keyOf(title), body, st.size, st.mtimeMs, original);
           // New words, new parts: their vectors are made again (TopicMeaning.catchUp).
           this.db.prepare("DELETE FROM parts WHERE path = ?").run(path);
           const insert = this.db.prepare("INSERT INTO parts (path, start, text) VALUES (?, ?, ?)");
@@ -518,6 +605,53 @@ export class TopicStore {
     return mdFiles(join(topic.dir, SOURCES)).find((p) => keyOf(basename(p, ".md")) === key) ?? null;
   }
 
+  // -- linked files -------------------------------------------------------------------
+
+  /** A linked file into the index, replacing what it had: words always, parts only for search by meaning. */
+  putLinked(topicName: string, row: LinkedRow & { title: string; body: string; parts: boolean }): void {
+    const topicKey = keyOf(this.need(topicName).name);
+    this.db.exec("BEGIN");
+    try {
+      this.db
+        .prepare("INSERT INTO files (path, topic_key, kind, title, title_key, body, size, mtime, folder, rel, sha256) VALUES (?, ?, 'linked', ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(path) DO UPDATE SET topic_key = excluded.topic_key, kind = excluded.kind, title = excluded.title, title_key = excluded.title_key, body = excluded.body, size = excluded.size, mtime = excluded.mtime, folder = excluded.folder, rel = excluded.rel, sha256 = excluded.sha256")
+        .run(row.path, topicKey, row.title, keyOf(row.title), row.body, row.size, row.mtime, row.folder, row.rel, row.sha256);
+      this.db.prepare("DELETE FROM parts WHERE path = ?").run(row.path);
+      if (row.parts) {
+        const insert = this.db.prepare("INSERT INTO parts (path, start, text) VALUES (?, ?, ?)");
+        for (const part of partsOf(row.body)) insert.run(row.path, part.start, part.text);
+      }
+      this.db.exec("COMMIT");
+    } catch (err) {
+      this.db.exec("ROLLBACK");
+      throw err;
+    }
+  }
+
+  /** Linked files out of the index: gone, or their folder is. */
+  dropLinked(topicName: string, paths: readonly string[]): void {
+    const topicKey = keyOf(this.need(topicName).name);
+    this.db.exec("BEGIN");
+    try {
+      for (const path of paths) {
+        if (!this.db.prepare("DELETE FROM files WHERE path = ? AND topic_key = ? AND kind = 'linked'").run(path, topicKey).changes) continue;
+        this.db.prepare("DELETE FROM parts WHERE path = ?").run(path);
+      }
+      this.db.exec("COMMIT");
+    } catch (err) {
+      this.db.exec("ROLLBACK");
+      throw err;
+    }
+  }
+
+  /** A topic's linked files as indexed: all, or one folder's. */
+  linkedRows(topicName: string, folder?: string): LinkedRow[] {
+    const topicKey = keyOf(this.need(topicName).name);
+    const rows = folder === undefined
+      ? this.db.prepare("SELECT path, rel, folder, size, mtime, sha256 FROM files WHERE topic_key = ? AND kind = 'linked' ORDER BY path").all(topicKey)
+      : this.db.prepare("SELECT path, rel, folder, size, mtime, sha256 FROM files WHERE topic_key = ? AND kind = 'linked' AND folder = ? ORDER BY path").all(topicKey, folder);
+    return rows as unknown as LinkedRow[];
+  }
+
   // -- search -------------------------------------------------------------------------
 
   /** Brings the index up to date with every topic's files. */
@@ -552,8 +686,8 @@ export class TopicStore {
     const names = new Map(topics.map((t) => [keyOf(t.name), t.name]));
     const where = topicName ? "AND f.topic_key = ?" : "";
     const rows = this.db
-      .prepare(`SELECT p.path, p.start, p.text, p.vector, f.kind, f.topic_key, f.title FROM parts p JOIN files f ON f.path = p.path WHERE p.vector_model = ? AND p.vector IS NOT NULL ${where}`)
-      .iterate(...(topicName ? [model, keyOf(topicName)] : [model])) as Iterable<{ path: string; start: number; text: string; vector: Uint8Array; kind: "note" | "source"; topic_key: string; title: string }>;
+      .prepare(`SELECT p.path, p.start, p.text, p.vector, f.kind, f.topic_key, f.title, f.folder, f.rel FROM parts p JOIN files f ON f.path = p.path WHERE p.vector_model = ? AND p.vector IS NOT NULL ${where}`)
+      .iterate(...(topicName ? [model, keyOf(topicName)] : [model])) as Iterable<{ path: string; start: number; text: string; vector: Uint8Array; kind: Row["kind"]; topic_key: string; title: string; folder: string | null; rel: string | null }>;
     const best = new Map<string, TopicHit & { score: number }>();
     for (const row of rows) {
       const topic = names.get(row.topic_key);
@@ -562,7 +696,7 @@ export class TopicStore {
       let score = 0;
       if (vector.length === query.length) for (let i = 0; i < vector.length; i++) score += vector[i]! * query[i]!;
       const was = best.get(row.path);
-      if (!was || score > was.score) best.set(row.path, { kind: row.kind, topic, title: row.title, snippet: row.text, path: row.path, at: row.start, score });
+      if (!was || score > was.score) best.set(row.path, { ...hitKind(row), topic, title: row.title, snippet: row.text, path: row.path, at: row.start, score });
     }
     return [...best.values()].filter((hit) => existsSync(hit.path)).sort((a, b) => b.score - a.score).slice(0, limit);
   }
@@ -589,10 +723,15 @@ export class TopicStore {
     for (const topic of topics) this.sync(topic);
     const names = new Map(topics.map((t) => [keyOf(t.name), t.name]));
     const rows = this.db
-      .prepare(`SELECT f.kind, f.topic_key, f.title, f.path, snippet(files_fts, 1, '', '', '…', 16) AS snip FROM files_fts JOIN files f ON f.rowid = files_fts.rowid WHERE files_fts MATCH ? ${topicName ? "AND f.topic_key = ?" : ""} ORDER BY bm25(files_fts) LIMIT ?`)
-      .all(...(topicName ? [match, keyOf(topicName), limit] : [match, limit])) as unknown as { kind: "note" | "source"; topic_key: string; title: string; path: string; snip: string }[];
-    return rows.filter((r) => names.has(r.topic_key) && existsSync(r.path)).map((r) => ({ kind: r.kind, topic: names.get(r.topic_key)!, title: r.title, snippet: r.snip.replace(/\s+/g, " ").trim(), path: r.path }));
+      .prepare(`SELECT f.kind, f.topic_key, f.title, f.path, f.folder, f.rel, snippet(files_fts, 1, '', '', '…', 16) AS snip FROM files_fts JOIN files f ON f.rowid = files_fts.rowid WHERE files_fts MATCH ? ${topicName ? "AND f.topic_key = ?" : ""} ORDER BY bm25(files_fts) LIMIT ?`)
+      .all(...(topicName ? [match, keyOf(topicName), limit] : [match, limit])) as unknown as { kind: Row["kind"]; topic_key: string; title: string; path: string; folder: string | null; rel: string | null; snip: string }[];
+    return rows.filter((r) => names.has(r.topic_key) && existsSync(r.path)).map((r) => ({ ...hitKind(r), topic: names.get(r.topic_key)!, title: r.title, snippet: r.snip.replace(/\s+/g, " ").trim(), path: r.path }));
   }
+}
+
+/** What a hit is, as the tools and the page name it: a linked file says where it is. */
+function hitKind(row: { kind: Row["kind"]; folder: string | null; rel: string | null }): Pick<TopicHit, "kind" | "folder" | "rel"> {
+  return row.kind === "linked" ? { kind: "file", folder: row.folder ?? "", rel: row.rel ?? "" } : { kind: row.kind };
 }
 
 function sourceAt(topic: string, path: string): TopicSource {

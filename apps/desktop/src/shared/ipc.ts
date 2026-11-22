@@ -80,7 +80,8 @@ export interface TopicSourceView {
 }
 
 export interface TopicSearchView {
-  hits: { kind: "note" | "source"; topic: string; title: string; snippet: string }[];
+  /** A file is in a linked folder; `name` is how it is opened (folder name and path inside it). */
+  hits: { kind: "note" | "source" | "file"; topic: string; title: string; snippet: string; name?: string }[];
   /** Parts not yet searchable by meaning. */
   pending: number;
   byMeaning: boolean;

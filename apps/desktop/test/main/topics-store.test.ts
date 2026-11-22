@@ -204,3 +204,75 @@ describe("the index while another program reads it", () => {
     expect(store.search("matte", "Home renovation", 5).map((h) => h.title)).toEqual(["Tiles"]);
   });
 });
+
+describe("linked folders in the index", () => {
+  const MODEL = "test-model";
+  /** The index as version 2 made it: notes and sources only. */
+  const V2 = `
+CREATE TABLE files (path TEXT PRIMARY KEY, topic_key TEXT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('note', 'source')), title TEXT NOT NULL, title_key TEXT NOT NULL, body TEXT NOT NULL, size INTEGER NOT NULL, mtime REAL NOT NULL);
+CREATE INDEX files_topic ON files(topic_key, kind);
+CREATE VIRTUAL TABLE files_fts USING fts5(title, body, content='files', content_rowid='rowid', tokenize='unicode61 remove_diacritics 2');
+CREATE TRIGGER files_ai AFTER INSERT ON files BEGIN INSERT INTO files_fts(rowid, title, body) VALUES (new.rowid, new.title, new.body); END;
+CREATE TABLE parts (id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT NOT NULL, start INTEGER NOT NULL, text TEXT NOT NULL, vector BLOB, vector_model TEXT);
+PRAGMA user_version = 2;`;
+
+  it("moves an index of version 2 to version 3 and keeps every vector", async () => {
+    store.close();
+    const dir = join(root, "Library", "Sources");
+    mkdirSync(dir, { recursive: true });
+    const source = join(dir, "a.md");
+    writeFileSync(source, '---\noriginal: "/Users/x/a.html"\n---\n\nAlpha library');
+    const st = (await import("node:fs")).statSync(source);
+    const { DatabaseSync } = await import("node:sqlite");
+    mkdirSync(join(base, "old"));
+    const db = new DatabaseSync(join(base, "old", "topics.db"));
+    db.exec(V2);
+    db.prepare("INSERT INTO files VALUES (?, 'library', 'source', 'a', 'a', 'Alpha library', ?, ?)").run(source, st.size, st.mtimeMs);
+    db.prepare("INSERT INTO parts (path, start, text, vector, vector_model) VALUES (?, 0, 'Alpha library', ?, ?)").run(source, new Uint8Array(new Float32Array([1, 0]).buffer), MODEL);
+    db.close();
+    store = new TopicStore({ root: () => root, dataDir: join(base, "old"), now: () => clock });
+    store.refresh();
+    const check = new DatabaseSync(join(base, "old", "topics.db"));
+    expect(check.prepare("PRAGMA user_version").get()).toEqual({ user_version: 3 });
+    expect(check.prepare("SELECT original FROM files WHERE path = ?").get(source)).toEqual({ original: "/Users/x/a.html" });
+    check.close();
+    expect(store.pendingParts(MODEL)).toBe(0);
+    expect(store.search("alpha", "Library").map((h) => h.kind)).toEqual(["source"]);
+  });
+
+  it("keeps a topic's linked folders in topic.md, and its description beside them", () => {
+    store.createTopic("Library", "Branches");
+    store.setLinkedFolders("Library", [{ path: "/tmp/ref", meaning: { records: false } }]);
+    store.setAbout("Library", "Branches and loans");
+    expect(store.linkedFolders("Library")).toEqual([{ path: "/tmp/ref", meaning: { records: false } }]);
+    expect(store.findTopic("Library")!.about).toBe("Branches and loans");
+  });
+
+  it("indexes a linked file for words, with parts only when asked", () => {
+    store.createTopic("Library", "");
+    const folder = join(base, "ref");
+    mkdirSync(folder);
+    const row = { folder, rel: "loan-period-reference.html", path: join(folder, "loan-period-reference.html"), title: "Loan period reference", body: "QXA Standard loan", size: 10, mtime: 1, sha256: "s1", parts: false };
+    // A hit is shown only while its file is there, as for notes and sources.
+    writeFileSync(row.path, "x");
+    store.putLinked("Library", row);
+    expect(store.search("standard", "Library")).toMatchObject([{ kind: "file", rel: "loan-period-reference.html", folder, title: "Loan period reference" }]);
+    expect(store.pendingParts(MODEL, "Library")).toBe(0);
+    store.putLinked("Library", { ...row, parts: true });
+    expect(store.pendingParts(MODEL, "Library")).toBe(1);
+    expect(store.linkedRows("Library")).toEqual([{ path: row.path, rel: row.rel, folder, size: 10, mtime: 1, sha256: "s1" }]);
+    store.dropLinked("Library", [row.path]);
+    expect(store.search("standard", "Library")).toEqual([]);
+    expect(store.pendingParts(MODEL, "Library")).toBe(0);
+  });
+
+  it("leaves linked files alone when it brings notes and sources up to date", () => {
+    store.createTopic("Library", "");
+    const path = join(base, "ref", "x.txt");
+    mkdirSync(join(base, "ref"));
+    writeFileSync(path, "x");
+    store.putLinked("Library", { folder: join(base, "ref"), rel: "x.txt", path, title: "x", body: "zebra", size: 1, mtime: 1, sha256: "h", parts: false });
+    store.refresh();
+    expect(store.search("zebra", "Library").map((h) => h.kind)).toEqual(["file"]);
+  });
+});

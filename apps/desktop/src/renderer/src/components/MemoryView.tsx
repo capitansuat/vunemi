@@ -613,7 +613,8 @@ function SearchPanel({ query, topic, version, onSelect }: { query: string; topic
                 <li key={`${h.topic}/${h.kind}/${h.title}`}>
                   <button
                     type="button"
-                    onClick={() => onSelect(h.kind === "note" ? { kind: "note", topic: h.topic, title: h.title } : { kind: "source", topic: h.topic, name: h.title })}
+                    disabled={h.kind === "file"}
+                    onClick={() => h.kind !== "file" && onSelect(h.kind === "note" ? { kind: "note", topic: h.topic, title: h.title } : { kind: "source", topic: h.topic, name: h.title })}
                     className="block w-full px-3.5 py-2.5 text-left hover:bg-surface-2"
                   >
                     <span className="flex items-center gap-2 text-[13px] text-fg">
