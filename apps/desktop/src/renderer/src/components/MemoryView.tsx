@@ -375,6 +375,7 @@ function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["top
           ))}
           {added.failed.length > NAMED && <p className="text-danger">{t("topics.page.andMore", { count: added.failed.length - NAMED })}</p>}
           {added.skipped > 0 && <p className="text-muted">{t("topics.page.skipped", { count: added.skipped })}</p>}
+          {added.copies > 0 && <p className="text-muted">{t("topics.page.copies", { count: added.copies })}</p>}
           {added.left > 0 && <p className="text-muted">{t("topics.page.left", { count: added.left, max: SOURCE_MAX })}</p>}
           {added.stopped && <p className="text-muted">{t("topics.page.stopped", { max: FOLDER_SCAN_MAX.toLocaleString() })}</p>}
         </div>

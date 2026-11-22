@@ -161,7 +161,7 @@ describe("the user's own changes", () => {
     writeFileSync(join(files, "notes.txt"), "Plain text");
     writeFileSync(join(files, "offer.pdf"), "%PDF");
     picked = [join(files, "notes.txt"), join(files, "offer.pdf")];
-    expect(await page.addSources("Home renovation")).toEqual({ added: ["notes"], already: [], failed: [{ file: "offer.pdf", error: "This kind of file can't be added." }], skipped: 0, left: 0, stopped: false });
+    expect(await page.addSources("Home renovation")).toEqual({ added: ["notes"], already: [], failed: [{ file: "offer.pdf", error: "This kind of file can't be added." }], skipped: 0, left: 0, copies: 0, stopped: false });
     expect(await page.addSources("Home renovation")).toMatchObject({ added: [], already: ["notes"] });
     picked = [];
     expect(await page.addSources("Home renovation")).toBeNull();
@@ -182,10 +182,24 @@ describe("the user's own changes", () => {
     symlinkSync(join(base, "Picked-elsewhere.txt"), join(tree, "link.txt"));
     writeFileSync(join(base, "Picked-elsewhere.txt"), "linked");
     picked = [tree];
-    expect(await page.addSources("Home renovation")).toEqual({ added: ["plan", "tiles", "plumber"], already: [], failed: [], skipped: 1, left: 0, stopped: false });
+    expect(await page.addSources("Home renovation")).toEqual({ added: ["plan", "tiles", "plumber"], already: [], failed: [], skipped: 1, left: 0, copies: 0, stopped: false });
     expect(store.listSources("Home renovation").map((s) => s.original).sort()).toEqual(
       [join(tree, "Offers", "2026", "plumber.txt"), join(tree, "Offers", "tiles.txt"), join(tree, "plan.md")].sort(),
     );
+  });
+
+  it("adds one file a document from a folder, the text one first, but every file the user picked one by one", async () => {
+    const tree = join(base, "Reports");
+    mkdirSync(join(tree, "Old"), { recursive: true });
+    for (const name of ["term.html", "term.md", "Term.csv", "term.py", "fees.html", "fees.csv", "rows.csv"]) writeFileSync(join(tree, name), "x");
+    writeFileSync(join(tree, "Old", "term.html"), "x");
+    expect(await pickedSources([tree], true, 200)).toMatchObject({
+      // fees: .html comes before .csv in what MarkItDown reads; Old is another folder.
+      ok: [join(tree, "fees.html"), join(tree, "rows.csv"), join(tree, "term.md"), join(tree, "Old", "term.html")],
+      copies: 3,
+      skipped: 1,
+    });
+    expect(await pickedSources([join(tree, "term.html"), join(tree, "term.md")], true, 200)).toMatchObject({ ok: [join(tree, "term.html"), join(tree, "term.md")], copies: 0 });
   });
 
   it("adds no more files than the topic has room for, and stops looking through a huge folder", async () => {

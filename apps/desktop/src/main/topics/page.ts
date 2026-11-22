@@ -172,9 +172,9 @@ export function topicPage(deps: TopicPageDeps) {
       const picked = await deps.pickFiles(SOURCE_KINDS(deps.convert !== null));
       if (picked.length === 0) return null;
       const room = Math.max(0, TOPIC_LIMITS.sources - store.outline(topic).sources.length);
-      const { ok, refused, skipped, left, stopped } = await pickedSources(picked, deps.convert !== null, room);
+      const { ok, refused, skipped, left, copies, stopped } = await pickedSources(picked, deps.convert !== null, room);
       const name = (path: string) => path.split("/").pop() ?? path;
-      const view: TopicAddedView = { added: [], already: [], failed: refused.map((r) => ({ file: name(r.path), error: r.error })), skipped, left, stopped };
+      const view: TopicAddedView = { added: [], already: [], failed: refused.map((r) => ({ file: name(r.path), error: r.error })), skipped, left, copies, stopped };
       if (ok.length === 0) return view;
       const { results } = await addSourceFiles(store, deps.convert, topic, ok, AbortSignal.timeout(30 * 60_000));
       for (const r of results) {

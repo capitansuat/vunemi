@@ -115,6 +115,11 @@ export const FOLDER_SCAN_LIMIT = 20_000;
 /** macOS packages look like files in Finder; they hold an app or a document's insides, not the user's files. */
 const PACKAGE_KINDS = new Set([".app", ".bundle", ".framework", ".plugin", ".kext", ".photoslibrary", ".musiclibrary", ".pages", ".numbers", ".key", ".xcodeproj", ".xcworkspace", ".lproj"]);
 
+/** The name without its kind, as one document's files share it. */
+const stemOf = (name: string): string => name.slice(0, name.length - extname(name).length).toLowerCase();
+/** Which of a document's files to keep: text as it is first, so nothing needs converting. */
+const preference = (name: string): number => [...TEXT_KINDS, ...MARKDOWN_KINDS].indexOf(extname(name).toLowerCase() as never);
+
 export interface PickedSources {
   ok: string[];
   /** Files the user picked one by one that can't be added, with why. */
@@ -123,6 +128,11 @@ export interface PickedSources {
   skipped: number;
   /** Files that would fit but are over `room`. */
   left: number;
+  /**
+   * Files in a picked folder left out because another file there has the
+   * same name in another kind: a report kept as .html and .md is one document.
+   */
+  copies: number;
   /** The folders hold more than FOLDER_SCAN_LIMIT entries; only part was looked through. */
   stopped: boolean;
 }
@@ -134,7 +144,7 @@ export interface PickedSources {
  * `room` files.
  */
 export async function pickedSources(paths: readonly string[], canConvert: boolean, room: number): Promise<PickedSources> {
-  const out: PickedSources = { ok: [], refused: [], skipped: 0, left: 0, stopped: false };
+  const out: PickedSources = { ok: [], refused: [], skipped: 0, left: 0, copies: 0, stopped: false };
   const readable = (path: string) => {
     const kind = extname(path).toLowerCase();
     return TEXT_KINDS.includes(kind) || (canConvert && (MARKDOWN_KINDS as readonly string[]).includes(kind));
@@ -159,6 +169,15 @@ export async function pickedSources(paths: readonly string[], canConvert: boolea
       return; // A folder macOS won't let Vunemi read is left out, like a hidden one.
     }
     entries.sort((a, b) => a.name.localeCompare(b.name));
+    // One file a document: measured 22 Nov, 42 of a folder's first 200 were
+    // the same report as .html and .md, taking room and showing up twice.
+    const kept = new Map<string, string>();
+    for (const entry of entries) {
+      if (!entry.isFile() || entry.name.startsWith(".") || !readable(entry.name)) continue;
+      const stem = stemOf(entry.name);
+      const other = kept.get(stem);
+      if (other === undefined || preference(entry.name) < preference(other)) kept.set(stem, entry.name);
+    }
     const dirs: string[] = [];
     for (const entry of entries) {
       if (out.stopped) return;
@@ -170,7 +189,11 @@ export async function pickedSources(paths: readonly string[], canConvert: boolea
       const path = join(dir, entry.name);
       if (entry.isDirectory()) {
         if (!PACKAGE_KINDS.has(extname(entry.name).toLowerCase())) dirs.push(path);
-      } else if (entry.isFile()) take(path, false);
+      } else if (entry.isFile()) {
+        const best = kept.get(stemOf(entry.name));
+        if (best !== undefined && best !== entry.name && readable(entry.name)) out.copies++;
+        else take(path, false);
+      }
     }
     // Files of a folder first, then its subfolders, as Finder lists them.
     for (const sub of dirs) await walk(sub);

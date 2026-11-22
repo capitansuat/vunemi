@@ -95,6 +95,8 @@ export interface TopicAddedView {
   skipped: number;
   /** Files not added because the topic would hold more sources than it can. */
   left: number;
+  /** Files in the picked folders left out: another file there is the same document in another kind. */
+  copies: number;
   /** The folders held too many entries to look through all of them. */
   stopped: boolean;
 }
