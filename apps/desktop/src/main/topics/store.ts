@@ -572,10 +572,7 @@ export class TopicStore {
     let name = stem;
     if (taken.has(keyOf(name))) name = safeFile(basename(input.original));
     for (let n = 2; taken.has(keyOf(name)); n++) name = `${stem} ${n}`;
-    let markdown = input.markdown;
-    if (markdown.length > TOPIC_LIMITS.sourceChars) {
-      markdown = `${markdown.slice(0, TOPIC_LIMITS.sourceChars)}\n\n[Cut here: the file's text was longer than ${TOPIC_LIMITS.sourceChars.toLocaleString("en-GB")} characters.]`;
-    }
+    const markdown = cutToSource(input.markdown);
     const path = join(dir, `${name}.md`);
     atomicWrite(path, writeFront({ original: input.original, bytes: input.bytes, sha256: input.sha256, added: new Date(this.now()).toISOString() }, markdown));
     this.opts.onChange?.();
@@ -625,6 +622,11 @@ export class TopicStore {
       this.db.exec("ROLLBACK");
       throw err;
     }
+  }
+
+  /** A linked file touched but not changed: its new size and time, its words and vectors kept. */
+  touchLinked(path: string, size: number, mtime: number): void {
+    this.db.prepare("UPDATE files SET size = ?, mtime = ? WHERE path = ? AND kind = 'linked'").run(size, mtime, path);
   }
 
   /** Linked files out of the index: gone, or their folder is. */
@@ -727,6 +729,12 @@ export class TopicStore {
       .all(...(topicName ? [match, keyOf(topicName), limit] : [match, limit])) as unknown as { kind: Row["kind"]; topic_key: string; title: string; path: string; folder: string | null; rel: string | null; snip: string }[];
     return rows.filter((r) => names.has(r.topic_key) && existsSync(r.path)).map((r) => ({ ...hitKind(r), topic: names.get(r.topic_key)!, title: r.title, snippet: r.snip.replace(/\s+/g, " ").trim(), path: r.path }));
   }
+}
+
+/** A file's text as a topic keeps it: at most TOPIC_LIMITS.sourceChars, saying where it was cut. */
+export function cutToSource(markdown: string): string {
+  if (markdown.length <= TOPIC_LIMITS.sourceChars) return markdown;
+  return `${markdown.slice(0, TOPIC_LIMITS.sourceChars)}\n\n[Cut here: the file's text was longer than ${TOPIC_LIMITS.sourceChars.toLocaleString("en-GB")} characters.]`;
 }
 
 /** What a hit is, as the tools and the page name it: a linked file says where it is. */

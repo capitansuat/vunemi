@@ -137,34 +137,34 @@ export interface PickedSources {
   stopped: boolean;
 }
 
+/** Whether Vunemi can read a file of this kind into a topic. */
+export const readableKind = (name: string, canConvert: boolean): boolean => {
+  const kind = extname(name).toLowerCase();
+  return TEXT_KINDS.includes(kind) || (canConvert && (MARKDOWN_KINDS as readonly string[]).includes(kind));
+};
+
+/** How many entries a walk has looked through: shared by the folders of one pick. */
+export interface WalkBudget {
+  scanned: number;
+}
+
 /**
- * Files and folders the user picked themselves (the Memory page). A folder
- * brings the files in it and in its subfolders: hidden entries, links and
- * packages are not followed. Kinds MarkItDown reads, not too large, at most
- * `room` files.
+ * The files in a folder and its subfolders that Vunemi can read, files of a
+ * folder first, then its subfolders, as Finder lists them. Hidden entries,
+ * links and packages are not followed; of files sharing a name, one is
+ * taken. At most FOLDER_SCAN_LIMIT entries are looked through.
  */
-export async function pickedSources(paths: readonly string[], canConvert: boolean, room: number): Promise<PickedSources> {
-  const out: PickedSources = { ok: [], refused: [], skipped: 0, left: 0, copies: 0, stopped: false };
-  const readable = (path: string) => {
-    const kind = extname(path).toLowerCase();
-    return TEXT_KINDS.includes(kind) || (canConvert && (MARKDOWN_KINDS as readonly string[]).includes(kind));
-  };
-  const seen = new Set<string>();
-  const take = (path: string, picked: boolean) => {
-    if (seen.has(path)) return;
-    seen.add(path);
-    if (!readable(path)) {
-      if (picked) out.refused.push({ path, error: t("topics.page.kind") });
-      else out.skipped++;
-    } else if (statSync(path).size > MAX_BYTES) out.refused.push({ path, error: t("topics.page.tooLarge", { size: `${MAX_BYTES / 1_000_000} MB` }) });
-    else if (out.ok.length >= room) out.left++;
-    else out.ok.push(path);
-  };
-  let scanned = 0;
-  const walk = async (dir: string): Promise<void> => {
+export async function walkFolder(
+  dir: string,
+  canConvert: boolean,
+  onFile: (path: string, size: number, mtime: number) => void,
+  budget: WalkBudget = { scanned: 0 },
+): Promise<{ skipped: number; copies: number; stopped: boolean }> {
+  const out = { skipped: 0, copies: 0, stopped: false };
+  const walk = async (folder: string): Promise<void> => {
     let entries;
     try {
-      entries = await readdir(dir, { withFileTypes: true });
+      entries = await readdir(folder, { withFileTypes: true });
     } catch {
       return; // A folder macOS won't let Vunemi read is left out, like a hidden one.
     }
@@ -173,7 +173,7 @@ export async function pickedSources(paths: readonly string[], canConvert: boolea
     // the same report as .html and .md, taking room and showing up twice.
     const kept = new Map<string, string>();
     for (const entry of entries) {
-      if (!entry.isFile() || entry.name.startsWith(".") || !readable(entry.name)) continue;
+      if (!entry.isFile() || entry.name.startsWith(".") || !readableKind(entry.name, canConvert)) continue;
       const stem = stemOf(entry.name);
       const other = kept.get(stem);
       if (other === undefined || preference(entry.name) < preference(other)) kept.set(stem, entry.name);
@@ -181,27 +181,59 @@ export async function pickedSources(paths: readonly string[], canConvert: boolea
     const dirs: string[] = [];
     for (const entry of entries) {
       if (out.stopped) return;
-      if (++scanned > FOLDER_SCAN_LIMIT) {
+      if (++budget.scanned > FOLDER_SCAN_LIMIT) {
         out.stopped = true;
         return;
       }
       if (entry.name.startsWith(".") || entry.isSymbolicLink()) continue;
-      const path = join(dir, entry.name);
+      const path = join(folder, entry.name);
       if (entry.isDirectory()) {
         if (!PACKAGE_KINDS.has(extname(entry.name).toLowerCase())) dirs.push(path);
       } else if (entry.isFile()) {
-        const best = kept.get(stemOf(entry.name));
-        if (best !== undefined && best !== entry.name && readable(entry.name)) out.copies++;
-        else take(path, false);
+        if (!readableKind(entry.name, canConvert)) out.skipped++;
+        else if (kept.get(stemOf(entry.name)) !== entry.name) out.copies++;
+        else {
+          let st;
+          try {
+            st = statSync(path);
+          } catch {
+            continue; // Gone while looking.
+          }
+          onFile(path, st.size, st.mtimeMs);
+        }
       }
     }
-    // Files of a folder first, then its subfolders, as Finder lists them.
     for (const sub of dirs) await walk(sub);
   };
+  await walk(dir);
+  return out;
+}
+
+/**
+ * Files and folders the user picked themselves (the Memory page). A folder
+ * brings the files in it and in its subfolders (walkFolder). Kinds MarkItDown
+ * reads, not too large, at most `room` files.
+ */
+export async function pickedSources(paths: readonly string[], canConvert: boolean, room: number): Promise<PickedSources> {
+  const out: PickedSources = { ok: [], refused: [], skipped: 0, left: 0, copies: 0, stopped: false };
+  const seen = new Set<string>();
+  const take = (path: string, size: number) => {
+    if (seen.has(path)) return;
+    seen.add(path);
+    if (size > MAX_BYTES) out.refused.push({ path, error: t("topics.page.tooLarge", { size: `${MAX_BYTES / 1_000_000} MB` }) });
+    else if (out.ok.length >= room) out.left++;
+    else out.ok.push(path);
+  };
+  const budget: WalkBudget = { scanned: 0 };
   for (const path of paths) {
     if (out.stopped) break;
-    if (statSync(path).isDirectory()) await walk(path);
-    else take(path, true);
+    if (statSync(path).isDirectory()) {
+      const walked = await walkFolder(path, canConvert, (file, size) => take(file, size), budget);
+      out.skipped += walked.skipped;
+      out.copies += walked.copies;
+      out.stopped = walked.stopped;
+    } else if (!readableKind(path, canConvert)) out.refused.push({ path, error: t("topics.page.kind") });
+    else take(path, statSync(path).size);
   }
   return out;
 }
