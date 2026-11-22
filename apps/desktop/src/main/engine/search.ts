@@ -15,8 +15,8 @@ const TRUSTED = new Set([
   "Qwen", "google", "mistralai", "microsoft", "openai", "ibm-granite", "meta-llama", "deepseek-ai", "nvidia",
 ]);
 
-/** Good quality per byte first; the first that fits the budget wins. */
-const PREFERRED = ["UD-Q4_K_XL", "Q4_K_M", "Q4_K_S", "UD-Q3_K_XL", "Q3_K_M"];
+/** Good quality per byte first; the first that fits the budget wins. IQ4_NL: what ggml-org publishes for new models. */
+const PREFERRED = ["UD-Q4_K_XL", "Q4_K_M", "Q4_K_S", "IQ4_NL", "UD-Q3_K_XL", "Q3_K_M"];
 
 const REPO = /^[A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/;
 
@@ -106,11 +106,11 @@ async function fetchRepo(repo: string, opts: HubOptions): Promise<RepoBody | nul
   return (await res.json()) as RepoBody;
 }
 
-function readRepo(repo: string, body: RepoBody | null, budget: number): Inspection {
+function readRepo(repo: string, body: RepoBody | null, budget: number, baseLicense: string | null = null): Inspection {
   const refuse = (reason: InspectReason): Inspection => ({ ok: false, repo, reason });
   if (!body) return refuse("notFound");
   if (body.gated !== undefined && body.gated !== false) return refuse("gated");
-  const license = licenseOf(body);
+  const license = licenseOf(body) ?? baseLicense;
   if (!license) return refuse("license");
   if (typeof body.sha !== "string" || !/^[0-9a-f]{40}$/.test(body.sha)) return refuse("notFound");
   const files = (body.siblings ?? []).flatMap((s): RepoFile[] =>
@@ -134,7 +134,22 @@ function readRepo(repo: string, body: RepoBody | null, budget: number): Inspecti
 
 export async function inspectRepo(repo: string, budget: number, opts: HubOptions = {}): Promise<Inspection> {
   if (!REPO.test(repo)) return { ok: false, repo, reason: "notFound" };
-  return readRepo(repo, await fetchRepo(repo, opts), budget);
+  const body = await fetchRepo(repo, opts);
+  return readRepo(repo, body, budget, body && !licenseOf(body) ? await licenseOfBase(body, opts) : null);
+}
+
+/**
+ * A converted model that names no licence (ggml-org's don't) carries the
+ * licence of the one model it was made from. Several bases, a gated base or
+ * one without a licence leave it unknown: Vunemi doesn't guess a licence.
+ */
+async function licenseOfBase(body: RepoBody, opts: HubOptions): Promise<string | null> {
+  const base = body.cardData?.base_model;
+  const only = typeof base === "string" ? base : Array.isArray(base) && base.length === 1 ? base[0] : null;
+  if (typeof only !== "string" || !REPO.test(only)) return null;
+  const card = await fetchRepo(only, opts);
+  if (!card || (card.gated !== undefined && card.gated !== false)) return null;
+  return licenseOf(card);
 }
 
 export interface PopularModel {

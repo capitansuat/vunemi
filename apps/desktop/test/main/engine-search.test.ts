@@ -44,6 +44,12 @@ describe("choosing the file", () => {
     expect(pickFile(files, 7 * 1e9)).toMatchObject({ name: "m-UD-Q3_K_XL.gguf" });
   });
 
+  it("takes IQ4_NL when a repository has no K quantisation, as ggml-org's often don't", () => {
+    const ggml = [file("m-BF16.gguf", 52), file("m-Q8_0.gguf", 27.8), file("m-IQ4_NL.gguf", 17.6), file("mmproj-m-Q8_0.gguf", 0.3)];
+    expect(pickFile(ggml, 32 * GiB)).toMatchObject({ name: "m-IQ4_NL.gguf" });
+    expect(pickFile([...ggml, file("m-Q4_K_S.gguf", 17)], 32 * GiB)).toMatchObject({ name: "m-Q4_K_S.gguf" });
+  });
+
   it("says when nothing fits, and when there is nothing to take", () => {
     expect(pickFile(files, 1e9)).toBe("tooBig");
     expect(pickFile([file("mmproj-F16.gguf", 0.2), file("m-F16.gguf", 2)], 16 * GiB)).toBe("none");
@@ -92,6 +98,25 @@ describe("inspecting a repository", () => {
   it("reads the licence from the tags when the card has none", async () => {
     const result = await inspectRepo("org/m", 16 * GiB, { fetchFn: fetchWith(repo({ cardData: {}, tags: ["gguf", "license:mit"] })) });
     expect(result).toMatchObject({ ok: true, license: "mit" });
+  });
+
+  it("takes the licence of the one model it was made from when it names none, as ggml-org's repositories do", async () => {
+    const urls: string[] = [];
+    const fetchFn = vi.fn(async (url: string) => {
+      urls.push(String(url));
+      return Response.json(String(url).includes("/maker/m?") ? { gated: false, cardData: { license: "apache-2.0" } } : repo({ cardData: { base_model: ["maker/m"] } }));
+    }) as unknown as typeof fetch;
+    expect(await inspectRepo("ggml-org/m-GGUF", 16 * GiB, { fetchFn })).toMatchObject({ ok: true, license: "apache-2.0" });
+    expect(urls[1]).toMatch(/^https:\/\/huggingface\.co\/api\/models\/maker\/m\?/);
+  });
+
+  it("refuses a licence it would have to guess: a gated or unlicensed base, or several bases", async () => {
+    const withBase = (base: unknown, baseBody: object) => vi.fn(async (url: string) =>
+      Response.json(String(url).includes("/org/m?") ? repo({ cardData: { base_model: base } }) : baseBody)) as unknown as typeof fetch;
+    const refused = { ok: false, repo: "org/m", reason: "license" };
+    expect(await inspectRepo("org/m", 16 * GiB, { fetchFn: withBase(["maker/m"], { gated: "manual", cardData: { license: "apache-2.0" } }) })).toEqual(refused);
+    expect(await inspectRepo("org/m", 16 * GiB, { fetchFn: withBase(["maker/m"], { gated: false, cardData: {} }) })).toEqual(refused);
+    expect(await inspectRepo("org/m", 16 * GiB, { fetchFn: withBase(["maker/a", "maker/b"], { gated: false, cardData: { license: "mit" } }) })).toEqual(refused);
   });
 
   it("refuses what it cannot download", async () => {
