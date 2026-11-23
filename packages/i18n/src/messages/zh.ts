@@ -1216,6 +1216,7 @@ export const messages: Catalogue = {
       outsideHome: "项目文件夹必须位于你的用户文件夹内。",
       home: "整个用户文件夹不能作为项目；请在其中选择一个文件夹。",
       library: "“资源库”（Library）文件夹保存应用数据；请选择其他文件夹。",
+      appData: "“AppData”文件夹保存应用数据；请选择其他文件夹。",
       hidden: "隐藏文件夹不能作为项目；请选择其他文件夹。",
       own: "此文件夹包含 Vunemi 自己的数据；请选择其他文件夹。",
     },

@@ -1216,6 +1216,7 @@ export const messages: Catalogue = {
       outsideHome: "Ein Projektordner muss in deinem Benutzerordner liegen.",
       home: "Dein ganzer Benutzerordner kann kein Projekt sein; wähle einen Ordner darin.",
       library: "Der Ordner „Library“ enthält die Daten von Apps; wähle einen anderen Ordner.",
+      appData: "Der Ordner „AppData“ enthält die Daten von Apps; wähle einen anderen Ordner.",
       hidden: "Ein versteckter Ordner kann kein Projekt sein; wähle einen anderen Ordner.",
       own: "Dieser Ordner enthält Vunemis eigene Daten; wähle einen anderen Ordner.",
     },

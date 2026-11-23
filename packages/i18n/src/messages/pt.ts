@@ -1216,6 +1216,7 @@ export const messages: Catalogue = {
       outsideHome: "Uma pasta de projeto precisa estar dentro da sua pasta de usuário.",
       home: "A pasta de usuário inteira não pode ser um projeto; escolha uma pasta dentro dela.",
       library: "A pasta Biblioteca (Library) guarda dados dos apps; escolha outra pasta.",
+      appData: "A pasta AppData guarda dados dos apps; escolha outra pasta.",
       hidden: "Uma pasta oculta não pode ser um projeto; escolha outra pasta.",
       own: "Esta pasta contém os dados do Vunemi; escolha outra pasta.",
     },

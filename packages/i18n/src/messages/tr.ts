@@ -1222,6 +1222,7 @@ export const messages = {
       outsideHome: "Proje klasörü kendi kullanıcı klasörünün içinde olmalı.",
       home: "Kullanıcı klasörünün tamamı proje olamaz; içinden bir klasör seç.",
       library: "Kitaplık (Library) klasörü uygulamaların verilerini tutar; başka bir klasör seç.",
+      appData: "AppData klasörü uygulamaların verilerini tutar; başka bir klasör seç.",
       hidden: "Gizli bir klasör proje olamaz; başka bir klasör seç.",
       own: "Bu klasör Vunemi'nin kendi verilerini içeriyor; başka bir klasör seç.",
     },

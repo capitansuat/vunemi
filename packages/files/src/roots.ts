@@ -57,9 +57,16 @@ export class PathRefused extends Error {
   }
 }
 
+/**
+ * Where the system keeps the three standard folders, when it isn't the home
+ * folder's own Desktop, Documents and Downloads: on Windows OneDrive often
+ * moves Desktop and Documents into OneDrive (sometimes under a local name).
+ */
+export type KnownFolders = { Desktop: string; Documents: string; Downloads: string };
+
 /** The folders a fresh install opens up. Everything else is closed. */
-export function defaultRoots(home = homedir()): string[] {
-  return [join(home, "Desktop"), join(home, "Documents"), join(home, "Downloads")];
+export function defaultRoots(home = homedir(), known: Partial<KnownFolders> = {}): string[] {
+  return [known.Desktop ?? join(home, "Desktop"), known.Documents ?? join(home, "Documents"), known.Downloads ?? join(home, "Downloads")];
 }
 
 /** What a Roots holds, sent to the session process so it can name files the way the tools do. */
@@ -68,6 +75,8 @@ export interface RootsSnapshot {
   projects: string[];
   active: string | null;
   granted: string[];
+  /** Only when the system keeps a standard folder elsewhere (see KnownFolders). */
+  known?: Partial<KnownFolders>;
 }
 
 export class Roots {
@@ -77,19 +86,24 @@ export class Roots {
   private active: string | null = null;
   /** Single files the user handed over by attaching them. Read-only, and only themselves. */
   private readonly granted = new Set<string>();
+  private readonly known: Partial<KnownFolders>;
 
-  constructor(roots: readonly string[] = defaultRoots()) {
+  constructor(roots: readonly string[] = defaultRoots(), opts: { known?: Partial<KnownFolders> } = {}) {
+    this.known = { ...opts.known };
     // Resolve the roots themselves too: on macOS /tmp and even the home
     // directory can be symlinks, and a root that isn't real can't be matched.
     this.base = roots.map((r) => realOrPlanned(resolve(r)));
   }
 
   snapshot(): RootsSnapshot {
-    return { roots: [...this.base], projects: [...this.projects], active: this.active, granted: [...this.granted] };
+    return {
+      roots: [...this.base], projects: [...this.projects], active: this.active, granted: [...this.granted],
+      ...(Object.keys(this.known).length > 0 && { known: { ...this.known } }),
+    };
   }
 
   static from(snapshot: RootsSnapshot): Roots {
-    const roots = new Roots(snapshot.roots);
+    const roots = new Roots(snapshot.roots, { ...(snapshot.known && { known: snapshot.known }) });
     roots.setProjects(snapshot.projects, snapshot.active);
     for (const file of snapshot.granted) roots.granted.add(file);
     return roots;
@@ -134,7 +148,7 @@ export class Roots {
     if (process.platform === "win32" && windowsPathProblem(expanded)) {
       throw new PathRefused(t("files.pathUnsupported", { path: raw }));
     }
-    const named = withAliases(expanded);
+    const named = withAliases(expanded, this.known);
     // "\Users\x\..." or "/Users/x/..." without a drive means "on the current
     // drive", which nobody chose: never taken as written. When it reads like a
     // home folder and the rest is open, the path it meant is said instead.
@@ -252,16 +266,23 @@ function realPath(path: string): string {
   return process.platform === "win32" ? realpathSync.native(path) : realpathSync(path);
 }
 
-function withAliases(path: string): string {
+function withAliases(path: string, known: Partial<KnownFolders> = {}): string {
   const segments = path.split(sep);
-  const mapped = segments.map((segment, i) => {
-    const english = ALIASES[plain(segment)];
-    if (!english) return segment;
+  const mapped: string[] = [];
+  for (const [i, segment] of segments.entries()) {
+    const english = ALIASES[plain(segment)] as keyof KnownFolders | undefined;
     // "Belgeler/rapor.txt" or "/Users/x/Belgeler/rapor.txt", not a file
     // called Belgeler halfway down some other tree.
-    const inHome = i === 0 || sameFolder(segments.slice(0, i).join(sep), homedir());
-    return inHome ? english : segment;
-  });
+    const inHome = english && (i === 0 || sameFolder(segments.slice(0, i).join(sep), homedir()));
+    if (!inHome) {
+      mapped.push(segment);
+      continue;
+    }
+    // Where the system keeps that folder, when it isn't in the home folder.
+    const moved = known[english];
+    if (moved) return join(moved, ...segments.slice(i + 1));
+    mapped.push(english);
+  }
   return mapped.join(sep);
 }
 
@@ -289,6 +310,8 @@ export function projectFolderProblem(folder: string, home = homedir(), own: read
   if (sameFolder(real, realHome)) return t("files.project.home");
   const inside = relative(realHome, real);
   if (inside === "Library" || inside.startsWith(`Library${sep}`)) return t("files.project.library");
+  // Windows' Library: every app's settings, caches and tokens.
+  if (process.platform === "win32" && within(join(realHome, inside), join(realHome, "AppData"))) return t("files.project.appData");
   if (hidden(inside)) return t("files.project.hidden");
   for (const path of own) {
     const mine = realOrPlanned(resolve(path));

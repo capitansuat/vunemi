@@ -1216,6 +1216,7 @@ export const messages: Catalogue = {
       outsideHome: "Una cartella di progetto deve trovarsi nella tua cartella utente.",
       home: "L'intera cartella utente non può essere un progetto; scegli una cartella al suo interno.",
       library: "La cartella Libreria (Library) contiene i dati delle app; scegli un'altra cartella.",
+      appData: "La cartella AppData contiene i dati delle app; scegli un'altra cartella.",
       hidden: "Una cartella nascosta non può essere un progetto; scegli un'altra cartella.",
       own: "Questa cartella contiene i dati di Vunemi; scegli un'altra cartella.",
     },

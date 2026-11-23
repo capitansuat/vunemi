@@ -11,7 +11,7 @@ import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createFileTools, PathRefused, Roots } from "../src/index.js";
+import { createFileTools, defaultRoots, PathRefused, Roots } from "../src/index.js";
 import { similarNames, spotlightQuery } from "../src/tools.js";
 const onWindows = process.platform === "win32";
 
@@ -293,6 +293,17 @@ describe("file tools", () => {
     // And a folder that happens to be called Belgeler somewhere else is not
     // quietly turned into Documents.
     expect(() => real.resolve("/tmp/Belgeler/x.txt")).toThrow(PathRefused);
+  });
+
+  it("opens the folders where the system keeps them, and the Finder names follow", () => {
+    // OneDrive moves Documents (and gives it a local name); the defaults have to follow.
+    const known = { Documents: join(homedir(), "OneDrive", "Belgeler") };
+    mkdirSync(known.Documents, { recursive: true });
+    expect(defaultRoots(homedir(), known)).toEqual([join(homedir(), "Desktop"), known.Documents, join(homedir(), "Downloads")]);
+    expect(defaultRoots(homedir())).toEqual([join(homedir(), "Desktop"), join(homedir(), "Documents"), join(homedir(), "Downloads")]);
+    const open = new Roots(defaultRoots(homedir(), known), { known });
+    expect(open.resolve(join("Belgeler", "rapor.txt"))).toBe(join(realpathSync(known.Documents), "rapor.txt"));
+    expect(open.resolve(join("~", "Belgeler", "rapor.txt"))).toBe(join(realpathSync(known.Documents), "rapor.txt"));
   });
 
   // -- reading -----------------------------------------------------------------

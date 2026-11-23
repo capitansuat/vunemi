@@ -1216,6 +1216,7 @@ export const messages: Catalogue = {
       outsideHome: "Un dossier de projet doit se trouver dans votre dossier utilisateur.",
       home: "Votre dossier utilisateur entier ne peut pas être un projet ; choisissez un dossier à l'intérieur.",
       library: "Le dossier Bibliothèque (Library) contient les données des apps ; choisissez un autre dossier.",
+      appData: "Le dossier AppData contient les données des apps ; choisissez un autre dossier.",
       hidden: "Un dossier masqué ne peut pas être un projet ; choisissez un autre dossier.",
       own: "Ce dossier contient les données de Vunemi ; choisissez un autre dossier.",
     },

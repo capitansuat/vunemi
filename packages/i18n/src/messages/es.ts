@@ -1216,6 +1216,7 @@ export const messages: Catalogue = {
       outsideHome: "Una carpeta de proyecto debe estar dentro de tu carpeta de usuario.",
       home: "Tu carpeta de usuario completa no puede ser un proyecto; elige una carpeta dentro de ella.",
       library: "La carpeta Biblioteca (Library) guarda datos de las apps; elige otra carpeta.",
+      appData: "La carpeta AppData guarda datos de las apps; elige otra carpeta.",
       hidden: "Una carpeta oculta no puede ser un proyecto; elige otra carpeta.",
       own: "Esta carpeta contiene los datos de Vunemi; elige otra carpeta.",
     },

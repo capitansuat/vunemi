@@ -1216,6 +1216,7 @@ export const messages: Catalogue = {
       outsideHome: "A project folder has to be inside your own user folder.",
       home: "Your whole user folder can't be a project; choose a folder inside it.",
       library: "The Library folder holds apps' data; choose another folder.",
+      appData: "The AppData folder holds apps' data; choose another folder.",
       hidden: "A hidden folder can't be a project; choose another folder.",
       own: "This folder holds Vunemi's own data; choose another folder.",
     },
