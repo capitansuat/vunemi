@@ -5,7 +5,7 @@
  */
 import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
 import type { ProjectView } from "../shared/ipc.js";
 
 export interface Project {
@@ -78,7 +78,7 @@ export class ProjectStore {
       const value = JSON.parse(readFileSync(this.file, "utf8")) as Stored;
       if (value?.version !== 1 || !Array.isArray(value.projects)) return [];
       return value.projects.filter(
-        (p) => ID.test(String(p?.id)) && typeof p.folder === "string" && p.folder.startsWith("/") && typeof p.name === "string",
+        (p) => ID.test(String(p?.id)) && typeof p.folder === "string" && isAbsolute(p.folder) && typeof p.name === "string",
       );
     } catch {
       return [];

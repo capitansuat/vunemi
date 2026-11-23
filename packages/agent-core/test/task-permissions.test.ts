@@ -1,4 +1,6 @@
 import {it,expect} from 'vitest';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {TaskPermissionStore} from '../src/task-permissions.js';
 const owner={sessionId:'s',taskId:'t',runId:'r'},epoch={registration:1,policy:1,task:1};
 const d={effect:'file-read' as const,target:{kind:'file' as const,path:'/fixture/a.txt',name:'a.txt'},identity:{kind:'file' as const,path:'/fixture/a.txt',device:'1',inode:'2',size:'3',mtimeNs:'4',ctimeNs:'5'}};
@@ -19,4 +21,12 @@ it('checks a live offer without consuming or publishing it and never revives an 
  const fresh=store.offer('c','files_read',d,{...epoch,policy:2});expect(store.canApprove(old.offerId,old.revision,owner,'c')).toBe(false);expect(store.canApprove(fresh.offerId,fresh.revision,owner,'c')).toBe(true);
  const grant=store.approve(fresh.offerId,fresh.revision,reordered,'c');expect(store.canApprove(fresh.offerId,fresh.revision,owner,'c')).toBe(false);
  store.bind(reordered);expect(store.match(owner,'files_read',d,{...epoch,policy:2})).toBe(grant);
+});
+it('accepts a file-read permission for an absolute path of the system it runs on, and still refuses a relative one',()=>{
+ const here=join(tmpdir(),'fixture','a.txt');
+ const local={...d,target:{...d.target,path:here},identity:{...d.identity,path:here}};
+ const store=new TaskPermissionStore();store.bind(owner);
+ expect(()=>store.offer('c','files_read',local,epoch)).not.toThrow();
+ const relative={...d,target:{...d.target,path:'fixture/a.txt'},identity:{...d.identity,path:'fixture/a.txt'}};
+ expect(()=>store.offer('r','files_read',relative,epoch)).toThrow();
 });
