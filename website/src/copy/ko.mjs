@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.3.0의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.4.0의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.3.0을 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.4.0을 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.3.0 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.4.0 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -189,9 +189,10 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "이제 Vunemi가 Word, PowerPoint, Excel, PDF 파일과 웹 페이지 등을 제목과 표를 유지한 Markdown 파일로 변환할 수 있습니다. 메모 앱이나 다른 어시스턴트에서 사용할 수 있습니다. 변환은 Mac에서 네트워크 없이 이루어지며 파일을 덮어쓰지 않습니다.",
-      "사용하지 않아도 Vunemi는 이전처럼 이 파일들을 읽지만 표는 단순한 줄로 들어옵니다. 변환기는 Microsoft의 MarkItDown이며 자체 Python과 함께 앱에 내장되어 있어 아무것도 설치할 필요가 없습니다. 그만큼 앱과 이번 업데이트의 크기가 커졌습니다.",
-      "Vunemi가 직접 변환한 파일을 다시 읽을 때 더 이상 지어낸 내용으로 판단하지 않습니다. 파일이나 시트에 관한 질문에 약 1분 뒤 같은 답변이 한 번 더 표시되는 일도 없어졌습니다.",
+      "새 기능: 주제. 자주 다루는 주제를 Mac의 Markdown 페이지 폴더로 보관하고 내 폴더를 연결할 수 있습니다. Vunemi는 파일을 그 자리에서 읽고, 어떤 파일이 어디로 연결되는지와 SKU 같은 코드를 어느 파일이 정의하는지 기록하며, “Index” 페이지에서 시작해 파일을 출처로 밝히는 페이지를 씁니다.",
+      "많은 파일을 한 번 검색하는 것만으로는 답이 있는 파일을 놓치는 경우가 많기 때문입니다. 무거운 작업은 Vunemi가 쉬고 있을 때만 실행됩니다. 주제가 없어도 작업에서 건넨 파일은 예전처럼 읽습니다. 페이지의 품질은 모델에 따라 다릅니다.",
+      "내장 엔진이 새 버전으로 바뀌어 Inkling 2를 실행합니다. 이제 ggml-org에서도 모델을 내려받을 수 있으며, 엔진이 모델을 불러오지 못하면 메모리나 모델의 도구 탓으로 돌리지 않고 그 사실을 알려 줍니다.",
+      "음성 채팅이 더 이상 “중지됨.”을 읽지 않습니다. 비밀번호 입력란에서는 텍스트를 바꾸지 않는 키만 누릅니다. macOS가 권한을 다시 요청할 수 있습니다. “모두 승인”과 예약 작업이 이름이 번역된 앱을 인식합니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",

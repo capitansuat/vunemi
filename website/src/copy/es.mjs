@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un asistente personal que funciona en tu Mac", description: "Vunemi ayuda con las tareas diarias. La IA funciona en tu Mac, sin cuenta en la nube de Vunemi. Tú eliges qué servicios externos conectar." },
-    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.3.0." },
+    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.4.0." },
     screens: { title: "Pantallas de Vunemi", description: "Pantallas reales de la app Vunemi para Mac, capturadas con datos de ejemplo." },
-    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.3.0 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
+    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.4.0 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
   },
   hero: {
     eyebrow: "Asistente personal para Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Todo lo que puede hacer Vunemi",
-    intro: "Vunemi 0.3.0 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
+    intro: "Vunemi 0.4.0 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
     chatTitle: "Trabajar con Vunemi",
     chat: [
       { title: "Primero, el plan", body: "En una tarea de varios pasos, Vunemi puede mostrarte antes el plan. Adelante, edita los pasos o cancela." },
@@ -189,9 +189,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novedades de esta versión",
     highlights: [
-      "Vunemi ahora convierte archivos de Word, PowerPoint, Excel y PDF, páginas web y más en archivos Markdown que conservan títulos y tablas, para una app de notas u otro asistente. Funciona en tu Mac sin acceso a la red y nunca reemplaza un archivo.",
-      "Sin ello, Vunemi lee esos archivos como antes, pero las tablas llegan como líneas sueltas. El conversor es MarkItDown de Microsoft, integrado con su propio Python: no instalas nada. Por eso la app y esta actualización pesan más.",
-      "Cuando Vunemi vuelve a leer un archivo que convirtió, ya no lo da por inventado. Una pregunta sobre un archivo o una hoja ya no recibe la misma respuesta una segunda vez, un minuto después.",
+      "Nuevo: temas. Guarda un asunto al que vuelves como carpeta de páginas Markdown en tu Mac y vincula tus carpetas: Vunemi las lee donde están, anota qué archivos enlazan a cuáles y cuáles definen códigos como SKU, y escribe páginas que citan sus archivos, empezando por la página «Index».",
+      "Existe porque una sola búsqueda en muchos archivos a menudo no encuentra el que tiene la respuesta. El trabajo pesado solo se hace cuando Vunemi está inactivo. Sin temas, Vunemi lee como antes los archivos que le das en una tarea. La calidad de las páginas depende del modelo.",
+      "El motor integrado es más nuevo y ejecuta Inkling 2. Vunemi ya puede descargar modelos de ggml-org y, cuando el motor no puede cargar un modelo, lo dice en vez de culpar a la memoria o a las herramientas del modelo.",
+      "El chat de voz ya no lee en voz alta «Detenido.». En un campo de contraseña, Vunemi solo pulsa teclas que no cambian el texto; puede que macOS vuelva a pedir sus permisos. «Aprobar todo» y las tareas programadas ahora reconocen apps con nombre traducido.",
     ],
     title: "Descarga Vunemi",
     intro: "Gratis y de código abierto. Para Mac con Apple Silicon y macOS 14 o posterior.",

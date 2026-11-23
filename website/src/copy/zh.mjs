@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.3.0 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.4.0 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.3.0，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.4.0，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.3.0：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.4.0：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -189,9 +189,10 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "Vunemi 现在可以把 Word、PowerPoint、Excel 和 PDF 文件、网页等转换为保留标题和表格的 Markdown 文件，方便用于笔记应用或其他助手。转换在你的 Mac 上进行，不联网，也绝不替换任何文件。",
-      "不使用它时，Vunemi 照常读取这些文件，只是表格会变成普通的文本行。转换器是微软的 MarkItDown，连同它自己的 Python 一起内置在应用中，你无需安装任何东西；因此应用和这次更新的体积更大。",
-      "Vunemi 重新读取自己转换的文件时，不再把它当作编造的内容。关于文件或表格的问题，也不会在大约一分钟后再收到一遍相同的回答。",
+      "新功能：主题。把你常回顾的主题保存为 Mac 上的 Markdown 页面文件夹，并链接你自己的文件夹：Vunemi 在原处读取文件，记录哪些文件链接到哪里、哪些定义了 SKU 这类代码，并从名为“Index”的页面开始，写出注明文件出处的页面。",
+      "这样做是因为对大量文件只搜索一次，常会漏掉包含答案的那个文件。繁重的工作只在 Vunemi 空闲时运行。没有主题时，Vunemi 仍像以前一样读取你在任务中提供的文件。页面的质量取决于模型。",
+      "内置引擎已更新，可以运行 Inkling 2。Vunemi 现在也能从 ggml-org 下载模型；当引擎无法加载某个模型时，它会直接说明，而不是归咎于内存或模型的工具。",
+      "语音聊天不再朗读“已停止。”。在密码框中，Vunemi 只按不会改变文本的键；macOS 可能会再次请求权限。“全部批准”和定时任务现在能识别名称经过翻译的应用。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",
