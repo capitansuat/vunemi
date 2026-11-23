@@ -23,7 +23,7 @@ import { BrowserController, checkNavigation, trustableHost } from "@vunemi/brows
 import { defaultRoots, projectFolderProblem, Roots, type KnownFolders } from "@vunemi/files";
 import { Helper, scheduledApp } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type MeetingsSharedView, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
+import { CH, emergencyStopAccelerator, type AddonId, type MeetingsSharedView, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
@@ -2457,8 +2457,9 @@ void app.whenReady().then(async () => {
     macAway = false;
     send(CH.lockChanged, lockState());
   });
-  if (!globalShortcut.register(EMERGENCY_STOP_ACCELERATOR, emergencyStop)) {
-    console.error(`[vunemi] could not register the emergency stop shortcut ${EMERGENCY_STOP_ACCELERATOR}`);
+  const stopKeys = emergencyStopAccelerator(process.platform);
+  if (!globalShortcut.register(stopKeys, emergencyStop)) {
+    console.error(`[vunemi] could not register the emergency stop shortcut ${stopKeys}`);
   }
   // The menu bar keeps Vunemi alive with no window, so runs continue.
   app.on("activate", () => (quitting ? reopenAfterQuit() : showWindow()));
