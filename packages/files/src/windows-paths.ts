@@ -34,3 +34,19 @@ export function windowsPathProblem(path: string): "unsupported" | null {
   }
   return null;
 }
+
+/**
+ * Whether `path` is `root` or inside it. Windows compares names without regard
+ * to letter case (NTFS does), so a path the model wrote as DOCUMENTS is inside
+ * Documents there; elsewhere the comparison is exact, as it always was.
+ */
+export function within(path: string, root: string, system: NodeJS.Platform = process.platform): boolean {
+  const sep = system === "win32" ? "\\" : "/";
+  const [p, r] = system === "win32" ? [path.toLowerCase(), root.toLowerCase()] : [path, root];
+  return p === r || p.startsWith(r + sep);
+}
+
+/** The same folder: exact elsewhere, without regard to letter case on Windows. */
+export function sameFolder(a: string, b: string, system: NodeJS.Platform = process.platform): boolean {
+  return system === "win32" ? a.toLowerCase() === b.toLowerCase() : a === b;
+}

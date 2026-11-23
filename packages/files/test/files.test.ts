@@ -4,7 +4,7 @@ import { t } from "@vunemi/i18n";
  * what they are. Each test is one escape that has to fail, or one change that
  * has to be undoable.
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { crc32 } from "node:zlib";
 import { chmodSync, existsSync, linkSync, unlinkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
@@ -150,12 +150,12 @@ describe("file tools", () => {
   // -- the walls ---------------------------------------------------------------
 
   // Windows: paths and open folders on Windows are plan 2.
-  it.skipIf(onWindows)("points a bare name to the open folder that has it, without reading it", async () => {
+  it("points a bare name to the open folder that has it, without reading it", async () => {
     const downloads = join(home, "Downloads");
     mkdirSync(downloads);
     writeFileSync(join(downloads, "fatura.txt"), "x");
     const two = new Map(createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots: new Roots([root, downloads]), shadowDir: join(home, "shadow") }).map((t) => [t.name, t]));
-    await expect(two.get("files_read")!.run({ path: "fatura.txt" } as never, ctx())).rejects.toThrow(/Downloads\/fatura\.txt/);
+    await expect(two.get("files_read")!.run({ path: "fatura.txt" } as never, ctx())).rejects.toThrow(join("Downloads", "fatura.txt"));
   });
 
   it("reads only the start of a large text file, and says how big it is", async () => {
@@ -190,6 +190,42 @@ describe("file tools", () => {
   it("refuses a path outside the open folders", async () => {
     await expect(call("files_read", { path: "/etc/hosts" })).rejects.toThrow(PathRefused);
     await expect(call("files_read", { path: join(homedir(), ".ssh", "id_rsa") })).rejects.toThrow(/dışında|gizli/);
+  });
+
+  it.runIf(onWindows)("takes ~/ and ~\\ and forward slashes on Windows", () => {
+    mkdirSync(join(homedir(), "Documents"), { recursive: true });
+    const open = new Roots([join(homedir(), "Documents")]);
+    const want = join(realpathSync.native(homedir()), "Documents", "a.txt");
+    for (const path of ["~/Documents/a.txt", "~\\Documents\\a.txt", homedir().replaceAll("\\", "/") + "/Documents/a.txt"]) {
+      expect(open.resolve(path), path).toBe(want);
+    }
+  });
+
+  it.runIf(onWindows)("accepts a path in another letter case and returns the disk's", () => {
+    writeFileSync(join(root, "a.txt"), "x");
+    expect(new Roots([root]).resolve(join(root, "a.txt").toUpperCase())).toBe(join(realpathSync.native(root), "a.txt"));
+  });
+
+  it.runIf(onWindows)("refuses a hidden folder named by its short name", () => {
+    const secret = join(root, ".secretsfolder");
+    mkdirSync(secret);
+    writeFileSync(join(secret, "k.txt"), "x");
+    const short = spawnSync("cmd.exe", ["/d", "/s", "/c", `"for %I in ("${secret}") do @echo %~sI"`], { encoding: "utf8", windowsVerbatimArguments: true }).stdout.trim();
+    // A volume with 8.3 names turned off has no short name to test.
+    if (short.toLowerCase() === secret.toLowerCase()) return;
+    expect(short).not.toContain(".secrets");
+    expect(() => new Roots([root]).resolve(join(short, "k.txt"))).toThrow(PathRefused);
+    expect(() => new Roots([root]).resolve(join(short, "k.txt"))).toThrow(t("files.hidden", { path: join(short, "k.txt") }));
+  });
+
+  it.runIf(onWindows)("follows junctions like links", () => {
+    const outside = join(home, "disari");
+    mkdirSync(outside);
+    symlinkSync(outside, join(root, "kisayol"), "junction");
+    expect(() => new Roots([root]).resolve(join(root, "kisayol", "x.txt"))).toThrow(PathRefused);
+    mkdirSync(join(root, "alt"));
+    symlinkSync(join(root, "alt"), join(root, "icerde"), "junction");
+    expect(new Roots([root]).resolve(join(root, "icerde", "x.txt"))).toBe(join(realpathSync.native(root), "alt", "x.txt"));
   });
 
   it.runIf(onWindows)("refuses Windows device and stream paths before touching the disk", () => {
@@ -236,8 +272,7 @@ describe("file tools", () => {
     expect(existsSync(join(home, "yeni.txt"))).toBe(false);
   });
 
-  // Windows: paths and open folders on Windows are plan 2.
-  it.skipIf(onWindows)("understands the folder names Finder shows, not just the ones on disk", () => {
+  it("understands the folder names Finder shows, not just the ones on disk", () => {
     // These only resolve when the real folder is open anyway, which is why
     // accepting them costs nothing.
     const real = new Roots([join(homedir(), "Documents"), join(homedir(), "Desktop")]);

@@ -17,7 +17,7 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, normalize, parse, relative, resolve, sep } from "node:path";
 import { t } from "@vunemi/i18n";
-import { windowsPathProblem } from "./windows-paths.js";
+import { sameFolder, windowsPathProblem, within } from "./windows-paths.js";
 
 /**
  * Finder shows these folders with Turkish names while the disk keeps the
@@ -128,8 +128,10 @@ export class Roots {
     if (!raw) throw new PathRefused(t("files.pathNeeded"));
     if (raw.includes("\0")) throw new PathRefused(t("files.pathInvalid"));
 
-    const expanded = raw === "~" || raw.startsWith(`~${sep}`) ? join(homedir(), raw.slice(1)) : raw;
-    if (process.platform === "win32" && windowsPathProblem(expanded.replace(/\//g, "\\"))) {
+    // Windows takes / as well as \; models write both, and ~/ most of all.
+    const written = process.platform === "win32" ? raw.replace(/\//g, "\\") : raw;
+    const expanded = written === "~" || written.startsWith(`~${sep}`) ? join(homedir(), written.slice(1)) : written;
+    if (process.platform === "win32" && windowsPathProblem(expanded)) {
       throw new PathRefused(t("files.pathUnsupported", { path: raw }));
     }
     const named = withAliases(expanded);
@@ -141,7 +143,7 @@ export class Roots {
     const real = realOrPlanned(absolute);
 
     // The deepest match: a project inside Documents is judged as the project.
-    const root = roots.filter((r) => real === r || real.startsWith(r + sep)).sort((a, b) => b.length - a.length)[0];
+    const root = roots.filter((r) => within(real, r)).sort((a, b) => b.length - a.length)[0];
     if (!root && access === "read" && this.granted.has(real)) return real;
     if (!root) {
       // "/Users/vunemi/Downloads/x", "/home/user/Downloads/x": a home folder
@@ -152,7 +154,7 @@ export class Roots {
       const guessed = /^\/(Users|home)\/([^/]+)\/(.+)$/.exec(absolute);
       if (guessed && !existsSync(join(sep, guessed[1]!, guessed[2]!))) {
         const meant = join(realOrPlanned(homedir()), guessed[3]!);
-        if (roots.some((r) => meant === r || meant.startsWith(r + sep))) {
+        if (roots.some((r) => within(meant, r))) {
           throw new PathRefused(t("files.wrongHome", { path: raw, fixed: `~/${guessed[3]}` }));
         }
       }
@@ -186,7 +188,7 @@ export class Roots {
     }
     if (!file) throw new PathRefused(t("files.grantNotFile", { name: parse(real).base }));
     const home = homedir();
-    const inside = real.startsWith(home + sep) ? relative(home, real) : parse(real).base;
+    const inside = !sameFolder(real, home) && within(real, home) ? relative(home, real) : parse(real).base;
     if (hidden(inside)) throw new PathRefused(t("files.grantHidden", { name: parse(real).base }));
     this.granted.add(real);
     return real;
@@ -214,7 +216,7 @@ function realOrPlanned(path: string): string {
   const tail: string[] = [];
   for (;;) {
     try {
-      return join(realpathSync(at), ...tail);
+      return join(realPath(at), ...tail);
     } catch {
       const { dir, base } = parse(at);
       if (!base || dir === at) return path; // nothing of it exists; take it as written
@@ -228,6 +230,15 @@ function realOrPlanned(path: string): string {
  * Rewrites a Turkish folder name to the one on disk. Only whole segments,
  * and only names that are folders in the home directory anyway.
  */
+/**
+ * The real path of something that exists. On Windows the system's own answer:
+ * it also expands 8.3 short names (a dot folder's short name has no dot) and
+ * gives the names in the disk's letter case.
+ */
+function realPath(path: string): string {
+  return process.platform === "win32" ? realpathSync.native(path) : realpathSync(path);
+}
+
 function withAliases(path: string): string {
   const segments = path.split(sep);
   const mapped = segments.map((segment, i) => {
@@ -235,7 +246,7 @@ function withAliases(path: string): string {
     if (!english) return segment;
     // "Belgeler/rapor.txt" or "/Users/x/Belgeler/rapor.txt", not a file
     // called Belgeler halfway down some other tree.
-    const inHome = i === 0 || segments.slice(0, i).join(sep) === homedir();
+    const inHome = i === 0 || sameFolder(segments.slice(0, i).join(sep), homedir());
     return inHome ? english : segment;
   });
   return mapped.join(sep);
@@ -255,20 +266,20 @@ function hidden(relativePath: string): boolean {
 export function projectFolderProblem(folder: string, home = homedir(), own: readonly string[] = []): string | null {
   let real: string;
   try {
-    real = realpathSync(resolve(folder));
+    real = realPath(resolve(folder));
     if (!statSync(real).isDirectory()) return t("files.project.notFolder");
   } catch {
     return t("files.project.notFolder");
   }
   const realHome = realOrPlanned(home);
-  if (real !== realHome && !real.startsWith(realHome + sep)) return t("files.project.outsideHome");
-  if (real === realHome) return t("files.project.home");
+  if (!within(real, realHome)) return t("files.project.outsideHome");
+  if (sameFolder(real, realHome)) return t("files.project.home");
   const inside = relative(realHome, real);
   if (inside === "Library" || inside.startsWith(`Library${sep}`)) return t("files.project.library");
   if (hidden(inside)) return t("files.project.hidden");
   for (const path of own) {
     const mine = realOrPlanned(resolve(path));
-    if (real === mine || real.startsWith(mine + sep) || mine.startsWith(real + sep)) return t("files.project.own");
+    if (within(real, mine) || within(mine, real)) return t("files.project.own");
   }
   return null;
 }
