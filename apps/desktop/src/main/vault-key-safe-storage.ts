@@ -1,17 +1,19 @@
 /**
- * The Vault's key on Linux.
+ * The Vault's key on Linux and Windows.
  *
  * macOS keeps the key in the login Keychain behind a signed Swift helper.
- * Linux has neither, so the key is kept in a file in the data folder,
- * encrypted by Electron's safeStorage, which on Linux asks the desktop's
- * keyring (libsecret: GNOME Keyring, KeePassXC…; or KWallet) for its own key.
+ * Linux and Windows have neither, so the key is kept in a file in the data
+ * folder, encrypted by Electron's safeStorage. On Linux safeStorage asks the
+ * desktop's keyring (libsecret: GNOME Keyring, KeePassXC…; or KWallet) for its
+ * own key; on Windows it uses DPAPI, which ties the file to the user's
+ * Windows sign-in, so another account or another PC can't open it.
  *
  * Where there is no keyring, safeStorage falls back to "basic_text": a key
  * built into Chromium, which protects nothing. Then Vunemi stores no secret
  * at all and tells the user what to install. It never writes a vault key, or
  * a secret, that anyone with the file could read.
  *
- * safeStorage exists only in the main process, so on Linux the key passes
+ * safeStorage exists only in the main process, so the key passes
  * through main on its way to the Vault process; main keeps no copy.
  *
  * File format: "VKL1" | safeStorage ciphertext of the base64 key.
@@ -21,6 +23,7 @@ import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from "nod
 import { join } from "node:path";
 
 export const LINUX_KEY_FILE = "vault-key.linux";
+export const WINDOWS_KEY_FILE = "vault-key.windows";
 const MAGIC = Buffer.from("VKL1", "ascii");
 const KEY_BYTES = 32;
 
@@ -30,7 +33,8 @@ export const KEYRING_BACKENDS: ReadonlySet<string> = new Set(["gnome_libsecret",
 /** The part of Electron's safeStorage this needs; a fake in tests. */
 export interface SafeStorageLike {
   isEncryptionAvailable(): boolean;
-  getSelectedStorageBackend(): string;
+  /** Electron has it on Linux only. */
+  getSelectedStorageBackend?(): string;
   encryptString(plain: string): Buffer;
   decryptString(cipher: Buffer): string;
 }
@@ -43,10 +47,12 @@ export type LinuxKeyResult =
   | { ok: false; reason: "unreadable"; detail: string };
 
 /** Which backend safeStorage uses, and whether it is one that protects anything. */
-export function keyringState(storage: SafeStorageLike): { backend: string; usable: boolean } {
+export function keyringState(storage: SafeStorageLike, system: NodeJS.Platform = process.platform): { backend: string; usable: boolean } {
   // Asking whether encryption is available is what makes safeStorage pick its backend.
   const available = storage.isEncryptionAvailable();
-  const backend = storage.getSelectedStorageBackend();
+  // Windows has one backend, DPAPI, and protects with it whenever it is available.
+  if (system === "win32") return { backend: "dpapi", usable: available };
+  const backend = storage.getSelectedStorageBackend?.() ?? "unknown";
   return { backend, usable: available && KEYRING_BACKENDS.has(backend) };
 }
 
@@ -55,10 +61,10 @@ export function keyringState(storage: SafeStorageLike): { backend: string; usabl
  * decrypted is never replaced: the secrets sealed with it stay recoverable if
  * the keyring that made it comes back.
  */
-export function linuxVaultKey(storage: SafeStorageLike, userData: string): LinuxKeyResult {
-  const { backend, usable } = keyringState(storage);
+export function safeStorageVaultKey(storage: SafeStorageLike, userData: string, system: NodeJS.Platform = process.platform): LinuxKeyResult {
+  const { backend, usable } = keyringState(storage, system);
   if (!usable) return { ok: false, reason: "no-keyring", backend };
-  const file = join(userData, LINUX_KEY_FILE);
+  const file = join(userData, system === "win32" ? WINDOWS_KEY_FILE : LINUX_KEY_FILE);
   if (existsSync(file)) {
     try {
       const sealed = readFileSync(file);
@@ -83,3 +89,6 @@ export function linuxVaultKey(storage: SafeStorageLike, userData: string): Linux
   }
   return { ok: true, key, created: true };
 }
+
+/** The Linux name, kept for the callers that predate Windows. */
+export const linuxVaultKey = (storage: SafeStorageLike, userData: string): LinuxKeyResult => safeStorageVaultKey(storage, userData, "linux");
