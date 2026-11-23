@@ -729,7 +729,9 @@ describe("add-on packs", () => {
     for (const pack of PACKS) for (const made of pack.tools(deps(), { paper: () => "A4" })) expect(typeof made.check, made.name).toBe("function");
     const sheet = tools.get("sheet_make")!;
     // A home folder the model made up: outside the open folders, and said so.
-    expect(await sheet.check!({ path: "/Users/someone-else/Downloads/giderler.xlsx", rows: [["a"]] })).toContain(folder);
+    // (On Windows a path without a drive is refused as such; the drive form is the same case.)
+    const madeUp = onWindows ? "C:\\Users\\someone-else\\Downloads\\giderler.xlsx" : "/Users/someone-else/Downloads/giderler.xlsx";
+    expect(await sheet.check!({ path: madeUp, rows: [["a"]] })).toContain(folder);
     expect(await sheet.check!({ path: join(folder, "giderler.xlsx"), rows: [["a"]] })).toBeNull();
     writeFileSync(join(folder, "var.xlsx"), "mine");
     expect(await sheet.check!({ path: join(folder, "var.xlsx"), rows: [["a"]] })).toBeTruthy();
