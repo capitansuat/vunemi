@@ -85,6 +85,16 @@ describe("the Linux wording", () => {
     // A key without a Linux wording falls through to the catalogue.
     expect(t("vault.unlock")).toBe(en.vault.unlock);
   });
+
+  it("uses the this-computer wording on Windows, not the Mac one", () => {
+    setLocale("en");
+    setSystem("win32");
+    try {
+      expect(t("app.local")).toBe("The model and your data stay on this computer.");
+    } finally {
+      setSystem("darwin");
+    }
+  });
 });
 
 describe("catalogues", () => {

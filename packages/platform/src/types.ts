@@ -6,7 +6,7 @@
  * can say "not on Linux yet" rather than offer something that fails.
  */
 
-export type PlatformId = "darwin" | "linux";
+export type PlatformId = "darwin" | "linux" | "win32";
 
 /**
  * Parts of Vunemi that exist on one system only. `true` means the feature is
