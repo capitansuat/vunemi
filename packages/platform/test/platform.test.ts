@@ -56,8 +56,8 @@ describe("platform layer", () => {
     expect(isPlatformId("win32")).toBe(true);
   });
 
-  it("starts Windows with every macOS feature off and nothing to run", () => {
-    for (const id of FEATURE_IDS) expect(windows.features[id], id).toBe(false);
+  it("starts Windows with every macOS feature off but reading aloud, and nothing to run", () => {
+    for (const id of FEATURE_IDS) expect(windows.features[id], id).toBe(id === "speakAloud");
     expect(windows.id).toBe("win32");
     expect(windows.vaultKey).toBe("safe-storage");
     expect(windows.fileSearch).toBe("walk");

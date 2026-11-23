@@ -20,7 +20,7 @@ export const WINDOWS_FEATURES: PlatformFeatures = {
   inAppUpdates: false,
   archives: false,
   atomicMove: false,
-  speakAloud: false,
+  speakAloud: true,
 };
 
 /** Where Windows builds are downloaded by hand until the app can update itself. */

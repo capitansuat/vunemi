@@ -29,6 +29,7 @@ import { platform } from "@vunemi/platform";
 
 import type { VoiceStatus } from "../shared/ipc.js";
 import { download, type DownloadProgress } from "./engine/download.js";
+import { spawnWindowsSpeech, windowsVoiceCultures } from "./speech-windows.js";
 import type { ModelSource } from "./engine/catalog.js";
 
 export type { VoiceStatus };
@@ -122,7 +123,7 @@ function voiceFor(locale: Locale): string | null {
 // A whisper-server the user installed themselves: Homebrew's on macOS, a distribution's or a local build on Linux.
 const SERVER_PATHS = platform.id === "darwin" ? ["/opt/homebrew/bin/whisper-server", "/usr/local/bin/whisper-server"] : ["/usr/local/bin/whisper-server", "/usr/bin/whisper-server"];
 
-/** Answers are spoken with macOS's own voices (say); elsewhere there is nothing to speak with yet. */
+/** Answers are spoken with the system's own voices: say on macOS, System.Speech on Windows; Linux has none yet. */
 const CAN_SPEAK = platform.features.speakAloud;
 
 /** Long enough to survive a pause in dictation, short enough to give the RAM back. */
@@ -336,14 +337,19 @@ export class Voice {
     // In the reply's own language, not the app's: an English Vunemi read
     // "Dört" with an English voice. The writing decides when it can; else
     // the language the user just spoke, which the reply answers in.
-    const voice = voiceFor(writtenIn(said) ?? this.heardLanguage ?? getLocale());
+    const locale = writtenIn(said) ?? this.heardLanguage ?? getLocale();
     const dir = join(this.userData, "speech");
     if (!this.swept) rmSync(dir, { recursive: true, force: true });
     this.swept = true;
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const file = join(dir, `${randomUUID()}.wav`);
-    // Arguments, never a shell: this is model output and may contain anything.
-    const child = spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "-o", file, "--data-format=LEI16@22050", "--", said], { stdio: "ignore" });
+    // Arguments or stdin, never a shell: this is model output and may contain anything.
+    const child = platform.id === "win32"
+      ? spawnWindowsSpeech(said, windowsVoiceCultures[locale], file)
+      : (() => {
+        const voice = voiceFor(locale);
+        return spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "-o", file, "--data-format=LEI16@22050", "--", said], { stdio: "ignore" });
+      })();
     this.speaking = child;
     return new Promise<Buffer>((resolve, reject) => {
       const done = (code: number | null) => {
