@@ -4,11 +4,10 @@
  * behaviour a real server might show is a switch, so the outbox can be tried
  * against refusals and dropped connections without any network.
  */
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { createServer, type Server, type Socket } from "node:net";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { TLSSocket } from "node:tls";
 
 export interface FakeSmtpOptions {
@@ -32,18 +31,15 @@ export interface Received {
 }
 
 /** A throwaway certificate for "localhost", made with the system's openssl. */
+/**
+ * A fixed self-signed certificate for localhost, made once with openssl and
+ * kept in test/fixtures, so the tests run where openssl is not installed
+ * (Windows). Test-only: the key belongs to a server bound to 127.0.0.1 for
+ * the length of a test and protects nothing.
+ */
 export function makeCertificate(): { key: string; cert: string } {
-  const dir = mkdtempSync(join(tmpdir(), "vunemi-smtp-cert-"));
-  try {
-    execFileSync("/usr/bin/openssl", [
-      "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
-      "-keyout", join(dir, "key.pem"), "-out", join(dir, "cert.pem"),
-      "-subj", "/CN=localhost", "-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1",
-    ], { stdio: "ignore" });
-    return { key: readFileSync(join(dir, "key.pem"), "utf8"), cert: readFileSync(join(dir, "cert.pem"), "utf8") };
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  const fixtures = fileURLToPath(new URL("./fixtures/", import.meta.url));
+  return { key: readFileSync(join(fixtures, "localhost-key.pem"), "utf8"), cert: readFileSync(join(fixtures, "localhost-cert.pem"), "utf8") };
 }
 
 export class FakeSmtp {
