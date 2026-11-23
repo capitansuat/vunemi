@@ -13,7 +13,8 @@ vi.mock("node:fs", async (orig) => {
 describe("syncFolder", () => {
   afterEach(() => vi.mocked(fs.fsyncSync).mockClear());
 
-  it("fsyncs the folder itself on macOS and Linux", () => {
+  // Windows: opening a folder and fsyncing it is exactly what Windows refuses (EPERM), so this case runs on macOS and Linux only.
+  it.skipIf(process.platform === "win32")("fsyncs the folder itself on macOS and Linux", () => {
     const dir = mkdtempSync(join(tmpdir(), "vunemi-sync-"));
     syncFolder(dir, "darwin");
     syncFolder(dir, "linux");
