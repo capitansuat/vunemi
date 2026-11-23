@@ -73,7 +73,7 @@ describe("markdown_convert", () => {
     const out = await tool("markdown_convert").run({ paths: [report, deck] }, ctx());
     expect(calls).toEqual([[join("in", "0", "Rapor.docx"), join("out", "0.md"), join("in", "1", "Sunum.pptx"), join("out", "1.md")]]);
     expect(readFileSync(join(folder, "Rapor.md"), "utf8")).toBe(`# ${join("in", "0", "Rapor.docx")}`);
-    expect(readFileSync(join(folder, "Sunum.md"), "utf8")).toBe("# in/1/Sunum.pptx");
+    expect(readFileSync(join(folder, "Sunum.md"), "utf8")).toBe(`# ${join("in", "1", "Sunum.pptx")}`);
     expect(readFileSync(report, "utf8")).toBe("original");
     expect(produced).toEqual([{ kind: "file", path: join(folder, "Rapor.md") }, { kind: "file", path: join(folder, "Sunum.md") }]);
     expect(out).toContain(`Created ${join(folder, "Rapor.md")} (17 characters).`);

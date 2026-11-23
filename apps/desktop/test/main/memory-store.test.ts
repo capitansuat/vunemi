@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { keywordQuery, MemoryStore } from "../../src/main/memory/store.js";
+const onWindows = process.platform === "win32";
 
 let dir = "";
 let store: MemoryStore;
@@ -108,10 +109,11 @@ describe("MemoryStore", () => {
     expect(store.keyword("b", 5)).toEqual([]);
   });
 
+  // Windows: file-heavy; about three times slower in the Windows VM than on a Mac.
   it("holds at most 500 notes", async () => {
     for (let i = 0; i < 500; i++) await store.add({ text: `Note ${i}`, kind: "topic", evidence: said(`note ${i}`) });
     await expect(store.add({ text: "One more", kind: "topic", evidence: said("one more") })).rejects.toThrow();
-  });
+  }, onWindows ? 60_000 : undefined);
 
   it("withholds a note the Vault now recognises as a secret from searches", async () => {
     const a = await store.add({ text: "Code word bluefin", kind: "topic", evidence: said("code word bluefin") });

@@ -1,6 +1,7 @@
 import {beforeAll,afterEach,afterAll,expect,it,vi} from 'vitest';
 import {fork,type ChildProcess} from 'node:child_process';
 import {esbuild} from './fixtures/esbuild-cli.js';
+const onWindows=process.platform==='win32';
 import {mkdtempSync,rmSync,realpathSync} from 'node:fs';
 import {homedir,tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
@@ -49,7 +50,8 @@ it('real worker task permission revoke validates exact owner before cancelling t
  await expect(f.host.revokeTaskPermission({sessionId:'synthetic-session',runId:'old-run',grantId:grant.grantId,expectedRevision:snapshot.revision})).rejects.toThrow(/Stale/);expect(signal?.aborted).toBe(false);
  await f.host.revokeTaskPermission({sessionId:'synthetic-session',runId:approval.runId,grantId:grant.grantId,expectedRevision:snapshot.revision});expect(signal?.aborted).toBe(true);await pending;expect(read).toHaveBeenCalledOnce();
 },15000);
-it('real worker matches a Craft output written as ~/ with the file the tool produced',async()=>{
+// Windows: a model's ~/ path is resolved by the open-folder rules, which come to Windows in plan 2.
+it.skipIf(onWindows)('real worker matches a Craft output written as ~/ with the file the tool produced',async()=>{
  const home=realpathSync(homedir()),saved=join(home,'vunemi-synthetic-missing','rates.xlsx');
  const make=vi.fn(async(_args:unknown,ctx:import('@vunemi/agent-core').ToolContext)=>{ctx.produced?.({kind:'file',path:saved});return'Created ~/vunemi-synthetic-missing/rates.xlsx';});
  const tools=new ToolRegistry().register({name:'files_write',description:'Write a synthetic file',parameters:{type:'object',properties:{path:{type:'string'},content:{type:'string'}},required:['path','content']},actionClass:'write-local',resolveFile:(args:{path?:unknown})=>String(args.path).replace(/^~(?=\/)/,home),run:async()=> 'unused'},'files').register({name:'sheet_make',description:'Make a synthetic workbook',parameters:{type:'object',properties:{path:{type:'string'},rows:{type:'array'}},required:['path','rows']},actionClass:'write-local',run:make},'addon:sheets');let calls=0;

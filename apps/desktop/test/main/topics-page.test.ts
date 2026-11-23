@@ -302,6 +302,7 @@ describe("the user's own changes", () => {
     expect(await pickedSources([join(tree, "term.html"), join(tree, "term.md")], true, 200)).toMatchObject({ ok: [join(tree, "term.html"), join(tree, "term.md")], copies: 0 });
   });
 
+  // Windows: file-heavy; about three times slower in the Windows VM than on a Mac.
   it("adds no more files than the topic has room for, and stops looking through a huge folder", async () => {
     const tree = join(base, "Many");
     mkdirSync(tree);
@@ -311,7 +312,7 @@ describe("the user's own changes", () => {
     mkdirSync(huge);
     for (let i = 0; i <= FOLDER_SCAN_LIMIT; i++) writeFileSync(join(huge, `x${String(i).padStart(5, "0")}.bin`), "");
     expect(await pickedSources([huge], false, 200)).toMatchObject({ ok: [], skipped: FOLDER_SCAN_LIMIT, stopped: true });
-  });
+  }, onWindows ? 60_000 : undefined);
 
   it("shows in Finder only what the topic holds", () => {
     store.writeNote("Home renovation", { title: "Budget", text: "Total", by: "vunemi", sources: [] });

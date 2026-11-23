@@ -13,6 +13,7 @@ import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setLocale } from "@vunemi/i18n";
 import { clean, findModel, noSpeech, Voice, VOICE_MODEL } from "../../src/main/voice.js";
+const onWindows = process.platform === "win32";
 
 const run = promisify(execFile);
 
@@ -149,7 +150,8 @@ describe("the voice as the model manager sees it", () => {
     expect(voice.pid()).toBeNull();
   });
 
-  it("is busy from the moment a clip is asked for, while the server starts, until it settles", async () => {
+  // Windows: the fake whisper-server is a shell script; dictation on Windows needs a Windows build of whisper.cpp, which no plan covers yet.
+  it.skipIf(onWindows)("is busy from the moment a clip is asked for, while the server starts, until it settles", async () => {
     const folder = mkdtempSync(join(tmpdir(), "vunemi-voice-"));
     mkdirSync(join(folder, "models"));
     writeFileSync(join(folder, "models", VOICE_MODEL.file), "");
