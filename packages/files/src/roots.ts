@@ -135,6 +135,16 @@ export class Roots {
       throw new PathRefused(t("files.pathUnsupported", { path: raw }));
     }
     const named = withAliases(expanded);
+    // "\Users\x\..." or "/Users/x/..." without a drive means "on the current
+    // drive", which nobody chose: never taken as written. When it reads like a
+    // home folder and the rest is open, the path it meant is said instead.
+    if (process.platform === "win32" && named.startsWith("\\")) {
+      const rest = /^\\(?:Users|home)\\[^\\]+\\(.+)$/i.exec(named)?.[1];
+      if (rest && this.list().some((r) => within(join(realOrPlanned(homedir()), rest), r))) {
+        throw new PathRefused(t("files.wrongHome", { path: raw, fixed: `~\\${rest}` }));
+      }
+      throw new PathRefused(t("files.pathUnsupported", { path: raw }));
+    }
     // A bare name belongs to the first open folder; a Finder name like
     // "Belgeler/rapor.txt" names a folder in the home directory.
     const roots = this.list();
@@ -151,11 +161,14 @@ export class Roots {
       // only "outside the open folders", Qwen3.8 35B decided the folder was
       // missing and wrote elsewhere. Read from the path as given: macOS keeps
       // /home somewhere else, and nothing here exists to be a link.
-      const guessed = /^\/(Users|home)\/([^/]+)\/(.+)$/.exec(absolute);
-      if (guessed && !existsSync(join(sep, guessed[1]!, guessed[2]!))) {
+      // On Windows the same shape with a drive: C:\Users\someone-else\...
+      const guessed = process.platform === "win32"
+        ? /^([A-Za-z]:\\Users)\\([^\\]+)\\(.+)$/i.exec(absolute)
+        : /^\/(Users|home)\/([^/]+)\/(.+)$/.exec(absolute);
+      if (guessed && !existsSync(process.platform === "win32" ? join(guessed[1]!, guessed[2]!) : join(sep, guessed[1]!, guessed[2]!))) {
         const meant = join(realOrPlanned(homedir()), guessed[3]!);
         if (roots.some((r) => within(meant, r))) {
-          throw new PathRefused(t("files.wrongHome", { path: raw, fixed: `~/${guessed[3]}` }));
+          throw new PathRefused(t("files.wrongHome", { path: raw, fixed: `~${sep}${guessed[3]}` }));
         }
       }
       throw new PathRefused(

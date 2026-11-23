@@ -236,7 +236,18 @@ describe("file tools", () => {
     expect(() => open.grant(join(root, "a.txt:gizli"))).toThrow(t("files.pathUnsupported", { path: join(root, "a.txt:gizli") }));
   });
 
-  // Windows: paths and open folders on Windows are plan 2.
+  it.runIf(onWindows)("names a home folder the model made up on Windows, and never takes a path without a drive as written", () => {
+    const open = new Roots([join(homedir(), "Downloads")]);
+    const fixed = "~\\Downloads\\deneme\\giderler.xlsx";
+    for (const path of ["C:\\Users\\no-such-user-vunemi\\Downloads\\deneme\\giderler.xlsx", "/Users/no-such-user-vunemi/Downloads/deneme/giderler.xlsx"]) {
+      expect(() => open.resolve(path), path).toThrow(t("files.wrongHome", { path, fixed }));
+    }
+    // The drive form of what isn't open is refused plainly; a path without a drive is never taken as written.
+    expect(() => open.resolve("C:\\Users\\no-such-user-vunemi\\Documents\\a.txt")).toThrow(/dışında/);
+    expect(() => open.resolve("\\Windows\\x.txt")).toThrow(t("files.pathUnsupported", { path: "\\Windows\\x.txt" }));
+    expect(() => open.resolve("/Users/no-such-user-vunemi/Documents/a.txt")).toThrow(t("files.pathUnsupported", { path: "/Users/no-such-user-vunemi/Documents/a.txt" }));
+  });
+
   it.skipIf(onWindows)("names a home folder the model made up, and gives the path it meant", () => {
     const open = new Roots([join(homedir(), "Downloads")]);
     // Refused, never quietly rewritten: the card would name one path and the file land at another.
