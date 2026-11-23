@@ -12,6 +12,7 @@ import { setLocale } from "@vunemi/i18n";
 import { TopicStore } from "../../src/main/topics/store.js";
 import { SHOWN_CHARS, topicPage, type TopicPageDeps } from "../../src/main/topics/page.js";
 import { FOLDER_SCAN_LIMIT, pickedSources } from "../../src/main/topics/tools.js";
+const onWindows = process.platform === "win32";
 
 let base: string;
 let store: TopicStore;
@@ -138,7 +139,8 @@ describe("the user's own changes", () => {
     expect(page.note("Home renovation", "Budget")).toBeNull();
   });
 
-  it("deletes notes and sources to the Trash", async () => {
+  // Windows: the Recycle Bin comes in plan 3.
+  it.skipIf(onWindows)("deletes notes and sources to the Trash", async () => {
     store.writeNote("Home renovation", { title: "Budget", text: "Total", by: "vunemi", sources: [] });
     store.addSource("Home renovation", { original: "/a/offer.pdf", markdown: "Tiles", bytes: 5, sha256: "a".repeat(64) });
     await page.deleteNote("Home renovation", "budget");

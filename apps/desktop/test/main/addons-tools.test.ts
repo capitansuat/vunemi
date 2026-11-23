@@ -21,6 +21,7 @@ import { timed, videoTools } from "../../src/main/addons/tools/video.js";
 import { drawingTools, inert } from "../../src/main/addons/tools/drawing.js";
 import { column, sheetTools } from "../../src/main/addons/tools/sheets.js";
 import { answers, editArgs, editOf, outline, slideTools, type Seen } from "../../src/main/addons/tools/slides.js";
+const onWindows = process.platform === "win32";
 
 let base = "";
 let folder = "";
@@ -134,7 +135,8 @@ describe("sheet_make", () => {
     expect(existsSync(join(folder, "kur.xlsx"))).toBe(false);
   });
 
-  it("shows the table as the program lays it out, and makes the file even when no picture can be drawn", async () => {
+  // Windows: add-ons run inside macOS's sandbox; macOS only.
+  it.skipIf(onWindows)("shows the table as the program lays it out, and makes the file even when no picture can be drawn", async () => {
     const drawn: string[] = [];
     const withPicture = (picture: (html: string) => Promise<Uint8Array>) => tool(sheetTools({ ...deps(), picture: async (html) => (drawn.push(html), picture(html)) }), "sheet_make");
     await withPicture(async () => new Uint8Array([1, 2, 3])).run({ path: join(folder, "a.xlsx"), rows }, ctx());
@@ -176,7 +178,8 @@ describe("sheet_make", () => {
 describe("document_make", () => {
   const list = (paper: "A4" | "Letter" = "A4") => documentTools(deps(), { paper: () => paper });
 
-  it("writes Word on the region's paper and shows the first page", async () => {
+  // Windows: add-ons run inside macOS's sandbox; macOS only.
+  it.skipIf(onWindows)("writes Word on the region's paper and shows the first page", async () => {
     answer = (args) => (args[0] === "info" ? { stdout: '{"pages":3}' } : {});
     const out = await tool(list(), "document_make").run({ path: join(folder, "rapor.docx"), markdown: "# Rapor\n\nMetin." }, ctx());
     expect(files["in.md"]).toBe("# Rapor\n\nMetin.");
@@ -279,7 +282,8 @@ describe("slides_make", () => {
   const make = () => tool(slideTools(deps()), "slides_make");
   const cmds = () => calls[0]!.args.filter((_, i, all) => all[i - 1] === "--cmd");
 
-  it("builds the deck slide by slide, without the bullets the model typed", async () => {
+  // Windows: add-ons run inside macOS's sandbox; macOS only.
+  it.skipIf(onWindows)("builds the deck slide by slide, without the bullets the model typed", async () => {
     const out = await make().run(
       {
         path: join(folder, "sunum.pptx"),
@@ -768,7 +772,8 @@ describe("add-on packs", () => {
     expect(calls).toEqual([]);
   });
 
-  it("gives every pack an area with a guide, and no two the same name", () => {
+  // Windows: add-ons run inside macOS's sandbox; macOS only.
+  it.skipIf(onWindows)("gives every pack an area with a guide, and no two the same name", () => {
     const areas = addonAreas([folder]);
     expect(areas.map((a) => a.id)).toEqual(PACKS.map((p) => p.area));
     // Every guide ends by saying where files may go, and how the home folder is written.
@@ -805,7 +810,8 @@ describe("add-on packs", () => {
 });
 
 describe("add-on jobs", () => {
-  it("runs the program in a folder of its own and removes the folder afterwards", async () => {
+  // Windows: add-ons run inside macOS's sandbox; macOS only.
+  it.skipIf(onWindows)("runs the program in a folder of its own and removes the folder afterwards", async () => {
     const seen: { program: string; job: string; home: string; engineDir: string }[] = [];
     const run = createEngines({
       addons: { binary: (id) => (id === "sheets" ? "/engines/gridcraft-cli" : null), engineDir: () => "/engines" },

@@ -17,7 +17,8 @@ describe("the personality file", () => {
     expect(soul.write("  Kısa yaz.\r\nBana sen de.\u0007  ")).toBe("Kısa yaz.\nBana sen de.");
     expect(readFileSync(join(dir, "soul.md"), "utf8")).toBe("Kısa yaz.\nBana sen de.\n");
     // The user's alone to read.
-    expect(statSync(join(dir, "soul.md")).mode & 0o077).toBe(0);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(dir, "soul.md")).mode & 0o077).toBe(0);
     expect(new Soul(dir).read()).toBe("Kısa yaz.\nBana sen de.");
   });
 

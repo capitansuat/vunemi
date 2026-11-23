@@ -22,7 +22,8 @@ describe("MemoryStore", () => {
     const note = await store.add({ text: "  I want reports as PDF  ", kind: "general", evidence: said("reports as PDF please") });
     expect(note).toMatchObject({ text: "I want reports as PDF", kind: "general", confirmed: 1, givenAt: null });
     expect(note.evidence).toEqual([said("reports as PDF please")]);
-    expect(statSync(join(dir, "memory.db")).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(dir, "memory.db")).mode & 0o777).toBe(0o600);
     store.close();
     store = new MemoryStore(dir);
     expect(store.list()).toEqual([note]);

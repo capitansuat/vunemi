@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { bridgeBinary, bridgeSetup } from "../../src/main/meetings/bridge.js";
 import { SettingsStore } from "../../src/main/settings.js";
+const onWindows = process.platform === "win32";
 
 let dir: string;
 
@@ -37,7 +38,8 @@ describe("bridgeSetup", () => {
   const binary = "/Applications/Vunemi.app/Contents/Resources/VunemiMeetings";
   const home = "/Users/ada";
 
-  it("names only the program when the data folder is the one it looks in by itself", () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("names only the program when the data folder is the one it looks in by itself", () => {
     const { claude, codex } = bridgeSetup(binary, `${home}/Library/Application Support/Vunemi`, home);
     expect(JSON.parse(claude)).toEqual({ mcpServers: { "vunemi-meetings": { command: binary } } });
     expect(codex).toBe(`[mcp_servers.vunemi-meetings]\ncommand = "${binary}"`);

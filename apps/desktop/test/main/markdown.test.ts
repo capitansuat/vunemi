@@ -71,8 +71,8 @@ describe("markdown_convert", () => {
     const report = put("Rapor.docx");
     const deck = put("Sunum.pptx");
     const out = await tool("markdown_convert").run({ paths: [report, deck] }, ctx());
-    expect(calls).toEqual([["in/0/Rapor.docx", "out/0.md", "in/1/Sunum.pptx", "out/1.md"]]);
-    expect(readFileSync(join(folder, "Rapor.md"), "utf8")).toBe("# in/0/Rapor.docx");
+    expect(calls).toEqual([[join("in", "0", "Rapor.docx"), join("out", "0.md"), join("in", "1", "Sunum.pptx"), join("out", "1.md")]]);
+    expect(readFileSync(join(folder, "Rapor.md"), "utf8")).toBe(`# ${join("in", "0", "Rapor.docx")}`);
     expect(readFileSync(join(folder, "Sunum.md"), "utf8")).toBe("# in/1/Sunum.pptx");
     expect(readFileSync(report, "utf8")).toBe("original");
     expect(produced).toEqual([{ kind: "file", path: join(folder, "Rapor.md") }, { kind: "file", path: join(folder, "Sunum.md") }]);
@@ -139,7 +139,7 @@ describe("markdown_read", () => {
     const read = tool("markdown_read");
     expect(read.actionClass).toBe("read");
     expect(read.untrustedOutput).toBe(true);
-    expect(await read.run({ path: put("Rapor.docx") }, ctx())).toBe("# in/0/Rapor.docx");
+    expect(await read.run({ path: put("Rapor.docx") }, ctx())).toBe(`# ${join("in", "0", "Rapor.docx")}`);
     expect(readdirSync(folder)).toEqual(["Rapor.docx"]);
     expect(produced).toEqual([]);
   });

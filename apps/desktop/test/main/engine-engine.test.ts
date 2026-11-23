@@ -2,6 +2,7 @@ import { chmodSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { Engine, serverArgs, type EngineSnapshot, type EngineOptions } from "../../src/main/engine/engine.js";
+const onWindows = process.platform === "win32";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-llama-server.mjs", import.meta.url));
 const spec = { id: "m", path: "/models/m.gguf", context: 32_768 };
@@ -42,7 +43,8 @@ describe("serverArgs", () => {
 });
 
 describe("the built-in engine", () => {
-  it("starts the server and answers only with its key", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("starts the server and answers only with its key", async () => {
     const { engine, states } = make();
     const endpoint = await engine.ensure(spec);
     expect(engine.snapshot).toEqual({ state: "ready", model: "m" });
@@ -55,13 +57,15 @@ describe("the built-in engine", () => {
     expect(engine.endpoint("other")).toBeNull();
   });
 
-  it("waits for a slow start, and starts only once for two callers", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("waits for a slow start, and starts only once for two callers", async () => {
     const { engine } = make({ env: { ...process.env, FAKE_ENGINE_MODE: "slow" } });
     const [a, b] = await Promise.all([engine.ensure(spec), engine.ensure(spec)]);
     expect(a).toEqual(b);
   });
 
-  it("loads the model again when its context length changes", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("loads the model again when its context length changes", async () => {
     const { engine } = make();
     const first = await engine.ensure(spec);
     expect(await engine.ensure(spec)).toEqual(first);
@@ -71,7 +75,8 @@ describe("the built-in engine", () => {
     expect(args[args.indexOf("-c") + 1]).toBe("65536");
   });
 
-  it("loads the vision part when there is one, and again when it changes", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("loads the vision part when there is one, and again when it changes", async () => {
     expect(serverArgs({ ...spec, projector: "/models/m.mmproj.gguf" }, 1, "k").slice(-2)).toEqual(["--mmproj", "/models/m.mmproj.gguf"]);
     expect(serverArgs(spec, 1, "k")).not.toContain("--mmproj");
     const { engine } = make();
@@ -80,21 +85,24 @@ describe("the built-in engine", () => {
     expect(second.baseUrl).not.toBe(first.baseUrl);
   });
 
-  it("lets go of memory when idle", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("lets go of memory when idle", async () => {
     const { engine } = make({ idleMs: 150 });
     const endpoint = await engine.ensure(spec);
     await until(() => engine.snapshot.state === "idle");
     await expect(fetch(`${endpoint.baseUrl.replace(/\/v1$/, "")}/health`)).rejects.toThrow();
   });
 
-  it("stays while there is work", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("stays while there is work", async () => {
     const { engine } = make({ idleMs: 100, isBusy: () => true });
     await engine.ensure(spec);
     await new Promise((r) => setTimeout(r, 400));
     expect(engine.snapshot.state).toBe("ready");
   });
 
-  it("restarts once after a crash, then gives up", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("restarts once after a crash, then gives up", async () => {
     const { engine } = make();
     const first = await engine.ensure(spec);
     const die = (e: typeof first) =>
@@ -105,14 +113,16 @@ describe("the built-in engine", () => {
     await until(() => engine.snapshot.state === "failed");
   });
 
-  it("says why it could not start", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("says why it could not start", async () => {
     const { engine } = make({ env: { ...process.env, FAKE_ENGINE_MODE: "crash" } });
     await expect(engine.ensure(spec)).rejects.toThrow(/does not fit/);
     expect(engine.snapshot.state).toBe("failed");
     expect(engine.snapshot.error).toMatch(/does not fit/);
   });
 
-  it("tells a model it can't load from one that doesn't fit in memory", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("tells a model it can't load from one that doesn't fit in memory", async () => {
     const unknown = make({ env: { ...process.env, FAKE_ENGINE_MODE: "unknown" } }).engine;
     await expect(unknown.ensure(spec)).rejects.toThrow(/model loading error/);
     expect(unknown.snapshot).toMatchObject({ state: "failed", cause: "model" });
@@ -132,7 +142,8 @@ describe("the built-in engine", () => {
     expect(engine.snapshot).toEqual({ state: "idle", model: null });
   });
 
-  it("starts the next launch after a stop during a load, and leaves it running", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("starts the next launch after a stop during a load, and leaves it running", async () => {
     const { engine } = make({ env: { ...process.env, FAKE_ENGINE_MODE: "slow" } });
     const loading = engine.ensure(spec).then(() => "ready", () => "rejected");
     await new Promise((r) => setTimeout(r, 150));
@@ -151,7 +162,8 @@ describe("the built-in engine", () => {
     await expect(engine.ensure(spec)).rejects.toThrow();
   });
 
-  it("says which process holds the model and what it was launched with", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("says which process holds the model and what it was launched with", async () => {
     const { engine } = make();
     expect(engine.pid()).toBeNull();
     expect(engine.loaded()).toBeNull();
@@ -165,7 +177,8 @@ describe("the built-in engine", () => {
 });
 
 describe("a server left behind", () => {
-  it("is stopped when Vunemi starts again after a crash", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("is stopped when Vunemi starts again after a crash", async () => {
     const { mkdtempSync, writeFileSync, readFileSync, existsSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
