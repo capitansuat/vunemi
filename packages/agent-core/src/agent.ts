@@ -1,3 +1,4 @@
+import { baseNameOf, tildeMatches } from "./path-names.js";
 import {copyQuotedSource,quotedSourceContext,type QuotedSource} from './quoted-source.js';
 import {outcomeWorkflow,automaticOutcomeCompletions} from './outcome-progress.js';
 import {validOutcomeEvidence,requiresOutcomeEvidence,mutationRequestFingerprint,type OutcomeEvidence} from './outcome-evidence.js';
@@ -448,7 +449,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const readBackFiles = new Set<string>();
   /** Files a converter (ToolDef.convertsFiles) made in this run, and nothing has written to since. */
   const convertedFiles = new Set<string>();
-  const sameFile = (a:string,b:string) => a===b || (b.startsWith("~/")&&a.endsWith(b.slice(1))) || (a.startsWith("~/")&&b.endsWith(a.slice(1)));
+  const sameFile = (a:string,b:string) => a===b || tildeMatches(b,a) || tildeMatches(a,b);
   const converted = (path:string|undefined) => !!path && [...convertedFiles].some(p=>sameFile(p,path));
   const writtenTo = (path:string) => { for(const p of [...convertedFiles]) if(sameFile(p,path)) convertedFiles.delete(p); };
   const requestedTextOutputs=[...new Set(explicitWriteTargets(opts.resumeTask?.goal ?? opts.goal)
@@ -483,11 +484,11 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       const file = fileCalls.get(event.callId);
       if (file && ["files_write", "files_edit"].includes(file.tool)) {
         unverifiedFiles.add(file.path); readBackFiles.delete(file.path); writtenTo(file.path);
-        if(file.path.startsWith("~/")) for(const p of [...readBackFiles]) if(p.endsWith(file.path.slice(1))) { readBackFiles.delete(p); unverifiedFiles.add(p); }
+        for(const p of [...readBackFiles]) if(tildeMatches(file.path,p)) { readBackFiles.delete(p); unverifiedFiles.add(p); }
       }
       if (file?.tool === "files_read" && file.checked) {
         const matching = [...unverifiedFiles, ...trackedTasks.flatMap(t => t.outputs.flatMap(o => o.kind === "file" ? [o.path] : []))]
-          .filter(p => p === file.path || (file.path.startsWith("~/") && p.endsWith(file.path.slice(1))));
+          .filter(p => p === file.path || tildeMatches(file.path,p));
         unverifiedFiles.delete(file.path); readBackFiles.add(file.path);
         for (const p of matching) { unverifiedFiles.delete(p); readBackFiles.add(p); }
       }
@@ -1376,7 +1377,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       const suggested=pending.flatMap(callId => {
         const path=fileCalls.get(callId)?.path ?? (task.outputs.length===1 && task.outputs[0]?.kind==="file" ? task.outputs[0].path : undefined);
         if(!path)return [];
-        const name=path.split("/").at(-1)!;
+        const name=baseNameOf(path);
         const index=task.steps.findIndex(s => (s.status!=="completed" || s.evidence!=="tool_result") && s.title.includes(name));
         return index<0?[]:[{tool:"task_update",arguments:{step:index+1,status:"completed",evidenceCallIds:[callId]},basis:"This output was saved successfully; only use this suggestion after checking its actual contents."}];
       });
@@ -1728,8 +1729,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       if (destinations.length && !destinations.includes(String(path)))
         return fail(call, `This write target differs from the user's explicit output path. Use one of these actual paths: ${JSON.stringify(requested)}. Do not prefix a connector label such as Files:. Nothing was written.`,false,true);
       const saved = trackedTasks.find(t => t.activeRunId === runId)?.outputs.filter(o => o.kind === "file") ?? [];
-      const suffix = typeof path === "string" && path.startsWith("~/") ? path.slice(1) : null;
-      if (saved.some(o => o.kind === "file" && (o.path === path || (suffix && o.path.endsWith(suffix)))))
+      if (saved.some(o => o.kind === "file" && (o.path === path || (typeof path === "string" && tildeMatches(path, o.path)))))
         return fail(call, "This output was already saved by this task. Do not write it again to get a new receipt. Read and verify it, reuse this task's successful receipt, and finish the remaining outputs. Corrections must use files_edit after reading the actual defect.", false, true);
     }
     if (tool.name === "present_options") {
@@ -1881,7 +1881,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       if (tool.name === "files_read") {
         const original=(parsed.value as {path?:string}).path;
         const path=typeof original === "string" ? canonicalFile(tool.name,parsed.value as Record<string,unknown>,original) : original;
-        const generated=trackedTasks.some(t => t.outputs.some(o => o.kind === "file" && (o.path === path || (path?.startsWith("~/") && o.path.endsWith(path.slice(1))))));
+        const generated=trackedTasks.some(t => t.outputs.some(o => o.kind === "file" && (o.path === path || (path !== undefined && tildeMatches(path, o.path)))));
         // A converter's output holds what the original holds: the checks for invented
         // currencies, years and averages, and the source review, are for model-written text.
         const conversion=generated&&converted(path);
@@ -1913,7 +1913,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           const latestWrite=operations.findLastIndex(op=>op.status==="completed" && op.fileEvidence?.kind==="write" && (op.fileEvidence.path===path||op.fileEvidence.paths?.includes(path!)));
           const prior=reusable && fingerprint && latestWrite>=0 ? operations.slice(latestWrite+1).findLast(op=>op.status==="completed" && op.fileEvidence?.kind==="verified-read" && (op.fileEvidence.path===path||op.fileEvidence.paths?.includes(path!)) && op.fileEvidence.review?.version===1 && op.fileEvidence.review.fingerprint===fingerprint) : undefined;
           if(!prior){
-            const issues=await reviewOutput(model,opts.resumeTask?.goal ?? opts.goal,sourceTexts.join("\n"),raw,signal,usage=>emit({type:"usage",runId,stepId,...usage}),path?.split("/").at(-1),requirements ?? "");
+            const issues=await reviewOutput(model,opts.resumeTask?.goal ?? opts.goal,sourceTexts.join("\n"),raw,signal,usage=>emit({type:"usage",runId,stepId,...usage}),(path === undefined ? undefined : baseNameOf(path)),requirements ?? "");
             if(issues.length) throw new Error(officePath(path??'')?officeReviewFailure(path!,`Source verification failed: ${JSON.stringify(issues)}.`,officeRepairAdvice(path!)):`Source verification failed: ${JSON.stringify(issues)}. Correct the specific defects with files_edit and verify again. Do not rewrite already correct files.`);
           }
           if(fingerprint)fileReview={version:1,fingerprint,mode:prior?"reused":"independent"};
@@ -2257,7 +2257,7 @@ async function attachedImages(
     const unseen = NO_VISION.replace("only this text is available", "the attached images are only paths");
     if (!readText) return { listed: [...attachments], images: [], note: `\n\n${unseen}` };
     const notes: string[] = [];
-    for (const path of pictures) notes.push(`${defuseTags(path.split("/").pop() ?? path)}: ${await imageText(path, readText, unseen)}`);
+    for (const path of pictures) notes.push(`${defuseTags(baseNameOf(path))}: ${await imageText(path, readText, unseen)}`);
     return { listed: [...attachments], images: [], note: `\n\n${notes.join("\n\n")}` };
   }
   const images: ImageData[] = [];
@@ -2269,7 +2269,7 @@ async function attachedImages(
       loaded.push(path);
     }
   }
-  const names = loaded.map((p) => defuseTags(p.split("/").pop() ?? p)).join(", ");
+  const names = loaded.map((p) => defuseTags(baseNameOf(p))).join(", ");
   return {
     listed: attachments.filter((a) => !loaded.includes(a)),
     images,

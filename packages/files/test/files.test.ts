@@ -379,15 +379,14 @@ describe("file tools", () => {
     expect(readdirSync(join(trash, "info"))).toEqual([]);
   });
 
-  // Windows: paths and open folders on Windows are plan 2.
-  it.runIf(!mac && !onWindows)("finds files by name and by the words in plain text, inside the open folders only", async () => {
+  it.runIf(!mac)("finds files by name and by the words in plain text, inside the open folders only", async () => {
     mkdirSync(join(root, "alt", ".gizli"), { recursive: true });
     writeFileSync(join(root, "fatura-7429.pdf"), "%PDF");
     writeFileSync(join(root, "alt", "not.md"), "Fatura 7429 ödendi");
     writeFileSync(join(root, "alt", ".gizli", "fatura-7429.txt"), "x");
     writeFileSync(join(home, "fatura-7429.txt"), "outside");
     const out = String(await call("files_search", { query: "fatura 7429" }));
-    expect(out).toContain("alt/not.md");
+    expect(out).toContain(join("alt", "not.md"));
     expect(out).not.toContain(".gizli");
     expect(out).not.toContain(join(home, "fatura-7429.txt"));
     const kind = String(await call("files_search", { query: "*.pdf" }));
