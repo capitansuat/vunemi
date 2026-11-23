@@ -295,6 +295,17 @@ describe("file tools", () => {
     expect(() => real.resolve("/tmp/Belgeler/x.txt")).toThrow(PathRefused);
   });
 
+  it("takes Documents/x as the home folder's Documents, not a new folder in the first open one", () => {
+    // A model writes "Documents/rapor.txt" as often as "Belgeler/rapor.txt"; joined to the
+    // first open folder (Desktop) it made a stray Desktop/Documents.
+    const open = new Roots([join(homedir(), "Desktop"), join(homedir(), "Documents"), join(homedir(), "Downloads")]);
+    expect(open.resolve(join("Documents", "rapor.txt"))).toBe(join(homedir(), "Documents", "rapor.txt"));
+    expect(open.resolve(join("Desktop", "not.txt"))).toBe(join(homedir(), "Desktop", "not.txt"));
+    expect(open.resolve(join("Downloads", "fatura.pdf"))).toBe(join(homedir(), "Downloads", "fatura.pdf"));
+    // A bare name still belongs to the first open folder.
+    expect(open.resolve("not.txt")).toBe(join(homedir(), "Desktop", "not.txt"));
+  });
+
   it("opens the folders where the system keeps them, and the Finder names follow", () => {
     // OneDrive moves Documents (and gives it a local name); the defaults have to follow.
     const known = { Documents: join(homedir(), "OneDrive", "Belgeler") };

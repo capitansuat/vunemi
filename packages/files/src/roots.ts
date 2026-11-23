@@ -26,6 +26,11 @@ import { sameFolder, windowsPathProblem, within } from "./windows-paths.js";
  * only ever resolves to a folder that is already open.
  */
 const ALIASES: Record<string, string> = {
+  // The English names too: "Documents/rapor.txt" means the home folder's
+  // Documents, not a new Documents inside whichever folder is open first.
+  desktop: "Desktop",
+  documents: "Documents",
+  downloads: "Downloads",
   belgeler: "Documents",
   dokumanlar: "Documents",
   indirilenler: "Downloads",
@@ -148,7 +153,7 @@ export class Roots {
     if (process.platform === "win32" && windowsPathProblem(expanded)) {
       throw new PathRefused(t("files.pathUnsupported", { path: raw }));
     }
-    const named = withAliases(expanded, this.known);
+    const { path: named, inHome } = withAliases(expanded, this.known);
     // "\Users\x\..." or "/Users/x/..." without a drive means "on the current
     // drive", which nobody chose: never taken as written. When it reads like a
     // home folder and the rest is open, the path it meant is said instead.
@@ -162,7 +167,7 @@ export class Roots {
     // A bare name belongs to the first open folder; a Finder name like
     // "Belgeler/rapor.txt" names a folder in the home directory.
     const roots = this.list();
-    const base = named === expanded ? (roots[0] ?? homedir()) : homedir();
+    const base = inHome ? homedir() : (roots[0] ?? homedir());
     const absolute = isAbsolute(named) ? normalize(named) : join(base, named);
     const real = realOrPlanned(absolute);
 
@@ -254,10 +259,6 @@ function realOrPlanned(path: string): string {
 }
 
 /**
- * Rewrites a Turkish folder name to the one on disk. Only whole segments,
- * and only names that are folders in the home directory anyway.
- */
-/**
  * The real path of something that exists. On Windows the system's own answer:
  * it also expands 8.3 short names (a dot folder's short name has no dot) and
  * gives the names in the disk's letter case.
@@ -266,9 +267,16 @@ function realPath(path: string): string {
   return process.platform === "win32" ? realpathSync.native(path) : realpathSync(path);
 }
 
-function withAliases(path: string, known: Partial<KnownFolders> = {}): string {
+/**
+ * Rewrites a Turkish (or English) standard folder name to the folder it means:
+ * where the system keeps it, else the home folder's own. Only whole segments,
+ * only at the start or right after the home folder; `inHome` says the path now
+ * starts from the home folder rather than from the first open folder.
+ */
+function withAliases(path: string, known: Partial<KnownFolders> = {}): { path: string; inHome: boolean } {
   const segments = path.split(sep);
   const mapped: string[] = [];
+  let found = false;
   for (const [i, segment] of segments.entries()) {
     const english = ALIASES[plain(segment)] as keyof KnownFolders | undefined;
     // "Belgeler/rapor.txt" or "/Users/x/Belgeler/rapor.txt", not a file
@@ -280,10 +288,11 @@ function withAliases(path: string, known: Partial<KnownFolders> = {}): string {
     }
     // Where the system keeps that folder, when it isn't in the home folder.
     const moved = known[english];
-    if (moved) return join(moved, ...segments.slice(i + 1));
+    if (moved) return { path: join(moved, ...segments.slice(i + 1)), inHome: true };
     mapped.push(english);
+    found = true;
   }
-  return mapped.join(sep);
+  return { path: mapped.join(sep), inHome: found };
 }
 
 function hidden(relativePath: string): boolean {
