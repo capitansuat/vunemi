@@ -16,7 +16,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { randomInt } from "node:crypto";
-import { closeSync, existsSync, linkSync, lstatSync, openSync, readdirSync, realpathSync, renameSync, rmSync, unlinkSync, writeSync } from "node:fs";
+import { closeSync, existsSync, linkSync, lstatSync, mkdirSync, openSync, readdirSync, realpathSync, renameSync, rmdirSync, rmSync, unlinkSync, writeSync } from "node:fs";
 import { basename, dirname, extname, join, parse, relative, resolve, isAbsolute } from "node:path";
 import type { Trashed } from "./types.js";
 
@@ -155,7 +155,18 @@ export function windowsMoveToTrash(path: string, opts: WindowsRecycleOptions = {
     restore: () => {
       if (existsSync(real)) throw new RecycleRefused(`Something new is at ${real}; the trashed one stays in the Recycle Bin.`, "taken");
       if (folder) {
-        renameSync(slot, real);
+        // Windows' rename puts a folder over a file without a word (seen in
+        // the VM), so the place is claimed first: mkdir fails if anything is
+        // there, even if it appeared after the check above. The contents then
+        // move into the new, empty folder, and the empty slot goes.
+        try {
+          mkdirSync(real);
+        } catch (err) {
+          if ((err as NodeJS.ErrnoException).code === "EEXIST") throw new RecycleRefused(`Something new is at ${real}.`, "taken");
+          throw err;
+        }
+        for (const entry of readdirSync(slot)) renameSync(join(slot, entry), join(real, entry));
+        rmdirSync(slot);
       } else {
         // A link fails if a file appeared meanwhile, where a rename would replace it.
         try {
