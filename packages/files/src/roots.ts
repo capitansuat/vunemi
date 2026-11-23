@@ -17,6 +17,7 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, normalize, parse, relative, resolve, sep } from "node:path";
 import { t } from "@vunemi/i18n";
+import { windowsPathProblem } from "./windows-paths.js";
 
 /**
  * Finder shows these folders with Turkish names while the disk keeps the
@@ -128,6 +129,9 @@ export class Roots {
     if (raw.includes("\0")) throw new PathRefused(t("files.pathInvalid"));
 
     const expanded = raw === "~" || raw.startsWith(`~${sep}`) ? join(homedir(), raw.slice(1)) : raw;
+    if (process.platform === "win32" && windowsPathProblem(expanded.replace(/\//g, "\\"))) {
+      throw new PathRefused(t("files.pathUnsupported", { path: raw }));
+    }
     const named = withAliases(expanded);
     // A bare name belongs to the first open folder; a Finder name like
     // "Belgeler/rapor.txt" names a folder in the home directory.
@@ -170,6 +174,9 @@ export class Roots {
    * refused: those are where secrets live, and a drag can miss its target.
    */
   grant(input: string): string {
+    if (process.platform === "win32" && windowsPathProblem(String(input ?? "").replace(/\//g, "\\"))) {
+      throw new PathRefused(t("files.pathUnsupported", { path: input }));
+    }
     const real = realOrPlanned(resolve(String(input ?? "")));
     let file: boolean;
     try {

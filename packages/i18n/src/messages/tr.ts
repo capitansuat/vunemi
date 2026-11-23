@@ -1193,6 +1193,7 @@ export const messages = {
   files: {
     pathNeeded: "Bir dosya yolu gerekiyor.",
     pathInvalid: "Dosya yolu geçersiz.",
+    pathUnsupported: "\"{path}\" Vunemi'nin açmadığı türde bir yol (ağ, aygıt ya da akış yolu, veya Windows'un değiştireceği bir ad). Açık klasörlerin içinde bir yol kullan.",
     outside: "\"{path}\" ajana açık klasörlerin dışında. Açık olanlar: {roots}. Buraya kullanıcı kendi bakmalı.",
     wrongHome: "\"{path}\" bu Mac'te olmayan bir ev klasörünü gösteriyor. Doğrusu: \"{fixed}\". Bu yolu kullan.",
     hidden: "\"{path}\" gizli bir dosya veya klasör. Ajan bunlara bakmaz; gerekiyorsa kullanıcı kendi açmalı.",

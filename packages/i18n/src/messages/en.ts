@@ -1187,6 +1187,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "A file path is needed.",
     pathInvalid: "Invalid file path.",
+    pathUnsupported: "\"{path}\" is a kind of path Vunemi doesn't open (a network, device or stream path, or a name Windows would change). Use a path inside the open folders.",
     outside: "\"{path}\" is outside the folders open to the agent. Open ones: {roots}. The user has to look there themselves.",
     wrongHome: "\"{path}\" names a home folder that isn't on this Mac. The right path is \"{fixed}\". Use that.",
     hidden: "\"{path}\" is a hidden file or folder. The agent doesn't look at these; the user can open it themselves if needed.",

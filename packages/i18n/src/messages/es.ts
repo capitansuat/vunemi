@@ -1187,6 +1187,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "Hace falta una ruta de archivo.",
     pathInvalid: "Ruta de archivo no válida.",
+    pathUnsupported: "«{path}» es un tipo de ruta que Vunemi no abre (una ruta de red, de dispositivo o de flujo, o un nombre que Windows cambiaría). Usa una ruta dentro de las carpetas abiertas.",
     outside: "«{path}» está fuera de las carpetas abiertas al agente. Abiertas: {roots}. El usuario tiene que mirar ahí por su cuenta.",
     wrongHome: "\"{path}\" indica una carpeta de inicio que no existe en este Mac. La ruta correcta es \"{fixed}\". Usa esa.",
     hidden: "«{path}» es un archivo o una carpeta oculta. El agente no mira estas cosas; si hace falta, el usuario puede abrirlo por su cuenta.",

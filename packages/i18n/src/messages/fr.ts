@@ -1187,6 +1187,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "Un chemin de fichier est requis.",
     pathInvalid: "Chemin de fichier non valide.",
+    pathUnsupported: "« {path} » est un type de chemin que Vunemi n’ouvre pas (chemin réseau, de périphérique ou de flux, ou nom que Windows modifierait). Utilisez un chemin dans les dossiers ouverts.",
     outside: "« {path} » est hors des dossiers ouverts à l’agent. Dossiers ouverts : {roots}. L’utilisateur doit regarder lui-même.",
     wrongHome: "« {path} » désigne un dossier personnel qui n'existe pas sur ce Mac. Le bon chemin est « {fixed} ». Utilisez-le.",
     hidden: "« {path} » est un fichier ou dossier masqué. L’agent ne regarde pas ce genre d’élément ; l’utilisateur peut l’ouvrir lui-même si besoin.",

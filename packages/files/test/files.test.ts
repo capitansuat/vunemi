@@ -192,6 +192,14 @@ describe("file tools", () => {
     await expect(call("files_read", { path: join(homedir(), ".ssh", "id_rsa") })).rejects.toThrow(/dışında|gizli/);
   });
 
+  it.runIf(onWindows)("refuses Windows device and stream paths before touching the disk", () => {
+    const open = new Roots([root]);
+    for (const path of [join(root, "a.txt:gizli"), join(root, "nul.txt"), join(root, "rapor.txt."), "\\\\sunucu\\paylasim\\a.txt"]) {
+      expect(() => open.resolve(path), path).toThrow(t("files.pathUnsupported", { path }));
+    }
+    expect(() => open.grant(join(root, "a.txt:gizli"))).toThrow(t("files.pathUnsupported", { path: join(root, "a.txt:gizli") }));
+  });
+
   // Windows: paths and open folders on Windows are plan 2.
   it.skipIf(onWindows)("names a home folder the model made up, and gives the path it meant", () => {
     const open = new Roots([join(homedir(), "Downloads")]);
