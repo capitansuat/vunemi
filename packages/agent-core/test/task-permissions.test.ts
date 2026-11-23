@@ -1,7 +1,7 @@
 import {it,expect} from 'vitest';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {TaskPermissionStore} from '../src/task-permissions.js';
+import {TaskPermissionStore,isAbsoluteFilePath} from '../src/task-permissions.js';
 const owner={sessionId:'s',taskId:'t',runId:'r'},epoch={registration:1,policy:1,task:1};
 const d={effect:'file-read' as const,target:{kind:'file' as const,path:'/fixture/a.txt',name:'a.txt'},identity:{kind:'file' as const,path:'/fixture/a.txt',device:'1',inode:'2',size:'3',mtimeNs:'4',ctimeNs:'5'}};
 function setup(){const store=new TaskPermissionStore();store.bind(owner);const offer=store.offer('c','files_read',d,epoch);return {store,offer,id:store.approve(offer.offerId,offer.revision,owner,'c')};}
@@ -29,4 +29,10 @@ it('accepts a file-read permission for an absolute path of the system it runs on
  expect(()=>store.offer('c','files_read',local,epoch)).not.toThrow();
  const relative={...d,target:{...d.target,path:'fixture/a.txt'},identity:{...d.identity,path:'fixture/a.txt'}};
  expect(()=>store.offer('r','files_read',relative,epoch)).toThrow();
+});
+it('tells absolute paths the way each system does, without node:path (the window bundles this file)',()=>{
+ for(const p of ['C:\\Users\\x\\a.txt','C:/Users/x/a.txt','\\\\server\\share\\a.txt','/x/a.txt'])expect(isAbsoluteFilePath(p,'win32')).toBe(true);
+ for(const p of ['C:a.txt','a.txt','x\\a.txt',''])expect(isAbsoluteFilePath(p,'win32')).toBe(false);
+ expect(isAbsoluteFilePath('/Users/x/a.txt','darwin')).toBe(true);
+ for(const p of ['C:\\Users\\x\\a.txt','\\\\server\\share','a.txt'])expect(isAbsoluteFilePath(p,'darwin')).toBe(false);
 });

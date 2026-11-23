@@ -21,4 +21,6 @@ jobs:
       - run: npm install -g pnpm@11.0.9
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r typecheck
+      # The window bundles shared packages too; typecheck and tests don't catch a Node-only import there.
+      - run: pnpm --filter @vunemi/desktop build
       - run: pnpm -r --no-bail test

@@ -1,4 +1,3 @@
-import {isAbsolute} from 'node:path';
 export type TaskPermissionSubjectView =
  | {effect:'file-read';target:{kind:'file';path:string;name:string}}
  | {effect:'window-observe';target:{kind:'native-window';appName:string;bundleId:string;pid:number;windowId:number;windowTitle:string}};
@@ -18,13 +17,20 @@ const copy=<T>(value:T):T=>structuredClone(value);
 const equal=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
 const sameOwner=(a:TaskPermissionOwner|undefined,b:TaskPermissionOwner|undefined)=>!!a&&!!b&&a.sessionId===b.sessionId&&a.taskId===b.taskId&&a.runId===b.runId;
 const subject=(d:TaskPermissionDescriptor):TaskPermissionSubjectView=>({effect:d.effect,target:copy(d.target)} as TaskPermissionSubjectView);
+/**
+ * Whether a path is absolute on the given system, with the same answers as node:path's posix and win32
+ * isAbsolute. Plain string checks because the window bundles this module too, and the window has no node:path.
+ */
+export function isAbsoluteFilePath(p:string,system:string|undefined=(globalThis as {process?:{platform?:string}}).process?.platform):boolean{
+ return system==='win32'?/^([A-Za-z]:)?[\\/]/.test(p):p.startsWith('/');
+}
 function validate(tool:string,d:TaskPermissionDescriptor):void {
  const i=d?.identity,t=d?.target;
  const keys=(value:unknown,expected:string[])=>!!value&&typeof value==='object'&&Object.keys(value).sort().join(',')===expected.sort().join(',');
  if(!keys(d,['effect','target','identity']))throw new Error('Invalid task permission descriptor.');
  if(d.effect==='file-read'&&(!keys(t,['kind','path','name'])||!keys(i,['kind','path','device','inode','size','mtimeNs','ctimeNs'])))throw new Error('Invalid file permission descriptor.');
  if(d.effect==='window-observe'&&(!keys(t,['kind','appName','bundleId','pid','windowId','windowTitle'])||!keys(i,['kind','bundleId','pid','startSec','startUsec','windowId','controlMode'])))throw new Error('Invalid native permission descriptor.');
- if(d?.effect==='file-read' && tool==='files_read' && t?.kind==='file' && i?.kind==='file' && t.path===i.path && isAbsolute(t.path) && typeof t.name==='string' && [i.device,i.inode,i.size,i.mtimeNs,i.ctimeNs].every(v=>typeof v==='string'&&/^\d+$/.test(v)))return;
+ if(d?.effect==='file-read' && tool==='files_read' && t?.kind==='file' && i?.kind==='file' && t.path===i.path && isAbsoluteFilePath(t.path) && typeof t.name==='string' && [i.device,i.inode,i.size,i.mtimeNs,i.ctimeNs].every(v=>typeof v==='string'&&/^\d+$/.test(v)))return;
  if(d?.effect==='window-observe' && tool==='desktop_background_describe' && t?.kind==='native-window' && i?.kind==='native-window' && i.controlMode==='backgroundStrict' && t.bundleId===i.bundleId && t.pid===i.pid && t.windowId===i.windowId && Number.isSafeInteger(i.pid)&&i.pid>0&&Number.isSafeInteger(i.windowId)&&i.windowId>0 && [i.startSec,i.startUsec].every(v=>typeof v==='string'&&/^\d+$/.test(v)) && [t.appName,t.bundleId,t.windowTitle].every(v=>typeof v==='string'&&v.length<8192))return;
  throw new Error('Invalid task permission descriptor.');
 }
