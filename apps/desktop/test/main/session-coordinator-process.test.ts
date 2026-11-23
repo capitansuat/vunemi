@@ -7,7 +7,7 @@ import {join,resolve} from 'node:path';
 import {ToolRegistry,TaskPermissionStore,type ChatModel,type AgentEvent} from '@vunemi/agent-core';
 import {SessionCoordinatorHost,type SessionCoordinatorChild} from '../../src/main/session-coordinator-host.js';
 const hosts:SessionCoordinatorHost[]=[],children:ChildProcess[]=[];let dir='',binary='';
-beforeAll(()=>{dir=realpathSync(mkdtempSync(join(tmpdir(),'session-coordinator-test-')));binary=join(dir,'worker.cjs');esbuild([resolve('test/main/fixtures/session-process.ts'),'--bundle','--platform=node','--format=cjs',`--outfile=${binary}`]);});
+beforeAll(()=>{dir=realpathSync.native(mkdtempSync(join(tmpdir(),'session-coordinator-test-')));binary=join(dir,'worker.cjs');esbuild([resolve('test/main/fixtures/session-process.ts'),'--bundle','--platform=node','--format=cjs',`--outfile=${binary}`]);});
 afterEach(()=>{for(const h of hosts.splice(0))h.dispose();for(const c of children.splice(0))if(c.exitCode===null)c.kill('SIGKILL');});afterAll(()=>rmSync(dir,{recursive:true,force:true}));
 const result=(text:string)=>({text,toolCalls:[],usage:{promptTokens:20,completionTokens:5,ttftMs:1,tokensPerSec:10}});
 function setup(chat:ChatModel['chat'],tools=new ToolRegistry()){

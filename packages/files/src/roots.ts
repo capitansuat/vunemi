@@ -219,7 +219,9 @@ export class Roots {
       throw new PathRefused(t("files.notFound", { path: input }));
     }
     if (!file) throw new PathRefused(t("files.grantNotFile", { name: parse(real).base }));
-    const home = homedir();
+    // Compared as the real path: a home folder written another way (a link,
+    // a Windows 8.3 short name) would otherwise let its hidden files through.
+    const home = realOrPlanned(homedir());
     const inside = !sameFolder(real, home) && within(real, home) ? relative(home, real) : parse(real).base;
     if (hidden(inside)) throw new PathRefused(t("files.grantHidden", { name: parse(real).base }));
     this.granted.add(real);

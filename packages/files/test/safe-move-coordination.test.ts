@@ -10,7 +10,7 @@ afterEach(()=>{for(const dir of dirs.splice(0))rmSync(dir,{recursive:true,force:
 type Admission=<T>(body:(assertCurrent:()=>void)=>Promise<T>|T,signal?:AbortSignal)=>Promise<T>;
 function admission():Admission{let held=false;return async(body,signal)=>{if(held||signal?.aborted)throw Error('Unavailable test admission');held=true;try{return await body(()=>{if(!held)throw Error('Lost test admission');});}finally{held=false;}};}
 function fixture(withAdmission:Admission|undefined=admission(),adapter?:AtomicMoveAdapter){
- const dir=realpathSync(mkdtempSync(join(tmpdir(),'safe-move-coordination-')));dirs.push(dir);mkdirSync(join(dir,'to'));const source=join(dir,'source.txt'),destination=join(dir,'to','moved.txt'),journalPath=join(dir,'journal.json');writeFileSync(source,'Synthetic original');
+ const dir=realpathSync.native(mkdtempSync(join(tmpdir(),'safe-move-coordination-')));dirs.push(dir);mkdirSync(join(dir,'to'));const source=join(dir,'source.txt'),destination=join(dir,'to','moved.txt'),journalPath=join(dir,'journal.json');writeFileSync(source,'Synthetic original');
  const move=vi.fn(async(request:any)=>{linkSync(request.source,request.destination);unlinkSync(request.source);return{status:'moved' as const};});
  const options={roots:new Roots([dir]),journalPath,adapter:adapter??{move},withAdmission};const c=new SafeMoveController(options);
  return{dir,source,destination,journalPath,options,c,move,prepare:()=>c.prepare({source,destination,ownerId:'owner'})};

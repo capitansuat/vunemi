@@ -27,7 +27,7 @@ const ctx = (): ToolContext => ({
 const call = (name: string, args: Record<string, unknown>) => tools.get(name)!.run(args as never, ctx());
 
 beforeEach(() => {
-  home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-projects-")));
+  home = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-projects-")));
   docs = join(home, "Documents");
   project = join(home, "Work", "site");
   mkdirSync(docs, { recursive: true });

@@ -118,7 +118,7 @@ function storedRar(name: string, data: string): Buffer {
 }
 
 beforeEach(() => {
-  base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-archive-")));
+  base = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-archive-")));
   home = join(base, "home");
   root = join(home, "Çalışma");
   mkdirSync(join(home, ".Trash"), { recursive: true });

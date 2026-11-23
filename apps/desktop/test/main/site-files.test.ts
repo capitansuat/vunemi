@@ -11,7 +11,7 @@ import { previewable, servedFile } from "../../src/main/site-files.js";
 let base: string;
 let site: string;
 beforeEach(() => {
-  base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-site-")));
+  base = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-site-")));
   site = join(base, "site");
   mkdirSync(join(site, "css"), { recursive: true });
   writeFileSync(join(site, "index.html"), "<h1>hi</h1>");

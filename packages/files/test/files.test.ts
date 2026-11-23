@@ -132,7 +132,7 @@ describe("file tools", () => {
   });
 
   beforeEach(() => {
-    home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-files-")));
+    home = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-files-")));
     testHome.path = join(home, "SyntheticHome");
     mkdirSync(join(testHome.path, ".Trash"), { recursive: true });
     // The freedesktop Trash follows XDG_DATA_HOME: never the real user's here.
@@ -466,6 +466,22 @@ describe("file tools", () => {
     }
   });
 
+  it("refuses a hidden file in the home folder when the home folder is written another way", () => {
+    // Windows gives a long user name as an 8.3 short name (C:\Users\FIRSTN~1)
+    // in some settings; a link to the home folder is the same case everywhere.
+    const real = testHome.path;
+    const link = join(home, "home-link");
+    symlinkSync(real, link, onWindows ? "junction" : "dir");
+    mkdirSync(join(real, ".vunemi-test-hidden"), { recursive: true });
+    writeFileSync(join(real, ".vunemi-test-hidden", "anahtar.txt"), "x");
+    testHome.path = link;
+    try {
+      expect(() => new Roots([root]).grant(join(real, ".vunemi-test-hidden", "anahtar.txt"))).toThrow(/gizli/);
+    } finally {
+      testHome.path = real;
+    }
+  });
+
   it("says when the folder itself is wrong", async () => {
     await expect(call("files_read", { path: "yok/dosya.txt" })).rejects.toThrow(/diye bir klasör yok/);
   });
@@ -647,7 +663,7 @@ describe("similarNames", () => {
 
 describe("files_search", () => {
   it.runIf(mac)("asks Spotlight with fixed arguments and shows only what is inside the open folders", async () => {
-    const home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-search-")));
+    const home = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-search-")));
     const root = join(home, "Belgeler");
     mkdirSync(root);
     const inside = join(root, "fatura.pdf");
@@ -668,7 +684,7 @@ console.log([${JSON.stringify(inside)}, "/etc/passwd", ${JSON.stringify(join(roo
     rmSync(home, { recursive: true, force: true });
   });
   it("puts the newest first, with its day", async () => {
-    const home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-search-")));
+    const home = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-search-")));
     const root = join(home, "Belgeler");
     mkdirSync(root);
     const old = join(root, "eski.pdf");

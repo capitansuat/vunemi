@@ -35,7 +35,7 @@ let answer: (args: string[], stdin?: string) => Partial<SandboxResult> & { skip?
 let typed: string[] = [];
 
 beforeEach(() => {
-  base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-addon-tools-")));
+  base = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-addon-tools-")));
   folder = join(base, "Documents");
   shots = join(base, "shots");
   mkdirSync(folder);

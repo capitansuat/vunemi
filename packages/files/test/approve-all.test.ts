@@ -6,7 +6,7 @@ import { approveAllCover, LOCAL_WORK } from "@vunemi/agent-core";
 import { createFileTools, Roots } from "../src/index.js";
 
 let home = "";
-beforeEach(() => { home = realpathSync(mkdtempSync(join(tmpdir(), "approve-all-"))); });
+beforeEach(() => { home = realpathSync.native(mkdtempSync(join(tmpdir(), "approve-all-"))); });
 afterEach(() => rmSync(home, { recursive: true, force: true }));
 
 const tool = (name: string) => {
