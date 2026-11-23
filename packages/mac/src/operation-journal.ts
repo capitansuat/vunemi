@@ -4,6 +4,7 @@ import {validLeaseTarget,validOwner,type LeaseTarget} from './target-lease.js';
 import {randomUUID} from 'node:crypto';
 import {existsSync,readFileSync,mkdirSync,openSync,writeFileSync,fsyncSync,closeSync,renameSync,unlinkSync,lstatSync} from 'node:fs';
 import {dirname,isAbsolute} from 'node:path';
+import {syncFolder} from '@vunemi/platform';
 export type OperationState='prepared'|'dispatched'|'native-result'|'unknown';
 export interface OperationRecord {dispatchId:string;op:string;state:OperationState;createdAt:number;updatedAt:number;nativeStatus?:string;nativeReasonCode?:DragReasonCode;nativePhase?:DragPhase;nativeOperationId?:string;ownerRunId?:string;target?:LeaseTarget}
 const operations=new Set(['scheduled_document_append','scheduled_document_save','background_press','background_set_value','background_open_document','background_save_document','background_document_move','background_scroll_position','background_menu_open','background_menu_select','background_drag']);
@@ -51,7 +52,7 @@ export class OperationJournal {
   this.requireAdmission();
   mkdirSync(dirname(this.path),{recursive:true,mode:0o700});
   const temp=`${this.path}.${randomUUID()}.tmp`;let fd:number|undefined;
-  try{fd=openSync(temp,'wx',0o600);writeFileSync(fd,JSON.stringify({version:1,records:this.records}));fsyncSync(fd);closeSync(fd);fd=undefined;renameSync(temp,this.path);const dir=openSync(dirname(this.path),'r');try{fsyncSync(dir);}finally{closeSync(dir);}}
+  try{fd=openSync(temp,'wx',0o600);writeFileSync(fd,JSON.stringify({version:1,records:this.records}));fsyncSync(fd);closeSync(fd);fd=undefined;renameSync(temp,this.path);syncFolder(dirname(this.path));}
   catch(error){this.unavailable=true;throw error;}
   finally{if(fd!==undefined)closeSync(fd);if(existsSync(temp))unlinkSync(temp);}
  }

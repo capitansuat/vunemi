@@ -14,7 +14,8 @@
   "dependencies": {
     "@vunemi/agent-core": "workspace:*",
     "@vunemi/i18n": "workspace:*",
-    "@vunemi/perception": "workspace:*"
+    "@vunemi/perception": "workspace:*",
+    "@vunemi/platform": "workspace:*"
   },
   "devDependencies": {
     "vitest": "5.0.3"
