@@ -21,6 +21,15 @@ describe("where the engine lives", () => {
     expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp })).toBe(join(cache, "llama-server"));
   });
 
+  it("is llama-server.exe on Windows", () => {
+    const cache = join(tmp, ".vunemi-build", "engine-cache", ENGINE_TAG);
+    mkdirSync(cache, { recursive: true });
+    writeFileSync(join(cache, "llama-server.exe"), "");
+    expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "win32" })).toBe(join(cache, "llama-server.exe"));
+    writeFileSync(join(tmp, "llama-server.exe"), "");
+    expect(engineBinary({ packaged: true, resourcesPath: tmp, home: "/nowhere", system: "win32" })).toBe(join(tmp, "llama-server.exe"));
+  });
+
   it("is missing rather than broken", () => {
     expect(engineBinary({ packaged: true, resourcesPath: "/nowhere", home: "/nowhere" })).toBeNull();
   });

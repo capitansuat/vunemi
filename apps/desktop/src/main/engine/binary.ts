@@ -10,9 +10,11 @@ export const ENGINE_TAG = "b12633";
  * either, the built-in engine is simply unavailable and everything else
  * still works.
  */
-export function engineBinary(opts: { packaged: boolean; resourcesPath: string; home: string }): string | null {
+export function engineBinary(opts: { packaged: boolean; resourcesPath: string; home: string; system?: NodeJS.Platform }): string | null {
+  // Windows runs programs by their .exe name.
+  const name = (opts.system ?? process.platform) === "win32" ? "llama-server.exe" : "llama-server";
   const path = opts.packaged
-    ? join(opts.resourcesPath, "llama-server")
-    : join(opts.home, ".vunemi-build", "engine-cache", ENGINE_TAG, "llama-server");
+    ? join(opts.resourcesPath, name)
+    : join(opts.home, ".vunemi-build", "engine-cache", ENGINE_TAG, name);
   return existsSync(path) ? path : null;
 }
