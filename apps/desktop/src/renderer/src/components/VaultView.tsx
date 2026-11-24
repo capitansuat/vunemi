@@ -1,10 +1,20 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, KeyRound, Plus, ShieldCheck, Trash2, TriangleAlert } from "lucide-react";
 import type { VaultStatus } from "../../../shared/ipc.js";
-import { formatDate, t } from "@vunemi/i18n";
+import { formatDate, t, type MessageKey } from "@vunemi/i18n";
+import type { PlatformInfo } from "@vunemi/platform";
 import { usePlatform } from "../lib/platform.js";
 
 const EMPTY: VaultStatus = { available: false, secrets: [] };
+
+/**
+ * The locked vault's hint. Off macOS the key is kept by the system (Linux's
+ * keyring, Windows for the account), and the words say so; on Windows that
+ * key resolves to Windows' own text.
+ */
+export function lockedHint(system: PlatformInfo["id"] | undefined): MessageKey {
+  return system === "linux" || system === "win32" ? "linux.vault.unlockHint" : "vault.unlockHint";
+}
 
 /**
  * The Kasa. The user puts a secret in once; after that only its name is ever
@@ -15,8 +25,7 @@ export function VaultView() {
   const [adding, setAdding] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // On Linux the key is the system keyring's, and the words say so.
-  const keyringKept = usePlatform()?.id === "linux";
+  const system = usePlatform()?.id;
 
   useEffect(() => {
     void window.vunemi.vaultStatus().then(setStatus);
@@ -54,7 +63,7 @@ export function VaultView() {
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2.5 text-[12.5px] text-fg">
             <TriangleAlert size={14} className="mt-0.5 shrink-0 text-danger" />
             <span>
-              {status.keyring ?? (keyringKept ? t("linux.vault.unlockHint") : t("vault.unlockHint"))}
+              {status.keyring ?? t(lockedHint(system))}
               <button type="button" disabled={unlocking}
                 onClick={() => {setUnlocking(true);void run(() => window.vunemi.vaultUnlock()).finally(() => setUnlocking(false));}}
                 className="mt-2 block rounded-md border border-line-strong px-3 py-1.5 disabled:opacity-50">
