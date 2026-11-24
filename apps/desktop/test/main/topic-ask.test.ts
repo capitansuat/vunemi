@@ -7,30 +7,26 @@ import { setLocale, t } from "@vunemi/i18n";
 import { WorkStore, conversationScope } from "../../src/main/work/store.js";
 import { TopicStore } from "../../src/main/topics/store.js";
 import { createFindingTools } from "../../src/main/work/findings.js";
-import { acceptAsk, asksAfter, whichAsk } from "../../src/main/topics/findings-ask.js";
+import { acceptAsk, asksAfter, deleteAsk, keepAsk, suggestable, whichAsk } from "../../src/main/topics/findings-ask.js";
 
 const REQUEST = "Find accountant jobs in London: full time?";
 
 describe("whichAsk", () => {
   const base = { inTopic: false, asked: false, request: REQUEST, fitting: null };
-  it("offers a new topic under the proposed name when findings were kept and none fits", () => {
-    expect(whichAsk({ ...base, found: [{}, { proposedTopic: "Job hunt" }] })).toEqual({ topic: "Job hunt", new: true });
+  it("still asks about a fitting topic for a conversation with no lookup", () => {
+    expect(whichAsk({ ...base, fitting: "Career" })).toEqual({ topic: "Career" });
   });
-  it("shortens a long proposed name at a word, without a bracket left open", () => {
-    expect(whichAsk({ ...base, found: [{ proposedTopic: "Python jobs (realpython.github.io/fake-jobs)" }] })).toEqual({ topic: "Python jobs", new: true });
-    expect(whichAsk({ ...base, found: [{ proposedTopic: "Accountant jobs in London and Manchester, full time only" }] })).toEqual({ topic: "Accountant jobs in London and Manchester", new: true });
+  it("asks nothing in a topic, once asked, or with nothing fitting: a lookup gathers in a temporary topic instead", () => {
+    expect(whichAsk({ ...base, inTopic: true, fitting: "Career" })).toBeNull();
+    expect(whichAsk({ ...base, asked: true, fitting: "Career" })).toBeNull();
+    expect(whichAsk(base)).toBeNull();
   });
-  it("names it from the request when the model proposed none, cleaned for a folder", () => {
-    expect(whichAsk({ ...base, found: [{}] })).toEqual({ topic: "Find accountant jobs in London full time", new: true });
-  });
-  it("asks for a fitting topic as today, findings or not", () => {
-    expect(whichAsk({ ...base, fitting: "Career", found: [{ proposedTopic: "Job hunt" }] })).toEqual({ topic: "Career" });
-    expect(whichAsk({ ...base, fitting: "Career", found: undefined })).toEqual({ topic: "Career" });
-  });
-  it("asks nothing in a topic, once asked, or with nothing found and nothing fitting", () => {
-    expect(whichAsk({ ...base, inTopic: true, found: [{}] })).toBeNull();
-    expect(whichAsk({ ...base, asked: true, found: [{}] })).toBeNull();
-    expect(whichAsk({ ...base, found: undefined })).toBeNull();
+});
+
+describe("suggestable", () => {
+  it("never offers a temporary topic for another conversation", () => {
+    const list = [{ name: "Career", temporary: undefined }, { name: "Job hunt", temporary: true as const }];
+    expect(suggestable(list).map((x) => x.name)).toEqual(["Career"]);
   });
 });
 
@@ -71,27 +67,64 @@ describe("acceptAsk", () => {
   });
   const deps = () => ({ topics, request: REQUEST, link: (name: string) => linked.push(name), move });
 
-  it("makes the new topic, puts the conversation in it, and moves the findings into pages", () => {
-    expect(acceptAsk({ topic: "Job hunt", new: true }, deps())).toBe("Job hunt");
-    expect(topics.findTopic("Job hunt")?.name).toBe("Job hunt");
-    expect(linked).toEqual(["Job hunt"]);
-    expect(topics.readNote("Job hunt", "Accountant, Acme")!.text).toContain("Source: https://jobs.example/job/1");
-    expect(work.readNote(conversationScope("c1"), t("findings.noteTitle"))).toBeNull();
-  });
-
-  it("uses a topic of that name if there already is one", () => {
-    topics.createTopic("Job hunt", "mine");
-    expect(acceptAsk({ topic: "job hunt", new: true }, deps())).toBe("Job hunt");
-    expect(topics.listTopics()).toHaveLength(1);
-  });
-
-  it("falls back to the request's words when the proposed name can't be a folder", () => {
-    expect(acceptAsk({ topic: "Jobs/London", new: true }, deps())).toBe("Find accountant jobs in London full time");
-  });
-
   it("moves the findings into a fitting topic too", () => {
     topics.createTopic("Career", "");
     expect(acceptAsk({ topic: "Career" }, deps())).toBe("Career");
     expect(topics.readNote("Career", "Accountant, Acme")).not.toBeNull();
+  });
+});
+
+describe("the temporary topic's card", () => {
+  let dir = "";
+  let topics: TopicStore;
+  let renamed: [string, string][];
+  let trashed: string[];
+  let declined: number;
+  const held = { topic: "Job hunt", temporary: true as const };
+
+  beforeEach(() => {
+    setLocale("en");
+    dir = mkdtempSync(join(tmpdir(), "vunemi-ask-temp-"));
+    topics = new TopicStore({ root: () => join(dir, "Memory"), dataDir: join(dir, "data") });
+    topics.createTopic("Job hunt", "Find Python jobs", { temporary: true });
+    topics.writeNote("Job hunt", { title: "Found — Find Python jobs", text: "Two jobs", by: "vunemi", sources: [] });
+    renamed = [];
+    trashed = [];
+    declined = 0;
+  });
+  afterEach(() => {
+    topics.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+  const keep = (name?: string) => keepAsk(held, { topics, ...(name !== undefined && { name }), rename: (from, to) => renamed.push([from, to]) });
+
+  it("keepAsk keeps it under its name: the mark goes, nothing is renamed", () => {
+    expect(keep()).toBe("Job hunt");
+    expect(topics.findTopic("Job hunt")?.temporary).toBeUndefined();
+    expect(renamed).toEqual([]);
+  });
+
+  it("keepAsk keeps it under the name typed, and the conversation follows", () => {
+    expect(keep("Python jobs")).toBe("Python jobs");
+    expect(renamed).toEqual([["Job hunt", "Python jobs"]]);
+    expect(topics.readNote("Python jobs", "Found — Find Python jobs")?.text).toBe("Two jobs");
+  });
+
+  it("keepAsk refuses a taken name and changes nothing", () => {
+    topics.createTopic("Career", "");
+    expect(() => keep("career")).toThrow(/already a topic/);
+    expect(topics.findTopic("Job hunt")?.temporary).toBe(true);
+    expect(renamed).toEqual([]);
+  });
+
+  it("deleteAsk trashes the folder and marks the conversation declined", async () => {
+    await deleteAsk(held, { trash: async (topic) => { trashed.push(topic); }, decline: () => declined++ });
+    expect(trashed).toEqual(["Job hunt"]);
+    expect(declined).toBe(1);
+  });
+
+  it("deleteAsk marks nothing when the Trash refuses", async () => {
+    await expect(deleteAsk(held, { trash: async () => { throw new Error("no Trash"); }, decline: () => declined++ })).rejects.toThrow("no Trash");
+    expect(declined).toBe(0);
   });
 });

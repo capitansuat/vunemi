@@ -801,7 +801,8 @@ export interface VunemiApi {
   /** The user's answer to a note proposed under a reply; `text` when they edited it. */
   resolveMemory(runId: string, proposalId: string, decision: "saved" | "skipped", text?: string): Promise<void>;
   /** The user's answer to "Shall I keep this conversation in …?" */
-  resolveTopic(runId: string, decision: "linked" | "skipped"): Promise<void>;
+  /** `name`: for "kept", the name the user typed for the temporary topic. */
+  resolveTopic(runId: string, decision: "linked" | "skipped" | "kept" | "deleted", name?: string): Promise<void>;
   /** Puts the open conversation in a topic, by name, or takes it out (null). */
   setTopic(name: string | null): Promise<SessionList>;
   /** The Memory page (main/topics/page.ts). */

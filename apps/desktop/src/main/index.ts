@@ -85,7 +85,7 @@ import { convertToMarkdown, markdownArea, markitdownDir, registerMarkdownTools }
 import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { createFindingTools } from "./work/findings.js";
-import { acceptAsk, asksAfter, whichAsk } from "./topics/findings-ask.js";
+import { acceptAsk, asksAfter, deleteAsk, keepAsk, suggestable, whichAsk } from "./topics/findings-ask.js";
 import { pageAddress, temporaryTopic, writeAnswer } from "./topics/lookup-topic.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
@@ -642,7 +642,7 @@ const findings = work
     })
   : null;
 /** "Shall I keep this in …?" asked under a run, until the user answers. Not kept past a restart. */
-const topicAsks = new Map<string, { conversation: string; topic: string; new?: true; request: string }>();
+const topicAsks = new Map<string, { conversation: string; topic: string; temporary?: true; request: string }>();
 /** What each run kept with web_finding_add, for the question after it (topics/findings-ask.ts); the latest few. */
 const runFound = new Map<string, { proposedTopic?: string }[]>();
 /** Each topic's vector for the question, by its text (topics/suggest.ts). */
@@ -671,24 +671,42 @@ function gatherLookup(runId: string, answer: string): boolean {
   if (!own && !answer.trim() && found.length === 0) return false;
   const request = runRequests.get(runId) ?? "";
   const proposed = [...found].reverse().find((f) => f.proposedTopic?.trim())?.proposedTopic ?? "";
+  const conversation = conversations.currentId;
   const topic = temporaryTopic({ topics, conversation: { ...(own && { topic: own.name }), declined: conversations.temporaryDeclined }, proposed, request, link: linkTemporary });
   if (!topic) return false;
   void writeAnswer({ topics, topic, request, answer, addresses: pages, redact: redactOrThrow })
-    .catch((err: unknown) => console.error("[vunemi] lookup answer:", err instanceof Error ? err.message : String(err)));
+    .catch((err: unknown) => console.error("[vunemi] lookup answer:", err instanceof Error ? err.message : String(err)))
+    .then((title) => {
+      // Asked only when this lookup added to it, it is still temporary, and the user is still here.
+      if (!title && found.length === 0) return;
+      if (conversations.currentId !== conversation || !topics?.findTopic(topic)?.temporary) return;
+      askKeep(runId, conversation, topic, request);
+    });
   return true;
+}
+
+/** "Keep it?" under the lookup; the card under an earlier lookup for the same topic goes, so one answer settles it. */
+function askKeep(runId: string, conversation: string, topic: string, request: string): void {
+  for (const [earlier, held] of topicAsks) {
+    if (!held.temporary || held.conversation !== conversation || held.topic !== topic) continue;
+    topicAsks.delete(earlier);
+    record({ type: "topic.resolved", runId: earlier, topic, decision: "skipped", at: Date.now() });
+  }
+  topicAsks.set(runId, { conversation, topic, temporary: true, request });
+  record({ type: "topic.suggested", runId, topic, temporary: true, at: Date.now() });
 }
 
 async function askTopic(runId: string, request: string | undefined): Promise<void> {
   if (!topics || !request || conversations.currentTopic || conversations.topicAsked) return;
   const conversation = conversations.currentId;
-  const fitting = await suggestTopic(meaning, request, topics.listTopics(), topicVectors);
-  // A lookup that kept findings is asked about even when no topic fits: a new one is offered.
-  const ask = whichAsk({ inTopic: !!conversations.currentTopic, asked: !!conversations.topicAsked, found: runFound.get(runId), request, fitting });
+  // A temporary topic belongs to the conversation that made it, until the user keeps it.
+  const fitting = await suggestTopic(meaning, request, suggestable(topics.listTopics()), topicVectors);
+  const ask = whichAsk({ inTopic: !!conversations.currentTopic, asked: !!conversations.topicAsked, request, fitting });
   // The user moved on, or put it in a topic meanwhile: the question would be wrong.
   if (!ask || conversations.currentId !== conversation || conversations.currentTopic || conversations.topicAsked) return;
   conversations.markTopicAsked();
   topicAsks.set(runId, { conversation, ...ask, request });
-  record({ type: "topic.suggested", runId, topic: ask.topic, ...(ask.new && { new: true as const }), at: Date.now() });
+  record({ type: "topic.suggested", runId, topic: ask.topic, at: Date.now() });
 }
 
 const connectors = buildConnectors({
@@ -1649,13 +1667,32 @@ handle(CH.memoryResolve, async (_e, runId: unknown, proposalId: unknown, decisio
   proposals.delete(proposal.id);
   record({ type: "memory.resolved", runId: held.runId, proposalId: proposal.id, decision, ...(text && { text }), at: Date.now() });
 });
-handle(CH.topicsResolve, (_e, runId: unknown, decision: unknown) => {
+handle(CH.topicsResolve, async (_e, runId: unknown, decision: unknown, name: unknown) => {
   const held = typeof runId === "string" ? topicAsks.get(runId) : undefined;
   if (!held || held.conversation !== conversations.currentId) throw new Error(t("topics.ask.expired"));
-  if (decision !== "linked" && decision !== "skipped") throw new Error(t("topics.ask.expired"));
+  if (held.temporary ? decision !== "kept" && decision !== "deleted" : decision !== "linked" && decision !== "skipped") throw new Error(t("topics.ask.expired"));
   let linked: string | null = null;
+  if (decision === "kept" || decision === "deleted") {
+    // Kept or deleted meanwhile, on the Memory page: this card has nothing left to settle.
+    if (!topics?.findTopic(held.topic)?.temporary) throw new Error(t("topics.ask.expired"));
+    if (decision === "kept") {
+      linked = keepAsk(held, {
+        topics,
+        ...(typeof name === "string" && { name }),
+        rename: (from, to) => conversations.renameTopic(from, to),
+      });
+    } else {
+      await deleteAsk(held, { trash: (topic) => page().deleteTopic(topic), decline: () => conversations.declineTemporary() });
+    }
+    topicAsks.delete(runId as string);
+    record({ type: "topic.resolved", runId: runId as string, topic: linked ?? held.topic, decision, at: Date.now() });
+    send(CH.sessionsChanged, sessionList());
+    send(CH.topicsChanged, null);
+    return;
+  }
+  if (decision !== "linked" && decision !== "skipped") throw new Error(t("topics.ask.expired"));
   if (decision === "linked") {
-    if (!topics || (!held.new && !topics.findTopic(held.topic))) throw new Error(t("topics.gone"));
+    if (!topics || !topics.findTopic(held.topic)) throw new Error(t("topics.gone"));
     linked = acceptAsk(held, {
       topics,
       request: held.request,
