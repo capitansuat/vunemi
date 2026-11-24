@@ -11,7 +11,7 @@ import { setLocale, t } from "@vunemi/i18n";
 import type { ToolDef } from "@vunemi/agent-core";
 import { WorkStore, conversationScope, projectScope } from "../../src/main/work/store.js";
 import { TopicStore } from "../../src/main/topics/store.js";
-import { addToNote, createFindingTools, listTitle, moveNoteToTopic, pageText, type Finding } from "../../src/main/work/findings.js";
+import { addToNote, createFindingTools, listTitle, moveNoteToTopic, pageText, shortName, type Finding } from "../../src/main/work/findings.js";
 
 let base = "";
 let work: WorkStore;
@@ -134,6 +134,19 @@ describe("in a topic", () => {
     expect(topics.readNote("Job hunt", "Accountant, Acme (web)")!.text).toContain("40,000");
   });
 
+});
+
+describe("shortName", () => {
+  it("leaves no little word dangling where it cuts", () => {
+    expect(shortName("Search NHS Jobs (jobs.nhs.uk) for software developer vacancies and list the ones you find.")).toBe("Search NHS Jobs (jobs.nhs.uk)");
+    expect(shortName("Find accountant jobs in London and Leeds", 24)).toBe("Find accountant jobs");
+    expect(shortName("Python için iş ilanlarını bul", 12)).toBe("Python");
+    expect(shortName("Offres d’emploi pour comptable à Paris", 20)).toBe("Offres d’emploi");
+  });
+  it("keeps a name that isn't cut as it is, and never cuts to nothing", () => {
+    expect(shortName("Jobs to apply for")).toBe("Jobs to apply for");
+    expect(shortName("for the whole of the year", 8)).toBe("for");
+  });
 });
 
 describe("listTitle", () => {

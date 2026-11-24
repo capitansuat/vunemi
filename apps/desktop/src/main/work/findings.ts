@@ -59,8 +59,26 @@ export function shortName(raw: string, max: number = NAME_CHARS): string {
   if (/[\p{L}\p{N}]/u.test(chars[max]!) && cut.includes(" ")) cut = cut.slice(0, cut.lastIndexOf(" "));
   const open = cut.lastIndexOf("(");
   if (open > 0 && cut.indexOf(")", open) < 0) cut = cut.slice(0, open);
-  return cut.replace(/[\s,;:.\-–—(]+$/u, "").trim();
+  const tidy = (s: string): string => s.replace(/[\s,;:.\-–—(]+$/u, "").trim();
+  cut = tidy(cut);
+  // Cut short, a name doesn't end on a word that leads into what was cut ("… for", "… ve"); one word always stays.
+  for (let space = cut.lastIndexOf(" "); space > 0 && DANGLING.has(cut.slice(space + 1).toLocaleLowerCase()); space = cut.lastIndexOf(" ")) cut = tidy(cut.slice(0, space));
+  return cut;
 }
+
+/** Little words that only lead on, in the languages written with spaces: articles, conjunctions, prepositions. */
+const DANGLING = new Set(
+  [
+    "a an the and or of for to in on at by with from about as into", // en
+    "ve veya ile için bir de da ya gibi", // tr
+    "der die das den dem des ein eine einen und oder für von mit zu im auf an bei nach aus über", // de
+    "le la les l’ l' un une des de du d’ d' et ou pour à au aux en dans sur par avec", // fr
+    "el la los las un una unos unas de del y o para por en con a al sobre", // es
+    "il lo la i gli le un una di da del della e o per in con su a al", // it
+    "o a os as um uma de do da dos das e ou para por em no na com", // pt
+    "и или в во на для по с со к о об из от у за", // ru
+  ].join(" ").split(" "),
+);
 
 /** A page title of the catalogue's words around the request, the request cut at a word to fit. */
 export function requestTitle(key: "findings.listTitle" | "findings.answerTitle", request: string): string {
