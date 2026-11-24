@@ -685,6 +685,15 @@ function gatherLookup(runId: string, answer: string): boolean {
   return true;
 }
 
+/** Kept or deleted on the Memory page: the open card for that topic in this conversation says so too. */
+function settleAsks(topic: string, decision: "kept" | "deleted"): void {
+  for (const [runId, held] of topicAsks) {
+    if (!held.temporary || held.conversation !== conversations.currentId || held.topic.toLowerCase() !== topic.toLowerCase()) continue;
+    topicAsks.delete(runId);
+    record({ type: "topic.resolved", runId, topic: held.topic, decision, at: Date.now() });
+  }
+}
+
 /** "Keep it?" under the lookup; the card under an earlier lookup for the same topic goes, so one answer settles it. */
 function askKeep(runId: string, conversation: string, topic: string, request: string): void {
   for (const [earlier, held] of topicAsks) {
@@ -1730,8 +1739,9 @@ const memoryPage = topics
       },
       trash: (path) => shell.trashItem(path),
       reveal: (path) => shell.showItemInFolder(path),
-      leave: (topic) => {
-        conversations.renameTopic(topic, null);
+      leave: (topic, temporary) => {
+        conversations.renameTopic(topic, null, { declined: temporary === true });
+        settleAsks(topic, "deleted");
         send(CH.sessionsChanged, sessionList());
       },
       changed: () => {
@@ -1765,6 +1775,11 @@ handle(CH.topicsRevealFile, (_e, topic: unknown, name: unknown) => page().reveal
 handle(CH.topicsReveal, (_e, topic: unknown, item: unknown) => page().reveal(topic, item));
 handle(CH.topicsRevealOriginal, (_e, topic: unknown, name: unknown) => page().revealOriginal(topic, name));
 handle(CH.topicsDelete, (_e, topic: unknown) => page().deleteTopic(topic));
+handle(CH.topicsKeep, (_e, topic: unknown) => {
+  page().keepTopic(topic);
+  const kept = typeof topic === "string" ? topics?.findTopic(topic)?.name : undefined;
+  if (kept) settleAsks(kept, "kept");
+});
 handle(CH.memorySearch, () => meaning.status());
 handle(CH.memorySearchDownload, async () => {
   try {

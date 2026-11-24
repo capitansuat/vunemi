@@ -830,6 +830,8 @@ export interface VunemiApi {
   topicsRevealOriginal(topic: string, name: string): Promise<void>;
   /** The topic's folder to the Trash; its conversations leave it. */
   topicsDelete(topic: string): Promise<void>;
+  /** A temporary topic becomes the user's (topics/page.ts keepTopic). */
+  topicsKeep(topic: string): Promise<void>;
   onTopicsChanged(listener: () => void): () => void;
   memorySearch(): Promise<MemorySearchStatus>;
   memorySearchDownload(): Promise<MemorySearchStatus>;
@@ -1117,6 +1119,7 @@ export const CH = {
   topicsReveal: "topics:reveal",
   topicsRevealOriginal: "topics:reveal-original",
   topicsDelete: "topics:delete",
+  topicsKeep: "topics:keep",
   topicsChanged: "topics:changed",
   memorySearch: "memory:search",
   memorySearchDownload: "memory:search-download",

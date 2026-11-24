@@ -274,20 +274,22 @@ export class SessionStore {
   }
 
   /** A topic renamed or gone: every conversation in it follows, or leaves it. */
-  renameTopic(from: string, to: string | null): void {
+  /** `declined`: a temporary topic the user deleted; the conversations that were in it make none again. */
+  renameTopic(from: string, to: string | null, o: { declined?: boolean } = {}): void {
     const key = from.toLowerCase();
+    const follow = (s: StoredSession): void => {
+      if (to) s.topic = to;
+      else delete s.topic;
+      if (!to && o.declined) s.temporaryDeclined = true;
+    };
     for (const summary of this.list()) {
       if (summary.topic?.toLowerCase() !== key) continue;
       const s = summary.id === this.current.id ? this.current : this.read(summary.id);
       if (!s) continue;
-      if (to) s.topic = to;
-      else delete s.topic;
+      follow(s);
       if (s !== this.current || s.events.length > 0) this.write(s);
     }
-    if (this.current.topic?.toLowerCase() === key) {
-      if (to) this.current.topic = to;
-      else delete this.current.topic;
-    }
+    if (this.current.topic?.toLowerCase() === key) follow(this.current);
   }
 
   /** Makes a stored conversation current, and hands back what it needs to be shown and continued. */

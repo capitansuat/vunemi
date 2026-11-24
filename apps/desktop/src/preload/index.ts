@@ -164,6 +164,7 @@ const api: VunemiApi = {
   topicsReveal: (topic, item) => ipcRenderer.invoke(CH.topicsReveal, topic, item),
   topicsRevealOriginal: (topic, name) => ipcRenderer.invoke(CH.topicsRevealOriginal, topic, name),
   topicsDelete: (topic) => ipcRenderer.invoke(CH.topicsDelete, topic),
+  topicsKeep: (topic) => ipcRenderer.invoke(CH.topicsKeep, topic),
   onTopicsChanged: (listener) => {
     const handler = () => listener();
     ipcRenderer.on(CH.topicsChanged, handler);

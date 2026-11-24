@@ -28,7 +28,8 @@ export interface TopicPageDeps {
   trash: (path: string) => Promise<void>;
   reveal: (path: string) => void;
   /** The topic is gone: the conversations in it leave it. */
-  leave: (topic: string) => void;
+  /** `temporary`: it was a temporary topic, so its conversations make none again. */
+  leave: (topic: string, temporary?: true) => void;
   /** Something changed that the page shows. */
   changed: () => void;
   /** The folders Vunemi may read: a folder is linked only inside them. */
@@ -340,7 +341,13 @@ export function topicPage(deps: TopicPageDeps) {
       const topic = store.findTopic(text(topicIn));
       if (!topic) return;
       await deps.trash(topic.dir);
-      deps.leave(topic.name);
+      deps.leave(topic.name, ...(topic.temporary ? [true as const] : []));
+      deps.changed();
+    },
+
+    /** Keep, on the Memory page: a temporary topic becomes the user's, under its name. */
+    keepTopic(topicIn: unknown): void {
+      store.keepTopic(topicOf(topicIn));
       deps.changed();
     },
   };

@@ -63,6 +63,20 @@ describe("a conversation in a topic", () => {
     expect(next.temporaryDeclined).toBe(false);
   });
 
+  it("leaves a deleted temporary topic for good: every conversation in it makes none again", () => {
+    const store = new SessionStore(join(dir, "sessions"));
+    store.setTopic("Job hunt");
+    oneTask(store);
+    const id = store.currentId;
+    store.create();
+    store.setTopic("Garden");
+    store.renameTopic("job hunt", null, { declined: true });
+    expect(store.temporaryDeclined).toBe(false);
+    store.open(id);
+    expect(store.currentTopic).toBeUndefined();
+    expect(store.temporaryDeclined).toBe(true);
+  });
+
   it("can leave its topic", () => {
     const store = new SessionStore(join(dir, "sessions"));
     store.setTopic("Home renovation");

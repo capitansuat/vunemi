@@ -170,6 +170,24 @@ describe("the user's own changes", () => {
     expect(store.findTopic("Home renovation")).toBeNull();
   });
 
+  it("keepTopic unmarks a temporary topic and tells the window", () => {
+    store.createTopic("Job hunt", "Jobs.", { temporary: true });
+    const before = changes;
+    page.keepTopic("job hunt");
+    expect(store.findTopic("Job hunt")?.temporary).toBeUndefined();
+    expect(changes).toBe(before + 1);
+    expect(() => page.keepTopic("Elsewhere")).toThrow(/isn’t in the memory folder any more/);
+  });
+
+  it("tells, when a temporary topic is deleted, that it was temporary, so its conversations make none again", async () => {
+    const gone: [string, boolean][] = [];
+    page = make({ leave: (topic, temporary) => gone.push([topic, temporary === true]) });
+    store.createTopic("Job hunt", "Jobs.", { temporary: true });
+    await page.deleteTopic("Job hunt");
+    await page.deleteTopic("Home renovation");
+    expect(gone).toEqual([["Job hunt", true], ["Home renovation", false]]);
+  });
+
   it("adds the files the user picked, and says which could not be", async () => {
     const files = join(base, "Picked");
     mkdirSync(files);
