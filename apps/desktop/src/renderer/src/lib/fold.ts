@@ -113,7 +113,7 @@ export interface RunView {
   /** Notes from memory the run was given, and notes it proposes to remember. */
   memory?: MemoryView;
   /** Vunemi asked to keep the conversation in a topic, and what the user said. */
-  topicAsk?: { topic: string; state: "open" | "linked" | "skipped" };
+  topicAsk?: { topic: string; state: "open" | "linked" | "skipped"; isNew?: true };
   /** Work notes the run saved; a note saved twice shows once, with its last title. */
   notes?: { id: string; title: string; scope: "project" | "conversation"; deleted?: boolean }[];
   /** The model opened with a shorter context than its setting, for lack of memory. */
@@ -307,9 +307,9 @@ function foldIntoRun(run: RunView, e: AgentEvent): RunView {
         memory: { given: run.memory?.given ?? [], proposals: e.proposals.map((p) => ({ ...p, state: "open" as const })) },
       };
     case "topic.suggested":
-      return { ...run, topicAsk: { topic: e.topic, state: "open" } };
+      return { ...run, topicAsk: { topic: e.topic, state: "open", ...(e.new && { isNew: true as const }) } };
     case "topic.resolved":
-      return run.topicAsk ? { ...run, topicAsk: { topic: e.topic, state: e.decision } } : run;
+      return run.topicAsk ? { ...run, topicAsk: { ...run.topicAsk, topic: e.topic, state: e.decision } } : run;
     case "memory.resolved":
       if (!run.memory) return run;
       return {

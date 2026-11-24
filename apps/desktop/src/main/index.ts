@@ -85,6 +85,7 @@ import { convertToMarkdown, markdownArea, markitdownDir, registerMarkdownTools }
 import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { createFindingTools } from "./work/findings.js";
+import { acceptAsk, whichAsk } from "./topics/findings-ask.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
 import { combined, tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
@@ -619,11 +620,17 @@ const findings = work
       onSaved: ({ runId, note, scope }) => {
         if (runId) record({ type: "note.saved", runId, noteId: note.id, title: note.title, scope, at: Date.now() });
       },
-      onFinding: () => {},
+      onFinding: (runId, f) => {
+        if (!runId) return;
+        runFound.set(runId, [...(runFound.get(runId) ?? []), { ...(f.proposedTopic && { proposedTopic: f.proposedTopic }) }]);
+        for (const old of [...runFound.keys()].slice(0, Math.max(0, runFound.size - 20))) runFound.delete(old);
+      },
     })
   : null;
 /** "Shall I keep this in …?" asked under a run, until the user answers. Not kept past a restart. */
-const topicAsks = new Map<string, { conversation: string; topic: string }>();
+const topicAsks = new Map<string, { conversation: string; topic: string; new?: true; request: string }>();
+/** What each run kept with web_finding_add, for the question after it (topics/findings-ask.ts); the latest few. */
+const runFound = new Map<string, { proposedTopic?: string }[]>();
 /** Each topic's vector for the question, by its text (topics/suggest.ts). */
 const topicVectors = new Map<string, Float32Array>();
 /** The open conversation's topic, if it still exists: its name as the folder has it. */
@@ -638,12 +645,14 @@ const currentTopic = () => {
 async function askTopic(runId: string, request: string | undefined): Promise<void> {
   if (!topics || !request || conversations.currentTopic || conversations.topicAsked) return;
   const conversation = conversations.currentId;
-  const found = await suggestTopic(meaning, request, topics.listTopics(), topicVectors);
+  const fitting = await suggestTopic(meaning, request, topics.listTopics(), topicVectors);
+  // A lookup that kept findings is asked about even when no topic fits: a new one is offered.
+  const ask = whichAsk({ inTopic: !!conversations.currentTopic, asked: !!conversations.topicAsked, found: runFound.get(runId), request, fitting });
   // The user moved on, or put it in a topic meanwhile: the question would be wrong.
-  if (!found || conversations.currentId !== conversation || conversations.currentTopic || conversations.topicAsked) return;
+  if (!ask || conversations.currentId !== conversation || conversations.currentTopic || conversations.topicAsked) return;
   conversations.markTopicAsked();
-  topicAsks.set(runId, { conversation, topic: found });
-  record({ type: "topic.suggested", runId, topic: found, at: Date.now() });
+  topicAsks.set(runId, { conversation, ...ask, request });
+  record({ type: "topic.suggested", runId, topic: ask.topic, ...(ask.new && { new: true as const }), at: Date.now() });
 }
 
 const connectors = buildConnectors({
@@ -1594,11 +1603,20 @@ handle(CH.topicsResolve, (_e, runId: unknown, decision: unknown) => {
   const held = typeof runId === "string" ? topicAsks.get(runId) : undefined;
   if (!held || held.conversation !== conversations.currentId) throw new Error(t("topics.ask.expired"));
   if (decision !== "linked" && decision !== "skipped") throw new Error(t("topics.ask.expired"));
-  const topic = decision === "linked" ? topics?.findTopic(held.topic) : null;
-  if (decision === "linked" && !topic) throw new Error(t("topics.gone"));
+  let linked: string | null = null;
+  if (decision === "linked") {
+    if (!topics || (!held.new && !topics.findTopic(held.topic))) throw new Error(t("topics.gone"));
+    const project = currentProject();
+    linked = acceptAsk(held, {
+      topics,
+      work,
+      where: noteWhere({ conversationId: conversations.currentId, projectId: project?.id, projectExists: project !== null }),
+      request: held.request,
+      link: (name) => conversations.setTopic(name),
+    });
+  }
   topicAsks.delete(runId as string);
-  if (topic) conversations.setTopic(topic.name);
-  record({ type: "topic.resolved", runId: runId as string, topic: topic?.name ?? held.topic, decision, at: Date.now() });
+  record({ type: "topic.resolved", runId: runId as string, topic: linked ?? held.topic, decision, at: Date.now() });
   send(CH.sessionsChanged, sessionList());
 });
 handle(CH.topicsSet, (_e, name: unknown) => {

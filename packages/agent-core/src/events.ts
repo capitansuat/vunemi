@@ -163,7 +163,7 @@ export type AgentEvent =
   | { type: "memory.proposed"; runId: string; proposals: MemoryProposal[]; at: number }
   | { type: "memory.resolved"; runId: string; proposalId: string; decision: "saved" | "skipped"; text?: string; at: number }
   /** Vunemi asks, once per conversation, to keep it in a topic that fits; the user answers. */
-  | { type: "topic.suggested"; runId: string; topic: string; at: number }
+  | { type: "topic.suggested"; runId: string; topic: string; /** A topic not made yet, for what a lookup found. */ new?: true; at: number }
   | { type: "topic.resolved"; runId: string; topic: string; decision: "linked" | "skipped"; at: number }
   /** The model saved a work note (worknote_write); the timeline shows its title. */
   | { type: "note.saved"; runId: string; noteId: string; title: string; scope: "project" | "conversation"; at: number }
