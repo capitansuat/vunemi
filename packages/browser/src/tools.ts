@@ -8,10 +8,10 @@
  */
 
 import type { BoundAction } from "./bound-actions.js";
-import { staleHead, type StaleHead, type ToolContext, type ToolDef } from "@vunemi/agent-core";
+import { soundsLikeSendOrDelete, staleHead, type ApproveAllCover, type StaleHead, type ToolContext, type ToolDef } from "@vunemi/agent-core";
 import type { BrowserController } from "./controller.js";
-import { OWNER_REFUSAL, PageActionError, type PageDriver } from "./page.js";
-import { checkNavigation } from "./url-policy.js";
+import { OWNER_REFUSAL, PageActionError, type ElementKind, type PageDriver } from "./page.js";
+import { checkNavigation, type TrustedSites } from "./url-policy.js";
 import { t } from "@vunemi/i18n";
 import { CONTENT_SHOWN, WHOLE_PAGE_MARK } from "./main-content.js";
 export { CONTENT_SHOWN, WHOLE_PAGE_MARK, markdownOf, type ContentNode, type Reader } from "./main-content.js";
@@ -88,7 +88,16 @@ export function outlineHead(output: string): string {
   return staleHead(output, PAGE_HEAD);
 }
 
-export function createBrowserTools(browser: BrowserController, opts: { shotDir?: string } = {}): ToolDef[] {
+
+/** Keys that can submit the form the focus is in. */
+const SUBMIT_KEYS = new Set(["Enter", "Space"]);
+
+/**
+ * `trusted` is the user's list of trusted sites (Settings › Security); the
+ * browser's own list when it is not given. Only the user adds to it.
+ */
+export function createBrowserTools(browser: BrowserController, opts: { shotDir?: string; trusted?: () => TrustedSites } = {}): ToolDef[] {
+  const trusted = opts.trusted ?? (() => browser.trusted?.() ?? new Set<string>());
   const previewRef = (ref: unknown) => {
     const line = typeof ref === "number" ? browser.lineFor(ref) : undefined;
     return line ?? `element [${String(ref)}]`;
@@ -101,6 +110,45 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
     const n = typeof ref === "string" ? Number(ref.replace(/[[\]*]/g, "")) : Number(ref);
     const owner = Number.isInteger(n) ? await browser.ownerField(n).catch(() => null) : null;
     return owner && OWNER_REFUSAL[owner];
+  };
+  // What acting on an element amounts to, from the page as the model last saw
+  // it (see BrowserController.kindFor). A ref that can't be read counts as
+  // outbound; check() reads the element again before a call relies on it.
+  const kindOf = (ref: unknown): ElementKind | undefined => {
+    const n = refOf(ref);
+    return n === undefined ? undefined : browser.kindFor?.(n);
+  };
+  /** Its label as the model saw it sounds like sending, publishing, deleting or paying: that keeps its own card. */
+  const sendsOrDeletes = (ref: unknown): boolean => {
+    const n = refOf(ref);
+    const line = n === undefined ? undefined : browser.lineFor(n);
+    return line !== undefined && soundsLikeSendOrDelete(line);
+  };
+  /** A link or search box counts as reading, unless its label says it sends or deletes. */
+  const reads = (ref: unknown, kind: "link" | "search"): boolean => kindOf(ref) === kind && !sendsOrDeletes(ref);
+  const recheck = (ref: unknown): Promise<string | null> => {
+    const n = refOf(ref);
+    return n === undefined || kindOf(n) === undefined ? Promise.resolve(null) : browser.recheckKind(n);
+  };
+  /**
+   * What "approve all in this task" reaches from a page action: the page's
+   * host, until the task ends. Nothing for an element in a form that posts,
+   * for a ref that can't be read, or when the page has moved to a host other
+   * than the one the model saw.
+   */
+  const siteCover = async (kind: ElementKind | undefined, sends = false): Promise<ApproveAllCover | undefined> => {
+    if (kind === undefined || kind === "posts" || sends) return undefined;
+    const host = browser.host?.() ?? null;
+    if (!host) return undefined;
+    if ((await browser.liveHost().catch(() => null)) !== host) return undefined;
+    return { key: `site:${host}`, site: host, trusted: trusted().has(host) };
+  };
+  /** Enter in the search field page_type just typed into sends the search, as page_search does. */
+  const searchEnter = (key: unknown): boolean => key === "Enter" && browser.focusedKind?.() === "search" && !focusSends();
+  /** The field typed into last, where the focus is, sounds like sending: Enter there keeps its card. */
+  const focusSends = (): boolean => {
+    const ref = browser.focusedRef?.();
+    return ref !== undefined && sendsOrDeletes(ref);
   };
 
   const tools: ToolDef[] = [
@@ -207,6 +255,10 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       description: "Click an element by its ref.",
       parameters: { type: "object", properties: { ref: REF }, required: ["ref"] },
       actionClass: "outbound",
+      // Following an ordinary link is opening its page, which page_goto does without asking.
+      classify: (a) => (reads(a.ref, "link") ? "read" : "outbound"),
+      check: (a) => recheck(a.ref),
+      approveAll: (a) => siteCover(kindOf(a.ref), sendsOrDeletes(a.ref)),
       untrustedOutput: true,
       preview: async (a) => previewRef(a.ref),
       run: (a, ctx) => guarded(browser, ctx, () => browser.act(`Clicked [${num(a.ref)}].`, (d) => d.click(num(a.ref)))),
@@ -224,15 +276,23 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
         required: ["ref", "text"],
       },
       actionClass: "outbound",
+      // A search field whose form sends the query in the address is a search, as page_search is.
+      classify: (a) => (reads(a.ref, "search") ? "read" : "outbound"),
       untrustedOutput: true,
-      check: (a) => ownerCheck(a.ref),
+      check: async (a) => (await ownerCheck(a.ref)) ?? recheck(a.ref),
+      // A field that posts never gets a cover, so neither does pressing Enter in it with submit.
+      approveAll: (a) => siteCover(kindOf(a.ref), sendsOrDeletes(a.ref)),
       preview: async (a) => `"${String(a.text)}" → ${previewRef(a.ref)}${a.submit === true ? " ⏎" : ""}`,
-      run: (a, ctx) =>
-        guarded(browser, ctx, () =>
+      run: async (a, ctx) => {
+        const out = await guarded(browser, ctx, () =>
           ctx.recordOutcomeEvidence&&a.submit!==true
             ? browser.actWithFieldOutcome(`Typed into [${num(a.ref)}].`,d=>d.type(num(a.ref),String(a.text)),{ref:num(a.ref),value:String(a.text),mode:'text'},e=>{ctx.assertToolActive?.();ctx.recordOutcomeEvidence!(e);})
             : browser.act(`Typed into [${num(a.ref)}].`, (d) => d.type(num(a.ref), String(a.text), { submit: a.submit === true })),
-        ),
+        );
+        // The focus is in the field now, so an Enter next is pressed there.
+        browser.noteFocus?.(num(a.ref));
+        return out;
+      },
     },
     {
       name: "page_select",
@@ -242,9 +302,11 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
         properties: { ref: REF, option: { type: "string" } },
         required: ["ref", "option"],
       },
+      // Choosing sends a choice; it is never reading.
       actionClass: "outbound",
       untrustedOutput: true,
-      check: (a) => ownerCheck(a.ref),
+      check: async (a) => (await ownerCheck(a.ref)) ?? recheck(a.ref),
+      approveAll: (a) => siteCover(kindOf(a.ref), sendsOrDeletes(a.ref)),
       preview: async (a) => `"${String(a.option)}" → ${previewRef(a.ref)}`,
       // The same wall check as the other page actions: a sign-in or payment step is the user's.
       run: (a, ctx) =>
@@ -268,6 +330,14 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
         required: ["key"],
       },
       actionClass: "outbound",
+      classify: (a) => (searchEnter(a.key) ? "read" : "outbound"),
+      check: (a) => (searchEnter(a.key) ? browser.recheckFocus() : Promise.resolve(null)),
+      // Enter or Space can submit the form the focus is in: covered only when that is seen not to post.
+      approveAll: async (a) =>
+        siteCover(
+          SUBMIT_KEYS.has(String(a.key)) ? await browser.focusedLiveKind().catch(() => undefined) : "other",
+          soundsLikeSendOrDelete(String(a.key)) || (SUBMIT_KEYS.has(String(a.key)) && focusSends()),
+        ),
       untrustedOutput: true,
       preview: async (a) => String(a.key),
       run: (a, ctx) => guarded(browser, ctx, () => browser.act(`Pressed ${String(a.key)}.`, (d) => d.press(String(a.key)))),
@@ -391,6 +461,12 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
     async run(args,ctx){if(!ctx.runId||!ctx.assertToolActive)throw new PageActionError("A trusted active run owner is required.");ctx.assertToolActive();return JSON.stringify(await browser.actBound(args as unknown as BoundAction,{runId:ctx.runId,signal:ctx.signal,assertToolActive:ctx.assertToolActive}));},
   });
   return tools;
+}
+
+/** A ref as the model wrote it ("12", "[12]", "*[12]"); undefined when it is none. */
+function refOf(v: unknown): number | undefined {
+  const n = typeof v === "string" ? Number(v.replace(/[[\]*]/g, "")) : Number(v);
+  return Number.isInteger(n) ? n : undefined;
 }
 
 function num(v: unknown): number {

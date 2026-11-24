@@ -77,8 +77,12 @@ export type AgentEvent =
       alert?: boolean;
       /** The tool asks every time; "always allow" does not apply. */
       alwaysAsk?: boolean;
-      /** This card can also approve the rest of the task; `app` is the app that would reach. */
-      approveAll?: { app?: string };
+      /**
+       * This card can also approve the rest of the task; `app` is the app it
+       * would reach, `site` the web host. `trusted`: the user trusts that
+       * host, so a plain approval already covers it until the task ends.
+       */
+      approveAll?: { app?: string; site?: string; trusted?: boolean };
       preview?: string;
       /**
        * The tool is switched off, and this is its connection and part in the

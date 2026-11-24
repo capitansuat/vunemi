@@ -28,6 +28,7 @@ import { useStore } from "../store.js";
 import { t } from "@vunemi/i18n";
 import type { SetupView } from "../../../shared/ipc.js";
 import { SetupSummary } from "./AutomationSetup.js";
+import { TRUST_ERRORS } from "../lib/trusted-sites.js";
 import { TravelOptionsCard } from "./TravelOptionsCard.js";
 
 const CLASS_ICON: Record<ActionClass, LucideIcon> = {
@@ -193,6 +194,9 @@ export function ApprovalCard({ call }: { call: CallView }) {
   const [error, setError] = useState<string | null>(null);
   const [expired,setExpired]=useState(false);
   const offersAll = call.approveAll !== undefined && !call.switchedOff && !call.alert;
+  // A page action's card names the site it reaches; one the user trusts is covered by a plain approval.
+  const site = offersAll ? call.approveAll!.site : undefined;
+  const trustedSite = site !== undefined && call.approveAll!.trusted === true;
   const Icon = CLASS_ICON[call.actionClass];
   const args = call.args && typeof call.args === "object" ? call.args as Record<string, unknown> : {};
   const exports = Array.isArray(args.outputs) ? args.outputs.flatMap(value =>
@@ -213,6 +217,29 @@ export function ApprovalCard({ call }: { call: CallView }) {
     const pending=scoped ? useStore.getState().approveTaskPermission(call.callId,offer!) : decide(call.callId, { kind },owner);
     void pending.then(ok=>{if(!current())return;if(!scoped&&ok===false){setExpired(true);setBusy(false);}}).catch((e: unknown) => {
       if(!current())return;
+      setBusy(false);
+      setError(e instanceof Error ? e.message : String(e));
+    });
+  };
+  /**
+   * The user trusts the site from the card: it joins the list in Settings ›
+   * Security, then the rest of this task on it is approved. A window control;
+   * nothing the agent or a page can press.
+   */
+  const trust = () => {
+    const owner=current();
+    if(!owner||busy||expired||sending||site===undefined||trustedSite)return;
+    sending=true;
+    setBusy(true);
+    setError(null);
+    void window.vunemi.addTrustedSite(site).then(async result=>{
+      if(!current())return;
+      if(!result.ok){sending=false;setBusy(false);setError(t(TRUST_ERRORS[result.reason]));return;}
+      const ok=await decide(call.callId,{kind:"approve_all"},owner);
+      if(current()&&ok===false){setExpired(true);setBusy(false);}
+    }).catch((e: unknown) => {
+      if(!current())return;
+      sending=false;
       setBusy(false);
       setError(e instanceof Error ? e.message : String(e));
     });
@@ -251,7 +278,12 @@ export function ApprovalCard({ call }: { call: CallView }) {
         {offer.effect==='file-read'&&<p className="text-muted">{t("taskPermissions.fileSameVersion")}</p>}
       </fieldset>}
       <p className="mt-2 text-[12px] leading-relaxed text-muted">{t("approvalContext.once")}</p>
-      {offersAll && <p className="mt-1 text-[12px] leading-relaxed text-muted">{call.approveAll!.app ? t("call.approveAllNoteApp", { app: call.approveAll!.app }) : t("call.approveAllNote")}</p>}
+      {offersAll && <p className="mt-1 text-[12px] leading-relaxed text-muted">{
+        site !== undefined
+          ? trustedSite ? t("call.trustedSiteNote", { site }) : t("call.approveAllNoteSite", { site })
+          : call.approveAll!.app ? t("call.approveAllNoteApp", { app: call.approveAll!.app }) : t("call.approveAllNote")
+      }</p>}
+      {site !== undefined && !trustedSite && <p className="mt-1 text-[12px] leading-relaxed text-muted">{t("call.trustSiteNote")}</p>}
       {error && <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p>}
       {expired&&<p role="status">{callStatusLabel('cancelled')}</p>}
       <div className="mt-3 flex flex-wrap gap-2">
@@ -283,6 +315,16 @@ export function ApprovalCard({ call }: { call: CallView }) {
             className="rounded-lg bg-fg px-3.5 py-1.5 text-[13px] font-medium text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {t("call.approveAll")}
+          </button>
+        )}
+        {site !== undefined && !trustedSite && (
+          <button
+            type="button"
+            disabled={busy||expired||!call.requestId}
+            onClick={trust}
+            className="rounded-lg border border-line-strong bg-surface px-3.5 py-1.5 text-[13px] text-fg transition-colors hover:bg-surface-2 disabled:opacity-50"
+          >
+            {t("call.trustSite", { site })}
           </button>
         )}
         <button
