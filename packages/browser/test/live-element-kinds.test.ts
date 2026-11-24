@@ -40,6 +40,20 @@ const PAGES: Record<string, string> = {
     <input aria-label="Loose field">
     <input aria-label="Attached field" form="far">
     <form id="far" method="post" action="/far"></form>`,
+  // A page that lies to scripts in its own world: POST forms read as GET, and the focus seems to stay in the search field.
+  "/lying": `<title>Lying</title>
+    <form method="post" action="/x"><input name="q" aria-label="Lying field"></form>
+    <form action="/s"><input name="s" aria-label="Lie search"></form>
+    <form method="post" action="/c"><input name="c" aria-label="Lie comment"></form>
+    <script>
+      const get = Element.prototype.getAttribute, has = Element.prototype.hasAttribute;
+      Element.prototype.getAttribute = function (n) { return n === "method" || n === "formmethod" ? "get" : get.call(this, n); };
+      Element.prototype.hasAttribute = function (n) { return n === "formmethod" ? false : has.call(this, n); };
+      Object.defineProperty(HTMLFormElement.prototype, "elements", { get() { return []; } });
+      const search = document.querySelector('[aria-label="Lie search"]');
+      Object.defineProperty(Document.prototype, "activeElement", { get() { return search; } });
+      search.addEventListener("input", () => setTimeout(() => document.querySelector('[aria-label="Lie comment"]').focus(), 0));
+    </script>`,
 };
 
 const live = process.env.VUNEMI_LIVE_BROWSER === "1";
@@ -116,6 +130,20 @@ describe.skipIf(!live)("element kinds, in live Chrome", () => {
     // The test server is this computer, so its own links are refused the same way; a public one is not.
     expect(await click.check!({ ref: ref("Plain link") })).toMatch(/this computer's own address/);
     expect(await click.check!({ ref: ref("Away link") })).toBeNull();
+  });
+
+  it("reads elements where the page's own scripts can't lie about them", { timeout: 60_000 }, async () => {
+    const ref = await refs("/lying");
+    expect(browser.kindFor(ref("Lying field"))).toBe("posts");
+    expect(browser.kindFor(ref("Lie search"))).toBe("search");
+    const tools = createBrowserTools(browser);
+    const type = tools.find((t) => t.name === "page_type")!;
+    const press = tools.find((t) => t.name === "page_press")!;
+    await type.run({ ref: ref("Lie search"), text: "weather" }, {} as never);
+    await new Promise((r) => setTimeout(r, 300));
+    // The page moved the focus into a form that posts and pretends it didn't: Enter is not a search there.
+    expect(await press.check!({ key: "Enter" })).toMatch(/focus is no longer in the search field/);
+    expect(await browser.focusedLiveKind()).toBe("posts");
   });
 
   it("counts Enter as a search only in the GET field just typed into", { timeout: 60_000 }, async () => {

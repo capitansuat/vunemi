@@ -90,6 +90,8 @@ export class PageDriver {
   private nextFrameRef = FRAME_REF_BASE;
   /** The page's own refs when it was last read: a ref into a frame is never one of them. */
   private pageRefs: ReadonlyMap<number, unknown> = new Map();
+  /** Vunemi's own world in each frame, by session and frame id (see world). */
+  private readonly worlds = new Map<CdpSession, Map<string, number>>();
 
   private constructor(private readonly s: CdpSession) {}
 
@@ -98,6 +100,8 @@ export class PageDriver {
     session.on("Page.frameStartedLoading", (p) => {
       if ((p as { frameId: string }).frameId === d.mainFrameId) d.loading = true;
     });
+    // A document's worlds go with it: the next read makes them again.
+    session.on("Page.frameNavigated", (p) => d.worlds.get(session)?.delete((p as { frame: { id: string } }).frame.id));
     session.on("Page.loadEventFired", () => {
       d.loading = false;
       for (const w of d.loadWaiters) w();
@@ -483,9 +487,8 @@ export class PageDriver {
       bySession.set(at.s, list);
     }
     await Promise.all([...bySession].map(async ([s, list]) => {
-      const objects = await Promise.all(list.map(({ ref, node }) =>
-        s.send<{ object: { objectId?: string } }>("DOM.resolveNode", { backendNodeId: node, objectGroup: group })
-          .then((r) => (r.object.objectId ? { ref, id: r.object.objectId } : null), () => null)));
+      // Read in Vunemi's own world, where the page's scripts can't change what the DOM says.
+      const objects = await this.resolveAll(s, list, group);
       const found = objects.filter((o): o is { ref: number; id: string } => o !== null);
       try {
         if (found.length === 0) return;
@@ -498,8 +501,11 @@ export class PageDriver {
           const f = facts[i];
           if (!f || typeof f !== "object") return;
           if (elementKind(f) === "link") {
+            // The page's listeners live in its own world, and the browser lists them there; a script can't hide them from that call.
+            const node = list.find((item) => item.ref === o.ref)!.node;
             const listened = await s
-              .send<{ listeners: { type: string }[] }>("DOMDebugger.getEventListeners", { objectId: o.id })
+              .send<{ object: { objectId?: string } }>("DOM.resolveNode", { backendNodeId: node, objectGroup: group })
+              .then((r) => s.send<{ listeners: { type: string }[] }>("DOMDebugger.getEventListeners", { objectId: r.object.objectId }))
               .then((r) => r.listeners.some((l) => CLICK_EVENTS.has(l.type)), () => true);
             if (listened) f.clickHandler = true;
           }
@@ -510,6 +516,86 @@ export class PageDriver {
       }
     }));
     return out;
+  }
+
+  /**
+   * A world of Vunemi's own in a frame of `s`: the page's scripts run in
+   * another one, so what they change of the prototypes (getAttribute, a
+   * form's elements, the focus) isn't seen here; the DOM itself is shared.
+   */
+  private async world(s: CdpSession, frameId: string): Promise<number> {
+    let known = this.worlds.get(s);
+    if (!known) this.worlds.set(s, (known = new Map()));
+    const had = known.get(frameId);
+    if (had !== undefined) return had;
+    const { executionContextId } = await s.send<{ executionContextId: number }>("Page.createIsolatedWorld", { frameId, worldName: WORLD });
+    known.set(frameId, executionContextId);
+    return executionContextId;
+  }
+
+  /** The frames of one process, its own document first. */
+  private async framesIn(s: CdpSession): Promise<string[]> {
+    const { frameTree } = await s.send<{ frameTree: FrameTree }>("Page.getFrameTree");
+    const out: string[] = [];
+    const walk = (tree: FrameTree): void => {
+      if (out.length >= MAX_FRAMES) return;
+      out.push(tree.frame.id);
+      for (const child of tree.childFrames ?? []) walk(child);
+    };
+    walk(frameTree);
+    return out;
+  }
+
+  /**
+   * Each node as Vunemi's world sees it, tried in the frames of its process
+   * in turn; null for one found in none. When some aren't found, the worlds
+   * are made again once, in case a document they were made in has gone.
+   */
+  private async resolveAll(s: CdpSession, list: readonly { ref: number; node: number }[], group: string): Promise<({ ref: number; id: string } | null)[]> {
+    const frames = await this.framesIn(s).catch(() => [] as string[]);
+    const resolve = async ({ ref, node }: { ref: number; node: number }): Promise<{ ref: number; id: string } | null> => {
+      for (const frame of frames) {
+        const id = await this.world(s, frame)
+          .then((ctx) => s.send<{ object: { objectId?: string } }>("DOM.resolveNode", { backendNodeId: node, executionContextId: ctx, objectGroup: group }))
+          .then((r) => r.object.objectId ?? null, () => null);
+        if (id) return { ref, id };
+      }
+      return null;
+    };
+    const first = await Promise.all(list.map(resolve));
+    if (first.every((o) => o !== null)) return first;
+    this.worlds.delete(s);
+    return Promise.all(list.map((item, i) => first[i] ?? resolve(item)));
+  }
+
+  /** Runs `fn` on an element in Vunemi's world; throws when it can't be found there. */
+  private async callIsolated<T>(ref: number, fn: string): Promise<T> {
+    const at = this.at(ref);
+    const group = `${KIND_GROUP}-${++kindPasses}`;
+    try {
+      const [found] = await this.resolveAll(at.s, [{ ref, node: at.node }], group);
+      if (!found) throw new PageActionError(`Element [${ref}] is no longer on the page.`);
+      const r = await at.s.send<{ result: { value?: unknown }; exceptionDetails?: { text: string } }>("Runtime.callFunctionOn", { objectId: found.id, functionDeclaration: fn, returnByValue: true });
+      if (r.exceptionDetails) throw new PageActionError(`Page script failed: ${r.exceptionDetails.text}`);
+      return r.result.value as T;
+    } finally {
+      await at.s.send("Runtime.releaseObjectGroup", { objectGroup: group }).catch(() => undefined);
+    }
+  }
+
+  /** An expression in Vunemi's world of the page's own document. */
+  private async evaluateIsolated<T>(expression: string): Promise<T> {
+    const run = async (): Promise<T> => {
+      const contextId = await this.world(this.s, this.mainFrameId ?? (await this.framesIn(this.s))[0]!);
+      const r = await this.s.send<{ result: { value?: unknown }; exceptionDetails?: { text: string } }>("Runtime.evaluate", { expression, contextId, returnByValue: true });
+      if (r.exceptionDetails) throw new PageActionError(`Page script failed: ${r.exceptionDetails.text}`);
+      return r.result.value as T;
+    };
+    // A world made in a document that has since gone is made again once.
+    return run().catch(() => {
+      this.worlds.delete(this.s);
+      return run();
+    });
   }
 
   /** The kind of each element (see elementKind); one evaluate over them per document process. */
@@ -524,7 +610,7 @@ export class PageDriver {
    * frame from another site, which this can't see into.
    */
   async focusedFacts(): Promise<ElementFacts | null> {
-    const f = await this.evaluate<ElementFacts | null>(`(() => {
+    const f = await this.evaluateIsolated<ElementFacts | null>(`(() => {
       let el = document.activeElement;
       while (el && /^(?:IFRAME|FRAME)$/.test(el.tagName)) {
         let inner = null;
@@ -539,7 +625,7 @@ export class PageDriver {
 
   /** Whether the element has the keyboard focus in its own document. */
   async hasFocus(ref: number): Promise<boolean> {
-    return this.callOn<boolean>(ref, "function() { return this === this.ownerDocument.activeElement; }").then((v) => v === true, () => false);
+    return this.callIsolated<boolean>(ref, "function() { return this === this.ownerDocument.activeElement; }").then((v) => v === true, () => false);
   }
 
   async type(ref: number, text: string, opts: { submit?: boolean; clear?: boolean } = {}): Promise<void> {
@@ -1019,6 +1105,9 @@ async function factsOf(s: CdpSession, ids: string[]): Promise<(ElementFacts | nu
   if (r.exceptionDetails || !Array.isArray(r.result.value)) throw new PageActionError("Couldn't read the page's elements.");
   return r.result.value as (ElementFacts | null)[];
 }
+
+/** The name of Vunemi's own world in a page (Page.createIsolatedWorld). */
+const WORLD = "vunemi";
 
 /** The remote objects made for reading kinds, released after each pass. */
 const KIND_GROUP = "vunemi-kinds";
