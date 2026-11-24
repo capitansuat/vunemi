@@ -16,6 +16,10 @@ describe("whichAsk", () => {
   it("offers a new topic under the proposed name when findings were kept and none fits", () => {
     expect(whichAsk({ ...base, found: [{}, { proposedTopic: "Job hunt" }] })).toEqual({ topic: "Job hunt", new: true });
   });
+  it("shortens a long proposed name at a word, without a bracket left open", () => {
+    expect(whichAsk({ ...base, found: [{ proposedTopic: "Python jobs (realpython.github.io/fake-jobs)" }] })).toEqual({ topic: "Python jobs", new: true });
+    expect(whichAsk({ ...base, found: [{ proposedTopic: "Accountant jobs in London and Manchester, full time only" }] })).toEqual({ topic: "Accountant jobs in London and Manchester", new: true });
+  });
   it("names it from the request when the model proposed none, cleaned for a folder", () => {
     expect(whichAsk({ ...base, found: [{}] })).toEqual({ topic: "Find accountant jobs in London full time", new: true });
   });

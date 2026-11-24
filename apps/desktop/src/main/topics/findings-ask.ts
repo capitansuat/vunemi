@@ -15,6 +15,18 @@ export function asksAfter(status: "done" | "max_steps", found: readonly unknown[
   return status === "done" || (found?.length ?? 0) > 0;
 }
 
+/** A name for the card: cleaned for a folder, cut at a word, with no bracket left open or dangling mark. */
+export function shortName(raw: string, max: number = NAME_CHARS): string {
+  const clean = safeTitle(raw, Number.MAX_SAFE_INTEGER);
+  const chars = [...clean];
+  if (chars.length <= max) return clean;
+  let cut = chars.slice(0, max).join("");
+  if (/[\p{L}\p{N}]/u.test(chars[max]!) && cut.includes(" ")) cut = cut.slice(0, cut.lastIndexOf(" "));
+  const open = cut.lastIndexOf("(");
+  if (open > 0 && cut.indexOf(")", open) < 0) cut = cut.slice(0, open);
+  return cut.replace(/[\s,;:.\-–—(]+$/u, "").trim();
+}
+
 export function whichAsk(o: {
   inTopic: boolean;
   asked: boolean;
@@ -28,7 +40,7 @@ export function whichAsk(o: {
   if (o.fitting) return { topic: o.fitting };
   if (!o.found?.length) return null;
   const proposed = [...o.found].reverse().find((f) => f.proposedTopic?.trim())?.proposedTopic ?? "";
-  const topic = safeTitle(proposed, NAME_CHARS) || safeTitle(o.request, NAME_CHARS);
+  const topic = shortName(proposed) || shortName(o.request);
   return topic ? { topic, new: true } : null;
 }
 
@@ -46,7 +58,7 @@ export function acceptAsk(
       try {
         name = d.topics.createTopic(held.topic, d.request).name;
       } catch {
-        const fallback = safeTitle(d.request, NAME_CHARS);
+        const fallback = shortName(d.request);
         name = d.topics.findTopic(fallback)?.name ?? d.topics.createTopic(fallback, d.request).name;
       }
     }

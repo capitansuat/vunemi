@@ -222,7 +222,10 @@ describe("either way", () => {
   it("tells who asked what was found, and keeps this run's findings", async () => {
     await add({ title: "Accountant, Acme", text: "40,000", topic: "Job hunt" });
     expect(found).toEqual([expect.objectContaining({ title: "Accountant, Acme", url: "https://jobs.example/job/1", proposedTopic: "Job hunt" })]);
-    expect(tools.runFindings("r1")).toEqual([expect.objectContaining({ title: "Accountant, Acme" })]);
+    await add({ title: "Analyst, Beta", text: "35,000", topic: "Python jobs (realpython.github.io/fake-jobs)" });
+    // Whole, for the question to shorten at a word (topics/findings-ask.ts).
+    expect(found.at(-1)!.proposedTopic).toBe("Python jobs (realpython.github.io/fake-jobs)");
+    expect(tools.runFindings("r1")).toEqual([expect.objectContaining({ title: "Accountant, Acme" }), expect.objectContaining({ title: "Analyst, Beta" })]);
     expect(tools.runFindings("other")).toEqual([]);
   });
 });

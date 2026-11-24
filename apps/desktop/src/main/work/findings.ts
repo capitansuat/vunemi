@@ -224,7 +224,8 @@ export function createFindingTools(opts: FindingToolsOptions): {
         const page = await opts.page();
         if (!page || !/^https?:\/\//i.test(page.url)) throw new Error(NO_PAGE);
         const f: Finding = { request: opts.request(ctx.runId), title: await mask(rawTitle), text: await mask(rawText), url: page.url, at: now() };
-        const proposed = oneLine(String(a.topic ?? "")).slice(0, FINDING_LIMITS.topic);
+        // Kept whole up to a title's length: the question shortens it at a word (topics/findings-ask.ts).
+        const proposed = [...oneLine(String(a.topic ?? ""))].slice(0, FINDING_LIMITS.title).join("");
         const topic = topicOf(where);
         let said: string;
         if (topic && opts.topics) {
