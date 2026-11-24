@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setLocale } from "@vunemi/i18n";
-import { clean, findModel, noSpeech, Voice, VOICE_MODEL } from "../../src/main/voice.js";
+import { clean, findModel, noSpeech, Voice, VOICE_MODEL, WHISPER_TAG, whisperBinary } from "../../src/main/voice.js";
 const onWindows = process.platform === "win32";
 
 const run = promisify(execFile);
@@ -164,5 +164,30 @@ describe("the voice as the model manager sees it", () => {
     expect(await clip).toBe("failed");
     expect(voice.busy()).toBe(false);
     rmSync(folder, { recursive: true, force: true });
+  });
+});
+
+describe("where the whisper server lives", () => {
+  let dir = "";
+  beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "vunemi-whisper-bin-")); });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it("is whisper-server.exe on Windows, built for this architecture", () => {
+    const cache = join(dir, ".vunemi-build", "whisper-cache", `${WHISPER_TAG}-win-arm64`);
+    mkdirSync(cache, { recursive: true });
+    writeFileSync(join(cache, "whisper-server.exe"), "");
+    expect(whisperBinary({ packaged: false, resourcesPath: "/nowhere", home: dir, system: "win32", arch: "arm64" })).toBe(join(cache, "whisper-server.exe"));
+    expect(whisperBinary({ packaged: false, resourcesPath: "/nowhere", home: dir, system: "win32", arch: "x64" })).toBeNull();
+    writeFileSync(join(dir, "whisper-server.exe"), "");
+    expect(whisperBinary({ packaged: true, resourcesPath: dir, home: "/nowhere", system: "win32" })).toBe(join(dir, "whisper-server.exe"));
+  });
+
+  it("keeps its name and cache on macOS and Linux", () => {
+    const cache = join(dir, ".vunemi-build", "whisper-cache", WHISPER_TAG);
+    mkdirSync(cache, { recursive: true });
+    writeFileSync(join(cache, "whisper-server"), "");
+    expect(whisperBinary({ packaged: false, resourcesPath: "/nowhere", home: dir, system: "linux" })).toBe(join(cache, "whisper-server"));
+    writeFileSync(join(dir, "whisper-server"), "");
+    expect(whisperBinary({ packaged: true, resourcesPath: dir, home: "/nowhere", system: "darwin" })).toBe(join(dir, "whisper-server"));
   });
 });

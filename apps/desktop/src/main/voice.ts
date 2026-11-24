@@ -20,7 +20,7 @@
 
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { accessSync, constants, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { accessSync, constants, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -28,6 +28,7 @@ import { getLocale, t, type Locale } from "@vunemi/i18n";
 import { platform } from "@vunemi/platform";
 
 import type { VoiceStatus } from "../shared/ipc.js";
+import { builtBinary, type BinaryLookup } from "./engine/binary.js";
 import { download, type DownloadProgress } from "./engine/download.js";
 import { spawnWindowsSpeech, windowsVoiceCultures } from "./speech-windows.js";
 import type { ModelSource } from "./engine/catalog.js";
@@ -52,11 +53,8 @@ export const VOICE_MODEL: ModelSource = {
 };
 
 /** The built-in whisper server: in the app's resources, or a development run's build cache. */
-export function whisperBinary(opts: { packaged: boolean; resourcesPath: string; home: string }): string | null {
-  const path = opts.packaged
-    ? join(opts.resourcesPath, "whisper-server")
-    : join(opts.home, ".vunemi-build", "whisper-cache", WHISPER_TAG, "whisper-server");
-  return existsSync(path) ? path : null;
+export function whisperBinary(opts: BinaryLookup): string | null {
+  return builtBinary(opts, "whisper-server", "whisper-cache", WHISPER_TAG);
 }
 
 /**
