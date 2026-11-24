@@ -13,6 +13,10 @@ interface Fake {
   kinds?: Record<number, string>;
   focused?: string;
   trusted?: string[];
+  /** ref → its outline line, as the model saw it. */
+  lines?: Record<number, string>;
+  /** The field page_type last typed into, and its kind. */
+  typedInto?: number;
 }
 
 function tools(f: Fake, opts: { trusted?: () => ReadonlySet<string> } = {}) {
@@ -21,9 +25,10 @@ function tools(f: Fake, opts: { trusted?: () => ReadonlySet<string> } = {}) {
     host: () => f.host,
     liveHost: async () => (f.live === undefined ? f.host : f.live),
     kindFor: (ref: number) => f.kinds?.[ref],
-    focusedKind: () => undefined,
+    focusedKind: () => (f.typedInto === undefined ? undefined : f.kinds?.[f.typedInto]),
+    focusedRef: () => f.typedInto,
     focusedLiveKind: async () => f.focused,
-    lineFor: () => undefined,
+    lineFor: (ref: number) => f.lines?.[ref],
     trusted: () => new Set(f.trusted ?? []),
   } as unknown as BrowserController;
   const list = createBrowserTools(browser, opts);
@@ -85,6 +90,36 @@ describe("approve all covers the page's site", () => {
     expect(await approveAllCover(tools({ host: "shop.example", kinds }, { trusted: listed })("page_click"), { ref: 4 })).toMatchObject({ trusted: false });
     // Without the option, the browser's own list is the one.
     expect(await approveAllCover(tools({ host: "example.com", kinds, trusted: ["example.com"] })("page_click"), { ref: 4 })).toMatchObject({ trusted: true });
+  });
+
+  it("keeps its own card for a control that sends or deletes, also on a trusted site", async () => {
+    const lines = { 4: 'button "Delete account"', 1: 'link "Send a message"', 2: 'searchbox "Reply"', 5: 'button "Sil"', 6: 'button "Apply filters"' };
+    const all = { ...kinds, 5: "other", 6: "other" };
+    for (const trusted of [[], ["example.com"]]) {
+      const tool = tools({ host: "example.com", kinds: all, lines, trusted, focused: "other" });
+      expect(await approveAllCover(tool("page_click"), { ref: 4 })).toBeUndefined();
+      expect(await approveAllCover(tool("page_click"), { ref: 1 })).toBeUndefined();
+      expect(await approveAllCover(tool("page_click"), { ref: 5 })).toBeUndefined();
+      expect(await approveAllCover(tool("page_type"), { ref: 2, text: "ok", submit: true })).toBeUndefined();
+      expect(await approveAllCover(tool("page_press"), { key: "Delete" })).toBeUndefined();
+      expect(await approveAllCover(tool("page_press"), { key: "Backspace" })).toBeUndefined();
+      expect(await approveAllCover(tool("page_click"), { ref: 6 })).toBeDefined();
+    }
+  });
+
+  it("asks for a link or a search box that sounds like sending or deleting, instead of reading", () => {
+    const tool = tools({ host: "example.com", kinds: { 1: "link", 2: "search", 7: "link" }, lines: { 1: 'link "Unsubscribe and delete"', 2: 'searchbox "Post a comment"', 7: 'link "Software developer, Leeds"' } });
+    expect(tool("page_click").classify!({ ref: 1 })).toBe("outbound");
+    expect(tool("page_type").classify!({ ref: 2, text: "x" })).toBe("outbound");
+    expect(tool("page_click").classify!({ ref: 7 })).toBe("read");
+  });
+
+  it("asks for Enter in a field whose label sounds like sending, and covers it for none", async () => {
+    const tool = tools({ host: "example.com", kinds: { 2: "search", 8: "search" }, lines: { 2: 'searchbox "Reply to all"', 8: 'searchbox "Search jobs"' }, typedInto: 2, focused: "search" });
+    expect(tool("page_press").classify!({ key: "Enter" })).toBe("outbound");
+    expect(await approveAllCover(tool("page_press"), { key: "Enter" })).toBeUndefined();
+    const plain = tools({ host: "example.com", kinds: { 8: "search" }, lines: { 8: 'searchbox "Search jobs"' }, typedInto: 8, focused: "search" });
+    expect(plain("page_press").classify!({ key: "Enter" })).toBe("read");
   });
 
   it("leaves every other page tool to its own card", async () => {

@@ -319,6 +319,12 @@ export class BrowserController {
     this.focused = ref === null || !this.current ? null : { target: this.current, ref };
   }
 
+  /** The field just typed into, while the focus is known to be there. */
+  focusedRef(): number | undefined {
+    const f = this.focused;
+    return f && f.target === this.current ? f.ref : undefined;
+  }
+
   /** The kind of the field just typed into, while the focus is known to be there. */
   focusedKind(): ElementKind | undefined {
     const f = this.focused;
