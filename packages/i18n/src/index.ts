@@ -13,17 +13,17 @@
  * resolved when a module loaded would stay in the language of that moment.
  */
 
-import { messages as tr, onLinux as trLinux } from "./messages/tr.js";
-import { messages as en, onLinux as enLinux } from "./messages/en.js";
-import { messages as de, onLinux as deLinux } from "./messages/de.js";
-import { messages as fr, onLinux as frLinux } from "./messages/fr.js";
-import { messages as es, onLinux as esLinux } from "./messages/es.js";
-import { messages as it, onLinux as itLinux } from "./messages/it.js";
-import { messages as pt, onLinux as ptLinux } from "./messages/pt.js";
-import { messages as ru, onLinux as ruLinux } from "./messages/ru.js";
-import { messages as zh, onLinux as zhLinux } from "./messages/zh.js";
-import { messages as ja, onLinux as jaLinux } from "./messages/ja.js";
-import { messages as ko, onLinux as koLinux } from "./messages/ko.js";
+import { messages as tr, onLinux as trLinux, onWindows as trWindows } from "./messages/tr.js";
+import { messages as en, onLinux as enLinux, onWindows as enWindows } from "./messages/en.js";
+import { messages as de, onLinux as deLinux, onWindows as deWindows } from "./messages/de.js";
+import { messages as fr, onLinux as frLinux, onWindows as frWindows } from "./messages/fr.js";
+import { messages as es, onLinux as esLinux, onWindows as esWindows } from "./messages/es.js";
+import { messages as it, onLinux as itLinux, onWindows as itWindows } from "./messages/it.js";
+import { messages as pt, onLinux as ptLinux, onWindows as ptWindows } from "./messages/pt.js";
+import { messages as ru, onLinux as ruLinux, onWindows as ruWindows } from "./messages/ru.js";
+import { messages as zh, onLinux as zhLinux, onWindows as zhWindows } from "./messages/zh.js";
+import { messages as ja, onLinux as jaLinux, onWindows as jaWindows } from "./messages/ja.js";
+import { messages as ko, onLinux as koLinux, onWindows as koWindows } from "./messages/ko.js";
 import type { Catalogue, MessageKey, PluralForms, SystemTexts } from "./types.js";
 
 export type { Catalogue, MessageKey, PluralForms, SystemTexts } from "./types.js";
@@ -57,8 +57,9 @@ export type Locale = (typeof LOCALES)[number]["code"];
 const CATALOGUES: Record<Locale, Catalogue> = { tr, en, de, fr, es, it, pt, ru, zh, ja, ko };
 
 /**
- * Texts that say "this Mac" or "Finder" have a second wording for Linux,
- * used on Windows too until Windows has its own.
+ * Texts that say "this Mac" or "Finder" have a second wording for Linux.
+ * Windows shares it ("this computer", Ctrl) and has a third for what is its
+ * own: File Explorer, the Recycle Bin, its vault key, "not on Windows yet".
  * Each process is told its system once, before anything is shown; until then
  * the Mac wording is used, as it always was.
  */
@@ -67,6 +68,11 @@ export type System = "darwin" | "linux" | "win32";
 const ON_LINUX: Record<Locale, SystemTexts> = {
   tr: trLinux, en: enLinux, de: deLinux, fr: frLinux, es: esLinux, it: itLinux,
   pt: ptLinux, ru: ruLinux, zh: zhLinux, ja: jaLinux, ko: koLinux,
+};
+
+const ON_WINDOWS: Record<Locale, SystemTexts> = {
+  tr: trWindows, en: enWindows, de: deWindows, fr: frWindows, es: esWindows, it: itWindows,
+  pt: ptWindows, ru: ruWindows, zh: zhWindows, ja: jaWindows, ko: koWindows,
 };
 
 let system: System = "darwin";
@@ -139,6 +145,8 @@ export function has(key: string): key is MessageKey {
 
 function forSystem(locale: Locale, key: MessageKey): string | undefined {
   if (system === "darwin") return undefined;
+  const own = ON_WINDOWS[locale];
+  if (system === "win32" && Object.hasOwn(own, key)) return own[key];
   const texts = ON_LINUX[locale];
   return Object.hasOwn(texts, key) ? texts[key] : undefined;
 }
