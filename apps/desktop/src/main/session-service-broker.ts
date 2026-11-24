@@ -57,7 +57,7 @@ export class SessionServiceBroker {
    case 'history':o.onHistory?.(a[0] as never);return;
    case 'checkpoint':await o.onCheckpoint?.(a[0] as never);return;
    case 'settled':await o.onRunSettled?.(String(a[0]));for(const[k,h]of this.handles)if(h.runId===a[0])this.handles.delete(k);return;
-   case 'afterRun':o.afterRun?.({runId:String(a[0]),model:this.model(String(a[1])),words:a[2] as string[]});return;
+   case 'afterRun':o.afterRun?.({runId:String(a[0]),model:this.model(String(a[1])),words:a[2] as string[],status:a[3]==='max_steps'?'max_steps':'done'});return;
    case 'keepOutput':return o.keptOutputs?.keep(String(a[0]),String(a[1]),Number(a[2]));
    default:throw Error('Unknown session service.');
   }

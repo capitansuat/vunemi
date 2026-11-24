@@ -7,7 +7,7 @@ import { setLocale, t } from "@vunemi/i18n";
 import { WorkStore, conversationScope } from "../../src/main/work/store.js";
 import { TopicStore } from "../../src/main/topics/store.js";
 import { createFindingTools } from "../../src/main/work/findings.js";
-import { acceptAsk, whichAsk } from "../../src/main/topics/findings-ask.js";
+import { acceptAsk, asksAfter, whichAsk } from "../../src/main/topics/findings-ask.js";
 
 const REQUEST = "Find accountant jobs in London: full time?";
 
@@ -27,6 +27,15 @@ describe("whichAsk", () => {
     expect(whichAsk({ ...base, inTopic: true, found: [{}] })).toBeNull();
     expect(whichAsk({ ...base, asked: true, found: [{}] })).toBeNull();
     expect(whichAsk({ ...base, found: undefined })).toBeNull();
+  });
+});
+
+describe("asksAfter", () => {
+  it("asks after a finished task, and after one that ran out of steps only when it kept findings", () => {
+    expect(asksAfter("done", undefined)).toBe(true);
+    expect(asksAfter("max_steps", [{}])).toBe(true);
+    expect(asksAfter("max_steps", undefined)).toBe(false);
+    expect(asksAfter("max_steps", [])).toBe(false);
   });
 });
 

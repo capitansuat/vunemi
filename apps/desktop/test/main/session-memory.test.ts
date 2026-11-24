@@ -30,7 +30,7 @@ function makeSession(recall = async (_goal: string) => ({
   topic: ["Manager is Ayşe"],
 })) {
   const events: AgentEvent[] = [];
-  const after: { runId: string; words: string[] }[] = [];
+  const after: { runId: string; words: string[]; status: RunStatus }[] = [];
   const session = new AgentSession({
     tools: { list: () => [], get: () => undefined, register: () => {} } as never,
     emit: (e) => events.push(e),
@@ -38,7 +38,7 @@ function makeSession(recall = async (_goal: string) => ({
     onUntrustedOutput: () => {},
     grants: new Set<string>(),
     recall,
-    afterRun: ({ runId, words }) => after.push({ runId, words }),
+    afterRun: ({ runId, words, status }) => after.push({ runId, words, status }),
   });
   return { session, events, after };
 }
@@ -72,12 +72,23 @@ describe("memory in a conversation", () => {
     nextStatus = "done";
     const { session, after } = makeSession();
     for (const goal of ["one", "two", "three", "four"]) await session.start(goal, "lmstudio:m");
-    expect(after.at(-1)).toEqual({ runId: "r4", words: ["two", "three", "four"] });
+    expect(after.at(-1)).toEqual({ runId: "r4", words: ["two", "three", "four"], status: "done" });
     expect(session.userWords()).toEqual(["two", "three", "four"]);
     await session.start("five", "lmstudio:m", [], { unattended: true });
     expect(after).toHaveLength(4);
     nextStatus = "failed";
     await session.start("six", "lmstudio:m");
     expect(after).toHaveLength(4);
+  });
+
+  it("also tells of a watched task that ran out of steps, with its status, for what it kept", async () => {
+    seen.length = 0;
+    nextStatus = "max_steps";
+    const { session, after } = makeSession();
+    await session.start("look through the jobs", "lmstudio:m");
+    expect(after).toEqual([{ runId: "r1", words: ["look through the jobs"], status: "max_steps" }]);
+    nextStatus = "stopped";
+    await session.start("stop", "lmstudio:m");
+    expect(after).toHaveLength(1);
   });
 });

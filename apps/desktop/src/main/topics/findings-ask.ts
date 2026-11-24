@@ -10,6 +10,11 @@ import { keyOf, type TopicStore } from "./store.js";
 /** A new topic's name: at most this many characters, as the model's proposal is. */
 const NAME_CHARS = 40;
 
+/** Asked after a finished task, and after one that ran out of steps only when it kept findings. */
+export function asksAfter(status: "done" | "max_steps", found: readonly unknown[] | undefined): boolean {
+  return status === "done" || (found?.length ?? 0) > 0;
+}
+
 export function whichAsk(o: {
   inTopic: boolean;
   asked: boolean;

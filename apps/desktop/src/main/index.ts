@@ -85,7 +85,7 @@ import { convertToMarkdown, markdownArea, markitdownDir, registerMarkdownTools }
 import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { createFindingTools } from "./work/findings.js";
-import { acceptAsk, whichAsk } from "./topics/findings-ask.js";
+import { acceptAsk, asksAfter, whichAsk } from "./topics/findings-ask.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
 import { combined, tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
@@ -965,7 +965,12 @@ const sessionOptions: SessionOptions = {
     meetingsIndexed = true;
     return library.index(goal, new Set([...given, conversations.currentId]));
   },
-  afterRun: ({ runId, model, words }) => {
+  afterRun: ({ runId, model, words, status }) => {
+    // A task that ran out of steps is asked only about what it kept; the rest is for finished ones.
+    if (status !== "done") {
+      if (asksAfter(status, runFound.get(runId))) void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
+      return;
+    }
     // The model the user last ran with writes the lines about linked files while idle.
     topicsModel = model;
     // Once this run has let go: what it said is in the library before the next request.

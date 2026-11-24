@@ -155,7 +155,8 @@ export interface SessionOptions {
    * After a finished task the user watched: what they wrote lately, and the
    * model that did it, so memory can propose notes from their own words.
    */
-  afterRun?: (run: { runId: string; model: ChatModel; words: string[] }) => void;
+  /** After a task the user watched that finished or ran out of steps (`status`): what comes after it, such as the topic question. */
+  afterRun?: (run: { runId: string; model: ChatModel; words: string[]; status: "done" | "max_steps" }) => void;
 }
 
 /** A message waiting its turn. */
@@ -537,7 +538,7 @@ export class AgentSession {
         await this.compactHistory(result.runId, model, window, { allowSummary: result.status !== "stopped", force: false });
       }
       // Nobody watches a scheduled task to answer a card under it.
-      if (result.status === "done" && !run.unattended) this.opts.afterRun?.({ runId: result.runId, model, words: [...this.words] });
+      if ((result.status === "done" || result.status === "max_steps") && !run.unattended) this.opts.afterRun?.({ runId: result.runId, model, words: [...this.words], status: result.status });
     } finally {
       this.opts.taskPermissions?.store.expire("run-ended");
       try {
