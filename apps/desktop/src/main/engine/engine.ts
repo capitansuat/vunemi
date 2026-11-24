@@ -287,13 +287,41 @@ function reapStale(pidFile: string, binary: string): void {
   }
   rmSync(pidFile, { force: true });
   if (!Number.isInteger(pid) || pid <= 1) return;
+  // By now the pid may belong to anything: only our own engine is stopped.
+  if (!staleEngine(pid, binary)) return;
   try {
-    const command = execFileSync("ps", ["-p", String(pid), "-o", "command="], { encoding: "utf8" }).trim();
-    // By now the pid may belong to anything: only our own engine is stopped.
-    if (command.startsWith(`${binary} `) || command.includes(` ${binary} `)) process.kill(pid, "SIGKILL");
+    process.kill(pid, "SIGKILL");
   } catch {
     // Already gone.
   }
+}
+
+/**
+ * What the system says a process is: its command line from `ps` on macOS
+ * and Linux, its program's path on Windows (which has no `ps`). Null when
+ * it is gone or can't be read.
+ */
+export function processPath(pid: number, system: NodeJS.Platform = process.platform): string | null {
+  if (!Number.isInteger(pid) || pid <= 1) return null;
+  try {
+    const out = system === "win32"
+      ? execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", `(Get-Process -Id ${pid} -ErrorAction Stop).Path`], { encoding: "utf8", windowsHide: true, timeout: 15_000 })
+      : execFileSync("ps", ["-p", String(pid), "-o", "command="], { encoding: "utf8" });
+    return out.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Whether that pid is our engine. Windows compares the program's whole path
+ * (in any letter case); elsewhere the command must start with the engine.
+ */
+export function staleEngine(pid: number, binary: string, system: NodeJS.Platform = process.platform, read: (pid: number) => string | null = (p) => processPath(p, system)): boolean {
+  const seen = read(pid);
+  if (!seen) return false;
+  if (system === "win32") return seen.toLowerCase() === binary.toLowerCase();
+  return seen.startsWith(`${binary} `) || seen.includes(` ${binary} `);
 }
 
 /**
