@@ -86,6 +86,7 @@ import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
 import { createFindingTools } from "./work/findings.js";
 import { acceptAsk, asksAfter, whichAsk } from "./topics/findings-ask.js";
+import { pageAddress, temporaryTopic, writeAnswer } from "./topics/lookup-topic.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
 import { combined, tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
@@ -600,6 +601,15 @@ if (topics) {
 }
 /** Each run's request, word for word, for the findings it keeps (work/findings.ts); the latest few. */
 const runRequests = new Map<string, string>();
+/** The pages each run read, as the browser named them, for its answer's sources (topics/lookup-topic.ts); the latest few. */
+const runPages = new Map<string, string[]>();
+/** A scheduled task is running: nobody is there to keep or delete a temporary topic, so none is made. */
+let scheduledRun = false;
+/** The conversation gathers in its new temporary topic. */
+const linkTemporary = (name: string): void => {
+  conversations.setTopic(name);
+  send(CH.sessionsChanged, sessionList());
+};
 /** Web findings: pages in the conversation's topic, or its findings note. */
 const findings = work
   ? createFindingTools({
@@ -620,6 +630,10 @@ const findings = work
       onSaved: ({ runId, note, scope }) => {
         if (runId) record({ type: "note.saved", runId, noteId: note.id, title: note.title, scope, at: Date.now() });
       },
+      ensureTopic: (proposed, request) =>
+        topics && !scheduledRun
+          ? temporaryTopic({ topics, conversation: { ...(conversations.currentTopic && { topic: conversations.currentTopic }), declined: conversations.temporaryDeclined }, proposed, request, link: linkTemporary })
+          : null,
       onFinding: (runId, f) => {
         if (!runId) return;
         runFound.set(runId, [...(runFound.get(runId) ?? []), { ...(f.proposedTopic && { proposedTopic: f.proposedTopic }) }]);
@@ -642,6 +656,28 @@ const currentTopic = () => {
  * After a run in a conversation with no topic, asked once: does what the
  * user asked fit one? Decided by meaning in code (topics/suggest.ts).
  */
+/**
+ * After a lookup (a run that read a page) in a conversation with no topic the
+ * user chose: its answer goes into the temporary topic, made now when the run
+ * kept nothing yet. True when it gathers there; the topic question is not asked then.
+ */
+function gatherLookup(runId: string, answer: string): boolean {
+  const pages = runPages.get(runId);
+  if (!topics || !pages?.length) return false;
+  const own = currentTopic();
+  if (own && !own.temporary) return false;
+  const found = runFound.get(runId) ?? [];
+  // Nothing to keep: no topic is made for it.
+  if (!own && !answer.trim() && found.length === 0) return false;
+  const request = runRequests.get(runId) ?? "";
+  const proposed = [...found].reverse().find((f) => f.proposedTopic?.trim())?.proposedTopic ?? "";
+  const topic = temporaryTopic({ topics, conversation: { ...(own && { topic: own.name }), declined: conversations.temporaryDeclined }, proposed, request, link: linkTemporary });
+  if (!topic) return false;
+  void writeAnswer({ topics, topic, request, answer, addresses: pages, redact: redactOrThrow })
+    .catch((err: unknown) => console.error("[vunemi] lookup answer:", err instanceof Error ? err.message : String(err)));
+  return true;
+}
+
 async function askTopic(runId: string, request: string | undefined): Promise<void> {
   if (!topics || !request || conversations.currentTopic || conversations.topicAsked) return;
   const conversation = conversations.currentId;
@@ -887,6 +923,12 @@ function record(event: AgentEvent): void {
     runRequests.set(event.runId, event.goal);
     for (const old of [...runRequests.keys()].slice(0, Math.max(0, runRequests.size - 20))) runRequests.delete(old);
   }
+  if (event.type === "tool.finished" && event.ok) {
+    const address = pageAddress(event.output);
+    const read = runPages.get(event.runId) ?? [];
+    if (address && !read.includes(address) && read.length < 20) runPages.set(event.runId, [...read, address]);
+    for (const old of [...runPages.keys()].slice(0, Math.max(0, runPages.size - 20))) runPages.delete(old);
+  }
   activity.record(event);
   artefacts.record(event);
   presence.record(event);
@@ -965,10 +1007,11 @@ const sessionOptions: SessionOptions = {
     meetingsIndexed = true;
     return library.index(goal, new Set([...given, conversations.currentId]));
   },
-  afterRun: ({ runId, model, words, status }) => {
+  afterRun: ({ runId, model, words, status, answer }) => {
+    const gathered = gatherLookup(runId, answer);
     // A task that ran out of steps is asked only about what it kept; the rest is for finished ones.
     if (status !== "done") {
-      if (asksAfter(status, runFound.get(runId))) void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
+      if (!gathered && asksAfter(status, runFound.get(runId))) void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
       return;
     }
     // The model the user last ran with writes the lines about linked files while idle.
@@ -985,7 +1028,7 @@ const sessionOptions: SessionOptions = {
         record({ type: "memory.proposed", runId, proposals: found, at: Date.now() });
       })
       .catch((err: unknown) => console.error("[vunemi] memory proposals:", err instanceof Error ? err.message : String(err)));
-    void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
+    if (!gathered) void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
   },
 };
 const session = new SessionCoordinatorHost({
@@ -1236,6 +1279,7 @@ const scheduler = new Scheduler({
       // would make the desktop tools refuse every other app until Vunemi restarts.
       if (item.apps?.length) scheduledApps = new Set(item.apps.map((grant) => grant.bundleId));
       currentGrant = standingGrant ?? null;
+      scheduledRun = true;
       status = await session.start(goal, model, [], {
         unattended: true,
         waitLimitMs: SCHEDULED_WAIT_MS,
@@ -1245,6 +1289,7 @@ const scheduler = new Scheduler({
     } finally {
       scheduledApps = null;
       currentGrant = null;
+      scheduledRun = false;
     }
     if (status === "stopped" && standingGrant) {
       const stopped = new Notification({ title: t("automations.stopped", { title: item.title }), body: appLock.isLocked ? "" : summaryLine(session.lastDetail) });

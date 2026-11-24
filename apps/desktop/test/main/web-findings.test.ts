@@ -142,6 +142,36 @@ describe("with no topic", () => {
     expect(noteText()).toBe("## Find accountant jobs in London: full time, at least 35,000?\n- **Accountant, Acme**: 40,000 — https://jobs.example/job/1 (10:30)");
   });
 
+  it("keeps a first finding in the temporary topic ensureTopic gives, and no note", async () => {
+    const asked: string[][] = [];
+    tools = createFindingTools({
+      work, topics, where: () => here,
+      request: () => "Find accountant jobs in London",
+      page: async () => page, sources: () => ["jobs.example"], redact: (text) => text,
+      onSaved: () => {}, onFinding: () => {}, now: () => clock,
+      ensureTopic: (proposed, request) => {
+        asked.push([proposed, request]);
+        return topics.findTopic("Accountant jobs")?.name ?? topics.createTopic("Accountant jobs", request, { temporary: true }).name;
+      },
+    });
+    expect(await add({ title: "Accountant, Acme", text: "40,000", topic: "Accountant jobs" })).toContain('in the topic "Accountant jobs"');
+    expect(asked).toEqual([["Accountant jobs", "Find accountant jobs in London"]]);
+    expect(topics.readNote("Accountant jobs", "Accountant, Acme")?.text).toContain("Source: https://jobs.example/job/1");
+    expect(noteText()).toBeNull();
+  });
+
+  it("keeps the note as before when ensureTopic gives none", async () => {
+    tools = createFindingTools({
+      work, topics, where: () => here,
+      request: () => "Find accountant jobs in London",
+      page: async () => page, sources: () => [], redact: (text) => text,
+      onSaved: () => {}, onFinding: () => {}, now: () => clock,
+      ensureTopic: () => null,
+    });
+    await add({ title: "Accountant, Acme", text: "40,000" });
+    expect(noteText()).toContain("**Accountant, Acme**");
+  });
+
   it("asks the model to rewrite the note shorter when it is full, and changes nothing", async () => {
     for (let i = 0; i < 7; i++) await add({ title: `Job ${i}`, text: "z".repeat(490) });
     const before = noteText();

@@ -179,6 +179,11 @@ export interface FindingToolsOptions {
   redact: (text: string) => string | Promise<string>;
   onSaved: (saved: { runId?: string; note: WorkNote; scope: "project" | "conversation" }) => void;
   onFinding: (runId: string | undefined, f: Finding & { proposedTopic?: string }) => void;
+  /**
+   * With no topic: the temporary topic this lookup gathers in (topics/lookup-topic.ts),
+   * made on the first finding; null keeps the conversation's findings note.
+   */
+  ensureTopic?: (proposed: string, request: string) => string | null;
   now?: () => number;
 }
 
@@ -226,7 +231,7 @@ export function createFindingTools(opts: FindingToolsOptions): {
         const f: Finding = { request: opts.request(ctx.runId), title: await mask(rawTitle), text: await mask(rawText), url: page.url, at: now() };
         // Kept whole up to a title's length: the question shortens it at a word (topics/findings-ask.ts).
         const proposed = [...oneLine(String(a.topic ?? ""))].slice(0, FINDING_LIMITS.title).join("");
-        const topic = topicOf(where);
+        const topic = topicOf(where) ?? opts.ensureTopic?.(proposed, f.request) ?? null;
         let said: string;
         if (topic && opts.topics) {
           const kept = toTopic(opts.topics, topic, f, opts.sources());
