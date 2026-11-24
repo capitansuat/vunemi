@@ -266,7 +266,7 @@ export interface RunOptions {
   keptOutputs?: OutputKeeper;
   /**
    * Web findings: the tool that keeps one, and the tools that show a page.
-   * After FINDINGS_AFTER pages with none kept, the model is reminded once; what
+   * After FINDINGS_AFTER page views with none kept, the model is reminded once; what
    * this run kept is carried word for word through every checkpoint.
    */
   findings?: { tool: string; pages: ReadonlySet<string> };
@@ -398,8 +398,12 @@ export function overheadChars(tools: ToolRegistry, instructions?: string, opened
 const IN_RUN_LIMIT = 0.8;
 
 /** Pages shown with no finding kept before the model is reminded, once a run. */
-export const FINDINGS_AFTER = 4;
-export const FINDINGS_REMINDER = "[Vunemi: you have read several pages and added no finding. If any of it answers the request, add it now with web_finding_add; leave out what doesn't.]";
+/*
+ * Two page views: a lookup often goes to a page, reads it and answers at once,
+ * keeping nothing (installed trial, 24 Nov: after 4 the reminder never came).
+ */
+export const FINDINGS_AFTER = 2;
+export const FINDINGS_REMINDER = "[Vunemi: nothing from these pages is kept yet. If any of it answers the request, add it now with web_finding_add; leave out what doesn't.]";
 /** What a checkpoint carries of the run's findings, newest kept. */
 const FINDINGS_PINNED_CHARS = 3_000;
 /** The model is reminded from this many identical calls in a row. */

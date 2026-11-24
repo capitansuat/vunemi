@@ -1504,16 +1504,18 @@ describe("context window", () => {
     const reads = (n: number) => Array.from({ length: n }, (_, i) => ({ calls: [{ name: "page_read", argumentsText: `{"n":${i + 1}}` }] }));
     const toolOutputs = (req: ChatRequest) => req.messages.filter((m) => m.role === "tool").map((m) => m.content);
 
-    it("reminds the model once when several pages were read and nothing kept", async () => {
+    it("reminds the model once, as soon as a page has been opened and read with nothing kept", async () => {
       const { model, seen } = scripted([...reads(6), { text: "done" }]);
       await runAgent({ goal: "find accountant jobs", model, tools: registry(), findings, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
       const outs = toolOutputs(seen.at(-1)!);
       expect(outs.filter((o) => o.endsWith(FINDINGS_REMINDER))).toHaveLength(1);
-      expect(outs[3]!.endsWith(FINDINGS_REMINDER)).toBe(true);
+      // A lookup often goes to the page and reads it, then answers: the reminder is on the read.
+      expect(outs[1]!.endsWith(FINDINGS_REMINDER)).toBe(true);
+      expect(FINDINGS_REMINDER).not.toContain("several");
     });
 
     it("counts again from a kept finding", async () => {
-      const { model, seen } = scripted([...reads(3), { calls: [{ name: "web_finding_add", argumentsText: '{"title":"Accountant, Acme","text":"40,000"}' }] }, ...reads(3), { text: "done" }]);
+      const { model, seen } = scripted([...reads(1), { calls: [{ name: "web_finding_add", argumentsText: '{"title":"Accountant, Acme","text":"40,000"}' }] }, ...reads(1), { text: "done" }]);
       await runAgent({ goal: "find accountant jobs", model, tools: registry(), findings, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
       expect(toolOutputs(seen.at(-1)!).some((o) => o.endsWith(FINDINGS_REMINDER))).toBe(false);
     });
