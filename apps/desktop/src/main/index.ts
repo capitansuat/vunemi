@@ -10,8 +10,11 @@ import {installNativeRecipesUnavailable} from './native-recipes/unavailable.js';
 import {assertModelRecoveryAllowed} from './task-recovery.js';
 import {scopedApprovalRequest,permissionListRequest,permissionRevokeRequest} from "./task-permissions-ipc.js";
 import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeImage, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
-import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { execFile, execFileSync, spawn as spawnProcess } from "node:child_process";
+import { createWriteStream, existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { join, resolve } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -92,8 +95,10 @@ import { summarise } from "./topics/summaries.js";
 import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
-import { PRODUCTION, type FeedSource } from "./updates/feed.js";
-import { UpdateService } from "./updates/service.js";
+import { localWindowsSource, PRODUCTION, windowsSource, type FeedSource } from "./updates/feed.js";
+import { UpdateService, type Updater } from "./updates/service.js";
+import { installableOnWindows, installerKey, WindowsUpdater } from "./updates/windows-updater.js";
+import { WINDOWS_UPDATE_KEY } from "./updates/windows-key.js";
 import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
 import { recoveryOwner, refusedBeforeStart } from "./recovery-owner.js";
@@ -1969,16 +1974,52 @@ handle(CH.reportProblem, () => reportProblem());
  * A test build may be pointed at a local feed to try an update end to end;
  * a build for other people only ever asks vunemi.com.
  */
+const windowsArch = process.arch === "arm64" ? "arm64" : "x64";
+
 function updateSource(): FeedSource | null {
   if (isLocalTestBuild(ownManifest())) {
     const local = process.env.VUNEMI_UPDATE_FEED;
     if (!local || !/^http:\/\/127\.0\.0\.1:\d+\/$/.test(local)) return null;
+    if (platform.id === "win32") return localWindowsSource(local, windowsArch, WINDOWS_UPDATE_KEY);
     return { feed: `${local}mac-arm64.json`, zip: (version) => `${local}Vunemi-${version}-arm64.zip` };
   }
   // No updater on Linux yet: the window links to the download page instead.
   if (!platform.features.inAppUpdates) return null;
-  return app.isPackaged ? PRODUCTION : null;
+  if (!app.isPackaged) return null;
+  return platform.id === "win32" ? windowsSource(windowsArch, WINDOWS_UPDATE_KEY) : PRODUCTION;
 }
+
+/** Where the Windows installer put this Vunemi, as it recorded it; null when it didn't (a development run). Asked once. */
+let installLocation: string | null | undefined;
+function windowsInstallLocation(): string | null {
+  if (installLocation !== undefined) return installLocation;
+  installLocation = readInstallLocation();
+  return installLocation;
+}
+function readInstallLocation(): string | null {
+  try {
+    const out = execFileSync("reg.exe", ["query", `HKCU\\Software\\${installerKey("com.vunemi.app")}`, "/v", "InstallLocation"], { encoding: "utf8", windowsHide: true, timeout: 10_000 });
+    return /InstallLocation\s+REG_SZ\s+(.+)/.exec(out)?.[1]?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+// Windows: Vunemi downloads the signed installer itself and runs it after quitting.
+const windowsUpdater = platform.id === "win32" ? new WindowsUpdater({
+  dir: join(app.getPath("userData"), "updates"),
+  arch: windowsArch,
+  download: async (url, file) => {
+    const res = await net.fetch(url, { cache: "no-store" });
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream<Uint8Array>), createWriteStream(file));
+  },
+  spawn: (file, args) => spawnProcess(file, args, { detached: true, stdio: "ignore" }).unref(),
+  quit: () => {
+    updating = true;
+    app.quit();
+  },
+}) : null;
 
 const runTool = (cmd: string, args: string[]): Promise<string> =>
   new Promise((resolve, reject) => execFile(cmd, args, { encoding: "utf8", timeout: 30_000 }, (err, stdout) => (err ? reject(err) : resolve(stdout))));
@@ -1992,12 +2033,12 @@ const updates = updateSourceNow && new UpdateService({
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
-  updater: autoUpdater,
+  updater: windowsUpdater ?? (autoUpdater as unknown as Updater),
   enabled: () => settings.updatesCheck,
-  installable: () => app.isInApplicationsFolder(),
+  installable: () => windowsUpdater ? installableOnWindows(process.execPath, windowsInstallLocation(), app.isPackaged) : app.isInApplicationsFolder(),
   // Nothing a restart would cut short: no task running or waiting, no mail about to go, no meeting being recorded.
   idle: () => !session.running && session.queued.length === 0 && !mailOutbox.busy && !meetings.status().recording,
-  stagedMatches: () => stagedMatches(
+  stagedMatches: () => windowsUpdater ? windowsUpdater.stagedMatches() : stagedMatches(
     runTool,
     join(homedir(), "Library/Caches/com.vunemi.app.ShipIt/ShipItState.plist"),
     app.getPath("exe").replace(/\/Contents\/MacOS\/[^/]+$/, ""),

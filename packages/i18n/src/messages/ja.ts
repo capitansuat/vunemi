@@ -2098,4 +2098,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "アドオンは Windows ではまだ利用できません。macOS のサンドボックス内で動作するためです。",
   "linux.updates": "Windows では Vunemi はまだ自動でアップデートされません。新しいバージョンはダウンロードページにあります。",
   "linux.backgroundRecipes": "App での予約作業は Windows ではまだ利用できません。",
+  "updates.moveFirst": "ここから更新するには、インストーラーで Vunemi をインストールしてください。",
 };

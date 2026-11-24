@@ -2098,4 +2098,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "Los complementos aún no están disponibles en Windows: se ejecutan dentro del entorno aislado de macOS.",
   "linux.updates": "Vunemi aún no se actualiza solo en Windows. Las nuevas versiones están en la página de descarga.",
   "linux.backgroundRecipes": "Las tareas programadas en apps aún no están disponibles en Windows.",
+  "updates.moveFirst": "Instala Vunemi con su instalador para actualizarlo desde aquí.",
 };

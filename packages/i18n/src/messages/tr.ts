@@ -2108,4 +2108,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "Eklentiler Windows'ta henüz yok: macOS'in korumalı alanında çalışıyorlar.",
   "linux.updates": "Vunemi Windows'ta henüz kendini güncellemiyor. Yeni sürümler indirme sayfasında.",
   "linux.backgroundRecipes": "Uygulamalarda zamanlanmış işler Windows'ta henüz yok.",
+  "updates.moveFirst": "Burada güncellemek için Vunemi'yi kurulum dosyasıyla kur.",
 };

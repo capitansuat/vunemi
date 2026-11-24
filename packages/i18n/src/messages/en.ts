@@ -2098,4 +2098,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "Add-ons are not available on Windows yet: they run inside macOS's sandbox.",
   "linux.updates": "Vunemi doesn't update itself on Windows yet. New versions are on the download page.",
   "linux.backgroundRecipes": "Scheduled work in apps is not available on Windows yet.",
+  "updates.moveFirst": "Install Vunemi with its installer to update it from here.",
 };

@@ -2098,4 +2098,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "추가 기능은 Windows에서 아직 사용할 수 없습니다. macOS의 샌드박스 안에서 실행되기 때문입니다.",
   "linux.updates": "Windows에서는 Vunemi가 아직 스스로 업데이트되지 않습니다. 새 버전은 다운로드 페이지에 있습니다.",
   "linux.backgroundRecipes": "앱의 예약 작업은 Windows에서 아직 사용할 수 없습니다.",
+  "updates.moveFirst": "여기에서 업데이트하려면 설치 프로그램으로 Vunemi를 설치하십시오.",
 };

@@ -2113,4 +2113,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "Дополнения пока недоступны в Windows: они работают в песочнице macOS.",
   "linux.updates": "В Windows Vunemi пока не обновляется сам. Новые версии — на странице загрузки.",
   "linux.backgroundRecipes": "Запланированные задачи в приложениях пока недоступны в Windows.",
+  "updates.moveFirst": "Установите Vunemi с помощью установщика, чтобы обновлять его отсюда.",
 };

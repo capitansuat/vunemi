@@ -17,7 +17,8 @@ export const WINDOWS_FEATURES: PlatformFeatures = {
   appLock: false,
   backgroundRecipes: false,
   addons: false,
-  inAppUpdates: false,
+  // The signed installer, checked against the maintainer's key (apps/desktop/src/main/updates).
+  inAppUpdates: true,
   archives: false,
   atomicMove: false,
   speakAloud: true,

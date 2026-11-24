@@ -116,11 +116,13 @@ const EXPLORER_KEYS = ["app.projects.revealLabel", "artefacts.reveal", "topics.p
 const RECYCLE_KEYS = ["topics.page.deleteNoteConfirm", "topics.page.deleteSourceConfirm", "topics.page.deleteTopicConfirm", "topics.page.toTrash", "main.download.undo", "files.preview.trash", "files.undo.untrash", "files.undo.toTrash", "connectors.files.description"];
 const VAULT_KEYS = ["vault.unlocking", "vault.intro", "vaultStore.locked", "linux.vault.noKeyring", "linux.vault.keyUnreadable", "linux.vault.unlockHint"];
 const NOT_YET_KEYS = ["linux.connection", "linux.appleMail", "linux.meetings", "linux.appLock", "linux.addons", "linux.updates", "linux.backgroundRecipes"];
+// Updating from a copy the installer didn't put in place.
+const UPDATE_KEYS = ["updates.moveFirst"];
 
 describe("the Windows wording", () => {
   it("covers the same keys in every language", () => {
     const keys = Object.keys(trWindows).sort();
-    expect(keys).toEqual([...EXPLORER_KEYS, ...RECYCLE_KEYS, ...VAULT_KEYS, ...NOT_YET_KEYS].sort());
+    expect(keys).toEqual([...EXPLORER_KEYS, ...RECYCLE_KEYS, ...VAULT_KEYS, ...NOT_YET_KEYS, ...UPDATE_KEYS].sort());
     for (const [lang, texts] of Object.entries(ON_WINDOWS)) expect(Object.keys(texts).sort(), lang).toEqual(keys);
   });
 
@@ -153,6 +155,8 @@ describe("the Windows wording", () => {
     setLocale("en");
     setSystem("win32");
     expect(t("artefacts.reveal")).toBe("Show in File Explorer");
+    // Updating asks for the installed copy, not the Applications folder.
+    expect(t("updates.moveFirst")).toBe("Install Vunemi with its installer to update it from here.");
     // What Windows shares with Linux still comes from the Linux wording.
     expect(t("app.local")).toBe("The model and your data stay on this computer.");
     setSystem("linux");

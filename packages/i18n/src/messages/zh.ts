@@ -2098,4 +2098,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "扩展在 Windows 上暂不可用：它们在 macOS 的沙盒中运行。",
   "linux.updates": "Vunemi 在 Windows 上暂不能自动更新。新版本在下载页面上。",
   "linux.backgroundRecipes": "App 中的定时任务在 Windows 上暂不可用。",
+  "updates.moveFirst": "请用安装程序安装 Vunemi，才能在这里更新它。",
 };
