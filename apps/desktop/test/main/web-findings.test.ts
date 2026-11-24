@@ -11,7 +11,7 @@ import { setLocale, t } from "@vunemi/i18n";
 import type { ToolDef } from "@vunemi/agent-core";
 import { WorkStore, conversationScope, projectScope } from "../../src/main/work/store.js";
 import { TopicStore } from "../../src/main/topics/store.js";
-import { addToNote, createFindingTools, moveNoteToTopic, type Finding } from "../../src/main/work/findings.js";
+import { addToNote, createFindingTools, moveNoteToTopic, pageText, type Finding } from "../../src/main/work/findings.js";
 
 let base = "";
 let work: WorkStore;
@@ -26,7 +26,9 @@ const ctx = { runId: "r1", signal: new AbortController().signal } as never;
 const tool = (name: string): ToolDef => tools.tools.find((x) => x.name === name)!;
 const add = (args: Record<string, unknown>) => tool("web_finding_add").run(args, ctx);
 
+const zone = process.env.TZ;
 beforeEach(() => {
+  process.env.TZ = "UTC";
   setLocale("en");
   base = mkdtempSync(join(tmpdir(), "vunemi-findings-"));
   work = new WorkStore(join(base, "work"), () => clock);
@@ -48,6 +50,8 @@ beforeEach(() => {
   });
 });
 afterEach(() => {
+  if (zone === undefined) delete process.env.TZ;
+  else process.env.TZ = zone;
   work.close();
   rmSync(base, { recursive: true, force: true });
 });
@@ -68,7 +72,21 @@ describe("addToNote", () => {
 
   it("doesn't add the same item twice", () => {
     const one = addToNote(null, f({}), 4_000) as { text: string };
-    expect(addToNote(one.text, f({ text: "updated words" }), 4_000)).toEqual({ text: one.text, added: false });
+    expect(addToNote(one.text, f({}), 4_000)).toEqual({ text: one.text, added: false });
+  });
+
+  it("writes the time and day where the user is", () => {
+    process.env.TZ = "Europe/Istanbul";
+    const late = Date.UTC(2026, 10, 24, 22, 30);
+    expect((addToNote(null, f({ at: late }), 4_000) as { text: string }).text).toContain("(01:30)");
+    expect(pageText(f({ at: late }))).toContain("(2026-11-25)");
+  });
+
+  it("keeps two items of the same name from one list page", () => {
+    const one = addToNote(null, f({ title: "Python Programmer", text: "Company: Moss; Location: Port Sara" }), 4_000) as { text: string };
+    const two = addToNote(one.text, f({ title: "Python Programmer", text: "Company: Cooper; Location: West Victor" }), 4_000) as { text: string; added: boolean };
+    expect(two.added).toBe(true);
+    expect(two.text.split("\n").filter((l) => l.startsWith("- **Python Programmer**"))).toHaveLength(2);
   });
 
   it("says it is full instead of cutting anything", () => {
@@ -92,11 +110,21 @@ describe("in a topic", () => {
     expect(list.text).toBe("- [[Accountant Acme Ltd]] — https://jobs.example/job/1");
   });
 
-  it("updates the page when the same item is found again, and lists it once", async () => {
+  it("writes the same item with the same facts once, and lists it once", async () => {
     await add({ title: "Accountant, Acme", text: "40,000" });
-    await add({ title: "Accountant, Acme", text: "42,000 after review" });
-    expect(topics.readNote("Job hunt", "Accountant, Acme")!.text).toContain("42,000 after review");
+    await add({ title: "Accountant, Acme", text: "40,000" });
+    expect(topics.listNotes("Job hunt").filter((n) => n.title.startsWith("Accountant"))).toHaveLength(1);
     expect(topics.listNotes("Job hunt").find((n) => n.title.startsWith("Web findings"))!.text.match(/\[\[/g)).toHaveLength(1);
+  });
+
+  it("gives a second item of the same name its own page, and says how to change the first", async () => {
+    await add({ title: "Python Programmer", text: "Company: Moss; Location: Port Sara" });
+    const said = await add({ title: "Python Programmer", text: "Company: Cooper; Location: West Victor" });
+    expect(topics.readNote("Job hunt", "Python Programmer")!.text).toContain("Moss");
+    expect(topics.readNote("Job hunt", "Python Programmer (2)")!.text).toContain("Cooper");
+    expect(said).toContain('Kept "Python Programmer (2)"');
+    expect(said).toContain("topic_note_write");
+    expect(topics.listNotes("Job hunt").find((n) => n.title.startsWith("Web findings"))!.text.match(/\[\[/g)).toHaveLength(2);
   });
 
   it("never writes over a page the user wrote", async () => {

@@ -48,8 +48,10 @@ export function safeTitle(raw: string, max: number = FINDING_LIMITS.title): stri
 }
 
 const oneLine = (s: string): string => s.replace(/\s+/g, " ").trim();
-const clock = (at: number): string => new Date(at).toISOString().slice(11, 16);
-const day = (at: number): string => new Date(at).toISOString().slice(0, 10);
+const two = (n: number): string => String(n).padStart(2, "0");
+/** The user's own clock and calendar, as they read the note. */
+const clock = (at: number): string => { const d = new Date(at); return `${two(d.getHours())}:${two(d.getMinutes())}`; };
+const day = (at: number): string => { const d = new Date(at); return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`; };
 
 /** A line of the conversation's findings note. */
 const noteLine = (f: Finding): string => `- **${oneLine(f.title)}**: ${oneLine(f.text)} — ${f.url} (${clock(f.at)})`;
@@ -76,7 +78,8 @@ export function addToNote(note: string | null, f: Finding, limit: number): { tex
   if (at >= 0) {
     const same = blocks[at]!.split("\n").slice(1).some((l) => {
       const m = LINE.exec(l);
-      return m !== null && m[1] === oneLine(f.title) && m[3] === f.url;
+      // A list page shows many items of one name at one address: only the same facts are the same item.
+      return m !== null && m[1] === oneLine(f.title) && m[3] === f.url && m[2] === oneLine(f.text);
     });
     if (same) return { text, added: false };
     blocks[at] = `${blocks[at]!.trimEnd()}\n${line}`;
@@ -115,11 +118,26 @@ export function listTitle(request: string): string {
   return safeTitle(t("findings.listTitle", { request: shortRequest }), FINDING_LIMITS.title + FINDING_LIMITS.listRequest).slice(0, 80).trim();
 }
 
-/** Writes the finding's page and its list line in the topic; returns the page's title. */
-function toTopic(topics: TopicStore, topic: string, f: Finding, sources: string[]): string {
-  let title = safeTitle(f.title) || "…";
-  const theirs = topics.readNote(topic, title);
-  if (theirs && theirs.by === "user") title = safeTitle(`${[...title].slice(0, FINDING_LIMITS.title - 6).join("")} (web)`);
+const SOURCE_LINE = /\n\nSource: \S+ \(\d{4}-\d\d-\d\d\)$/;
+const cutTo = (title: string, room: number): string => [...title].slice(0, FINDING_LIMITS.title - room).join("").trim();
+
+/**
+ * Writes the finding's page and its list line in the topic; returns the
+ * page's title, and whether a page of the finding's name held another item.
+ * A page the user wrote is never written over (the finding goes to "… (web)").
+ * A page of this name with other facts is another item, as a list page shows
+ * many alike: the finding gets the next free name, "… (2)", and nothing is lost.
+ */
+function toTopic(topics: TopicStore, topic: string, f: Finding, sources: string[]): { title: string; other: boolean } {
+  let base = safeTitle(f.title) || "…";
+  const theirs = topics.readNote(topic, base);
+  if (theirs && theirs.by === "user") base = safeTitle(`${cutTo(base, 6)} (web)`);
+  let title = base;
+  for (let n = 2; n <= 100; n++) {
+    const at = topics.readNote(topic, title);
+    if (!at || (at.by !== "user" && at.text.replace(SOURCE_LINE, "").trim() === f.text.trim())) break;
+    title = safeTitle(`${cutTo(base, String(n).length + 3)} (${n})`);
+  }
   topics.writeNote(topic, { title, text: pageText(f), by: "vunemi", sources });
   const list = listTitle(f.request);
   const old = topics.readNote(topic, list);
@@ -129,7 +147,7 @@ function toTopic(topics: TopicStore, topic: string, f: Finding, sources: string[
     // A full list page keeps the pages; only the line is left out.
     if (next.length <= 4_000) topics.writeNote(topic, { title: list, text: next, by: old?.by ?? "vunemi", sources });
   }
-  return title;
+  return { title, other: title !== base };
 }
 
 /**
@@ -187,7 +205,7 @@ export function createFindingTools(opts: FindingToolsOptions): {
   const tools: ToolDef[] = [
     {
       name: "web_finding_add",
-      description: `Keep one item from the open page that matches the request (a job, a product), facts as written; skip items that don't match. Address added for you. title ≤${FINDING_LIMITS.title}, text ≤${FINDING_LIMITS.text}; topic: short name for the search.`,
+      description: `Keep one item from the open page that matches the request (a job, a product), facts as written; skip others. Address is added. title: the item and who offers it, ≤${FINDING_LIMITS.title}; text ≤${FINDING_LIMITS.text}; topic: short name for the search.`,
       parameters: {
         type: "object",
         properties: { title: { type: "string" }, text: { type: "string" }, topic: { type: "string" } },
@@ -210,8 +228,9 @@ export function createFindingTools(opts: FindingToolsOptions): {
         const topic = topicOf(where);
         let said: string;
         if (topic && opts.topics) {
-          const title = toTopic(opts.topics, topic, f, opts.sources());
-          said = `Kept "${title}" (${f.url}) in the topic "${topic}".`;
+          const kept = toTopic(opts.topics, topic, f, opts.sources());
+          said = `Kept "${kept.title}" (${f.url}) in the topic "${topic}".`;
+          if (kept.other) said += ` A page of that name held another item; to change that one instead, use topic_note_write.`;
         } else {
           const scope = noteScopeOf(where);
           const title = findingsTitle(where);
