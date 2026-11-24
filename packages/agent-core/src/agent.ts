@@ -264,6 +264,12 @@ export interface RunOptions {
   maxToolOutputChars?: number;
   /** Where long tool output is kept whole; without it, its middle is cut. */
   keptOutputs?: OutputKeeper;
+  /**
+   * Web findings: the tool that keeps one, and the tools that show a page.
+   * After FINDINGS_AFTER pages with none kept, the model is reminded once; what
+   * this run kept is carried word for word through every checkpoint.
+   */
+  findings?: { tool: string; pages: ReadonlySet<string> };
   /** Consecutive identical tool calls tolerated before the run is failed. Default 5; a reminder goes to the model from the third. */
   maxRepeats?: number;
   /** Tokens the model takes per request; trimming starts before it fills. */
@@ -390,6 +396,12 @@ export function overheadChars(tools: ToolRegistry, instructions?: string, opened
 
 /** In a run, trimming starts past this share of the window. */
 const IN_RUN_LIMIT = 0.8;
+
+/** Pages shown with no finding kept before the model is reminded, once a run. */
+export const FINDINGS_AFTER = 4;
+export const FINDINGS_REMINDER = "[Vunemi: you have read several pages and added no finding. If any of it answers the request, add it now with web_finding_add; leave out what doesn't.]";
+/** What a checkpoint carries of the run's findings, newest kept. */
+const FINDINGS_PINNED_CHARS = 3_000;
 /** The model is reminded from this many identical calls in a row. */
 const REMIND_AT = 3;
 /** Sent with the one request after the steps run out; never kept in the conversation. */
@@ -682,6 +694,10 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const listedParts = areaMode ? listedRequest(tools, areas, listed, opts.instructions, offerable, withinRun, opts.compactTaskTools) : null;
   const system = listedParts?.system ?? systemPrompt(opts.instructions);
   const ephemeral = new Map(tools.list().flatMap((t) => (t.ephemeral ? [[t.name, t.stale] as const] : [])));
+  // Web findings (opts.findings): pages since the last one, whether the model was reminded, and what this run kept.
+  let pagesSinceFinding = 0;
+  let findingsReminded = false;
+  const keptFindings: string[] = [];
   // Recomputed when a guide opens a group of tools; the same otherwise. With
   // areas never: the group's definitions are given in the conversation instead.
   let toolSpecs = (listedParts?.tools ?? toolSpecsOf(tools, opts.openedTools, offerable, toolGoal, withinRun)).filter(spec => {
@@ -1214,6 +1230,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
 
         let output = await handleCall(call, stepId);
         if (repeats >= REMIND_AT) output += REPEAT_REMINDER;
+        output = noteFinding(call, output);
         convo.push({ role: "tool", content: output, toolCallId: call.id, toolName: realName(call) });
         checkpoint();
         if (approvalRejected) return finish("stopped", t("agent.rejectionStopped"));
@@ -1476,6 +1493,46 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
    * tool output, which costs no model call; `hard` — the server already
    * refused — trims harder and may summarise earlier turns.
    */
+  /**
+   * Counts pages shown since the last finding and reminds the model once a
+   * run; keeps each finding the tool confirmed ("Kept "<title>" (<address>)"),
+   * with the text the model gave, for checkpoints.
+   */
+  function noteFinding(call: ToolCall, output: string): string {
+    const f = opts.findings;
+    if (!f) return output;
+    const name = realName(call);
+    if (name === f.tool) {
+      pagesSinceFinding = 0;
+      const url = /^Kept ".*?" \((https?:\/\/[^\s)]+)\)/.exec(output)?.[1];
+      if (url) {
+        let args: { title?: unknown; text?: unknown } = {};
+        const inner = call.name === TOOL_RUN ? unwrapRun(call.argumentsText) : call;
+        try { args = JSON.parse("argumentsText" in inner ? inner.argumentsText : "{}") as typeof args; } catch { /* kept without its words */ }
+        keptFindings.push(`- ${String(args.title ?? "").trim()}: ${String(args.text ?? "").replace(/\s+/g, " ").trim()} — ${url}`);
+      }
+      return output;
+    }
+    if (!f.pages.has(name)) return output;
+    pagesSinceFinding++;
+    if (findingsReminded || pagesSinceFinding < FINDINGS_AFTER) return output;
+    findingsReminded = true;
+    return `${output}\n\n${FINDINGS_REMINDER}`;
+  }
+
+  /** This run's findings for a checkpoint, newest kept when there are too many. */
+  function pinnedFindings(): string | undefined {
+    const out: string[] = [];
+    let used = 0;
+    for (let i = keptFindings.length - 1; i >= 0; i--) {
+      const line = keptFindings[i]!;
+      if (used + line.length + 1 > FINDINGS_PINNED_CHARS) break;
+      out.unshift(line);
+      used += line.length + 1;
+    }
+    return out.length ? out.join("\n") : undefined;
+  }
+
   async function makeRoom(hard: boolean): Promise<void> {
     // Compaction may change message indices. Resume full context before
     // pruning so a stale literal-history offset cannot hide the request.
@@ -1499,6 +1556,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       allowSummary: hard,
       force: hard,
       signal,
+      pinned: pinnedFindings(),
     });
     if (result.kind === "none" && !dropped) return;
     convo.splice(0, convo.length, ...result.history);

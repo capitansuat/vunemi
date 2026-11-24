@@ -165,10 +165,30 @@ describe("either way", () => {
     expect(noteText()).not.toContain("abcdefghijklmnopqrstuvwxyz0123456789ABCD");
   });
 
+  it("says what it kept with the page's address, as the agent reads it for checkpoints", async () => {
+    expect(await add({ title: "Accountant, Acme", text: "40,000" })).toMatch(/^Kept "Accountant, Acme" \(https:\/\/jobs\.example\/job\/1\) /);
+    topics.createTopic("Job hunt", "");
+    here = { ...here, topic: "Job hunt" };
+    expect(await add({ title: "Auditor: Gamma", text: "45,000" })).toMatch(/^Kept "Auditor Gamma" \(https:\/\/jobs\.example\/job\/1\) /);
+  });
+
   it("tells who asked what was found, and keeps this run's findings", async () => {
     await add({ title: "Accountant, Acme", text: "40,000", topic: "Job hunt" });
     expect(found).toEqual([expect.objectContaining({ title: "Accountant, Acme", url: "https://jobs.example/job/1", proposedTopic: "Job hunt" })]);
     expect(tools.runFindings("r1")).toEqual([expect.objectContaining({ title: "Accountant, Acme" })]);
     expect(tools.runFindings("other")).toEqual([]);
+  });
+});
+
+describe("findingsOption", () => {
+  it("is given to a run only while the findings tool is offered", async () => {
+    const { ToolRegistry } = await import("@vunemi/agent-core");
+    const { findingsOption } = await import("../../src/main/work/findings.js");
+    const registry = new ToolRegistry();
+    expect(findingsOption(registry)).toBeUndefined();
+    registry.register(tools.tools[0]!);
+    const option = findingsOption(registry)!;
+    expect(option.tool).toBe("web_finding_add");
+    expect([...option.pages].sort()).toEqual(["page_back", "page_click", "page_describe", "page_goto", "page_read", "page_scroll"]);
   });
 });

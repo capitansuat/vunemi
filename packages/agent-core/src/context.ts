@@ -299,7 +299,13 @@ export interface CompactOptions {
   budget?: Budget;
   /** Told just before the summarizer is called, so the UI can say so. */
   onSummarizing?: () => void;
+  /** What the run kept (web findings), carried word for word after the summary. */
+  pinned?: string;
 }
+
+/** The summary with what must not be lost carried word for word after it. */
+const withPinned = (summary: string, pinned: string | undefined): string =>
+  pinned?.trim() ? `${summary}\n\nWeb findings so far, word for word:\n${pinned.trim()}` : summary;
 
 export interface Compacted {
   history: ChatMessage[];
@@ -352,7 +358,7 @@ export async function compact(history: readonly ChatMessage[], o: CompactOptions
   }
   if (summary === null) return { ...trimmed, error: "summary was unusable or over budget" };
 
-  let next = [withSummary(summary, history[start]!, earlierRequests(older)), ...history.slice(start + 1)];
+  let next = [withSummary(withPinned(summary, o.pinned), history[start]!, earlierRequests(older)), ...history.slice(start + 1)];
   if (tokens(next) > limit) next = prune(next);
   return { history: next, kind: "summarized", before, after: tokens(next), summary };
 }
@@ -395,7 +401,7 @@ async function checkpointSteps(
   if (summary === null) return { ...trimmed, error: "summary was unusable or over budget" };
 
   const request = { ...first, content: first.content.replace(SUMMARY_BLOCK, "") } as ChatMessage;
-  let next = [withSummary(summary, request, earlierRequests([first]).slice(0, -1), true), ...history.slice(stepsStart)];
+  let next = [withSummary(withPinned(summary, o.pinned), request, earlierRequests([first]).slice(0, -1), true), ...history.slice(stepsStart)];
   if (tokens(next) > o.window * o.target) next = prune(next);
   return { history: next, kind: "summarized", before: trimmed.before, after: tokens(next), summary };
 }

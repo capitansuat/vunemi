@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { taskProgressTool, tasksFromEvents } from "../src/tasks.js";
-import { announcesRead, argumentMisfit, claimsChange, comparesOptions, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
+import { announcesRead, argumentMisfit, claimsChange, comparesOptions, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, FINDINGS_REMINDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
 import { requestedTravelTools } from "../src/travel-intent.js";
 import { choiceTools } from "../src/choices.js";
 import { GUARD_NOTE } from "../src/guard.js";
@@ -1493,6 +1493,56 @@ describe("context window", () => {
     const result = await runAgent({ goal: "Find the price of the blue kettle on shop.example", model, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }), contextWindow: nCtx, maxSteps: 30 });
     expect(result.detail).toBe("The blue kettle costs 30.");
     expect(result.status).toBe("done");
+  });
+
+  describe("web findings", () => {
+    const page = (n: number) => `[tab 1] Jobs — https://jobs.example/${n}\n${"- job listing line\n".repeat(20)}`;
+    const registry = () => new ToolRegistry()
+      .register({ name: "page_read", description: "read", parameters: { type: "object", properties: { n: { type: "number" } } }, actionClass: "read", run: async (a) => page(Number((a as { n: number }).n)) })
+      .register({ name: "web_finding_add", description: "keep", parameters: { type: "object", properties: { title: { type: "string" }, text: { type: "string" } } }, actionClass: "read", run: async (a) => `Kept "${(a as { title: string }).title}" (https://jobs.example/9) in this conversation's findings.` });
+    const findings = { tool: "web_finding_add", pages: new Set(["page_read"]) };
+    const reads = (n: number) => Array.from({ length: n }, (_, i) => ({ calls: [{ name: "page_read", argumentsText: `{"n":${i + 1}}` }] }));
+    const toolOutputs = (req: ChatRequest) => req.messages.filter((m) => m.role === "tool").map((m) => m.content);
+
+    it("reminds the model once when several pages were read and nothing kept", async () => {
+      const { model, seen } = scripted([...reads(6), { text: "done" }]);
+      await runAgent({ goal: "find accountant jobs", model, tools: registry(), findings, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+      const outs = toolOutputs(seen.at(-1)!);
+      expect(outs.filter((o) => o.endsWith(FINDINGS_REMINDER))).toHaveLength(1);
+      expect(outs[3]!.endsWith(FINDINGS_REMINDER)).toBe(true);
+    });
+
+    it("counts again from a kept finding", async () => {
+      const { model, seen } = scripted([...reads(3), { calls: [{ name: "web_finding_add", argumentsText: '{"title":"Accountant, Acme","text":"40,000"}' }] }, ...reads(3), { text: "done" }]);
+      await runAgent({ goal: "find accountant jobs", model, tools: registry(), findings, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+      expect(toolOutputs(seen.at(-1)!).some((o) => o.endsWith(FINDINGS_REMINDER))).toBe(false);
+    });
+
+    it("carries this run's findings through a checkpoint", async () => {
+      const nCtx = 8_192;
+      let steps = 0;
+      let afterCheckpoint = "";
+      const model: ChatModel = {
+        id: "fake:server",
+        async chat(req) {
+          const tokens = Math.ceil(JSON.stringify({ m: req.messages, t: req.tools }).length / 3);
+          if (tokens > nCtx) throw new ProviderError("http", `HTTP 400 from x: request (${tokens} tokens) exceeds the available context size (${nCtx} tokens)`, "x");
+          const usage = { promptTokens: tokens, completionTokens: 20, ttftMs: 1, tokensPerSec: 1 };
+          if (req.messages.at(-1)!.content.includes("context checkpoint")) return { text: SUMMARY, toolCalls: [], usage };
+          if (req.messages[1]!.content.includes("<earlier_summary>")) afterCheckpoint ||= req.messages[1]!.content;
+          steps++;
+          if (steps === 2) return { text: "", toolCalls: [{ id: "f1", name: "web_finding_add", argumentsText: '{"title":"Accountant, Acme","text":"40,000 a year"}' }], usage };
+          if (steps > 26) return { text: "One job matches.", toolCalls: [], usage };
+          return { text: "", toolCalls: [{ id: `p${steps}`, name: "page_read", argumentsText: `{"n":${steps}}` }], usage };
+        },
+      };
+      const big = new ToolRegistry()
+        .register({ name: "page_read", description: "read", parameters: { type: "object", properties: { n: { type: "number" } } }, actionClass: "read", run: async () => `[tab 1] Jobs — https://jobs.example/\n${"- link \"A job\" [ref=3]\n".repeat(120)}` })
+        .register({ name: "web_finding_add", description: "keep", parameters: { type: "object", properties: {} }, actionClass: "read", run: async () => 'Kept "Accountant, Acme" (https://jobs.example/9) in this conversation\'s findings.' });
+      const result = await runAgent({ goal: "Find accountant jobs", model, tools: big, findings, emit: () => {}, requestApproval: async () => ({ kind: "approve" }), contextWindow: nCtx, maxSteps: 30 });
+      expect(result.status).toBe("done");
+      expect(afterCheckpoint).toContain("Web findings so far, word for word:\n- Accountant, Acme: 40,000 a year — https://jobs.example/9");
+    });
   });
 
   it("never shows the server's raw words when the context is full", async () => {

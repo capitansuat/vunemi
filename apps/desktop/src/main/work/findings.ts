@@ -201,7 +201,7 @@ export function createFindingTools(opts: FindingToolsOptions): { tools: ToolDef[
         let said: string;
         if (topic && opts.topics) {
           const title = toTopic(opts.topics, topic, f, opts.sources());
-          said = `Kept "${title}" in the topic "${topic}".`;
+          said = `Kept "${title}" (${f.url}) in the topic "${topic}".`;
         } else {
           const scope = noteScopeOf(where);
           const title = findingsTitle(where);
@@ -210,7 +210,7 @@ export function createFindingTools(opts: FindingToolsOptions): { tools: ToolDef[
           if (!next.added) return `"${f.title}" from this page is already in the findings.`;
           const { note } = opts.work.writeNote({ scope, conversationId: where.conversationId, title, text: next.text, sources: opts.sources() });
           opts.onSaved({ ...(ctx.runId && { runId: ctx.runId }), note, scope: where.projectId ? "project" : "conversation" });
-          said = `Kept "${f.title}" in this conversation's findings.`;
+          said = `Kept "${f.title}" (${f.url}) in this conversation's findings.`;
         }
         if (ctx.runId) byRun.set(ctx.runId, [...(byRun.get(ctx.runId) ?? []), f]);
         opts.onFinding(ctx.runId, { ...f, ...(proposed && { proposedTopic: proposed }) });
@@ -220,3 +220,5 @@ export function createFindingTools(opts: FindingToolsOptions): { tools: ToolDef[
   ];
   return { tools, runFindings: (runId) => [...(byRun.get(runId) ?? [])] };
 }
+
+export { findingsOption } from "./findings-option.js";

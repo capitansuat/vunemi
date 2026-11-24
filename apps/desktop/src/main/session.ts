@@ -1,4 +1,5 @@
 import {copyQuotedSource,type QuotedSource} from '@vunemi/agent-core';
+import { findingsOption } from "./work/findings-option.js";
 import type {StandingGrant,TaskPermissionStore,TaskPermissionEpoch,TaskPermissionOfferView,TaskPermissionRevokeRequest,TaskPermissionsSnapshot} from "@vunemi/agent-core";
 import {randomUUID} from 'node:crypto';
 /**
@@ -471,6 +472,7 @@ export class AgentSession {
         charsPerToken: this.charsPerToken,
         tools: this.opts.tools,
         ...(this.opts.keptOutputs && { keptOutputs: this.opts.keptOutputs }),
+        ...(findingsOption(this.opts.tools) && { findings: findingsOption(this.opts.tools) }),
         emit: event => {
           if (event.type === "run.started") { ownerRunId = event.runId; this.approvedAllRun = event.runId; }
           this.emit(event);
