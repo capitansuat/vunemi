@@ -47,6 +47,28 @@ export function safeTitle(raw: string, max: number = FINDING_LIMITS.title): stri
   return [...clean].slice(0, max).join("").trim();
 }
 
+/** A topic's name or a request in a title: at most this many characters, as the model's proposal is. */
+const NAME_CHARS = 40;
+
+/** A name for the card: cleaned for a folder, cut at a word, with no bracket left open or dangling mark. */
+export function shortName(raw: string, max: number = NAME_CHARS): string {
+  const clean = safeTitle(raw, Number.MAX_SAFE_INTEGER);
+  const chars = [...clean];
+  if (chars.length <= max) return clean;
+  let cut = chars.slice(0, max).join("");
+  if (/[\p{L}\p{N}]/u.test(chars[max]!) && cut.includes(" ")) cut = cut.slice(0, cut.lastIndexOf(" "));
+  const open = cut.lastIndexOf("(");
+  if (open > 0 && cut.indexOf(")", open) < 0) cut = cut.slice(0, open);
+  return cut.replace(/[\s,;:.\-–—(]+$/u, "").trim();
+}
+
+/** A page title of the catalogue's words around the request, the request cut at a word to fit. */
+export function requestTitle(key: "findings.listTitle" | "findings.answerTitle", request: string): string {
+  const around = [...t(key, { request: "" })].length;
+  const shortRequest = shortName(request, Math.min(FINDING_LIMITS.listRequest, FINDING_LIMITS.title - around)) || "…";
+  return safeTitle(t(key, { request: shortRequest }), FINDING_LIMITS.title);
+}
+
 const oneLine = (s: string): string => s.replace(/\s+/g, " ").trim();
 const two = (n: number): string => String(n).padStart(2, "0");
 /** The user's own clock and calendar, as they read the note. */
@@ -114,8 +136,7 @@ export function findingsTitle(where: FindingsWhere): string {
 
 /** The lookup's list page in a topic. */
 export function listTitle(request: string): string {
-  const shortRequest = safeTitle(request, FINDING_LIMITS.listRequest) || "…";
-  return safeTitle(t("findings.listTitle", { request: shortRequest }), FINDING_LIMITS.title + FINDING_LIMITS.listRequest).slice(0, 80).trim();
+  return requestTitle("findings.listTitle", request);
 }
 
 const SOURCE_LINE = /\n\nSource: \S+ \(\d{4}-\d\d-\d\d\)$/;

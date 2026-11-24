@@ -9,8 +9,7 @@
  */
 import { maskSecrets } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
-import { FINDING_LIMITS, safeTitle } from "../work/findings.js";
-import { shortName } from "./findings-ask.js";
+import { FINDING_LIMITS, requestTitle, shortName } from "../work/findings.js";
 import { TOPIC_LIMITS, type TopicStore } from "./store.js";
 
 /** A page view's own line: "[tab 1] Title — https://…", or after "Now on: ". The first one is the page's; text below it is the page's content. */
@@ -61,12 +60,8 @@ export function temporaryTopic(d: {
   return name;
 }
 
-/** The answer page's title: the request cut at a word, to fit beside the catalogue's words. */
-function answerTitle(request: string): string {
-  const around = [...t("findings.answerTitle", { request: "" })].length;
-  const shortRequest = shortName(request, Math.min(FINDING_LIMITS.listRequest, FINDING_LIMITS.title - around)) || "…";
-  return safeTitle(t("findings.answerTitle", { request: shortRequest }), FINDING_LIMITS.title);
-}
+/** The answer page's title: the request cut at a word, as a list page's is. */
+const answerTitle = (request: string): string => requestTitle("findings.answerTitle", request);
 
 /**
  * Writes the lookup's answer as Vunemi's page in the topic; returns its title,

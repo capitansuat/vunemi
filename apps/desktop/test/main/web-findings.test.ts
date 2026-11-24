@@ -11,7 +11,7 @@ import { setLocale, t } from "@vunemi/i18n";
 import type { ToolDef } from "@vunemi/agent-core";
 import { WorkStore, conversationScope, projectScope } from "../../src/main/work/store.js";
 import { TopicStore } from "../../src/main/topics/store.js";
-import { addToNote, createFindingTools, moveNoteToTopic, pageText, type Finding } from "../../src/main/work/findings.js";
+import { addToNote, createFindingTools, listTitle, moveNoteToTopic, pageText, type Finding } from "../../src/main/work/findings.js";
 
 let base = "";
 let work: WorkStore;
@@ -134,6 +134,15 @@ describe("in a topic", () => {
     expect(topics.readNote("Job hunt", "Accountant, Acme (web)")!.text).toContain("40,000");
   });
 
+});
+
+describe("listTitle", () => {
+  it("cuts a long request at a word", () => {
+    expect(listTitle("Search NHS Jobs (jobs.nhs.uk) for software developer vacancies and list the ones you find.")).toBe(
+      "Web findings — Search NHS Jobs (jobs.nhs.uk) for software developer",
+    );
+    expect(listTitle("Find accountant jobs in London: full time, at least 35,000?")).toBe("Web findings — Find accountant jobs in London full time, at least 35,000");
+  });
 });
 
 describe("with no topic", () => {

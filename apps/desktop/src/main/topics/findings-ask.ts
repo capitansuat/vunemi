@@ -4,27 +4,14 @@
  * A web lookup gathers in a temporary topic (lookup-topic.ts), and its card
  * asks to keep it, under a name the user can change, or delete it.
  */
-import { safeTitle } from "../work/findings.js";
 import type { TopicStore } from "./store.js";
 
-/** A new topic's name: at most this many characters, as the model's proposal is. */
-const NAME_CHARS = 40;
+/** The card's name for a topic: work/findings.ts, beside the title rules it shares. */
+export { shortName } from "../work/findings.js";
 
 /** Asked after a finished task, and after one that ran out of steps only when it kept findings. */
 export function asksAfter(status: "done" | "max_steps", found: readonly unknown[] | undefined): boolean {
   return status === "done" || (found?.length ?? 0) > 0;
-}
-
-/** A name for the card: cleaned for a folder, cut at a word, with no bracket left open or dangling mark. */
-export function shortName(raw: string, max: number = NAME_CHARS): string {
-  const clean = safeTitle(raw, Number.MAX_SAFE_INTEGER);
-  const chars = [...clean];
-  if (chars.length <= max) return clean;
-  let cut = chars.slice(0, max).join("");
-  if (/[\p{L}\p{N}]/u.test(chars[max]!) && cut.includes(" ")) cut = cut.slice(0, cut.lastIndexOf(" "));
-  const open = cut.lastIndexOf("(");
-  if (open > 0 && cut.indexOf(")", open) < 0) cut = cut.slice(0, open);
-  return cut.replace(/[\s,;:.\-–—(]+$/u, "").trim();
 }
 
 /** Asked after a run in a conversation with no topic, when a topic the user has fits what was asked. A lookup gathers in a temporary topic instead (lookup-topic.ts). */
