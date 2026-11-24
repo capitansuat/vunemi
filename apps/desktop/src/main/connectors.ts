@@ -356,7 +356,8 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: BROWSER_INSTRUCTIONS,
       status: async () => ({ state: "ready" }),
-      tools: () => withoutHelperTools(createBrowserTools(opts.browser, { shotDir: opts.shotDir })),
+      // The user's trusted sites: there one approval covers a site for the task.
+      tools: () => withoutHelperTools(createBrowserTools(opts.browser, { shotDir: opts.shotDir, trusted: opts.browser.trusted })),
     },
 
     {

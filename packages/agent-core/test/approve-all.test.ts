@@ -221,6 +221,36 @@ describe("approve all in this task", () => {
     expect(events.find((e) => e.type === "approval.required")).not.toHaveProperty("approveAll");
   });
 
+  it("covers one site: the next click on that host has no card, another host asks, and a form that posts asks", async () => {
+    const ran: string[] = [];
+    // The host is the page's, as the browser tools give it; a ref of 0 is something in a form that posts.
+    const click = tool("page_click", {
+      actionClass: "outbound",
+      alwaysAsk: false,
+      approveAll: (a) => (a.ref === 0 ? undefined : { key: `site:${String(a.host)}`, site: String(a.host), trusted: false }),
+    }, ran);
+    const { asked, events } = await go(
+      [click],
+      [
+        { name: "page_click", args: { host: "example.com", ref: 1 } },
+        { name: "page_click", args: { host: "example.com", ref: 2 } },
+        { name: "page_click", args: { host: "shop.example", ref: 3 } },
+        { name: "page_click", args: { host: "evil.example.com.attacker.net", ref: 4 } },
+        { name: "page_click", args: { host: "example.com", ref: 0 } },
+      ],
+      (_tool, n) => (n === 1 ? all() : { kind: "approve" }),
+    );
+    expect(ran).toHaveLength(5);
+    expect(asked).toHaveLength(4);
+    const cards = events.filter((e) => e.type === "approval.required");
+    expect(cards.map((e) => (e as { approveAll?: unknown }).approveAll)).toEqual([
+      { site: "example.com" },
+      { site: "shop.example" },
+      { site: "evil.example.com.attacker.net" },
+      undefined,
+    ]);
+  });
+
   it("covers nothing when the tool can't say what it would reach", async () => {
     const ran: string[] = [];
     const { asked, events } = await go(

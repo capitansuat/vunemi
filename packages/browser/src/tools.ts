@@ -8,10 +8,10 @@
  */
 
 import type { BoundAction } from "./bound-actions.js";
-import type { ToolContext, ToolDef } from "@vunemi/agent-core";
+import type { ApproveAllCover, ToolContext, ToolDef } from "@vunemi/agent-core";
 import type { BrowserController } from "./controller.js";
 import { OWNER_REFUSAL, PageActionError, type ElementKind, type PageDriver } from "./page.js";
-import { checkNavigation } from "./url-policy.js";
+import { checkNavigation, type TrustedSites } from "./url-policy.js";
 import { t } from "@vunemi/i18n";
 
 const REF = { type: "integer", description: "Observed page_describe ref." } as const;
@@ -71,7 +71,15 @@ export const NOTHING_TO_TAKE_OVER =
 /** A request about the user's own Safari or Chrome, not Vunemi's browser: its tab tools stand aside. */
 const OTHER_BROWSER = /\b(?:safari|chrome)\b/i;
 
-export function createBrowserTools(browser: BrowserController, opts: { shotDir?: string } = {}): ToolDef[] {
+/** Keys that can submit the form the focus is in. */
+const SUBMIT_KEYS = new Set(["Enter", "Space"]);
+
+/**
+ * `trusted` is the user's list of trusted sites (Settings › Security); the
+ * browser's own list when it is not given. Only the user adds to it.
+ */
+export function createBrowserTools(browser: BrowserController, opts: { shotDir?: string; trusted?: () => TrustedSites } = {}): ToolDef[] {
+  const trusted = opts.trusted ?? (() => browser.trusted?.() ?? new Set<string>());
   const previewRef = (ref: unknown) => {
     const line = typeof ref === "number" ? browser.lineFor(ref) : undefined;
     return line ?? `element [${String(ref)}]`;
@@ -95,6 +103,19 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
   const recheck = (ref: unknown): Promise<string | null> => {
     const n = refOf(ref);
     return n === undefined || kindOf(n) === undefined ? Promise.resolve(null) : browser.recheckKind(n);
+  };
+  /**
+   * What "approve all in this task" reaches from a page action: the page's
+   * host, until the task ends. Nothing for an element in a form that posts,
+   * for a ref that can't be read, or when the page has moved to a host other
+   * than the one the model saw.
+   */
+  const siteCover = async (kind: ElementKind | undefined): Promise<ApproveAllCover | undefined> => {
+    if (kind === undefined || kind === "posts") return undefined;
+    const host = browser.host?.() ?? null;
+    if (!host) return undefined;
+    if ((await browser.liveHost().catch(() => null)) !== host) return undefined;
+    return { key: `site:${host}`, site: host, trusted: trusted().has(host) };
   };
   /** Enter in the search field page_type just typed into sends the search, as page_search does. */
   const searchEnter = (key: unknown): boolean => key === "Enter" && browser.focusedKind?.() === "search";
@@ -205,6 +226,7 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       // Following an ordinary link is opening its page, which page_goto does without asking.
       classify: (a) => (kindOf(a.ref) === "link" ? "read" : "outbound"),
       check: (a) => recheck(a.ref),
+      approveAll: (a) => siteCover(kindOf(a.ref)),
       untrustedOutput: true,
       preview: async (a) => previewRef(a.ref),
       run: (a, ctx) => guarded(browser, ctx, () => browser.act(`Clicked [${num(a.ref)}].`, (d) => d.click(num(a.ref)))),
@@ -226,6 +248,8 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       classify: (a) => (kindOf(a.ref) === "search" ? "read" : "outbound"),
       untrustedOutput: true,
       check: async (a) => (await ownerCheck(a.ref)) ?? recheck(a.ref),
+      // A field that posts never gets a cover, so neither does pressing Enter in it with submit.
+      approveAll: (a) => siteCover(kindOf(a.ref)),
       preview: async (a) => `"${String(a.text)}" → ${previewRef(a.ref)}${a.submit === true ? " ⏎" : ""}`,
       run: async (a, ctx) => {
         const out = await guarded(browser, ctx, () =>
@@ -250,6 +274,7 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       actionClass: "outbound",
       untrustedOutput: true,
       check: async (a) => (await ownerCheck(a.ref)) ?? recheck(a.ref),
+      approveAll: (a) => siteCover(kindOf(a.ref)),
       preview: async (a) => `"${String(a.option)}" → ${previewRef(a.ref)}`,
       // The same wall check as the other page actions: a sign-in or payment step is the user's.
       run: (a, ctx) =>
@@ -275,6 +300,9 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       actionClass: "outbound",
       classify: (a) => (searchEnter(a.key) ? "read" : "outbound"),
       check: (a) => (searchEnter(a.key) ? browser.recheckFocus() : Promise.resolve(null)),
+      // Enter or Space can submit the form the focus is in: covered only when that is seen not to post.
+      approveAll: async (a) =>
+        siteCover(SUBMIT_KEYS.has(String(a.key)) ? await browser.focusedLiveKind().catch(() => undefined) : "other"),
       untrustedOutput: true,
       preview: async (a) => String(a.key),
       run: (a, ctx) => guarded(browser, ctx, () => browser.act(`Pressed ${String(a.key)}.`, (d) => d.press(String(a.key)))),

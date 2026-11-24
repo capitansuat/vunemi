@@ -2066,7 +2066,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       ...(taskPermissionOffer && {taskPermissionOffer}),
       ...(alert && { alert: true }),
       ...(alwaysAsk && !tool.allowSessionApproval && { alwaysAsk: true }),
-      ...(cover && { approveAll: cover.app === undefined ? {} : { app: cover.app } }),
+      ...(cover && { approveAll: { ...(cover.app !== undefined && { app: cover.app }), ...(cover.site !== undefined && { site: cover.site }), ...(cover.trusted === true && { trusted: true }) } }),
       ...(preview !== undefined && { preview }),
     });
     const decision = await Promise.race([
