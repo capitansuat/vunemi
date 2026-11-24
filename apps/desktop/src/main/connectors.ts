@@ -286,7 +286,7 @@ export function onThisSystem(connector: Connector, on: Platform = platform): Con
 /** Tools that need the Swift helper's host observation, or its atomic move. */
 const HELPER_TOOLS = new Set(["page_target_observe", "page_target_act", "files_move"]);
 /** Elsewhere those tools are left out rather than offered to refuse every call. */
-function withoutHelperTools(tools: ToolDef[], on: Platform = platform): ToolDef[] {
+export function withoutHelperTools(tools: ToolDef[], on: Platform = platform): ToolDef[] {
   return on.features.desktopControl && on.features.atomicMove ? tools : tools.filter((tool) => !HELPER_TOOLS.has(tool.name));
 }
 
