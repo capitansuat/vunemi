@@ -14,6 +14,7 @@ import { join } from "node:path";
 import { find, outline } from "@vunemi/perception";
 import type { BrowserBackend, TabInfo } from "./backend.js";
 import { detectChallenge } from "./challenge.js";
+import { WHOLE_PAGE_MARK } from "./main-content.js";
 import { PageActionError, PageDriver, type OwnerField, type PointerEvent } from "./page.js";
 import type { TrustedSites } from "./url-policy.js";
 
@@ -251,11 +252,28 @@ export class BrowserController {
     return hits.length === 0 ? `Nothing on this page matches "${query}".` : hits.join("\n");
   }
 
+  /**
+   * The page's main content as Markdown, then — after WHOLE_PAGE_MARK — its
+   * whole visible text, which the model is not shown but can search when
+   * the content left something out.
+   */
   async read(maxChars: number): Promise<string> {
     const { driver, target } = await this.page();
-    const r = await driver.readText(maxChars);
+    const r = await driver.readContent(maxChars);
     const more = r.truncated > 0 ? `\n[… ${r.truncated} more characters not read.]` : "";
-    return `${header(await this.tabNumber(target), r)}\n${r.text || "(no visible text)"}${more}`;
+    const content = r.markdown || r.whole || "(no visible text)";
+    return `${header(await this.tabNumber(target), r)}\n${content}\n[Read: ${r.reader}]${WHOLE_PAGE_MARK}${r.whole}${more}`;
+  }
+
+  /** The current tab's address and title, read from the page; null when no tab is open. */
+  async where(): Promise<{ url: string; title: string } | null> {
+    if (!this.current) return null;
+    try {
+      const { driver } = await this.page();
+      return await driver.location();
+    } catch {
+      return null;
+    }
   }
 
   /** Saves a picture of the current tab into `dir`; its path and where the tab was. */

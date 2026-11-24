@@ -547,6 +547,21 @@ describe("previews, instructions and ephemeral outputs", () => {
     expect(events.find((e) => e.type === "context.compacted")).toMatchObject({ kind: "pruned" });
   });
 
+  it("shows only as much of an output as the tool says it should", async () => {
+    const { model, seen } = scripted([{ calls: [{ name: "reader", argumentsText: "{}" }] }, { text: "done" }]);
+    const tools = new ToolRegistry().register({
+      name: "reader", description: "", parameters: { type: "object", properties: {} }, actionClass: "read",
+      firstPartChars: (output) => output.indexOf("|"),
+      run: async () => `shown part|${"hidden ".repeat(500)}`,
+    });
+    const kept = { keep: (_tool: string, text: string, part: number) => `${text.slice(0, part)}\n[kept as "o1"]`, read: () => "", search: () => "", toolOf: () => "reader" };
+    await runAgent({ goal: "g", model, tools, keptOutputs: kept, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    const out = seen[1]!.messages.find((m) => m.role === "tool")!.content;
+    expect(out).toContain("shown part");
+    expect(out).not.toContain("hidden");
+    expect(out).toContain('kept as "o1"');
+  });
+
   it("keeps what a tool says an old snapshot shortens to, and where the whole of it is kept", async () => {
     const { model, seen } = twoSnapshots();
     let n = 0;

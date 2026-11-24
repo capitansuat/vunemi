@@ -186,7 +186,7 @@ export interface ToolDef<Args = Record<string, unknown>> {
    * Output longer than this is kept whole and shown from the start, with a
    * note on reading the rest (see KeptOutputs). Default: the run's limit.
    */
-  firstPartChars?: number;
+  firstPartChars?: number | ((output: string) => number);
   /**
    * What the model is given instead of the whole output, when part of it is
    * for the user only (links shown on a card, say). The UI gets all of it.

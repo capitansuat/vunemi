@@ -14,6 +14,7 @@ import { outline, type AXNode } from "@vunemi/perception";
 import type { BoundAction, PageState } from "./bound-actions.js";
 import type { CdpSession } from "./cdp.js";
 import { closedFrame } from "./frames.js";
+import { CONTENT_SCRIPT, markdownOf, type ContentNode, type Reader } from "./main-content.js";
 
 /** Thrown for failures the model should read and route around. */
 export class PageActionError extends Error {
@@ -337,7 +338,24 @@ export class PageDriver {
     const r = await this.evaluate<{ url: string; title: string; text: string }>(
       `({ url: location.href, title: document.title, text: (${FRAMES_TEXT})(document, 0) })`,
     );
-    // After the page's own text, that of each frame from another site it shows.
+    return { ...r, ...cut(`${r.text}${await this.outerFramesText()}`, maxChars) };
+  }
+
+  /**
+   * The page's main content as Markdown (main-content.ts), and its whole
+   * visible text as readText gives it, in one evaluate of the page.
+   */
+  async readContent(maxChars: number): Promise<{ url: string; title: string; reader: Reader; markdown: string; whole: string; truncated: number }> {
+    const r = await this.evaluate<{ url: string; title: string; reader: Reader; tree: ContentNode[]; whole: string }>(
+      `(() => { const c = (${CONTENT_SCRIPT})(document); return { url: location.href, title: document.title, reader: c.reader, tree: c.tree, whole: (${FRAMES_TEXT})(document, 0) }; })()`,
+    );
+    const whole = cut(`${r.whole}${await this.outerFramesText()}`, maxChars);
+    return { url: r.url, title: r.title, reader: r.reader, markdown: markdownOf(r.tree), whole: whole.text, truncated: whole.truncated };
+  }
+
+  /** After the page's own text, that of each frame from another site it shows. */
+  private async outerFramesText(): Promise<string> {
+    let out = "";
     let left = MAX_FRAMES;
     for (const frame of [...this.outer.values()]) {
       if (left-- <= 0) break;
@@ -345,17 +363,12 @@ export class PageDriver {
         if (await this.closed(frame)) continue;
         await this.place(frame);
         const inner = (await evaluateIn<string>(frame.s, `(${FRAMES_TEXT})(document, 0)`)).trim();
-        if (inner) r.text += `\n\n${inner}`;
+        if (inner) out += `\n\n${inner}`;
       } catch {
         // Not shown, or gone while it was being read.
       }
     }
-    const text = r.text.replace(/\n{3,}/g, "\n\n").trim();
-    return {
-      ...r,
-      text: text.slice(0, maxChars),
-      truncated: Math.max(0, text.length - maxChars),
-    };
+    return out;
   }
 
   /**
@@ -862,6 +875,12 @@ async function evaluateIn<T>(s: CdpSession, expression: string): Promise<T> {
   });
   if (r.exceptionDetails) throw new PageActionError(`Page script failed: ${r.exceptionDetails.text}`);
   return r.result.value as T;
+}
+
+/** Text with runs of blank lines squeezed, cut to `maxChars`, and how much was cut. */
+function cut(raw: string, maxChars: number): { text: string; truncated: number } {
+  const text = raw.replace(/\n{3,}/g, "\n\n").trim();
+  return { text: text.slice(0, maxChars), truncated: Math.max(0, text.length - maxChars) };
 }
 
 /** Frames read into one page: enough for framesets and portals, bounded for pages that nest ads. */

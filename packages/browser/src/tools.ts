@@ -13,6 +13,8 @@ import type { BrowserController } from "./controller.js";
 import { OWNER_REFUSAL, PageActionError, type PageDriver } from "./page.js";
 import { checkNavigation } from "./url-policy.js";
 import { t } from "@vunemi/i18n";
+import { CONTENT_SHOWN, WHOLE_PAGE_MARK } from "./main-content.js";
+export { WHOLE_PAGE_MARK, markdownOf, type ContentNode, type Reader } from "./main-content.js";
 
 const REF = { type: "integer", description: "Observed page_describe ref." } as const;
 
@@ -187,8 +189,8 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       actionClass: "read",
       untrustedOutput: true,
       ephemeral: true,
-      // The whole page is read; the model sees the start, the rest is kept.
-      firstPartChars: 6_000,
+      // The model sees the start of the main content; the rest, and the whole page text, is kept.
+      firstPartChars: (output: string) => { const at = output.indexOf(WHOLE_PAGE_MARK); return Math.min(CONTENT_SHOWN, at < 0 ? output.length : at); },
       run: () => browser.read(PAGE_TEXT_CHARS),
     },
     ...(opts.shotDir ? [pageScreenshot(browser, opts.shotDir)] : []),

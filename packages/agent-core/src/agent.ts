@@ -1322,7 +1322,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
 
   /** Long output kept whole, the model shown its start; room is left for the note. */
   async function keepLong(raw: string, tool: ToolDef): Promise<string> {
-    const first = Math.min(tool.firstPartChars ?? maxOut, maxOut - KEPT_NOTE_ROOM);
+    const wanted = typeof tool.firstPartChars === "function" ? tool.firstPartChars(raw) : tool.firstPartChars;
+    const first = Math.min(Number.isFinite(wanted) && wanted! >= 0 ? wanted! : maxOut, maxOut - KEPT_NOTE_ROOM);
     if (!opts.keptOutputs || raw.length <= first || KEPT_READERS.has(tool.name)) return raw;
     return opts.keptOutputs.keep(tool.name, raw, first);
   }
