@@ -160,14 +160,58 @@ describe("the engine service", () => {
     expect(service.pid()).toEqual(expect.any(Number));
     expect(service.mapped()).toBe(50_000);
 
-    // Loaded with a shorter context: used as it is, not reloaded.
+    // Loaded with a shorter context and memory still short: a task asks again, then uses it as it is.
+    const pid = service.pid();
     expect(await service.prepare(spec, { announce: true })).toEqual({ context: 8_192, wanted: 65_536, tight: true, announce: false });
-    expect(fit).toHaveBeenCalledTimes(1);
+    expect(fit).toHaveBeenCalledTimes(2);
+    expect(fit.mock.calls[1]![0]).toMatchObject({ wanted: 65_536, replacing: "chat" });
+    expect(service.pid()).toBe(pid);
+    // A caller that is not a task (the check from Settings, a meeting's summary) does not ask.
+    await service.prepare(spec);
+    expect(fit).toHaveBeenCalledTimes(2);
 
     // A new length from the user is a new launch, which replaces the loaded model.
     await service.setContext("tiny-q4_k_m", 16_384);
-    expect(fit).toHaveBeenCalledTimes(2);
-    expect(fit.mock.calls[1]![0]).toMatchObject({ wanted: 16_384, replacing: "chat" });
+    expect(fit).toHaveBeenCalledTimes(3);
+    expect(fit.mock.calls[2]![0]).toMatchObject({ wanted: 16_384, replacing: "chat" });
+  });
+
+  it("opens the model again with the whole context when a task starts and memory has room by then", async () => {
+    const fit = vi.fn(async (_req: FitRequest) => ({ context: 16_384, tight: false }));
+    service = new EngineService({
+      dir, binary: FAKE, totalMemory: 64 * GiB, isBusy: () => false, testModel: vi.fn(async () => true), onChange: () => {},
+      hub: { base }, allowUrl: () => true, freeBytes: async () => 1e12, manager: { fit },
+    });
+    const spec = (await service.download({ repo: "org/tiny-GGUF" }))!;
+    await service.unload();
+    expect(await service.prepare(spec, { announce: true })).toEqual({ context: 16_384, wanted: 65_536, tight: false, announce: true });
+
+    // Another app closed: the next task gets the whole window.
+    fit.mockImplementation(async () => ({ context: 65_536, tight: false }));
+    expect(await service.prepare(spec, { announce: true })).toEqual({ context: 65_536, wanted: 65_536, tight: false, announce: false });
+    const args = await argsOf(service.endpoint(spec)!);
+    expect(args[args.indexOf("-c") + 1]).toBe("65536");
+
+    // Whole now: nothing more to ask.
+    await service.prepare(spec, { announce: true });
+    expect(fit).toHaveBeenCalledTimes(3); // the download's test, the first task, the second; not the third
+  });
+
+  it("does not open the model again while someone else is using it", async () => {
+    const fit = vi.fn(async (_req: FitRequest) => ({ context: 16_384, tight: false }));
+    service = new EngineService({
+      dir, binary: FAKE, totalMemory: 64 * GiB, isBusy: () => false, testModel: vi.fn(async () => true), onChange: () => {},
+      hub: { base }, allowUrl: () => true, freeBytes: async () => 1e12, manager: { fit },
+    });
+    const spec = (await service.download({ repo: "org/tiny-GGUF" }))!;
+    await service.unload();
+    await service.prepare(spec, { announce: true });
+    fit.mockImplementation(async () => ({ context: 65_536, tight: false }));
+    let release!: () => void;
+    const other = service.hold(() => new Promise<void>((r) => (release = r)));
+    expect((await service.prepare(spec, { announce: true }))!.context).toBe(16_384);
+    release();
+    await other;
   });
 
   it("tells a lowered context once, to the first caller that announces it, whoever launched", async () => {
@@ -186,7 +230,7 @@ describe("the engine service", () => {
     // The conversation's first run hears it, once.
     expect(await service.prepare(spec, { announce: true })).toEqual({ context: 16_384, wanted: 65_536, tight: false, announce: true });
     expect(await service.prepare(spec, { announce: true })).toEqual({ context: 16_384, wanted: 65_536, tight: false, announce: false });
-    expect(fit).toHaveBeenCalledTimes(2); // the download's test, and the warm-up
+    expect(fit).toHaveBeenCalledTimes(4); // the download's test, the warm-up, and each task asking again
   });
 
   it("counts as busy while it loads or tests the model, so memory pressure leaves it alone", async () => {
