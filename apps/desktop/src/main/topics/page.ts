@@ -115,6 +115,7 @@ export function topicPage(deps: TopicPageDeps) {
             name: topic.name,
             about: topic.about,
             updatedAt: topic.updatedAt,
+            ...(topic.temporary && { temporary: true as const }),
             notes: outline.notes.map((n) => ({ title: n.title, updatedAt: n.mtime })),
             sources: outline.sources.map((s) => ({ name: s.title, updatedAt: s.mtime })),
             folders: store.linkedFolders(topic.name).map((f) => ({

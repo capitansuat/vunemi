@@ -74,6 +74,12 @@ describe("what the page shows", () => {
     expect(tree.topics.map((tp) => [tp.name, tp.about, tp.notes.map((n) => n.title), tp.sources.map((s) => s.name)])).toEqual([["Home renovation", "Bathroom and kitchen.", ["Budget"], ["offer"]]]);
   });
 
+  it("marks a temporary topic, and only that one", () => {
+    store.createTopic("Job hunt", "Jobs.", { temporary: true });
+    const marks = Object.fromEntries(page.tree().topics.map((tp) => [tp.name, tp.temporary]));
+    expect(marks).toEqual({ "Home renovation": undefined, "Job hunt": true });
+  });
+
   it("shows a note with its links, those that lead nowhere, and what links to it", () => {
     store.writeNote("Home renovation", { title: "Budget", text: "Total", by: "vunemi", sources: ["offer"] });
     store.writeNote("Home renovation", { title: "Tiles", text: "Within [[budget]], see [[Plumber]]", by: "vunemi", sources: [] });

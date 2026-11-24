@@ -38,6 +38,8 @@ export interface Topic {
   sources: number;
   /** Newest change to any of its files, ms. */
   updatedAt: number;
+  /** Made by Vunemi for a web lookup, until the user keeps it (topic.md: `temporary: true`). */
+  temporary?: true;
 }
 
 export interface TopicNote {
@@ -400,7 +402,7 @@ export class TopicStore {
     return hit ? this.topicAt(hit.name) : null;
   }
 
-  createTopic(nameIn: string, aboutIn: string): Topic {
+  createTopic(nameIn: string, aboutIn: string, opts: { temporary?: true } = {}): Topic {
     const name = cleanName(nameIn, "topic");
     if (this.findTopic(name)) throw new Error(`There is already a topic called "${name}".`);
     const about = String(aboutIn ?? "").trim().slice(0, TOPIC_LIMITS.about);
@@ -408,9 +410,50 @@ export class TopicStore {
     mkdirSync(join(dir, NOTES), { recursive: true });
     mkdirSync(join(dir, SOURCES), { recursive: true });
     this.inside(dir);
-    writeFileSync(join(dir, ABOUT), writeFront({ topic: name, created: new Date(this.now()).toISOString() }, about || name));
+    writeFileSync(join(dir, ABOUT), writeFront({ topic: name, created: new Date(this.now()).toISOString(), ...(opts.temporary && { temporary: true }) }, about || name));
     this.opts.onChange?.();
     return this.topicAt(name);
+  }
+
+  /** The name, or the first of "name (2)", "name (3)"… no topic has, in any case. */
+  freeTopicName(base: string): string {
+    if (!this.findTopic(base)) return base;
+    for (let n = 2; ; n++) {
+      const name = `${base} (${n})`;
+      if (!this.findTopic(name)) return name;
+    }
+  }
+
+  /**
+   * The user keeps a temporary topic: the mark goes. With a new name, the
+   * folder moves and the index follows; a taken or bad name changes nothing.
+   */
+  keepTopic(topicName: string, newNameIn?: string): Topic {
+    const topic = this.need(topicName);
+    let name = topic.name;
+    if (newNameIn !== undefined && newNameIn.trim() && newNameIn.trim() !== topic.name) {
+      name = cleanName(newNameIn, "topic");
+      const other = this.findTopic(name);
+      if (other && other.name !== topic.name) throw new Error(`There is already a topic called "${name}".`);
+    }
+    const file = join(topic.dir, ABOUT);
+    const old = existsSync(file) ? parseNote(readFileSync(file, "utf8")) : { meta: {}, body: topic.name };
+    const { temporary: _mark, ...meta } = old.meta;
+    atomicWrite(file, writeFront({ ...meta, topic: name }, old.body.trim() || name));
+    if (name !== topic.name) {
+      const dir = join(this.root, name);
+      renameSync(topic.dir, dir);
+      this.inside(dir);
+      // The old name's rows go; the folder is read again under the new one.
+      for (const row of this.db.prepare("SELECT path FROM files WHERE topic_key = ? AND kind != 'linked'").all(keyOf(topic.name)) as unknown as { path: string }[]) {
+        this.db.prepare("DELETE FROM parts WHERE path = ?").run(row.path);
+        this.db.prepare("DELETE FROM files WHERE path = ?").run(row.path);
+      }
+    }
+    const kept = this.topicAt(name);
+    this.sync(kept);
+    this.opts.onChange?.();
+    return kept;
   }
 
   setAbout(topicName: string, aboutIn: string): Topic {
@@ -451,7 +494,8 @@ export class TopicStore {
     const notes = count(NOTES);
     const sources = count(SOURCES);
     const times = [...notes, ...sources, ...(existsSync(aboutFile) ? [aboutFile] : [])].map((p) => statSync(p).mtimeMs);
-    return { name, about, dir, notes: notes.length, sources: sources.length, updatedAt: times.length ? Math.max(...times) : statSync(dir).mtimeMs };
+    const temporary = existsSync(aboutFile) && parseNote(readFileSync(aboutFile, "utf8")).meta.temporary === true;
+    return { name, about, dir, notes: notes.length, sources: sources.length, updatedAt: times.length ? Math.max(...times) : statSync(dir).mtimeMs, ...(temporary && { temporary: true as const }) };
   }
 
   private need(topicName: string): Topic {

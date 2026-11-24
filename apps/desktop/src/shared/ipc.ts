@@ -40,6 +40,8 @@ export interface TopicTreeView {
     name: string;
     about: string;
     updatedAt: number;
+    /** Made by Vunemi for a web lookup; the user keeps or deletes it. */
+    temporary?: true;
     notes: { title: string; updatedAt: number }[];
     sources: { name: string; updatedAt: number }[];
     /** Folders linked to the topic: read where they are, never copied. */
