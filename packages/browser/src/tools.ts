@@ -71,6 +71,26 @@ export const NOTHING_TO_TAKE_OVER =
 /** A request about the user's own Safari or Chrome, not Vunemi's browser: its tab tools stand aside. */
 const OTHER_BROWSER = /\b(?:safari|chrome)\b/i;
 
+/** Tools whose output shows the page as it was: once older, only their first lines matter. */
+const PAGE_VIEWS = new Set(["page_goto", "page_search", "page_back", "page_describe", "page_read", "page_click", "page_type", "page_select", "page_press", "page_scroll"]);
+const HEAD_MAX = 300;
+
+/**
+ * What an old page view shortens to: what was done and the page it led to
+ * (the "[tab N] title — address" line, or the verdict), not the outline.
+ */
+export function outlineHead(output: string): string {
+  const lines = output.split("\n");
+  const head: string[] = [];
+  for (const line of lines.slice(0, 3)) {
+    head.push(line);
+    if (/\[tab \d+\]/.test(line) || line.startsWith("→ ")) break;
+  }
+  if (!head.some((l) => /\[tab \d+\]/.test(l) || l.startsWith("→ "))) head.splice(1);
+  const text = head.join("\n");
+  return text.length > HEAD_MAX ? `${text.slice(0, HEAD_MAX - 1)}…` : text;
+}
+
 export function createBrowserTools(browser: BrowserController, opts: { shotDir?: string } = {}): ToolDef[] {
   const previewRef = (ref: unknown) => {
     const line = typeof ref === "number" ? browser.lineFor(ref) : undefined;
@@ -354,6 +374,7 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       },
     },
   ];
+  for (const tool of tools) if (PAGE_VIEWS.has(tool.name)) Object.assign(tool, { ephemeral: true, stale: outlineHead });
   tools.push({
     name:"page_target_observe",description:"Observe owned target; run-bound snapshot/refs. picture required for canvas coordinates.",
     parameters:{type:"object",properties:{tab:{type:"integer"},picture:{type:"boolean"}}},actionClass:"read",untrustedOutput:true,

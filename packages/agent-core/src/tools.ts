@@ -178,6 +178,11 @@ export interface ToolDef<Args = Record<string, unknown>> {
    */
   ephemeral?: boolean;
   /**
+   * What an older ephemeral output shortens to, in front of the note: for a
+   * page, the action and the address it led to. Without it, only the note.
+   */
+  stale?: (output: string) => string;
+  /**
    * Output longer than this is kept whole and shown from the start, with a
    * note on reading the rest (see KeptOutputs). Default: the run's limit.
    */

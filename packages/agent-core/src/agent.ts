@@ -681,7 +681,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   if (areaMode && tools.getAny("task_update")) listed.add("task_update");
   const listedParts = areaMode ? listedRequest(tools, areas, listed, opts.instructions, offerable, withinRun, opts.compactTaskTools) : null;
   const system = listedParts?.system ?? systemPrompt(opts.instructions);
-  const ephemeral = new Set(tools.list().flatMap((t) => (t.ephemeral ? [t.name] : [])));
+  const ephemeral = new Map(tools.list().flatMap((t) => (t.ephemeral ? [[t.name, t.stale] as const] : [])));
   // Recomputed when a guide opens a group of tools; the same otherwise. With
   // areas never: the group's definitions are given in the conversation instead.
   let toolSpecs = (listedParts?.tools ?? toolSpecsOf(tools, opts.openedTools, offerable, toolGoal, withinRun)).filter(spec => {
@@ -2291,15 +2291,34 @@ export const EPHEMERAL_PLACEHOLDER =
  * tools, since they all describe the same changing page. Returns a new
  * array; messages themselves are not mutated.
  */
-export function compactEphemeral(messages: ChatMessage[], ephemeral: ReadonlySet<string>): ChatMessage[] {
+export function compactEphemeral(
+  messages: ChatMessage[],
+  ephemeral: ReadonlySet<string> | ReadonlyMap<string, ((output: string) => string) | undefined>,
+): ChatMessage[] {
   if (ephemeral.size === 0) return messages;
   let lastIndex = -1;
   messages.forEach((m, i) => {
     if (m.role === "tool" && ephemeral.has(m.toolName)) lastIndex = i;
   });
   return messages.map((m, i) =>
-    m.role === "tool" && ephemeral.has(m.toolName) && i !== lastIndex ? { ...m, content: EPHEMERAL_PLACEHOLDER } : m,
+    m.role === "tool" && ephemeral.has(m.toolName) && i !== lastIndex ? { ...m, content: staleContent(m.content, ephemeral instanceof Map ? ephemeral.get(m.toolName) : undefined) } : m,
   );
+}
+
+/** A kept output's note: it says where the whole of the output can still be read. */
+const KEPT_NOTE = /\n(\[Showing characters [^\n]*kept as "[^"\n]+"[^\n]*\])\s*$/;
+
+/** An old snapshot: what its tool keeps of it, the note, and where the whole of it is kept. */
+function staleContent(content: string, stale: ((output: string) => string) | undefined): string {
+  if (content.startsWith(EPHEMERAL_PLACEHOLDER) || content.includes(`\n${EPHEMERAL_PLACEHOLDER}`)) return content;
+  let head = "";
+  try {
+    head = stale?.(content).trim() ?? "";
+  } catch {
+    head = "";
+  }
+  const kept = KEPT_NOTE.exec(content)?.[1];
+  return [head, EPHEMERAL_PLACEHOLDER, kept].filter(Boolean).join("\n");
 }
 
 /** How models write a tool call when it isn't parsed as one. */
