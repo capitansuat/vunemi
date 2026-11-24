@@ -1129,6 +1129,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "No speech model yet. Press the mic to download it ({size} MB).",
     noWhisper: "This Vunemi installation has no speech engine.",
+    notOnWindows: "Typing by voice is not available on Windows yet.",
     failed: "Speech recognition failed ({status}).",
     startFailed: "Couldn't start speech recognition: {why}",
   },

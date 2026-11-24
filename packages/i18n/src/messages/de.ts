@@ -1129,6 +1129,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "Noch kein Sprachmodell. Tippe aufs Mikrofon, um es zu laden ({size} MB).",
     noWhisper: "Diese Vunemi-Installation hat keine Spracherkennung.",
+    notOnWindows: "Diktieren ist unter Windows noch nicht verfügbar.",
     failed: "Spracherkennung fehlgeschlagen ({status}).",
     startFailed: "Spracherkennung konnte nicht gestartet werden: {why}",
   },

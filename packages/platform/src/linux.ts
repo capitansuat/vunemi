@@ -21,6 +21,8 @@ export const LINUX_FEATURES: PlatformFeatures = {
   archives: false,
   atomicMove: false,
   speakAloud: false,
+  // Its own whisper build (build-whisper-linux.sh), tried with a microphone.
+  dictation: true,
 };
 
 /** Where Linux builds are downloaded by hand until the app can update itself. */

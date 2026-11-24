@@ -1129,6 +1129,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "아직 음성 모델이 없습니다. 마이크를 눌러 다운로드하세요({size}MB).",
     noWhisper: "이 Vunemi 설치에는 음성 엔진이 없습니다.",
+    notOnWindows: "음성 입력은 Windows에서 아직 사용할 수 없습니다.",
     failed: "음성 인식에 실패했습니다({status}).",
     startFailed: "음성 인식을 시작할 수 없습니다: {why}",
   },

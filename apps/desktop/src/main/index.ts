@@ -732,6 +732,7 @@ function splitCommand(line: string): string[] {
 // Hearing and speaking, both local: whisper.cpp on the GPU, macOS's own voice.
 const voice = new Voice(app.getPath("userData"), {
   builtIn: whisperBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir() }),
+  offered: platform.features.dictation,
   onChange: (status) => send(CH.voiceChanged, status),
 });
 

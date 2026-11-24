@@ -191,3 +191,25 @@ describe("where the whisper server lives", () => {
     expect(whisperBinary({ packaged: true, resourcesPath: dir, home: "/nowhere", system: "darwin" })).toBe(join(dir, "whisper-server"));
   });
 });
+
+describe("dictation where it isn't tried yet", () => {
+  it("is not offered: no download, no start, and it says so", async () => {
+    setLocale("en");
+    const folder = mkdtempSync(join(tmpdir(), "vunemi-voice-"));
+    try {
+      mkdirSync(join(folder, "models"));
+      writeFileSync(join(folder, "models", VOICE_MODEL.file), "");
+      const server = join(folder, "whisper-server");
+      writeFileSync(server, "");
+      const voice = new Voice(folder, { builtIn: server, shared: false, offered: false });
+      const status = voice.status();
+      expect(status.canHear).toBe(false);
+      expect(status.hint).toBe("Typing by voice is not available on Windows yet.");
+      expect(status.download).toBeUndefined();
+      await expect(voice.clip(Buffer.alloc(0), "auto")).rejects.toThrow("Typing by voice is not available on Windows yet.");
+      expect(voice.pid()).toBeNull();
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+});

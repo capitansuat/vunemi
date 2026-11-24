@@ -1134,6 +1134,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "Речевой модели пока нет. Нажмите на микрофон, чтобы загрузить её ({size} МБ).",
     noWhisper: "В этой установке Vunemi нет движка распознавания речи.",
+    notOnWindows: "Голосовой ввод пока недоступен в Windows.",
     failed: "Не удалось распознать речь ({status}).",
     startFailed: "Не удалось запустить распознавание речи: {why}",
   },

@@ -31,7 +31,8 @@ describe("platform layer", () => {
   });
 
   it("hides on Linux everything that needs macOS itself", () => {
-    for (const id of FEATURE_IDS) expect(linux.features[id], id).toBe(false);
+    // Dictation works on Linux with its own whisper build; everything else here needs macOS.
+    for (const id of FEATURE_IDS) expect(linux.features[id], id).toBe(id === "dictation");
     expect(linux.vaultKey).toBe("safe-storage");
     expect(linux.fileSearch).toBe("walk");
     expect(linux.downloadPage).toBe(LINUX_DOWNLOAD_PAGE);

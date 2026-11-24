@@ -1129,6 +1129,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "还没有语音模型。点按麦克风即可下载（{size} MB）。",
     noWhisper: "此 Vunemi 安装没有语音引擎。",
+    notOnWindows: "语音输入在 Windows 上暂不可用。",
     failed: "语音识别失败（{status}）。",
     startFailed: "无法启动语音识别：{why}",
   },

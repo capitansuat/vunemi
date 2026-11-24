@@ -1135,6 +1135,7 @@ export const messages = {
   voiceEngine: {
     noModel: "Ses modeli henüz yok. Mikrofona basınca indirebilirsin ({size} MB).",
     noWhisper: "Bu Vunemi kurulumunda ses motoru yok.",
+    notOnWindows: "Sesle yazdırma Windows'ta henüz yok.",
     failed: "Ses tanıma başarısız oldu ({status}).",
     startFailed: "Ses tanıma başlatılamadı: {why}",
   },

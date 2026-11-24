@@ -1129,6 +1129,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "Ainda não há modelo de voz. Toque no microfone para baixá-lo ({size} MB).",
     noWhisper: "Esta instalação do Vunemi não tem mecanismo de voz.",
+    notOnWindows: "O ditado por voz ainda não está disponível no Windows.",
     failed: "O reconhecimento de voz falhou ({status}).",
     startFailed: "Não foi possível iniciar o reconhecimento de voz: {why}",
   },

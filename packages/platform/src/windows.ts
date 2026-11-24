@@ -21,6 +21,8 @@ export const WINDOWS_FEATURES: PlatformFeatures = {
   archives: false,
   atomicMove: false,
   speakAloud: true,
+  // Built and tried with a recording; on once it is tried with a microphone in the installed app.
+  dictation: false,
 };
 
 /** Where Windows builds are downloaded by hand until the app can update itself. */
