@@ -132,13 +132,18 @@ function toTopic(topics: TopicStore, topic: string, f: Finding, sources: string[
   return title;
 }
 
-/** Moves the conversation note's findings into the topic as pages; returns how many. The note is then deleted. */
+/**
+ * Moves the conversation note's findings into the topic as pages; returns how
+ * many. The note is then deleted, unless it holds lines that aren't findings
+ * (the model rewrote it in its own words): then it stays, so nothing is lost.
+ */
 export function moveNoteToTopic(work: WorkStore, topics: TopicStore, where: FindingsWhere, topic: string, now: () => number = Date.now): number {
   const note = work.readNote(noteScopeOf(where), findingsTitle(where));
   if (!note) return 0;
   const items = parseNote(note.text, now());
   for (const f of items) toTopic(topics, topic, f, note.sources);
-  work.deleteNote(note.id);
+  const other = note.text.split("\n").some((l) => l.trim() !== "" && !l.startsWith("## ") && !LINE.test(l.trim()));
+  if (!other) work.deleteNote(note.id);
   return items.length;
 }
 
@@ -163,7 +168,12 @@ export interface FindingToolsOptions {
 export const findingsFull = (title: string): string => `The findings note is full. Rewrite it shorter with worknote_write under the title "${title}", in the same form, keeping what matters to the request; then add this finding again.`;
 export const NO_PAGE = "Open the page this finding comes from, then add it.";
 
-export function createFindingTools(opts: FindingToolsOptions): { tools: ToolDef[]; runFindings: (runId: string) => Finding[] } {
+export function createFindingTools(opts: FindingToolsOptions): {
+  tools: ToolDef[];
+  runFindings: (runId: string) => Finding[];
+  /** The open conversation's findings note into the topic, from the same place the tool writes it (see moveNoteToTopic). */
+  moveToTopic: (topic: string) => number;
+} {
   const now = opts.now ?? Date.now;
   const byRun = new Map<string, Finding[]>();
   const topicOf = (where: FindingsWhere): string | null => (where.topic && opts.topics?.findTopic(where.topic)?.name) || null;
@@ -218,7 +228,11 @@ export function createFindingTools(opts: FindingToolsOptions): { tools: ToolDef[
       },
     },
   ];
-  return { tools, runFindings: (runId) => [...(byRun.get(runId) ?? [])] };
+  return {
+    tools,
+    runFindings: (runId) => [...(byRun.get(runId) ?? [])],
+    moveToTopic: (topic) => (opts.topics ? moveNoteToTopic(opts.work, opts.topics, opts.where(), topic, now) : 0),
+  };
 }
 
 export { findingsOption } from "./findings-option.js";

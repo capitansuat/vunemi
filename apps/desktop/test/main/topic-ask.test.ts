@@ -35,6 +35,7 @@ describe("acceptAsk", () => {
   let work: WorkStore;
   let topics: TopicStore;
   let linked: string[];
+  let move: (name: string) => number;
   const where = { conversationId: "c1" };
   const clock = Date.UTC(2026, 10, 24, 10, 30);
 
@@ -44,17 +45,18 @@ describe("acceptAsk", () => {
     work = new WorkStore(join(dir, "work"), () => clock);
     topics = new TopicStore({ root: () => join(dir, "Memory"), dataDir: join(dir, "data"), now: () => clock });
     linked = [];
-    const { tools } = createFindingTools({
+    const made = createFindingTools({
       work, topics, where: () => where, request: () => REQUEST, page: async () => ({ url: "https://jobs.example/job/1", title: "Accountant" }),
       sources: () => [], redact: (x) => x, onSaved: () => {}, onFinding: () => {}, now: () => clock,
     });
-    await tools[0]!.run({ title: "Accountant, Acme", text: "40,000" }, { runId: "r1" } as never);
+    move = made.moveToTopic;
+    await made.tools[0]!.run({ title: "Accountant, Acme", text: "40,000" }, { runId: "r1" } as never);
   });
   afterEach(() => {
     work.close();
     rmSync(dir, { recursive: true, force: true });
   });
-  const deps = () => ({ topics, work, where, request: REQUEST, link: (name: string) => linked.push(name), now: () => clock });
+  const deps = () => ({ topics, request: REQUEST, link: (name: string) => linked.push(name), move });
 
   it("makes the new topic, puts the conversation in it, and moves the findings into pages", () => {
     expect(acceptAsk({ topic: "Job hunt", new: true }, deps())).toBe("Job hunt");

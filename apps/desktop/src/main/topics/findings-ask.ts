@@ -4,8 +4,7 @@
  * (suggest.ts); otherwise a new one, under the short name the model gave the
  * search or the request's first words. Nothing is made without the user's yes.
  */
-import type { WorkStore } from "../work/store.js";
-import { moveNoteToTopic, safeTitle, type FindingsWhere } from "../work/findings.js";
+import { safeTitle } from "../work/findings.js";
 import { keyOf, type TopicStore } from "./store.js";
 
 /** A new topic's name: at most this many characters, as the model's proposal is. */
@@ -31,7 +30,8 @@ export function whichAsk(o: {
 /** The user said yes: the topic (made, when new), the conversation in it, and the findings moved there. Returns its name. */
 export function acceptAsk(
   held: { topic: string; new?: true },
-  d: { topics: TopicStore; work: WorkStore | null; where: FindingsWhere; request: string; link: (name: string) => void; now?: () => number },
+  /** `move`: the conversation's findings note into the topic (createFindingTools' moveToTopic), where the tool wrote it. */
+  d: { topics: TopicStore; request: string; link: (name: string) => void; move?: (name: string) => number },
 ): string {
   let name: string;
   if (held.new) {
@@ -51,6 +51,6 @@ export function acceptAsk(
     name = found.name;
   }
   d.link(name);
-  if (d.work) moveNoteToTopic(d.work, d.topics, d.where, name, d.now);
+  d.move?.(name);
   return name;
 }

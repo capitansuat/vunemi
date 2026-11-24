@@ -144,6 +144,25 @@ describe("with no topic", () => {
     expect(topics.listNotes("Job hunt").find((n) => n.title.startsWith("Web findings"))!.text.split("\n")).toHaveLength(3);
     expect(noteText()).toBeNull();
   });
+
+  it("moves a project conversation's findings, named with its title, through the tools' own place", async () => {
+    here = { conversationId: "c1", projectId: "p1", conversationTitle: "London" };
+    await add({ title: "Accountant, Acme", text: "40,000" });
+    topics.createTopic("Job hunt", "");
+    expect(tools.moveToTopic("Job hunt")).toBe(1);
+    expect(topics.readNote("Job hunt", "Accountant, Acme")).not.toBeNull();
+    expect(work.listNotes(projectScope("p1"))).toHaveLength(0);
+  });
+
+  it("keeps the note when it holds lines it can't read as findings, so nothing is lost", async () => {
+    await add({ title: "Accountant, Acme", text: "40,000" });
+    const note = work.readNote(conversationScope("c1"), t("findings.noteTitle"))!;
+    work.writeNote({ scope: conversationScope("c1"), conversationId: "c1", title: note.title, text: `${note.text}\nBest so far: Acme, the only one with hybrid work.`, sources: [] });
+    topics.createTopic("Job hunt", "");
+    expect(moveNoteToTopic(work, topics, here, "Job hunt", () => clock)).toBe(1);
+    expect(topics.readNote("Job hunt", "Accountant, Acme")).not.toBeNull();
+    expect(noteText()).toContain("Best so far: Acme");
+  });
 });
 
 describe("either way", () => {

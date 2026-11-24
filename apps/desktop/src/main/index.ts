@@ -1606,13 +1606,11 @@ handle(CH.topicsResolve, (_e, runId: unknown, decision: unknown) => {
   let linked: string | null = null;
   if (decision === "linked") {
     if (!topics || (!held.new && !topics.findTopic(held.topic))) throw new Error(t("topics.gone"));
-    const project = currentProject();
     linked = acceptAsk(held, {
       topics,
-      work,
-      where: noteWhere({ conversationId: conversations.currentId, projectId: project?.id, projectExists: project !== null }),
       request: held.request,
       link: (name) => conversations.setTopic(name),
+      ...(findings && { move: findings.moveToTopic }),
     });
   }
   topicAsks.delete(runId as string);
