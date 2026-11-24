@@ -61,10 +61,11 @@ export function temporaryTopic(d: {
   return name;
 }
 
-/** The answer page's title, the request shortened as a list page's is (work/findings.ts listTitle). */
+/** The answer page's title: the request cut at a word, to fit beside the catalogue's words. */
 function answerTitle(request: string): string {
-  const shortRequest = safeTitle(request, FINDING_LIMITS.listRequest) || "…";
-  return safeTitle(t("findings.answerTitle", { request: shortRequest }), FINDING_LIMITS.title + FINDING_LIMITS.listRequest).slice(0, FINDING_LIMITS.title).trim();
+  const around = [...t("findings.answerTitle", { request: "" })].length;
+  const shortRequest = shortName(request, Math.min(FINDING_LIMITS.listRequest, FINDING_LIMITS.title - around)) || "…";
+  return safeTitle(t("findings.answerTitle", { request: shortRequest }), FINDING_LIMITS.title);
 }
 
 /**

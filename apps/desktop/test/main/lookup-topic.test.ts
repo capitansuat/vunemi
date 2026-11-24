@@ -98,6 +98,12 @@ describe("writeAnswer", () => {
     expect(await write("Auditor, Gamma")).toBe("Found — Find accountant jobs in London (2)");
   });
 
+  it("cuts a long request in the title at a word", async () => {
+    expect(await write("Two jobs", "Search NHS Jobs (jobs.nhs.uk) for software developer vacancies and list the ones you find.")).toBe(
+      "Found — Search NHS Jobs (jobs.nhs.uk) for software developer",
+    );
+  });
+
   it("writes nothing for an empty answer", async () => {
     expect(await write("  ")).toBeNull();
     expect(topics.outline("Jobs").notes).toEqual([]);
