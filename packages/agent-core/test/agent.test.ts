@@ -11,7 +11,9 @@ import { ToolRegistry, type ToolDef } from "../src/tools.js";
 import type { ToolArea } from "../src/areas.js";
 import { KeptOutputs, keptOutputTools } from "../src/kept.js";
 import { PLAN_BUDGET } from "../src/plan.js";
-import { IMAGE_REMOVED, IMAGES_KEPT, capImages, keepNewestImage, stripImages } from "../src/context.js";
+import { IMAGE_REMOVED, IMAGES_KEPT, SUMMARY_SECTIONS, capImages, keepNewestImage, stripImages } from "../src/context.js";
+
+const SUMMARY = SUMMARY_SECTIONS.map((s) => `${s}\n- something`).join("\n\n");
 
 /** A model that replays a fixed script of turns, and records what it was sent. */
 function scripted(turns: Array<{ text?: string; calls?: Array<Omit<ToolCall, "id">> }>) {
@@ -543,6 +545,23 @@ describe("previews, instructions and ephemeral outputs", () => {
     await runAgent({ goal: "g", model, tools: snapshots(4_000), contextWindow: 2_000, emit: (e) => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
     expect(toolContents(seen[2]!.messages)).toEqual([EPHEMERAL_PLACEHOLDER.slice(0, 7), "page v2"]);
     expect(events.find((e) => e.type === "context.compacted")).toMatchObject({ kind: "pruned" });
+  });
+
+  it("keeps what a tool says an old snapshot shortens to, and where the whole of it is kept", async () => {
+    const { model, seen } = twoSnapshots();
+    let n = 0;
+    const tools = new ToolRegistry().register({
+      name: "snapshot", description: "", parameters: { type: "object", properties: {} }, actionClass: "read", ephemeral: true,
+      stale: (output) => output.split("\n")[0]!,
+      run: async () => `[tab 1] Page ${++n} — https://shop.example/${n}\n${"x".repeat(6_000)}`,
+    });
+    const kept = { keep: (_tool: string, text: string, part: number) => `${text.slice(0, part)}\n[Showing characters 1–${part} of ${text.length}. The whole output is kept as "o1": output_read with id "o1" and part 2–3 reads the rest in order; output_search finds the lines that contain given words.]`, read: () => "", search: () => "", toolOf: () => "snapshot" };
+    await runAgent({ goal: "g", model, tools, contextWindow: 2_000, keptOutputs: kept, maxToolOutputChars: 5_000, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    const old = seen[2]!.messages.filter((m) => m.role === "tool")[0]!.content;
+    expect(old.startsWith("[tab 1] Page 1 — https://shop.example/1\n")).toBe(true);
+    expect(old).toContain(EPHEMERAL_PLACEHOLDER);
+    expect(old).toContain('kept as "o1"');
+    expect(old.length).toBeLessThan(600);
   });
 });
 
@@ -1432,6 +1451,42 @@ describe("context window", () => {
       id: "fake:overflow",
       async chat() {
         throw new ProviderError("http", "HTTP 400 from x: the request exceeds the available context size", "x");
+      },
+    };
+    const result = await run({ model }).promise;
+    expect(result.status).toBe("failed");
+    expect(result.detail).toBe(t("agent.contextFull"));
+  });
+
+  it("finishes a long one-request lookup on a lowered 8K window", async () => {
+    // A server with a real window: it counts the whole request and refuses past n_ctx, in llama-server's words.
+    const nCtx = 8_192;
+    let steps = 0;
+    const model: ChatModel = {
+      id: "fake:server",
+      async chat(req) {
+        const tokens = Math.ceil(JSON.stringify({ m: req.messages, t: req.tools }).length / 3);
+        if (tokens > nCtx) throw new ProviderError("http", `HTTP 400 from x: {"error":{"code":400,"message":"request (${tokens} tokens) exceeds the available context size (${nCtx} tokens), try increasing it","type":"exceed_context_size_error"}}`, "x");
+        const usage = { promptTokens: tokens, completionTokens: 20, ttftMs: 1, tokensPerSec: 1 };
+        if (req.messages.at(-1)!.content.includes("context checkpoint")) return { text: SUMMARY, toolCalls: [], usage };
+        if (++steps > 26) return { text: "The blue kettle costs 30.", toolCalls: [], usage };
+        return { text: "", toolCalls: [{ id: `p${steps}`, name: "shop_look", argumentsText: `{"ref":${steps}}` }], usage };
+      },
+    };
+    const page = `[tab 1] Shop — https://shop.example/\n${"- link \"A product\" [ref=3]\n".repeat(120)}`;
+    const registry = new ToolRegistry().register({ name: "shop_look", description: "look at a shop page", parameters: { type: "object", properties: { ref: { type: "number" } } }, actionClass: "read", untrustedOutput: true, run: async () => page });
+    const result = await runAgent({ goal: "Find the price of the blue kettle on shop.example", model, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }), contextWindow: nCtx, maxSteps: 30 });
+    expect(result.detail).toBe("The blue kettle costs 30.");
+    expect(result.status).toBe("done");
+  });
+
+  it("never shows the server's raw words when the context is full", async () => {
+    let calls = 0;
+    const model: ChatModel = {
+      id: "fake:overflow",
+      async chat() {
+        if (calls++ === 0) return { text: "", toolCalls: [{ id: "a", name: "read_page", argumentsText: "{}" }], usage: { promptTokens: 1, completionTokens: 1, ttftMs: 1, tokensPerSec: 1 } };
+        throw new ProviderError("http", "HTTP 400 from x: request (8409 tokens) exceeds the available context size (8192 tokens), try increasing it", "x");
       },
     };
     const result = await run({ model }).promise;

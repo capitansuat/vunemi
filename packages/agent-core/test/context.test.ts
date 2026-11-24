@@ -9,6 +9,7 @@ import {
   messageChars,
   pruneToolResults,
   recentTurnsStart,
+  recentStepsStart,
   summarize,
   earlierRequests,
   SUMMARY_SECTIONS,
@@ -340,5 +341,117 @@ describe("summarizing from the cache", () => {
     expect(retry[1]!.content.startsWith("<earlier_summary>")).toBe(true);
     expect(retry[1]!.content).toContain("u1");
     expect(retry.some((m) => m.content.includes("\nu0\n"))).toBe(false);
+  });
+});
+
+/** One user request followed by `steps` tool steps, as a web lookup makes them. */
+function longTask(steps: number, size: number): ChatMessage[] {
+  const out: ChatMessage[] = [{ role: "user", content: "<user_request>\nFind the price of the blue kettle on shop.example\n</user_request>" }];
+  for (let i = 1; i <= steps; i++) {
+    out.push({ role: "assistant", content: "", toolCalls: [{ id: `s${i}`, name: "page_click", argumentsText: `{"ref":${i}}` }] });
+    out.push({ role: "tool", content: `[tab 1] Page ${i} — https://shop.example/p/${i}\n${"x".repeat(size)}`, toolCallId: `s${i}`, toolName: "page_click" });
+  }
+  return out;
+}
+
+/** True when every tool result follows the assistant message that called it. */
+function paired(history: readonly ChatMessage[]): boolean {
+  const open = new Set<string>();
+  for (const m of history) {
+    if (m.role === "assistant") for (const c of m.toolCalls ?? []) open.add(c.id);
+    if (m.role === "tool" && !open.has(m.toolCallId)) return false;
+  }
+  return true;
+}
+
+describe("recentStepsStart", () => {
+  it("finds the assistant message that starts the last steps of the current turn", () => {
+    const history = longTask(10, 5);
+    const at = recentStepsStart(history, 4);
+    expect(history[at]).toMatchObject({ role: "assistant", toolCalls: [{ id: "s7" }] });
+    expect(history.slice(at).filter((m) => m.role === "assistant")).toHaveLength(4);
+  });
+
+  it("keeps a step with two calls whole", () => {
+    const history: ChatMessage[] = [
+      ...longTask(3, 5),
+      { role: "assistant", content: "", toolCalls: [{ id: "d1", name: "x", argumentsText: "{}" }, { id: "d2", name: "x", argumentsText: "{}" }] },
+      { role: "tool", content: "r1", toolCallId: "d1", toolName: "x" },
+      { role: "tool", content: "r2", toolCallId: "d2", toolName: "x" },
+    ];
+    const at = recentStepsStart(history, 1);
+    expect(history[at]).toMatchObject({ role: "assistant", toolCalls: [{ id: "d1" }, { id: "d2" }] });
+  });
+
+  it("returns 0 when the turn has no more steps than are kept", () => {
+    expect(recentStepsStart(longTask(4, 5), 4)).toBe(0);
+    expect(recentStepsStart([], 4)).toBe(0);
+  });
+
+  it("looks only at the turn after the last user message", () => {
+    const history = [...longTask(6, 5), { role: "user", content: "<user_request>\nand the red one?\n</user_request>" } as ChatMessage, ...longTask(2, 5).slice(1)];
+    expect(recentStepsStart(history, 4)).toBe(0);
+  });
+});
+
+describe("compact in one long task", () => {
+  const long = (model: ChatModel): CompactOptions => ({
+    ...base(model),
+    window: 32_768,
+    system: "s".repeat(15_000),
+    charsPerToken: 3,
+    target: 0.5,
+    keepTurns: 1,
+    keepRecentTools: 1,
+    pruneChars: 800,
+    force: true,
+  });
+
+  it("checkpoints the older steps of an 80-step task, so it fits again", async () => {
+    const { model, seen } = answering(goodSummary);
+    const history = longTask(80, 2_500);
+    const out = await compact(history, long(model));
+    expect(out.kind).toBe("summarized");
+    expect(seen).toHaveLength(1);
+    expect(out.after).toBeLessThanOrEqual(32_768 * 0.5);
+    expect(out.history[0]!.role).toBe("user");
+    expect(out.history[0]!.content.endsWith(history[0]!.content)).toBe(true);
+    expect(out.history[0]!.content.startsWith("<earlier_summary>")).toBe(true);
+    expect(out.history.slice(-8)).toEqual(history.slice(-8));
+    expect(paired(out.history)).toBe(true);
+  });
+
+  it("says the checkpoint is progress on a request that is not finished", async () => {
+    const { model } = answering(goodSummary);
+    const out = await compact(longTask(80, 2_500), long(model));
+    expect(out.history[0]!.content).not.toContain("already been handled");
+    expect(out.history[0]!.content).toContain("not finished");
+  });
+
+  it("sends the summarizer a request that fits, trimming older results when the whole doesn't", async () => {
+    const { model, seen } = answering(goodSummary);
+    await compact(longTask(80, 2_500), long(model));
+    const chars = messageChars(seen[0]!.messages) + JSON.stringify(seen[0]!.tools).length;
+    expect(chars).toBeLessThanOrEqual(32_768 * 3 * 0.8);
+    expect(seen[0]!.messages[1]!.content).toContain("Find the price of the blue kettle");
+  });
+
+  it("folds an earlier checkpoint of the same task into the next one", async () => {
+    const { model, seen } = answering(goodSummary);
+    const once = await compact(longTask(80, 2_500), long(model));
+    const more = [...once.history, ...longTask(40, 2_500).slice(1).map((m) => (m.role === "tool" ? { ...m, toolCallId: `n${m.toolCallId}` } : m.role === "assistant" ? { ...m, toolCalls: m.toolCalls!.map((c) => ({ ...c, id: `n${c.id}` })) } : m))];
+    const twice = await compact(more, long(model));
+    expect(twice.kind).toBe("summarized");
+    expect(seen[1]!.messages[1]!.content).toContain("<earlier_summary>");
+    expect(twice.history[0]!.content.match(/<earlier_summary>/g)).toHaveLength(1);
+    expect(twice.history[0]!.content.endsWith("Find the price of the blue kettle on shop.example\n</user_request>")).toBe(true);
+    expect(paired(twice.history)).toBe(true);
+  });
+
+  it("trims only, without a model call, when summaries are not allowed", async () => {
+    const { model, seen } = answering(goodSummary);
+    const out = await compact(longTask(80, 2_500), { ...long(model), allowSummary: false });
+    expect(seen).toHaveLength(0);
+    expect(out.kind).toBe("pruned");
   });
 });
