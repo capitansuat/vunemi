@@ -31,7 +31,7 @@ import { GUARD_NOTE, suspectInstructions } from "./guard.js";
 import { mentionParts, mentionSource, type RunMention } from "./mentions.js";
 import { maskSecrets } from "./secrets.js";
 import type { ChatMessage, ChatModel, ChatResult, ImageData, ToolCall, ToolSpec } from "./provider.js";
-import type { ActionClass, ToolDef, ToolRegistry } from "./tools.js";
+import { staleHead, type ActionClass, type StaleHead, type ToolDef, type ToolRegistry } from "./tools.js";
 import { t } from "@vunemi/i18n";
 import { requestedTravelTools } from "./travel-intent.js";
 import { promptLedger, type LedgerPart } from "./ledger.js";
@@ -1339,7 +1339,8 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
 
   /** Long output kept whole, the model shown its start; room is left for the note. */
   async function keepLong(raw: string, tool: ToolDef): Promise<string> {
-    const wanted = typeof tool.firstPartChars === "function" ? tool.firstPartChars(raw) : tool.firstPartChars;
+    const end = tool.firstPartEnd ? raw.indexOf(tool.firstPartEnd) : -1;
+    const wanted = end >= 0 ? Math.min(tool.firstPartChars ?? end, end) : tool.firstPartChars;
     const first = Math.min(Number.isFinite(wanted) && wanted! >= 0 ? wanted! : maxOut, maxOut - KEPT_NOTE_ROOM);
     if (!opts.keptOutputs || raw.length <= first || KEPT_READERS.has(tool.name)) return raw;
     return opts.keptOutputs.keep(tool.name, raw, first);
@@ -2352,7 +2353,7 @@ export const EPHEMERAL_PLACEHOLDER =
  */
 export function compactEphemeral(
   messages: ChatMessage[],
-  ephemeral: ReadonlySet<string> | ReadonlyMap<string, ((output: string) => string) | undefined>,
+  ephemeral: ReadonlySet<string> | ReadonlyMap<string, StaleHead | undefined>,
 ): ChatMessage[] {
   if (ephemeral.size === 0) return messages;
   let lastIndex = -1;
@@ -2368,11 +2369,11 @@ export function compactEphemeral(
 const KEPT_NOTE = /\n(\[Showing characters [^\n]*kept as "[^"\n]+"[^\n]*\])\s*$/;
 
 /** An old snapshot: what its tool keeps of it, the note, and where the whole of it is kept. */
-function staleContent(content: string, stale: ((output: string) => string) | undefined): string {
+function staleContent(content: string, stale: StaleHead | undefined): string {
   if (content.startsWith(EPHEMERAL_PLACEHOLDER) || content.includes(`\n${EPHEMERAL_PLACEHOLDER}`)) return content;
   let head = "";
   try {
-    head = stale?.(content).trim() ?? "";
+    head = stale ? staleHead(content, stale).trim() : "";
   } catch {
     head = "";
   }

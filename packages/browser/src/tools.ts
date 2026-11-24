@@ -8,13 +8,13 @@
  */
 
 import type { BoundAction } from "./bound-actions.js";
-import type { ToolContext, ToolDef } from "@vunemi/agent-core";
+import { staleHead, type StaleHead, type ToolContext, type ToolDef } from "@vunemi/agent-core";
 import type { BrowserController } from "./controller.js";
 import { OWNER_REFUSAL, PageActionError, type PageDriver } from "./page.js";
 import { checkNavigation } from "./url-policy.js";
 import { t } from "@vunemi/i18n";
 import { CONTENT_SHOWN, WHOLE_PAGE_MARK } from "./main-content.js";
-export { WHOLE_PAGE_MARK, markdownOf, type ContentNode, type Reader } from "./main-content.js";
+export { CONTENT_SHOWN, WHOLE_PAGE_MARK, markdownOf, type ContentNode, type Reader } from "./main-content.js";
 
 const REF = { type: "integer", description: "Observed page_describe ref." } as const;
 
@@ -81,16 +81,11 @@ const HEAD_MAX = 300;
  * What an old page view shortens to: what was done and the page it led to
  * (the "[tab N] title — address" line, or the verdict), not the outline.
  */
+/** What an older page view keeps: its first lines, through the one with the tab and address. */
+export const PAGE_HEAD: StaleHead = { lines: 3, until: String.raw`\[tab \d+\]|^→ `, max: HEAD_MAX };
+
 export function outlineHead(output: string): string {
-  const lines = output.split("\n");
-  const head: string[] = [];
-  for (const line of lines.slice(0, 3)) {
-    head.push(line);
-    if (/\[tab \d+\]/.test(line) || line.startsWith("→ ")) break;
-  }
-  if (!head.some((l) => /\[tab \d+\]/.test(l) || l.startsWith("→ "))) head.splice(1);
-  const text = head.join("\n");
-  return text.length > HEAD_MAX ? `${text.slice(0, HEAD_MAX - 1)}…` : text;
+  return staleHead(output, PAGE_HEAD);
 }
 
 export function createBrowserTools(browser: BrowserController, opts: { shotDir?: string } = {}): ToolDef[] {
@@ -190,7 +185,8 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       untrustedOutput: true,
       ephemeral: true,
       // The model sees the start of the main content; the rest, and the whole page text, is kept.
-      firstPartChars: (output: string) => { const at = output.indexOf(WHOLE_PAGE_MARK); return Math.min(CONTENT_SHOWN, at < 0 ? output.length : at); },
+      firstPartChars: CONTENT_SHOWN,
+      firstPartEnd: WHOLE_PAGE_MARK,
       run: () => browser.read(PAGE_TEXT_CHARS),
     },
     ...(opts.shotDir ? [pageScreenshot(browser, opts.shotDir)] : []),
@@ -376,7 +372,7 @@ export function createBrowserTools(browser: BrowserController, opts: { shotDir?:
       },
     },
   ];
-  for (const tool of tools) if (PAGE_VIEWS.has(tool.name)) Object.assign(tool, { ephemeral: true, stale: outlineHead });
+  for (const tool of tools) if (PAGE_VIEWS.has(tool.name)) Object.assign(tool, { ephemeral: true, stale: PAGE_HEAD });
   tools.push({
     name:"page_target_observe",description:"Observe owned target; run-bound snapshot/refs. picture required for canvas coordinates.",
     parameters:{type:"object",properties:{tab:{type:"integer"},picture:{type:"boolean"}}},actionClass:"read",untrustedOutput:true,

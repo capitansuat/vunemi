@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createBrowserTools, outlineHead } from "../src/tools.js";
+import { createBrowserTools, outlineHead, PAGE_HEAD } from "../src/tools.js";
 import type { BrowserController } from "../src/controller.js";
 
 describe("an old page outline", () => {
@@ -26,7 +26,7 @@ describe("an old page outline", () => {
     for (const name of ["page_goto", "page_search", "page_back", "page_describe", "page_read", "page_click", "page_type", "page_select", "page_press", "page_scroll"]) {
       const tool = tools.find((t) => t.name === name)!;
       expect(tool.ephemeral, name).toBe(true);
-      expect(tool.stale, name).toBe(outlineHead);
+      expect(tool.stale, name).toBe(PAGE_HEAD);
     }
     expect(tools.find((t) => t.name === "page_find")!.ephemeral).toBeFalsy();
   });

@@ -551,7 +551,7 @@ describe("previews, instructions and ephemeral outputs", () => {
     const { model, seen } = scripted([{ calls: [{ name: "reader", argumentsText: "{}" }] }, { text: "done" }]);
     const tools = new ToolRegistry().register({
       name: "reader", description: "", parameters: { type: "object", properties: {} }, actionClass: "read",
-      firstPartChars: (output) => output.indexOf("|"),
+      firstPartEnd: "|",
       run: async () => `shown part|${"hidden ".repeat(500)}`,
     });
     const kept = { keep: (_tool: string, text: string, part: number) => `${text.slice(0, part)}\n[kept as "o1"]`, read: () => "", search: () => "", toolOf: () => "reader" };
@@ -567,7 +567,7 @@ describe("previews, instructions and ephemeral outputs", () => {
     let n = 0;
     const tools = new ToolRegistry().register({
       name: "snapshot", description: "", parameters: { type: "object", properties: {} }, actionClass: "read", ephemeral: true,
-      stale: (output) => output.split("\n")[0]!,
+      stale: { lines: 1, until: "^\\[tab", max: 200 },
       run: async () => `[tab 1] Page ${++n} — https://shop.example/${n}\n${"x".repeat(6_000)}`,
     });
     const kept = { keep: (_tool: string, text: string, part: number) => `${text.slice(0, part)}\n[Showing characters 1–${part} of ${text.length}. The whole output is kept as "o1": output_read with id "o1" and part 2–3 reads the rest in order; output_search finds the lines that contain given words.]`, read: () => "", search: () => "", toolOf: () => "snapshot" };

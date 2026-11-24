@@ -61,8 +61,8 @@ describe("page_read", () => {
     const out = await tool.run({}, { handoff: async () => true } as never);
     expect(out.startsWith("[tab 1] Jobs — https://jobs.example/\n# Accountant")).toBe(true);
     expect(out).toContain("[Read: main]");
-    const first = tool.firstPartChars as (o: string) => number;
-    expect(out.slice(0, first(out))).not.toContain("Cookies");
-    expect(first(`x${"y".repeat(9_000)}${WHOLE_PAGE_MARK}z`)).toBe(6_000);
+    expect(tool.firstPartEnd).toBe(WHOLE_PAGE_MARK);
+    expect(tool.firstPartChars).toBe(6_000);
+    expect(out.slice(0, out.indexOf(tool.firstPartEnd!))).not.toContain("Cookies");
   });
 });
