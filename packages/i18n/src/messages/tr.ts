@@ -1306,7 +1306,7 @@ export const messages = {
     calendarUnread: "Takvimi okuyamadım: {error} Etkinlik olup olmadığını doğrulayamadım.",
     nothingChanged: "⚠️ Vunemi'nin notu: bu görevde hiçbir şey eklenmedi, gönderilmedi ya da değiştirilmedi. Yukarıdaki cevap aksini söylüyorsa yanlış; işi yeniden iste ya da kendin yap.",
     switchedOff: "{part} kapalı. Bu görev onu kullanmak istiyor.",
-    contextFull: "Konuşma bu model için fazla uzun. Yeni bir oturum açın ya da “Şimdi sıkıştır”ı deneyin.",
+    contextFull: "Konuşma bu model için fazla uzun. Yeni bir oturum aç ya da “Şimdi sıkıştır”ı dene.",
     claimCheck: "🔎 Vunemi: bu cevap bir şeyin yapıldığını söylüyor ama hiçbir şey değişmedi. Model bir kez daha deniyor.",
     callCheck: "🔎 Vunemi: model bir aracı andı ama kullanmadı. Bir kez daha deniyor.",
     guideCheck: "🔎 Vunemi: model uygulama araçlarını açtı ama hiçbirini kullanmadı. Bir kez daha deniyor.",
