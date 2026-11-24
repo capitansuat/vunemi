@@ -173,7 +173,8 @@ export function requestGuard(
   };
 }
 
-function safeHost(raw: string): string | null {
+/** The lower-case host of a web address; null for anything that is not an http(s) page. */
+export function safeHost(raw: string): string | null {
   try {
     const url = new URL(raw);
     return url.protocol === "http:" || url.protocol === "https:" ? hostOf(url) : null;
