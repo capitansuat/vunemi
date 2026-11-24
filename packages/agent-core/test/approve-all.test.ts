@@ -251,6 +251,93 @@ describe("approve all in this task", () => {
     ]);
   });
 
+  describe("on a site the user trusts", () => {
+    const page = (ran: string[], trusted: boolean | undefined) => tool("page_click", {
+      actionClass: "outbound",
+      alwaysAsk: false,
+      approveAll: (a) => (a.posts === true ? undefined : { key: `site:${String(a.host)}`, site: String(a.host), ...(trusted !== undefined && { trusted }) }),
+    }, ran);
+    const approve = (): ApprovalDecision => ({ kind: "approve" });
+
+    it("one plain approval covers the site's next calls, and nothing else", async () => {
+      const ran: string[] = [];
+      const files = tool("files_edit", {}, ran);
+      const { asked, events } = await go(
+        [page(ran, true), files],
+        [
+          { name: "page_click", args: { host: "example.com" } },
+          { name: "page_click", args: { host: "example.com" } },
+          { name: "files_edit" },
+          { name: "page_click", args: { host: "shop.example" } },
+        ],
+        approve,
+      );
+      // Local work is not covered by a plain approval; another host asks again.
+      expect(asked).toEqual(["page_click", "files_edit", "page_click"]);
+      expect(ran).toEqual(["page_click", "page_click", "files_edit", "page_click"]);
+      expect(events.find((e) => e.type === "approval.required")).toMatchObject({ approveAll: { site: "example.com", trusted: true } });
+    });
+
+    it("a site that isn't trusted, or doesn't say, asks every time a plain approval is given", async () => {
+      for (const trusted of [false, undefined]) {
+        const ran: string[] = [];
+        const { asked, events } = await go(
+          [page(ran, trusted)],
+          [{ name: "page_click", args: { host: "example.com" } }, { name: "page_click", args: { host: "example.com" } }],
+          approve,
+        );
+        expect(asked).toEqual(["page_click", "page_click"]);
+        expect(events.find((e) => e.type === "approval.required")).not.toHaveProperty("approveAll.trusted");
+      }
+    });
+
+    it("a form that posts still has its card, and approving it covers nothing further", async () => {
+      const ran: string[] = [];
+      const { asked } = await go(
+        [page(ran, true)],
+        [
+          { name: "page_click", args: { host: "example.com", posts: true } },
+          { name: "page_click", args: { host: "example.com", posts: true } },
+          { name: "page_click", args: { host: "example.com" } },
+        ],
+        approve,
+      );
+      expect(asked).toEqual(["page_click", "page_click", "page_click"]);
+    });
+
+    it("a warning and a resumed run give no cover, so approving covers nothing", async () => {
+      const ran: string[] = [];
+      const authorize: RunOptions["authorize"] = () => ({ kind: "ask", alert: true, reason: "This came from a page." });
+      const warned = await go(
+        [page(ran, true)],
+        [{ name: "page_click", args: { host: "example.com" } }, { name: "page_click", args: { host: "example.com" } }],
+        approve,
+        { authorize },
+      );
+      expect(warned.asked).toEqual(["page_click", "page_click"]);
+      const resumed = await go(
+        [page(ran, true)],
+        [{ name: "page_click", args: { host: "example.com" } }, { name: "page_click", args: { host: "example.com" } }],
+        approve,
+        { askBeyondRead: true },
+      );
+      expect(resumed.asked).toEqual(["page_click", "page_click"]);
+    });
+
+    it("a scheduled run never gets the shortcut", async () => {
+      const ran: string[] = [];
+      const authorize: RunOptions["authorize"] = () => ({ kind: "ask", reason: "ask" });
+      const approvedAll = new Set<string>();
+      await go(
+        [page(ran, true)],
+        [{ name: "page_click", args: { host: "example.com" } }],
+        approve,
+        { authorize, unattended: true, approvedAll },
+      );
+      expect(approvedAll.size).toBe(0);
+    });
+  });
+
   it("covers nothing when the tool can't say what it would reach", async () => {
     const ran: string[] = [];
     const { asked, events } = await go(
