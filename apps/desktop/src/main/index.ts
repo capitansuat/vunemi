@@ -653,10 +653,6 @@ const currentTopic = () => {
   return name && topics ? topics.findTopic(name) : null;
 };
 /**
- * After a run in a conversation with no topic, asked once: does what the
- * user asked fit one? Decided by meaning in code (topics/suggest.ts).
- */
-/**
  * After a lookup (a run that read a page) in a conversation with no topic the
  * user chose: its answer goes into the temporary topic, made now when the run
  * kept nothing yet. True when it gathers there; the topic question is not asked then.
@@ -705,6 +701,10 @@ function askKeep(runId: string, conversation: string, topic: string, request: st
   record({ type: "topic.suggested", runId, topic, temporary: true, at: Date.now() });
 }
 
+/**
+ * After a run in a conversation with no topic, asked once: does what the
+ * user asked fit one? Decided by meaning in code (topics/suggest.ts).
+ */
 async function askTopic(runId: string, request: string | undefined): Promise<void> {
   if (!topics || !request || conversations.currentTopic || conversations.topicAsked) return;
   const conversation = conversations.currentId;
