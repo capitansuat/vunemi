@@ -45,6 +45,8 @@ import { platform, type Platform } from "@vunemi/platform";
 export interface CatalogueOptions {
   tools: ToolRegistry;
   browser: BrowserController;
+  /** Tools that keep what a lookup found (work/findings.ts); on and off with the browser's reading part. */
+  findingTools?: ToolDef[];
   roots: Roots;
   appCatalog: ScriptableCatalog;
   shadowDir: string;
@@ -341,7 +343,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       capabilities: [
         part("connectors.browser.read", {
           id: "read",
-          tools: ["page_goto", "page_search", "page_back", "page_describe", "page_read", "page_screenshot", "page_find", "page_target_observe", "page_scroll", "page_wait", "tabs_list", "tabs_focus", "tabs_close", "user_takeover"],
+          tools: ["page_goto", "page_search", "page_back", "page_describe", "page_read", "page_screenshot", "page_find", "page_target_observe", "page_scroll", "page_wait", "tabs_list", "tabs_focus", "tabs_close", "user_takeover", "web_finding_add"],
           defaultOn: true,
         }),
         part("connectors.browser.act", {
@@ -356,7 +358,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: BROWSER_INSTRUCTIONS,
       status: async () => ({ state: "ready" }),
-      tools: () => withoutHelperTools(createBrowserTools(opts.browser, { shotDir: opts.shotDir })),
+      tools: () => [...withoutHelperTools(createBrowserTools(opts.browser, { shotDir: opts.shotDir })), ...(opts.findingTools ?? [])],
     },
 
     {

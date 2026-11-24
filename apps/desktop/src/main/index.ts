@@ -84,6 +84,7 @@ import { addonAreas, addonInstructions, packIds, registerAddonTools } from "./ad
 import { convertToMarkdown, markdownArea, markitdownDir, registerMarkdownTools } from "./markdown.js";
 import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
+import { createFindingTools } from "./work/findings.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
 import { combined, tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
@@ -596,6 +597,31 @@ if (topics) {
     find: (query, topic, limit) => topicMeaning!.find(query, topic, limit),
   });
 }
+/** Each run's request, word for word, for the findings it keeps (work/findings.ts); the latest few. */
+const runRequests = new Map<string, string>();
+/** Web findings: pages in the conversation's topic, or its findings note. */
+const findings = work
+  ? createFindingTools({
+      work,
+      topics,
+      where: () => {
+        const project = currentProject();
+        return {
+          ...noteWhere({ conversationId: conversations.currentId, projectId: project?.id, projectExists: project !== null }),
+          conversationTitle: conversations.list().find((c) => c.id === conversations.currentId)?.title ?? "",
+          ...(conversations.currentTopic && { topic: conversations.currentTopic }),
+        };
+      },
+      request: (runId) => (runId && runRequests.get(runId)) || "",
+      page: () => browser.where(),
+      sources: () => sentinel.untrustedSources(),
+      redact: redactOrThrow,
+      onSaved: ({ runId, note, scope }) => {
+        if (runId) record({ type: "note.saved", runId, noteId: note.id, title: note.title, scope, at: Date.now() });
+      },
+      onFinding: () => {},
+    })
+  : null;
 /** "Shall I keep this in …?" asked under a run, until the user answers. Not kept past a restart. */
 const topicAsks = new Map<string, { conversation: string; topic: string }>();
 /** Each topic's vector for the question, by its text (topics/suggest.ts). */
@@ -622,6 +648,7 @@ async function askTopic(runId: string, request: string | undefined): Promise<voi
 
 const connectors = buildConnectors({
   automations,
+  ...(findings && { findingTools: findings.tools }),
   // Set up further down, beside the scope lookup it needs; a tool asks for it only when it is called.
   automationGrants: () => automationGrants,
   scheduledApps: () => scheduledApps,
@@ -847,6 +874,10 @@ const engine: EngineService = new EngineService({
 function record(event: AgentEvent): void {
   // Work keeps the engine loaded; the idle clock starts from the last of it.
   if (event.type === "run.started" || event.type === "run.finished") engine.touch();
+  if (event.type === "run.started") {
+    runRequests.set(event.runId, event.goal);
+    for (const old of [...runRequests.keys()].slice(0, Math.max(0, runRequests.size - 20))) runRequests.delete(old);
+  }
   activity.record(event);
   artefacts.record(event);
   presence.record(event);
