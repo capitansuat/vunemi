@@ -2066,7 +2066,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       ...(taskPermissionOffer && {taskPermissionOffer}),
       ...(alert && { alert: true }),
       ...(alwaysAsk && !tool.allowSessionApproval && { alwaysAsk: true }),
-      ...(cover && { approveAll: cover.app === undefined ? {} : { app: cover.app } }),
+      ...(cover && { approveAll: { ...(cover.app !== undefined && { app: cover.app }), ...(cover.site !== undefined && { site: cover.site }), ...(cover.trusted === true && { trusted: true }) } }),
       ...(preview !== undefined && { preview }),
     });
     const decision = await Promise.race([
@@ -2094,6 +2094,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       approved(false, undefined, () => approvedAll.has(cover.key));
       return null;
     }
+    // On a site the user trusts, one approval covers the site until the task ends, but not local work.
+    // A warning, a resumed or scheduled run, and a form that posts have no cover, so nothing is added.
+    if (cover?.trusted === true && !alert) approvedAll.add(cover.key);
     approved(alert, () => {
       if (decision.kind === "approve_always") {
         if (scope && tool.allowSessionApproval && !alert) { grants.add(scope); if(strict) freshResumeScopes.add(scope); }

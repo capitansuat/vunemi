@@ -4,8 +4,13 @@
  * tool names, so a new tool can't slip past the gate by being unfamiliar.
  */
 
-/** `app` is the name the card shows, when the approval reaches an app and not only local work. */
-export interface ApproveAllCover { key: string; app?: string }
+/**
+ * `app` is the name the card shows, when the approval reaches an app and not
+ * only local work. `site` is the host a page action's approval reaches;
+ * `trusted` says the user has that host on their trusted list, where one
+ * plain approval covers it for the task.
+ */
+export interface ApproveAllCover { key: string; app?: string; site?: string; trusted?: boolean }
 
 export type ActionClass =
   /** Reads state; no side effects. */
