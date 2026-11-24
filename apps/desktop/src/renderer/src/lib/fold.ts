@@ -27,8 +27,12 @@ export interface CallView {
   flagged?: string;
   /** "Always allow" does not apply to this call. */
   alwaysAsk?: boolean;
-  /** The card can approve the rest of the task; `app` is the app that would reach. */
-  approveAll?: { app?: string };
+  /**
+   * The card can approve the rest of the task; `app` is the app it would
+   * reach, `site` the web host. `trusted`: the user trusts the host, so a
+   * plain approval already covers it until the task ends.
+   */
+  approveAll?: { app?: string; site?: string; trusted?: boolean };
   /** The tool is switched off; this is its connection and part, and the card offers to switch it on. */
   switchedOff?: string;
   /** Set while the call waits for the user to do something themselves (a CAPTCHA, a login). */
