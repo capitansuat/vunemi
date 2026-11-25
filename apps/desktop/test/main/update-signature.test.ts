@@ -3,7 +3,7 @@ import { generateKeyPairSync, sign } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { signedMessage, verifyUpdate } from "../../src/main/updates/signature.js";
-import { readFeed, windowsSource } from "../../src/main/updates/feed.js";
+import { linuxSource, localLinuxSource, readFeed, windowsSource } from "../../src/main/updates/feed.js";
 
 const pair = () => {
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");
@@ -123,6 +123,50 @@ describe("the release scripts", () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+const appImage = (version: string, arch: "x64" | "arm64", tag = `v${version}-linux.1`) =>
+  `${RELEASES}/${tag}/Vunemi-${version}-linux-${arch === "x64" ? "x86_64" : "arm64"}.AppImage`;
+const linuxFeed = (version: string, arch: "x64" | "arm64", to: Record<string, unknown>) => ({
+  currentRelease: version,
+  releases: [{ version, updateTo: { version, url: appImage(version, arch), sha256: SHA, signature: signed(version, arch, SHA, ours.privateKey, "linux"), ...to } }],
+  notes: { en: ["Linux updates."] },
+});
+
+describe("the Linux feed", () => {
+  it("reads linux-<arch>.json and offers a Linux-signed AppImage from the releases", () => {
+    expect(linuxSource("x64", ours.pub).feed).toBe("https://vunemi.com/update/linux-x64.json");
+    expect(linuxSource("arm64", ours.pub).feed).toBe("https://vunemi.com/update/linux-arm64.json");
+    const offer = readFeed(linuxFeed("0.5.1", "arm64", {}), "0.5.0", "en", linuxSource("arm64", ours.pub));
+    expect(offer).toMatchObject({ version: "0.5.1", sha256: SHA, url: appImage("0.5.1", "arm64"), notes: ["Linux updates."] });
+  });
+
+  it("refuses a .deb, the other architecture, another repository, a path out or plain http", () => {
+    const source = linuxSource("x64", ours.pub);
+    const offered = (url: string) => readFeed(linuxFeed("0.5.1", "x64", { url }), "0.5.0", "en", source);
+    expect(offered(appImage("0.5.1", "x64"))).not.toBeNull();
+    expect(offered(`${RELEASES}/v0.5.1-linux.1/Vunemi-0.5.1-linux-amd64.deb`)).toBeNull();
+    expect(offered(appImage("0.5.1", "arm64"))).toBeNull();
+    expect(offered(appImage("0.5.1", "x64").replace("capitansuat/vunemi", "someone/vunemi"))).toBeNull();
+    expect(offered(`${RELEASES}/../x/Vunemi-0.5.1-linux-x86_64.AppImage`)).toBeNull();
+    expect(offered(appImage("0.5.1", "x64").replace("https:", "http:"))).toBeNull();
+  });
+
+  it("refuses an AppImage signed for Windows, and Windows refuses one signed for Linux", () => {
+    const forWindows = linuxFeed("0.5.1", "x64", { signature: signed("0.5.1", "x64") });
+    expect(readFeed(forWindows, "0.5.0", "en", linuxSource("x64", ours.pub))).toBeNull();
+    const linuxSigned = winFeed("0.5.1", "x64", { signature: signed("0.5.1", "x64", SHA, ours.privateKey, "linux") });
+    expect(readFeed(linuxSigned, "0.5.0", "en", windowsSource("x64", ours.pub))).toBeNull();
+  });
+
+  it("offers nothing without a key, and a local test feed only from its own address", () => {
+    expect(readFeed(linuxFeed("0.5.1", "x64", {}), "0.5.0", "en", linuxSource("x64", null))).toBeNull();
+    const base = "http://127.0.0.1:18765/";
+    const local = localLinuxSource(base, "x64", ours.pub);
+    expect(local.feed).toBe(`${base}linux-x64.json`);
+    expect(readFeed(linuxFeed("0.5.1", "x64", { url: `${base}Vunemi-0.5.1-linux-x86_64.AppImage` }), "0.5.0", "en", local)).not.toBeNull();
+    expect(readFeed(linuxFeed("0.5.1", "x64", {}), "0.5.0", "en", local)).toBeNull();
   });
 });
 

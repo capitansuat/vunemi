@@ -45,6 +45,33 @@ export function localWindowsSource(base: string, arch: UpdateArch, publicKey: st
   return { feed: `${base}win-${arch}.json`, zip: installer, signed: { platform: "windows", arch, publicKey, accepts: (url, version) => url === installer(version) } };
 }
 
+/** The AppImage's name for this architecture, as electron-builder's Linux builds call it. */
+const appImageName = (version: string, arch: UpdateArch) => `Vunemi-${version}-linux-${arch === "x64" ? "x86_64" : "arm64"}.AppImage`;
+
+/**
+ * The Linux feed for this architecture: AppImages only (a .deb can't replace
+ * itself without root), only from the releases, only with the key's Linux
+ * signature.
+ */
+export function linuxSource(arch: UpdateArch, publicKey: string | null): FeedSource {
+  return {
+    feed: `https://vunemi.com/update/linux-${arch}.json`,
+    zip: (version) => `${RELEASES}v${version}-linux.1/${appImageName(version, arch)}`,
+    signed: {
+      platform: "linux",
+      arch,
+      publicKey,
+      accepts: (url, version) => new RegExp(`^${escape(RELEASES)}[A-Za-z0-9._-]+/${escape(appImageName(version, arch))}$`).test(url) && !url.includes(".."),
+    },
+  };
+}
+
+/** A local test feed for a Linux test build (VUNEMI_UPDATE_FEED), with the same signature check. */
+export function localLinuxSource(base: string, arch: UpdateArch, publicKey: string | null): FeedSource {
+  const file = (version: string) => `${base}${appImageName(version, arch)}`;
+  return { feed: `${base}linux-${arch}.json`, zip: file, signed: { platform: "linux", arch, publicKey, accepts: (url, version) => url === file(version) } };
+}
+
 export const PRODUCTION: FeedSource = {
   feed: FEED_URL,
   zip: (version) => `https://github.com/capitansuat/vunemi/releases/download/v${version}/Vunemi-${version}-arm64.zip`,
