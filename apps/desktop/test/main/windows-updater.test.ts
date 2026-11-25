@@ -1,6 +1,6 @@
 /** Downloading and running a signed Windows installer, and nothing else. */
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -85,6 +85,28 @@ describe("the Windows updater", () => {
     u.quitAndInstall();
     expect(spawned).toEqual([]);
     expect(existsSync(join(dir, "Vunemi-Setup-0.5.1-x64.exe"))).toBe(false);
+  });
+});
+
+describe("installers left from an earlier run", () => {
+  it("are removed when Vunemi starts, and nothing else in the folder", () => {
+    writeFileSync(join(dir, "Vunemi-Setup-0.5.0-x64.exe"), "ran last time");
+    writeFileSync(join(dir, "Vunemi-Setup-0.5.1-x64.exe.part"), "cut short");
+    writeFileSync(join(dir, "notes.txt"), "not ours");
+    updater().u.forgetOld();
+    expect(readdirSync(dir)).toEqual(["notes.txt"]);
+  });
+
+  it("are left for the next start when one can't be removed yet (the installer still running)", () => {
+    mkdirSync(join(dir, "Vunemi-Setup-0.5.1-x64.exe"));
+    writeFileSync(join(dir, "Vunemi-Setup-0.5.0-x64.exe"), "ran last time");
+    expect(() => updater().u.forgetOld()).not.toThrow();
+    expect(readdirSync(dir)).toEqual(["Vunemi-Setup-0.5.1-x64.exe"]);
+  });
+
+  it("are no reason to fail when the folder isn't there yet", () => {
+    rmSync(dir, { recursive: true, force: true });
+    expect(() => updater().u.forgetOld()).not.toThrow();
   });
 });
 

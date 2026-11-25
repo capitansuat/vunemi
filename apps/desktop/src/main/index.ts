@@ -2020,6 +2020,7 @@ const windowsUpdater = platform.id === "win32" ? new WindowsUpdater({
     app.quit();
   },
 }) : null;
+windowsUpdater?.forgetOld();
 
 const runTool = (cmd: string, args: string[]): Promise<string> =>
   new Promise((resolve, reject) => execFile(cmd, args, { encoding: "utf8", timeout: 30_000 }, (err, stdout) => (err ? reject(err) : resolve(stdout))));
@@ -2087,7 +2088,7 @@ handle(CH.forgetEverything, async () => {
   await engine.dispose();
   await meaning.stop();
   // work.db too: when it could not be opened this launch, work?.clear() above did nothing.
-  const names = ["shots", "shadow", "models", "engine", "meetings", "projects.json", "preferences.json", "preferences.json.bak"];
+  const names = ["shots", "shadow", "models", "engine", "meetings", "updates", "projects.json", "preferences.json", "preferences.json.bak"];
   if (!work) names.push("work.db", "work.db-journal");
   for (const name of names) {
     rmSync(join(app.getPath("userData"), name), { recursive: true, force: true });

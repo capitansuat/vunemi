@@ -8,7 +8,7 @@
  * the agent.
  */
 import { createHash } from "node:crypto";
-import { createReadStream, mkdirSync, renameSync, rmSync } from "node:fs";
+import { createReadStream, mkdirSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { join, win32 } from "node:path";
 import type { Offer } from "./feed.js";
 import type { Updater } from "./service.js";
@@ -41,6 +41,28 @@ export class WindowsUpdater implements Updater {
   private readonly failed: ((error: Error) => void)[] = [];
 
   constructor(private readonly deps: WindowsUpdaterDeps) {}
+
+  /**
+   * Installers from an earlier run (one that ran, or a download cut short):
+   * nothing staged outlives a restart, so at start they are only taking room,
+   * in the roaming part of the profile. Other files in the folder stay.
+   */
+  forgetOld(): void {
+    let names: string[];
+    try {
+      names = readdirSync(this.deps.dir);
+    } catch {
+      return;
+    }
+    for (const name of names) {
+      if (!/^Vunemi-Setup-.+\.exe(\.part)?$/.test(name)) continue;
+      try {
+        rmSync(join(this.deps.dir, name), { force: true });
+      } catch {
+        // Still in use (the installer that started this Vunemi): the next start removes it.
+      }
+    }
+  }
 
   /** The offer to fetch; only a signed one (with url and sha256) is ever fetched. */
   prepare(offer: Offer): void {
