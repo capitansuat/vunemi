@@ -968,6 +968,7 @@ export const messages = {
     restart: "Güncellemek için yeniden başlat",
     busy: "Görev ya da toplantı bitince yeniden başlatabilirsin.",
     moveFirst: "Güncellemek için Vunemi'yi Uygulamalar klasörüne taşı.",
+    downloadInstead: "Bu kopya kendini güncelleyemiyor: .deb ile kuruldu ya da klasörü değiştirilemiyor. Yeni sürümü indirme sayfasından al.",
     failed: "Güncelleme indirilemedi. Sonra yeniden dene.",
     badSignature: "İndirilen dosya Vunemi imzası taşımıyor, kurulmadı.",
     upToDate: "Vunemi güncel.",

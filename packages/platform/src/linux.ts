@@ -17,7 +17,8 @@ export const LINUX_FEATURES: PlatformFeatures = {
   appLock: false,
   backgroundRecipes: false,
   addons: false,
-  inAppUpdates: false,
+  // The AppImage replaces itself with the signed update; a .deb is shown the download page.
+  inAppUpdates: true,
   archives: false,
   atomicMove: false,
   speakAloud: false,
@@ -25,7 +26,7 @@ export const LINUX_FEATURES: PlatformFeatures = {
   dictation: true,
 };
 
-/** Where Linux builds are downloaded by hand until the app can update itself. */
+/** Where a Linux build that can't replace itself (a .deb) is downloaded by hand. */
 export const LINUX_DOWNLOAD_PAGE = "https://github.com/capitansuat/vunemi/releases";
 
 /**

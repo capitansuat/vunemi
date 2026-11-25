@@ -35,6 +35,8 @@ export interface UpdateDeps {
   stagedMatches: () => Promise<boolean | null>;
   now: () => number;
   onChange: (status: UpdateStatus) => void;
+  /** Where a copy that can't replace itself (Linux's .deb) is downloaded by hand. */
+  downloadPage?: string;
 }
 
 type Phase = UpdateStatus["phase"];
@@ -55,7 +57,10 @@ export class UpdateService {
   }
 
   status(): UpdateStatus {
-    return { phase: this.phase, offer: this.offer, error: this.error, checkedAt: this.checkedAt, installable: this.deps.installable(), idle: this.deps.idle() };
+    return {
+      phase: this.phase, offer: this.offer, error: this.error, checkedAt: this.checkedAt, installable: this.deps.installable(), idle: this.deps.idle(),
+      ...(this.deps.downloadPage && { downloadPage: this.deps.downloadPage }),
+    };
   }
 
   /** Sends the status again, for when idleness may have changed. */

@@ -962,6 +962,7 @@ export const messages: Catalogue = {
     restart: "重新启动以更新",
     busy: "任务或会议结束后即可重新启动。",
     moveFirst: "请将 Vunemi 移到“应用程序”文件夹后再更新。",
+    downloadInstead: "这个副本无法自行替换：它是通过 .deb 安装的，或者它所在的文件夹无法更改。请从下载页面获取新版本。",
     failed: "无法下载更新，请稍后再试。",
     badSignature: "下载的文件没有 Vunemi 的签名，因此未安装。",
     upToDate: "Vunemi 已是最新版本。",

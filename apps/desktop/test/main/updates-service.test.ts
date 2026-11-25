@@ -7,7 +7,7 @@ import type { UpdateStatus } from "../../src/shared/ipc.js";
 const FEED = { currentRelease: "0.1.9", releases: [{ version: "0.1.9", updateTo: { version: "0.1.9", url: PRODUCTION.zip("0.1.9") } }], sizeMb: 131, notes: { en: ["New."] } };
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-function setup(over: { feed?: () => Promise<unknown>; idle?: boolean; installable?: boolean; enabled?: boolean; staged?: boolean | null } = {}) {
+function setup(over: { feed?: () => Promise<unknown>; idle?: boolean; installable?: boolean; enabled?: boolean; staged?: boolean | null; downloadPage?: string } = {}) {
   let now = 1_000_000;
   const calls: string[] = [];
   const emitter = new EventEmitter();
@@ -36,6 +36,7 @@ function setup(over: { feed?: () => Promise<unknown>; idle?: boolean; installabl
     stagedMatches: async () => (over.staged === undefined ? true : over.staged),
     now: () => now,
     onChange: (st) => seen.push(st),
+    ...(over.downloadPage && { downloadPage: over.downloadPage }),
   });
   return { s, calls, emitter, seen, fetched, advance: (ms: number) => { now += ms; } };
 }
@@ -94,6 +95,16 @@ describe("UpdateService", () => {
     const off = setup({ enabled: false });
     off.s.tick();
     expect(off.fetched).toHaveLength(0);
+  });
+
+  it("tells a copy that can't replace itself where to download it (a .deb on Linux)", async () => {
+    const page = "https://github.com/capitansuat/vunemi/releases";
+    const { s, calls } = setup({ installable: false, downloadPage: page });
+    await s.check(false);
+    expect(s.status()).toMatchObject({ phase: "available", installable: false, downloadPage: page });
+    expect(s.download().phase).toBe("available");
+    expect(calls).toEqual([]);
+    expect(setup().s.status().downloadPage).toBeUndefined();
   });
 
   it("does not download outside Applications", async () => {

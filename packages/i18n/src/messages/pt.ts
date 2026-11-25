@@ -962,6 +962,7 @@ export const messages: Catalogue = {
     restart: "Reiniciar para atualizar",
     busy: "Você pode reiniciar quando a tarefa ou a reunião terminar.",
     moveFirst: "Mova o Vunemi para a pasta Aplicativos para atualizá-lo.",
+    downloadInstead: "Esta cópia não consegue se substituir: foi instalada pelo .deb ou a pasta dela não pode ser alterada. Baixe a nova versão na página de download.",
     failed: "Não foi possível baixar a atualização. Tente de novo mais tarde.",
     badSignature: "O arquivo baixado não tem a assinatura do Vunemi, por isso não foi instalado.",
     upToDate: "O Vunemi está atualizado.",
