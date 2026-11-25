@@ -13,6 +13,7 @@
 // Usage: node scripts/package-windows.mjs --arch x64|arm64
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -47,9 +48,10 @@ const whisperCache = join(root, "whisper-cache", `${pinned("build-whisper-linux.
  * shell; it then gets one command line, each argument quoted.
  */
 function run(command, args, opts = {}) {
+  const env = { ...process.env, ...opts.env };
   const result = opts.shell
-    ? spawnSync([command, ...args.map((arg) => `"${arg}"`)].join(" "), { cwd: here, stdio: "inherit", shell: true })
-    : spawnSync(command, args, { cwd: here, stdio: "inherit" });
+    ? spawnSync([command, ...args.map((arg) => `"${arg}"`)].join(" "), { cwd: here, stdio: "inherit", shell: true, env })
+    : spawnSync(command, args, { cwd: here, stdio: "inherit", env });
   if (result.status !== 0) fail(`${command} ${args.join(" ")} (${result.status ?? result.error?.message})`);
 }
 
@@ -77,7 +79,12 @@ const metadata = ["--config.extraMetadata.author.name=Vunemi", "--config.extraMe
 const testBuild = [...metadata, ...(distribution ? [] : ["--config.extraMetadata.vunemiLocalTestBuild=true"])];
 if (distribution) console.log("› dağıtım derlemesi: uzaktan hata ayıklama ve yerel güncelleme beslemesiyle açılmaz");
 rmSync(out, { recursive: true, force: true });
-const builder = (...args) => run("pnpm", ["--filter", "@vunemi/desktop", "exec", "electron-builder", "--win", ...args, `--${arch}`, "--publish", "never", `--config.directories.output=${out}`], { shell: true });
+// arm64: 7-Zip packs ARM64 .exe and .dll files with its ARM64 filter, which the
+// installer's own unpacker (NSIS's 7z plugin) doesn't know: it skipped
+// Vunemi.exe, both engines and every DLL, and still ended with exit code 0.
+// BCJ, which it knows, is forced instead; checked after the build below.
+const builderEnv = arch === "arm64" ? { ELECTRON_BUILDER_7Z_FILTER: "BCJ" } : {};
+const builder = (...args) => run("pnpm", ["--filter", "@vunemi/desktop", "exec", "electron-builder", "--win", ...args, `--${arch}`, "--publish", "never", `--config.directories.output=${out}`], { shell: true, env: builderEnv });
 builder("dir", ...testBuild);
 
 const unpacked = join(out, arch === "x64" ? "win-unpacked" : "win-arm64-unpacked");
@@ -103,4 +110,16 @@ builder("nsis", "--prepackaged", unpacked, ...metadata);
 
 const made = readdirSync(out).filter((name) => /^Vunemi-Setup-.*\.exe$/.test(name));
 if (made.length !== 1) fail(`beklenen tek kurulum dosyası yerine: ${made.join(", ") || "hiçbiri"}`);
+
+/** The 7z methods inside an installer, with electron-builder's own 7za. */
+async function methodsIn(installer) {
+  const desktop = createRequire(join(here, "apps", "desktop", "package.json"));
+  const { getPath7za } = createRequire(desktop.resolve("electron-builder"))("app-builder-lib/out/toolsets/7zip");
+  const list = spawnSync(await getPath7za(), ["l", "-slt", installer], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (list.status !== 0) fail(`kurulum dosyasının içi okunamadı (${list.status ?? list.error?.message})`);
+  return [...list.stdout.matchAll(/^Method = (.+)$/gm)].map((m) => m[1].trim());
+}
+const methods = await methodsIn(join(out, made[0]));
+if (methods.length === 0) fail("kurulum dosyasının içinde sıkıştırılmış dosya görünmedi");
+if (methods.some((m) => /\bARM64\b/.test(m))) fail("kurulum dosyasında ARM64 filtresiyle sıkıştırılmış dosya var: kurulum bunları açmadan atlar");
 console.log(`› hazır: ${join(out, made[0])}`);
