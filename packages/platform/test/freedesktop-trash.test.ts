@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { dataHomeOf, deletionDate, encodeTrashPath, freedesktopMoveToTrash, mountTopOf, TrashRefused } from "../src/index.js";
+const onWindows = process.platform === "win32";
 
 let root: string;
 let dataHome: string;
@@ -90,7 +91,8 @@ describe("freedesktop Trash", () => {
     expect(existsSync(join(docs, "link.txt"))).toBe(false);
   });
 
-  it("encodes the recorded path so it cannot break the info file", () => {
+  // Windows: the freedesktop Trash is Linux's.
+  it.skipIf(onWindows)("encodes the recorded path so it cannot break the info file", () => {
     expect(encodeTrashPath("/home/u/a b/ç\nx.txt")).toBe("/home/u/a%20b/%C3%A7%0Ax.txt");
     const file = join(docs, "line\nbreak.txt");
     writeFileSync(file, "x");
@@ -99,7 +101,8 @@ describe("freedesktop Trash", () => {
     expect(info.split("\n")).toHaveLength(4);
   });
 
-  it("reads XDG_DATA_HOME as the spec does", () => {
+  // Windows: the freedesktop Trash is Linux's.
+  it.skipIf(onWindows)("reads XDG_DATA_HOME as the spec does", () => {
     expect(dataHomeOf({ XDG_DATA_HOME: "/x/data" }, "/home/u")).toBe("/x/data");
     expect(dataHomeOf({ XDG_DATA_HOME: "relative" }, "/home/u")).toBe("/home/u/.local/share");
     expect(dataHomeOf({}, "/home/u")).toBe("/home/u/.local/share");

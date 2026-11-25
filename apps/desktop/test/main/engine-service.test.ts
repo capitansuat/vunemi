@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GiB } from "../../src/main/engine/catalog.js";
 import { EngineService } from "../../src/main/engine/service.js";
 import { ModelManager, type FitRequest } from "../../src/main/models/manager.js";
+const onWindows = process.platform === "win32";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-llama-server.mjs", import.meta.url));
 const BYTES = randomBytes(50_000);
@@ -84,7 +85,8 @@ describe("the engine service", () => {
     expect(view.installed).toEqual([]);
   });
 
-  it("downloads a searched model, re-reading it from the hub, then tries its tools", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("downloads a searched model, re-reading it from the hub, then tries its tools", async () => {
     const { service, testModel } = make();
     const spec = await service.download({ repo: "org/tiny-GGUF" });
     expect(spec).toBe("vunemi:tiny-q4_k_m");
@@ -96,7 +98,8 @@ describe("the engine service", () => {
     expect(service.specs()).toEqual(["vunemi:tiny-q4_k_m"]);
   });
 
-  it("tries the tools again when the first answer misses, and fails only after that", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("tries the tools again when the first answer misses, and fails only after that", async () => {
     const answers = [false, true];
     const { service, testModel } = make(vi.fn(async () => answers.shift() ?? false));
     await service.download({ repo: "org/tiny-GGUF" });
@@ -137,7 +140,8 @@ describe("the engine service", () => {
     expect(service.view().installed[0]?.toolTest).toBe("ok");
   });
 
-  it("opens the model with the context the manager fits, and reuses it while it is loaded", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("opens the model with the context the manager fits, and reuses it while it is loaded", async () => {
     const fit = vi.fn(async (_req: FitRequest) => ({ context: 8_192, tight: true }));
     service = new EngineService({
       dir, binary: FAKE, totalMemory: 64 * GiB, isBusy: () => false, testModel: vi.fn(async () => true), onChange: () => {},
@@ -214,7 +218,8 @@ describe("the engine service", () => {
     await other;
   });
 
-  it("tells a lowered context once, to the first caller that announces it, whoever launched", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("tells a lowered context once, to the first caller that announces it, whoever launched", async () => {
     const fit = vi.fn(async (_req: FitRequest) => ({ context: 16_384, tight: false }));
     service = new EngineService({
       dir, binary: FAKE, totalMemory: 64 * GiB, isBusy: () => false, testModel: vi.fn(async () => true), onChange: () => {},
@@ -233,7 +238,8 @@ describe("the engine service", () => {
     expect(fit).toHaveBeenCalledTimes(4); // the download's test, the warm-up, and each task asking again
   });
 
-  it("counts as busy while it loads or tests the model, so memory pressure leaves it alone", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("counts as busy while it loads or tests the model, so memory pressure leaves it alone", async () => {
     const busyInTest: boolean[] = [];
     const { service } = make(vi.fn(async () => {
       busyInTest.push(service.busy());
@@ -273,7 +279,8 @@ describe("the engine service", () => {
     expect(service.pid()).toBeNull();
   });
 
-  it("loads the model again with the context length the user picks", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("loads the model again with the context length the user picks", async () => {
     const { service } = make();
     const spec = (await service.download({ repo: "org/tiny-GGUF" }))!;
     await service.prepare(spec);
@@ -290,7 +297,8 @@ describe("the engine service", () => {
     await expect(service.setContext("missing", 16_384)).rejects.toThrow();
   });
 
-  it("downloads the vision part with a model that has one, and loads it", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("downloads the vision part with a model that has one, and loads it", async () => {
     hub.projector = true;
     const { service } = make();
     const spec = (await service.download({ repo: "org/tiny-GGUF" }))!;
@@ -312,7 +320,8 @@ describe("the engine service", () => {
     expect(service.view().installed[0]).toMatchObject({ vision: "yes" });
   });
 
-  it("adds vision to a model downloaded before, asking the hub at the model's own commit", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("adds vision to a model downloaded before, asking the hub at the model's own commit", async () => {
     writeFileSync(join(dir, "tiny-Q4_K_M.gguf"), BYTES);
     writeFileSync(join(dir, "models.json"), JSON.stringify({
       models: [{ id: "tiny-q4_k_m", name: "tiny", license: "mit", repo: "org/tiny-GGUF", commit: COMMIT, file: "tiny-Q4_K_M.gguf", size: BYTES.length, sha256: SHA }],
@@ -344,7 +353,8 @@ describe("the engine service", () => {
     expect(service.view().installed[0]).toMatchObject({ vision: "no" });
   });
 
-  it("runs the model a task asks for and hands out its address", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("runs the model a task asks for and hands out its address", async () => {
     const { service } = make();
     const spec = (await service.download({ repo: "org/tiny-GGUF" }))!;
     await service.prepare(spec);
@@ -420,7 +430,8 @@ describe("a GGUF file from this Mac", () => {
     return path;
   }
 
-  it("is copied beside the downloads, tried, and never touched again", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("is copied beside the downloads, tried, and never touched again", async () => {
     const { service, testModel } = make();
     const original = local("my-model-Q4.gguf");
     const spec = await service.addLocal(original);

@@ -12,6 +12,7 @@ import { setLocale } from "@vunemi/i18n";
 import { TopicStore } from "../../src/main/topics/store.js";
 import { SHOWN_CHARS, topicPage, type TopicPageDeps } from "../../src/main/topics/page.js";
 import { FOLDER_SCAN_LIMIT, pickedSources } from "../../src/main/topics/tools.js";
+const onWindows = process.platform === "win32";
 
 let base: string;
 let store: TopicStore;
@@ -144,7 +145,8 @@ describe("the user's own changes", () => {
     expect(page.note("Home renovation", "Budget")).toBeNull();
   });
 
-  it("deletes notes and sources to the Trash", async () => {
+  // Windows: the Recycle Bin comes in plan 3.
+  it.skipIf(onWindows)("deletes notes and sources to the Trash", async () => {
     store.writeNote("Home renovation", { title: "Budget", text: "Total", by: "vunemi", sources: [] });
     store.addSource("Home renovation", { original: "/a/offer.pdf", markdown: "Tiles", bytes: 5, sha256: "a".repeat(64) });
     await page.deleteNote("Home renovation", "budget");
@@ -324,6 +326,7 @@ describe("the user's own changes", () => {
     expect(await pickedSources([join(tree, "term.html"), join(tree, "term.md")], true, 200)).toMatchObject({ ok: [join(tree, "term.html"), join(tree, "term.md")], copies: 0 });
   });
 
+  // Windows: file-heavy; about three times slower in the Windows VM than on a Mac.
   it("adds no more files than the topic has room for, and stops looking through a huge folder", async () => {
     const tree = join(base, "Many");
     mkdirSync(tree);
@@ -333,7 +336,7 @@ describe("the user's own changes", () => {
     mkdirSync(huge);
     for (let i = 0; i <= FOLDER_SCAN_LIMIT; i++) writeFileSync(join(huge, `x${String(i).padStart(5, "0")}.bin`), "");
     expect(await pickedSources([huge], false, 200)).toMatchObject({ ok: [], skipped: FOLDER_SCAN_LIMIT, stopped: true });
-  });
+  }, onWindows ? 60_000 : undefined);
 
   it("shows in Finder only what the topic holds", () => {
     store.writeNote("Home renovation", { title: "Budget", text: "Total", by: "vunemi", sources: [] });

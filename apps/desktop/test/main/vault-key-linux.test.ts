@@ -59,7 +59,8 @@ describe("the Linux vault key", () => {
     const first = linuxVaultKey(storage("gnome_libsecret"), dir);
     expect(first.ok && first.created).toBe(true);
     const file = join(dir, LINUX_KEY_FILE);
-    expect(statSync(file).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600);
     const sealed = readFileSync(file);
     expect(sealed.subarray(0, 4).toString("ascii")).toBe("VKL1");
     // The key itself is not in the file.

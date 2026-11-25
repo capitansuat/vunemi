@@ -146,6 +146,9 @@ importers:
       '@vunemi/perception':
         specifier: workspace:*
         version: link:../perception
+      '@vunemi/platform':
+        specifier: workspace:*
+        version: link:../platform
     devDependencies:
       vitest:
         specifier: 5.0.3
@@ -194,6 +197,9 @@ importers:
       '@vunemi/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@vunemi/platform':
+        specifier: workspace:*
+        version: link:../platform
     devDependencies:
       esbuild:
         specifier: 0.28.2

@@ -12,6 +12,7 @@ import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { t } from "@vunemi/i18n";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { afterAction, blockedReason, createDesktopTools, Helper } from "../src/index.js";
+const onWindows = process.platform === "win32";
 
 /** Records whatever a tool hands to the UI, so the tests can look at it. */
 const attached: { kind: string; path: string }[] = [];
@@ -247,7 +248,8 @@ describe("desktop tools", () => {
     expect(helper.calls.map((c) => c.op)).toEqual(["click", "describe"]);
   });
 
-  it("says what approve all would reach only after native validation", async () => {
+  // Windows: macOS desktop control only.
+  it.skipIf(onWindows)("says what approve all would reach only after native validation", async () => {
     const tool = tools.get("desktop_type")!;
     const args = { app: "Notes", text: "x", snapshotId: "observed-1" };
     expect(await tool.approveAll?.(args)).toBeUndefined();
@@ -324,7 +326,8 @@ lines.on("line", (line) => { const req = JSON.parse(line); ${body} });
     return path;
   }
 
-  it("cancels native input on Stop and safely starts a fresh helper afterwards",async()=>{
+  // Windows: macOS desktop control only.
+  it.skipIf(onWindows)("cancels native input on Stop and safely starts a fresh helper afterwards",async()=>{
     const mark=join(dir,"late-input");
     helper=new Helper(fakeBinary(`if(req.op==="type")setTimeout(()=>{require("node:fs").writeFileSync(req.args.path,"input");process.stdout.write(JSON.stringify({id:req.id,ok:true,result:{}})+"\\n");},500);else process.stdout.write(JSON.stringify({id:req.id,ok:true,result:{op:req.op}})+"\\n");`));
     const stop=new AbortController();const running=helper.call("type",{path:mark},{signal:stop.signal,timeoutMs:200} as never);
@@ -332,14 +335,16 @@ lines.on("line", (line) => { const req = JSON.parse(line); ${body} });
     expect(await helper.call("ping")).toEqual({op:"ping"});
     await new Promise(r=>setTimeout(r,550));expect(existsSync(mark)).toBe(false);
   });
-  it("interrupts an input call if its connector is disabled during execution",async()=>{
+  // Windows: macOS desktop control only.
+  it.skipIf(onWindows)("interrupts an input call if its connector is disabled during execution",async()=>{
     const mark=join(dir,"late-connector-input");
     helper=new Helper(fakeBinary(`setTimeout(()=>{require("node:fs").writeFileSync(req.args.path,"input");process.stdout.write(JSON.stringify({id:req.id,ok:true,result:{}})+"\\n");},500);`));
     let active=true;setTimeout(()=>active=false,30);
     await expect(helper.call("type",{path:mark},{timeoutMs:200,assertActive:()=>{if(!active)throw Error("connector disabled");}} as never)).rejects.toThrow(/connector disabled/);
     await new Promise(r=>setTimeout(r,550));expect(existsSync(mark)).toBe(false);
   });
-  it("rejects overlapping requests without queueing and admits the next settled request", async () => {
+  // Windows: macOS desktop control only.
+  it.skipIf(onWindows)("rejects overlapping requests without queueing and admits the next settled request", async () => {
     helper = new Helper(
       fakeBinary(`setTimeout(() => process.stdout.write(JSON.stringify({ id: req.id, ok: true, result: { op: req.op } }) + "\\n"), req.op === "slow" ? 40 : 0);`),
     );
@@ -349,14 +354,16 @@ lines.on("line", (line) => { const req = JSON.parse(line); ${body} });
     expect(await helper.call('quick')).toEqual({op:'quick'});
   });
 
-  it("turns the helper's error into a rejected call", async () => {
+  // Windows: macOS desktop control only.
+  it.skipIf(onWindows)("turns the helper's error into a rejected call", async () => {
     helper = new Helper(
       fakeBinary(`process.stdout.write(JSON.stringify({ id: req.id, ok: false, error: "Erişilebilirlik izni yok." }) + "\\n");`),
     );
     await expect(helper.call("describe")).rejects.toThrow(/Erişilebilirlik/);
   });
 
-  it("does not hang when the helper dies mid-call", async () => {
+  // Windows: macOS desktop control only.
+  it.skipIf(onWindows)("does not hang when the helper dies mid-call", async () => {
     helper = new Helper(fakeBinary(`process.exit(1);`));
     await expect(helper.call("describe")).rejects.toThrow(/kapandı/);
   });

@@ -57,11 +57,12 @@ export type Locale = (typeof LOCALES)[number]["code"];
 const CATALOGUES: Record<Locale, Catalogue> = { tr, en, de, fr, es, it, pt, ru, zh, ja, ko };
 
 /**
- * Texts that say "this Mac" or "Finder" have a second wording for Linux.
+ * Texts that say "this Mac" or "Finder" have a second wording for Linux,
+ * used on Windows too until Windows has its own.
  * Each process is told its system once, before anything is shown; until then
  * the Mac wording is used, as it always was.
  */
-export type System = "darwin" | "linux";
+export type System = "darwin" | "linux" | "win32";
 
 const ON_LINUX: Record<Locale, SystemTexts> = {
   tr: trLinux, en: enLinux, de: deLinux, fr: frLinux, es: esLinux, it: itLinux,
@@ -137,7 +138,7 @@ export function has(key: string): key is MessageKey {
 }
 
 function forSystem(locale: Locale, key: MessageKey): string | undefined {
-  if (system !== "linux") return undefined;
+  if (system === "darwin") return undefined;
   const texts = ON_LINUX[locale];
   return Object.hasOwn(texts, key) ? texts[key] : undefined;
 }

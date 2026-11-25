@@ -13,6 +13,7 @@ import { RATE } from "../../src/main/meetings/segmenter.js";
 import { MeetingService, type MeetingStatus } from "../../src/main/meetings/service.js";
 import type { Turn } from "../../src/main/meetings/speakers.js";
 import { MeetingStore } from "../../src/main/meetings/store.js";
+const onWindows = process.platform === "win32";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-recorder.mjs", import.meta.url));
 chmodSync(FAKE, 0o755);
@@ -78,7 +79,8 @@ function service(blocked: () => "macos" | null = () => null) {
 }
 
 describe("MeetingService", () => {
-  it("records, writes down, summarises and sends the audio to the Trash", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("records, writes down, summarises and sends the audio to the Trash", async () => {
     const s = service();
     const meeting = await s.start();
     expect(s.status().recording?.id).toBe(meeting.id);
@@ -95,7 +97,8 @@ describe("MeetingService", () => {
     expect(s.status().recording).toBeNull();
   });
 
-  it("pauses for a break and resumes into the same meeting, and stops while paused", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("pauses for a break and resumes into the same meeting, and stops while paused", async () => {
     const s = service();
     await s.pause(); // nothing recorded: nothing happens
     const meeting = await s.start();
@@ -124,7 +127,8 @@ describe("MeetingService", () => {
     expect(s.status().recording).toBeNull();
   });
 
-  it("stays paused when the recorder cannot take the sound again", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("stays paused when the recorder cannot take the sound again", async () => {
     process.env.FAKE_RECORDER_MODE = "no-resume";
     const s = service();
     await s.start();
@@ -137,7 +141,8 @@ describe("MeetingService", () => {
     expect(s.status().recording).toBeNull();
   });
 
-  it("keeps the transcript when the summary fails, and tries again", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("keeps the transcript when the summary fails, and tries again", async () => {
     const s = service();
     const meeting = await s.start();
     writeFileSync(join(store.folder(meeting.id), "mic.pcm"), speech(1));
@@ -157,7 +162,8 @@ describe("MeetingService", () => {
     expect(m.lines).toHaveLength(1);
   });
 
-  it("fails without a model, and does not start a second recording", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("fails without a model, and does not start a second recording", async () => {
     const s = service();
     const meeting = await s.start();
     await expect(s.start()).rejects.toThrow("already");
@@ -166,7 +172,8 @@ describe("MeetingService", () => {
     expect(store.get(meeting.id)).toMatchObject({ state: "failed", error: "model" });
   });
 
-  it("says why it cannot record, and leaves nothing behind when the recorder refuses", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("says why it cannot record, and leaves nothing behind when the recorder refuses", async () => {
     await expect(service(() => "macos").start()).rejects.toThrow("macos");
     process.env.FAKE_RECORDER_MODE = "no-permission";
     await expect(service().start()).rejects.toThrow("microphone");
@@ -185,7 +192,8 @@ describe("MeetingService", () => {
     expect(done.endedAt).not.toBeNull();
   });
 
-  it("ends a silent meeting without asking the model", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("ends a silent meeting without asking the model", async () => {
     modelAnswer = () => {
       throw new Error("should not be asked");
     };
@@ -195,7 +203,8 @@ describe("MeetingService", () => {
     expect(store.get(meeting.id)).toMatchObject({ state: "done", summary: null });
   });
 
-  it("keeps audio when transcription fails and retries it", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("keeps audio when transcription fails and retries it", async () => {
     const s = service();
     const meeting = await s.start();
     writeFileSync(join(store.folder(meeting.id), "mic.pcm"), speech(1));
@@ -211,7 +220,8 @@ describe("MeetingService", () => {
     expect(existsSync(join(store.folder(meeting.id), "mic.pcm"))).toBe(false);
   });
 
-  it("says whether it records without asking why it could not", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("says whether it records without asking why it could not", async () => {
     let asked = 0;
     const s = service(() => {
       asked++;
@@ -227,7 +237,8 @@ describe("MeetingService", () => {
     expect(s.isRecording).toBe(false);
   });
 
-  it("says it is summarising while the summary is written, and only then", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("says it is summarising while the summary is written, and only then", async () => {
     const s = service();
     const during: boolean[] = [];
     modelAnswer = () => {
@@ -264,7 +275,8 @@ describe("telling the others apart", () => {
     return meeting.id;
   }
 
-  it("gives each of the others' lines its speaker before the summary, which is told of them", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("gives each of the others' lines its speaker before the summary, which is told of them", async () => {
     turns = async () => [{ start: 0, end: 1.5, voice: 4 }];
     const s = service();
     const meeting = await s.start();
@@ -278,7 +290,8 @@ describe("telling the others apart", () => {
     expect(asked).toContain("told apart by their voices");
   });
 
-  it("leaves the others as one when it fails, and the meeting is still summarised", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("leaves the others as one when it fails, and the meeting is still summarised", async () => {
     turns = async () => {
       throw new Error("no program");
     };
@@ -294,7 +307,8 @@ describe("telling the others apart", () => {
     expect(asked).not.toContain("told apart by their voices");
   });
 
-  it("is not asked when only the user spoke", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("is not asked when only the user spoke", async () => {
     let called = 0;
     turns = async () => (called++, []);
     const s = service();
@@ -363,7 +377,8 @@ describe("telling the others apart", () => {
 });
 
 describe("renaming a meeting", () => {
-  it("keeps a name given while recording through the summary", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("keeps a name given while recording through the summary", async () => {
     const s = service();
     const meeting = await s.start();
     writeFileSync(join(store.folder(meeting.id), "mic.pcm"), speech(1));

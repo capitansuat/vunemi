@@ -11,14 +11,23 @@ afterEach(() => rmSync(tmp, { recursive: true, force: true }));
 describe("where the engine lives", () => {
   it("is in the app's resources once packaged", () => {
     writeFileSync(join(tmp, "llama-server"), "");
-    expect(engineBinary({ packaged: true, resourcesPath: tmp, home: "/nowhere" })).toBe(join(tmp, "llama-server"));
+    expect(engineBinary({ packaged: true, resourcesPath: tmp, home: "/nowhere", system: "darwin" })).toBe(join(tmp, "llama-server"));
   });
 
   it("is in the build cache during development", () => {
     const cache = join(tmp, ".vunemi-build", "engine-cache", ENGINE_TAG);
     mkdirSync(cache, { recursive: true });
     writeFileSync(join(cache, "llama-server"), "");
-    expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp })).toBe(join(cache, "llama-server"));
+    expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "darwin" })).toBe(join(cache, "llama-server"));
+  });
+
+  it("is llama-server.exe on Windows", () => {
+    const cache = join(tmp, ".vunemi-build", "engine-cache", ENGINE_TAG);
+    mkdirSync(cache, { recursive: true });
+    writeFileSync(join(cache, "llama-server.exe"), "");
+    expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "win32" })).toBe(join(cache, "llama-server.exe"));
+    writeFileSync(join(tmp, "llama-server.exe"), "");
+    expect(engineBinary({ packaged: true, resourcesPath: tmp, home: "/nowhere", system: "win32" })).toBe(join(tmp, "llama-server.exe"));
   });
 
   it("is missing rather than broken", () => {

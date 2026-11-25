@@ -3,6 +3,7 @@
 import { constants, closeSync, existsSync, fstatSync, fsyncSync, lstatSync, openSync, readFileSync, readSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { dirname, isAbsolute, join } from 'node:path';
+import { syncFolder } from '@vunemi/platform';
 import type { Roots } from './roots.js';
 export type MoveIdentity = Readonly<{
     device: string;
@@ -172,8 +173,7 @@ export class SafeMoveController {
             assertCurrent(); fsyncSync(fd);
             closeSync(fd); fd = undefined;
             assertCurrent(); renameSync(temp, p);
-            const dir = openSync(dirname(p), constants.O_RDONLY | constants.O_NOFOLLOW);
-            try { assertCurrent(); fsyncSync(dir); } finally { closeSync(dir); }
+            assertCurrent(); syncFolder(dirname(p), process.platform, constants.O_RDONLY | constants.O_NOFOLLOW);
         } finally {
             if (fd !== undefined) closeSync(fd);
             if (existsSync(temp)) { try { assertCurrent(); unlinkSync(temp); } catch { /* Lost ownership cannot perform journal cleanup. */ } }

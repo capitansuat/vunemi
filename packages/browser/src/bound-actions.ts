@@ -1,6 +1,7 @@
 import {randomUUID,createHash} from 'node:crypto';
 import {openSync,closeSync,fsyncSync,writeSync,readFileSync,existsSync,mkdirSync,lstatSync,constants} from 'node:fs';
 import {dirname} from 'node:path';
+import {syncFolder} from '@vunemi/platform';
 export interface HostObservation {foregroundPid:number;cursor:{x:number;y:number};unlocked:boolean}
 export interface BoundOptions {operationJournalPath?:string;observeHost?:()=>Promise<HostObservation>}
 export interface PageState {frameId:string;loaderId:string;url:string;width:number;height:number;scale:number;scrollX:number;scrollY:number}
@@ -100,7 +101,7 @@ export class BoundActions {
  }
  private append(binding:Binding,operationId:string,phase:JournalRow['phase']){
   const path=this.options.operationJournalPath!;if(journalInfo(path)){const info=journalInfo(path)!;if(!info.isFile()||info.isSymbolicLink()||info.size>7_999_000){this.journalUnavailable=true;throw Error('Browser journal is unsafe or full.');}}mkdirSync(dirname(path),{recursive:true,mode:0o700});
-  const existed=existsSync(path),fd=openSync(path,constants.O_APPEND|constants.O_CREAT|constants.O_WRONLY|constants.O_NOFOLLOW,0o600);try{const row=Buffer.from(JSON.stringify({version:1,operationId,ownerId:binding.adapter.ownerId,targetId:binding.adapter.targetId,runId:binding.runId,phase,at:Date.now()})+'\n');let offset=0;while(offset<row.length){const written=writeSync(fd,row,offset);if(written<=0)throw Error('Incomplete browser journal write.');offset+=written;}fsyncSync(fd);}finally{closeSync(fd);}if(!existed){const dir=openSync(dirname(path),'r');try{fsyncSync(dir);}finally{closeSync(dir);}}
+  const existed=existsSync(path),fd=openSync(path,constants.O_APPEND|constants.O_CREAT|constants.O_WRONLY|constants.O_NOFOLLOW,0o600);try{const row=Buffer.from(JSON.stringify({version:1,operationId,ownerId:binding.adapter.ownerId,targetId:binding.adapter.targetId,runId:binding.runId,phase,at:Date.now()})+'\n');let offset=0;while(offset<row.length){const written=writeSync(fd,row,offset);if(written<=0)throw Error('Incomplete browser journal write.');offset+=written;}fsyncSync(fd);}finally{closeSync(fd);}if(!existed)syncFolder(dirname(path));
  }
  async act(args:BoundAction,ctx:{runId:string;signal:AbortSignal;assertToolActive?:()=>void}){
   if(this.journalUnavailable||!this.options.operationJournalPath)throw noInput('A valid durable browser journal is required.');

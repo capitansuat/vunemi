@@ -26,12 +26,15 @@ describe("MeetingStore", () => {
   it("creates owner-only meetings and reads them back", () => {
     const m = store.create();
     expect(m.state).toBe("recording");
-    expect(statSync(join(root, "meetings")).mode & 0o777).toBe(0o700);
-    expect(statSync(store.folder(m.id)).mode & 0o777).toBe(0o700);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(root, "meetings")).mode & 0o777).toBe(0o700);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(store.folder(m.id)).mode & 0o777).toBe(0o700);
     m.lines.push({ source: "me", start: 1, end: 2, text: "Merhaba" });
     m.title = "Bütçe";
     store.save(m);
-    expect(statSync(join(store.folder(m.id), "meeting.json")).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(store.folder(m.id), "meeting.json")).mode & 0o777).toBe(0o600);
     expect(store.get(m.id)).toEqual(m);
   });
 

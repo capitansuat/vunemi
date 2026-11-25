@@ -2,6 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { existsSync, readFileSync, mkdirSync, openSync, writeFileSync, fsyncSync, closeSync, renameSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { syncFolder } from '@vunemi/platform';
 import type { SetupOwner, NativeRecipeSetupInput, NativeRecipeOffer, NativeRecipeView, NativeRecipesSnapshot } from '../../shared/native-recipes';
 import type { NativeRecipeBinding, NativeRecipeEpoch, NativeRecipeClaim, NativeRecipeSlotResult } from './types';
 type Row = {
@@ -145,10 +146,7 @@ export class NativeRecipeStore {
         closeSync(fd);
         fd = undefined;
         renameSync(temp, this.file);
-        fd = openSync(dirname(this.file), 'r');
-        fsyncSync(fd);
-        closeSync(fd);
-        fd = undefined;
+        syncFolder(dirname(this.file));
     }
     catch (e) {
         this.poisoned = true;

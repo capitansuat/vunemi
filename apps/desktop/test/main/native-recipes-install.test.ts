@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+const onWindows = process.platform === "win32";
 
 const platform=vi.hoisted(()=>({directory:'',idle:20,state:'active',wake:undefined as undefined|(()=>void),execute:vi.fn()}));
 vi.mock('electron',()=>({app:{getPath:()=>platform.directory},powerMonitor:{getSystemIdleTime:()=>platform.idle,getSystemIdleState:()=>platform.state,on:(_event:string,fn:()=>void)=>{platform.wake=fn;}}}));
@@ -30,7 +31,8 @@ async function setup(){
  return {environment,startNativeRecipe,conversation,roots,sentinel};
 }
 
-it('consumes a due slot when security metadata fails and never replays it after recovery',async()=>{
+// Windows: background recipes are macOS only.
+it.skipIf(onWindows)('consumes a due slot when security metadata fails and never replays it after recovery',async()=>{
  const {environment,startNativeRecipe,conversation}=await setup();environment.mockRejectedValueOnce(Error('security session unavailable'));
  vi.setSystemTime(1_115_000);await vi.advanceTimersByTimeAsync(5000);
  expect(runtime!.store.snapshot().recipes[0]).toMatchObject({remainingSlots:1,slots:[{status:'skipped',reason:'busy'},{status:'scheduled'}]});
@@ -38,21 +40,24 @@ it('consumes a due slot when security metadata fails and never replays it after 
  expect(startNativeRecipe).not.toHaveBeenCalled();expect(platform.execute).not.toHaveBeenCalled();expect(conversation).not.toHaveBeenCalled();
  expect(runtime!.store.snapshot().recipes[0]!.remainingSlots).toBe(1);
 });
-it.each(['recent-input','locked'] as const)('consumes the %s slot instead of waiting for an idle unlocked desktop',async reason=>{
+// Windows: background recipes are macOS only.
+it.skipIf(onWindows).each(['recent-input','locked'] as const)('consumes the %s slot instead of waiting for an idle unlocked desktop',async reason=>{
  const {startNativeRecipe}=await setup();if(reason==='recent-input')platform.idle=2;else platform.state='locked';
  vi.setSystemTime(1_115_000);await vi.advanceTimersByTimeAsync(5000);
  expect(runtime!.store.snapshot().recipes[0]!.slots[0]!.status).toBe('skipped');
  platform.idle=20;platform.state='active';await vi.advanceTimersByTimeAsync(5000);
  expect(startNativeRecipe).not.toHaveBeenCalled();expect(platform.execute).not.toHaveBeenCalled();
 });
-it('admits a future slot independently after a skipped metadata failure',async()=>{
+// Windows: background recipes are macOS only.
+it.skipIf(onWindows)('admits a future slot independently after a skipped metadata failure',async()=>{
  const {environment,startNativeRecipe}=await setup();environment.mockRejectedValueOnce(Error('unavailable'));
  vi.setSystemTime(1_115_000);await vi.advanceTimersByTimeAsync(5000);
  vi.setSystemTime(1_235_000);await vi.advanceTimersByTimeAsync(5000);
  expect(startNativeRecipe).toHaveBeenCalledTimes(1);expect(platform.execute).toHaveBeenCalledTimes(1);
  expect(runtime!.store.snapshot().recipes[0]).toMatchObject({remainingSlots:0,slots:[{status:'skipped'},{status:'skipped',reason:'synthetic-no-input'}]});
 });
-it.each(['roots','policy'] as const)('ends active authority synchronously when %s changes between native boundaries',async changed=>{
+// Windows: background recipes are macOS only.
+it.skipIf(onWindows).each(['roots','policy'] as const)('ends active authority synchronously when %s changes between native boundaries',async changed=>{
  const {roots,sentinel,startNativeRecipe}=await setup();const dispatch=vi.fn();
  platform.execute.mockImplementationOnce(async(_binding,_literal,_backup,context)=>{
   if(changed==='roots')roots.list=()=>['/changed'];else sentinel.currentPolicy.read='deny';

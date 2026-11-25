@@ -3,6 +3,7 @@ import {expect,it,vi} from 'vitest';
 // This suite isolates real helper transport settlement; OS admission has separate native subprocess tests.
 vi.mock('../../../../packages/mac/src/journal-coordinator.js',()=>({withJournalAdmission:async(_binary:string,_path:string,body:(assert:()=>void)=>unknown)=>body(()=>{})}));
 import {ToolRegistry,type AgentEvent,type ChatModel} from '@vunemi/agent-core';
+const onWindows = process.platform === "win32";
 const state=vi.hoisted(()=>({models:new Map<string,unknown>()}));
 vi.mock('@vunemi/agent-core',async load=>{const real=await load<typeof import('@vunemi/agent-core')>();return {...real,createModel:(spec:string)=>{const model=state.models.get(spec);if(!model)throw Error('Model unavailable');return model}}});
 const {AgentSession}=await import('../../src/main/session.js');
@@ -39,7 +40,8 @@ it('settles the same real run owner supplied to tool execution context',async()=
  const tools=new ToolRegistry().register({name:'lease_scope_probe',description:'Read local scope',parameters:{type:'object',properties:{}},actionClass:'read',run:async(_args,ctx)=>{executedOwner=ctx.runId;return 'Read complete.'}});
  const settled:string[]=[],s=session(async id=>{settled.push(id)},[],tools);expect(await s.start('Read local scope','settlement-tool')).toBe('done');expect(executedOwner).toBeTruthy();expect(settled).toEqual([executedOwner]);
 });
-it('Stop keeps real helper transport exclusive through child exit and retains an unknown target lock',async()=>{
+// Windows: the desktop helper is macOS only.
+it.skipIf(onWindows)('Stop keeps real helper transport exclusive through child exit and retains an unknown target lock',async()=>{
  const {Helper}=await import('@vunemi/mac');const {mkdtempSync,writeFileSync,readFileSync,existsSync,rmSync}=await import('node:fs');const {join}=await import('node:path');const {tmpdir}=await import('node:os');
  const dir=mkdtempSync(join(tmpdir(),'session-helper-settle-')),log=join(dir,'events.txt'),binary=join(dir,'helper.cjs'),exitGate=join(dir,'allow-exit');
  writeFileSync(binary,`#!${process.execPath}\nconst fs=require('node:fs');const log=${JSON.stringify(log)};const note=s=>{try{fs.appendFileSync(log,s+'\\n')}catch{}};process.on('SIGTERM',()=>{note('terminating');setInterval(()=>{if(fs.existsSync(${JSON.stringify(exitGate)})){note('exited');process.exit(0)}},10)});require('node:readline').createInterface({input:process.stdin}).on('line',line=>{const m=JSON.parse(line);note('request');setTimeout(()=>process.stdout.write(JSON.stringify({id:m.id,ok:true,result:{status:'completed'}})+'\\n'),60000)});`,{mode:0o755});
@@ -55,7 +57,8 @@ it('Stop keeps real helper transport exclusive through child exit and retains an
   await expect(helper.call('background_press',{app:'10'},{ownerRunId:'another-run',target})).rejects.toMatchObject({noInputSent:true,reasonCode:'delivery-blocked'});
  }finally{writeFileSync(exitGate,'settle');helper.dispose();await vi.waitFor(()=>expect(readFileSync(log,'utf8')).toContain('exited'));rmSync(dir,{recursive:true,force:true})}
 });
-it('a normally settled session releases its known helper target for a different run',async()=>{
+// Windows: the desktop helper is macOS only.
+it.skipIf(onWindows)('a normally settled session releases its known helper target for a different run',async()=>{
  const {Helper}=await import('@vunemi/mac');const {mkdtempSync,writeFileSync,rmSync}=await import('node:fs');const {join}=await import('node:path');const {tmpdir}=await import('node:os');const dir=mkdtempSync(join(tmpdir(),'session-helper-known-')),binary=join(dir,'helper.cjs');
  writeFileSync(binary,`#!${process.execPath}\nrequire('node:readline').createInterface({input:process.stdin}).on('line',line=>{const m=JSON.parse(line);process.stdout.write(JSON.stringify({id:m.id,ok:true,result:{status:'delivered'}})+'\\n')});`,{mode:0o755});
  const helper=new Helper(binary,{operationJournalPath:join(dir,'journal.json')}),target={bundleId:'test.known',pid:11,processStartedAt:22,windowId:33};let calls=0;

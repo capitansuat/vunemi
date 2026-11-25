@@ -13,6 +13,7 @@ import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFileTools, PathRefused, Roots } from "../src/index.js";
 import { similarNames, spotlightQuery } from "../src/tools.js";
+const onWindows = process.platform === "win32";
 
 // The real production homedir API is unchanged; only this isolated worker gets
 // a synthetic home for hidden-path and Trash behavior.
@@ -148,7 +149,8 @@ describe("file tools", () => {
 
   // -- the walls ---------------------------------------------------------------
 
-  it("points a bare name to the open folder that has it, without reading it", async () => {
+  // Windows: paths and open folders on Windows are plan 2.
+  it.skipIf(onWindows)("points a bare name to the open folder that has it, without reading it", async () => {
     const downloads = join(home, "Downloads");
     mkdirSync(downloads);
     writeFileSync(join(downloads, "fatura.txt"), "x");
@@ -190,7 +192,8 @@ describe("file tools", () => {
     await expect(call("files_read", { path: join(homedir(), ".ssh", "id_rsa") })).rejects.toThrow(/dışında|gizli/);
   });
 
-  it("names a home folder the model made up, and gives the path it meant", () => {
+  // Windows: paths and open folders on Windows are plan 2.
+  it.skipIf(onWindows)("names a home folder the model made up, and gives the path it meant", () => {
     const open = new Roots([join(homedir(), "Downloads")]);
     // Refused, never quietly rewritten: the card would name one path and the file land at another.
     expect(() => open.resolve("/Users/no-such-user-vunemi/Downloads/deneme/giderler.xlsx")).toThrow(t("files.wrongHome", { path: "/Users/no-such-user-vunemi/Downloads/deneme/giderler.xlsx", fixed: "~/Downloads/deneme/giderler.xlsx" }));
@@ -225,7 +228,8 @@ describe("file tools", () => {
     expect(existsSync(join(home, "yeni.txt"))).toBe(false);
   });
 
-  it("understands the folder names Finder shows, not just the ones on disk", () => {
+  // Windows: paths and open folders on Windows are plan 2.
+  it.skipIf(onWindows)("understands the folder names Finder shows, not just the ones on disk", () => {
     // These only resolve when the real folder is open anyway, which is why
     // accepting them costs nothing.
     const real = new Roots([join(homedir(), "Documents"), join(homedir(), "Desktop")]);
@@ -285,7 +289,8 @@ describe("file tools", () => {
     expect(readdirSync(root)).toEqual(["Level_Process.docx"]);
   });
 
-  it.runIf(!mac)("reads a Word document's text itself without a converter, paragraphs and tables", async () => {
+  // Windows: the Office reader calls /usr/bin/unzip until plan 3.
+  it.runIf(!mac && !onWindows)("reads a Word document's text itself without a converter, paragraphs and tables", async () => {
     writeFileSync(join(root, "Level_Process.docx"), minimalDocx("Seviye süreci yılı artırır."));
     expect(await call("files_read", { path: "Level_Process.docx" })).toBe("Seviye süreci yılı artırır.\nhücre\tiki");
     expect(readdirSync(root)).toEqual(["Level_Process.docx"]);
@@ -296,7 +301,8 @@ describe("file tools", () => {
     await expect(call("files_read", { path: "eski.rtf" })).rejects.toThrow(/macOS/);
   });
 
-  it.runIf(!mac)("sends a file to the freedesktop Trash, and undo brings it back", async () => {
+  // Windows: the freedesktop Trash is Linux's; the Recycle Bin comes in plan 3.
+  it.runIf(!mac && !onWindows)("sends a file to the freedesktop Trash, and undo brings it back", async () => {
     writeFileSync(join(root, "gereksiz.md"), "x");
     await call("files_trash", { path: join(root, "gereksiz.md") });
     const trash = join(testHome.path, ".local", "share", "Trash");
@@ -308,7 +314,8 @@ describe("file tools", () => {
     expect(readdirSync(join(trash, "info"))).toEqual([]);
   });
 
-  it.runIf(!mac)("finds files by name and by the words in plain text, inside the open folders only", async () => {
+  // Windows: paths and open folders on Windows are plan 2.
+  it.runIf(!mac && !onWindows)("finds files by name and by the words in plain text, inside the open folders only", async () => {
     mkdirSync(join(root, "alt", ".gizli"), { recursive: true });
     writeFileSync(join(root, "fatura-7429.pdf"), "%PDF");
     writeFileSync(join(root, "alt", "not.md"), "Fatura 7429 ödendi");
@@ -451,7 +458,8 @@ describe("file tools", () => {
     ).rejects.toThrow(/dışında/);
   });
 
-  it("converts a file, and offers to undo what it made", async () => {
+  // Windows: no converters are offered on Windows yet (plan 3).
+  it.skipIf(onWindows)("converts a file, and offers to undo what it made", async () => {
     writeFileSync(join(root, "not.txt"), "merhaba dünya");
     await call("system_run", { command: "textutil", args: ["-convert", "rtf", join(root, "not.txt")] });
     const made = join(root, "not.rtf");
@@ -464,7 +472,8 @@ describe("file tools", () => {
     expect(readFileSync(join(root, "not.txt"), "utf8")).toBe("merhaba dünya");
   });
 
-  it("keeps a copy of an output it overwrites, says so, and can put it back", async () => {
+  // Windows: no converters are offered on Windows yet (plan 3).
+  it.skipIf(onWindows)("keeps a copy of an output it overwrites, says so, and can put it back", async () => {
     writeFileSync(join(root, "not.txt"), "yeni metin");
     writeFileSync(join(root, "not.rtf"), "ESKİ RTF");
     const out = await call("system_run", { command: "textutil", args: ["-convert", "rtf", join(root, "not.txt")] });
@@ -519,13 +528,15 @@ describe("file tools", () => {
     expect(made).toEqual([{ kind: "file", path: real("yeni.md") }]);
   });
 
-  it("announces what a converter created", async () => {
+  // Windows: no converters are offered on Windows yet (plan 3).
+  it.skipIf(onWindows)("announces what a converter created", async () => {
     writeFileSync(join(root, "not.txt"), "merhaba dünya");
     await call("system_run", { command: "textutil", args: ["-convert", "rtf", join(root, "not.txt")] });
     expect(made).toEqual([{ kind: "file", path: real("not.rtf") }]);
   });
 
-  it("does not present a file sent to the Trash as something it made", async () => {
+  // Windows: the Recycle Bin comes in plan 3.
+  it.skipIf(onWindows)("does not present a file sent to the Trash as something it made", async () => {
     writeFileSync(join(root, "gereksiz.md"), "x");
     await call("files_trash", { path: join(root, "gereksiz.md") });
     expect(made).toEqual([]);

@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';import {join} from 'node:path';import {createHash
 import {Helper} from '../src/helper.js';
 import {NoInputSent} from '../src/target-lease.js';import type {SemanticMoveGuard} from '@vunemi/agent-core';
 import {createDocumentMoveTools,movedDocumentText,verifiedDocumentMoveResult} from '../src/document-move.js';
+const onWindows = process.platform === "win32";
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 async function setup(moveGuard?:SemanticMoveGuard){
  const dir=await realpath(await mkdtemp(join(tmpdir(),'document-move-'))),path=join(dir,'fixture.txt'),before='aa TOKEN bb END';await writeFile(path,before);
@@ -62,7 +63,8 @@ it.each([true,false])('uncertain errors expose only validated diagnostic metadat
  const error=await s.move.run(args,s.ctx).catch(e=>e);expect(error.deliveryUnknown).toBe(true);expect(error.message).not.toContain('PRIVATE');if(valid){expect(error.message).toContain('Dispatch ID: 95da94c6-2538-44ea-aa41-8e1d599ed875');expect(error.message).toContain('phase: save');}else expect(error.message).not.toContain('Dispatch ID');
  }finally{await rm(s.dir,{recursive:true,force:true});}});
 
-it.each(['fifo','symlink'] as const)('refuses a nonregular or linked document without native observation: %s',async mode=>{const s=await setup();try{await rm(s.path);if(mode==='fifo')execFileSync('/usr/bin/mkfifo',[s.path]);else {await writeFile(join(s.dir,'other.txt'),'private outside target');await symlink(join(s.dir,'other.txt'),s.path);}await expect(s.observe.run({app:'42',path:s.path,windowId:9},s.ctx)).rejects.toThrow();expect(s.counts()).toEqual({effects:0,validations:0});}finally{await rm(s.dir,{recursive:true,force:true});}},1000);
+// Windows has no FIFOs.
+it.each(onWindows?['symlink'] as const:['fifo','symlink'] as const)('refuses a nonregular or linked document without native observation: %s',async mode=>{const s=await setup();try{await rm(s.path);if(mode==='fifo')execFileSync('/usr/bin/mkfifo',[s.path]);else {await writeFile(join(s.dir,'other.txt'),'private outside target');await symlink(join(s.dir,'other.txt'),s.path);}await expect(s.observe.run({app:'42',path:s.path,windowId:9},s.ctx)).rejects.toThrow();expect(s.counts()).toEqual({effects:0,validations:0});}finally{await rm(s.dir,{recursive:true,force:true});}},1000);
 
 it('classifies a native readonly preflight rejection as no move input, without leaking native details',async()=>{const s=await setup();try{const o=JSON.parse(await s.observe.run({app:'42',path:s.path,windowId:9},s.ctx) as string),args={targetId:o.targetId,destinationOffset:12};await s.move.check!(args,{runId:s.ctx.runId,signal:s.ctx.signal,assertToolActive(){}});s.setReplyPatch({validateReject:true});const error=await s.move.run(args,s.ctx).catch(e=>e);expect(error).toMatchObject({noInputSent:true,deliveryUnknown:false});expect(error.message).not.toContain('PRIVATE');expect(s.counts().effects).toBe(0);expect(await readdir(s.dir)).toEqual(['fixture.txt']);}finally{await rm(s.dir,{recursive:true,force:true});}});
 

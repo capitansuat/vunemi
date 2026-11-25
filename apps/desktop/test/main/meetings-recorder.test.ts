@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Recorder, recorderBinary } from "../../src/main/meetings/recorder.js";
+const onWindows = process.platform === "win32";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-recorder.mjs", import.meta.url));
 chmodSync(FAKE, 0o755);
@@ -40,18 +41,21 @@ describe("recorderBinary", () => {
 });
 
 describe("Recorder", () => {
-  it("lists microphones, records to both files, reports levels and stops", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("lists microphones, records to both files, reports levels and stops", async () => {
     recorder = new Recorder(FAKE);
     expect(recorder.available()).toBe(true);
     expect(await recorder.devices()).toEqual([{ id: "built-in", name: "MacBook Microphone", default: true }]);
     await recorder.start(dir, "built-in");
     expect([...readFileSync(join(dir, "mic.pcm"))]).toEqual([1, 0, 2, 0, 3, 0]);
-    expect(statSync(join(dir, "system.pcm")).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(dir, "system.pcm")).mode & 0o777).toBe(0o600);
     expect(await recorder.levels()).toEqual({ me: 0.25, others: 0.5 });
     expect(await recorder.stop()).toEqual({ seconds: 1.5 });
   });
 
-  it("pauses and resumes the recording it holds", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("pauses and resumes the recording it holds", async () => {
     recorder = new Recorder(FAKE);
     await expect(recorder.pause()).rejects.toThrow("Nothing is being recorded.");
     await recorder.start(dir);
@@ -61,7 +65,8 @@ describe("Recorder", () => {
     expect(await recorder.levels()).toEqual({ me: 0.25, others: 0.5 });
   });
 
-  it("rejects a start the recorder refuses, with its reason", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("rejects a start the recorder refuses, with its reason", async () => {
     process.env.FAKE_RECORDER_MODE = "no-permission";
     recorder = new Recorder(FAKE);
     await expect(recorder.start(dir)).rejects.toThrow("microphone");
@@ -73,14 +78,16 @@ describe("Recorder", () => {
     await expect(recorder.devices()).rejects.toThrow("unavailable");
   });
 
-  it("stops a recording when it is disposed, keeping what was written", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("stops a recording when it is disposed, keeping what was written", async () => {
     recorder = new Recorder(FAKE);
     await recorder.start(dir);
     recorder.dispose();
     await waitFor(() => readFileSync(join(dir, "mic.pcm")).length === 8);
   });
 
-  it("hears of a recorder that ended on its own", async () => {
+  // Windows: meeting recording is off on Windows (path 3), and these fakes are shell scripts.
+  it.skipIf(onWindows)("hears of a recorder that ended on its own", async () => {
     process.env.FAKE_RECORDER_MODE = "crash";
     const exits: (number | null)[] = [];
     recorder = new Recorder(FAKE, (code) => exits.push(code));

@@ -1,5 +1,6 @@
 import {beforeAll,afterEach,afterAll,expect,it,vi} from 'vitest';
-import {fork,execFileSync,type ChildProcess} from 'node:child_process';
+import {fork,type ChildProcess} from 'node:child_process';
+import {esbuild} from './fixtures/esbuild-cli.js';
 import {mkdtempSync,rmSync,realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
@@ -9,7 +10,7 @@ import {SessionCoordinatorHost,type SessionCoordinatorChild} from '../../src/mai
 
 // VUN-14: main-owned calendar adapter receipt must cross the real session worker boundary before the tool result.
 const hosts:SessionCoordinatorHost[]=[],children:ChildProcess[]=[];let dir='',binary='';
-beforeAll(()=>{dir=realpathSync(mkdtempSync(join(tmpdir(),'vun14-receipt-process-')));binary=join(dir,'worker.cjs');execFileSync(resolve('../../packages/mac/node_modules/.bin/esbuild'),[resolve('test/main/fixtures/session-process.ts'),'--bundle','--platform=node','--format=cjs',`--outfile=${binary}`],{stdio:'pipe'});});
+beforeAll(()=>{dir=realpathSync(mkdtempSync(join(tmpdir(),'vun14-receipt-process-')));binary=join(dir,'worker.cjs');esbuild([resolve('test/main/fixtures/session-process.ts'),'--bundle','--platform=node','--format=cjs',`--outfile=${binary}`]);});
 afterEach(()=>{for(const h of hosts.splice(0))h.dispose();for(const c of children.splice(0))if(c.exitCode===null)c.kill('SIGKILL');});afterAll(()=>rmSync(dir,{recursive:true,force:true}));
 const usage={promptTokens:20,completionTokens:5,ttftMs:1,tokensPerSec:10};
 const goal='Create calendar event "VUN14 Synthetic" from 2028-02-29T10:00Z to 2028-02-29T11:00Z';
