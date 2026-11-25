@@ -52,5 +52,6 @@ describe("asking Windows for a process's path", () => {
     }
     await new Promise((resolve) => child.once("exit", resolve));
     expect(processPath(child.pid!, "win32")).toBeNull();
-  });
+    // Four PowerShell starts, each allowed 15 s by processPath; a busy machine needs more than 5 s for them.
+  }, 60_000);
 });
