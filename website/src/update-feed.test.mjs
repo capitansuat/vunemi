@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { updateFeed, windowsFeed } from "./update-feed.mjs";
+import { checkWindowsRelease, updateFeed, windowsFeed } from "./update-feed.mjs";
 
 const base = { version: "0.1.8", date: "2026-10-01", zip: "Vunemi-0.1.8-arm64.zip", zipSizeMb: 131, zipSha256: "a".repeat(64),
   get zipUrl() { return `https://github.com/capitansuat/vunemi/releases/download/v${this.version}/${this.zip}`; } };
@@ -45,4 +45,18 @@ test("writes each Windows architecture its own feed, signed installer and all", 
 test("writes no Windows feed without a release, or for an architecture it doesn't have", () => {
   assert.equal(windowsFeed(null, "x64", winCopy, ["en"]), null);
   assert.equal(windowsFeed({ ...win, files: win.files.filter((f) => f.arch === "x64") }, "arm64", winCopy, ["en"]), null);
+});
+
+test("checks a Windows release before it is offered", () => {
+  assert.doesNotThrow(() => checkWindowsRelease(win));
+  const broken = (change) => () => checkWindowsRelease({ ...win, ...change });
+  assert.throws(broken({ tag: "v0.5.1" }), /tag/);
+  assert.throws(broken({ tag: "v0.5.2-windows.1" }), /tag/);
+  assert.throws(broken({ version: "0.5.1-test1" }), /x\.y\.z/);
+  assert.throws(broken({ files: [] }), /without files/);
+  assert.throws(broken({ files: [win.files[0], win.files[0]] }), /Two Windows files/);
+  assert.throws(broken({ files: [{ ...win.files[0], asset: "Vunemi-Setup-0.5.0-x64.exe" }] }), /does not match/);
+  assert.throws(broken({ files: [{ ...win.files[0], sha256: "B".repeat(64) }] }), /SHA-256/);
+  assert.throws(broken({ files: [{ ...win.files[0], signature: undefined }] }), /signature/);
+  assert.throws(broken({ files: [{ ...win.files[0], arch: "ia32" }] }), /architecture/);
 });
