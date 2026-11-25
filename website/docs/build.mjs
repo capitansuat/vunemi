@@ -4,8 +4,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { review, translations } from "./content.mjs";
 import { linuxRelease, release, windowsRelease } from "../src/release.mjs";
-import { checkWindowsRelease, updateFeed, windowsFeed } from "../src/update-feed.mjs";
+import { checkLinuxRelease, checkWindowsRelease, linuxFeed, updateFeed, windowsFeed } from "../src/update-feed.mjs";
 import { windowsCopy } from "../src/windows-copy.mjs";
+import { linuxCopy } from "../src/linux-copy.mjs";
 import { languages, pageNames, pagePath, renderPage, redirectPage, shotFiles } from "../src/pages.mjs";
 import { supportCopy } from "../src/support-copy.mjs";
 import { gatekeeperCopy } from "../src/gatekeeper-copy.mjs";
@@ -55,12 +56,14 @@ function validateSite() {
   for (const language of languages) sameShape(supportCopy.en, supportCopy[language], `support.${language}`);
   for (const language of languages) sameShape(gatekeeperCopy.en, gatekeeperCopy[language], `gatekeeper.${language}`);
   for (const language of languages) sameShape(windowsCopy.en, windowsCopy[language], `windows.${language}`);
+  for (const language of languages) sameShape(linuxCopy.en, linuxCopy[language], `linux.${language}`);
   // An installed Vunemi shows these as the update's notes and cuts each at 300 characters, 20 notes at most (updates/feed.ts).
   for (const language of languages) {
     const notes = copy[language].downloadPage.highlights;
     if (notes.length > 20) throw new Error(`Too many update notes: ${language}`);
     for (const note of notes) if (note.length > 300) throw new Error(`Update note over 300 characters: ${language}: ${note.slice(0, 40)}`);
     for (const note of windowsCopy[language].updateNotes) if (note.length > 300) throw new Error(`Windows update note over 300 characters: ${language}: ${note.slice(0, 40)}`);
+    for (const note of linuxCopy[language].updateNotes) if (note.length > 300) throw new Error(`Linux update note over 300 characters: ${language}: ${note.slice(0, 40)}`);
   }
   for (const file of [...shotFiles, "hero-plan.png"]) {
     if (!existsSync(join(publicDir, "screenshots", file))) throw new Error(`Missing product screenshot: ${file}`);
@@ -170,13 +173,8 @@ function releaseCheck() {
     if (release.zip !== `Vunemi-${release.version}-arm64.zip`) throw new Error(`Update zip ${release.zip} does not match ${release.version}`);
     if (!/^[a-f0-9]{64}$/.test(release.zipSha256 ?? "") || !(release.zipSizeMb > 0)) throw new Error("Update zip size or SHA-256 missing");
   }
-  // The Linux preview: names follow its version, each file has a size and SHA-256.
-  const linuxNames = { deb: `Vunemi-${linuxRelease.version}-linux-amd64.deb`, appImage: `Vunemi-${linuxRelease.version}-linux-x86_64.AppImage` };
-  if (!linuxRelease.tag.startsWith(`v${linuxRelease.version}-linux.`)) throw new Error(`Linux tag ${linuxRelease.tag} does not match ${linuxRelease.version}`);
-  for (const file of linuxRelease.files) {
-    if (file.asset !== linuxNames[file.kind]) throw new Error(`Linux file ${file.asset} does not match ${linuxRelease.version}`);
-    if (!/^[a-f0-9]{64}$/.test(file.sha256) || !(file.sizeMb > 0)) throw new Error(`Linux file ${file.asset}: size or SHA-256 missing`);
-  }
+  // The Linux preview: names follow its version and architecture, each file has a size and SHA-256, only AppImages are signed.
+  checkLinuxRelease(linuxRelease);
   if (windowsRelease) checkWindowsRelease(windowsRelease);
 }
 
@@ -195,6 +193,8 @@ try {
   for (const arch of ["x64", "arm64"]) {
     const winFeed = windowsFeed(windowsRelease, arch, windowsCopy, languages);
     if (winFeed) pages.set(join(publicDir, `update/win-${arch}.json`), `${JSON.stringify(winFeed, null, 2)}\n`);
+    const linFeed = linuxFeed(linuxRelease, arch, linuxCopy, languages);
+    if (linFeed) pages.set(join(publicDir, `update/linux-${arch}.json`), `${JSON.stringify(linFeed, null, 2)}\n`);
   }
 
   if (!["--build", "--check", "--release-check"].includes(command)) throw new Error(`Unknown option: ${command}`);

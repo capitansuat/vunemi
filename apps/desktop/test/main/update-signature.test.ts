@@ -191,3 +191,28 @@ describe("the site's Windows feed", () => {
     expect(readFeed(feed, "0.5.0", "en", windowsSource("x64", ours.pub))).toBeNull();
   });
 });
+
+describe("the site's Linux feed", () => {
+  it("is one the app accepts for its own architecture's AppImage only", async () => {
+    // website/src/update-feed.mjs writes vunemi.com/update/linux-<arch>.json.
+    const site = new URL("../../../../website/src/update-feed.mjs", import.meta.url).href;
+    const { linuxFeed } = (await import(/* @vite-ignore */ site)) as {
+      linuxFeed(release: unknown, arch: "x64" | "arm64", copy: unknown, languages: string[]): unknown;
+    };
+    const { createHash: hash } = await import("node:crypto");
+    const sha = hash("sha256").update("made-up x64 appimage").digest("hex");
+    const signature = sign(null, signedMessage("linux", "0.5.1", "x64", sha), ours.privateKey).toString("base64");
+    const release = {
+      tag: "v0.5.1-linux.1", version: "0.5.1", date: "2026-12-01",
+      files: [
+        { kind: "appImage", arch: "x64", asset: "Vunemi-0.5.1-linux-x86_64.AppImage", sizeMb: 140, sha256: sha, signature },
+        { kind: "deb", arch: "x64", asset: "Vunemi-0.5.1-linux-amd64.deb", sizeMb: 110, sha256: "b".repeat(64) },
+      ],
+      url(asset: string) { return `https://github.com/capitansuat/vunemi/releases/download/${this.tag}/${asset}`; },
+    };
+    const feed = linuxFeed(release, "x64", { en: { updateNotes: ["Linux preview."] } }, ["en"]);
+    expect(readFeed(feed, "0.5.0", "en", linuxSource("x64", ours.pub))).toMatchObject({ version: "0.5.1", sha256: sha, url: release.url("Vunemi-0.5.1-linux-x86_64.AppImage"), sizeMb: 140 });
+    expect(readFeed(feed, "0.5.0", "en", linuxSource("arm64", ours.pub))).toBeNull();
+    expect(readFeed(feed, "0.5.0", "en", windowsSource("x64", ours.pub))).toBeNull();
+  });
+});

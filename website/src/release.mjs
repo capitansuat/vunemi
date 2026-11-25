@@ -17,14 +17,19 @@ export const release = {
 
 export const repoUrl = "https://github.com/capitansuat/vunemi";
 
-// The Linux preview, a pre-release of its own. The Mac fields above and the
-// update feed don't depend on it; a Linux build doesn't update itself.
+// The Linux preview, a pre-release of its own (vX-linux.N). The Mac fields
+// above don't depend on it. Each architecture has an AppImage and a .deb;
+// an AppImage with a signature (scripts/sign-update.mjs, linux) gets the
+// update feed update/linux-<arch>.json, which the AppImage updates itself
+// from. A .deb never has a signature: it can't replace itself. Shape of a
+// file: { kind: "appImage" | "deb", arch: "x64" | "arm64", asset, sizeMb, sha256, signature? }.
 export const linuxRelease = {
   tag: "v0.2.6-linux.1",
   version: "0.2.6",
+  date: "2026-11-06",
   files: [
-    { kind: "deb", asset: "Vunemi-0.2.6-linux-amd64.deb", sizeMb: 105, sha256: "e804939f8de91c0fc5d1fa8262fb80ac094bb8fafcb9a8b8f494ae0273b13a71" },
-    { kind: "appImage", asset: "Vunemi-0.2.6-linux-x86_64.AppImage", sizeMb: 135, sha256: "b6b2412b3bfbde15f52f89f200a71d2da14e63f5139d979b691be2cfefe4d761" },
+    { kind: "deb", arch: "x64", asset: "Vunemi-0.2.6-linux-amd64.deb", sizeMb: 105, sha256: "e804939f8de91c0fc5d1fa8262fb80ac094bb8fafcb9a8b8f494ae0273b13a71" },
+    { kind: "appImage", arch: "x64", asset: "Vunemi-0.2.6-linux-x86_64.AppImage", sizeMb: 135, sha256: "b6b2412b3bfbde15f52f89f200a71d2da14e63f5139d979b691be2cfefe4d761" },
   ],
   url(asset) { return `https://github.com/capitansuat/vunemi/releases/download/${this.tag}/${asset}`; },
   get notes() { return `https://github.com/capitansuat/vunemi/releases/tag/${this.tag}`; },

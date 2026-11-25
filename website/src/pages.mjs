@@ -232,20 +232,23 @@ ${notesSection(t)}
 }
 
 // The Linux preview: its own files and copy; nothing above depends on it.
-function linuxSection(lang) {
+/** The Linux preview: an AppImage and a .deb per architecture, and which of them updates itself. */
+export function linuxSection(lang, lin = linuxRelease) {
   const l = linuxCopy[lang];
-  const deb = linuxRelease.files.find((f) => f.kind === "deb");
+  const deb = lin.files.find((f) => f.kind === "deb" && f.arch === "x64") ?? lin.files.find((f) => f.kind === "deb");
   const label = { deb: l.debButton, appImage: l.appImageButton };
-  const files = linuxRelease.files.map((f) => `<li><a class="pill small" href="${linuxRelease.url(f.asset)}">${esc(label[f.kind])}</a><p class="file">${f.asset} · ${f.sizeMb} MB</p><p class="checksum">SHA-256 ${f.sha256}</p></li>`).join("");
+  const order = { appImage: 0, deb: 1 };
+  const files = ["x64", "arm64"].flatMap((arch) => lin.files.filter((f) => f.arch === arch).sort((a, b) => order[a.kind] - order[b.kind]))
+    .map((f) => `<li><a class="pill small" href="${lin.url(f.asset)}">${esc(label[f.kind])} · ${esc(l.archNames[f.arch])}</a><p class="file">${f.asset} · ${f.sizeMb} MB</p><p class="checksum">SHA-256 ${f.sha256}</p></li>`).join("");
   return `<section id="linux" class="linux-preview" aria-labelledby="linux-title">
-<h2 id="linux-title">${esc(l.title)} · ${linuxRelease.version}</h2>
+<h2 id="linux-title">${esc(l.title)} · ${lin.version}</h2>
 <p>${esc(l.why)}</p>
 <ul class="linux-files">${files}</ul>
 <div class="download-grid">
-<section class="panel-box"><h3>${esc(l.installTitle)}</h3><ol class="install">${l.install.map((s) => `<li>${esc(s.replace("{deb}", deb.asset))}</li>`).join("")}</ol><p>${esc(l.update)}</p></section>
+<section class="panel-box"><h3>${esc(l.installTitle)}</h3><ol class="install">${l.install.map((s) => `<li>${esc(s.replace("{deb}", deb?.asset ?? ""))}</li>`).join("")}</ol><p>${esc(l.update)}</p></section>
 <section class="panel-box"><h3>${esc(l.needTitle)}</h3><ul>${l.need.map((n) => `<li>${esc(n)}</li>`).join("")}</ul><p>${esc(l.works)}</p><p>${esc(l.missing)}</p></section>
 </div>
-<p class="release-links"><a href="${linuxRelease.notes}">${esc(l.notes)} ↗</a></p>
+<p class="release-links"><a href="${lin.notes}">${esc(l.notes)} ↗</a></p>
 </section>`;
 }
 
