@@ -13,3 +13,23 @@ export function updateFeed(release, copy, languages) {
     notes: Object.fromEntries(languages.map((code) => [code, copy[code].downloadPage.highlights])),
   };
 }
+
+// The Windows feeds (vunemi.com/update/win-<arch>.json): the same form, plus
+// the installer's SHA-256 and the maintainer's signature over version,
+// architecture and SHA-256, which the app checks before it downloads
+// (apps/desktop/src/main/updates/feed.ts). Notes are Windows' own: the Mac's
+// highlights would describe another app.
+export function windowsFeed(windowsRelease, arch, windowsCopy, languages) {
+  const file = windowsRelease?.files.find((f) => f.arch === arch);
+  if (!file) return null;
+  const { version, date } = windowsRelease;
+  return {
+    currentRelease: version,
+    releases: [{
+      version,
+      updateTo: { version, name: `Vunemi ${version}`, pub_date: `${date}T00:00:00Z`, notes: "", url: windowsRelease.url(file.asset), sha256: file.sha256, signature: file.signature },
+    }],
+    sizeMb: file.sizeMb,
+    notes: Object.fromEntries(languages.map((code) => [code, windowsCopy[code].updateNotes])),
+  };
+}
