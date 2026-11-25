@@ -6,10 +6,15 @@ export interface SessionBrokerChannel {guard():void;signal:AbortSignal;stream(ch
 /** Main-owned services. Functions, AbortSignals, provider credentials and prepared args never serialize. */
 export class SessionServiceBroker {
  private handles=new Map<string,Handle>();private models=new Map<string,ChatModel>();
+ /** "Just this once" for a switched-off tool: recorded by main from the card it showed and the user's click, never by the worker. */
+ private once=new Map<string,{tool:string;serialized:string}>();
  constructor(readonly options:SessionOptions,private readonly sessionId:()=>string,private readonly locale:()=>string){}
  configuration():SessionConfiguration{const o=this.options,tools=o.tools.sources().flatMap(source=>[...o.tools.list(),...o.tools.listSwitchedOff()].filter(t=>o.tools.sourceOf(t.name)===source.source).map(t=>({source:source.source,enabled:source.enabled,revision:o.tools.revisionOf(source.source),definition:Object.fromEntries(['name','description','parameters','actionClass','takesForeground','alwaysAsk','allowSessionApproval','onDemand','untrustedOutput','record','ephemeral','stale','firstPartChars','firstPartEnd','saves'].filter(k=>(t as unknown as Record<string,unknown>)[k]!==undefined).map(k=>[k,(t as unknown as Record<string,unknown>)[k]])) as SessionToolMetadata['definition'],...(t.wantedFor&&{wantedFor:{source:t.wantedFor.source,flags:t.wantedFor.flags}}),...(t.avoidFor&&{avoidFor:{source:t.avoidFor.source,flags:t.avoidFor.flags}}),taskPermission:!!t.taskPermission})));return{sessionId:this.sessionId(),locale:this.locale(),tools,instructions:o.instructions?.()??'',chatInstructions:o.chatInstructions?.()??'',planBeforeRun:o.planBeforeRun?.()===true,areas:o.areas?.()??[],latestTask:o.latestTask?.(),openPage:o.openPage?.()??null,notesIndex:o.notesIndex?.()??null,topicIndex:o.topicIndex?.()??null,grants:[...o.grants],permissionEpoch:o.taskPermissions?.epoch(),hasTaskPermissions:!!o.taskPermissions,offers:Object.fromEntries(tools.flatMap(t=>{const v=o.switchedOff?.(t.definition.name);return v?[[t.definition.name,v]]:[];})),...(o.fileRoots&&{fileRoots:o.fileRoots()})};}
  private model(spec:string){let m=this.models.get(spec);if(!m){m=this.options.modelFactory?.(spec)??createModel(spec,this.options.modelConfig?.(spec));this.models.set(spec,m);}return m;}
  forgetModel(spec:string){this.models.delete(spec);}
+ /** Lets exactly this call of a switched-off tool run once, with exactly these arguments; the tool's part stays off. */
+ allowOnce(runId:string,callId:string,tool:string,serialized:string){this.once.set(`${runId}:${callId}`,{tool,serialized});}
+ forgetOnce(runId:string,callId:string){this.once.delete(`${runId}:${callId}`);}
  clear(){this.handles.clear();this.models.clear();}
  async invoke(request:SessionBrokerMessage,channel:SessionBrokerChannel):Promise<unknown>{
   const o=this.options,a=request.args;channel.guard();
@@ -28,8 +33,11 @@ export class SessionServiceBroker {
    return{preview,actionClass,scope,path,alwaysAsk:tool.alwaysAskWhen?.(handle.args)===true};
   }
   if(request.op.startsWith('tool.')){
-   const [name,id,args]=a as [string,string,Record<string,unknown>];const h=this.handles.get(`${request.runId}:${id}`);if(!h||h.tool.name!==name||h.runId!==request.runId||h.serialized!==JSON.stringify(args))throw Error('Prepared tool owner or arguments changed.');this.assertHandle(h,channel,request.op==='tool.run');
-   const guard=()=>this.assertHandle(h,channel,request.op==='tool.run');checkContext.assertToolActive=guard;
+   const [name,id,args]=a as [string,string,Record<string,unknown>];const h=this.handles.get(`${request.runId}:${id}`);if(!h||h.tool.name!==name||h.runId!==request.runId||h.serialized!==JSON.stringify(args))throw Error('Prepared tool owner or arguments changed.');
+   // Taken (and spent) when the run starts: a switched-off tool runs only for the exact call the user allowed just this once.
+   let once=false;if(request.op==='tool.run'&&!h.used){const key=`${request.runId}:${String(a[6])}`,granted=this.once.get(key);this.once.delete(key);once=!!granted&&granted.tool===h.tool.name&&granted.serialized===h.serialized;}
+   this.assertHandle(h,channel,request.op==='tool.run'&&!once);
+   const guard=()=>this.assertHandle(h,channel,request.op==='tool.run'&&!once);checkContext.assertToolActive=guard;
    if(request.op==='tool.check')return done(h.tool.check?.(h.args,checkContext)??null);
    if(request.op==='tool.approveAll')return done(approveAllCover(h.tool,h.args).then(cover=>cover??null));
    if(request.op==='tool.permission.prepare')return done(h.tool.taskPermission?.prepare(h.args,checkContext)??null);
@@ -56,7 +64,7 @@ export class SessionServiceBroker {
    case 'untrusted':o.onUntrustedOutput?.(String(a[0]),String(a[1]));return;
    case 'history':o.onHistory?.(a[0] as never);return;
    case 'checkpoint':await o.onCheckpoint?.(a[0] as never);return;
-   case 'settled':await o.onRunSettled?.(String(a[0]));for(const[k,h]of this.handles)if(h.runId===a[0])this.handles.delete(k);return;
+   case 'settled':await o.onRunSettled?.(String(a[0]));for(const[k,h]of this.handles)if(h.runId===a[0])this.handles.delete(k);for(const k of this.once.keys())if(k.startsWith(`${String(a[0])}:`))this.once.delete(k);return;
    case 'afterRun':o.afterRun?.({runId:String(a[0]),model:this.model(String(a[1])),words:a[2] as string[],status:a[3]==='max_steps'?'max_steps':'done',answer:typeof a[4]==='string'?a[4]:''});return;
    case 'keepOutput':return o.keptOutputs?.keep(String(a[0]),String(a[1]),Number(a[2]));
    default:throw Error('Unknown session service.');

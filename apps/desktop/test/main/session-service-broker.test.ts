@@ -12,3 +12,21 @@ it('append intent acknowledgment is a true awaited pre-effect barrier',async()=>
 it('transport preserves explicit nonretryable native error classification',()=>{const original=Object.assign(Error('Synthetic read failed'),{retryable:false,deliveryUnknown:true,operationId:'synthetic-operation'});expect(fromSessionError(sessionError(original))).toMatchObject({retryable:false,deliveryUnknown:true,operationId:'synthetic-operation'});});
 
 it('projection failure after a completed effect returns raw output without retrying the effect',async()=>{const effect=vi.fn(async()=> 'Actual completed output'),f=fixture({name:'fixture',description:'Synthetic',parameters:{type:'object',properties:{}},actionClass:'write-local',run:effect,forModel:()=>{throw Error('Synthetic projection failure');}});await f.request('tool.prepare',['fixture','handle',{}]);expect(await f.request('tool.run',['fixture','handle',{},'goal','ctx',{},'call'])).toEqual({output:'Actual completed output',modelOutput:'Actual completed output'});expect(effect).toHaveBeenCalledOnce();});
+it('a switched-off tool runs only for the exact call main allowed just this once, and only once',async()=>{
+ const run=vi.fn(async()=> 'written'),f=fixture({name:'fixture',description:'Synthetic',parameters:{type:'object',properties:{}},actionClass:'write-local',run},false);
+ // No record from main: refused, as before.
+ await f.request('tool.prepare',['fixture','h1',{v:1}]);
+ await expect(f.request('tool.run',['fixture','h1',{v:1},'goal','ctx',{},'call-1'])).rejects.toThrow(/registration/);
+ // Recorded for another call, or for other arguments: refused.
+ f.broker.allowOnce('run','call-2','fixture',JSON.stringify({v:2}));
+ await f.request('tool.prepare',['fixture','h2',{v:1}]);
+ await expect(f.request('tool.run',['fixture','h2',{v:1},'goal','ctx',{},'call-2'])).rejects.toThrow(/registration/);
+ // The exact call: runs once, the part stays off, and the permission is spent.
+ f.broker.allowOnce('run','call-3','fixture',JSON.stringify({v:3}));
+ await f.request('tool.prepare',['fixture','h3',{v:3}]);
+ expect(await f.request('tool.run',['fixture','h3',{v:3},'goal','ctx',{},'call-3'])).toMatchObject({output:'written'});
+ expect(f.tools.isEnabled('fixture')).toBe(false);
+ await f.request('tool.prepare',['fixture','h4',{v:3}]);
+ await expect(f.request('tool.run',['fixture','h4',{v:3},'goal','ctx',{},'call-3'])).rejects.toThrow(/registration/);
+ expect(run).toHaveBeenCalledOnce();
+});
