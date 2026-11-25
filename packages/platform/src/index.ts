@@ -8,6 +8,7 @@ export { darwin, DARWIN_FEATURES, DARWIN_PROGRAMS, darwinMoveToTrash, uniqueIn }
 export { linux, LINUX_FEATURES, LINUX_DOWNLOAD_PAGE, LINUX_PROGRAMS } from "./linux.js";
 export { windows, WINDOWS_FEATURES, WINDOWS_DOWNLOAD_PAGE } from "./windows.js";
 export { syncFolder } from "./durable.js";
+export { readRecycleInfo, recycleInfo, RecycleRefused, windowsMoveToTrash, type WindowsRecycleOptions } from "./windows-recycle.js";
 export { dataHomeOf, deletionDate, encodeTrashPath, freedesktopMoveToTrash, mountTopOf, trashFor, TrashRefused, type FreedesktopTrashOptions } from "./freedesktop-trash.js";
 
 /**

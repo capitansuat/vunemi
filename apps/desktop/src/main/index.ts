@@ -23,12 +23,12 @@ import { BrowserController, checkNavigation, trustableHost } from "@vunemi/brows
 import { defaultRoots, projectFolderProblem, Roots, type KnownFolders } from "@vunemi/files";
 import { Helper, scheduledApp } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type MeetingsSharedView, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
+import { CH, emergencyStopAccelerator, type AddonId, type MeetingsSharedView, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
 import { platform, platformInfo } from "@vunemi/platform";
-import { linuxVaultKey, type LinuxKeyResult } from "./vault-key-linux.js";
+import { safeStorageVaultKey, type LinuxKeyResult } from "./vault-key-safe-storage.js";
 import { within } from "./shutdown.js";
 import { VaultHost } from "./vault-host.js";
 import { projectInstructions, ProjectStore } from "./projects.js";
@@ -357,18 +357,18 @@ function languageInstructions(): string {
 // the client reads as locked until then, and what needs a secret waits for
 // `vaultReady`: the outbox, the MCP migration, the memory check.
 /**
- * Linux: the Vault key from safeStorage and the system keyring
- * (vault-key-linux.ts). Main reads it only to hand it to the Vault process.
+ * Linux and Windows: the Vault key from safeStorage — the system keyring on
+ * Linux, DPAPI on Windows (vault-key-safe-storage.ts). Main reads it only to hand it to the Vault process.
  * Without a keyring there is no key, and the Vault refuses to store anything.
  */
 let linuxKey: LinuxKeyResult | null = null;
 function readLinuxKey(): string | undefined {
   try {
-    linuxKey = linuxVaultKey(safeStorage, app.getPath("userData"));
+    linuxKey = safeStorageVaultKey(safeStorage, app.getPath("userData"), platform.id);
   } catch (err) {
     linuxKey = { ok: false, reason: "unreadable", detail: err instanceof Error ? err.message : String(err) };
   }
-  if (!linuxKey.ok) console.error(`[vunemi] vault: no Linux key (${linuxKey.reason === "no-keyring" ? `no keyring; safeStorage backend "${linuxKey.backend}"` : linuxKey.detail})`);
+  if (!linuxKey.ok) console.error(`[vunemi] vault: no key (${linuxKey.reason === "no-keyring" ? `no-keyring, ${linuxKey.backend}` : `unreadable, ${linuxKey.detail}`})`);
   return linuxKey.ok ? linuxKey.key.toString("base64") : undefined;
 }
 /** Why the Vault can't keep secrets on Linux, in the user's words; null when it can. */
@@ -2606,8 +2606,9 @@ void app.whenReady().then(async () => {
     macAway = false;
     send(CH.lockChanged, lockState());
   });
-  if (!globalShortcut.register(EMERGENCY_STOP_ACCELERATOR, emergencyStop)) {
-    console.error(`[vunemi] could not register the emergency stop shortcut ${EMERGENCY_STOP_ACCELERATOR}`);
+  const stopKeys = emergencyStopAccelerator(process.platform);
+  if (!globalShortcut.register(stopKeys, emergencyStop)) {
+    console.error(`[vunemi] could not register the emergency stop shortcut ${stopKeys}`);
   }
   // The menu bar keeps Vunemi alive with no window, so runs continue.
   app.on("activate", () => (quitting ? reopenAfterQuit() : showWindow()));

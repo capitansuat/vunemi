@@ -4,7 +4,7 @@
  *
  * On macOS it asks the signed Swift helper for the key itself — the key never
  * passes through main. On Linux main hands it the key that safeStorage and
- * the system keyring keep (main/vault-key-linux.ts). Then it opens vault.json, and then answers requests from main
+ * the system keyring keep (main/vault-key-safe-storage.ts). Then it opens vault.json, and then answers requests from main
  * (see @vunemi/vault remote.ts and ./mail.ts). Logs carry names and errors,
  * never a value.
  */

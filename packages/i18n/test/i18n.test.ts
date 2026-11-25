@@ -17,6 +17,17 @@ import { messages as ru, onLinux as ruLinux } from "../src/messages/ru.js";
 import { messages as zh, onLinux as zhLinux } from "../src/messages/zh.js";
 import { messages as ja, onLinux as jaLinux } from "../src/messages/ja.js";
 import { messages as ko, onLinux as koLinux } from "../src/messages/ko.js";
+import { onWindows as trWindows } from "../src/messages/tr.js";
+import { onWindows as enWindows } from "../src/messages/en.js";
+import { onWindows as deWindows } from "../src/messages/de.js";
+import { onWindows as frWindows } from "../src/messages/fr.js";
+import { onWindows as esWindows } from "../src/messages/es.js";
+import { onWindows as itWindows } from "../src/messages/it.js";
+import { onWindows as ptWindows } from "../src/messages/pt.js";
+import { onWindows as ruWindows } from "../src/messages/ru.js";
+import { onWindows as zhWindows } from "../src/messages/zh.js";
+import { onWindows as jaWindows } from "../src/messages/ja.js";
+import { onWindows as koWindows } from "../src/messages/ko.js";
 
 const CATALOGUES: Record<string, Catalogue> = { en, de, fr, es, it: it_, pt, ru, zh, ja, ko };
 
@@ -94,6 +105,60 @@ describe("the Linux wording", () => {
     } finally {
       setSystem("darwin");
     }
+  });
+});
+
+const ON_WINDOWS: Record<string, SystemTexts> = { tr: trWindows, en: enWindows, de: deWindows, fr: frWindows, es: esWindows, it: itWindows, pt: ptWindows, ru: ruWindows, zh: zhWindows, ja: jaWindows, ko: koWindows };
+/** Windows 11's own names, or a stem where the word takes case endings. */
+const EXPLORER: Record<string, string> = { tr: "Dosya Gezgini", en: "File Explorer", de: "Datei-Explorer", fr: "Explorateur de fichiers", es: "Explorador de archivos", it: "Esplora file", pt: "Explorador de Arquivos", ru: "Проводник", ja: "エクスプローラー", ko: "파일 탐색기", zh: "文件资源管理器" };
+const RECYCLE_BIN: Record<string, string> = { tr: "Geri Dönüşüm Kutusu", en: "Recycle Bin", de: "Papierkorb", fr: "Corbeille", es: "Papelera", it: "Cestino", pt: "Lixeira", ru: "Корзин", ja: "ごみ箱", ko: "휴지통", zh: "回收站" };
+const EXPLORER_KEYS = ["app.projects.revealLabel", "artefacts.reveal", "topics.page.reveal", "topics.page.revealOriginal", "main.artefact.notOpenable"];
+const RECYCLE_KEYS = ["topics.page.deleteNoteConfirm", "topics.page.deleteSourceConfirm", "topics.page.deleteTopicConfirm", "topics.page.toTrash", "main.download.undo", "files.preview.trash", "files.undo.untrash", "files.undo.toTrash", "connectors.files.description"];
+const VAULT_KEYS = ["vault.unlocking", "vault.intro", "vaultStore.locked", "linux.vault.noKeyring", "linux.vault.keyUnreadable", "linux.vault.unlockHint"];
+const NOT_YET_KEYS = ["linux.connection", "linux.appleMail", "linux.meetings", "linux.appLock", "linux.addons", "linux.updates", "linux.backgroundRecipes"];
+
+describe("the Windows wording", () => {
+  it("covers the same keys in every language", () => {
+    const keys = Object.keys(trWindows).sort();
+    expect(keys).toEqual([...EXPLORER_KEYS, ...RECYCLE_KEYS, ...VAULT_KEYS, ...NOT_YET_KEYS].sort());
+    for (const [lang, texts] of Object.entries(ON_WINDOWS)) expect(Object.keys(texts).sort(), lang).toEqual(keys);
+  });
+
+  it("only replaces keys that exist, keeping their placeholders", () => {
+    for (const [lang, texts] of Object.entries(ON_WINDOWS)) {
+      const base = new Map(entries(ALL[lang]));
+      for (const [key, text] of Object.entries(texts)) {
+        const original = base.get(key);
+        expect(typeof original, `${lang} ${key}`).toBe("string");
+        expect([...placeholders(text!)].sort(), `${lang} ${key}`).toEqual([...namesOf(original!)].sort());
+      }
+    }
+  });
+
+  it("no longer speaks of Linux, the Mac, Finder or ⌘", () => {
+    for (const [lang, texts] of Object.entries(ON_WINDOWS)) {
+      for (const [key, text] of Object.entries(texts)) expect(text, `${lang} ${key}`).not.toMatch(/Linux|\bMac\b|Finder|访达|⌘|keyring|keychain|キーチェーン|키체인|钥匙串/);
+    }
+  });
+
+  it("names File Explorer and the Recycle Bin as Windows does", () => {
+    for (const [lang, texts] of Object.entries(ON_WINDOWS)) {
+      for (const key of EXPLORER_KEYS) expect(texts[key as keyof SystemTexts], `${lang} ${key}`).toContain(EXPLORER[lang]);
+      for (const key of RECYCLE_KEYS) expect(texts[key as keyof SystemTexts], `${lang} ${key}`).toContain(RECYCLE_BIN[lang]);
+      for (const key of [...NOT_YET_KEYS, "linux.vault.noKeyring", "linux.vault.keyUnreadable", "vaultStore.locked"]) expect(texts[key as keyof SystemTexts], `${lang} ${key}`).toContain("Windows");
+    }
+  });
+
+  it("is used only on Windows", () => {
+    setLocale("en");
+    setSystem("win32");
+    expect(t("artefacts.reveal")).toBe("Show in File Explorer");
+    // What Windows shares with Linux still comes from the Linux wording.
+    expect(t("app.local")).toBe("The model and your data stay on this computer.");
+    setSystem("linux");
+    expect(t("artefacts.reveal")).toBe("Show in the file manager");
+    setSystem("darwin");
+    expect(t("artefacts.reveal")).toBe("Show in Finder");
   });
 });
 

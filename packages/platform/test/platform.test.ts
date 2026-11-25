@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { darwin, FEATURE_IDS, isPlatformId, linux, LINUX_DOWNLOAD_PAGE, platform, platformFor, platformInfo, windows, WINDOWS_DOWNLOAD_PAGE } from "../src/index.js";
+import { darwin, FEATURE_IDS, isPlatformId, linux, LINUX_DOWNLOAD_PAGE, platform, platformFor, platformInfo, RecycleRefused, windows, WINDOWS_DOWNLOAD_PAGE } from "../src/index.js";
 
 describe("platform layer", () => {
   it("picks the implementation by Node's platform name", () => {
@@ -56,8 +56,8 @@ describe("platform layer", () => {
     expect(isPlatformId("win32")).toBe(true);
   });
 
-  it("starts Windows with every macOS feature off and nothing to run", () => {
-    for (const id of FEATURE_IDS) expect(windows.features[id], id).toBe(false);
+  it("starts Windows with every macOS feature off but reading aloud, and nothing to run", () => {
+    for (const id of FEATURE_IDS) expect(windows.features[id], id).toBe(id === "speakAloud");
     expect(windows.id).toBe("win32");
     expect(windows.vaultKey).toBe("safe-storage");
     expect(windows.fileSearch).toBe("walk");
@@ -66,12 +66,17 @@ describe("platform layer", () => {
     expect(windows.downloadPage).toBe(WINDOWS_DOWNLOAD_PAGE);
   });
 
-  it("never deletes on Windows while the Recycle Bin is not wired", () => {
+  it("takes nothing back on Windows when the download is already gone", () => {
+    const dir = mkdtempSync(join(tmpdir(), "vunemi-win-"));
+    expect(() => windows.trashDownload(join(dir, "gone.txt"), "gone.txt")).not.toThrow();
+  });
+
+  // On Windows this would really use the Recycle Bin (windows-recycle.test.ts does, with a temp file).
+  it.skipIf(process.platform === "win32")("refuses rather than deletes where there is no Recycle Bin", () => {
     const dir = mkdtempSync(join(tmpdir(), "vunemi-win-"));
     const file = join(dir, "note.txt");
     writeFileSync(file, "x");
-    expect(() => windows.moveToTrash(file)).toThrow(/nothing was deleted/);
-    expect(() => windows.trashDownload(file, "note.txt")).toThrow(/nothing was deleted/);
+    expect(() => windows.moveToTrash(file)).toThrow(RecycleRefused);
     expect(existsSync(file)).toBe(true);
   });
 });

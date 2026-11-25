@@ -396,8 +396,14 @@ export interface ArtefactView {
   canUndo: boolean;
 }
 
-/** Works from anywhere, even when Vunemi isn't focused. */
-export const EMERGENCY_STOP_ACCELERATOR = "CommandOrControl+Shift+Escape";
+/**
+ * Works from anywhere, even when Vunemi isn't focused. Windows keeps
+ * Ctrl+Shift+Esc for Task Manager and never lets an app register it, so
+ * there it is Ctrl+Alt+Shift+Esc (the user's choice, 23 Nov 2026).
+ */
+export function emergencyStopAccelerator(system: NodeJS.Platform | string): string {
+  return system === "win32" ? "Control+Alt+Shift+Escape" : "CommandOrControl+Shift+Escape";
+}
 
 /** How big a request the model takes, and how much of it the next one would use. */
 export interface ContextInfo {

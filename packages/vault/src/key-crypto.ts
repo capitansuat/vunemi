@@ -16,7 +16,7 @@
  * both version the format and tell it apart from safeStorage's "v10…".
  *
  * On Linux the key comes from Electron's safeStorage and the system keyring
- * instead (see the desktop app's vault-key-linux.ts), and secrets are written
+ * instead (see the desktop app's vault-key-safe-storage.ts), and secrets are written
  * as "OCL1" | IV | tag | ciphertext: the same scheme, under a magic of its
  * own, so a vault.json carried between a Mac and a Linux machine is told
  * apart rather than tried with the wrong key.

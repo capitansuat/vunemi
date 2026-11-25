@@ -19,7 +19,7 @@ export interface ChildProcessLike {
 
 export interface VaultHostOptions {
   spawn: () => ChildProcessLike;
-  /** On Linux main also hands over the key (see vault-key-linux.ts); on macOS the Vault process asks the helper. */
+  /** On Linux main also hands over the key (see vault-key-safe-storage.ts); on macOS the Vault process asks the helper. */
   init: () => { userData: string; helperPath: string; locale: string; keySource?: "keychain-helper" | "safe-storage"; key?: string };
   /** Long enough for the user to answer a keychain prompt. */
   startTimeoutMs?: number;
