@@ -3,11 +3,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { inputCover, soundsLikeSendOrDelete } from "../src/approve-all.js";
-const onWindows = process.platform === "win32";
+const notMac = process.platform !== "darwin";
 
 describe("what approve all reaches in an app", () => {
-  // Windows: macOS desktop control only.
-  it.skipIf(onWindows)("covers an ordinary app by its identity", async () => {
+  // Windows and Linux: macOS desktop control only.
+  it.skipIf(notMac)("covers an ordinary app by its identity", async () => {
     expect(await inputCover({ name: "TextEdit", bundleId: "com.apple.TextEdit" })).toEqual({ key: "app:com.apple.TextEdit", app: "TextEdit" });
     expect(await inputCover({ name: "TextEdit", bundleId: "com.apple.TextEdit" }, "Bold")).toEqual({ key: "app:com.apple.TextEdit", app: "TextEdit" });
   });
@@ -23,8 +23,8 @@ describe("what approve all reaches in an app", () => {
     expect(await inputCover({ name, bundleId })).toBeUndefined();
   });
 
-  // Windows: macOS desktop control only.
-  it.skipIf(onWindows)("leaves a control or key that sounds like sending or deleting to its own card", async () => {
+  // Windows and Linux: macOS desktop control only.
+  it.skipIf(notMac)("leaves a control or key that sounds like sending or deleting to its own card", async () => {
     expect(await inputCover({ name: "Finder", bundleId: "com.apple.finder" }, "Move to Trash")).toBeUndefined();
     expect(await inputCover({ name: "Finder", bundleId: "com.apple.finder" }, "cmd+delete")).toBeUndefined();
     expect(await inputCover({ name: "Finder", bundleId: "com.apple.finder" }, "cmd+backspace")).toBeUndefined();
@@ -53,8 +53,8 @@ describe("an app whose name on screen isn't its folder's", () => {
   const look = { folders: [dir], withId: async (id: string) => ({ "org.example.notes": [join(dir, "Notes.app")], "org.example.bank": [join(dir, "MyBank.app")] } as Record<string, string[]>)[id] ?? [] };
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
-  // Windows: macOS desktop control only.
-  it.skipIf(onWindows)("is still covered when it is an ordinary app (Notlar for Notes)", async () => {
+  // Windows and Linux: macOS desktop control only.
+  it.skipIf(notMac)("is still covered when it is an ordinary app (Notlar for Notes)", async () => {
     expect(await inputCover({ name: "Notlar", bundleId: "org.example.notes" }, undefined, look)).toEqual({ key: "app:org.example.notes", app: "Notlar" });
   });
 

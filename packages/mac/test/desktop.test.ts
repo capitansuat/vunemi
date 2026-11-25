@@ -13,6 +13,7 @@ import { t } from "@vunemi/i18n";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { afterAction, blockedReason, createDesktopTools, Helper } from "../src/index.js";
 const onWindows = process.platform === "win32";
+const notMac = process.platform !== "darwin";
 
 /** Records whatever a tool hands to the UI, so the tests can look at it. */
 const attached: { kind: string; path: string }[] = [];
@@ -248,8 +249,8 @@ describe("desktop tools", () => {
     expect(helper.calls.map((c) => c.op)).toEqual(["click", "describe"]);
   });
 
-  // Windows: macOS desktop control only.
-  it.skipIf(onWindows)("says what approve all would reach only after native validation", async () => {
+  // Windows and Linux: macOS desktop control only.
+  it.skipIf(notMac)("says what approve all would reach only after native validation", async () => {
     const tool = tools.get("desktop_type")!;
     const args = { app: "Notes", text: "x", snapshotId: "observed-1" };
     expect(await tool.approveAll?.(args)).toBeUndefined();
