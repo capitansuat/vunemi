@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.4.0 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.5.0 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.4.0 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.5.0 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.4.0 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.5.0 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -191,10 +191,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Neu: Themen. Halte ein Thema als Ordner mit Markdown-Seiten auf deinem Mac und verknüpfe eigene Ordner: Vunemi liest sie, wo sie liegen, merkt sich, welche Dateien wohin verlinken und welche Codes wie SKU definieren, und schreibt Seiten mit Quellen, ausgehend von der Seite „Index“.",
-      "Der Grund: Eine einzelne Suche über viele Dateien verfehlt oft die Datei mit der Antwort. Aufwendige Arbeit läuft nur, wenn Vunemi nichts zu tun hat. Ohne Themen liest Vunemi die Dateien, die du ihm in einer Aufgabe gibst, wie bisher. Wie gut die Seiten sind, hängt vom Modell ab.",
-      "Die eingebaute Engine ist neuer und führt Inkling 2 aus. Vunemi lädt Modelle jetzt auch von ggml-org, und wenn die Engine ein Modell nicht laden kann, sagt sie das, statt auf den Speicher oder die Werkzeuge des Modells zu verweisen.",
-      "Der Sprachchat liest „Angehalten.“ nicht mehr vor. In einem Passwortfeld drückt Vunemi nur Tasten, die den Text unverändert lassen; macOS fragt eventuell noch einmal nach Berechtigungen. „Alle genehmigen“ und geplante Aufgaben erkennen jetzt Apps mit übersetztem Namen.",
+      "Neu: Wenn ein Gespräch ohne Thema etwas im Web nachschlägt, sammelt Vunemi die Antwort, die gelesenen Adressen und die behaltenen Einträge in einem vorläufigen Thema und fragt, ob du es unter einem änderbaren Namen behalten oder löschen willst.",
+      "Das gibt es, weil eine lange Suche das Gedächtnis des Modells mit ganzen Seiten füllte und Gefundenes verlor. Seiten werden jetzt als Hauptinhalt gelesen, ältere Schritte gekürzt. Sagst du Löschen, bleibt nichts; die Antwort steht weiter im Chat.",
+      "Weniger Karten im Web: gewöhnliche Links und das Suchfeld einer Website gelten als Lesen. Alles freigeben deckt eine Website bis zum Ende der Aufgabe ab; eine vertrauenswürdige braucht eine Freigabe pro Aufgabe. Formulare, Senden und Löschen fragen weiter.",
+      "Ein Thema wird nur noch vorgeschlagen, wenn eine Anfrage ihm näher ist als alltäglichen Anfragen, und die Skripte einer Seite können ein Formular, das Daten sendet, nicht mehr als Suche ausgeben.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",

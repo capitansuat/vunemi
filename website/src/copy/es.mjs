@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un asistente personal que funciona en tu Mac", description: "Vunemi ayuda con las tareas diarias. La IA funciona en tu Mac, sin cuenta en la nube de Vunemi. Tú eliges qué servicios externos conectar." },
-    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.4.0." },
+    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.5.0." },
     screens: { title: "Pantallas de Vunemi", description: "Pantallas reales de la app Vunemi para Mac, capturadas con datos de ejemplo." },
-    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.4.0 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
+    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.5.0 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
   },
   hero: {
     eyebrow: "Asistente personal para Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Todo lo que puede hacer Vunemi",
-    intro: "Vunemi 0.4.0 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
+    intro: "Vunemi 0.5.0 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
     chatTitle: "Trabajar con Vunemi",
     chat: [
       { title: "Primero, el plan", body: "En una tarea de varios pasos, Vunemi puede mostrarte antes el plan. Adelante, edita los pasos o cancela." },
@@ -191,10 +191,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novedades de esta versión",
     highlights: [
-      "Nuevo: temas. Guarda un asunto al que vuelves como carpeta de páginas Markdown en tu Mac y vincula tus carpetas: Vunemi las lee donde están, anota qué archivos enlazan a cuáles y cuáles definen códigos como SKU, y escribe páginas que citan sus archivos, empezando por la página «Index».",
-      "Existe porque una sola búsqueda en muchos archivos a menudo no encuentra el que tiene la respuesta. El trabajo pesado solo se hace cuando Vunemi está inactivo. Sin temas, Vunemi lee como antes los archivos que le das en una tarea. La calidad de las páginas depende del modelo.",
-      "El motor integrado es más nuevo y ejecuta Inkling 2. Vunemi ya puede descargar modelos de ggml-org y, cuando el motor no puede cargar un modelo, lo dice en vez de culpar a la memoria o a las herramientas del modelo.",
-      "El chat de voz ya no lee en voz alta «Detenido.». En un campo de contraseña, Vunemi solo pulsa teclas que no cambian el texto; puede que macOS vuelva a pedir sus permisos. «Aprobar todo» y las tareas programadas ahora reconocen apps con nombre traducido.",
+      "Novedad: cuando una conversación sin tema busca algo en la web, Vunemi reúne la respuesta, las direcciones que leyó y lo que guardó en un tema temporal, y te pregunta si quieres conservarlo, con un nombre que puedes cambiar, o eliminarlo.",
+      "Existe porque una búsqueda larga llenaba la memoria del modelo con páginas enteras y perdía lo encontrado. Ahora las páginas se leen por su contenido principal y los pasos antiguos se acortan. Si eliges Eliminar, no queda nada; la respuesta sigue en el chat.",
+      "Menos tarjetas en la web: los enlaces normales y el cuadro de búsqueda de un sitio cuentan como lectura. Aprobar todo cubre un sitio hasta que termina la tarea, y uno de confianza pide una aprobación por tarea. Formularios, envíos y borrados siguen preguntando.",
+      "Un tema solo se sugiere si la petición está más cerca de él que de las peticiones cotidianas, y los scripts de una página ya no pueden hacer pasar un formulario que envía datos por una búsqueda.",
     ],
     title: "Descarga Vunemi",
     intro: "Gratis y de código abierto. Para Mac con Apple Silicon y macOS 14 o posterior.",
