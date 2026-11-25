@@ -21,6 +21,7 @@ import { Turn } from "./components/Turn.js";
 import { openReplies, runStats } from "./lib/fold.js";
 import type { LedgerKind } from "@vunemi/agent-core";
 import { available, GOALS, IDEAS, PROJECT_GOALS, PROJECT_IDEAS, switchable } from "./lib/suggestions.js";
+import { usePlatform } from "./lib/platform.js";
 import { ICONS } from "./components/ConnectionsView.js";
 import { formatTokens } from "./lib/labels.js";
 import { clock, dayLabel } from "./lib/time.js";
@@ -471,6 +472,8 @@ function Empty() {
   const project = sessions.projects.find((p) => p.id === sessions.project) ?? null;
   // Which connections are switched on; suggestions that need one wait for it.
   const [ready, setReady] = useState<Set<string> | null>(null);
+  // Which system this is: what it can never switch on isn't offered.
+  const platform = usePlatform();
   // An idea starts a task at once: one click, one task.
   const [sent, setSent] = useState(false);
   useEffect(() => {
@@ -483,7 +486,7 @@ function Empty() {
   }, []);
   const goals = available(project ? PROJECT_GOALS : GOALS, ready);
   const ideas = available(project ? PROJECT_IDEAS : IDEAS, ready);
-  const discover = project ? [] : switchable(ready);
+  const discover = project ? [] : switchable(ready, platform?.features ?? null);
   // One recipe of each kind; the page has the rest.
   const recipes = project || !library?.enabled ? [] : library.recipes.filter((r, i, all) => all.findIndex((o) => o.category === r.category) === i).slice(0, 3);
   // No model anywhere: getting one is the only useful thing on this screen.
