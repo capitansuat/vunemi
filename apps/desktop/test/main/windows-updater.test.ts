@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installableOnWindows, WindowsUpdater } from "../../src/main/updates/windows-updater.js";
 
 const BYTES = "made-up installer";
@@ -22,7 +22,11 @@ function updater(bytes = BYTES) {
   const u = new WindowsUpdater({
     dir,
     arch: "x64",
-    download: async (_url, file) => writeFileSync(file, bytes),
+    // As slow as a real download under load: the tests wait for what happened, not for a fixed time.
+    download: async (_url, file) => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      writeFileSync(file, bytes);
+    },
     spawn: (file, args) => spawned.push({ file, args }),
     quit: () => { quit++; },
   });
@@ -30,14 +34,17 @@ function updater(bytes = BYTES) {
   u.on("error", (err) => events.push(`error:${err.message}`));
   return { u, spawned, events, quits: () => quit };
 }
-const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+/** Until the download has ended one way or the other. */
+const ended = (events: string[]) => vi.waitFor(() => expect(events).not.toHaveLength(0), { timeout: 5_000 });
+/** A while, to see that nothing happens. */
+const settle = () => new Promise((resolve) => setTimeout(resolve, 100));
 
 describe("the Windows updater", () => {
   it("downloads the offered installer, checks it, and runs it only when asked", async () => {
     const { u, spawned, events, quits } = updater();
     u.prepare(offer);
     u.checkForUpdates();
-    await settle();
+    await ended(events);
     expect(events).toEqual(["downloaded"]);
     expect(spawned).toEqual([]);
     expect(await u.stagedMatches()).toBe(true);
@@ -50,7 +57,7 @@ describe("the Windows updater", () => {
     const { u, spawned, events } = updater("something else");
     u.prepare(offer);
     u.checkForUpdates();
-    await settle();
+    await ended(events);
     expect(events).toEqual([expect.stringMatching(/^error:/)]);
     expect(readdirSync(dir)).toEqual([]);
     u.quitAndInstall();
@@ -69,10 +76,10 @@ describe("the Windows updater", () => {
   });
 
   it("notices an installer changed after it was checked", async () => {
-    const { u, spawned } = updater();
+    const { u, spawned, events } = updater();
     u.prepare(offer);
     u.checkForUpdates();
-    await settle();
+    await ended(events);
     writeFileSync(join(dir, "Vunemi-Setup-0.5.1-x64.exe"), "swapped");
     expect(await u.stagedMatches()).toBe(false);
     u.quitAndInstall();

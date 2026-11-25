@@ -1,5 +1,6 @@
 /** A Windows installer is run only with the user's own signature over its version, architecture and contents. */
 import { generateKeyPairSync, sign } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { signedMessage, verifyUpdate } from "../../src/main/updates/signature.js";
 import { readFeed, windowsSource } from "../../src/main/updates/feed.js";
@@ -85,7 +86,7 @@ describe("the release scripts", () => {
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { createHash } = await import("node:crypto");
-    const root = new URL("../../../../scripts/", import.meta.url).pathname;
+    const root = fileURLToPath(new URL("../../../../scripts/", import.meta.url));
     const dir = mkdtempSync(join(tmpdir(), "vunemi-update-key-"));
     try {
       const env = { ...process.env, VUNEMI_UPDATE_KEY_FILE: join(dir, "key.pem") };

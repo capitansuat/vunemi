@@ -20,16 +20,17 @@ beforeEach(() => {
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("the built-in speech engine", () => {
+  // The Mac's layout; Windows' (.exe, per-arch cache) is in engine-binary.test.ts.
   it("is found inside the app, or in a development run's build cache", () => {
     const resources = join(dir, "Resources");
     mkdirSync(resources);
     writeFileSync(join(resources, "whisper-server"), "");
-    expect(whisperBinary({ packaged: true, resourcesPath: resources, home: dir })).toBe(join(resources, "whisper-server"));
-    expect(whisperBinary({ packaged: false, resourcesPath: resources, home: dir })).toBeNull();
+    expect(whisperBinary({ packaged: true, resourcesPath: resources, home: dir, system: "darwin" })).toBe(join(resources, "whisper-server"));
+    expect(whisperBinary({ packaged: false, resourcesPath: resources, home: dir, system: "darwin" })).toBeNull();
     const cache = join(dir, ".vunemi-build", "whisper-cache", WHISPER_TAG);
     mkdirSync(cache, { recursive: true });
     writeFileSync(join(cache, "whisper-server"), "");
-    expect(whisperBinary({ packaged: false, resourcesPath: resources, home: dir })).toBe(join(cache, "whisper-server"));
+    expect(whisperBinary({ packaged: false, resourcesPath: resources, home: dir, system: "darwin" })).toBe(join(cache, "whisper-server"));
   });
 });
 
