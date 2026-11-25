@@ -15,6 +15,7 @@ const fake = (name: string): ToolDef => ({ name, description: "", parameters: { 
 describe("findings tools", () => {
   it("are offered only while the browser is on, as part of its reading", async () => {
     const dir = mkdtempSync(join(tmpdir(), "vunemi-findings-conn-"));
+    const store = new LibraryStore(dir);
     try {
       const tools = new ToolRegistry();
       const sources = { conversations: () => [], conversation: () => null, meetings: () => [], meeting: () => null };
@@ -22,7 +23,7 @@ describe("findings tools", () => {
         tools, browser: {} as never, roots: { list: () => [] } as never, appCatalog: new ScriptableCatalog(join(dir, "apps")),
         shadowDir: join(dir, "shadow"), helper: {} as never, shotDir: join(dir, "shots"),
         automations: new AutomationStore(join(dir, "automations.json")), mailAccounts: [],
-        library: { library: new Library(new LibraryStore(dir), sources), sources, current: () => "" },
+        library: { library: new Library(store, sources), sources, current: () => "" },
         findingTools: [fake("web_finding_add")],
       });
       connectors.setOn("browser", false);
@@ -33,6 +34,7 @@ describe("findings tools", () => {
       connectors.setPartOn("browser", "read", false);
       expect(connectors.partOf("web_finding_add")).toMatchObject({ connectorId: "browser", partId: "read" });
     } finally {
+      store.close();
       rmSync(dir, { recursive: true, force: true });
     }
   });

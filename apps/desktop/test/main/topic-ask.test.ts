@@ -63,6 +63,7 @@ describe("acceptAsk", () => {
   });
   afterEach(() => {
     work.close();
+    topics.close();
     rmSync(dir, { recursive: true, force: true });
   });
   const deps = () => ({ topics, request: REQUEST, link: (name: string) => linked.push(name), move });
