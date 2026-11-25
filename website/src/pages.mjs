@@ -1,6 +1,7 @@
 // Renders the product pages for one locale as static HTML.
-import { linuxRelease, release, repoUrl } from "./release.mjs";
+import { linuxRelease, release, repoUrl, windowsRelease } from "./release.mjs";
 import { linuxCopy } from "./linux-copy.mjs";
+import { windowsCopy } from "./windows-copy.mjs";
 import { supportCopy } from "./support-copy.mjs";
 import { gatekeeperCopy } from "./gatekeeper-copy.mjs";
 
@@ -211,7 +212,7 @@ function download(t, lang) {
 <p class="lead">${esc(d.intro)}</p>
 <div class="hero-actions">${downloadButton(t)}</div>
 <p class="file">Vunemi ${release.version} · ${release.asset} · ${release.sizeMb} MB</p>
-<p class="release-links"><a href="${release.notes}">${esc(d.notes)} ↗</a><a href="${repoUrl}">${esc(d.source)} ↗</a><a href="/docs/${lang}/">${esc(d.guide)}</a><a href="#linux">${esc(linuxCopy[lang].title)}</a></p>
+<p class="release-links"><a href="${release.notes}">${esc(d.notes)} ↗</a><a href="${repoUrl}">${esc(d.source)} ↗</a><a href="/docs/${lang}/">${esc(d.guide)}</a><a href="#linux">${esc(linuxCopy[lang].title)}</a>${windowsRelease ? `<a href="#windows">${esc(windowsCopy[lang].title)}</a>` : ""}</p>
 </section>
 <section class="release-highlights" aria-labelledby="release-highlights-title">
 <h2 id="release-highlights-title">${esc(d.highlightsTitle)} · ${release.version}</h2>
@@ -225,7 +226,7 @@ function download(t, lang) {
 <section class="panel-box"><h2>${esc(d.installTitle)}</h2><ol class="install">${d.install.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></section>
 <section class="panel-box"><h2>${esc(d.requirementsTitle)}</h2><ul>${d.requirements.map((r) => `<li>${esc(r)}</li>`).join("")}</ul><h3>${esc(d.updateTitle)}</h3><p>${esc(d.updateBody)}</p><h3>${esc(d.keychainTitle)}</h3><p>${esc(d.keychainBody)}</p><h3>${esc(d.checksum)}</h3><p class="checksum">${release.sha256}</p></section>
 </div>
-${linuxSection(lang)}
+${linuxSection(lang)}${windowsSection(lang)}
 ${notesSection(t)}
 </main>`;
 }
@@ -245,6 +246,29 @@ function linuxSection(lang) {
 <section class="panel-box"><h3>${esc(l.needTitle)}</h3><ul>${l.need.map((n) => `<li>${esc(n)}</li>`).join("")}</ul><p>${esc(l.works)}</p><p>${esc(l.missing)}</p></section>
 </div>
 <p class="release-links"><a href="${linuxRelease.notes}">${esc(l.notes)} ↗</a></p>
+</section>`;
+}
+
+// The Windows preview: shown only once release.mjs has a windowsRelease.
+export function windowsSection(lang, win = windowsRelease) {
+  if (!win) return "";
+  const w = windowsCopy[lang];
+  const label = { x64: w.x64Button, arm64: w.arm64Button };
+  const files = win.files.map((f) => `<li><a class="pill small" href="${win.url(f.asset)}">${esc(label[f.arch])}</a><p class="file">${f.asset} · ${f.sizeMb} MB</p><p class="checksum">SHA-256 ${f.sha256}</p></li>`).join("");
+  return `
+<section id="windows" class="linux-preview" aria-labelledby="windows-title">
+<h2 id="windows-title">${esc(w.title)} · ${win.version}</h2>
+<p>${esc(w.why)}</p>
+<ul class="linux-files">${files}</ul>
+<aside class="gatekeeper-notice" aria-labelledby="smartscreen-title">
+<div class="gatekeeper-mark" aria-hidden="true">!</div>
+<div><h3 id="smartscreen-title">${esc(w.smartTitle)}</h3><p>${esc(w.smartWhy)}</p><ol class="install">${w.smartSteps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol><p>${esc(w.smartCheck)}</p></div>
+</aside>
+<div class="download-grid">
+<section class="panel-box"><h3>${esc(w.installTitle)}</h3><ol class="install">${w.install.map((s) => `<li>${esc(s)}</li>`).join("")}</ol><p>${esc(w.update)}</p></section>
+<section class="panel-box"><h3>${esc(w.needTitle)}</h3><ul>${w.need.map((n) => `<li>${esc(n)}</li>`).join("")}</ul><p>${esc(w.works)}</p><p>${esc(w.missing)}</p></section>
+</div>
+<p class="release-links"><a href="${win.notes}">${esc(w.notes)} ↗</a></p>
 </section>`;
 }
 

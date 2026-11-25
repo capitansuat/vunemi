@@ -107,3 +107,25 @@ describe("the release scripts", () => {
     }
   });
 });
+
+describe("the site's Windows feed", () => {
+  it("is one the app accepts for its own architecture only", async () => {
+    // website/src/update-feed.mjs writes vunemi.com/update/win-<arch>.json.
+    const site = new URL("../../../../website/src/update-feed.mjs", import.meta.url).href;
+    const { windowsFeed } = (await import(/* @vite-ignore */ site)) as {
+      windowsFeed(release: unknown, arch: "x64" | "arm64", copy: unknown, languages: string[]): unknown;
+    };
+    const { createHash: hash } = await import("node:crypto");
+    const sha = hash("sha256").update("made-up arm64 installer").digest("hex");
+    const signature = sign(null, signedMessage("0.5.1", "arm64", sha), ours.privateKey).toString("base64");
+    const release = {
+      tag: "v0.5.1-windows.1", version: "0.5.1", date: "2026-12-01",
+      files: [{ arch: "arm64", asset: "Vunemi-Setup-0.5.1-arm64.exe", sizeMb: 118, sha256: sha, signature }],
+      url(asset: string) { return `https://github.com/capitansuat/vunemi/releases/download/${this.tag}/${asset}`; },
+    };
+    const feed = windowsFeed(release, "arm64", { en: { updateNotes: ["Windows preview."] } }, ["en"]);
+    const offer = readFeed(feed, "0.5.0", "en", windowsSource("arm64", ours.pub));
+    expect(offer).toMatchObject({ version: "0.5.1", sha256: sha, url: release.url("Vunemi-Setup-0.5.1-arm64.exe"), notes: ["Windows preview."], sizeMb: 118 });
+    expect(readFeed(feed, "0.5.0", "en", windowsSource("x64", ours.pub))).toBeNull();
+  });
+});
