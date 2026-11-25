@@ -35,6 +35,18 @@ describe("where the engine lives", () => {
     expect(engineBinary({ packaged: true, resourcesPath: tmp, home: "/nowhere", system: "win32" })).toBe(join(tmp, "llama-server.exe"));
   });
 
+  it("on Linux is built for this architecture, each in its own cache", () => {
+    // One arm64 Linux machine builds both architectures (x64 with a cross compiler).
+    for (const arch of ["x64", "arm64"] as const) {
+      const cache = join(tmp, ".vunemi-build", "engine-cache", `${ENGINE_TAG}-linux-${arch}`);
+      mkdirSync(cache, { recursive: true });
+      writeFileSync(join(cache, "llama-server"), "");
+      expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "linux", arch })).toBe(join(cache, "llama-server"));
+    }
+    rmSync(join(tmp, ".vunemi-build", "engine-cache", `${ENGINE_TAG}-linux-x64`), { recursive: true });
+    expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "linux", arch: "x64" })).toBeNull();
+  });
+
   it("is missing rather than broken", () => {
     expect(engineBinary({ packaged: true, resourcesPath: "/nowhere", home: "/nowhere" })).toBeNull();
   });
@@ -42,5 +54,9 @@ describe("where the engine lives", () => {
   it("is built from the tag the app expects", () => {
     const script = readFileSync(fileURLToPath(new URL("../../../../scripts/engine-version.sh", import.meta.url)), "utf8");
     expect(script).toContain(`engine_tag="\${VUNEMI_ENGINE_TAG:-${ENGINE_TAG}}"`);
+    // Linux builds the same release: its script reads the pin from engine-version.sh, as the Mac's does.
+    const linux = readFileSync(fileURLToPath(new URL("../../../../scripts/build-engine-linux.sh", import.meta.url)), "utf8");
+    expect(linux).toContain('source "$(dirname "$0")/engine-version.sh"');
+    expect(linux).not.toMatch(/VUNEMI_ENGINE_TAG:-v?\d/);
   });
 });
