@@ -1135,6 +1135,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "No speech model yet. Press the mic to download it ({size} MB).",
     noWhisper: "This Vunemi installation has no speech engine.",
+    notOnWindows: "Typing by voice is not available on Windows yet.",
     failed: "Speech recognition failed ({status}).",
     startFailed: "Couldn't start speech recognition: {why}",
   },
@@ -2103,4 +2104,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "Add-ons are not available on Windows yet: they run inside macOS's sandbox.",
   "linux.updates": "Vunemi doesn't update itself on Windows yet. New versions are on the download page.",
   "linux.backgroundRecipes": "Scheduled work in apps is not available on Windows yet.",
+  "updates.moveFirst": "Install Vunemi with its installer to update it from here.",
 };

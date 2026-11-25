@@ -1140,6 +1140,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "Речевой модели пока нет. Нажмите на микрофон, чтобы загрузить её ({size} МБ).",
     noWhisper: "В этой установке Vunemi нет движка распознавания речи.",
+    notOnWindows: "Голосовой ввод пока недоступен в Windows.",
     failed: "Не удалось распознать речь ({status}).",
     startFailed: "Не удалось запустить распознавание речи: {why}",
   },
@@ -2118,4 +2119,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "Дополнения пока недоступны в Windows: они работают в песочнице macOS.",
   "linux.updates": "В Windows Vunemi пока не обновляется сам. Новые версии — на странице загрузки.",
   "linux.backgroundRecipes": "Запланированные задачи в приложениях пока недоступны в Windows.",
+  "updates.moveFirst": "Установите Vunemi с помощью установщика, чтобы обновлять его отсюда.",
 };

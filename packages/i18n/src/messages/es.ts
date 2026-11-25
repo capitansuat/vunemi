@@ -1135,6 +1135,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "Aún no hay modelo de voz. Pulsa el micrófono para descargarlo ({size} MB).",
     noWhisper: "Esta instalación de Vunemi no tiene motor de voz.",
+    notOnWindows: "El dictado por voz aún no está disponible en Windows.",
     failed: "El reconocimiento de voz falló ({status}).",
     startFailed: "No se pudo iniciar el reconocimiento de voz: {why}",
   },
@@ -2103,4 +2104,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "Los complementos aún no están disponibles en Windows: se ejecutan dentro del entorno aislado de macOS.",
   "linux.updates": "Vunemi aún no se actualiza solo en Windows. Las nuevas versiones están en la página de descarga.",
   "linux.backgroundRecipes": "Las tareas programadas en apps aún no están disponibles en Windows.",
+  "updates.moveFirst": "Instala Vunemi con su instalador para actualizarlo desde aquí.",
 };

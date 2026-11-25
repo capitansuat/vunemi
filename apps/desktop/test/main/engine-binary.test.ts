@@ -21,11 +21,16 @@ describe("where the engine lives", () => {
     expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "darwin" })).toBe(join(cache, "llama-server"));
   });
 
-  it("is llama-server.exe on Windows", () => {
-    const cache = join(tmp, ".vunemi-build", "engine-cache", ENGINE_TAG);
-    mkdirSync(cache, { recursive: true });
-    writeFileSync(join(cache, "llama-server.exe"), "");
-    expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "win32" })).toBe(join(cache, "llama-server.exe"));
+  it("is llama-server.exe on Windows, built for this architecture", () => {
+    // One Windows machine builds both architectures, so each has its own cache.
+    for (const arch of ["x64", "arm64"] as const) {
+      const cache = join(tmp, ".vunemi-build", "engine-cache", `${ENGINE_TAG}-win-${arch}`);
+      mkdirSync(cache, { recursive: true });
+      writeFileSync(join(cache, "llama-server.exe"), "");
+      expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "win32", arch })).toBe(join(cache, "llama-server.exe"));
+    }
+    rmSync(join(tmp, ".vunemi-build", "engine-cache", `${ENGINE_TAG}-win-x64`), { recursive: true });
+    expect(engineBinary({ packaged: false, resourcesPath: "/nowhere", home: tmp, system: "win32", arch: "x64" })).toBeNull();
     writeFileSync(join(tmp, "llama-server.exe"), "");
     expect(engineBinary({ packaged: true, resourcesPath: tmp, home: "/nowhere", system: "win32" })).toBe(join(tmp, "llama-server.exe"));
   });

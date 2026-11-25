@@ -1141,6 +1141,7 @@ export const messages = {
   voiceEngine: {
     noModel: "Ses modeli henüz yok. Mikrofona basınca indirebilirsin ({size} MB).",
     noWhisper: "Bu Vunemi kurulumunda ses motoru yok.",
+    notOnWindows: "Sesle yazdırma Windows'ta henüz yok.",
     failed: "Ses tanıma başarısız oldu ({status}).",
     startFailed: "Ses tanıma başlatılamadı: {why}",
   },
@@ -2113,4 +2114,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "Eklentiler Windows'ta henüz yok: macOS'in korumalı alanında çalışıyorlar.",
   "linux.updates": "Vunemi Windows'ta henüz kendini güncellemiyor. Yeni sürümler indirme sayfasında.",
   "linux.backgroundRecipes": "Uygulamalarda zamanlanmış işler Windows'ta henüz yok.",
+  "updates.moveFirst": "Burada güncellemek için Vunemi'yi kurulum dosyasıyla kur.",
 };

@@ -39,6 +39,8 @@ export interface PlatformFeatures {
   atomicMove: boolean;
   /** Reading answers aloud with the system's own voices. */
   speakAloud: boolean;
+  /** Typing by voice with the built-in whisper.cpp; on only where it was tried with a microphone. */
+  dictation: boolean;
 }
 
 export const FEATURE_IDS = [
@@ -55,6 +57,7 @@ export const FEATURE_IDS = [
   "archives",
   "atomicMove",
   "speakAloud",
+  "dictation",
 ] as const satisfies readonly (keyof PlatformFeatures)[];
 
 export type FeatureId = (typeof FEATURE_IDS)[number];

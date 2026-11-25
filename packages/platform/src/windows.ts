@@ -17,10 +17,13 @@ export const WINDOWS_FEATURES: PlatformFeatures = {
   appLock: false,
   backgroundRecipes: false,
   addons: false,
-  inAppUpdates: false,
+  // The signed installer, checked against the maintainer's key (apps/desktop/src/main/updates).
+  inAppUpdates: true,
   archives: false,
   atomicMove: false,
   speakAloud: true,
+  // Built and tried with a recording; on once it is tried with a microphone in the installed app.
+  dictation: false,
 };
 
 /** Where Windows builds are downloaded by hand until the app can update itself. */

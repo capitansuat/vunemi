@@ -1135,6 +1135,7 @@ export const messages: Catalogue = {
   voiceEngine: {
     noModel: "还没有语音模型。点按麦克风即可下载（{size} MB）。",
     noWhisper: "此 Vunemi 安装没有语音引擎。",
+    notOnWindows: "语音输入在 Windows 上暂不可用。",
     failed: "语音识别失败（{status}）。",
     startFailed: "无法启动语音识别：{why}",
   },
@@ -2103,4 +2104,5 @@ export const onWindows: SystemTexts = {
   "linux.addons": "扩展在 Windows 上暂不可用：它们在 macOS 的沙盒中运行。",
   "linux.updates": "Vunemi 在 Windows 上暂不能自动更新。新版本在下载页面上。",
   "linux.backgroundRecipes": "App 中的定时任务在 Windows 上暂不可用。",
+  "updates.moveFirst": "请用安装程序安装 Vunemi，才能在这里更新它。",
 };

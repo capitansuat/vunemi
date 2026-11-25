@@ -15,6 +15,7 @@
     "predev": "node scripts/dev-permissions.mjs || true",
     "package": "bash scripts/package.sh",
     "package:linux": "bash scripts/package-linux.sh",
+    "package:windows": "node scripts/package-windows.mjs",
     "signing-identity": "bash scripts/signing-identity.sh"
   },
   "devDependencies": {

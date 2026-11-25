@@ -20,7 +20,7 @@
 
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { accessSync, constants, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { accessSync, constants, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -28,6 +28,7 @@ import { getLocale, t, type Locale } from "@vunemi/i18n";
 import { platform } from "@vunemi/platform";
 
 import type { VoiceStatus } from "../shared/ipc.js";
+import { builtBinary, type BinaryLookup } from "./engine/binary.js";
 import { download, type DownloadProgress } from "./engine/download.js";
 import { spawnWindowsSpeech, windowsVoiceCultures } from "./speech-windows.js";
 import type { ModelSource } from "./engine/catalog.js";
@@ -52,11 +53,8 @@ export const VOICE_MODEL: ModelSource = {
 };
 
 /** The built-in whisper server: in the app's resources, or a development run's build cache. */
-export function whisperBinary(opts: { packaged: boolean; resourcesPath: string; home: string }): string | null {
-  const path = opts.packaged
-    ? join(opts.resourcesPath, "whisper-server")
-    : join(opts.home, ".vunemi-build", "whisper-cache", WHISPER_TAG, "whisper-server");
-  return existsSync(path) ? path : null;
+export function whisperBinary(opts: BinaryLookup): string | null {
+  return builtBinary(opts, "whisper-server", "whisper-cache", WHISPER_TAG);
 }
 
 /**
@@ -176,6 +174,7 @@ export class Voice {
   private readonly onChange: (status: VoiceStatus) => void;
   private readonly downloadModel: typeof download;
   private readonly shared: boolean;
+  private readonly offered: boolean;
 
   constructor(
     private readonly userData: string,
@@ -188,8 +187,11 @@ export class Voice {
       download?: typeof download;
       /** Also look in the folders earlier builds and other tools used. */
       shared?: boolean;
+      /** False where dictation isn't tried yet (platform.features.dictation): nothing is offered or started. */
+      offered?: boolean;
     } = {},
   ) {
+    this.offered = opts.offered ?? true;
     this.builtIn = opts.builtIn ?? null;
     this.onChange = opts.onChange ?? (() => {});
     this.downloadModel = opts.download ?? download;
@@ -200,6 +202,7 @@ export class Voice {
 
   /** Cheap enough to call whenever the composer appears. */
   status(): VoiceStatus {
+    if (!this.offered) return { canHear: false, canSpeak: CAN_SPEAK, engine: "", hint: t("voiceEngine.notOnWindows") };
     // Re-probe: the user may have installed whisper while Vunemi was running.
     this.binary ??= findBinary(this.builtIn);
     this.model ??= findModel(this.userData, this.shared);
@@ -225,6 +228,7 @@ export class Voice {
    * button; nothing downloads by itself.
    */
   async download(): Promise<VoiceStatus> {
+    if (!this.offered) return this.status();
     if (!this.downloading) {
       const controller = new AbortController();
       // Kept before the download starts: progress may be reported at once.
@@ -386,6 +390,7 @@ export class Voice {
 
   /** Starts whisper-server if it isn't up; concurrent callers share one start. */
   private start(language: string): Promise<void> {
+    if (!this.offered) return Promise.reject(new Error(t("voiceEngine.notOnWindows")));
     if (this.ready) return this.ready;
     const { binary, model } = this;
     if (!binary || !model) return Promise.reject(new Error(this.status().hint ?? t("composer.voice.unavailable")));

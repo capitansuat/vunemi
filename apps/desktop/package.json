@@ -140,6 +140,25 @@
         }
       ]
     },
+    "win": {
+      "icon": "build/icon.png",
+      "executableName": "Vunemi",
+      "publish": [],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "artifactName": "Vunemi-Setup-${version}-${arch}.${ext}",
+      "shortcutName": "Vunemi",
+      "deleteAppDataOnUninstall": false
+    },
     "deb": {
       "depends": [
         "libgtk-3-0",

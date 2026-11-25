@@ -51,6 +51,19 @@ describe("UpdateService", () => {
     expect(seen.at(-1)?.phase).toBe("downloading");
   });
 
+  it("hands the offer to an updater that downloads it itself (Windows) before it starts", async () => {
+    const { s, calls } = setup();
+    const prepared: unknown[] = [];
+    (s as unknown as { deps: { updater: Updater } }).deps.updater.prepare = (offer) => {
+      prepared.push(offer);
+      calls.push("prepare");
+    };
+    await s.check(false);
+    s.download();
+    expect(prepared).toEqual([{ version: "0.1.9", notes: ["New."], sizeMb: 131 }]);
+    expect(calls).toEqual(["prepare", `feed ${PRODUCTION.feed}`, "download"]);
+  });
+
   it("says up to date only after a manual check, and keeps quiet about failures otherwise", async () => {
     const same = setup({ feed: async () => ({ ...FEED, currentRelease: "0.1.8" }) });
     expect((await same.s.check(false)).phase).toBe("idle");

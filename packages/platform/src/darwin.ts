@@ -22,6 +22,7 @@ export const DARWIN_FEATURES: PlatformFeatures = {
   archives: true,
   atomicMove: true,
   speakAloud: true,
+  dictation: true,
 };
 
 /**
