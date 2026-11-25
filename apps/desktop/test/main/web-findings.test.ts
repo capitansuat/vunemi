@@ -53,6 +53,7 @@ afterEach(() => {
   if (zone === undefined) delete process.env.TZ;
   else process.env.TZ = zone;
   work.close();
+  topics.close();
   rmSync(base, { recursive: true, force: true });
 });
 

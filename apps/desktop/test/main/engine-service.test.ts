@@ -180,7 +180,8 @@ describe("the engine service", () => {
     expect(fit.mock.calls[2]![0]).toMatchObject({ wanted: 16_384, replacing: "chat" });
   });
 
-  it("opens the model again with the whole context when a task starts and memory has room by then", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("opens the model again with the whole context when a task starts and memory has room by then", async () => {
     const fit = vi.fn(async (_req: FitRequest) => ({ context: 16_384, tight: false }));
     service = new EngineService({
       dir, binary: FAKE, totalMemory: 64 * GiB, isBusy: () => false, testModel: vi.fn(async () => true), onChange: () => {},
@@ -201,7 +202,8 @@ describe("the engine service", () => {
     expect(fit).toHaveBeenCalledTimes(3); // the download's test, the first task, the second; not the third
   });
 
-  it("does not open the model again while someone else is using it", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("does not open the model again while someone else is using it", async () => {
     const fit = vi.fn(async (_req: FitRequest) => ({ context: 16_384, tight: false }));
     service = new EngineService({
       dir, binary: FAKE, totalMemory: 64 * GiB, isBusy: () => false, testModel: vi.fn(async () => true), onChange: () => {},
