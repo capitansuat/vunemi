@@ -144,7 +144,7 @@ const api: VunemiApi = {
   modelsMemory: () => ipcRenderer.invoke(CH.modelsMemory),
   deleteWorkNote: (id, scope) => ipcRenderer.invoke(CH.workNotesDelete, id, scope),
   resolveMemory: (runId, proposalId, decision, text) => ipcRenderer.invoke(CH.memoryResolve, runId, proposalId, decision, text),
-  resolveTopic: (runId, decision) => ipcRenderer.invoke(CH.topicsResolve, runId, decision),
+  resolveTopic: (runId, decision, name) => ipcRenderer.invoke(CH.topicsResolve, runId, decision, name),
   setTopic: (name) => ipcRenderer.invoke(CH.topicsSet, name),
   topicsTree: () => ipcRenderer.invoke(CH.topicsTree),
   topicsNote: (topic, title) => ipcRenderer.invoke(CH.topicsNote, topic, title),
@@ -164,6 +164,7 @@ const api: VunemiApi = {
   topicsReveal: (topic, item) => ipcRenderer.invoke(CH.topicsReveal, topic, item),
   topicsRevealOriginal: (topic, name) => ipcRenderer.invoke(CH.topicsRevealOriginal, topic, name),
   topicsDelete: (topic) => ipcRenderer.invoke(CH.topicsDelete, topic),
+  topicsKeep: (topic) => ipcRenderer.invoke(CH.topicsKeep, topic),
   onTopicsChanged: (listener) => {
     const handler = () => listener();
     ipcRenderer.on(CH.topicsChanged, handler);

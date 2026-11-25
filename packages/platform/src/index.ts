@@ -1,18 +1,25 @@
 import { darwin } from "./darwin.js";
 import { linux } from "./linux.js";
+import { windows } from "./windows.js";
 import type { Platform, PlatformId, PlatformInfo } from "./types.js";
 
 export * from "./types.js";
 export { darwin, DARWIN_FEATURES, DARWIN_PROGRAMS, darwinMoveToTrash, uniqueIn } from "./darwin.js";
 export { linux, LINUX_FEATURES, LINUX_DOWNLOAD_PAGE, LINUX_PROGRAMS } from "./linux.js";
+export { windows, WINDOWS_FEATURES, WINDOWS_DOWNLOAD_PAGE } from "./windows.js";
+export { syncFolder } from "./durable.js";
+export { readRecycleInfo, recycleInfo, RecycleRefused, windowsMoveToTrash, type WindowsRecycleOptions } from "./windows-recycle.js";
 export { dataHomeOf, deletionDate, encodeTrashPath, freedesktopMoveToTrash, mountTopOf, trashFor, TrashRefused, type FreedesktopTrashOptions } from "./freedesktop-trash.js";
 
 /**
- * The implementation for a Node platform name. Vunemi is built for macOS and
- * Linux; anything else gets Linux's, which assumes the least about the system.
+ * The implementation for a Node platform name. Vunemi is built for macOS,
+ * Windows and Linux; anything else gets Linux's, which assumes the least
+ * about the system.
  */
 export function platformFor(name: NodeJS.Platform | string): Platform {
-  return name === "darwin" ? darwin : linux;
+  if (name === "darwin") return darwin;
+  if (name === "win32") return windows;
+  return linux;
 }
 
 /** The system this process runs on. */
@@ -24,5 +31,5 @@ export function platformInfo(p: Platform = platform): PlatformInfo {
 }
 
 export function isPlatformId(value: unknown): value is PlatformId {
-  return value === "darwin" || value === "linux";
+  return value === "darwin" || value === "linux" || value === "win32";
 }

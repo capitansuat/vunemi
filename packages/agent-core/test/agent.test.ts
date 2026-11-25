@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { taskProgressTool, tasksFromEvents } from "../src/tasks.js";
-import { announcesRead, argumentMisfit, claimsChange, comparesOptions, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
+import { announcesRead, argumentMisfit, claimsChange, comparesOptions, leakedCall, namedTool, DEFAULT_POLICY, EPHEMERAL_PLACEHOLDER, FINDINGS_REMINDER, isImagePath, runAgent, sealInterrupted, shapeOutput, toolSpecsOf, sentAt, userRequest, type RunOptions } from "../src/agent.js";
 import { requestedTravelTools } from "../src/travel-intent.js";
 import { choiceTools } from "../src/choices.js";
 import { GUARD_NOTE } from "../src/guard.js";
@@ -11,7 +11,9 @@ import { ToolRegistry, type ToolDef } from "../src/tools.js";
 import type { ToolArea } from "../src/areas.js";
 import { KeptOutputs, keptOutputTools } from "../src/kept.js";
 import { PLAN_BUDGET } from "../src/plan.js";
-import { IMAGE_REMOVED, IMAGES_KEPT, capImages, keepNewestImage, stripImages } from "../src/context.js";
+import { IMAGE_REMOVED, IMAGES_KEPT, SUMMARY_SECTIONS, capImages, keepNewestImage, stripImages } from "../src/context.js";
+
+const SUMMARY = SUMMARY_SECTIONS.map((s) => `${s}\n- something`).join("\n\n");
 
 /** A model that replays a fixed script of turns, and records what it was sent. */
 function scripted(turns: Array<{ text?: string; calls?: Array<Omit<ToolCall, "id">> }>) {
@@ -543,6 +545,38 @@ describe("previews, instructions and ephemeral outputs", () => {
     await runAgent({ goal: "g", model, tools: snapshots(4_000), contextWindow: 2_000, emit: (e) => events.push(e), requestApproval: async () => ({ kind: "approve" }) });
     expect(toolContents(seen[2]!.messages)).toEqual([EPHEMERAL_PLACEHOLDER.slice(0, 7), "page v2"]);
     expect(events.find((e) => e.type === "context.compacted")).toMatchObject({ kind: "pruned" });
+  });
+
+  it("shows only as much of an output as the tool says it should", async () => {
+    const { model, seen } = scripted([{ calls: [{ name: "reader", argumentsText: "{}" }] }, { text: "done" }]);
+    const tools = new ToolRegistry().register({
+      name: "reader", description: "", parameters: { type: "object", properties: {} }, actionClass: "read",
+      firstPartEnd: "|",
+      run: async () => `shown part|${"hidden ".repeat(500)}`,
+    });
+    const kept = { keep: (_tool: string, text: string, part: number) => `${text.slice(0, part)}\n[kept as "o1"]`, read: () => "", search: () => "", toolOf: () => "reader" };
+    await runAgent({ goal: "g", model, tools, keptOutputs: kept, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    const out = seen[1]!.messages.find((m) => m.role === "tool")!.content;
+    expect(out).toContain("shown part");
+    expect(out).not.toContain("hidden");
+    expect(out).toContain('kept as "o1"');
+  });
+
+  it("keeps what a tool says an old snapshot shortens to, and where the whole of it is kept", async () => {
+    const { model, seen } = twoSnapshots();
+    let n = 0;
+    const tools = new ToolRegistry().register({
+      name: "snapshot", description: "", parameters: { type: "object", properties: {} }, actionClass: "read", ephemeral: true,
+      stale: { lines: 1, until: "^\\[tab", max: 200 },
+      run: async () => `[tab 1] Page ${++n} — https://shop.example/${n}\n${"x".repeat(6_000)}`,
+    });
+    const kept = { keep: (_tool: string, text: string, part: number) => `${text.slice(0, part)}\n[Showing characters 1–${part} of ${text.length}. The whole output is kept as "o1": output_read with id "o1" and part 2–3 reads the rest in order; output_search finds the lines that contain given words.]`, read: () => "", search: () => "", toolOf: () => "snapshot" };
+    await runAgent({ goal: "g", model, tools, contextWindow: 2_000, keptOutputs: kept, maxToolOutputChars: 5_000, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+    const old = seen[2]!.messages.filter((m) => m.role === "tool")[0]!.content;
+    expect(old.startsWith("[tab 1] Page 1 — https://shop.example/1\n")).toBe(true);
+    expect(old).toContain(EPHEMERAL_PLACEHOLDER);
+    expect(old).toContain('kept as "o1"');
+    expect(old.length).toBeLessThan(600);
   });
 });
 
@@ -1432,6 +1466,94 @@ describe("context window", () => {
       id: "fake:overflow",
       async chat() {
         throw new ProviderError("http", "HTTP 400 from x: the request exceeds the available context size", "x");
+      },
+    };
+    const result = await run({ model }).promise;
+    expect(result.status).toBe("failed");
+    expect(result.detail).toBe(t("agent.contextFull"));
+  });
+
+  it("finishes a long one-request lookup on a lowered 8K window", async () => {
+    // A server with a real window: it counts the whole request and refuses past n_ctx, in llama-server's words.
+    const nCtx = 8_192;
+    let steps = 0;
+    const model: ChatModel = {
+      id: "fake:server",
+      async chat(req) {
+        const tokens = Math.ceil(JSON.stringify({ m: req.messages, t: req.tools }).length / 3);
+        if (tokens > nCtx) throw new ProviderError("http", `HTTP 400 from x: {"error":{"code":400,"message":"request (${tokens} tokens) exceeds the available context size (${nCtx} tokens), try increasing it","type":"exceed_context_size_error"}}`, "x");
+        const usage = { promptTokens: tokens, completionTokens: 20, ttftMs: 1, tokensPerSec: 1 };
+        if (req.messages.at(-1)!.content.includes("context checkpoint")) return { text: SUMMARY, toolCalls: [], usage };
+        if (++steps > 26) return { text: "The blue kettle costs 30.", toolCalls: [], usage };
+        return { text: "", toolCalls: [{ id: `p${steps}`, name: "shop_look", argumentsText: `{"ref":${steps}}` }], usage };
+      },
+    };
+    const page = `[tab 1] Shop — https://shop.example/\n${"- link \"A product\" [ref=3]\n".repeat(120)}`;
+    const registry = new ToolRegistry().register({ name: "shop_look", description: "look at a shop page", parameters: { type: "object", properties: { ref: { type: "number" } } }, actionClass: "read", untrustedOutput: true, run: async () => page });
+    const result = await runAgent({ goal: "Find the price of the blue kettle on shop.example", model, tools: registry, emit: () => {}, requestApproval: async () => ({ kind: "approve" }), contextWindow: nCtx, maxSteps: 30 });
+    expect(result.detail).toBe("The blue kettle costs 30.");
+    expect(result.status).toBe("done");
+  });
+
+  describe("web findings", () => {
+    const page = (n: number) => `[tab 1] Jobs — https://jobs.example/${n}\n${"- job listing line\n".repeat(20)}`;
+    const registry = () => new ToolRegistry()
+      .register({ name: "page_read", description: "read", parameters: { type: "object", properties: { n: { type: "number" } } }, actionClass: "read", run: async (a) => page(Number((a as { n: number }).n)) })
+      .register({ name: "web_finding_add", description: "keep", parameters: { type: "object", properties: { title: { type: "string" }, text: { type: "string" } } }, actionClass: "read", run: async (a) => `Kept "${(a as { title: string }).title}" (https://jobs.example/9) in this conversation's findings.` });
+    const findings = { tool: "web_finding_add", pages: new Set(["page_read"]) };
+    const reads = (n: number) => Array.from({ length: n }, (_, i) => ({ calls: [{ name: "page_read", argumentsText: `{"n":${i + 1}}` }] }));
+    const toolOutputs = (req: ChatRequest) => req.messages.filter((m) => m.role === "tool").map((m) => m.content);
+
+    it("reminds the model once, as soon as a page has been opened and read with nothing kept", async () => {
+      const { model, seen } = scripted([...reads(6), { text: "done" }]);
+      await runAgent({ goal: "find accountant jobs", model, tools: registry(), findings, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+      const outs = toolOutputs(seen.at(-1)!);
+      expect(outs.filter((o) => o.endsWith(FINDINGS_REMINDER))).toHaveLength(1);
+      // A lookup often goes to the page and reads it, then answers: the reminder is on the read.
+      expect(outs[1]!.endsWith(FINDINGS_REMINDER)).toBe(true);
+      expect(FINDINGS_REMINDER).not.toContain("several");
+    });
+
+    it("counts again from a kept finding", async () => {
+      const { model, seen } = scripted([...reads(1), { calls: [{ name: "web_finding_add", argumentsText: '{"title":"Accountant, Acme","text":"40,000"}' }] }, ...reads(1), { text: "done" }]);
+      await runAgent({ goal: "find accountant jobs", model, tools: registry(), findings, emit: () => {}, requestApproval: async () => ({ kind: "approve" }) });
+      expect(toolOutputs(seen.at(-1)!).some((o) => o.endsWith(FINDINGS_REMINDER))).toBe(false);
+    });
+
+    it("carries this run's findings through a checkpoint", async () => {
+      const nCtx = 8_192;
+      let steps = 0;
+      let afterCheckpoint = "";
+      const model: ChatModel = {
+        id: "fake:server",
+        async chat(req) {
+          const tokens = Math.ceil(JSON.stringify({ m: req.messages, t: req.tools }).length / 3);
+          if (tokens > nCtx) throw new ProviderError("http", `HTTP 400 from x: request (${tokens} tokens) exceeds the available context size (${nCtx} tokens)`, "x");
+          const usage = { promptTokens: tokens, completionTokens: 20, ttftMs: 1, tokensPerSec: 1 };
+          if (req.messages.at(-1)!.content.includes("context checkpoint")) return { text: SUMMARY, toolCalls: [], usage };
+          if (req.messages[1]!.content.includes("<earlier_summary>")) afterCheckpoint ||= req.messages[1]!.content;
+          steps++;
+          if (steps === 2) return { text: "", toolCalls: [{ id: "f1", name: "web_finding_add", argumentsText: '{"title":"Accountant, Acme","text":"40,000 a year"}' }], usage };
+          if (steps > 26) return { text: "One job matches.", toolCalls: [], usage };
+          return { text: "", toolCalls: [{ id: `p${steps}`, name: "page_read", argumentsText: `{"n":${steps}}` }], usage };
+        },
+      };
+      const big = new ToolRegistry()
+        .register({ name: "page_read", description: "read", parameters: { type: "object", properties: { n: { type: "number" } } }, actionClass: "read", run: async () => `[tab 1] Jobs — https://jobs.example/\n${"- link \"A job\" [ref=3]\n".repeat(120)}` })
+        .register({ name: "web_finding_add", description: "keep", parameters: { type: "object", properties: {} }, actionClass: "read", run: async () => 'Kept "Accountant, Acme" (https://jobs.example/9) in this conversation\'s findings.' });
+      const result = await runAgent({ goal: "Find accountant jobs", model, tools: big, findings, emit: () => {}, requestApproval: async () => ({ kind: "approve" }), contextWindow: nCtx, maxSteps: 30 });
+      expect(result.status).toBe("done");
+      expect(afterCheckpoint).toContain("Web findings so far, word for word:\n- Accountant, Acme: 40,000 a year — https://jobs.example/9");
+    });
+  });
+
+  it("never shows the server's raw words when the context is full", async () => {
+    let calls = 0;
+    const model: ChatModel = {
+      id: "fake:overflow",
+      async chat() {
+        if (calls++ === 0) return { text: "", toolCalls: [{ id: "a", name: "read_page", argumentsText: "{}" }], usage: { promptTokens: 1, completionTokens: 1, ttftMs: 1, tokensPerSec: 1 } };
+        throw new ProviderError("http", "HTTP 400 from x: request (8409 tokens) exceeds the available context size (8192 tokens), try increasing it", "x");
       },
     };
     const result = await run({ model }).promise;

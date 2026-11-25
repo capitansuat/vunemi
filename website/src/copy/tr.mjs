@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.4.0'ın yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.5.0'ın yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.4.0'ı Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.5.0'ı Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.4.0: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.5.0: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -129,6 +129,7 @@ export default {
       { title: "Projeler", body: "Bir klasörü proje yap: Vunemi o işin dosyalarını orada tutar ve her değişiklik geri alınabilir." },
       { title: "Hafıza", body: "Senin sözlerinden notlar; yalnız onay verdiğinde kaydedilir. Bir göreve yalnız ona uyan notlar verilir ve yanıt kaç not verildiğini söyler." },
       { title: "Konular", body: "Dönüp durduğun bir işi, örneğin bir tadilatı ya da bir araştırma sorusunu, konu olarak tut: Mac'inde, Obsidian'da da açabileceğin Markdown sayfalarından oluşan bir klasör. Kendi klasörünü bağla; Vunemi dosyaları kopyalamadan, oldukları yerde okur. Hangi dosyanın hangisine bağlantı verdiğini ve SKU gibi kodları hangi dosyanın tanımladığını not eder, “Index” adlı kısa bir sayfa tutar. Dosyalardan cevap verdiğinde öğrendiğini, her dosyayı kaynak gösteren sayfalara yazar; böylece bir sonraki cevap oradan başlar. Kaynak gösterdiği bir dosya değişirse sayfa işaretlenir. Bu özellik, çok sayıda dosyada tek bir aramanın cevabı içeren dosyayı çoğu zaman kaçırması yüzünden var. Ağır işler yalnızca Vunemi boştayken yapılır; büyük alt klasörlerde, sen açmadıkça yalnızca kelimelere göre aranır. Konular olmadan da Vunemi bir görevde verdiğin dosyaları okur. Sayfaların ne kadar iyi olduğu modele bağlıdır." },
+      { title: "Web aramasında bulunanlar", body: "Vunemi web'de bir şey ararken sayfanın menülerini, reklamlarını ve alt bilgisini değil içeriğini okur ve yalnızca sana cevap olanı tutar: bir iş sitesinde uyan ilanları, her birini adresiyle. Konuşma bir konudaysa bunlar oraya gider. Değilse Vunemi cevabını ve bulduklarını, okuduğu adreslerle birlikte geçici bir konuda toplar ve adını değiştirebileceğin şekilde tutmak mı yoksa silmek mi istediğini sorar; sen seçene kadar Hafıza sayfasında geçici olarak işaretli durur. Bu, uzun bir aramada sayfaların tamamı modelin belleğini doldurup bulduklarını kaybettirdiği ve model bulduklarını tutmayı her zaman hatırlamadığı için var: cevap her durumda hafızaya ulaşır. Bunu istemezsen Sil de, hiçbir şey kalmaz; cevap yine konuşmada durur. Ne kadar iyi seçtiği modele bağlıdır." },
       { title: "Önceki işi getir", body: "@ yazıp önceki bir oturumu ya da toplantıyı seç. Oturumun soruları ve yanıtları ya da toplantının özeti mesajınla birlikte gider; bir mesaja en çok beş tane." },
       { title: "Toplantıların Claude ya da Codex'te", body: "Claude ya da Codex de kullanıyorsan, Vunemi'nin kaydettiği toplantıları okumasına izin verebilirsin; kayıt sürerken de. Böylece dökümü elle kopyalaman gerekmez. Toplantılar'da sen açana kadar kapalıdır ve yalnız okuyabilir. Okuduğu şey o asistanın kendi hizmetine gider, yani Mac'inden çıkar. Bu olmadan Vunemi'deki her şey eskisi gibi çalışır ve toplantıların Mac'inde kalır." },
       { title: "Dikkat gerekenler", body: "Onay, yanıtın ya da inceleme bekleyen görevler, bütün oturumlardan tek listede. Birini seçince tam o görev açılır; eski bir oturumda bekleyen iş gözden kaçmaz. Baktığın bir görevi Gördüm ile kaldırabilirsin; 7 günden eski incelemeler listeden kendiliğinden çıkar, görevde yeni bir şey olursa yeniden görünür." },
@@ -175,6 +176,7 @@ export default {
       { title: "Verin, kararın", body: "Bir oturumu, bir notu ya da her şeyi unut. Hafızadaki bir not hiçbir izin vermez; sayfalardan, e-postalardan ya da dosyalardan gelen sözler asla not olamaz." },
       { title: "Bu çalıştırmanın izinleri", body: "Vunemi bir dosyayı okumak ya da bir pencereye bakmak istediğinde her okumayı tek tek onaylamak yerine bir kez ya da görevin geri kalanı için, en çok 8 kez izin verebilirsin. Değişen bir dosya yeni izin ister, bir izni istediğin an geri alabilirsin ve hiçbiri zamanlanmış işlere geçmez." },
       { title: "Bir işte hepsini onayla", body: "Bazı işler art arda çok sayıda küçük onay ister; her birine basmak, devrettiğin işin önüne geçer. Normal bir kartta işin geri kalanını onaylayabilirsin: o uygulama ve yerel değişiklikler iş bitene kadar sormaz. Gönderme, silme, bir dosyanın üstüne yazma, e-posta, mesajlaşma ve tarayıcı uygulamaları ve uyarılar yine sorar. Yine sor ile geri alırsın; Vunemi bir adımın sonucunu anlayamazsa kendiliğinden biter. Kullanmak zorunda değilsin: bu olmadan her adım ayrı ayrı sorar." },
+      { title: "Web sayfalarında daha az kart", body: "Web'de bir arama her tıklamada, yazılan her aramada ve her Enter'da onay istiyordu; bu kadar kart da okumadan Onayla'ya basmayı alıştırır. Artık sıradan bir bağlantıyı izlemek ve bir sitenin arama kutusunu kullanmak, bir sayfa açmak gibi okuma sayılıyor ve kart istemiyor. Bir sitedeki düğme için Hepsini onayla, iş bitene kadar yalnızca o sitedeki tıklamaları, yazmaları ve seçimleri kapsar; kartta ya da Ayarlar › Güvenlik'te güvenilir işaretlediğin bir sitede tek onay aynı işi görür. Veri gönderen bir form, başka bir site, giriş ve ödeme alanları ve göndermeye ya da silmeye benzeyen her şey yine her seferinde sorar. Kullanmak zorunda değilsin: kullanmazsan sayfadaki her işlem ayrı ayrı sorar." },
       { title: "Emin değilse tekrarlamaz", body: "Vunemi bir işlemin gerçekleşip gerçekleşmediğini anlayamazsa onu yeniden yapmaz. Görev Sonuç belirsiz olarak işaretlenir ve yeniden başlatmadan sonra da sen kontrol edene kadar bekler." },
     ],
     extras: [
@@ -191,10 +193,10 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Yeni: konular. Dönüp durduğun bir konuyu Mac'inde Markdown sayfaları klasörü olarak tut, kendi klasörlerini bağla: Vunemi onları yerinde okur, dosyaların birbirine bağlantılarını ve SKU gibi kodları hangisinin tanımladığını not eder, “Index” sayfasından başlayıp kaynak gösteren sayfalar yazar.",
-      "Bunun nedeni, çok sayıda dosyada tek bir aramanın cevabı tutan dosyayı sık sık kaçırması. Ağır işler yalnız Vunemi boştayken çalışır. Konular olmadan Vunemi, bir görevde verdiğin dosyaları eskisi gibi okur. Sayfaların ne kadar iyi olduğu modele bağlı.",
-      "Yerleşik motor daha yeni ve Inkling 2'yi çalıştırıyor. Vunemi artık ggml-org'dan da model indirebiliyor; motor bir modeli yükleyemezse belleği ya da modelin araçlarını işaret etmek yerine bunu söylüyor.",
-      "Sesli sohbet artık “Durduruldu.” diye okumuyor. Parola alanında Vunemi yalnız metne dokunmayan tuşlara basıyor; macOS izinlerini bir kez daha sorabilir. “Hepsini onayla” ve zamanlı görevler adı çevrilmiş uygulamaları artık tanıyor.",
+      "Yeni: konusu olmayan bir sohbet web'de bir şey aradığında Vunemi cevabı, okuduğu adresleri ve tuttuğu öğeleri geçici bir konuda toplar; sonra adını değiştirebileceğin şekilde tutmak mı, silmek mi istediğini sorar.",
+      "Bu, uzun bir aramada sayfaların tamamı modelin belleğini doldurup bulduklarını kaybettirdiği için var. Sayfalar artık ana içerikleriyle okunuyor, eski adımlar kısalıyor; uzun bir arama sığmaya devam ediyor. Sil dersen hiçbir şey kalmaz; cevap sohbette durur.",
+      "Web'de daha az kart: sıradan bağlantılar ve bir sitenin arama kutusu okuma sayılıyor. Hepsini onayla, iş bitene kadar tek bir siteyi kapsıyor; güvendiğin bir site her işte tek onay istiyor. Veri gönderen formlar, gönderme ve silme yine soruyor.",
+      "Bir konu artık yalnızca istek ona gündelik isteklerden daha yakınsa öneriliyor; bir sayfanın kendi betikleri de veri gönderen bir formu arama gibi gösteremiyor.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

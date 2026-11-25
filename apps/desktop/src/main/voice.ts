@@ -20,7 +20,7 @@
 
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { accessSync, constants, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { accessSync, constants, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -28,7 +28,9 @@ import { getLocale, t, type Locale } from "@vunemi/i18n";
 import { platform } from "@vunemi/platform";
 
 import type { VoiceStatus } from "../shared/ipc.js";
+import { builtBinary, type BinaryLookup } from "./engine/binary.js";
 import { download, type DownloadProgress } from "./engine/download.js";
+import { spawnWindowsSpeech, windowsVoiceCultures } from "./speech-windows.js";
 import type { ModelSource } from "./engine/catalog.js";
 
 export type { VoiceStatus };
@@ -51,11 +53,8 @@ export const VOICE_MODEL: ModelSource = {
 };
 
 /** The built-in whisper server: in the app's resources, or a development run's build cache. */
-export function whisperBinary(opts: { packaged: boolean; resourcesPath: string; home: string }): string | null {
-  const path = opts.packaged
-    ? join(opts.resourcesPath, "whisper-server")
-    : join(opts.home, ".vunemi-build", "whisper-cache", WHISPER_TAG, "whisper-server");
-  return existsSync(path) ? path : null;
+export function whisperBinary(opts: BinaryLookup): string | null {
+  return builtBinary(opts, "whisper-server", "whisper-cache", WHISPER_TAG);
 }
 
 /**
@@ -122,7 +121,7 @@ function voiceFor(locale: Locale): string | null {
 // A whisper-server the user installed themselves: Homebrew's on macOS, a distribution's or a local build on Linux.
 const SERVER_PATHS = platform.id === "darwin" ? ["/opt/homebrew/bin/whisper-server", "/usr/local/bin/whisper-server"] : ["/usr/local/bin/whisper-server", "/usr/bin/whisper-server"];
 
-/** Answers are spoken with macOS's own voices (say); elsewhere there is nothing to speak with yet. */
+/** Answers are spoken with the system's own voices: say on macOS, System.Speech on Windows; Linux has none yet. */
 const CAN_SPEAK = platform.features.speakAloud;
 
 /** Long enough to survive a pause in dictation, short enough to give the RAM back. */
@@ -175,6 +174,7 @@ export class Voice {
   private readonly onChange: (status: VoiceStatus) => void;
   private readonly downloadModel: typeof download;
   private readonly shared: boolean;
+  private readonly offered: boolean;
 
   constructor(
     private readonly userData: string,
@@ -187,8 +187,11 @@ export class Voice {
       download?: typeof download;
       /** Also look in the folders earlier builds and other tools used. */
       shared?: boolean;
+      /** False where dictation isn't tried yet (platform.features.dictation): nothing is offered or started. */
+      offered?: boolean;
     } = {},
   ) {
+    this.offered = opts.offered ?? true;
     this.builtIn = opts.builtIn ?? null;
     this.onChange = opts.onChange ?? (() => {});
     this.downloadModel = opts.download ?? download;
@@ -199,6 +202,7 @@ export class Voice {
 
   /** Cheap enough to call whenever the composer appears. */
   status(): VoiceStatus {
+    if (!this.offered) return { canHear: false, canSpeak: CAN_SPEAK, engine: "", hint: t("voiceEngine.notOnWindows") };
     // Re-probe: the user may have installed whisper while Vunemi was running.
     this.binary ??= findBinary(this.builtIn);
     this.model ??= findModel(this.userData, this.shared);
@@ -224,6 +228,7 @@ export class Voice {
    * button; nothing downloads by itself.
    */
   async download(): Promise<VoiceStatus> {
+    if (!this.offered) return this.status();
     if (!this.downloading) {
       const controller = new AbortController();
       // Kept before the download starts: progress may be reported at once.
@@ -336,14 +341,19 @@ export class Voice {
     // In the reply's own language, not the app's: an English Vunemi read
     // "Dört" with an English voice. The writing decides when it can; else
     // the language the user just spoke, which the reply answers in.
-    const voice = voiceFor(writtenIn(said) ?? this.heardLanguage ?? getLocale());
+    const locale = writtenIn(said) ?? this.heardLanguage ?? getLocale();
     const dir = join(this.userData, "speech");
     if (!this.swept) rmSync(dir, { recursive: true, force: true });
     this.swept = true;
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const file = join(dir, `${randomUUID()}.wav`);
-    // Arguments, never a shell: this is model output and may contain anything.
-    const child = spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "-o", file, "--data-format=LEI16@22050", "--", said], { stdio: "ignore" });
+    // Arguments or stdin, never a shell: this is model output and may contain anything.
+    const child = platform.id === "win32"
+      ? spawnWindowsSpeech(said, windowsVoiceCultures[locale], file)
+      : (() => {
+        const voice = voiceFor(locale);
+        return spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "-o", file, "--data-format=LEI16@22050", "--", said], { stdio: "ignore" });
+      })();
     this.speaking = child;
     return new Promise<Buffer>((resolve, reject) => {
       const done = (code: number | null) => {
@@ -380,6 +390,7 @@ export class Voice {
 
   /** Starts whisper-server if it isn't up; concurrent callers share one start. */
   private start(language: string): Promise<void> {
+    if (!this.offered) return Promise.reject(new Error(t("voiceEngine.notOnWindows")));
     if (this.ready) return this.ready;
     const { binary, model } = this;
     if (!binary || !model) return Promise.reject(new Error(this.status().hint ?? t("composer.voice.unavailable")));

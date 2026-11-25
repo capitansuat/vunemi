@@ -8,6 +8,7 @@ import { createOfficeTools, FIND_WORKBOOK, EXCEL_LIVE as EXCEL_LIVE_FOR_TEST } f
 import { AppScriptError } from "../src/runner.js";
 import { writePptx, writeXlsx, writeZip } from "./zip.js";
 import { xlsxCells } from "../src/ooxml.js";
+const onWindows = process.platform === "win32";
 
 const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
@@ -213,7 +214,8 @@ describe("Excel without Excel", () => {
     expect(out).toMatchObject({ source: "saved file", sheet: "Sheet", range: "A1:C2", values: [["Tarih", "2026-09-26", "2026-09-26 12:00"], [12.5, true, ""]] });
   });
 
-  it("lists the sheet's charts with the cells they show, and says when there are none", async () => {
+  // Windows: the Office reader calls /usr/bin/unzip until plan 3.
+  it.skipIf(onWindows)("lists the sheet's charts with the cells they show, and says when there are none", async () => {
     // A model read a workbook with a chart through this tool, saw values only and told the user there was no chart.
     // Real zip archives: the file check reads them with unzip, which wants their checksums.
     const zipped = (name: string, parts: Record<string, string>): string => {

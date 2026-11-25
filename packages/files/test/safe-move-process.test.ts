@@ -6,9 +6,9 @@ import {tmpdir} from 'node:os';
 const binary=resolve('../../native/VunemiHelper/.build/release/VunemiHelper');
 const enabled=process.platform==='darwin'&&existsSync(binary);
 const temporary:string[]=[],children:ChildProcess[]=[];let script:string;
-beforeAll(()=>{if(!enabled)return;const dir=realpathSync(mkdtempSync(join(tmpdir(),'safe-move-process-bundle-')));temporary.push(dir);script=join(dir,'fixture.cjs');execFileSync(resolve('../mac/node_modules/.bin/esbuild'),[resolve('test/fixtures/safe-move-process.ts'),'--bundle','--platform=node','--format=cjs',`--outfile=${script}`],{stdio:'pipe'});});
+beforeAll(()=>{if(!enabled)return;const dir=realpathSync.native(mkdtempSync(join(tmpdir(),'safe-move-process-bundle-')));temporary.push(dir);script=join(dir,'fixture.cjs');execFileSync(resolve('../mac/node_modules/.bin/esbuild'),[resolve('test/fixtures/safe-move-process.ts'),'--bundle','--platform=node','--format=cjs',`--outfile=${script}`],{stdio:'pipe'});});
 afterAll(()=>{for(const child of children)if(child.exitCode===null)child.kill('SIGKILL');for(const dir of temporary)rmSync(dir,{recursive:true,force:true});});
-function fixture(){const dir=realpathSync(mkdtempSync(join(tmpdir(),'safe-move-process-')));temporary.push(dir);mkdirSync(join(dir,'to'));for(const name of ['first','second','recovery'])writeFileSync(join(dir,`${name}.txt`),`Synthetic ${name}`);return dir;}
+function fixture(){const dir=realpathSync.native(mkdtempSync(join(tmpdir(),'safe-move-process-')));temporary.push(dir);mkdirSync(join(dir,'to'));for(const name of ['first','second','recovery'])writeFileSync(join(dir,`${name}.txt`),`Synthetic ${name}`);return dir;}
 function writer(dir:string,mode:string,name='first'){
  const child=fork(script,[binary,dir,mode,name],{stdio:['ignore','ignore','pipe','ipc']});children.push(child);
  const messages:any[]=[];let stderr='';child.stderr?.on('data',b=>stderr+=String(b));child.on('message',m=>messages.push(m));

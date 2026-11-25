@@ -414,13 +414,24 @@ export class EngineService {
     const path = this.store.pathOf(m);
     const wanted = this.contextOf(m);
     const loaded = this.engine.loaded();
+    const weights = this.weightsOf(m);
+    const kv = this.shapeOf(path).kvBytesPerToken;
     // Loaded, perhaps with a shorter context than wanted: a reload would throw its cache away.
     if (loaded && this.launched?.wanted === wanted && loaded.id === id && loaded.path === path && (loaded.projector ?? null) === (projector ?? null)) {
+      // A context lowered because memory was short at launch stayed lowered for as long as the model
+      // stayed loaded; on a 16 GB Mac that was 8K or 16K for the whole day. A task starting asks again,
+      // when no one else is using the model, and opens it with the longer context memory now has room for.
+      if (announce && loaded.context < wanted && this.opts.manager && this.holds === 1) {
+        const fit = await this.opts.manager.fit({ wanted, need: (context) => need(weights, kv, context), replacing: "chat" });
+        if (fit.context > loaded.context) {
+          this.launched = { wanted, tight: fit.tight, told: fit.context >= wanted && !fit.tight };
+          await this.engine.ensure({ ...loaded, context: fit.context });
+          return { context: fit.context, wanted, tight: fit.tight, announce: this.tell(announce) };
+        }
+      }
       await this.engine.ensure(loaded);
       return { context: loaded.context, wanted, tight: this.launched.tight, announce: this.tell(announce) };
     }
-    const weights = this.weightsOf(m);
-    const kv = this.shapeOf(path).kvBytesPerToken;
     const fit = this.opts.manager
       ? await this.opts.manager.fit({ wanted, need: (context) => need(weights, kv, context), ...(loaded && { replacing: "chat" as const }) })
       : { context: wanted, tight: false };

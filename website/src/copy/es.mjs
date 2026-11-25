@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un asistente personal que funciona en tu Mac", description: "Vunemi ayuda con las tareas diarias. La IA funciona en tu Mac, sin cuenta en la nube de Vunemi. Tú eliges qué servicios externos conectar." },
-    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.4.0." },
+    features: { title: "Qué hace Vunemi", description: "Correo, calendario, archivos, la web y tus apps del Mac, con tarjetas de aprobación, deshacer y límites claros. Todo lo que puede hacer Vunemi 0.5.0." },
     screens: { title: "Pantallas de Vunemi", description: "Pantallas reales de la app Vunemi para Mac, capturadas con datos de ejemplo." },
-    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.4.0 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
+    download: { title: "Descarga Vunemi para Mac", description: "Descarga Vunemi 0.5.0 para Mac con Apple Silicon y macOS 14 o posterior. Gratis y de código abierto." },
   },
   hero: {
     eyebrow: "Asistente personal para Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Todo lo que puede hacer Vunemi",
-    intro: "Vunemi 0.4.0 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
+    intro: "Vunemi 0.5.0 en detalle: cómo trabajas con él, con qué se puede conectar y cómo mantienes el control.",
     chatTitle: "Trabajar con Vunemi",
     chat: [
       { title: "Primero, el plan", body: "En una tarea de varios pasos, Vunemi puede mostrarte antes el plan. Adelante, edita los pasos o cancela." },
@@ -129,6 +129,7 @@ export default {
       { title: "Proyectos", body: "Convierte una carpeta en proyecto: Vunemi guarda ahí los archivos de ese trabajo y cada cambio se puede deshacer." },
       { title: "Memoria", body: "Notas con tus propias palabras, guardadas solo cuando dices que sí. Una tarea recibe solo las notas que le sirven, y la respuesta dice cuántas recibió." },
       { title: "Temas", body: "Guarda como tema algo a lo que vuelves a menudo, como una reforma o una pregunta de investigación: una carpeta de páginas Markdown en tu Mac que también puedes abrir en Obsidian. Vincula una carpeta tuya y Vunemi lee sus archivos donde están, sin copiarlos. Anota qué archivos enlazan con cuáles y cuáles definen códigos como SKU, y mantiene una página corta llamada «Index». Cuando responde a partir de los archivos, escribe lo que aprendió en páginas que citan cada archivo, así la siguiente respuesta empieza desde ahí, y una página se marca cuando cambia un archivo que cita. Existe porque una sola búsqueda en muchos archivos a menudo no encuentra el archivo que tiene la respuesta. El trabajo pesado solo se hace mientras Vunemi está libre, y en las subcarpetas grandes se busca por palabras salvo que las actives. Sin temas, Vunemi sigue leyendo los archivos que le das en una tarea. La calidad de las páginas depende del modelo." },
+      { title: "Lo que encontró una búsqueda web", body: "Cuando Vunemi busca algo en la web, lee el contenido de una página, no sus menús, anuncios ni pies de página, y guarda lo que te responde: en un sitio de empleo, las ofertas que encajan, cada una con su dirección. Si la conversación está en un tema, van allí. Si no, Vunemi reúne su respuesta y lo que encontró, con las direcciones que leyó, en un tema temporal y te pregunta si quieres conservarlo, con un nombre que puedes cambiar, o eliminarlo; hasta que elijas, sigue marcado como temporal en la página Memoria. Existe porque una búsqueda larga llenaba la memoria del modelo con páginas enteras y perdía lo que había encontrado, y porque un modelo no siempre recuerda guardar sus hallazgos: la respuesta llega a la memoria de todos modos. Sin esto, elige Eliminar y no queda nada; la respuesta sigue en la conversación. Lo bien que elige depende del modelo." },
       { title: "Trae trabajo anterior", body: "Escribe @ y elige una sesión anterior o una reunión. Sus preguntas y respuestas, o el resumen de la reunión, van con tu mensaje; hasta cinco a la vez." },
       { title: "Tus reuniones en Claude o Codex", body: "Si también usas Claude o Codex, puedes permitirle leer las reuniones que grabó Vunemi, también mientras se graba una, para no copiar la transcripción a mano. Está desactivado hasta que lo actives en Reuniones, y solo puede leer. Lo que lee va al servicio de ese asistente, así que sale de tu Mac. Sin ello, todo en Vunemi funciona como antes y tus reuniones se quedan en tu Mac." },
       { title: "Requieren atención", body: "Las tareas que esperan un permiso, tu respuesta o una revisión, de todas las sesiones, en una sola lista. Al elegir una se abre justo esa tarea, así nada se queda esperando sin que lo veas en una sesión antigua. Marca una tarea como vista cuando la hayas mirado; las revisiones de más de 7 días salen solas de la lista, y una tarea vuelve si pasa algo nuevo en ella." },
@@ -175,6 +176,7 @@ export default {
       { title: "Tus datos, tu decisión", body: "Olvida una sesión, una nota o todo. Una nota de la memoria nunca concede un permiso, y las palabras de páginas, correos o archivos nunca pueden convertirse en una." },
       { title: "Permisos de esta ejecución", body: "Cuando Vunemi pide leer un archivo o mirar una ventana, puedes permitirlo una vez o durante el resto de la tarea, hasta 8 veces, en lugar de aprobar cada lectura. Un archivo cambiado necesita un permiso nuevo, puedes revocar cualquiera en cualquier momento y ninguno pasa a las tareas programadas." },
       { title: "Aprobar todo en una tarea", body: "Algunas tareas piden muchas aprobaciones pequeñas seguidas, y pulsar cada una estorba el trabajo que delegaste. En una tarjeta normal puedes aprobar el resto de la tarea: esa app y los cambios locales dejan de preguntar hasta que termine. Enviar, eliminar, reemplazar un archivo, las apps de correo, mensajería y navegadores, y las advertencias siguen preguntando. Volver a preguntar lo deshace, y termina solo si Vunemi no puede saber si un paso surtió efecto. Nunca tienes que usarlo: sin esto, cada paso pregunta por separado." },
+      { title: "Menos tarjetas en las páginas web", body: "Una búsqueda en la web pedía aprobación en cada clic, cada búsqueda escrita y cada Intro, y tantas tarjetas te acostumbran a pulsar Aprobar sin leer. Ahora seguir un enlace normal y usar el cuadro de búsqueda de un sitio cuentan como lectura, como abrir una página, y no piden tarjeta. Para un botón en un sitio, Aprobar todo cubre los siguientes clics, textos y elecciones solo en ese sitio hasta que termine la tarea; en un sitio que marques como de confianza, en la tarjeta o en Ajustes › Seguridad, basta una aprobación. Un formulario que envía datos, otro sitio, los campos de inicio de sesión y de pago, y todo lo que suene a enviar o eliminar siguen preguntando cada vez. Nunca tienes que usarlo: sin esto, cada acción en una página pregunta por separado." },
       { title: "Sin repeticiones ante la duda", body: "Si Vunemi no puede saber si una acción tuvo efecto, no la vuelve a hacer. La tarea queda marcada como «Resultado incierto» y espera a que lo compruebes, incluso después de reiniciar." },
     ],
     extras: [
@@ -189,10 +191,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novedades de esta versión",
     highlights: [
-      "Nuevo: temas. Guarda un asunto al que vuelves como carpeta de páginas Markdown en tu Mac y vincula tus carpetas: Vunemi las lee donde están, anota qué archivos enlazan a cuáles y cuáles definen códigos como SKU, y escribe páginas que citan sus archivos, empezando por la página «Index».",
-      "Existe porque una sola búsqueda en muchos archivos a menudo no encuentra el que tiene la respuesta. El trabajo pesado solo se hace cuando Vunemi está inactivo. Sin temas, Vunemi lee como antes los archivos que le das en una tarea. La calidad de las páginas depende del modelo.",
-      "El motor integrado es más nuevo y ejecuta Inkling 2. Vunemi ya puede descargar modelos de ggml-org y, cuando el motor no puede cargar un modelo, lo dice en vez de culpar a la memoria o a las herramientas del modelo.",
-      "El chat de voz ya no lee en voz alta «Detenido.». En un campo de contraseña, Vunemi solo pulsa teclas que no cambian el texto; puede que macOS vuelva a pedir sus permisos. «Aprobar todo» y las tareas programadas ahora reconocen apps con nombre traducido.",
+      "Novedad: cuando una conversación sin tema busca algo en la web, Vunemi reúne la respuesta, las direcciones que leyó y lo que guardó en un tema temporal, y te pregunta si quieres conservarlo, con un nombre que puedes cambiar, o eliminarlo.",
+      "Existe porque una búsqueda larga llenaba la memoria del modelo con páginas enteras y perdía lo encontrado. Ahora las páginas se leen por su contenido principal y los pasos antiguos se acortan. Si eliges Eliminar, no queda nada; la respuesta sigue en el chat.",
+      "Menos tarjetas en la web: los enlaces normales y el cuadro de búsqueda de un sitio cuentan como lectura. Aprobar todo cubre un sitio hasta que termina la tarea, y uno de confianza pide una aprobación por tarea. Formularios, envíos y borrados siguen preguntando.",
+      "Un tema solo se sugiere si la petición está más cerca de él que de las peticiones cotidianas, y los scripts de una página ya no pueden hacer pasar un formulario que envía datos por una búsqueda.",
     ],
     title: "Descarga Vunemi",
     intro: "Gratis y de código abierto. Para Mac con Apple Silicon y macOS 14 o posterior.",

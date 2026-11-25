@@ -40,6 +40,8 @@ export interface TopicTreeView {
     name: string;
     about: string;
     updatedAt: number;
+    /** Made by Vunemi for a web lookup; the user keeps or deletes it. */
+    temporary?: true;
     notes: { title: string; updatedAt: number }[];
     sources: { name: string; updatedAt: number }[];
     /** Folders linked to the topic: read where they are, never copied. */
@@ -394,8 +396,14 @@ export interface ArtefactView {
   canUndo: boolean;
 }
 
-/** Works from anywhere, even when Vunemi isn't focused. */
-export const EMERGENCY_STOP_ACCELERATOR = "CommandOrControl+Shift+Escape";
+/**
+ * Works from anywhere, even when Vunemi isn't focused. Windows keeps
+ * Ctrl+Shift+Esc for Task Manager and never lets an app register it, so
+ * there it is Ctrl+Alt+Shift+Esc (the user's choice, 23 Nov 2026).
+ */
+export function emergencyStopAccelerator(system: NodeJS.Platform | string): string {
+  return system === "win32" ? "Control+Alt+Shift+Escape" : "CommandOrControl+Shift+Escape";
+}
 
 /** How big a request the model takes, and how much of it the next one would use. */
 export interface ContextInfo {
@@ -799,7 +807,8 @@ export interface VunemiApi {
   /** The user's answer to a note proposed under a reply; `text` when they edited it. */
   resolveMemory(runId: string, proposalId: string, decision: "saved" | "skipped", text?: string): Promise<void>;
   /** The user's answer to "Shall I keep this conversation in …?" */
-  resolveTopic(runId: string, decision: "linked" | "skipped"): Promise<void>;
+  /** `name`: for "kept", the name the user typed for the temporary topic. */
+  resolveTopic(runId: string, decision: "linked" | "skipped" | "kept" | "deleted", name?: string): Promise<void>;
   /** Puts the open conversation in a topic, by name, or takes it out (null). */
   setTopic(name: string | null): Promise<SessionList>;
   /** The Memory page (main/topics/page.ts). */
@@ -827,6 +836,8 @@ export interface VunemiApi {
   topicsRevealOriginal(topic: string, name: string): Promise<void>;
   /** The topic's folder to the Trash; its conversations leave it. */
   topicsDelete(topic: string): Promise<void>;
+  /** A temporary topic becomes the user's (topics/page.ts keepTopic). */
+  topicsKeep(topic: string): Promise<void>;
   onTopicsChanged(listener: () => void): () => void;
   memorySearch(): Promise<MemorySearchStatus>;
   memorySearchDownload(): Promise<MemorySearchStatus>;
@@ -1114,6 +1125,7 @@ export const CH = {
   topicsReveal: "topics:reveal",
   topicsRevealOriginal: "topics:reveal-original",
   topicsDelete: "topics:delete",
+  topicsKeep: "topics:keep",
   topicsChanged: "topics:changed",
   memorySearch: "memory:search",
   memorySearchDownload: "memory:search-download",

@@ -7,6 +7,7 @@ import { Connectors } from "@vunemi/connectors";
 import { overheadChars, ToolRegistry } from "@vunemi/agent-core";
 import { ScriptableCatalog } from "@vunemi/apps";
 import { appsConnector, shortcutsConnector } from "../../src/main/connectors.js";
+const onWindows = process.platform === "win32";
 
 let dir: string;
 let fake: string;
@@ -47,7 +48,8 @@ describe("the Mac apps connection", () => {
     expect(view.parts.map((part) => part.id)).toEqual(["notes", "notes-change", "finder"]);
   });
 
-  it("shows a refused permission as blocked until a call works again", async () => {
+  // Windows: Mac apps and Apple Mail are macOS only.
+  it.skipIf(onWindows)("shows a refused permission as blocked until a call works again", async () => {
     const c = appsConnector({ roots: new Roots([dir]), catalog: new ScriptableCatalog(join(dir, "cache"), []), osascript: fake });
     const tools = c.tools();
     expect(await c.status()).toEqual({ state: "ready" });

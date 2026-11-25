@@ -1,13 +1,14 @@
 /**
- * The Vault's key on Linux: kept by the system keyring through safeStorage,
- * or not at all. Synthetic keys and a fake safeStorage only.
+ * The Vault's key on Linux and Windows: kept through safeStorage (the system
+ * keyring on Linux, DPAPI on Windows), or not at all. Synthetic keys and a
+ * fake safeStorage only.
  */
 import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { KeyCrypto, LINUX_MAGIC, Vault } from "@vunemi/vault";
-import { KEYRING_BACKENDS, keyringState, LINUX_KEY_FILE, linuxVaultKey, type SafeStorageLike } from "../../src/main/vault-key-linux.js";
+import { KEYRING_BACKENDS, keyringState, LINUX_KEY_FILE, linuxVaultKey, safeStorageVaultKey, WINDOWS_KEY_FILE, type SafeStorageLike } from "../../src/main/vault-key-safe-storage.js";
 
 /** A stand-in for safeStorage: reversible, and marked so a test can see it was used. */
 function storage(backend: string, available = true): SafeStorageLike & { calls: string[] } {
@@ -33,16 +34,16 @@ afterEach(() => rmSync(dir, { recursive: true, force: true }));
 describe("the Linux vault key", () => {
   it("accepts only backends that keep the key in a real keyring", () => {
     expect([...KEYRING_BACKENDS].sort()).toEqual(["gnome_libsecret", "kwallet", "kwallet5", "kwallet6"]);
-    expect(keyringState(storage("gnome_libsecret")).usable).toBe(true);
-    expect(keyringState(storage("kwallet6")).usable).toBe(true);
-    expect(keyringState(storage("basic_text")).usable).toBe(false);
-    expect(keyringState(storage("unknown")).usable).toBe(false);
-    expect(keyringState(storage("gnome_libsecret", false)).usable).toBe(false);
+    expect(keyringState(storage("gnome_libsecret"), "linux").usable).toBe(true);
+    expect(keyringState(storage("kwallet6"), "linux").usable).toBe(true);
+    expect(keyringState(storage("basic_text"), "linux").usable).toBe(false);
+    expect(keyringState(storage("unknown"), "linux").usable).toBe(false);
+    expect(keyringState(storage("gnome_libsecret", false), "linux").usable).toBe(false);
   });
 
   it("asks whether encryption is available before reading the backend, which is what selects it", () => {
     const fake = storage("gnome_libsecret");
-    keyringState(fake);
+    keyringState(fake, "linux");
     expect(fake.calls.slice(0, 2)).toEqual(["available", "backend"]);
   });
 
@@ -59,7 +60,8 @@ describe("the Linux vault key", () => {
     const first = linuxVaultKey(storage("gnome_libsecret"), dir);
     expect(first.ok && first.created).toBe(true);
     const file = join(dir, LINUX_KEY_FILE);
-    expect(statSync(file).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600);
     const sealed = readFileSync(file);
     expect(sealed.subarray(0, 4).toString("ascii")).toBe("VKL1");
     // The key itself is not in the file.
@@ -107,5 +109,38 @@ describe("the Linux vault key", () => {
     const reopened = new KeyCrypto(LINUX_MAGIC);
     reopened.unlock(again.key);
     expect(new Vault(dir, reopened).has("github-token")).toBe(true);
+  });
+});
+
+/** Windows' safeStorage: DPAPI, and no getSelectedStorageBackend (Electron has it on Linux only). */
+function windowsStorage(available = true): SafeStorageLike & { calls: string[] } {
+  const { getSelectedStorageBackend: _linuxOnly, ...rest } = storage("unused", available);
+  return rest;
+}
+
+describe("the Windows vault key", () => {
+  it("is kept with DPAPI and never asks for a Linux backend", () => {
+    const fake = windowsStorage();
+    expect(keyringState(fake, "win32")).toEqual({ backend: "dpapi", usable: true });
+    expect(keyringState(windowsStorage(false), "win32")).toEqual({ backend: "dpapi", usable: false });
+    expect(fake.calls).not.toContain("backend");
+  });
+
+  it("makes a key once in its own file and reads the same key back", () => {
+    const first = safeStorageVaultKey(windowsStorage(), dir, "win32");
+    expect(first).toMatchObject({ ok: true, created: true });
+    expect(existsSync(join(dir, WINDOWS_KEY_FILE))).toBe(true);
+    expect(existsSync(join(dir, LINUX_KEY_FILE))).toBe(false);
+    const again = safeStorageVaultKey(windowsStorage(), dir, "win32");
+    if (!first.ok || !again.ok) throw new Error("no key");
+    expect(again.created).toBe(false);
+    expect(again.key.equals(first.key)).toBe(true);
+  });
+
+  it("without DPAPI stores nothing and says why", () => {
+    const fake = windowsStorage(false);
+    expect(safeStorageVaultKey(fake, dir, "win32")).toEqual({ ok: false, reason: "no-keyring", backend: "dpapi" });
+    expect(fake.calls).not.toContain("encrypt");
+    expect(existsSync(join(dir, WINDOWS_KEY_FILE))).toBe(false);
   });
 });

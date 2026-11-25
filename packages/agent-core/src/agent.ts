@@ -1,3 +1,4 @@
+import { baseNameOf, tildeMatches } from "./path-names.js";
 import {copyQuotedSource,quotedSourceContext,type QuotedSource} from './quoted-source.js';
 import {outcomeWorkflow,automaticOutcomeCompletions} from './outcome-progress.js';
 import {validOutcomeEvidence,requiresOutcomeEvidence,mutationRequestFingerprint,type OutcomeEvidence} from './outcome-evidence.js';
@@ -31,7 +32,7 @@ import { GUARD_NOTE, suspectInstructions } from "./guard.js";
 import { mentionParts, mentionSource, type RunMention } from "./mentions.js";
 import { maskSecrets } from "./secrets.js";
 import type { ChatMessage, ChatModel, ChatResult, ImageData, ToolCall, ToolSpec } from "./provider.js";
-import type { ActionClass, ToolDef, ToolRegistry } from "./tools.js";
+import { staleHead, type ActionClass, type StaleHead, type ToolDef, type ToolRegistry } from "./tools.js";
 import { t } from "@vunemi/i18n";
 import { requestedTravelTools } from "./travel-intent.js";
 import { promptLedger, type LedgerPart } from "./ledger.js";
@@ -264,6 +265,12 @@ export interface RunOptions {
   maxToolOutputChars?: number;
   /** Where long tool output is kept whole; without it, its middle is cut. */
   keptOutputs?: OutputKeeper;
+  /**
+   * Web findings: the tool that keeps one, and the tools that show a page.
+   * After FINDINGS_AFTER page views with none kept, the model is reminded once; what
+   * this run kept is carried word for word through every checkpoint.
+   */
+  findings?: { tool: string; pages: ReadonlySet<string> };
   /** Consecutive identical tool calls tolerated before the run is failed. Default 5; a reminder goes to the model from the third. */
   maxRepeats?: number;
   /** Tokens the model takes per request; trimming starts before it fills. */
@@ -390,6 +397,16 @@ export function overheadChars(tools: ToolRegistry, instructions?: string, opened
 
 /** In a run, trimming starts past this share of the window. */
 const IN_RUN_LIMIT = 0.8;
+
+/** Pages shown with no finding kept before the model is reminded, once a run. */
+/*
+ * Two page views: a lookup often goes to a page, reads it and answers at once,
+ * keeping nothing (installed trial, 24 Nov: after 4 the reminder never came).
+ */
+export const FINDINGS_AFTER = 2;
+export const FINDINGS_REMINDER = "[Vunemi: nothing from these pages is kept yet. If any of it answers the request, add it now with web_finding_add; leave out what doesn't.]";
+/** What a checkpoint carries of the run's findings, newest kept. */
+const FINDINGS_PINNED_CHARS = 3_000;
 /** The model is reminded from this many identical calls in a row. */
 const REMIND_AT = 3;
 /** Sent with the one request after the steps run out; never kept in the conversation. */
@@ -448,7 +465,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   const readBackFiles = new Set<string>();
   /** Files a converter (ToolDef.convertsFiles) made in this run, and nothing has written to since. */
   const convertedFiles = new Set<string>();
-  const sameFile = (a:string,b:string) => a===b || (b.startsWith("~/")&&a.endsWith(b.slice(1))) || (a.startsWith("~/")&&b.endsWith(a.slice(1)));
+  const sameFile = (a:string,b:string) => a===b || tildeMatches(b,a) || tildeMatches(a,b);
   const converted = (path:string|undefined) => !!path && [...convertedFiles].some(p=>sameFile(p,path));
   const writtenTo = (path:string) => { for(const p of [...convertedFiles]) if(sameFile(p,path)) convertedFiles.delete(p); };
   const requestedTextOutputs=[...new Set(explicitWriteTargets(opts.resumeTask?.goal ?? opts.goal)
@@ -483,11 +500,11 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       const file = fileCalls.get(event.callId);
       if (file && ["files_write", "files_edit"].includes(file.tool)) {
         unverifiedFiles.add(file.path); readBackFiles.delete(file.path); writtenTo(file.path);
-        if(file.path.startsWith("~/")) for(const p of [...readBackFiles]) if(p.endsWith(file.path.slice(1))) { readBackFiles.delete(p); unverifiedFiles.add(p); }
+        for(const p of [...readBackFiles]) if(tildeMatches(file.path,p)) { readBackFiles.delete(p); unverifiedFiles.add(p); }
       }
       if (file?.tool === "files_read" && file.checked) {
         const matching = [...unverifiedFiles, ...trackedTasks.flatMap(t => t.outputs.flatMap(o => o.kind === "file" ? [o.path] : []))]
-          .filter(p => p === file.path || (file.path.startsWith("~/") && p.endsWith(file.path.slice(1))));
+          .filter(p => p === file.path || tildeMatches(file.path,p));
         unverifiedFiles.delete(file.path); readBackFiles.add(file.path);
         for (const p of matching) { unverifiedFiles.delete(p); readBackFiles.add(p); }
       }
@@ -681,7 +698,11 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
   if (areaMode && tools.getAny("task_update")) listed.add("task_update");
   const listedParts = areaMode ? listedRequest(tools, areas, listed, opts.instructions, offerable, withinRun, opts.compactTaskTools) : null;
   const system = listedParts?.system ?? systemPrompt(opts.instructions);
-  const ephemeral = new Set(tools.list().flatMap((t) => (t.ephemeral ? [t.name] : [])));
+  const ephemeral = new Map(tools.list().flatMap((t) => (t.ephemeral ? [[t.name, t.stale] as const] : [])));
+  // Web findings (opts.findings): pages since the last one, whether the model was reminded, and what this run kept.
+  let pagesSinceFinding = 0;
+  let findingsReminded = false;
+  const keptFindings: string[] = [];
   // Recomputed when a guide opens a group of tools; the same otherwise. With
   // areas never: the group's definitions are given in the conversation instead.
   let toolSpecs = (listedParts?.tools ?? toolSpecsOf(tools, opts.openedTools, offerable, toolGoal, withinRun)).filter(spec => {
@@ -1214,6 +1235,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
 
         let output = await handleCall(call, stepId);
         if (repeats >= REMIND_AT) output += REPEAT_REMINDER;
+        output = noteFinding(call, output);
         convo.push({ role: "tool", content: output, toolCallId: call.id, toolName: realName(call) });
         checkpoint();
         if (approvalRejected) return finish("stopped", t("agent.rejectionStopped"));
@@ -1322,7 +1344,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
 
   /** Long output kept whole, the model shown its start; room is left for the note. */
   async function keepLong(raw: string, tool: ToolDef): Promise<string> {
-    const first = Math.min(tool.firstPartChars ?? maxOut, maxOut - KEPT_NOTE_ROOM);
+    const end = tool.firstPartEnd ? raw.indexOf(tool.firstPartEnd) : -1;
+    const wanted = end >= 0 ? Math.min(tool.firstPartChars ?? end, end) : tool.firstPartChars;
+    const first = Math.min(Number.isFinite(wanted) && wanted! >= 0 ? wanted! : maxOut, maxOut - KEPT_NOTE_ROOM);
     if (!opts.keptOutputs || raw.length <= first || KEPT_READERS.has(tool.name)) return raw;
     return opts.keptOutputs.keep(tool.name, raw, first);
   }
@@ -1376,7 +1400,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       const suggested=pending.flatMap(callId => {
         const path=fileCalls.get(callId)?.path ?? (task.outputs.length===1 && task.outputs[0]?.kind==="file" ? task.outputs[0].path : undefined);
         if(!path)return [];
-        const name=path.split("/").at(-1)!;
+        const name=baseNameOf(path);
         const index=task.steps.findIndex(s => (s.status!=="completed" || s.evidence!=="tool_result") && s.title.includes(name));
         return index<0?[]:[{tool:"task_update",arguments:{step:index+1,status:"completed",evidenceCallIds:[callId]},basis:"This output was saved successfully; only use this suggestion after checking its actual contents."}];
       });
@@ -1475,6 +1499,46 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
    * tool output, which costs no model call; `hard` — the server already
    * refused — trims harder and may summarise earlier turns.
    */
+  /**
+   * Counts pages shown since the last finding and reminds the model once a
+   * run; keeps each finding the tool confirmed ("Kept "<title>" (<address>)"),
+   * with the text the model gave, for checkpoints.
+   */
+  function noteFinding(call: ToolCall, output: string): string {
+    const f = opts.findings;
+    if (!f) return output;
+    const name = realName(call);
+    if (name === f.tool) {
+      pagesSinceFinding = 0;
+      const url = /^Kept ".*?" \((https?:\/\/[^\s)]+)\)/.exec(output)?.[1];
+      if (url) {
+        let args: { title?: unknown; text?: unknown } = {};
+        const inner = call.name === TOOL_RUN ? unwrapRun(call.argumentsText) : call;
+        try { args = JSON.parse("argumentsText" in inner ? inner.argumentsText : "{}") as typeof args; } catch { /* kept without its words */ }
+        keptFindings.push(`- ${String(args.title ?? "").trim()}: ${String(args.text ?? "").replace(/\s+/g, " ").trim()} — ${url}`);
+      }
+      return output;
+    }
+    if (!f.pages.has(name)) return output;
+    pagesSinceFinding++;
+    if (findingsReminded || pagesSinceFinding < FINDINGS_AFTER) return output;
+    findingsReminded = true;
+    return `${output}\n\n${FINDINGS_REMINDER}`;
+  }
+
+  /** This run's findings for a checkpoint, newest kept when there are too many. */
+  function pinnedFindings(): string | undefined {
+    const out: string[] = [];
+    let used = 0;
+    for (let i = keptFindings.length - 1; i >= 0; i--) {
+      const line = keptFindings[i]!;
+      if (used + line.length + 1 > FINDINGS_PINNED_CHARS) break;
+      out.unshift(line);
+      used += line.length + 1;
+    }
+    return out.length ? out.join("\n") : undefined;
+  }
+
   async function makeRoom(hard: boolean): Promise<void> {
     // Compaction may change message indices. Resume full context before
     // pruning so a stale literal-history offset cannot hide the request.
@@ -1498,6 +1562,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       allowSummary: hard,
       force: hard,
       signal,
+      pinned: pinnedFindings(),
     });
     if (result.kind === "none" && !dropped) return;
     convo.splice(0, convo.length, ...result.history);
@@ -1728,8 +1793,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       if (destinations.length && !destinations.includes(String(path)))
         return fail(call, `This write target differs from the user's explicit output path. Use one of these actual paths: ${JSON.stringify(requested)}. Do not prefix a connector label such as Files:. Nothing was written.`,false,true);
       const saved = trackedTasks.find(t => t.activeRunId === runId)?.outputs.filter(o => o.kind === "file") ?? [];
-      const suffix = typeof path === "string" && path.startsWith("~/") ? path.slice(1) : null;
-      if (saved.some(o => o.kind === "file" && (o.path === path || (suffix && o.path.endsWith(suffix)))))
+      if (saved.some(o => o.kind === "file" && (o.path === path || (typeof path === "string" && tildeMatches(path, o.path)))))
         return fail(call, "This output was already saved by this task. Do not write it again to get a new receipt. Read and verify it, reuse this task's successful receipt, and finish the remaining outputs. Corrections must use files_edit after reading the actual defect.", false, true);
     }
     if (tool.name === "present_options") {
@@ -1881,7 +1945,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       if (tool.name === "files_read") {
         const original=(parsed.value as {path?:string}).path;
         const path=typeof original === "string" ? canonicalFile(tool.name,parsed.value as Record<string,unknown>,original) : original;
-        const generated=trackedTasks.some(t => t.outputs.some(o => o.kind === "file" && (o.path === path || (path?.startsWith("~/") && o.path.endsWith(path.slice(1))))));
+        const generated=trackedTasks.some(t => t.outputs.some(o => o.kind === "file" && (o.path === path || (path !== undefined && tildeMatches(path, o.path)))));
         // A converter's output holds what the original holds: the checks for invented
         // currencies, years and averages, and the source review, are for model-written text.
         const conversion=generated&&converted(path);
@@ -1913,7 +1977,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
           const latestWrite=operations.findLastIndex(op=>op.status==="completed" && op.fileEvidence?.kind==="write" && (op.fileEvidence.path===path||op.fileEvidence.paths?.includes(path!)));
           const prior=reusable && fingerprint && latestWrite>=0 ? operations.slice(latestWrite+1).findLast(op=>op.status==="completed" && op.fileEvidence?.kind==="verified-read" && (op.fileEvidence.path===path||op.fileEvidence.paths?.includes(path!)) && op.fileEvidence.review?.version===1 && op.fileEvidence.review.fingerprint===fingerprint) : undefined;
           if(!prior){
-            const issues=await reviewOutput(model,opts.resumeTask?.goal ?? opts.goal,sourceTexts.join("\n"),raw,signal,usage=>emit({type:"usage",runId,stepId,...usage}),path?.split("/").at(-1),requirements ?? "");
+            const issues=await reviewOutput(model,opts.resumeTask?.goal ?? opts.goal,sourceTexts.join("\n"),raw,signal,usage=>emit({type:"usage",runId,stepId,...usage}),(path === undefined ? undefined : baseNameOf(path)),requirements ?? "");
             if(issues.length) throw new Error(officePath(path??'')?officeReviewFailure(path!,`Source verification failed: ${JSON.stringify(issues)}.`,officeRepairAdvice(path!)):`Source verification failed: ${JSON.stringify(issues)}. Correct the specific defects with files_edit and verify again. Do not rewrite already correct files.`);
           }
           if(fingerprint)fileReview={version:1,fingerprint,mode:prior?"reused":"independent"};
@@ -2066,7 +2130,7 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       ...(taskPermissionOffer && {taskPermissionOffer}),
       ...(alert && { alert: true }),
       ...(alwaysAsk && !tool.allowSessionApproval && { alwaysAsk: true }),
-      ...(cover && { approveAll: cover.app === undefined ? {} : { app: cover.app } }),
+      ...(cover && { approveAll: { ...(cover.app !== undefined && { app: cover.app }), ...(cover.site !== undefined && { site: cover.site }), ...(cover.trusted === true && { trusted: true }) } }),
       ...(preview !== undefined && { preview }),
     });
     const decision = await Promise.race([
@@ -2094,6 +2158,9 @@ export async function runAgent(opts: RunOptions): Promise<RunResult> {
       approved(false, undefined, () => approvedAll.has(cover.key));
       return null;
     }
+    // On a site the user trusts, one approval covers the site until the task ends, but not local work.
+    // A warning, a resumed or scheduled run, and a form that posts have no cover, so nothing is added.
+    if (cover?.trusted === true && !alert) approvedAll.add(cover.key);
     approved(alert, () => {
       if (decision.kind === "approve_always") {
         if (scope && tool.allowSessionApproval && !alert) { grants.add(scope); if(strict) freshResumeScopes.add(scope); }
@@ -2257,7 +2324,7 @@ async function attachedImages(
     const unseen = NO_VISION.replace("only this text is available", "the attached images are only paths");
     if (!readText) return { listed: [...attachments], images: [], note: `\n\n${unseen}` };
     const notes: string[] = [];
-    for (const path of pictures) notes.push(`${defuseTags(path.split("/").pop() ?? path)}: ${await imageText(path, readText, unseen)}`);
+    for (const path of pictures) notes.push(`${defuseTags(baseNameOf(path))}: ${await imageText(path, readText, unseen)}`);
     return { listed: [...attachments], images: [], note: `\n\n${notes.join("\n\n")}` };
   }
   const images: ImageData[] = [];
@@ -2269,7 +2336,7 @@ async function attachedImages(
       loaded.push(path);
     }
   }
-  const names = loaded.map((p) => defuseTags(p.split("/").pop() ?? p)).join(", ");
+  const names = loaded.map((p) => defuseTags(baseNameOf(p))).join(", ");
   return {
     listed: attachments.filter((a) => !loaded.includes(a)),
     images,
@@ -2291,15 +2358,34 @@ export const EPHEMERAL_PLACEHOLDER =
  * tools, since they all describe the same changing page. Returns a new
  * array; messages themselves are not mutated.
  */
-export function compactEphemeral(messages: ChatMessage[], ephemeral: ReadonlySet<string>): ChatMessage[] {
+export function compactEphemeral(
+  messages: ChatMessage[],
+  ephemeral: ReadonlySet<string> | ReadonlyMap<string, StaleHead | undefined>,
+): ChatMessage[] {
   if (ephemeral.size === 0) return messages;
   let lastIndex = -1;
   messages.forEach((m, i) => {
     if (m.role === "tool" && ephemeral.has(m.toolName)) lastIndex = i;
   });
   return messages.map((m, i) =>
-    m.role === "tool" && ephemeral.has(m.toolName) && i !== lastIndex ? { ...m, content: EPHEMERAL_PLACEHOLDER } : m,
+    m.role === "tool" && ephemeral.has(m.toolName) && i !== lastIndex ? { ...m, content: staleContent(m.content, ephemeral instanceof Map ? ephemeral.get(m.toolName) : undefined) } : m,
   );
+}
+
+/** A kept output's note: it says where the whole of the output can still be read. */
+const KEPT_NOTE = /\n(\[Showing characters [^\n]*kept as "[^"\n]+"[^\n]*\])\s*$/;
+
+/** An old snapshot: what its tool keeps of it, the note, and where the whole of it is kept. */
+function staleContent(content: string, stale: StaleHead | undefined): string {
+  if (content.startsWith(EPHEMERAL_PLACEHOLDER) || content.includes(`\n${EPHEMERAL_PLACEHOLDER}`)) return content;
+  let head = "";
+  try {
+    head = stale ? staleHead(content, stale).trim() : "";
+  } catch {
+    head = "";
+  }
+  const kept = KEPT_NOTE.exec(content)?.[1];
+  return [head, EPHEMERAL_PLACEHOLDER, kept].filter(Boolean).join("\n");
 }
 
 /** How models write a tool call when it isn't parsed as one. */

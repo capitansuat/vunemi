@@ -1,6 +1,6 @@
 {
   "name": "@vunemi/desktop",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "license": "GPL-3.0-only",
   "homepage": "https://vunemi.com",
@@ -139,6 +139,25 @@
           "arch": ["x64", "arm64"]
         }
       ]
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "executableName": "Vunemi",
+      "publish": [],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "artifactName": "Vunemi-Setup-${version}-${arch}.${ext}",
+      "shortcutName": "Vunemi",
+      "deleteAppDataOnUninstall": false
     },
     "deb": {
       "depends": [

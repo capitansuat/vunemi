@@ -10,8 +10,11 @@ import {installNativeRecipesUnavailable} from './native-recipes/unavailable.js';
 import {assertModelRecoveryAllowed} from './task-recovery.js';
 import {scopedApprovalRequest,permissionListRequest,permissionRevokeRequest} from "./task-permissions-ipc.js";
 import { app, autoUpdater, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeImage, nativeTheme, net, Notification, powerMonitor, safeStorage, shell, systemPreferences, utilityProcess, type IpcMainInvokeEvent } from "electron";
-import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { execFile, execFileSync, spawn as spawnProcess } from "node:child_process";
+import { createWriteStream, existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { join, resolve } from "node:path";
 import { homedir, totalmem } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -20,15 +23,15 @@ import { followLanguage } from "./system-language.js";
 import { toolAreas } from "./areas.js";
 import { type StandingGrant, TaskPermissionStore, taskProgressTool, choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision, type ChatModel } from "@vunemi/agent-core";
 import { BrowserController, checkNavigation, trustableHost } from "@vunemi/browser";
-import { projectFolderProblem, Roots } from "@vunemi/files";
+import { defaultRoots, projectFolderProblem, Roots, type KnownFolders } from "@vunemi/files";
 import { Helper, scheduledApp } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
-import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type MeetingsSharedView, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
+import { CH, emergencyStopAccelerator, type AddonId, type MeetingsSharedView, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
 import { createMcpConnector, type McpServerConfig, type McpTool } from "@vunemi/mcp";
 import { Sentinel } from "@vunemi/sentinel";
 import { isLegacyCipher } from "@vunemi/vault";
 import { platform, platformInfo } from "@vunemi/platform";
-import { linuxVaultKey, type LinuxKeyResult } from "./vault-key-linux.js";
+import { safeStorageVaultKey, type LinuxKeyResult } from "./vault-key-safe-storage.js";
 import { within } from "./shutdown.js";
 import { VaultHost } from "./vault-host.js";
 import { projectInstructions, ProjectStore } from "./projects.js";
@@ -84,6 +87,9 @@ import { addonAreas, addonInstructions, packIds, registerAddonTools } from "./ad
 import { convertToMarkdown, markdownArea, markitdownDir, registerMarkdownTools } from "./markdown.js";
 import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
+import { createFindingTools } from "./work/findings.js";
+import { acceptAsk, asksAfter, deleteAsk, keepAsk, suggestable, whichAsk } from "./topics/findings-ask.js";
+import { pageAddress, temporaryTopic, writeAnswer } from "./topics/lookup-topic.js";
 import { topicIndex } from "./topics/index-text.js";
 import { suggestTopic } from "./topics/suggest.js";
 import { combined, tendAgainIn, TopicMeaning, type CatchUp } from "./topics/meaning.js";
@@ -92,8 +98,10 @@ import { summarise } from "./topics/summaries.js";
 import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
-import { PRODUCTION, type FeedSource } from "./updates/feed.js";
-import { UpdateService } from "./updates/service.js";
+import { localWindowsSource, PRODUCTION, windowsSource, type FeedSource } from "./updates/feed.js";
+import { UpdateService, type Updater } from "./updates/service.js";
+import { installableOnWindows, installerKey, WindowsUpdater } from "./updates/windows-updater.js";
+import { WINDOWS_UPDATE_KEY } from "./updates/windows-key.js";
 import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
 import { recoveryOwner, refusedBeforeStart } from "./recovery-owner.js";
@@ -226,7 +234,12 @@ tools.register(taskProgressTool());
 
 // The folders the user opened to Vunemi — Desktop, Documents, Downloads — and
 // nothing else. Overwritten files are kept aside so the log can undo them.
-const roots = new Roots();
+// On Windows the three folders are where the system says (OneDrive often
+// moves Desktop and Documents); elsewhere the home folder's own, as always.
+const knownFolders: Partial<KnownFolders> = process.platform === "win32"
+  ? { Desktop: app.getPath("desktop"), Documents: app.getPath("documents"), Downloads: app.getPath("downloads") }
+  : {};
+const roots = new Roots(defaultRoots(homedir(), knownFolders), { known: knownFolders });
 
 // The Mac itself, through the signed Swift helper. Without it — or without
 // the Accessibility permission — these tools simply say so and the rest of
@@ -349,18 +362,18 @@ function languageInstructions(): string {
 // the client reads as locked until then, and what needs a secret waits for
 // `vaultReady`: the outbox, the MCP migration, the memory check.
 /**
- * Linux: the Vault key from safeStorage and the system keyring
- * (vault-key-linux.ts). Main reads it only to hand it to the Vault process.
+ * Linux and Windows: the Vault key from safeStorage — the system keyring on
+ * Linux, DPAPI on Windows (vault-key-safe-storage.ts). Main reads it only to hand it to the Vault process.
  * Without a keyring there is no key, and the Vault refuses to store anything.
  */
 let linuxKey: LinuxKeyResult | null = null;
 function readLinuxKey(): string | undefined {
   try {
-    linuxKey = linuxVaultKey(safeStorage, app.getPath("userData"));
+    linuxKey = safeStorageVaultKey(safeStorage, app.getPath("userData"), platform.id);
   } catch (err) {
     linuxKey = { ok: false, reason: "unreadable", detail: err instanceof Error ? err.message : String(err) };
   }
-  if (!linuxKey.ok) console.error(`[vunemi] vault: no Linux key (${linuxKey.reason === "no-keyring" ? `no keyring; safeStorage backend "${linuxKey.backend}"` : linuxKey.detail})`);
+  if (!linuxKey.ok) console.error(`[vunemi] vault: no key (${linuxKey.reason === "no-keyring" ? `no-keyring, ${linuxKey.backend}` : `unreadable, ${linuxKey.detail}`})`);
   return linuxKey.ok ? linuxKey.key.toString("base64") : undefined;
 }
 /** Why the Vault can't keep secrets on Linux, in the user's words; null when it can. */
@@ -596,8 +609,52 @@ if (topics) {
     find: (query, topic, limit) => topicMeaning!.find(query, topic, limit),
   });
 }
+/** Each run's request, word for word, for the findings it keeps (work/findings.ts); the latest few. */
+const runRequests = new Map<string, string>();
+/** The pages each run read, as the browser named them, for its answer's sources (topics/lookup-topic.ts); the latest few. */
+const runPages = new Map<string, string[]>();
+/** A scheduled task is running: nobody is there to keep or delete a temporary topic, so none is made. */
+let scheduledRun = false;
+/** The conversation gathers in its new temporary topic. */
+const linkTemporary = (name: string): void => {
+  conversations.setTopic(name);
+  send(CH.sessionsChanged, sessionList());
+};
+/** Web findings: pages in the conversation's topic, or its findings note. */
+const findings = work
+  ? createFindingTools({
+      work,
+      topics,
+      where: () => {
+        const project = currentProject();
+        return {
+          ...noteWhere({ conversationId: conversations.currentId, projectId: project?.id, projectExists: project !== null }),
+          conversationTitle: conversations.list().find((c) => c.id === conversations.currentId)?.title ?? "",
+          ...(conversations.currentTopic && { topic: conversations.currentTopic }),
+        };
+      },
+      request: (runId) => (runId && runRequests.get(runId)) || "",
+      page: () => browser.where(),
+      sources: () => sentinel.untrustedSources(),
+      redact: redactOrThrow,
+      onSaved: ({ runId, note, scope }) => {
+        if (runId) record({ type: "note.saved", runId, noteId: note.id, title: note.title, scope, at: Date.now() });
+      },
+      ensureTopic: (proposed, request) =>
+        topics && !scheduledRun
+          ? temporaryTopic({ topics, conversation: { ...(conversations.currentTopic && { topic: conversations.currentTopic }), declined: conversations.temporaryDeclined }, proposed, request, link: linkTemporary })
+          : null,
+      onFinding: (runId, f) => {
+        if (!runId) return;
+        runFound.set(runId, [...(runFound.get(runId) ?? []), { ...(f.proposedTopic && { proposedTopic: f.proposedTopic }) }]);
+        for (const old of [...runFound.keys()].slice(0, Math.max(0, runFound.size - 20))) runFound.delete(old);
+      },
+    })
+  : null;
 /** "Shall I keep this in …?" asked under a run, until the user answers. Not kept past a restart. */
-const topicAsks = new Map<string, { conversation: string; topic: string }>();
+const topicAsks = new Map<string, { conversation: string; topic: string; temporary?: true; request: string }>();
+/** What each run kept with web_finding_add, for the question after it (topics/findings-ask.ts); the latest few. */
+const runFound = new Map<string, { proposedTopic?: string }[]>();
 /** Each topic's vector for the question, by its text (topics/suggest.ts). */
 const topicVectors = new Map<string, Float32Array>();
 /** The open conversation's topic, if it still exists: its name as the folder has it. */
@@ -606,22 +663,74 @@ const currentTopic = () => {
   return name && topics ? topics.findTopic(name) : null;
 };
 /**
+ * After a lookup (a run that read a page) in a conversation with no topic the
+ * user chose: its answer goes into the temporary topic, made now when the run
+ * kept nothing yet. True when it gathers there; the topic question is not asked then.
+ */
+function gatherLookup(runId: string, answer: string): boolean {
+  const pages = runPages.get(runId);
+  if (!topics || !pages?.length) return false;
+  const own = currentTopic();
+  if (own && !own.temporary) return false;
+  const found = runFound.get(runId) ?? [];
+  // Nothing to keep: no topic is made for it.
+  if (!own && !answer.trim() && found.length === 0) return false;
+  const request = runRequests.get(runId) ?? "";
+  const proposed = [...found].reverse().find((f) => f.proposedTopic?.trim())?.proposedTopic ?? "";
+  const conversation = conversations.currentId;
+  const topic = temporaryTopic({ topics, conversation: { ...(own && { topic: own.name }), declined: conversations.temporaryDeclined }, proposed, request, link: linkTemporary });
+  if (!topic) return false;
+  void writeAnswer({ topics, topic, request, answer, addresses: pages, redact: redactOrThrow })
+    .catch((err: unknown) => console.error("[vunemi] lookup answer:", err instanceof Error ? err.message : String(err)))
+    .then((title) => {
+      // Asked only when this lookup added to it, it is still temporary, and the user is still here.
+      if (!title && found.length === 0) return;
+      if (conversations.currentId !== conversation || !topics?.findTopic(topic)?.temporary) return;
+      askKeep(runId, conversation, topic, request);
+    });
+  return true;
+}
+
+/** Kept or deleted on the Memory page: the open card for that topic in this conversation says so too. */
+function settleAsks(topic: string, decision: "kept" | "deleted"): void {
+  for (const [runId, held] of topicAsks) {
+    if (!held.temporary || held.conversation !== conversations.currentId || held.topic.toLowerCase() !== topic.toLowerCase()) continue;
+    topicAsks.delete(runId);
+    record({ type: "topic.resolved", runId, topic: held.topic, decision, at: Date.now() });
+  }
+}
+
+/** "Keep it?" under the lookup; the card under an earlier lookup for the same topic goes, so one answer settles it. */
+function askKeep(runId: string, conversation: string, topic: string, request: string): void {
+  for (const [earlier, held] of topicAsks) {
+    if (!held.temporary || held.conversation !== conversation || held.topic !== topic) continue;
+    topicAsks.delete(earlier);
+    record({ type: "topic.resolved", runId: earlier, topic, decision: "skipped", at: Date.now() });
+  }
+  topicAsks.set(runId, { conversation, topic, temporary: true, request });
+  record({ type: "topic.suggested", runId, topic, temporary: true, at: Date.now() });
+}
+
+/**
  * After a run in a conversation with no topic, asked once: does what the
  * user asked fit one? Decided by meaning in code (topics/suggest.ts).
  */
 async function askTopic(runId: string, request: string | undefined): Promise<void> {
   if (!topics || !request || conversations.currentTopic || conversations.topicAsked) return;
   const conversation = conversations.currentId;
-  const found = await suggestTopic(meaning, request, topics.listTopics(), topicVectors);
+  // A temporary topic belongs to the conversation that made it, until the user keeps it.
+  const fitting = await suggestTopic(meaning, request, suggestable(topics.listTopics()), topicVectors);
+  const ask = whichAsk({ inTopic: !!conversations.currentTopic, asked: !!conversations.topicAsked, request, fitting });
   // The user moved on, or put it in a topic meanwhile: the question would be wrong.
-  if (!found || conversations.currentId !== conversation || conversations.currentTopic || conversations.topicAsked) return;
+  if (!ask || conversations.currentId !== conversation || conversations.currentTopic || conversations.topicAsked) return;
   conversations.markTopicAsked();
-  topicAsks.set(runId, { conversation, topic: found });
-  record({ type: "topic.suggested", runId, topic: found, at: Date.now() });
+  topicAsks.set(runId, { conversation, ...ask, request });
+  record({ type: "topic.suggested", runId, topic: ask.topic, at: Date.now() });
 }
 
 const connectors = buildConnectors({
   automations,
+  ...(findings && { findingTools: findings.tools }),
   // Set up further down, beside the scope lookup it needs; a tool asks for it only when it is called.
   automationGrants: () => automationGrants,
   scheduledApps: () => scheduledApps,
@@ -727,6 +836,7 @@ function splitCommand(line: string): string[] {
 // Hearing and speaking, both local: whisper.cpp on the GPU, macOS's own voice.
 const voice = new Voice(app.getPath("userData"), {
   builtIn: whisperBinary({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir() }),
+  offered: platform.features.dictation,
   onChange: (status) => send(CH.voiceChanged, status),
 });
 
@@ -847,6 +957,16 @@ const engine: EngineService = new EngineService({
 function record(event: AgentEvent): void {
   // Work keeps the engine loaded; the idle clock starts from the last of it.
   if (event.type === "run.started" || event.type === "run.finished") engine.touch();
+  if (event.type === "run.started") {
+    runRequests.set(event.runId, event.goal);
+    for (const old of [...runRequests.keys()].slice(0, Math.max(0, runRequests.size - 20))) runRequests.delete(old);
+  }
+  if (event.type === "tool.finished" && event.ok) {
+    const address = pageAddress(event.output);
+    const read = runPages.get(event.runId) ?? [];
+    if (address && !read.includes(address) && read.length < 20) runPages.set(event.runId, [...read, address]);
+    for (const old of [...runPages.keys()].slice(0, Math.max(0, runPages.size - 20))) runPages.delete(old);
+  }
   activity.record(event);
   artefacts.record(event);
   presence.record(event);
@@ -925,7 +1045,13 @@ const sessionOptions: SessionOptions = {
     meetingsIndexed = true;
     return library.index(goal, new Set([...given, conversations.currentId]));
   },
-  afterRun: ({ runId, model, words }) => {
+  afterRun: ({ runId, model, words, status, answer }) => {
+    const gathered = gatherLookup(runId, answer);
+    // A task that ran out of steps is asked only about what it kept; the rest is for finished ones.
+    if (status !== "done") {
+      if (!gathered && asksAfter(status, runFound.get(runId))) void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
+      return;
+    }
     // The model the user last ran with writes the lines about linked files while idle.
     topicsModel = model;
     // Once this run has let go: what it said is in the library before the next request.
@@ -940,7 +1066,7 @@ const sessionOptions: SessionOptions = {
         record({ type: "memory.proposed", runId, proposals: found, at: Date.now() });
       })
       .catch((err: unknown) => console.error("[vunemi] memory proposals:", err instanceof Error ? err.message : String(err)));
-    void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
+    if (!gathered) void askTopic(runId, words.at(-1)).catch((err: unknown) => console.error("[vunemi] topic question:", err instanceof Error ? err.message : String(err)));
   },
 };
 const session = new SessionCoordinatorHost({
@@ -1191,6 +1317,7 @@ const scheduler = new Scheduler({
       // would make the desktop tools refuse every other app until Vunemi restarts.
       if (item.apps?.length) scheduledApps = new Set(item.apps.map((grant) => grant.bundleId));
       currentGrant = standingGrant ?? null;
+      scheduledRun = true;
       status = await session.start(goal, model, [], {
         unattended: true,
         waitLimitMs: SCHEDULED_WAIT_MS,
@@ -1200,6 +1327,7 @@ const scheduler = new Scheduler({
     } finally {
       scheduledApps = null;
       currentGrant = null;
+      scheduledRun = false;
     }
     if (status === "stopped" && standingGrant) {
       const stopped = new Notification({ title: t("automations.stopped", { title: item.title }), body: appLock.isLocked ? "" : summaryLine(session.lastDetail) });
@@ -1459,7 +1587,7 @@ handle(CH.projectsAdd, async () => {
     title: t("app.projects.pickTitle"),
     message: t("app.projects.pickMessage"),
     buttonLabel: t("app.projects.pickButton"),
-    defaultPath: join(homedir(), "Documents"),
+    defaultPath: knownFolders.Documents ?? join(homedir(), "Documents"),
     properties: ["openDirectory", "createDirectory"] as ("openDirectory" | "createDirectory")[],
   };
   const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
@@ -1559,15 +1687,41 @@ handle(CH.memoryResolve, async (_e, runId: unknown, proposalId: unknown, decisio
   proposals.delete(proposal.id);
   record({ type: "memory.resolved", runId: held.runId, proposalId: proposal.id, decision, ...(text && { text }), at: Date.now() });
 });
-handle(CH.topicsResolve, (_e, runId: unknown, decision: unknown) => {
+handle(CH.topicsResolve, async (_e, runId: unknown, decision: unknown, name: unknown) => {
   const held = typeof runId === "string" ? topicAsks.get(runId) : undefined;
   if (!held || held.conversation !== conversations.currentId) throw new Error(t("topics.ask.expired"));
+  if (held.temporary ? decision !== "kept" && decision !== "deleted" : decision !== "linked" && decision !== "skipped") throw new Error(t("topics.ask.expired"));
+  let linked: string | null = null;
+  if (decision === "kept" || decision === "deleted") {
+    // Kept or deleted meanwhile, on the Memory page: this card has nothing left to settle.
+    if (!topics?.findTopic(held.topic)?.temporary) throw new Error(t("topics.ask.expired"));
+    if (decision === "kept") {
+      linked = keepAsk(held, {
+        topics,
+        ...(typeof name === "string" && { name }),
+        rename: (from, to) => conversations.renameTopic(from, to),
+      });
+    } else {
+      await deleteAsk(held, { trash: (topic) => page().deleteTopic(topic), decline: () => conversations.declineTemporary() });
+    }
+    topicAsks.delete(runId as string);
+    record({ type: "topic.resolved", runId: runId as string, topic: linked ?? held.topic, decision, at: Date.now() });
+    send(CH.sessionsChanged, sessionList());
+    send(CH.topicsChanged, null);
+    return;
+  }
   if (decision !== "linked" && decision !== "skipped") throw new Error(t("topics.ask.expired"));
-  const topic = decision === "linked" ? topics?.findTopic(held.topic) : null;
-  if (decision === "linked" && !topic) throw new Error(t("topics.gone"));
+  if (decision === "linked") {
+    if (!topics || !topics.findTopic(held.topic)) throw new Error(t("topics.gone"));
+    linked = acceptAsk(held, {
+      topics,
+      request: held.request,
+      link: (name) => conversations.setTopic(name),
+      ...(findings && { move: findings.moveToTopic }),
+    });
+  }
   topicAsks.delete(runId as string);
-  if (topic) conversations.setTopic(topic.name);
-  record({ type: "topic.resolved", runId: runId as string, topic: topic?.name ?? held.topic, decision, at: Date.now() });
+  record({ type: "topic.resolved", runId: runId as string, topic: linked ?? held.topic, decision, at: Date.now() });
   send(CH.sessionsChanged, sessionList());
 });
 handle(CH.topicsSet, (_e, name: unknown) => {
@@ -1596,8 +1750,9 @@ const memoryPage = topics
       },
       trash: (path) => shell.trashItem(path),
       reveal: (path) => shell.showItemInFolder(path),
-      leave: (topic) => {
-        conversations.renameTopic(topic, null);
+      leave: (topic, temporary) => {
+        conversations.renameTopic(topic, null, { declined: temporary === true });
+        settleAsks(topic, "deleted");
         send(CH.sessionsChanged, sessionList());
       },
       changed: () => {
@@ -1631,6 +1786,11 @@ handle(CH.topicsRevealFile, (_e, topic: unknown, name: unknown) => page().reveal
 handle(CH.topicsReveal, (_e, topic: unknown, item: unknown) => page().reveal(topic, item));
 handle(CH.topicsRevealOriginal, (_e, topic: unknown, name: unknown) => page().revealOriginal(topic, name));
 handle(CH.topicsDelete, (_e, topic: unknown) => page().deleteTopic(topic));
+handle(CH.topicsKeep, (_e, topic: unknown) => {
+  page().keepTopic(topic);
+  const kept = typeof topic === "string" ? topics?.findTopic(topic)?.name : undefined;
+  if (kept) settleAsks(kept, "kept");
+});
 handle(CH.memorySearch, () => meaning.status());
 handle(CH.memorySearchDownload, async () => {
   try {
@@ -1963,16 +2123,53 @@ handle(CH.reportProblem, () => reportProblem());
  * A test build may be pointed at a local feed to try an update end to end;
  * a build for other people only ever asks vunemi.com.
  */
+const windowsArch = process.arch === "arm64" ? "arm64" : "x64";
+
 function updateSource(): FeedSource | null {
   if (isLocalTestBuild(ownManifest())) {
     const local = process.env.VUNEMI_UPDATE_FEED;
     if (!local || !/^http:\/\/127\.0\.0\.1:\d+\/$/.test(local)) return null;
+    if (platform.id === "win32") return localWindowsSource(local, windowsArch, WINDOWS_UPDATE_KEY);
     return { feed: `${local}mac-arm64.json`, zip: (version) => `${local}Vunemi-${version}-arm64.zip` };
   }
   // No updater on Linux yet: the window links to the download page instead.
   if (!platform.features.inAppUpdates) return null;
-  return app.isPackaged ? PRODUCTION : null;
+  if (!app.isPackaged) return null;
+  return platform.id === "win32" ? windowsSource(windowsArch, WINDOWS_UPDATE_KEY) : PRODUCTION;
 }
+
+/** Where the Windows installer put this Vunemi, as it recorded it; null when it didn't (a development run). Asked once. */
+let installLocation: string | null | undefined;
+function windowsInstallLocation(): string | null {
+  if (installLocation !== undefined) return installLocation;
+  installLocation = readInstallLocation();
+  return installLocation;
+}
+function readInstallLocation(): string | null {
+  try {
+    const out = execFileSync("reg.exe", ["query", `HKCU\\Software\\${installerKey("com.vunemi.app")}`, "/v", "InstallLocation"], { encoding: "utf8", windowsHide: true, timeout: 10_000 });
+    return /InstallLocation\s+REG_SZ\s+(.+)/.exec(out)?.[1]?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+// Windows: Vunemi downloads the signed installer itself and runs it after quitting.
+const windowsUpdater = platform.id === "win32" ? new WindowsUpdater({
+  dir: join(app.getPath("userData"), "updates"),
+  arch: windowsArch,
+  download: async (url, file) => {
+    const res = await net.fetch(url, { cache: "no-store" });
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream<Uint8Array>), createWriteStream(file));
+  },
+  spawn: (file, args) => spawnProcess(file, args, { detached: true, stdio: "ignore" }).unref(),
+  quit: () => {
+    updating = true;
+    app.quit();
+  },
+}) : null;
+windowsUpdater?.forgetOld();
 
 const runTool = (cmd: string, args: string[]): Promise<string> =>
   new Promise((resolve, reject) => execFile(cmd, args, { encoding: "utf8", timeout: 30_000 }, (err, stdout) => (err ? reject(err) : resolve(stdout))));
@@ -1986,12 +2183,12 @@ const updates = updateSourceNow && new UpdateService({
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
-  updater: autoUpdater,
+  updater: windowsUpdater ?? (autoUpdater as unknown as Updater),
   enabled: () => settings.updatesCheck,
-  installable: () => app.isInApplicationsFolder(),
+  installable: () => windowsUpdater ? installableOnWindows(process.execPath, windowsInstallLocation(), app.isPackaged) : app.isInApplicationsFolder(),
   // Nothing a restart would cut short: no task running or waiting, no mail about to go, no meeting being recorded.
   idle: () => !session.running && session.queued.length === 0 && !mailOutbox.busy && !meetings.status().recording,
-  stagedMatches: () => stagedMatches(
+  stagedMatches: () => windowsUpdater ? windowsUpdater.stagedMatches() : stagedMatches(
     runTool,
     join(homedir(), "Library/Caches/com.vunemi.app.ShipIt/ShipItState.plist"),
     app.getPath("exe").replace(/\/Contents\/MacOS\/[^/]+$/, ""),
@@ -2040,7 +2237,7 @@ handle(CH.forgetEverything, async () => {
   await engine.dispose();
   await meaning.stop();
   // work.db too: when it could not be opened this launch, work?.clear() above did nothing.
-  const names = ["shots", "shadow", "models", "engine", "meetings", "projects.json", "preferences.json", "preferences.json.bak"];
+  const names = ["shots", "shadow", "models", "engine", "meetings", "updates", "projects.json", "preferences.json", "preferences.json.bak"];
   if (!work) names.push("work.db", "work.db-journal");
   for (const name of names) {
     rmSync(join(app.getPath("userData"), name), { recursive: true, force: true });
@@ -2452,8 +2649,9 @@ void app.whenReady().then(async () => {
     macAway = false;
     send(CH.lockChanged, lockState());
   });
-  if (!globalShortcut.register(EMERGENCY_STOP_ACCELERATOR, emergencyStop)) {
-    console.error(`[vunemi] could not register the emergency stop shortcut ${EMERGENCY_STOP_ACCELERATOR}`);
+  const stopKeys = emergencyStopAccelerator(process.platform);
+  if (!globalShortcut.register(stopKeys, emergencyStop)) {
+    console.error(`[vunemi] could not register the emergency stop shortcut ${stopKeys}`);
   }
   // The menu bar keeps Vunemi alive with no window, so runs continue.
   app.on("activate", () => (quitting ? reopenAfterQuit() : showWindow()));

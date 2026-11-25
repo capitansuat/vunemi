@@ -42,6 +42,41 @@ describe("a conversation in a topic", () => {
     expect(again.currentTopic).toBeUndefined();
   });
 
+  it("remembers that the user deleted its temporary topic, also after reopening and recovery", () => {
+    const store = new SessionStore(join(dir, "sessions"));
+    oneTask(store);
+    expect(store.temporaryDeclined).toBe(false);
+    store.setTopic("Job hunt");
+    store.declineTemporary();
+    expect(store.currentTopic).toBeUndefined();
+    expect(store.temporaryDeclined).toBe(true);
+    const id = store.currentId;
+    const again = new SessionStore(join(dir, "sessions"));
+    again.open(id);
+    expect(again.temporaryDeclined).toBe(true);
+    again.record({ type: "run.started", runId: "r2", goal: "More jobs", at: 3 } as never);
+    again.checkpoint([{ role: "user", content: "<user_request>More jobs</user_request>" }] as never);
+    const next = new SessionStore(join(dir, "sessions"));
+    next.open(id);
+    expect(next.temporaryDeclined).toBe(true);
+    next.create();
+    expect(next.temporaryDeclined).toBe(false);
+  });
+
+  it("leaves a deleted temporary topic for good: every conversation in it makes none again", () => {
+    const store = new SessionStore(join(dir, "sessions"));
+    store.setTopic("Job hunt");
+    oneTask(store);
+    const id = store.currentId;
+    store.create();
+    store.setTopic("Garden");
+    store.renameTopic("job hunt", null, { declined: true });
+    expect(store.temporaryDeclined).toBe(false);
+    store.open(id);
+    expect(store.currentTopic).toBeUndefined();
+    expect(store.temporaryDeclined).toBe(true);
+  });
+
   it("can leave its topic", () => {
     const store = new SessionStore(join(dir, "sessions"));
     store.setTopic("Home renovation");

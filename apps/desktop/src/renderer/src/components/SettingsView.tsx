@@ -19,6 +19,7 @@ import { AddonsSection } from "./AddonsSection.js";
 import { useStore, type SettingsSection as Section } from "../store.js";
 import { useFeature, usePlatform } from "../lib/platform.js";
 import { NotOnThisSystem } from "./NotOnThisSystem.js";
+import { TRUST_ERRORS } from "../lib/trusted-sites.js";
 import { UpdateAction } from "./UpdateAction.js";
 
 const SECTIONS: Section[] = ["permissions", "security", "connections", "addons", "vault", "outbox", "automations", "activity", "model", "language", "appearance", "soul", "data", "updates"];
@@ -241,11 +242,6 @@ function SecuritySection() {
   );
 }
 
-const TRUST_ERRORS: Record<Extract<TrustedSiteResult, { ok: false }>["reason"], MessageKey> = {
-  invalid: "settings.trusted.error.invalid",
-  "this-computer": "settings.trusted.error.thisComputer",
-  full: "settings.trusted.error.full",
-};
 
 /**
  * Private-network sites the browser may open. Only here, only by the user:
@@ -284,7 +280,7 @@ function TrustedSites() {
   return (
     <section className="mt-9" aria-labelledby="trusted-sites">
       <h3 id="trusted-sites" className="text-[14px] font-semibold text-fg">{t("settings.trusted.title")}</h3>
-      <p className="mt-1 text-[13px] text-muted">{t("settings.trusted.intro")}</p>
+      <p className="mt-1 text-[13px] text-muted">{t("settings.trusted.intro")} {t("settings.trusted.oneApproval")}</p>
       <form
         className="mt-4 flex gap-2"
         onSubmit={(e) => {

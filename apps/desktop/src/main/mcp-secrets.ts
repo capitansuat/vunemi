@@ -34,9 +34,13 @@ function withoutValues(config: McpServerConfig): McpServerConfig {
  */
 export function mcpTarget(config: McpServerConfig): string {
   if (config.transport.kind !== "stdio") return `mcp:${new URL(config.transport.url).origin}`;
+  // The Vault takes no whitespace in a target, and Windows keeps programs in
+  // "Program Files": a space is written %20, and a literal % as %25 so the two
+  // never meet. Every other command is written as it always was.
+  const command = config.transport.command.replace(/%/g, "%25").replace(/ /g, "%20");
   const args = config.transport.args ?? [];
-  if (args.length === 0) return `mcp:${config.transport.command}`;
-  return `mcp:${config.transport.command}#${createHash("sha256").update(JSON.stringify(args)).digest("hex").slice(0, 16)}`;
+  if (args.length === 0) return `mcp:${command}`;
+  return `mcp:${command}#${createHash("sha256").update(JSON.stringify(args)).digest("hex").slice(0, 16)}`;
 }
 
 /** Secret headers travel only encrypted, or not off this Mac at all. */

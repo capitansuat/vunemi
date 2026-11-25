@@ -57,8 +57,10 @@ describe("ShortcutInstaller", () => {
     expect(drafted!.xml).toContain("<string>is.workflow.actions.addnewreminder</string>");
     expect(drafted!.xml).toContain("<string>Of what?</string>");
     // The files are the user's alone.
-    expect(statSync(dir).mode & 0o777).toBe(0o700);
-    expect(drafted!.mode).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(dir).mode & 0o777).toBe(0o700);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(drafted!.mode).toBe(0o600);
     // Signed, the drafts are gone; the signed file is what was opened.
     expect(existsSync(join(dir, "unsigned", "Remind me.xml"))).toBe(false);
     expect(existsSync(join(dir, "unsigned", "Remind me.shortcut"))).toBe(false);

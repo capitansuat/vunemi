@@ -1,6 +1,7 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {closeSync,fstatSync,fsyncSync,openSync,readSync,writeSync,constants,existsSync,readFileSync,realpathSync,statSync} from 'node:fs';
 import {basename,dirname,join} from 'node:path';
+import {syncFolder} from '@vunemi/platform';
 import type {ToolDef,ToolCheckContext,SemanticMoveGuard} from '@vunemi/agent-core';
 import {t} from '@vunemi/i18n';
 import {Roots,PathRefused} from './roots.js';
@@ -13,7 +14,7 @@ function backupFile(p:SafeMovePlan,path:string){
  try{const st=fstatSync(source,{bigint:true});if(!st.isFile()||String(st.dev)!==p.sourceIdentity.device||String(st.ino)!==p.sourceIdentity.inode||String(st.size)!==p.sourceIdentity.size||String(st.mtimeNs)!==p.sourceIdentity.mtimeNs||String(st.ctimeNs)!==p.sourceIdentity.ctimeNs)throw new SafeMoveError('backup-source-changed');
  destination=openSync(path,constants.O_CREAT|constants.O_EXCL|constants.O_WRONLY|constants.O_NOFOLLOW,0o600);const buffer=Buffer.alloc(65536);let n=0,total=0;while((n=readSync(source,buffer,0,buffer.length,null))>0){total+=n;if(total>64*1024*1024)throw new SafeMoveError('backup-size-limit');let at=0;while(at<n){const wrote=writeSync(destination,buffer,at,n-at);if(wrote<=0)throw new SafeMoveError('backup-write-failed');at+=wrote;}}fsyncSync(destination);
  }finally{if(destination!==undefined)closeSync(destination);closeSync(source)}
- const folder=openSync(dirname(path),constants.O_RDONLY);try{fsyncSync(folder)}finally{closeSync(folder)}if(sha(path)!==p.sourceIdentity.sha256)throw new SafeMoveError('backup-verification-failed');
+ syncFolder(dirname(path),process.platform,constants.O_RDONLY);if(sha(path)!==p.sourceIdentity.sha256)throw new SafeMoveError('backup-verification-failed');
 }
 /** Shared controller per roots/journal prevents rebuilt connector factories racing journals. */
 export function safeMoveTool(opts:{roots:Roots;shadowDir:string;adapter?:AtomicMoveAdapter;journalPath?:string;admitJournal?:<T>(path:string,body:(assertCurrent:()=>void)=>Promise<T>|T,signal?:AbortSignal)=>Promise<T>;moveGuard?:SemanticMoveGuard}):ToolDef<Args>{

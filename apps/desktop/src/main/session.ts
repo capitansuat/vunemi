@@ -1,4 +1,5 @@
 import {copyQuotedSource,type QuotedSource} from '@vunemi/agent-core';
+import { findingsOption } from "./work/findings-option.js";
 import type {StandingGrant,TaskPermissionStore,TaskPermissionEpoch,TaskPermissionOfferView,TaskPermissionRevokeRequest,TaskPermissionsSnapshot} from "@vunemi/agent-core";
 import {randomUUID} from 'node:crypto';
 /**
@@ -154,7 +155,9 @@ export interface SessionOptions {
    * After a finished task the user watched: what they wrote lately, and the
    * model that did it, so memory can propose notes from their own words.
    */
-  afterRun?: (run: { runId: string; model: ChatModel; words: string[] }) => void;
+  /** After a task the user watched that finished or ran out of steps (`status`): what comes after it, such as the topic question. */
+  /** `answer`: the text the run ended on, as the user saw it; "" when it ended on no answer. */
+  afterRun?: (run: { runId: string; model: ChatModel; words: string[]; status: "done" | "max_steps"; answer: string }) => void;
 }
 
 /** A message waiting its turn. */
@@ -471,6 +474,7 @@ export class AgentSession {
         charsPerToken: this.charsPerToken,
         tools: this.opts.tools,
         ...(this.opts.keptOutputs && { keptOutputs: this.opts.keptOutputs }),
+        ...(findingsOption(this.opts.tools) && { findings: findingsOption(this.opts.tools) }),
         emit: event => {
           if (event.type === "run.started") { ownerRunId = event.runId; this.approvedAllRun = event.runId; }
           this.emit(event);
@@ -535,7 +539,7 @@ export class AgentSession {
         await this.compactHistory(result.runId, model, window, { allowSummary: result.status !== "stopped", force: false });
       }
       // Nobody watches a scheduled task to answer a card under it.
-      if (result.status === "done" && !run.unattended) this.opts.afterRun?.({ runId: result.runId, model, words: [...this.words] });
+      if ((result.status === "done" || result.status === "max_steps") && !run.unattended) this.opts.afterRun?.({ runId: result.runId, model, words: [...this.words], status: result.status, answer: endAnswer(result.messages) });
     } finally {
       this.opts.taskPermissions?.store.expire("run-ended");
       try {
@@ -824,4 +828,10 @@ export class AgentSession {
   noteUndone(label: string): void {
     this.undone.push(label);
   }
+}
+
+/** The text a run ended on: its last message, when that is the assistant's words. */
+function endAnswer(messages: readonly ChatMessage[]): string {
+  const last = messages.at(-1);
+  return last?.role === "assistant" ? last.content.trim() : "";
 }

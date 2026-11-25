@@ -14,6 +14,7 @@ import { outline, type AXNode } from "@vunemi/perception";
 import type { BoundAction, PageState } from "./bound-actions.js";
 import type { CdpSession } from "./cdp.js";
 import { closedFrame } from "./frames.js";
+import { CONTENT_SCRIPT, markdownOf, type ContentNode, type Reader } from "./main-content.js";
 
 /** Thrown for failures the model should read and route around. */
 export class PageActionError extends Error {
@@ -90,6 +91,8 @@ export class PageDriver {
   private nextFrameRef = FRAME_REF_BASE;
   /** The page's own refs when it was last read: a ref into a frame is never one of them. */
   private pageRefs: ReadonlyMap<number, unknown> = new Map();
+  /** Vunemi's own world in each frame, by session and frame id (see world). */
+  private readonly worlds = new Map<CdpSession, Map<string, number>>();
 
   private constructor(private readonly s: CdpSession) {}
 
@@ -98,6 +101,8 @@ export class PageDriver {
     session.on("Page.frameStartedLoading", (p) => {
       if ((p as { frameId: string }).frameId === d.mainFrameId) d.loading = true;
     });
+    // A document's worlds go with it: the next read makes them again.
+    session.on("Page.frameNavigated", (p) => d.worlds.get(session)?.delete((p as { frame: { id: string } }).frame.id));
     session.on("Page.loadEventFired", () => {
       d.loading = false;
       for (const w of d.loadWaiters) w();
@@ -337,7 +342,24 @@ export class PageDriver {
     const r = await this.evaluate<{ url: string; title: string; text: string }>(
       `({ url: location.href, title: document.title, text: (${FRAMES_TEXT})(document, 0) })`,
     );
-    // After the page's own text, that of each frame from another site it shows.
+    return { ...r, ...cut(`${r.text}${await this.outerFramesText()}`, maxChars) };
+  }
+
+  /**
+   * The page's main content as Markdown (main-content.ts), and its whole
+   * visible text as readText gives it, in one evaluate of the page.
+   */
+  async readContent(maxChars: number): Promise<{ url: string; title: string; reader: Reader; markdown: string; whole: string; truncated: number }> {
+    const r = await this.evaluate<{ url: string; title: string; reader: Reader; tree: ContentNode[]; whole: string }>(
+      `(() => { const c = (${CONTENT_SCRIPT})(document); return { url: location.href, title: document.title, reader: c.reader, tree: c.tree, whole: (${FRAMES_TEXT})(document, 0) }; })()`,
+    );
+    const whole = cut(`${r.whole}${await this.outerFramesText()}`, maxChars);
+    return { url: r.url, title: r.title, reader: r.reader, markdown: markdownOf(r.tree), whole: whole.text, truncated: whole.truncated };
+  }
+
+  /** After the page's own text, that of each frame from another site it shows. */
+  private async outerFramesText(): Promise<string> {
+    let out = "";
     let left = MAX_FRAMES;
     for (const frame of [...this.outer.values()]) {
       if (left-- <= 0) break;
@@ -345,17 +367,12 @@ export class PageDriver {
         if (await this.closed(frame)) continue;
         await this.place(frame);
         const inner = (await evaluateIn<string>(frame.s, `(${FRAMES_TEXT})(document, 0)`)).trim();
-        if (inner) r.text += `\n\n${inner}`;
+        if (inner) out += `\n\n${inner}`;
       } catch {
         // Not shown, or gone while it was being read.
       }
     }
-    const text = r.text.replace(/\n{3,}/g, "\n\n").trim();
-    return {
-      ...r,
-      text: text.slice(0, maxChars),
-      truncated: Math.max(0, text.length - maxChars),
-    };
+    return out;
   }
 
   /**
@@ -462,6 +479,166 @@ export class PageDriver {
       if (e instanceof PageActionError) throw e;
       return null;
     });
+  }
+
+  /**
+   * What the page says about each element, read in one pass per document
+   * process (see ELEMENT_FACTS), for how much acting on it needs asking (see
+   * elementKind). An element that is gone, or can't be read, has no entry.
+   * A link with a click listener of its own may do anything when clicked, so
+   * that is asked of the browser too, for the links only.
+   */
+  async elementFacts(refs: readonly number[]): Promise<Map<number, ElementFacts>> {
+    const out = new Map<number, ElementFacts>();
+    // A group of its own, so a pass that overlaps another doesn't release that one's objects.
+    const group = `${KIND_GROUP}-${++kindPasses}`;
+    const bySession = new Map<CdpSession, { ref: number; node: number }[]>();
+    for (const ref of refs.slice(0, MAX_KIND_REFS)) {
+      const at = this.at(ref);
+      const list = bySession.get(at.s) ?? [];
+      list.push({ ref, node: at.node });
+      bySession.set(at.s, list);
+    }
+    await Promise.all([...bySession].map(async ([s, list]) => {
+      // Read in Vunemi's own world, where the page's scripts can't change what the DOM says.
+      const objects = await this.resolveAll(s, list, group);
+      const found = objects.filter((o): o is { ref: number; id: string } => o !== null);
+      try {
+        if (found.length === 0) return;
+        const facts = await factsOf(s, found.map((o) => o.id)).catch(async () => {
+          // Elements of different frames can't share a call; each is asked on its own then.
+          const one = await Promise.all(found.map((o) => factsOf(s, [o.id]).then((f) => f[0] ?? null, () => null)));
+          return one;
+        });
+        await Promise.all(found.map(async (o, i) => {
+          const f = facts[i];
+          if (!f || typeof f !== "object") return;
+          if (elementKind(f) === "link") {
+            // The page's listeners live in its own world, and the browser lists them there; a script can't hide them from that call.
+            const node = list.find((item) => item.ref === o.ref)!.node;
+            const listened = await s
+              .send<{ object: { objectId?: string } }>("DOM.resolveNode", { backendNodeId: node, objectGroup: group })
+              .then((r) => s.send<{ listeners: { type: string }[] }>("DOMDebugger.getEventListeners", { objectId: r.object.objectId }))
+              .then((r) => r.listeners.some((l) => CLICK_EVENTS.has(l.type)), () => true);
+            if (listened) f.clickHandler = true;
+          }
+          out.set(o.ref, f);
+        }));
+      } finally {
+        await s.send("Runtime.releaseObjectGroup", { objectGroup: group }).catch(() => undefined);
+      }
+    }));
+    return out;
+  }
+
+  /**
+   * A world of Vunemi's own in a frame of `s`: the page's scripts run in
+   * another one, so what they change of the prototypes (getAttribute, a
+   * form's elements, the focus) isn't seen here; the DOM itself is shared.
+   */
+  private async world(s: CdpSession, frameId: string): Promise<number> {
+    let known = this.worlds.get(s);
+    if (!known) this.worlds.set(s, (known = new Map()));
+    const had = known.get(frameId);
+    if (had !== undefined) return had;
+    const { executionContextId } = await s.send<{ executionContextId: number }>("Page.createIsolatedWorld", { frameId, worldName: WORLD });
+    known.set(frameId, executionContextId);
+    return executionContextId;
+  }
+
+  /** The frames of one process, its own document first. */
+  private async framesIn(s: CdpSession): Promise<string[]> {
+    const { frameTree } = await s.send<{ frameTree: FrameTree }>("Page.getFrameTree");
+    const out: string[] = [];
+    const walk = (tree: FrameTree): void => {
+      if (out.length >= MAX_FRAMES) return;
+      out.push(tree.frame.id);
+      for (const child of tree.childFrames ?? []) walk(child);
+    };
+    walk(frameTree);
+    return out;
+  }
+
+  /**
+   * Each node as Vunemi's world sees it, tried in the frames of its process
+   * in turn; null for one found in none. When some aren't found, the worlds
+   * are made again once, in case a document they were made in has gone.
+   */
+  private async resolveAll(s: CdpSession, list: readonly { ref: number; node: number }[], group: string): Promise<({ ref: number; id: string } | null)[]> {
+    const frames = await this.framesIn(s).catch(() => [] as string[]);
+    const resolve = async ({ ref, node }: { ref: number; node: number }): Promise<{ ref: number; id: string } | null> => {
+      for (const frame of frames) {
+        const id = await this.world(s, frame)
+          .then((ctx) => s.send<{ object: { objectId?: string } }>("DOM.resolveNode", { backendNodeId: node, executionContextId: ctx, objectGroup: group }))
+          .then((r) => r.object.objectId ?? null, () => null);
+        if (id) return { ref, id };
+      }
+      return null;
+    };
+    const first = await Promise.all(list.map(resolve));
+    if (first.every((o) => o !== null)) return first;
+    this.worlds.delete(s);
+    return Promise.all(list.map((item, i) => first[i] ?? resolve(item)));
+  }
+
+  /** Runs `fn` on an element in Vunemi's world; throws when it can't be found there. */
+  private async callIsolated<T>(ref: number, fn: string): Promise<T> {
+    const at = this.at(ref);
+    const group = `${KIND_GROUP}-${++kindPasses}`;
+    try {
+      const [found] = await this.resolveAll(at.s, [{ ref, node: at.node }], group);
+      if (!found) throw new PageActionError(`Element [${ref}] is no longer on the page.`);
+      const r = await at.s.send<{ result: { value?: unknown }; exceptionDetails?: { text: string } }>("Runtime.callFunctionOn", { objectId: found.id, functionDeclaration: fn, returnByValue: true });
+      if (r.exceptionDetails) throw new PageActionError(`Page script failed: ${r.exceptionDetails.text}`);
+      return r.result.value as T;
+    } finally {
+      await at.s.send("Runtime.releaseObjectGroup", { objectGroup: group }).catch(() => undefined);
+    }
+  }
+
+  /** An expression in Vunemi's world of the page's own document. */
+  private async evaluateIsolated<T>(expression: string): Promise<T> {
+    const run = async (): Promise<T> => {
+      const contextId = await this.world(this.s, this.mainFrameId ?? (await this.framesIn(this.s))[0]!);
+      const r = await this.s.send<{ result: { value?: unknown }; exceptionDetails?: { text: string } }>("Runtime.evaluate", { expression, contextId, returnByValue: true });
+      if (r.exceptionDetails) throw new PageActionError(`Page script failed: ${r.exceptionDetails.text}`);
+      return r.result.value as T;
+    };
+    // A world made in a document that has since gone is made again once.
+    return run().catch(() => {
+      this.worlds.delete(this.s);
+      return run();
+    });
+  }
+
+  /** The kind of each element (see elementKind); one evaluate over them per document process. */
+  async elementKinds(refs: readonly number[]): Promise<Map<number, ElementKind>> {
+    const facts = await this.elementFacts(refs);
+    return new Map([...facts].map(([ref, f]) => [ref, elementKind(f)]));
+  }
+
+  /**
+   * What the page says about the element that has the keyboard focus, in
+   * the page or a frame of its own site in it. Null when the focus is in a
+   * frame from another site, which this can't see into.
+   */
+  async focusedFacts(): Promise<ElementFacts | null> {
+    const f = await this.evaluateIsolated<ElementFacts | null>(`(() => {
+      let el = document.activeElement;
+      while (el && /^(?:IFRAME|FRAME)$/.test(el.tagName)) {
+        let inner = null;
+        try { inner = el.contentDocument; } catch (e) {}
+        if (!inner) return null;
+        el = inner.activeElement;
+      }
+      return (${ELEMENT_FACTS})(el);
+    })()`);
+    return f && typeof f === "object" ? f : null;
+  }
+
+  /** Whether the element has the keyboard focus in its own document. */
+  async hasFocus(ref: number): Promise<boolean> {
+    return this.callIsolated<boolean>(ref, "function() { return this === this.ownerDocument.activeElement; }").then((v) => v === true, () => false);
   }
 
   async type(ref: number, text: string, opts: { submit?: boolean; clear?: boolean } = {}): Promise<void> {
@@ -807,6 +984,154 @@ const OWNER_FIELD = `function() {
   return unsure && others.some((field) => field.type === 'email' || field.type === 'tel' || words.test(saidOf(field))) ? 'personal' : null;
 }`;
 
+/**
+ * What acting on an element amounts to, for how much it needs asking:
+ * - `link`: an ordinary link to an http(s) page; clicking it is the same as
+ *   opening that page.
+ * - `search`: a text field in a form that sends what is typed in the page's
+ *   address (GET, the default), as a search engine's box does.
+ * - `posts`: anything in a form that sends its data in the request (POST).
+ * - `other`: everything else, and whatever can't be told apart.
+ */
+export type ElementKind = "link" | "search" | "posts" | "other";
+
+/** What the page says about an element (see ELEMENT_FACTS). Methods are as the page wrote them. */
+export interface ElementFacts {
+  /** Lower-case tag name. */
+  tag: string;
+  /** Its role attribute, lower-case, when it has one. */
+  role?: string;
+  /** A link's resolved address. */
+  href?: string;
+  /** The link points into the page it is on (`#`, `#top`, or no address at all). */
+  fragment?: boolean;
+  download?: boolean;
+  /** An input's type, lower-case; "text" when it has none. */
+  inputType?: string;
+  contentEditable?: boolean;
+  /** An onclick of its own, or a click listener on the element itself. */
+  clickHandler?: boolean;
+  /** A control that submits its form (a submit button, a button with no type). */
+  submits?: boolean;
+  /** That control's own formmethod, which overrides its form's. */
+  formMethod?: string;
+  /**
+   * The form it belongs to: the method attribute (null when missing), the
+   * action attribute, and the formmethod of the button Enter would press.
+   */
+  form?: { method: string | null; action?: string; defaultMethod?: string };
+}
+
+/** The method a form or button submits with: an unknown or missing value is GET. */
+function submitMethod(raw: string | null | undefined): "get" | "post" | "dialog" {
+  const m = (raw ?? "").trim().toLowerCase();
+  return m === "post" ? "post" : m === "dialog" ? "dialog" : "get";
+}
+
+/** A field whose text goes into its form when submitted. */
+function textField(f: ElementFacts): boolean {
+  return (f.tag === "input" && (f.inputType === "text" || f.inputType === "search")) || f.tag === "textarea" || f.role === "searchbox";
+}
+
+/** The rules over what the page says; see ElementKind. */
+export function elementKind(f: ElementFacts | null | undefined): ElementKind {
+  if (!f) return "other";
+  if (f.form) {
+    if (submitMethod(f.form.method) === "post") return "posts";
+    if (f.submits && f.formMethod !== undefined && submitMethod(f.formMethod) === "post") return "posts";
+    // Enter in a field presses the form's first submit button, with that button's method.
+    if (textField(f) && f.form.defaultMethod !== undefined && submitMethod(f.form.defaultMethod) === "post") return "posts";
+  }
+  if (f.tag === "a" || f.tag === "area") {
+    const plain = !f.fragment && !f.download && !f.clickHandler && (!f.role || f.role === "link");
+    return plain && typeof f.href === "string" && /^https?:\/\//i.test(f.href) ? "link" : "other";
+  }
+  if (f.form && textField(f) && submitMethod(f.form.method) === "get" && !/^\s*javascript:/i.test(f.form.action ?? "")) {
+    const enter = f.form.defaultMethod === undefined ? "get" : submitMethod(f.form.defaultMethod);
+    if (enter === "get") return "search";
+  }
+  return "other";
+}
+
+/**
+ * Reads ElementFacts off one element. The form is the one the element
+ * belongs to (its form attribute counts), read through the prototype so a
+ * field named "method" or "elements" can't stand in for it.
+ */
+const ELEMENT_FACTS = `function facts(el) {
+  if (!el || el.nodeType !== 1) return null;
+  const tag = el.tagName.toLowerCase();
+  const get = (node, name) => Element.prototype.getAttribute.call(node, name);
+  const has = (node, name) => Element.prototype.hasAttribute.call(node, name);
+  const out = { tag };
+  const role = (get(el, 'role') || '').trim().toLowerCase();
+  if (role) out.role = role;
+  if (tag === 'a' || tag === 'area') {
+    const raw = get(el, 'href');
+    if (raw === null || raw.trim() === '' || raw.trim().startsWith('#')) out.fragment = true;
+    if (raw !== null) {
+      out.href = String(el.href);
+      try {
+        const to = new URL(out.href), here = new URL(el.ownerDocument.URL);
+        if (to.hash && to.origin === here.origin && to.pathname === here.pathname && to.search === here.search) out.fragment = true;
+      } catch (e) {}
+    }
+    if (has(el, 'download')) out.download = true;
+  }
+  if (tag === 'input') out.inputType = (get(el, 'type') || 'text').trim().toLowerCase();
+  if (el.isContentEditable) out.contentEditable = true;
+  if (has(el, 'onclick') || typeof el.onclick === 'function') out.clickHandler = true;
+  const win = el.ownerDocument.defaultView;
+  const Form = win && win.HTMLFormElement;
+  const owned = 'form' in el && Form && el.form instanceof Form ? el.form : null;
+  const form = owned || (el.parentElement ? Element.prototype.closest.call(el, 'form') : null);
+  const submits = (tag === 'button' && (get(el, 'type') || 'submit').trim().toLowerCase() === 'submit') || (tag === 'input' && /^(?:submit|image)$/.test(out.inputType));
+  if (submits) {
+    out.submits = true;
+    if (has(el, 'formmethod')) out.formMethod = get(el, 'formmethod');
+  }
+  if (form) {
+    const info = { method: get(form, 'method') };
+    if (has(form, 'action')) info.action = get(form, 'action');
+    const elements = Form ? Object.getOwnPropertyDescriptor(Form.prototype, 'elements').get.call(form) : [];
+    for (const c of elements) {
+      const t = (get(c, 'type') || (c.tagName === 'BUTTON' ? 'submit' : 'text')).trim().toLowerCase();
+      if ((c.tagName === 'BUTTON' && t === 'submit') || (c.tagName === 'INPUT' && (t === 'submit' || t === 'image'))) {
+        if (has(c, 'formmethod')) info.defaultMethod = get(c, 'formmethod');
+        break;
+      }
+    }
+    out.form = info;
+  }
+  return out;
+}`;
+
+/** The facts of the elements behind `ids`, all in one document of `s`. */
+async function factsOf(s: CdpSession, ids: string[]): Promise<(ElementFacts | null)[]> {
+  const r = await s.send<{ result: { value?: unknown }; exceptionDetails?: { text: string } }>("Runtime.callFunctionOn", {
+    objectId: ids[0],
+    // The marker names the call in tests; it is a comment to the page.
+    functionDeclaration: `function(...els) { /* vunemi:element-facts */ const facts = ${ELEMENT_FACTS}; return els.map((el) => { try { return facts(el); } catch (e) { return null; } }); }`,
+    arguments: ids.map((objectId) => ({ objectId })),
+    returnByValue: true,
+  });
+  if (r.exceptionDetails || !Array.isArray(r.result.value)) throw new PageActionError("Couldn't read the page's elements.");
+  return r.result.value as (ElementFacts | null)[];
+}
+
+/** The name of Vunemi's own world in a page (Page.createIsolatedWorld). */
+const WORLD = "vunemi";
+
+/** The remote objects made for reading kinds, released after each pass. */
+const KIND_GROUP = "vunemi-kinds";
+let kindPasses = 0;
+
+/** Elements read at once; an outline holds far fewer. */
+const MAX_KIND_REFS = 2_000;
+
+/** A listener for one of these on a link may do anything when it is clicked. */
+const CLICK_EVENTS = new Set(["click", "mousedown", "mouseup", "pointerdown", "pointerup", "auxclick"]);
+
 /** A frame from another site: it runs in a process of its own and is reached through a session of its own. */
 interface OuterFrame {
   /** Its frame id, which is its target's too. */
@@ -862,6 +1187,12 @@ async function evaluateIn<T>(s: CdpSession, expression: string): Promise<T> {
   });
   if (r.exceptionDetails) throw new PageActionError(`Page script failed: ${r.exceptionDetails.text}`);
   return r.result.value as T;
+}
+
+/** Text with runs of blank lines squeezed, cut to `maxChars`, and how much was cut. */
+function cut(raw: string, maxChars: number): { text: string; truncated: number } {
+  const text = raw.replace(/\n{3,}/g, "\n\n").trim();
+  return { text: text.slice(0, maxChars), truncated: Math.max(0, text.length - maxChars) };
 }
 
 /** Frames read into one page: enough for framesets and portals, bounded for pages that nest ads. */

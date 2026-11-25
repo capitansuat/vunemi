@@ -77,8 +77,12 @@ export type AgentEvent =
       alert?: boolean;
       /** The tool asks every time; "always allow" does not apply. */
       alwaysAsk?: boolean;
-      /** This card can also approve the rest of the task; `app` is the app that would reach. */
-      approveAll?: { app?: string };
+      /**
+       * This card can also approve the rest of the task; `app` is the app it
+       * would reach, `site` the web host. `trusted`: the user trusts that
+       * host, so a plain approval already covers it until the task ends.
+       */
+      approveAll?: { app?: string; site?: string; trusted?: boolean };
       preview?: string;
       /**
        * The tool is switched off, and this is its connection and part in the
@@ -163,8 +167,8 @@ export type AgentEvent =
   | { type: "memory.proposed"; runId: string; proposals: MemoryProposal[]; at: number }
   | { type: "memory.resolved"; runId: string; proposalId: string; decision: "saved" | "skipped"; text?: string; at: number }
   /** Vunemi asks, once per conversation, to keep it in a topic that fits; the user answers. */
-  | { type: "topic.suggested"; runId: string; topic: string; at: number }
-  | { type: "topic.resolved"; runId: string; topic: string; decision: "linked" | "skipped"; at: number }
+  | { type: "topic.suggested"; runId: string; topic: string; /** The temporary topic a lookup gathered in: keep it or delete it. */ temporary?: true; at: number }
+  | { type: "topic.resolved"; runId: string; topic: string; decision: "linked" | "skipped" | "kept" | "deleted"; at: number }
   /** The model saved a work note (worknote_write); the timeline shows its title. */
   | { type: "note.saved"; runId: string; noteId: string; title: string; scope: "project" | "conversation"; at: number }
   /** The chat model opened with a shorter context than its setting, for lack of memory (`tight`: not even the shortest fitted). */

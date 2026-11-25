@@ -45,6 +45,8 @@ import { platform, type Platform } from "@vunemi/platform";
 export interface CatalogueOptions {
   tools: ToolRegistry;
   browser: BrowserController;
+  /** Tools that keep what a lookup found (work/findings.ts); on and off with the browser's reading part. */
+  findingTools?: ToolDef[];
   roots: Roots;
   appCatalog: ScriptableCatalog;
   shadowDir: string;
@@ -286,7 +288,7 @@ export function onThisSystem(connector: Connector, on: Platform = platform): Con
 /** Tools that need the Swift helper's host observation, or its atomic move. */
 const HELPER_TOOLS = new Set(["page_target_observe", "page_target_act", "files_move"]);
 /** Elsewhere those tools are left out rather than offered to refuse every call. */
-function withoutHelperTools(tools: ToolDef[], on: Platform = platform): ToolDef[] {
+export function withoutHelperTools(tools: ToolDef[], on: Platform = platform): ToolDef[] {
   return on.features.desktopControl && on.features.atomicMove ? tools : tools.filter((tool) => !HELPER_TOOLS.has(tool.name));
 }
 
@@ -341,7 +343,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       capabilities: [
         part("connectors.browser.read", {
           id: "read",
-          tools: ["page_goto", "page_search", "page_back", "page_describe", "page_read", "page_screenshot", "page_find", "page_target_observe", "page_scroll", "page_wait", "tabs_list", "tabs_focus", "tabs_close", "user_takeover"],
+          tools: ["page_goto", "page_search", "page_back", "page_describe", "page_read", "page_screenshot", "page_find", "page_target_observe", "page_scroll", "page_wait", "tabs_list", "tabs_focus", "tabs_close", "user_takeover", "web_finding_add"],
           defaultOn: true,
         }),
         part("connectors.browser.act", {
@@ -356,7 +358,8 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       origin: "builtin",
       instructions: BROWSER_INSTRUCTIONS,
       status: async () => ({ state: "ready" }),
-      tools: () => withoutHelperTools(createBrowserTools(opts.browser, { shotDir: opts.shotDir })),
+      // The user's trusted sites: there one approval covers a site for the task.
+      tools: () => [...withoutHelperTools(createBrowserTools(opts.browser, { shotDir: opts.shotDir, trusted: opts.browser.trusted })), ...(opts.findingTools ?? [])],
     },
 
     {

@@ -7,6 +7,7 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {constants,copyFileSync,existsSync,mkdirSync,openSync,closeSync,readFileSync,fstatSync,lstatSync,fsyncSync,renameSync,unlinkSync,chmodSync} from 'node:fs';
 import {dirname,extname,join,basename} from 'node:path';
+import {syncFolder} from '@vunemi/platform';
 import type {Roots} from '@vunemi/files';
 import type {ToolContext} from '@vunemi/agent-core';
 import {t} from '@vunemi/i18n';
@@ -48,11 +49,11 @@ export function createSafeOfficeEdits(roots:Roots,backupDir:string){
     roots.resolve(stage,'write');copyFileSync(made,stage,constants.COPYFILE_EXCL);chmodSync(stage,plan.snapshot.mode&0o777);const staged=openSync(stage,'r');try{fsyncSync(staged);}finally{closeSync(staged);}
     active();verify(plan);
     mkdirSync(backupDir,{recursive:true,mode:0o700});copyFileSync(plan.path,plan.backupPath!,constants.COPYFILE_EXCL);chmodSync(plan.backupPath!,0o600);const backup=openSync(plan.backupPath!,'r');try{fsyncSync(backup);}finally{closeSync(backup);}
-    const backupDirectory=openSync(backupDir,'r');try{fsyncSync(backupDirectory);}finally{closeSync(backupDirectory);}
+    syncFolder(backupDir);
     if(snapshot(plan.backupPath!).hash!==plan.snapshot.hash)throw Error('Office backup differs from approved original; replacement refused.');
     active();if(roots.resolve(plan.input,'write')!==plan.path||JSON.stringify(snapshot(plan.path))!==JSON.stringify(plan.snapshot))throw Error('Office target changed before commit; original preserved.');
     // Atomic publication, but Node has no filesystem compare-and-swap against external writers.
-    renameSync(stage,plan.path);committed=true;const original=plan.backupPath!;ctx.offerUndo(t('files.undo.restore',{name:basename(plan.path)}),async()=>{copyFileSync(original,plan.path);});ctx.produced?.({kind:'file',path:plan.path,replaced:true});const directory=openSync(dirname(plan.path),'r');try{fsyncSync(directory);}finally{closeSync(directory);}
+    renameSync(stage,plan.path);committed=true;const original=plan.backupPath!;ctx.offerUndo(t('files.undo.restore',{name:basename(plan.path)}),async()=>{copyFileSync(original,plan.path);});ctx.produced?.({kind:'file',path:plan.path,replaced:true});syncFolder(dirname(plan.path));
    }catch(error){if(committed)throw Object.assign(error instanceof Error?error:Error(String(error)),{deliveryUnknown:true,backupPath:plan.backupPath});throw error;}finally{if(existsSync(stage))unlinkSync(stage);}
   }
  };

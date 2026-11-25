@@ -1,84 +1,84 @@
 {
-  "currentRelease": "0.4.0",
+  "currentRelease": "0.5.0",
   "releases": [
     {
-      "version": "0.4.0",
+      "version": "0.5.0",
       "updateTo": {
-        "version": "0.4.0",
-        "name": "Vunemi 0.4.0",
-        "pub_date": "2026-11-23T00:00:00Z",
+        "version": "0.5.0",
+        "name": "Vunemi 0.5.0",
+        "pub_date": "2026-11-25T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.4.0/Vunemi-0.4.0-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.5.0/Vunemi-0.5.0-arm64.zip"
       }
     }
   ],
-  "sizeMb": 242,
+  "sizeMb": 243,
   "notes": {
     "en": [
-      "New: topics. Keep a subject you come back to as a folder of Markdown pages on your Mac, and link folders of your own: Vunemi reads them where they are, notes which files link where and which define codes such as SKU, and writes pages that cite their files, starting from a page called “Index”.",
-      "This exists because one search over many files often misses the file with the answer. Heavy work runs only while Vunemi is idle. Without topics, Vunemi reads the files you give it in a task as before. How good the pages are depends on the model.",
-      "The built-in engine is newer and runs Inkling 2. Vunemi can now download models from ggml-org, and when the engine can't load a model it says so, instead of pointing at memory or the model's tools.",
-      "Voice chat no longer reads out “Stopped.” In a password field Vunemi presses only keys that leave its text alone; macOS may ask for its permissions once more. “Approve all” and scheduled tasks now recognise apps whose name is translated."
+      "New: when a conversation with no topic looks something up on the web, Vunemi gathers the answer, the addresses it read and the items it kept in a temporary topic, then asks whether to keep it, under a name you can change, or delete it.",
+      "This exists because a long search filled the model's memory with whole pages and lost what it found. Pages are now read as their main content, and older steps are shortened so a long lookup keeps fitting. Say Delete and nothing stays; the answer is still in the chat.",
+      "Fewer cards on the web: ordinary links and a site's search box count as reading. Approve all covers one site until the task ends, and a site you trust needs one approval per task. Forms that send data, sending and deleting still ask.",
+      "A topic is suggested only when a request is nearer to it than to everyday requests, and a page's own scripts can no longer make a form that sends data look like a search."
     ],
     "de": [
-      "Neu: Themen. Halte ein Thema als Ordner mit Markdown-Seiten auf deinem Mac und verknüpfe eigene Ordner: Vunemi liest sie, wo sie liegen, merkt sich, welche Dateien wohin verlinken und welche Codes wie SKU definieren, und schreibt Seiten mit Quellen, ausgehend von der Seite „Index“.",
-      "Der Grund: Eine einzelne Suche über viele Dateien verfehlt oft die Datei mit der Antwort. Aufwendige Arbeit läuft nur, wenn Vunemi nichts zu tun hat. Ohne Themen liest Vunemi die Dateien, die du ihm in einer Aufgabe gibst, wie bisher. Wie gut die Seiten sind, hängt vom Modell ab.",
-      "Die eingebaute Engine ist neuer und führt Inkling 2 aus. Vunemi lädt Modelle jetzt auch von ggml-org, und wenn die Engine ein Modell nicht laden kann, sagt sie das, statt auf den Speicher oder die Werkzeuge des Modells zu verweisen.",
-      "Der Sprachchat liest „Angehalten.“ nicht mehr vor. In einem Passwortfeld drückt Vunemi nur Tasten, die den Text unverändert lassen; macOS fragt eventuell noch einmal nach Berechtigungen. „Alle genehmigen“ und geplante Aufgaben erkennen jetzt Apps mit übersetztem Namen."
+      "Neu: Wenn ein Gespräch ohne Thema etwas im Web nachschlägt, sammelt Vunemi die Antwort, die gelesenen Adressen und die behaltenen Einträge in einem vorläufigen Thema und fragt, ob du es unter einem änderbaren Namen behalten oder löschen willst.",
+      "Das gibt es, weil eine lange Suche das Gedächtnis des Modells mit ganzen Seiten füllte und Gefundenes verlor. Seiten werden jetzt als Hauptinhalt gelesen, ältere Schritte gekürzt. Sagst du Löschen, bleibt nichts; die Antwort steht weiter im Chat.",
+      "Weniger Karten im Web: gewöhnliche Links und das Suchfeld einer Website gelten als Lesen. Alles freigeben deckt eine Website bis zum Ende der Aufgabe ab; eine vertrauenswürdige braucht eine Freigabe pro Aufgabe. Formulare, Senden und Löschen fragen weiter.",
+      "Ein Thema wird nur noch vorgeschlagen, wenn eine Anfrage ihm näher ist als alltäglichen Anfragen, und die Skripte einer Seite können ein Formular, das Daten sendet, nicht mehr als Suche ausgeben."
     ],
     "es": [
-      "Nuevo: temas. Guarda un asunto al que vuelves como carpeta de páginas Markdown en tu Mac y vincula tus carpetas: Vunemi las lee donde están, anota qué archivos enlazan a cuáles y cuáles definen códigos como SKU, y escribe páginas que citan sus archivos, empezando por la página «Index».",
-      "Existe porque una sola búsqueda en muchos archivos a menudo no encuentra el que tiene la respuesta. El trabajo pesado solo se hace cuando Vunemi está inactivo. Sin temas, Vunemi lee como antes los archivos que le das en una tarea. La calidad de las páginas depende del modelo.",
-      "El motor integrado es más nuevo y ejecuta Inkling 2. Vunemi ya puede descargar modelos de ggml-org y, cuando el motor no puede cargar un modelo, lo dice en vez de culpar a la memoria o a las herramientas del modelo.",
-      "El chat de voz ya no lee en voz alta «Detenido.». En un campo de contraseña, Vunemi solo pulsa teclas que no cambian el texto; puede que macOS vuelva a pedir sus permisos. «Aprobar todo» y las tareas programadas ahora reconocen apps con nombre traducido."
+      "Novedad: cuando una conversación sin tema busca algo en la web, Vunemi reúne la respuesta, las direcciones que leyó y lo que guardó en un tema temporal, y te pregunta si quieres conservarlo, con un nombre que puedes cambiar, o eliminarlo.",
+      "Existe porque una búsqueda larga llenaba la memoria del modelo con páginas enteras y perdía lo encontrado. Ahora las páginas se leen por su contenido principal y los pasos antiguos se acortan. Si eliges Eliminar, no queda nada; la respuesta sigue en el chat.",
+      "Menos tarjetas en la web: los enlaces normales y el cuadro de búsqueda de un sitio cuentan como lectura. Aprobar todo cubre un sitio hasta que termina la tarea, y uno de confianza pide una aprobación por tarea. Formularios, envíos y borrados siguen preguntando.",
+      "Un tema solo se sugiere si la petición está más cerca de él que de las peticiones cotidianas, y los scripts de una página ya no pueden hacer pasar un formulario que envía datos por una búsqueda."
     ],
     "fr": [
-      "Nouveau : les sujets. Gardez un sujet en dossier de pages Markdown sur votre Mac et liez vos dossiers : Vunemi les lit là où ils sont, note quels fichiers renvoient où et lesquels définissent des codes comme SKU, et écrit des pages qui citent leurs fichiers, à partir de la page « Index ».",
-      "Pourquoi : une seule recherche dans de nombreux fichiers manque souvent celui qui contient la réponse. Le travail lourd ne tourne que quand Vunemi est inactif. Sans sujets, Vunemi lit comme avant les fichiers que vous lui donnez dans une tâche. La qualité des pages dépend du modèle.",
-      "Le moteur intégré est plus récent et fait tourner Inkling 2. Vunemi peut désormais télécharger des modèles depuis ggml-org et, quand le moteur ne peut pas charger un modèle, il le dit au lieu d'accuser la mémoire ou les outils du modèle.",
-      "Le chat vocal ne lit plus « Arrêté. ». Dans un champ de mot de passe, Vunemi n'appuie que sur des touches qui ne modifient pas le texte ; macOS peut redemander ses autorisations. « Tout approuver » et les tâches planifiées reconnaissent les apps au nom traduit."
+      "Nouveau : quand une conversation sans sujet cherche quelque chose sur le web, Vunemi rassemble la réponse, les adresses lues et les éléments gardés dans un sujet temporaire, puis vous demande de le conserver, sous un nom modifiable, ou de le supprimer.",
+      "Cela existe parce qu’une longue recherche remplissait la mémoire du modèle de pages entières et perdait ce qu’il avait trouvé. Les pages sont lues par leur contenu principal et les anciennes étapes raccourcies. Supprimer n’en garde rien ; la réponse reste dans le chat.",
+      "Moins de cartes sur le web : les liens ordinaires et le champ de recherche d’un site comptent comme lecture. Tout approuver couvre un site jusqu’à la fin de la tâche ; un site fiable demande une approbation par tâche. Formulaires, envois et suppressions demandent.",
+      "Un sujet n’est proposé que si la demande en est plus proche que des demandes courantes, et les scripts d’une page ne peuvent plus faire passer un formulaire qui envoie des données pour une recherche."
     ],
     "it": [
-      "Novità: gli argomenti. Tieni un argomento come cartella di pagine Markdown sul tuo Mac e collega le tue cartelle: Vunemi le legge dove sono, annota quali file rimandano a quali e quali definiscono codici come SKU, e scrive pagine che citano i loro file, a partire dalla pagina «Index».",
-      "Il motivo: una sola ricerca su molti file spesso manca quello con la risposta. Il lavoro pesante parte solo quando Vunemi è inattivo. Senza argomenti, Vunemi legge come prima i file che gli dai in un'attività. La qualità delle pagine dipende dal modello.",
-      "Il motore integrato è più recente ed esegue Inkling 2. Vunemi ora scarica modelli anche da ggml-org e, quando il motore non riesce a caricare un modello, lo dice invece di dare la colpa alla memoria o agli strumenti del modello.",
-      "La chat vocale non legge più «Interrotto.». In un campo password Vunemi preme solo tasti che lasciano invariato il testo; macOS potrebbe chiedere di nuovo i suoi permessi. «Approva tutto» e le attività pianificate ora riconoscono le app con nome tradotto."
+      "Novità: quando una conversazione senza argomento cerca qualcosa sul web, Vunemi raccoglie la risposta, gli indirizzi letti e gli elementi tenuti in un argomento temporaneo, poi ti chiede se conservarlo, con un nome che puoi cambiare, o eliminarlo.",
+      "Esiste perché una ricerca lunga riempiva la memoria del modello di pagine intere e perdeva ciò che aveva trovato. Ora le pagine si leggono nel contenuto principale e i passi vecchi si accorciano. Con Elimina non resta nulla; la risposta resta nella chat.",
+      "Meno schede sul web: i link normali e la casella di ricerca di un sito contano come lettura. Approva tutto copre un sito fino alla fine dell’attività; un sito attendibile chiede un’approvazione per attività. Moduli, invii ed eliminazioni chiedono ancora.",
+      "Un argomento viene proposto solo se la richiesta gli è più vicina che alle richieste quotidiane, e gli script di una pagina non possono più far passare per ricerca un modulo che invia dati."
     ],
     "tr": [
-      "Yeni: konular. Dönüp durduğun bir konuyu Mac'inde Markdown sayfaları klasörü olarak tut, kendi klasörlerini bağla: Vunemi onları yerinde okur, dosyaların birbirine bağlantılarını ve SKU gibi kodları hangisinin tanımladığını not eder, “Index” sayfasından başlayıp kaynak gösteren sayfalar yazar.",
-      "Bunun nedeni, çok sayıda dosyada tek bir aramanın cevabı tutan dosyayı sık sık kaçırması. Ağır işler yalnız Vunemi boştayken çalışır. Konular olmadan Vunemi, bir görevde verdiğin dosyaları eskisi gibi okur. Sayfaların ne kadar iyi olduğu modele bağlı.",
-      "Yerleşik motor daha yeni ve Inkling 2'yi çalıştırıyor. Vunemi artık ggml-org'dan da model indirebiliyor; motor bir modeli yükleyemezse belleği ya da modelin araçlarını işaret etmek yerine bunu söylüyor.",
-      "Sesli sohbet artık “Durduruldu.” diye okumuyor. Parola alanında Vunemi yalnız metne dokunmayan tuşlara basıyor; macOS izinlerini bir kez daha sorabilir. “Hepsini onayla” ve zamanlı görevler adı çevrilmiş uygulamaları artık tanıyor."
+      "Yeni: konusu olmayan bir sohbet web'de bir şey aradığında Vunemi cevabı, okuduğu adresleri ve tuttuğu öğeleri geçici bir konuda toplar; sonra adını değiştirebileceğin şekilde tutmak mı, silmek mi istediğini sorar.",
+      "Bu, uzun bir aramada sayfaların tamamı modelin belleğini doldurup bulduklarını kaybettirdiği için var. Sayfalar artık ana içerikleriyle okunuyor, eski adımlar kısalıyor; uzun bir arama sığmaya devam ediyor. Sil dersen hiçbir şey kalmaz; cevap sohbette durur.",
+      "Web'de daha az kart: sıradan bağlantılar ve bir sitenin arama kutusu okuma sayılıyor. Hepsini onayla, iş bitene kadar tek bir siteyi kapsıyor; güvendiğin bir site her işte tek onay istiyor. Veri gönderen formlar, gönderme ve silme yine soruyor.",
+      "Bir konu artık yalnızca istek ona gündelik isteklerden daha yakınsa öneriliyor; bir sayfanın kendi betikleri de veri gönderen bir formu arama gibi gösteremiyor."
     ],
     "pt": [
-      "Novo: tópicos. Mantenha um assunto como pasta de páginas Markdown no seu Mac e vincule suas pastas: o Vunemi as lê onde estão, anota quais arquivos apontam para quais e quais definem códigos como SKU, e escreve páginas que citam seus arquivos, a partir da página “Index”.",
-      "Isso existe porque uma única busca em muitos arquivos muitas vezes perde o arquivo com a resposta. O trabalho pesado só roda quando o Vunemi está ocioso. Sem tópicos, o Vunemi lê como antes os arquivos que você passa numa tarefa. A qualidade das páginas depende do modelo.",
-      "O motor embutido é mais novo e roda o Inkling 2. O Vunemi agora baixa modelos também do ggml-org e, quando o motor não consegue carregar um modelo, diz isso em vez de culpar a memória ou as ferramentas do modelo.",
-      "O chat de voz não lê mais “Parado.” em voz alta. Num campo de senha, o Vunemi só pressiona teclas que não mudam o texto; o macOS pode pedir as permissões de novo. “Aprovar tudo” e as tarefas agendadas agora reconhecem apps com nome traduzido."
+      "Novo: quando uma conversa sem tópico procura algo na web, o Vunemi reúne a resposta, os endereços que leu e os itens que guardou em um tópico temporário e pergunta se você quer mantê-lo, com um nome que pode mudar, ou excluí-lo.",
+      "Isso existe porque uma busca longa enchia a memória do modelo com páginas inteiras e perdia o que encontrou. Agora as páginas são lidas pelo conteúdo principal e os passos antigos encurtam. Se escolher Excluir, nada fica; a resposta continua na conversa.",
+      "Menos cartões na web: links comuns e a caixa de busca de um site contam como leitura. Aprovar tudo cobre um site até a tarefa terminar, e um site confiável pede uma aprovação por tarefa. Formulários, envios e exclusões continuam perguntando.",
+      "Um tópico só é sugerido quando o pedido está mais perto dele do que de pedidos do dia a dia, e os scripts de uma página não conseguem mais fazer um formulário que envia dados parecer uma busca."
     ],
     "ru": [
-      "Новое: темы. Храните тему, к которой возвращаетесь, как папку страниц Markdown на Mac и подключайте свои папки: Vunemi читает их на месте, отмечает, какие файлы ссылаются друг на друга и где определены коды вроде SKU, и пишет страницы со ссылками на файлы, начиная со страницы «Index».",
-      "Зачем: один поиск по множеству файлов часто пропускает файл с ответом. Тяжёлая работа идёт, только когда Vunemi простаивает. Без тем Vunemi, как и раньше, читает файлы, которые вы даёте в задаче. Качество страниц зависит от модели.",
-      "Встроенный движок обновлён и запускает Inkling 2. Vunemi теперь скачивает модели и из ggml-org, а если движок не может загрузить модель, так и сообщает, а не ссылается на память или инструменты модели.",
-      "Голосовой чат больше не зачитывает «Остановлено.». В поле пароля Vunemi нажимает только клавиши, которые не меняют текст; macOS может ещё раз запросить разрешения. «Одобрить всё» и задачи по расписанию теперь узнают приложения с переведённым названием."
+      "Новое: когда беседа без темы что-то ищет в интернете, Vunemi собирает ответ, прочитанные адреса и сохранённые пункты во временной теме и спрашивает, оставить её под названием, которое можно изменить, или удалить.",
+      "Это сделано потому, что при долгом поиске память модели заполнялась целыми страницами и найденное терялось. Теперь страницы читаются по основному содержимому, а старые шаги сокращаются. Если удалить, ничего не останется; ответ останется в беседе.",
+      "Меньше карточек в интернете: обычные ссылки и поле поиска сайта считаются чтением. «Одобрить всё» покрывает один сайт до конца задачи, а доверенный сайт требует одного одобрения на задачу. Формы, отправка и удаление по-прежнему спрашивают.",
+      "Тема предлагается, только если запрос ближе к ней, чем к повседневным запросам, а скрипты страницы больше не могут выдать форму, отправляющую данные, за поиск."
     ],
     "zh": [
-      "新功能：主题。把你常回顾的主题保存为 Mac 上的 Markdown 页面文件夹，并链接你自己的文件夹：Vunemi 在原处读取文件，记录哪些文件链接到哪里、哪些定义了 SKU 这类代码，并从名为“Index”的页面开始，写出注明文件出处的页面。",
-      "这样做是因为对大量文件只搜索一次，常会漏掉包含答案的那个文件。繁重的工作只在 Vunemi 空闲时运行。没有主题时，Vunemi 仍像以前一样读取你在任务中提供的文件。页面的质量取决于模型。",
-      "内置引擎已更新，可以运行 Inkling 2。Vunemi 现在也能从 ggml-org 下载模型；当引擎无法加载某个模型时，它会直接说明，而不是归咎于内存或模型的工具。",
-      "语音聊天不再朗读“已停止。”。在密码框中，Vunemi 只按不会改变文本的键；macOS 可能会再次请求权限。“全部批准”和定时任务现在能识别名称经过翻译的应用。"
+      "新功能：没有主题的对话在网上查找时，Vunemi 会把回答、读过的地址和保留的条目收集到一个临时主题里，然后问你是保留它（名称可改）还是删除它。",
+      "之所以有它，是因为长时间的搜索会让整页内容塞满模型的记忆，丢掉已找到的东西。现在页面只读取正文，较早的步骤会被缩短，长时间的查找也放得下。选择删除就什么都不留，回答仍在对话里。",
+      "网页上的卡片更少了：普通链接和网站的搜索框算作读取。“全部批准”在任务结束前只覆盖一个网站，可信网站每个任务只需批准一次。发送数据的表单、发送和删除仍会询问。",
+      "只有当请求离某个主题比离日常请求更近时，才会建议该主题；页面自己的脚本也不能再把发送数据的表单伪装成搜索。"
     ],
     "ja": [
-      "新機能: トピック。繰り返し扱うテーマを Mac 上の Markdown ページのフォルダーとして保存し、自分のフォルダーをリンクできます。Vunemi はファイルをその場で読み、どのファイルがどこにリンクし、SKU のようなコードをどれが定義しているかを記録し、「Index」ページを起点にファイルを出典として示すページを書きます。",
-      "多数のファイルを一度検索するだけでは、答えのあるファイルを見落とすことが多いためです。重い処理は Vunemi が待機中のときだけ行います。トピックがなくても、タスクで渡したファイルはこれまでどおり読みます。ページの質はモデルによって異なります。",
-      "内蔵エンジンが新しくなり、Inkling 2 を実行できます。ggml-org からもモデルをダウンロードできるようになり、エンジンがモデルを読み込めないときは、メモリやモデルのツールのせいにせず、そのことを伝えます。",
-      "音声チャットで「停止しました。」を読み上げなくなりました。パスワード欄では、テキストを変えないキーだけを押します。macOS が権限をもう一度求めることがあります。「すべて承認」と予定タスクが、名前が翻訳されたアプリを認識するようになりました。"
+      "新機能:トピックのない会話でウェブを調べると、Vunemi は答え、読んだアドレス、残した項目を一時的なトピックにまとめ、名前を変えて残すか削除するかをたずねます。",
+      "長い検索ではページ全体がモデルの記憶をふさぎ、見つけたものが失われていたためです。いまはページの本文だけを読み、古い手順は短くなるので、長い検索も収まります。削除すれば何も残らず、答えは会話に残ります。",
+      "ウェブのカードを少なく:ふつうのリンクとサイトの検索ボックスは読むことと見なされます。「すべて承認」はタスクが終わるまで 1 つのサイトだけをまかない、信頼済みのサイトはタスクごとに 1 回の承認で済みます。データを送るフォーム、送信、削除は今まで通りたずねます。",
+      "トピックは、依頼が日常的な依頼よりもそのトピックに近いときだけ提案されます。ページ自身のスクリプトが、データを送るフォームを検索に見せかけることもできなくなりました。"
     ],
     "ko": [
-      "새 기능: 주제. 자주 다루는 주제를 Mac의 Markdown 페이지 폴더로 보관하고 내 폴더를 연결할 수 있습니다. Vunemi는 파일을 그 자리에서 읽고, 어떤 파일이 어디로 연결되는지와 SKU 같은 코드를 어느 파일이 정의하는지 기록하며, “Index” 페이지에서 시작해 파일을 출처로 밝히는 페이지를 씁니다.",
-      "많은 파일을 한 번 검색하는 것만으로는 답이 있는 파일을 놓치는 경우가 많기 때문입니다. 무거운 작업은 Vunemi가 쉬고 있을 때만 실행됩니다. 주제가 없어도 작업에서 건넨 파일은 예전처럼 읽습니다. 페이지의 품질은 모델에 따라 다릅니다.",
-      "내장 엔진이 새 버전으로 바뀌어 Inkling 2를 실행합니다. 이제 ggml-org에서도 모델을 내려받을 수 있으며, 엔진이 모델을 불러오지 못하면 메모리나 모델의 도구 탓으로 돌리지 않고 그 사실을 알려 줍니다.",
-      "음성 채팅이 더 이상 “중지됨.”을 읽지 않습니다. 비밀번호 입력란에서는 텍스트를 바꾸지 않는 키만 누릅니다. macOS가 권한을 다시 요청할 수 있습니다. “모두 승인”과 예약 작업이 이름이 번역된 앱을 인식합니다."
+      "새 기능: 주제가 없는 대화에서 웹을 찾아보면 Vunemi가 답변, 읽은 주소, 남긴 항목을 임시 주제에 모으고, 이름을 바꿔 유지할지 삭제할지 묻습니다.",
+      "긴 검색에서 페이지 전체가 모델의 기억을 채워 찾은 내용을 잃었기 때문에 만들었습니다. 이제 페이지는 본문만 읽고 오래된 단계는 줄여서 긴 검색도 들어맞습니다. 삭제하시면 아무것도 남지 않으며 답변은 대화에 남습니다.",
+      "웹의 카드를 줄였습니다: 일반 링크와 사이트의 검색 상자는 읽기로 간주됩니다. 모두 승인은 작업이 끝날 때까지 한 사이트만 다루고, 신뢰하는 사이트는 작업마다 한 번만 승인하시면 됩니다. 데이터를 보내는 양식, 보내기, 삭제는 여전히 묻습니다.",
+      "주제는 요청이 일상적인 요청보다 그 주제에 더 가까울 때만 제안됩니다. 페이지의 스크립트가 데이터를 보내는 양식을 검색처럼 보이게 할 수도 없게 되었습니다."
     ]
   }
 }

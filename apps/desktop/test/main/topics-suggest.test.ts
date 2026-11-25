@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { TopicStore } from "../../src/main/topics/store.js";
 import { topicIndex, TOPIC_INDEX_LINES } from "../../src/main/topics/index-text.js";
-import { SUGGEST_MARGIN, SUGGEST_MIN, suggestTopic, topicText } from "../../src/main/topics/suggest.js";
+import { ELSEWHERE, SUGGEST_MARGIN, SUGGEST_MIN, suggestTopic, topicText } from "../../src/main/topics/suggest.js";
 
 /** A stand-in embedder: each text is a direction picked by the words in it. */
 function meaningOf(scores: Record<string, number>, available = true) {
@@ -47,6 +47,13 @@ describe("suggesting a topic", () => {
     expect(await suggestTopic(meaningOf({ "Home renovation": 0.6, "Taxes 2026": 0.6 - SUGGEST_MARGIN / 2 }).meaning, "x", topics, new Map())).toBeNull();
   });
 
+  it("names none when the request is nearer to everyday requests than to the topic, as with one short topic", async () => {
+    const one = [{ name: "Garden", about: "Garden" }];
+    // One topic leaves no runner-up for the margin; everyday requests stand in for it.
+    expect(await suggestTopic(meaningOf({ "Garden": 0.43, General: 0.5 }).meaning, "Find the Python jobs on this page", one, new Map())).toBeNull();
+    expect(await suggestTopic(meaningOf({ "Garden": 0.5, General: 0.3 }).meaning, "When should I prune the roses?", one, new Map())).toBe("Garden");
+  });
+
   it("asks nothing without the meaning model, a topic or words", async () => {
     const off = meaningOf({ "Home renovation": 0.9, "Taxes 2026": 0 }, false);
     expect(await suggestTopic(off.meaning, "tiles", topics, new Map())).toBeNull();
@@ -55,12 +62,12 @@ describe("suggesting a topic", () => {
     expect(await suggestTopic(meaningOf({ "Home renovation": 0.9, "Taxes 2026": 0 }).meaning, "  ", topics, new Map())).toBeNull();
   });
 
-  it("embeds a topic's text once while it stays the same", async () => {
+  it("embeds a topic's text, and the everyday one, once while they stay the same", async () => {
     const { meaning, calls } = meaningOf({ "Home renovation": 0.9, "Taxes 2026": 0 });
     const cache = new Map<string, Float32Array>();
     await suggestTopic(meaning, "tiles", topics, cache);
     await suggestTopic(meaning, "grout", topics, cache);
-    expect(calls.filter((c) => c.as === "passage").map((c) => c.texts)).toEqual([topics.map(topicText)]);
+    expect(calls.filter((c) => c.as === "passage").map((c) => c.texts)).toEqual([[...topics.map(topicText), ELSEWHERE]]);
     expect(calls.filter((c) => c.as === "query")).toHaveLength(2);
   });
 });

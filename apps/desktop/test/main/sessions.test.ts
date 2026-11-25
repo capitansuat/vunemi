@@ -97,7 +97,8 @@ describe("SessionStore", () => {
     const store = new SessionStore(dir);
     run(store, "r1", "gizli iş", "tamam");
     const [file] = readdirSync(dir);
-    expect(statSync(join(dir, file!)).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(dir, file!)).mode & 0o777).toBe(0o600);
   });
 
   it("refuses an id that is really a path", () => {
@@ -183,7 +184,8 @@ describe("a task cut short by Vunemi closing", () => {
 
   it("comes back marked, with the finished step kept and the unfinished one unknown", () => {
     const id = crash(new SessionStore(dir));
-    expect(statSync(join(dir, `${id}.checkpoint`)).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(dir, `${id}.checkpoint`)).mode & 0o777).toBe(0o600);
 
     const next = new SessionStore(dir);
     expect(readdirSync(dir).filter((f) => f.endsWith(".checkpoint"))).toEqual([]);

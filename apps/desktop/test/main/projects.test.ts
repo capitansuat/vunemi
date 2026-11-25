@@ -20,7 +20,8 @@ describe("projects", () => {
     const again = new ProjectStore(join(dir, "projects.json"));
     expect(again.list()).toEqual([a]);
     // Only the owner reads it: it lists the user's folders.
-    expect(statSync(join(dir, "projects.json")).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(dir, "projects.json")).mode & 0o777).toBe(0o600);
   });
 
   it("are forgotten without touching the folder", () => {

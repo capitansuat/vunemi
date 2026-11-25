@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { Roots } from "@vunemi/files";
 import { setLocale } from "@vunemi/i18n";
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
@@ -142,7 +142,7 @@ describe("in a topic", () => {
     writeFileSync(join(files, "broken.pdf"), "%PDF broken");
     writeFileSync(join(files, "notes.txt"), "Plain text from the user");
     const said = await run("topic_add_sources", { paths: [join(files, "offer-2.pdf"), join(files, "broken.pdf"), join(files, "notes.txt")] });
-    expect(converted.map((call) => call.map((p) => p.split("/").pop()))).toEqual([["offer-2.pdf", "broken.pdf"]]);
+    expect(converted.map((call) => call.map((p) => basename(p)))).toEqual([["offer-2.pdf", "broken.pdf"]]);
     expect(said).toMatch(/offer-2\.pdf: added as the source "offer-2"/);
     expect(said).toMatch(/broken\.pdf: not added\. No text found\./);
     expect(said).toMatch(/notes\.txt: added as the source "notes"/);

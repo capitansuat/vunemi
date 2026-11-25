@@ -46,6 +46,8 @@ interface StoredSession {
   topic?: string;
   /** Vunemi has asked once whether it belongs in a topic; it doesn't ask again. */
   topicAsked?: true;
+  /** The user deleted the temporary topic its lookups gathered in; none is made again here (topics/lookup-topic.ts). */
+  temporaryDeclined?: true;
 }
 
 /** A run in progress, as of its last step. */
@@ -230,6 +232,7 @@ export class SessionStore {
     else delete this.current.projectId;
     delete this.current.topic;
     delete this.current.topicAsked;
+    delete this.current.temporaryDeclined;
     return this.current.id;
   }
 
@@ -251,6 +254,19 @@ export class SessionStore {
     if (this.current.events.length > 0) this.save();
   }
 
+  /** Whether the user deleted this conversation's temporary topic. */
+  get temporaryDeclined(): boolean {
+    return this.current.temporaryDeclined === true;
+  }
+
+  /** The user deleted the temporary topic: the conversation leaves it, and none is made again here. */
+  declineTemporary(): void {
+    delete this.current.topic;
+    this.current.temporaryDeclined = true;
+    this.current.topicAsked = true;
+    if (this.current.events.length > 0) this.save();
+  }
+
   /** Vunemi asked and the user said no: it isn't asked again in this conversation. */
   markTopicAsked(): void {
     this.current.topicAsked = true;
@@ -258,20 +274,22 @@ export class SessionStore {
   }
 
   /** A topic renamed or gone: every conversation in it follows, or leaves it. */
-  renameTopic(from: string, to: string | null): void {
+  /** `declined`: a temporary topic the user deleted; the conversations that were in it make none again. */
+  renameTopic(from: string, to: string | null, o: { declined?: boolean } = {}): void {
     const key = from.toLowerCase();
+    const follow = (s: StoredSession): void => {
+      if (to) s.topic = to;
+      else delete s.topic;
+      if (!to && o.declined) s.temporaryDeclined = true;
+    };
     for (const summary of this.list()) {
       if (summary.topic?.toLowerCase() !== key) continue;
       const s = summary.id === this.current.id ? this.current : this.read(summary.id);
       if (!s) continue;
-      if (to) s.topic = to;
-      else delete s.topic;
+      follow(s);
       if (s !== this.current || s.events.length > 0) this.write(s);
     }
-    if (this.current.topic?.toLowerCase() === key) {
-      if (to) this.current.topic = to;
-      else delete this.current.topic;
-    }
+    if (this.current.topic?.toLowerCase() === key) follow(this.current);
   }
 
   /** Makes a stored conversation current, and hands back what it needs to be shown and continued. */
@@ -373,6 +391,7 @@ export class SessionStore {
       ...((point.projectId ?? kept?.projectId) && { projectId: point.projectId ?? kept?.projectId }),
       ...((point.topic ?? kept?.topic) && { topic: point.topic ?? kept?.topic }),
       ...(kept?.topicAsked && { topicAsked: true as const }),
+      ...(kept?.temporaryDeclined && { temporaryDeclined: true as const }),
     });
     rmSync(this.checkpointFile(id), { force: true });
   }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { stagedMatches, type Run } from "../../src/main/updates/staged.js";
+const onWindows = process.platform === "win32";
 
 const REQ = 'designated => identifier "com.vunemi.app" and certificate leaf = H"abc"';
 
@@ -20,10 +21,12 @@ function fake(state: object | null, opts: { verifyFails?: boolean; stagedReq?: s
 const STATE = { updateBundleURL: "file:///Users/x/Library/Caches/com.vunemi.app.ShipIt/update.abc/Vunemi.app/" };
 
 describe("stagedMatches", () => {
-  it("accepts a staged app signed like the running one", async () => {
+  // Windows: this checks a macOS code signature; Windows updates come in plan 6.
+  it.skipIf(onWindows)("accepts a staged app signed like the running one", async () => {
     expect(await stagedMatches(fake(STATE), "/state.plist", "/Applications/Vunemi.app")).toBe(true);
   });
-  it("refuses a staged app that fails verification or is signed by someone else", async () => {
+  // Windows: this checks a macOS code signature; Windows updates come in plan 6.
+  it.skipIf(onWindows)("refuses a staged app that fails verification or is signed by someone else", async () => {
     expect(await stagedMatches(fake(STATE, { verifyFails: true }), "/state.plist", "/Applications/Vunemi.app")).toBe(false);
     expect(await stagedMatches(fake(STATE, { stagedReq: 'designated => identifier "com.vunemi.app" and certificate leaf = H"evil"' }), "/state.plist", "/Applications/Vunemi.app")).toBe(false);
   });

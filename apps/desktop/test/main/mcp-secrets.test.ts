@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { McpServerConfig } from "@vunemi/mcp";
 import { connectLocal, Vault } from "@vunemi/vault";
-import { migrateMcpSecrets, openMcpServer, removeMcpSecrets, sealMcpServer, unsealed } from "../../src/main/mcp-secrets.js";
+import { mcpTarget, migrateMcpSecrets, openMcpServer, removeMcpSecrets, sealMcpServer, unsealed } from "../../src/main/mcp-secrets.js";
 import { SettingsStore } from "../../src/main/settings.js";
 
 const dirs: string[] = [];
@@ -38,6 +38,19 @@ describe("MCP connection secrets", () => {
     expect((await openMcpServer(new SettingsStore(dir).mcpServers[0]!, vault)).transport).toEqual(raw.transport);
     await removeMcpSecrets(stored, vault);
     await expect(openMcpServer(stored, vault)).rejects.toThrow();
+  });
+
+  it("binds secrets to a program in a folder with a space, as Windows keeps Node in Program Files", async () => {
+    const { vault } = await fixture();
+    const spaced = "C:\\Program Files\\nodejs\\node.exe";
+    const raw: McpServerConfig = { id: "spaced", label: "Spaced", transport: { kind: "stdio", command: spaced, env: { API_KEY: "secret-token-value" } } };
+    const { stored } = await sealMcpServer(raw, vault);
+    expect((await openMcpServer(stored, vault)).transport).toEqual(raw.transport);
+    expect(mcpTarget(raw)).toBe("mcp:C:\\Program%20Files\\nodejs\\node.exe");
+    // Targets without a space or a percent sign are written exactly as before, so bindings made earlier still match.
+    expect(mcpTarget({ id: "a", label: "a", transport: { kind: "stdio", command: "/usr/local/bin/server" } })).toBe("mcp:/usr/local/bin/server");
+    // A literal "%20" in a path stays apart from a space.
+    expect(mcpTarget({ id: "b", label: "b", transport: { kind: "stdio", command: "/x/a%20b" } })).not.toBe(mcpTarget({ id: "c", label: "c", transport: { kind: "stdio", command: "/x/a b" } }));
   });
 
   it("won't hand a server's secrets to a different command or site saved in its place", async () => {

@@ -23,7 +23,7 @@ const call = async (name: string, a: Record<string, unknown>) => String(await to
 const made = (name: string) => { const p = join(base, name); expect(existsSync(p), name).toBe(true); expect(statSync(p).size, name).toBeGreaterThan(0); return p; };
 describe.skipIf(process.env.CRAFT_LIVE !== '1' || process.platform !== 'darwin')('short add-on tools on the pinned programs', () => {
   beforeAll(() => {
-    base = realpathSync(mkdtempSync(join(tmpdir(), 'vunemi-short-tools-')));
+    base = realpathSync.native(mkdtempSync(join(tmpdir(), 'vunemi-short-tools-')));
     const engines = createEngines({ home: homedir(), jobsDir: join(base, '.jobs'), addons: { binary: id => existsSync(program(id)) ? program(id) : null, engineDir: id => join(installed, id, ADDONS.find(a => a.id === id)!.tag) } });
     const deps = { engines, roots: new Roots([base]), shotDir: join(base, '.shots'), backupDir: join(base, '.backups') };
     tools = new Map([...drawingTools(deps), ...pdfTools(deps), ...photoTools(deps), ...videoTools(deps)].map(t => [t.name, t]));

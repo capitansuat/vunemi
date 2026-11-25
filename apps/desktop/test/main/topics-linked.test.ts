@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { PathRefused } from "@vunemi/files";
 import { TopicStore } from "../../src/main/topics/store.js";
 import { defaultMeaning, LinkedSync, MEANING_SUBFOLDER_MAX, meaningOn } from "../../src/main/topics/linked.js";
+const onWindows = process.platform === "win32";
 
 let base: string;
 let dir: string;
@@ -174,6 +175,7 @@ describe("a linked folder", () => {
     expect(readFileSync(index, "utf8")).toContain('- "Loan"');
   });
 
+  // Windows: file-heavy; about three times slower in the Windows VM than on a Mac.
   it("gives meaning to the top level and small subfolders, not to a large one, unless switched", async () => {
     for (const name of ["t1.txt", "t2.txt"]) writeFileSync(join(dir, name), "top words");
     mkdirSync(join(dir, "small"));
@@ -194,7 +196,7 @@ describe("a linked folder", () => {
     expect([parts(join(dir, "small", "s9.txt")), parts(join(dir, "small", "s0.txt")), parts(join(dir, "big", "b0.txt"))]).toEqual([0, 1, 0]);
     db.close();
     // A thousand files on disk: slow on a busy machine, not wrong.
-  }, 30_000);
+  }, onWindows ? 120_000 : 30_000);
 
   it("decides by size where the user set no switch", () => {
     expect(defaultMeaning(MEANING_SUBFOLDER_MAX)).toBe(true);

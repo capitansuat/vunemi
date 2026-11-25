@@ -8,6 +8,7 @@ import { notScheduledReason } from "../src/policy.js";
 import { scheduledApp } from "../src/scheduled-apps.js";
 import { createDesktopTools } from "../src/tools.js";
 import type { ToolContext } from "@vunemi/agent-core";
+const onWindows = process.platform === "win32";
 
 const app = (name: string, bundleId: string): MacApp => ({ name, bundleId, pid: bundleId.length, frontmost: false });
 
@@ -39,7 +40,8 @@ describe("finding the app a set-up names", () => {
     await expect(scheduledApp("Safari", look([app("Safari", "com.apple.Safari")]))).rejects.toThrow(/can't be given/);
     await expect(scheduledApp("No Such App", look([]))).rejects.toThrow(/No installed app/);
   });
-  it("an open finance app is refused under a name that isn't its folder's", async () => {
+  // Windows: macOS desktop control only.
+  it.skipIf(onWindows)("an open finance app is refused under a name that isn't its folder's", async () => {
     setLocale("en");
     const dir = mkdtempSync(join(tmpdir(), "vunemi-apps-"));
     try {

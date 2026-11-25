@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mailConnector, type CatalogueOptions } from "../../src/main/connectors.js";
 import type { StoredMailAccount } from "../../src/main/settings.js";
+const onWindows = process.platform === "win32";
 
 let dir: string;
 let fake: string;
@@ -69,7 +70,8 @@ describe("Mail app accounts in the mail connection", () => {
     await expect(c.addAccount!("applemail", { account: "iCloud" })).rejects.toThrow();
   });
 
-  it("searches it with the ordinary mail tools", async () => {
+  // Windows: Mac apps and Apple Mail are macOS only.
+  it.skipIf(onWindows)("searches it with the ordinary mail tools", async () => {
     const { c } = connector([{ id: "a-1", provider: "applemail", account: "iCloud", email: "test@example.com", addedAt: 1 }]);
     const search = c.tools().find((tool) => tool.name === "mail_search")!;
     const out = await search.run({ text: "Hi" }, {} as never);

@@ -15,6 +15,7 @@ it('never sends native effect when the current file version differs',async()=>{
  expect(out.status).toBe('no-input');expect(calls).toBe(0);expect(await readFile(path,'utf8')).toBe('fixture');
 });
 import {lstat,realpath} from 'node:fs/promises';import {createHash,randomUUID} from 'node:crypto';
+const onWindows = process.platform === "win32";
 const sha=(text:string)=>createHash('sha256').update(text).digest('hex');
 async function nativeFixture(abortAfterAppend=false){
  const dir=await realpath(await mkdtemp(join(tmpdir(),'vun13p2-'))),path=join(dir,'a.txt');await writeFile(path,'fixture');
@@ -24,6 +25,7 @@ async function nativeFixture(abortAfterAppend=false){
  const driver=new NativeRecipeDriver({helper:helper as any,assertPath:p=>p,helperRevision:()=> 'a'.repeat(64)}),context={runId:'native-r',signal:abort.signal,assertActive(){if(abort.signal.aborted)throw Error('stopped');},beforeChild:(phase:string,id:string)=>child.push(phase+':'+id),recordBackup:(p:string,h:string)=>{expect(p).toBe(backupPath);expect(h).toBe(sha('fixture'));}};
  return{driver,context,binding,path,backupPath,calls,child};
 }
-it('backs up once, appends once, saves once and independently reads actual bytes',async()=>{const f=await nativeFixture();const r=await f.driver.execute(f.binding,'!',f.backupPath,f.context);expect(r.status).toBe('verified');expect(await readFile(f.path,'utf8')).toBe('fixture!');expect(await readFile(f.backupPath,'utf8')).toBe('fixture');expect(f.calls).toEqual(['scheduled_recipe_prepare','scheduled_recipe_backup','scheduled_document_append','scheduled_document_save']);expect(f.child).toHaveLength(2);});
+// Windows: macOS desktop control only.
+it.skipIf(onWindows)('backs up once, appends once, saves once and independently reads actual bytes',async()=>{const f=await nativeFixture();const r=await f.driver.execute(f.binding,'!',f.backupPath,f.context);expect(r.status).toBe('verified');expect(await readFile(f.path,'utf8')).toBe('fixture!');expect(await readFile(f.backupPath,'utf8')).toBe('fixture');expect(f.calls).toEqual(['scheduled_recipe_prepare','scheduled_recipe_backup','scheduled_document_append','scheduled_document_save']);expect(f.child).toHaveLength(2);});
 it('does not send save after append cancellation and preserves backup/unknown',async()=>{const f=await nativeFixture(true);const r=await f.driver.execute(f.binding,'!',f.backupPath,f.context);expect(r.status).toBe('unknown');expect(f.calls).not.toContain('scheduled_document_save');expect(await readFile(f.backupPath,'utf8')).toBe('fixture');expect(f.child).toHaveLength(1);});
 it('backup collision never overwrites or sends native input',async()=>{const f=await nativeFixture();await writeFile(f.backupPath,'do not replace');const r=await f.driver.execute(f.binding,'!',f.backupPath,f.context);expect(r.status).toBe('no-input');expect(f.calls).toEqual(['scheduled_recipe_prepare','scheduled_recipe_backup']);expect(f.child).toHaveLength(0);expect(await readFile(f.backupPath,'utf8')).toBe('do not replace');});

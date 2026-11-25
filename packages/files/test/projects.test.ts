@@ -9,6 +9,7 @@ import { join } from "node:path";
 import type { ToolContext, ToolDef } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createFileTools, PathRefused, projectFolderProblem, Roots } from "../src/index.js";
+import { t } from "@vunemi/i18n";
 
 let home = "";
 let docs = "";
@@ -26,7 +27,7 @@ const ctx = (): ToolContext => ({
 const call = (name: string, args: Record<string, unknown>) => tools.get(name)!.run(args as never, ctx());
 
 beforeEach(() => {
-  home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-projects-")));
+  home = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-projects-")));
   docs = join(home, "Documents");
   project = join(home, "Work", "site");
   mkdirSync(docs, { recursive: true });
@@ -85,6 +86,13 @@ describe("project folders", () => {
     expect(projectFolderProblem(join(home, "nowhere"), home)).toBeTruthy();
     // Vunemi's own data folder, or one holding it.
     expect(projectFolderProblem(project, home, [join(project, "data")])).toBeTruthy();
+  });
+
+  it.runIf(process.platform === "win32")("keep AppData and the system's own folders closed on Windows", () => {
+    mkdirSync(join(home, "AppData", "Local", "x"), { recursive: true });
+    expect(projectFolderProblem(join(home, "AppData", "Local", "x"), home)).toBe(t("files.project.appData"));
+    expect(projectFolderProblem(join(home, "appdata"), home)).toBe(t("files.project.appData"));
+    expect(projectFolderProblem(process.env.ProgramData!, home)).toBe(t("files.project.outsideHome"));
   });
 
   it("can't be smuggled in through a link to a forbidden place", () => {

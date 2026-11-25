@@ -4,8 +4,13 @@
  * tool names, so a new tool can't slip past the gate by being unfamiliar.
  */
 
-/** `app` is the name the card shows, when the approval reaches an app and not only local work. */
-export interface ApproveAllCover { key: string; app?: string }
+/**
+ * `app` is the name the card shows, when the approval reaches an app and not
+ * only local work. `site` is the host a page action's approval reaches;
+ * `trusted` says the user has that host on their trusted list, where one
+ * plain approval covers it for the task.
+ */
+export interface ApproveAllCover { key: string; app?: string; site?: string; trusted?: boolean }
 
 export type ActionClass =
   /** Reads state; no side effects. */
@@ -100,6 +105,33 @@ export interface ToolContext {
   openTools?(group: string): void;
 }
 
+/**
+ * How an older ephemeral output shortens: its first `lines` lines, stopping
+ * after the first one that matches `until` (a pattern's source); only its
+ * first line when none does; at most `max` characters. Plain data, as every
+ * part of a definition the session process is told about (no functions).
+ */
+export interface StaleHead {
+  lines: number;
+  until: string;
+  max: number;
+}
+
+export function staleHead(output: string, spec: StaleHead): string {
+  const until = new RegExp(spec.until);
+  const head: string[] = [];
+  let found = false;
+  for (const line of output.split("\n").slice(0, spec.lines)) {
+    head.push(line);
+    if (until.test(line)) {
+      found = true;
+      break;
+    }
+  }
+  const text = (found ? head : head.slice(0, 1)).join("\n");
+  return text.length > spec.max ? `${text.slice(0, spec.max - 1)}…` : text;
+}
+
 export interface ToolDef<Args = Record<string, unknown>> {
   name: string;
   description: string;
@@ -178,10 +210,17 @@ export interface ToolDef<Args = Record<string, unknown>> {
    */
   ephemeral?: boolean;
   /**
+   * What an older ephemeral output shortens to, in front of the note: for a
+   * page, the action and the address it led to. Without it, only the note.
+   */
+  stale?: StaleHead;
+  /**
    * Output longer than this is kept whole and shown from the start, with a
    * note on reading the rest (see KeptOutputs). Default: the run's limit.
    */
   firstPartChars?: number;
+  /** The shown part also stops where this text first appears (page_read: before the whole page text). */
+  firstPartEnd?: string;
   /**
    * What the model is given instead of the whole output, when part of it is
    * for the user only (links shown on a card, say). The UI gets all of it.

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { serverArgs } from "../../src/main/engine/engine.js";
 import { cosine, EMBED_MODEL, Embedder, TooLongError } from "../../src/main/memory/embedder.js";
+const onWindows = process.platform === "win32";
 
 const FAKE = fileURLToPath(new URL("./fixtures/fake-llama-server.mjs", import.meta.url));
 let dir = "";
@@ -54,7 +55,8 @@ describe("the meaning model", () => {
     expect(embedder.available()).toBe(true);
   });
 
-  it("embeds a query with its task and notes as they are, normalised, in order", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("embeds a query with its task and notes as they are, normalised, in order", async () => {
     withModel();
     const [query] = await make().embed(["rapor"], "query");
     expect([...query!].map((x) => +x.toFixed(3))).toEqual([0.6, 0, 0.8]);
@@ -63,7 +65,8 @@ describe("the meaning model", () => {
     expect(b).toEqual(a);
   });
 
-  it("takes a whole topic part, and says when a text is too long", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("takes a whole topic part, and says when a text is too long", async () => {
     withModel();
     const embedder = make();
     // A part is up to 1,000 characters; a table of numbers is about a token a character.
@@ -88,7 +91,8 @@ describe("the meaning model", () => {
     expect(calls).toEqual([{ file: EMBED_MODEL.file, dir }]);
   });
 
-  it("is busy only while it embeds, and says which process holds the model", async () => {
+  // Windows: the fake server is a .mjs file, which Windows can't start as a program; plan 5 tests the real Windows build.
+  it.skipIf(onWindows)("is busy only while it embeds, and says which process holds the model", async () => {
     withModel();
     const embedder = make();
     expect(embedder.pid()).toBeNull();

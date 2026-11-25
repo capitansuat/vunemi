@@ -25,7 +25,8 @@ describe("outputs", () => {
     expect(store.addOutput("c1", "page_read", "long page", 4)).toBe("o1");
     expect(store.addOutput("c1", "page_read", "second", 4)).toBe("o2");
     expect(store.addOutput("c2", "files_read", "other", 4)).toBe("o1");
-    expect(statSync(join(dir, "work.db")).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(dir, "work.db")).mode & 0o777).toBe(0o600);
     store.close();
     store = new WorkStore(dir, () => clock);
     expect(store.output("c1", "o2")).toEqual({ tool: "page_read", text: "second", part: 4 });

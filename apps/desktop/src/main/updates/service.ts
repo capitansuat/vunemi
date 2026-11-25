@@ -14,6 +14,8 @@ export interface Updater {
   setFeedURL(options: { url: string; serverType: "json" }): void;
   checkForUpdates(): void;
   quitAndInstall(): void;
+  /** An updater that downloads the offer itself (Windows) is told which one first. */
+  prepare?(offer: Offer): void;
   on(event: "update-downloaded", listener: () => void): void;
   on(event: "error", listener: (error: Error) => void): void;
 }
@@ -96,10 +98,11 @@ export class UpdateService {
     }
   }
 
-  /** Squirrel downloads the offer and checks its signature. Only from Applications. */
+  /** Squirrel (or, on Windows, WindowsUpdater) downloads the offer and checks it. Only where Vunemi can replace itself. */
   download(): UpdateStatus {
     const retry = this.phase === "failed" && this.offer !== null;
     if ((this.phase !== "available" && !retry) || !this.deps.installable()) return this.status();
+    if (this.offer) this.deps.updater.prepare?.(this.offer);
     this.deps.updater.setFeedURL({ url: this.deps.source.feed, serverType: "json" });
     this.deps.updater.checkForUpdates();
     return this.set("downloading");

@@ -5,7 +5,9 @@ import {mkdtempSync,readFileSync,writeFileSync,chmodSync,existsSync} from 'node:
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {Helper} from '../src/helper.js';
-it('cooperatively stops drag and awaits same-target release/child exit before settling owner',async()=>{
+const onWindows = process.platform === "win32";
+// Windows: macOS desktop control only.
+it.skipIf(onWindows)('cooperatively stops drag and awaits same-target release/child exit before settling owner',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'drag-cancel-')),binary=join(dir,'helper'),events=join(dir,'events'),path=join(dir,'journal.json');
  writeFileSync(binary,`#!/usr/bin/env node\nconst fs=require('node:fs');const file=${JSON.stringify(events)};let moving,requestId;process.on('SIGUSR1',()=>{clearInterval(moving);fs.appendFileSync(file,'up:123:9\\n');process.stdout.write(JSON.stringify({id:requestId,ok:true,result:{status:'verified'}})+'\\n');setTimeout(()=>{fs.appendFileSync(file,'exited\\n');process.exit(0)},100)});process.on('SIGTERM',()=>{fs.appendFileSync(file,'forced\\n');process.exit(2)});require('node:readline').createInterface({input:process.stdin}).on('line',line=>{const req=JSON.parse(line);requestId=req.id;fs.writeFileSync(file,'down:123:9\\n');moving=setInterval(()=>fs.appendFileSync(file,'move:123:9\\n'),20);});\n`);chmodSync(binary,0o755);
  const h=new Helper(binary,{operationJournalPath:path}),stop=new AbortController(),target={bundleId:'org.scope.sliderfixture',pid:123,processStartedAt:100,windowId:9};

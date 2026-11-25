@@ -8,13 +8,14 @@
 import { randomUUID } from "node:crypto";
 import {outcomeFingerprint,type ToolContext} from '@vunemi/agent-core';
 import { BoundActions, type BoundOptions, type BoundAction } from "./bound-actions.js";
-import { checkNavigation } from "./url-policy.js";
+import { checkNavigation, safeHost } from "./url-policy.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { find, outline } from "@vunemi/perception";
 import type { BrowserBackend, TabInfo } from "./backend.js";
 import { detectChallenge } from "./challenge.js";
-import { PageActionError, PageDriver, type OwnerField, type PointerEvent } from "./page.js";
+import { WHOLE_PAGE_MARK } from "./main-content.js";
+import { elementKind, PageActionError, PageDriver, type ElementKind, type OwnerField, type PointerEvent } from "./page.js";
 import type { TrustedSites } from "./url-policy.js";
 
 export interface TabView {
@@ -29,6 +30,8 @@ interface Snapshot {
   refs: Set<number>;
   /** ref → its outline line, for approval previews. */
   lines: Map<number, string>;
+  /** ref → what acting on it amounts to, read from the page when the outline was made. */
+  kinds: Map<number, ElementKind>;
 }
 
 const DESCRIBE_BUDGET = 16_000; // ≈4K tokens
@@ -52,6 +55,8 @@ export class BrowserController {
   private readonly snapshots = new Map<string, Snapshot>();
   /** Bot check seen on the current page by the last goto/act, if any. */
   private seenChallenge: string | null = null;
+  /** The field page_type last typed into, while nothing else has been done since. */
+  private focused: { target: string; ref: number } | null = null;
 
   private pointerListener: ((target: string, p: PointerEvent) => Promise<void> | void) | null = null;
 
@@ -146,6 +151,7 @@ export class BrowserController {
   // -- navigation ----------------------------------------------------------
 
   async goto(url: string, newTab: boolean, capturedTarget?:(target:string)=>void): Promise<string> {
+    this.focused = null;
     const b = await this.ensure();
     if (newTab || (await this.tabs()).length === 0) {
       const target = await b.openTab("about:blank");
@@ -211,6 +217,7 @@ export class BrowserController {
   }
 
   async back(): Promise<string> {
+    this.focused = null;
     const { driver, target } = await this.page();
     if (!(await driver.back())) return "There is no previous page in this tab's history.";
     await driver.settle();
@@ -236,10 +243,10 @@ export class BrowserController {
     // slice was shown — otherwise hidden-from-view elements would later
     // count as "appeared".
     if (opts.ref === undefined && !opts.interactiveOnly) {
-      this.remember(target, loc.url, o.text, o.refs);
+      await this.rememberPage(driver, target, loc.url, o.text, o.refs);
     } else {
       const full = outline(nodes, { maxChars: DESCRIBE_BUDGET });
-      this.remember(target, loc.url, full.text, full.refs);
+      await this.rememberPage(driver, target, loc.url, full.text, full.refs);
     }
     return `${header(await this.tabNumber(target), loc)}\n${o.text || "(the page has no readable content yet)"}`;
   }
@@ -248,14 +255,35 @@ export class BrowserController {
     const { driver, target } = await this.page();
     const hits = find(await driver.axNodes(), query);
     for (const line of hits) this.rememberLine(target, line);
+    await this.learnKinds(driver, target, hits.flatMap((l) => {
+      const m = l.match(/^\[(\d+)\]/);
+      return m ? [Number(m[1])] : [];
+    }));
     return hits.length === 0 ? `Nothing on this page matches "${query}".` : hits.join("\n");
   }
 
+  /**
+   * The page's main content as Markdown, then — after WHOLE_PAGE_MARK — its
+   * whole visible text, which the model is not shown but can search when
+   * the content left something out.
+   */
   async read(maxChars: number): Promise<string> {
     const { driver, target } = await this.page();
-    const r = await driver.readText(maxChars);
+    const r = await driver.readContent(maxChars);
     const more = r.truncated > 0 ? `\n[… ${r.truncated} more characters not read.]` : "";
-    return `${header(await this.tabNumber(target), r)}\n${r.text || "(no visible text)"}${more}`;
+    const content = r.markdown || r.whole || "(no visible text)";
+    return `${header(await this.tabNumber(target), r)}\n${content}\n[Read: ${r.reader}]${WHOLE_PAGE_MARK}${r.whole}${more}`;
+  }
+
+  /** The current tab's address and title, read from the page; null when no tab is open. */
+  async where(): Promise<{ url: string; title: string } | null> {
+    if (!this.current) return null;
+    try {
+      const { driver } = await this.page();
+      return await driver.location();
+    } catch {
+      return null;
+    }
   }
 
   /** Saves a picture of the current tab into `dir`; its path and where the tab was. */
@@ -281,6 +309,103 @@ export class BrowserController {
     return driver.ownerField(ref).catch(() => null);
   }
 
+  // -- what a call on the page amounts to -----------------------------------
+
+  /**
+   * What acting on an element amounts to (see ElementKind), as read from the
+   * page when the model last saw it there. Undefined for a ref that wasn't in
+   * what it saw, or that couldn't be read: that counts as outbound.
+   */
+  kindFor(ref: number): ElementKind | undefined {
+    return this.current ? this.snapshots.get(this.current)?.kinds.get(ref) : undefined;
+  }
+
+  /** The lower-case host of the current page as the model last saw it; null when there is none, or it isn't a web page. */
+  host(): string | null {
+    const url = this.current ? this.snapshots.get(this.current)?.url : undefined;
+    return url === undefined ? null : safeHost(url);
+  }
+
+  /** The current page's host, asked of the page now. */
+  async liveHost(): Promise<string | null> {
+    const { driver } = await this.page();
+    return safeHost((await driver.location()).url);
+  }
+
+  /** page_type typed into `ref`, so the focus is there; any other action forgets it. */
+  noteFocus(ref: number | null): void {
+    this.focused = ref === null || !this.current ? null : { target: this.current, ref };
+  }
+
+  /** The field just typed into, while the focus is known to be there. */
+  focusedRef(): number | undefined {
+    const f = this.focused;
+    return f && f.target === this.current ? f.ref : undefined;
+  }
+
+  /** The kind of the field just typed into, while the focus is known to be there. */
+  focusedKind(): ElementKind | undefined {
+    const f = this.focused;
+    return f && f.target === this.current ? this.kindFor(f.ref) : undefined;
+  }
+
+  /** The kind of whatever has the focus on the page now; undefined when that can't be told. */
+  async focusedLiveKind(): Promise<ElementKind | undefined> {
+    const { driver } = await this.page();
+    const facts = await driver.focusedFacts().catch(() => null);
+    return facts ? elementKind(facts) : undefined;
+  }
+
+  /**
+   * Before a call that was judged by an element's kind: whether that still
+   * holds on the page now. Null when it does (or nothing was judged by it);
+   * otherwise why the call is refused. A link is also held to where page_goto
+   * may go, since following it opens that page.
+   */
+  async recheckKind(ref: number): Promise<string | null> {
+    const target = this.current;
+    const snap = target ? this.snapshots.get(target) : undefined;
+    const was = snap?.kinds.get(ref);
+    if (!target || !snap || was === undefined) return null;
+    const unsure = `Couldn't check element [${ref}] on the page. Nothing was done. Call page_describe and try again.`;
+    try {
+      const { driver, target: now } = await this.page();
+      if (now !== target) return unsure;
+      const loc = await driver.location();
+      const before = safeHost(snap.url);
+      const after = safeHost(loc.url);
+      if (after !== before) {
+        return `The page is now on ${after ?? loc.url.slice(0, 100)} (it was on ${before ?? "another page"} when it was read), so element [${ref}] may be something else. Nothing was done. Call page_describe for fresh refs.`;
+      }
+      const facts = (await driver.elementFacts([ref])).get(ref);
+      // Gone: the action says so itself, and can do nothing.
+      if (!facts) return null;
+      const live = elementKind(facts);
+      snap.kinds.set(ref, live);
+      const looser = was === "link" || was === "search" ? live !== was : was !== "posts" && live === "posts";
+      if (looser) return `Element [${ref}] has changed since the page was read. Nothing was done. Call page_describe to see it as it is now.`;
+      if (live === "link" && facts.href) return checkNavigation(facts.href, this.trusted());
+      return null;
+    } catch {
+      return unsure;
+    }
+  }
+
+  /** Before Enter counts as a search: the focus is still in the search field typed into, and it is still one. */
+  async recheckFocus(): Promise<string | null> {
+    const f = this.focused;
+    if (!f || f.target !== this.current) return null;
+    const why = await this.recheckKind(f.ref);
+    if (why) {
+      this.focused = null;
+      return why;
+    }
+    const { driver } = await this.page();
+    if (this.kindFor(f.ref) === "search" && (await driver.hasFocus(f.ref))) return null;
+    this.focused = null;
+    return `The keyboard focus is no longer in the search field [${f.ref}] that was typed into, so Enter could do something else. Nothing was done. Use page_type with submit: true on the field instead.`;
+  }
+
   // -- acting --------------------------------------------------------------
 
   /** The bot check the last navigation or action ran into, if any. */
@@ -299,6 +424,8 @@ export class BrowserController {
 
   /** Runs an action and reports what changed. */
   async act(label: string, action: (driver: PageDriver) => Promise<void>): Promise<string> {
+    // Whatever the action does, Vunemi no longer knows where the focus is.
+    this.focused = null;
     const { driver, target } = await this.page();
     const before = this.snapshots.get(target) ?? (await this.snapshot(driver, target));
     const beforeUrl = (await driver.location()).url;
@@ -327,7 +454,7 @@ export class BrowserController {
     const full = outline(nodes, { maxChars: DESCRIBE_BUDGET });
     const added = [...full.refs].filter((r) => !before.refs.has(r));
     const removed = [...before.refs].filter((r) => !full.refs.has(r));
-    this.remember(target, loc.url, full.text, full.refs);
+    await this.rememberPage(driver, target, loc.url, full.text, full.refs);
 
     if (added.length === 0 && removed.length === 0) {
       return `${label}\n→ No visible change on the page. The action may have had no effect; try a different element, or check with page_describe.`;
@@ -354,6 +481,7 @@ export class BrowserController {
     this.snapshots.clear();
     this.shortIds.clear();
     this.current = null;
+    this.focused = null;
     await b?.close();
   }
 
@@ -421,7 +549,7 @@ export class BrowserController {
     const [loc, nodes] = await Promise.all([driver.location(), driver.axNodes()]);
     this.seenChallenge = detectChallenge(loc.url, nodes);
     const full = outline(nodes, { maxChars: DESCRIBE_BUDGET });
-    this.remember(target, loc.url, full.text, full.refs);
+    await this.rememberPage(driver, target, loc.url, full.text, full.refs);
     const interactive = outline(nodes, { interactiveOnly: true, maxChars: 6_000 });
     return [
       `Now on: ${header(await this.tabNumber(target), loc)}`,
@@ -433,7 +561,25 @@ export class BrowserController {
   private async snapshot(driver: PageDriver, target: string): Promise<Snapshot> {
     const [loc, nodes] = await Promise.all([driver.location(), driver.axNodes()]);
     const o = outline(nodes, { maxChars: DESCRIBE_BUDGET });
-    return this.remember(target, loc.url, o.text, o.refs);
+    return this.rememberPage(driver, target, loc.url, o.text, o.refs);
+  }
+
+  /** Remembers the outline, and what kind of element each of its refs is (see PageDriver.elementKinds). */
+  private async rememberPage(driver: PageDriver, target: string, url: string, text: string, refs: Set<number>): Promise<Snapshot> {
+    const prev = this.snapshots.get(target);
+    const snap = this.remember(target, url, text, refs);
+    // The same page's elements keep their kind and only new ones are read; recheckKind reads again before a call relies on one.
+    if (prev && prev.url === url) for (const [ref, kind] of prev.kinds) if (refs.has(ref)) snap.kinds.set(ref, kind);
+    await this.learnKinds(driver, target, [...refs].filter((r) => !snap.kinds.has(r)));
+    return snap;
+  }
+
+  /** An element whose kind can't be read stays unknown, which counts as outbound. */
+  private async learnKinds(driver: PageDriver, target: string, refs: number[]): Promise<void> {
+    if (refs.length === 0) return;
+    const kinds = await driver.elementKinds(refs).catch(() => new Map<number, ElementKind>());
+    const snap = this.snapshots.get(target);
+    for (const [ref, kind] of kinds) snap?.kinds.set(ref, kind);
   }
 
   private remember(target: string, url: string, text: string, refs: Set<number>): Snapshot {
@@ -442,7 +588,7 @@ export class BrowserController {
       const m = l.trim().match(/^\*?\[(\d+)\] (.*)$/);
       if (m) lines.set(Number(m[1]), m[2]!);
     }
-    const snap = { url, refs, lines };
+    const snap = { url, refs, lines, kinds: new Map<number, ElementKind>() };
     this.snapshots.set(target, snap);
     return snap;
   }
@@ -464,6 +610,7 @@ export class BrowserController {
   }
 
   private forget(target: string): void {
+    if (this.focused?.target === target) this.focused = null;
     this.shortIds.delete(target);
     this.drivers.delete(target);
     this.snapshots.delete(target);

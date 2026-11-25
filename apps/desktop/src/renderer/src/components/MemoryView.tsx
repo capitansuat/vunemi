@@ -8,7 +8,7 @@
  * Trash, and Finder shows where each file is.
  */
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { BookMarked, ChevronRight, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Library, Link2Off, NotebookPen, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { BookMarked, Check, ChevronRight, FilePlus2, FileText, Folder, FolderOpen, FolderPlus, Library, Link2Off, NotebookPen, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { formatDate, t } from "@vunemi/i18n";
 import type { TopicAddedView, TopicCheckView, TopicFileView, TopicNoteView, TopicSearchView, TopicSourceView, TopicTreeView } from "../../../shared/ipc.js";
 import { useStore } from "../store.js";
@@ -187,7 +187,7 @@ function NavRow({ active, icon, onClick, children, depth = 0 }: { active: boolea
   );
 }
 
-function TopicBranch({
+export function TopicBranch({
   topic,
   open,
   selected,
@@ -210,8 +210,9 @@ function TopicBranch({
         <button type="button" onClick={onToggle} aria-expanded={open} aria-label={topic.name} className="grid size-6 shrink-0 place-items-center text-faint">
           <ChevronRight size={12} className={`transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
-        <button type="button" onClick={() => onSelect({ kind: "topic", topic: topic.name })} className="min-w-0 flex-1 truncate py-1 pr-2 text-left text-[12.5px] text-fg">
-          {topic.name}
+        <button type="button" onClick={() => onSelect({ kind: "topic", topic: topic.name })} className="flex min-w-0 flex-1 items-center gap-1.5 py-1 pr-2 text-left text-[12.5px] text-fg">
+          <span className="truncate">{topic.name}</span>
+          {topic.temporary && <span className="shrink-0 rounded border border-line px-1 text-[10.5px] text-faint">{t("topics.page.temporary")}</span>}
         </button>
       </div>
       {open && (
@@ -353,7 +354,7 @@ function NewTopic({ onMade, onCancel }: { onMade: (name: string) => Promise<void
   );
 }
 
-function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["topics"][number] | undefined; canConvert: boolean; onSelect: (s: Selected) => void }) {
+export function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["topics"][number] | undefined; canConvert: boolean; onSelect: (s: Selected) => void }) {
   const [editing, setEditing] = useState(false);
   const [about, setAbout] = useState(topic?.about ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -368,6 +369,12 @@ function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["top
   return (
     <div className="max-w-[680px]">
       <h1 className="text-[17px] font-semibold text-fg">{topic.name}</h1>
+      {topic.temporary && (
+        <p className="mt-1 text-[12.5px] text-muted">
+          <span className="mr-1.5 rounded border border-line px-1 text-[11px] text-faint">{t("topics.page.temporary")}</span>
+          {t("topics.page.temporaryWhy")}
+        </p>
+      )}
       <p className="mt-1 text-[12px] text-faint">
         {t("topics.page.noteCount", { count: topic.notes.length })} · {t("topics.page.sourceCount", { count: topic.sources.length })} · {t("topics.page.changedOn", { date: day(topic.updatedAt) })}
       </p>
@@ -388,6 +395,7 @@ function TopicPanel({ topic, canConvert, onSelect }: { topic: TopicTreeView["top
         <Button disabled={busy} onClick={() => run(() => window.vunemi.topicsAddSources(topic.name).then((r) => setAdded(r)))} icon={<Library size={13} />}>{t("topics.page.addSources")}</Button>
         {!editing && <Button onClick={() => setEditing(true)} icon={<Pencil size={12} />}>{t("topics.page.editAbout")}</Button>}
         <Button onClick={() => void window.vunemi.topicsReveal(topic.name, null)} icon={<FolderOpen size={13} />}>{t("topics.page.reveal")}</Button>
+        {topic.temporary && <Button disabled={busy} onClick={() => run(() => window.vunemi.topicsKeep(topic.name))} icon={<Check size={13} />}>{t("topics.page.keepTopic")}</Button>}
         <DeleteButton label={t("topics.page.deleteTopic")} confirm={t("topics.page.deleteTopicConfirm", { topic: topic.name })} onDelete={() => window.vunemi.topicsDelete(topic.name).catch((err: unknown) => setError(message(err)))} />
       </div>
       {!canConvert && <p className="mt-2 text-[12px] text-faint">{t("topics.page.textOnly")}</p>}

@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFileTools, Roots, type ArchiveTools } from "@vunemi/files";
 import { extractArchive, listArchive, parseListing, type IsolatedRunner } from "../../../../packages/files/src/archive.js";
 import { runSandboxed } from "../../src/main/addons/sandbox.js";
+const onWindows = process.platform === "win32";
 
 const mac = process.platform === "darwin" && existsSync("/usr/bin/bsdtar");
 
@@ -117,7 +118,7 @@ function storedRar(name: string, data: string): Buffer {
 }
 
 beforeEach(() => {
-  base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-archive-")));
+  base = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-archive-")));
   home = join(base, "home");
   root = join(home, "Çalışma");
   mkdirSync(join(home, ".Trash"), { recursive: true });
@@ -137,7 +138,8 @@ afterEach(() => {
 });
 
 describe("reading what bsdtar lists", () => {
-  it("counts files and sizes, and survives an owner name it cannot parse", () => {
+  // Windows: archives are off on Windows until plan 3.
+  it.skipIf(onWindows)("counts files and sizes, and survives an owner name it cannot parse", () => {
     const listing = parseListing("drwxr-xr-x  0 0 0 0 Jan  1  2020 a/\n-rw-r--r--  0 0 0 200 Jan  1  2020 a/b c.txt\n-rw-r--r--  0 Some One Two 1 Jan  1  2020 odd\n");
     expect(listing).toEqual({ names: ["a/", "a/b c.txt"], files: 2, bytes: 200 });
   });

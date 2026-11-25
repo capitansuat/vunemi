@@ -43,9 +43,12 @@ const LIMITS = {
    * downloaded, one line names them and where to get them, so a request for
    * a presentation is answered with that and not with "I can't". 40,263
    * before that line also named the add-ons being updated, which it does
-   * only in the minutes after Vunemi itself was updated).
+   * only in the minutes after Vunemi itself was updated). 41,588 with
+   * web_finding_add (24 Nov): on with the browser, it keeps a lookup's
+   * matching items, so old pages can leave a small window without losing
+   * them; about 110 tokens, paid back by the first page that leaves.
    */
-  total: 41_200,
+  total: 41_600,
   /**
    * With areas: a conversation's first prompt with one area picked, the
    * largest (13,171, browser). Was 11,743 before the browser's rule on
@@ -81,6 +84,12 @@ async function compose() {
     shadowDir: join(dir, "shadow"), helper: {} as never, shotDir: join(dir, "shots"),
     automations: new AutomationStore(join(dir, "automations.json")), mailAccounts: [],
     library: { library: new Library(new LibraryStore(dir), sources), sources, current: () => "" },
+    // As in main: the tools that keep what a lookup found ride with the browser.
+    findingTools: (await import("../../src/main/work/findings.js")).createFindingTools({
+      work: new (await import("../../src/main/work/store.js")).WorkStore(join(dir, "work")), topics: null,
+      where: () => ({ conversationId: "c" }), request: () => "", page: async () => null, sources: () => [], redact: (x) => x,
+      onSaved: () => {}, onFinding: () => {},
+    }).tools,
   });
   // Add-ons, all installed: their tools are areas of their own, shown on request.
   const { addonAreas, addonInstructions, registerAddonTools } = await import("../../src/main/addons/packs.js");

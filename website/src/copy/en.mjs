@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.4.0 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.5.0 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.4.0 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.5.0 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.4.0 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.5.0 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -131,6 +131,7 @@ export default {
       { title: "Projects", body: "Make a folder a project: Vunemi keeps that work's files there, and every change can be undone." },
       { title: "Memory", body: "Notes from your own words, saved only when you say yes. A task gets only the notes that fit it, and the answer says how many it was given." },
       { title: "Topics", body: "Keep a subject you come back to, such as a renovation or a research question, as a topic: a folder of Markdown pages on your Mac that you can also open in Obsidian. Link a folder of your own and Vunemi reads its files where they are, without copying them. It notes which files link to which and which define codes such as SKU, and keeps a short page called “Index”. When it answers from the files, it writes what it learned on pages that cite each file, so the next answer starts there, and a page is marked when a file it cites changes. This exists because one search over many files often misses the file that holds the answer. Heavy work runs only while Vunemi is idle, and large subfolders are searched by words unless you switch them on. Without topics, Vunemi still reads the files you give it in a task. How good the pages are depends on the model." },
+      { title: "What a web search found", body: "When Vunemi looks something up on the web, it reads a page's content, not its menus, ads and footers, and keeps what answers you: on a jobs site, the jobs that fit, each with its address. If the conversation is in a topic, they go there. If not, Vunemi gathers its answer and what it found, with the addresses it read, in a temporary topic, and asks whether to keep it, under a name you can change, or delete it; until you choose, it stays marked temporary on the Memory page. This exists because a long search filled the model's memory with whole pages and lost what it had found, and because a model doesn't always remember to keep its findings: the answer reaches memory either way. Without it, say Delete and nothing stays; the answer is still in the conversation. How well it picks depends on the model." },
       { title: "Bring in earlier work", body: "Type @ to pick an earlier session or a meeting. Its questions and answers, or the meeting's summary, go with your message; up to five at a time." },
       { title: "Your meetings in Claude or Codex", body: "If you also use Claude or Codex, you can let it read the meetings Vunemi recorded, also while one is being recorded, so you don't copy a transcript across by hand. It is off until you turn it on in Meetings, and it can only read. What it reads goes to that assistant's own service, so it leaves your Mac. Without it, everything in Vunemi works as before and your meetings stay on your Mac." },
       { title: "Needs attention", body: "Tasks waiting for an approval, your answer or a review, from every session in one list. Choosing one opens that exact task, so nothing sits unseen in an older session. Mark a task Seen once you have looked at it; reviews older than 7 days leave the list by themselves, and a task comes back if something happens in it again." },
@@ -177,6 +178,7 @@ export default {
       { title: "Your data, your call", body: "Forget one session, one note or everything. A note from memory never grants a permission, and words from pages, mail or files can never become one." },
       { title: "Run permissions", body: "When Vunemi asks to read a file or look at a window, you can allow it once or for the rest of the task, up to 8 times, instead of approving every read. A changed file needs new permission, you can revoke one at any time, and none carries over to scheduled tasks." },
       { title: "Approve all in a task", body: "Some tasks ask for many small approvals in a row, and pressing each one gets in the way of the work you handed over. On an ordinary card you can approve the rest of the task: that app and local changes stop asking until the task ends. Sending, deleting, replacing a file, mail, messaging and browser apps, and warnings still ask. Ask again takes it back, and it ends by itself if Vunemi can't tell whether a step took effect. You never have to use it: without it, every step asks on its own." },
+      { title: "Fewer cards on web pages", body: "A web search used to ask about every click, every search typed and every Enter, and that many cards teach you to press Approve without reading. Now following an ordinary link and using a site's search box count as reading, like opening a page, and need no card. For a button on a site, Approve all covers further clicks, typing and choices on that site only, until the task ends; on a site you mark as trusted, on the card or in Settings › Security, one approval does the same. A form that sends data, another site, sign-in and payment fields, and anything that sounds like sending or deleting still ask every time. You never have to use it: without it, every action on a page asks on its own." },
       { title: "No repeats when unsure", body: "If Vunemi can't tell whether an action took effect, it does not do it again. The task is marked Result uncertain and waits for you to check, even after a restart." },
     ],
     extras: [
@@ -193,10 +195,10 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "New: topics. Keep a subject you come back to as a folder of Markdown pages on your Mac, and link folders of your own: Vunemi reads them where they are, notes which files link where and which define codes such as SKU, and writes pages that cite their files, starting from a page called “Index”.",
-      "This exists because one search over many files often misses the file with the answer. Heavy work runs only while Vunemi is idle. Without topics, Vunemi reads the files you give it in a task as before. How good the pages are depends on the model.",
-      "The built-in engine is newer and runs Inkling 2. Vunemi can now download models from ggml-org, and when the engine can't load a model it says so, instead of pointing at memory or the model's tools.",
-      "Voice chat no longer reads out “Stopped.” In a password field Vunemi presses only keys that leave its text alone; macOS may ask for its permissions once more. “Approve all” and scheduled tasks now recognise apps whose name is translated.",
+      "New: when a conversation with no topic looks something up on the web, Vunemi gathers the answer, the addresses it read and the items it kept in a temporary topic, then asks whether to keep it, under a name you can change, or delete it.",
+      "This exists because a long search filled the model's memory with whole pages and lost what it found. Pages are now read as their main content, and older steps are shortened so a long lookup keeps fitting. Say Delete and nothing stays; the answer is still in the chat.",
+      "Fewer cards on the web: ordinary links and a site's search box count as reading. Approve all covers one site until the task ends, and a site you trust needs one approval per task. Forms that send data, sending and deleting still ask.",
+      "A topic is suggested only when a request is nearer to it than to everyday requests, and a page's own scripts can no longer make a form that sends data look like a search.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],

@@ -18,7 +18,9 @@ vi.mock("@vunemi/agent-core", async (importOriginal) => {
       const runId = `r${seen.length}`;
       opts.emit({ type: "run.started", runId, goal: opts.goal, model: "m", at: 0 });
       opts.emit({ type: "run.finished", runId, status: nextStatus, detail: "", at: 0 });
-      return { runId, status: nextStatus, detail: "", messages: [...(opts.history ?? []), { role: "user", content: opts.goal }], charsPerToken: 1 };
+      // A finished run ends on its answer; one that ran out of steps, on a tool's result.
+      const end: ChatMessage[] = nextStatus === "done" ? [{ role: "assistant", content: ` Found: ${opts.goal} ` }] : [{ role: "tool", content: "page", toolCallId: "c", toolName: "page_read" }];
+      return { runId, status: nextStatus, detail: "", messages: [...(opts.history ?? []), { role: "user", content: opts.goal }, ...end], charsPerToken: 1 };
     },
   };
 });
@@ -30,7 +32,7 @@ function makeSession(recall = async (_goal: string) => ({
   topic: ["Manager is Ayşe"],
 })) {
   const events: AgentEvent[] = [];
-  const after: { runId: string; words: string[] }[] = [];
+  const after: { runId: string; words: string[]; status: RunStatus; answer: string }[] = [];
   const session = new AgentSession({
     tools: { list: () => [], get: () => undefined, register: () => {} } as never,
     emit: (e) => events.push(e),
@@ -38,7 +40,7 @@ function makeSession(recall = async (_goal: string) => ({
     onUntrustedOutput: () => {},
     grants: new Set<string>(),
     recall,
-    afterRun: ({ runId, words }) => after.push({ runId, words }),
+    afterRun: ({ runId, words, status, answer }) => after.push({ runId, words, status, answer }),
   });
   return { session, events, after };
 }
@@ -72,12 +74,24 @@ describe("memory in a conversation", () => {
     nextStatus = "done";
     const { session, after } = makeSession();
     for (const goal of ["one", "two", "three", "four"]) await session.start(goal, "lmstudio:m");
-    expect(after.at(-1)).toEqual({ runId: "r4", words: ["two", "three", "four"] });
+    expect(after.at(-1)).toEqual({ runId: "r4", words: ["two", "three", "four"], status: "done", answer: "Found: four" });
     expect(session.userWords()).toEqual(["two", "three", "four"]);
     await session.start("five", "lmstudio:m", [], { unattended: true });
     expect(after).toHaveLength(4);
     nextStatus = "failed";
     await session.start("six", "lmstudio:m");
     expect(after).toHaveLength(4);
+  });
+
+  it("also tells of a watched task that ran out of steps, with its status, for what it kept", async () => {
+    seen.length = 0;
+    nextStatus = "max_steps";
+    const { session, after } = makeSession();
+    await session.start("look through the jobs", "lmstudio:m");
+    // No answer text at the end: none is passed on, not an earlier run's.
+    expect(after).toEqual([{ runId: "r1", words: ["look through the jobs"], status: "max_steps", answer: "" }]);
+    nextStatus = "stopped";
+    await session.start("stop", "lmstudio:m");
+    expect(after).toHaveLength(1);
   });
 });

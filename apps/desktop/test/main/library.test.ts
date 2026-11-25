@@ -129,7 +129,8 @@ describe("LibraryStore", () => {
   it("is owner-only, and an item keeps its ref when it changes", () => {
     store.upsert({ id: "s_a", kind: "conversation", title: "Lisbon", at: 1, line: "", text: "hotel", stamp: 1 });
     store.upsert({ id: "m_a", kind: "meeting", title: "Sync", at: 2, line: "", text: "budget", stamp: 1 });
-    expect(statSync(join(dir, "library.db")).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes: there the user profile's ACL keeps the file private.
+    if (process.platform !== "win32") expect(statSync(join(dir, "library.db")).mode & 0o777).toBe(0o600);
     const ref = store.get("s_a")!.ref;
     expect(ref).toBe("c1");
     expect(store.get("m_a")!.ref).toBe("m2");

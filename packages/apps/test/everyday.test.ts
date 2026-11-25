@@ -9,7 +9,7 @@ import {
   BROWSER_OPEN, BROWSER_TABS, CONTACTS_SEARCH, createEverydayTools, MESSAGES_SEND, MUSIC_CONTROL, MUSIC_NOW, PHOTOS_SEARCH, PHOTOS_THUMBS, recipient,
 } from "../src/everyday.js";
 
-const base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-everyday-")));
+const base = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-everyday-")));
 const allowed = join(base, "allowed");
 mkdirSync(allowed);
 const ctx = (produced: Produced[] = []) => ({ signal: new AbortController().signal, produced: (p: Produced) => produced.push(p) }) as unknown as ToolContext;

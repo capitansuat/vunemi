@@ -12,6 +12,7 @@ import { nativeImage } from "electron";
 import { join } from "node:path";
 import type { AgentEvent } from "@vunemi/agent-core";
 import { onLocaleChange, t } from "@vunemi/i18n";
+import { emergencyStopAccelerator } from "../shared/ipc.js";
 
 export interface RunControls {
   show(): void;
@@ -194,7 +195,7 @@ export class Presence {
           click: () => (paused ? this.controls.resume() : this.controls.pause()),
         },
         { label: t("composer.stop"), enabled: running, click: () => this.controls.stop() },
-        { label: t("presence.emergency"), accelerator: "CommandOrControl+Shift+Escape", click: () => this.controls.emergencyStop() },
+        { label: t("presence.emergency"), accelerator: emergencyStopAccelerator(process.platform), click: () => this.controls.emergencyStop() },
         { type: "separator" },
         { label: `${t("app.reportProblem")}…`, click: () => this.controls.reportProblem() },
         { label: t("presence.quit"), role: "quit" },

@@ -3,8 +3,9 @@ import { readFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { review, translations } from "./content.mjs";
-import { linuxRelease, release } from "../src/release.mjs";
-import { updateFeed } from "../src/update-feed.mjs";
+import { linuxRelease, release, windowsRelease } from "../src/release.mjs";
+import { checkWindowsRelease, updateFeed, windowsFeed } from "../src/update-feed.mjs";
+import { windowsCopy } from "../src/windows-copy.mjs";
 import { languages, pageNames, pagePath, renderPage, redirectPage, shotFiles } from "../src/pages.mjs";
 import { supportCopy } from "../src/support-copy.mjs";
 import { gatekeeperCopy } from "../src/gatekeeper-copy.mjs";
@@ -53,11 +54,13 @@ function validateSite() {
   for (const language of languages) sameShape(copy.en, copy[language], language);
   for (const language of languages) sameShape(supportCopy.en, supportCopy[language], `support.${language}`);
   for (const language of languages) sameShape(gatekeeperCopy.en, gatekeeperCopy[language], `gatekeeper.${language}`);
+  for (const language of languages) sameShape(windowsCopy.en, windowsCopy[language], `windows.${language}`);
   // An installed Vunemi shows these as the update's notes and cuts each at 300 characters, 20 notes at most (updates/feed.ts).
   for (const language of languages) {
     const notes = copy[language].downloadPage.highlights;
     if (notes.length > 20) throw new Error(`Too many update notes: ${language}`);
     for (const note of notes) if (note.length > 300) throw new Error(`Update note over 300 characters: ${language}: ${note.slice(0, 40)}`);
+    for (const note of windowsCopy[language].updateNotes) if (note.length > 300) throw new Error(`Windows update note over 300 characters: ${language}: ${note.slice(0, 40)}`);
   }
   for (const file of [...shotFiles, "hero-plan.png"]) {
     if (!existsSync(join(publicDir, "screenshots", file))) throw new Error(`Missing product screenshot: ${file}`);
@@ -174,7 +177,9 @@ function releaseCheck() {
     if (file.asset !== linuxNames[file.kind]) throw new Error(`Linux file ${file.asset} does not match ${linuxRelease.version}`);
     if (!/^[a-f0-9]{64}$/.test(file.sha256) || !(file.sizeMb > 0)) throw new Error(`Linux file ${file.asset}: size or SHA-256 missing`);
   }
+  if (windowsRelease) checkWindowsRelease(windowsRelease);
 }
+
 
 try {
   validateContent();
@@ -187,6 +192,10 @@ try {
   }
   const feed = updateFeed(release, copy, languages);
   if (feed) pages.set(join(publicDir, "update/mac-arm64.json"), `${JSON.stringify(feed, null, 2)}\n`);
+  for (const arch of ["x64", "arm64"]) {
+    const winFeed = windowsFeed(windowsRelease, arch, windowsCopy, languages);
+    if (winFeed) pages.set(join(publicDir, `update/win-${arch}.json`), `${JSON.stringify(winFeed, null, 2)}\n`);
+  }
 
   if (!["--build", "--check", "--release-check"].includes(command)) throw new Error(`Unknown option: ${command}`);
   for (const [path, html] of pages) {

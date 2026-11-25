@@ -16,7 +16,7 @@ let home = "";
 let job = "";
 let engine = "";
 beforeEach(() => {
-  base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-sandbox-")));
+  base = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-sandbox-")));
   home = join(base, "home");
   // Like the real thing: the job folder and the program live inside the home folder that is otherwise closed.
   job = join(home, "Library", "Vunemi", "jobs", "j1");

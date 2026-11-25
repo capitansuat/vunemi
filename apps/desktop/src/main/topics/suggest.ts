@@ -18,6 +18,17 @@ import type { Meaning } from "../memory/recall.js";
  */
 export const SUGGEST_MIN = 0.38;
 export const SUGGEST_MARGIN = 0.08;
+/*
+ * The best topic must also stand nearer than this, which stands for requests
+ * on no subject. With one topic there is no runner-up for the margin, and a
+ * short topic text drew requests that fit nothing: a jobs lookup scored 0.43
+ * against a lone topic whose text was its name (24 Nov). Measured as above
+ * on the same 4 topics: 5 of the 6 fitting requests stay nearer their topic
+ * (by 0.07–0.24); the 4 that fit none, two web lookups and that lone-topic
+ * case are all nearer this (by 0.05–0.23). One fitting request is no longer
+ * asked about: a miss, which costs nothing.
+ */
+export const ELSEWHERE = "General\nEveryday requests on no particular subject: the web, email, files, the calendar, quick questions.";
 const ABOUT_CHARS = 1_500;
 const TASK = "Given a request to an assistant, retrieve the description of the subject the request belongs to";
 
@@ -36,7 +47,7 @@ export async function suggestTopic(
 ): Promise<string | null> {
   if (!meaning.available() || topics.length === 0 || !request.trim()) return null;
   const texts = topics.map(topicText);
-  const missing = [...new Set(texts.filter((text) => !cache.has(text)))];
+  const missing = [...new Set([...texts, ELSEWHERE].filter((text) => !cache.has(text)))];
   if (missing.length > 0) {
     const vectors = await meaning.embed(missing, "passage");
     missing.forEach((text, i) => cache.set(text, vectors[i]!));
@@ -46,5 +57,6 @@ export async function suggestTopic(
   const [best, next] = scored;
   if (!best || best.score < SUGGEST_MIN) return null;
   if (next && best.score - next.score < SUGGEST_MARGIN) return null;
+  if (best.score <= cosine(query!, cache.get(ELSEWHERE)!)) return null;
   return best.name;
 }

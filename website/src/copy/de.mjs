@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: ein persönlicher Assistent, der auf deinem Mac läuft", description: "Vunemi hilft im Alltag. Die KI läuft auf deinem Mac, ohne Vunemi-Cloud-Konto. Du entscheidest, welche externen Dienste du verbindest." },
-    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.4.0 kann." },
+    features: { title: "Was Vunemi kann", description: "E-Mail, Kalender, Dateien, Web und deine Mac-Apps – mit Freigabekarten, Rückgängig und festen Grenzen. Alles, was Vunemi 0.5.0 kann." },
     screens: { title: "Vunemi-Ansichten", description: "Echte Ansichten der Vunemi-App für den Mac, mit Beispieldaten aufgenommen." },
-    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.4.0 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
+    download: { title: "Vunemi für Mac herunterladen", description: "Lade Vunemi 0.5.0 für Macs mit Apple Silicon und macOS 14 oder neuer. Kostenlos und Open Source." },
   },
   hero: {
     eyebrow: "Persönlicher Assistent für den Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Alles, was Vunemi kann",
-    intro: "Vunemi 0.4.0 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
+    intro: "Vunemi 0.5.0 im Detail: wie du damit arbeitest, womit es sich verbinden kann und wie du die Kontrolle behältst.",
     chatTitle: "Mit Vunemi arbeiten",
     chat: [
       { title: "Erst der Plan", body: "Bei Aufgaben mit mehreren Schritten kann Vunemi zuerst den Plan zeigen. Leg los, bearbeite die Schritte oder brich ab." },
@@ -129,6 +129,7 @@ export default {
       { title: "Projekte", body: "Mach einen Ordner zum Projekt: Vunemi legt die Dateien dieser Arbeit dort ab, und jede Änderung lässt sich rückgängig machen." },
       { title: "Gedächtnis", body: "Notizen aus deinen eigenen Worten, gespeichert nur mit deiner Zustimmung. Eine Aufgabe bekommt nur die Notizen, die zu ihr passen, und die Antwort sagt, wie viele es waren." },
       { title: "Themen", body: "Halte ein Thema, auf das du immer wieder zurückkommst, etwa eine Renovierung oder eine Forschungsfrage, als Thema fest: einen Ordner mit Markdown-Seiten auf deinem Mac, den du auch in Obsidian öffnen kannst. Verknüpfe einen eigenen Ordner, und Vunemi liest seine Dateien dort, wo sie liegen, ohne sie zu kopieren. Es merkt sich, welche Dateien aufeinander verweisen und welche Codes wie SKU definieren, und führt eine kurze Seite „Index“. Wenn es aus den Dateien antwortet, schreibt es das Gelernte auf Seiten, die jede Datei angeben, sodass die nächste Antwort dort beginnt; ändert sich eine angegebene Datei, wird die Seite markiert. Das gibt es, weil eine einzige Suche über viele Dateien oft genau die Datei verfehlt, in der die Antwort steht. Aufwendige Arbeit läuft nur, während Vunemi nichts zu tun hat, und große Unterordner werden nur nach Wörtern durchsucht, solange du sie nicht einschaltest. Ohne Themen liest Vunemi weiterhin die Dateien, die du ihm in einer Aufgabe gibst. Wie gut die Seiten werden, hängt vom Modell ab." },
+      { title: "Was eine Websuche gefunden hat", body: "Wenn Vunemi etwas im Web nachschlägt, liest es den Inhalt einer Seite, nicht ihre Menüs, Werbung und Fußzeilen, und behält, was dir antwortet: auf einer Jobseite die passenden Stellen, jede mit ihrer Adresse. Ist das Gespräch in einem Thema, kommen sie dorthin. Wenn nicht, sammelt Vunemi seine Antwort und das Gefundene mit den gelesenen Adressen in einem vorläufigen Thema und fragt, ob du es behalten willst, unter einem Namen, den du ändern kannst, oder löschen; bis du entscheidest, bleibt es auf der Seite „Gedächtnis“ als vorläufig markiert. Das gibt es, weil eine lange Suche das Gedächtnis des Modells mit ganzen Seiten füllte und es verlor, was es gefunden hatte, und weil ein Modell nicht immer daran denkt, seine Funde zu behalten: Die Antwort erreicht das Gedächtnis so oder so. Ohne das sagst du „Löschen“, und nichts bleibt; die Antwort steht weiter im Gespräch. Wie gut es auswählt, hängt vom Modell ab." },
       { title: "Frühere Arbeit dazuholen", body: "Tippe @ und wähle eine frühere Sitzung oder eine Besprechung. Ihre Fragen und Antworten oder die Zusammenfassung der Besprechung gehen mit deiner Nachricht mit; bis zu fünf auf einmal." },
       { title: "Deine Besprechungen in Claude oder Codex", body: "Wenn du auch Claude oder Codex nutzt, kannst du ihm erlauben, die von Vunemi aufgenommenen Besprechungen zu lesen, auch während einer Aufnahme. So musst du keine Mitschrift von Hand hinüberkopieren. Es ist aus, bis du es unter Besprechungen einschaltest, und es kann nur lesen. Was es liest, geht an den Dienst dieses Assistenten und verlässt damit deinen Mac. Ohne es funktioniert in Vunemi alles wie bisher, und deine Besprechungen bleiben auf deinem Mac." },
       { title: "Aufmerksamkeit nötig", body: "Aufgaben, die auf eine Freigabe, deine Antwort oder eine Prüfung warten, aus allen Sitzungen in einer Liste. Wählst du eine aus, öffnet sich genau diese Aufgabe, sodass nichts unbemerkt in einer älteren Sitzung liegen bleibt. Markiere eine Aufgabe als gesehen, wenn du sie angesehen hast; Prüfungen, die älter als 7 Tage sind, verschwinden von selbst, und eine Aufgabe kommt zurück, wenn darin wieder etwas passiert." },
@@ -175,6 +176,7 @@ export default {
       { title: "Deine Daten, deine Entscheidung", body: "Vergiss eine Sitzung, eine Notiz oder alles. Eine Notiz aus dem Gedächtnis gewährt nie eine Berechtigung, und Worte aus Seiten, Mails oder Dateien werden nie zu einer." },
       { title: "Berechtigungen dieses Laufs", body: "Wenn Vunemi eine Datei lesen oder ein Fenster ansehen möchte, kannst du es einmal oder für den Rest der Aufgabe erlauben, bis zu 8 Mal, statt jeden Lesevorgang freizugeben. Eine geänderte Datei braucht eine neue Berechtigung, du kannst jede jederzeit widerrufen, und keine geht auf geplante Aufgaben über." },
       { title: "Alles in einer Aufgabe freigeben", body: "Manche Aufgaben verlangen viele kleine Freigaben hintereinander, und jede einzeln zu bestätigen stört die Arbeit, die du abgegeben hast. Auf einer normalen Karte kannst du den Rest der Aufgabe freigeben: Diese App und lokale Änderungen fragen bis zum Ende der Aufgabe nicht mehr. Senden, Löschen, das Ersetzen einer Datei, Mail-, Nachrichten- und Browser-Apps sowie Warnungen fragen weiterhin. Mit „Wieder fragen“ nimmst du es zurück, und es endet von selbst, wenn Vunemi nicht erkennen kann, ob ein Schritt gewirkt hat. Du musst es nie nutzen: Ohne das fragt jeder Schritt einzeln." },
+      { title: "Weniger Karten auf Webseiten", body: "Eine Websuche fragte bei jedem Klick, jeder eingetippten Suche und jedem Enter nach, und so viele Karten gewöhnen dich daran, ungelesen auf Freigeben zu drücken. Jetzt gelten ein gewöhnlicher Link und das Suchfeld einer Website als Lesen, wie das Öffnen einer Seite, und brauchen keine Karte. Bei einer Schaltfläche auf einer Website deckt Alles freigeben weitere Klicks, Eingaben und Auswahlen nur auf dieser Website ab, bis die Aufgabe endet; auf einer Website, die du auf der Karte oder unter Einstellungen › Sicherheit als vertrauenswürdig markierst, reicht dafür eine Freigabe. Ein Formular, das Daten sendet, eine andere Website, Anmelde- und Zahlungsfelder und alles, was nach Senden oder Löschen klingt, fragen weiterhin jedes Mal. Du musst es nie nutzen: Ohne fragt jede Aktion auf einer Seite für sich." },
       { title: "Keine Wiederholung bei Unsicherheit", body: "Kann Vunemi nicht erkennen, ob eine Aktion gewirkt hat, führt es sie nicht noch einmal aus. Die Aufgabe wird als „Ergebnis unklar“ markiert und wartet, bis du nachsiehst, auch nach einem Neustart." },
     ],
     extras: [
@@ -189,10 +191,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Neu in dieser Version",
     highlights: [
-      "Neu: Themen. Halte ein Thema als Ordner mit Markdown-Seiten auf deinem Mac und verknüpfe eigene Ordner: Vunemi liest sie, wo sie liegen, merkt sich, welche Dateien wohin verlinken und welche Codes wie SKU definieren, und schreibt Seiten mit Quellen, ausgehend von der Seite „Index“.",
-      "Der Grund: Eine einzelne Suche über viele Dateien verfehlt oft die Datei mit der Antwort. Aufwendige Arbeit läuft nur, wenn Vunemi nichts zu tun hat. Ohne Themen liest Vunemi die Dateien, die du ihm in einer Aufgabe gibst, wie bisher. Wie gut die Seiten sind, hängt vom Modell ab.",
-      "Die eingebaute Engine ist neuer und führt Inkling 2 aus. Vunemi lädt Modelle jetzt auch von ggml-org, und wenn die Engine ein Modell nicht laden kann, sagt sie das, statt auf den Speicher oder die Werkzeuge des Modells zu verweisen.",
-      "Der Sprachchat liest „Angehalten.“ nicht mehr vor. In einem Passwortfeld drückt Vunemi nur Tasten, die den Text unverändert lassen; macOS fragt eventuell noch einmal nach Berechtigungen. „Alle genehmigen“ und geplante Aufgaben erkennen jetzt Apps mit übersetztem Namen.",
+      "Neu: Wenn ein Gespräch ohne Thema etwas im Web nachschlägt, sammelt Vunemi die Antwort, die gelesenen Adressen und die behaltenen Einträge in einem vorläufigen Thema und fragt, ob du es unter einem änderbaren Namen behalten oder löschen willst.",
+      "Das gibt es, weil eine lange Suche das Gedächtnis des Modells mit ganzen Seiten füllte und Gefundenes verlor. Seiten werden jetzt als Hauptinhalt gelesen, ältere Schritte gekürzt. Sagst du Löschen, bleibt nichts; die Antwort steht weiter im Chat.",
+      "Weniger Karten im Web: gewöhnliche Links und das Suchfeld einer Website gelten als Lesen. Alles freigeben deckt eine Website bis zum Ende der Aufgabe ab; eine vertrauenswürdige braucht eine Freigabe pro Aufgabe. Formulare, Senden und Löschen fragen weiter.",
+      "Ein Thema wird nur noch vorgeschlagen, wenn eine Anfrage ihm näher ist als alltäglichen Anfragen, und die Skripte einer Seite können ein Formular, das Daten sendet, nicht mehr als Suche ausgeben.",
     ],
     title: "Vunemi herunterladen",
     intro: "Kostenlos und Open Source. Für Macs mit Apple Silicon und macOS 14 oder neuer.",
