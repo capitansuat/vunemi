@@ -101,7 +101,7 @@ import { transcriptText } from "./meetings/summary.js";
 import { localWindowsSource, PRODUCTION, windowsSource, type FeedSource } from "./updates/feed.js";
 import { UpdateService, type Updater } from "./updates/service.js";
 import { installableOnWindows, installerKey, WindowsUpdater } from "./updates/windows-updater.js";
-import { WINDOWS_UPDATE_KEY } from "./updates/windows-key.js";
+import { UPDATE_KEY } from "./updates/update-key.js";
 import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
 import { recoveryOwner, refusedBeforeStart } from "./recovery-owner.js";
@@ -2129,13 +2129,13 @@ function updateSource(): FeedSource | null {
   if (isLocalTestBuild(ownManifest())) {
     const local = process.env.VUNEMI_UPDATE_FEED;
     if (!local || !/^http:\/\/127\.0\.0\.1:\d+\/$/.test(local)) return null;
-    if (platform.id === "win32") return localWindowsSource(local, windowsArch, WINDOWS_UPDATE_KEY);
+    if (platform.id === "win32") return localWindowsSource(local, windowsArch, UPDATE_KEY);
     return { feed: `${local}mac-arm64.json`, zip: (version) => `${local}Vunemi-${version}-arm64.zip` };
   }
   // No updater on Linux yet: the window links to the download page instead.
   if (!platform.features.inAppUpdates) return null;
   if (!app.isPackaged) return null;
-  return platform.id === "win32" ? windowsSource(windowsArch, WINDOWS_UPDATE_KEY) : PRODUCTION;
+  return platform.id === "win32" ? windowsSource(windowsArch, UPDATE_KEY) : PRODUCTION;
 }
 
 /** Where the Windows installer put this Vunemi, as it recorded it; null when it didn't (a development run). Asked once. */

@@ -1,4 +1,4 @@
-/** A Windows installer is run only with the user's own signature over its version, architecture and contents. */
+/** An update (a Windows installer, a Linux AppImage) is run only with the user's own signature over its platform, version, architecture and contents. */
 import { generateKeyPairSync, sign } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -12,27 +12,38 @@ const pair = () => {
 const ours = pair();
 const theirs = pair();
 const SHA = "a".repeat(64);
-const signed = (version: string, arch: "x64" | "arm64", sha256 = SHA, key = ours.privateKey) =>
-  sign(null, signedMessage(version, arch, sha256), key).toString("base64");
+const signed = (version: string, arch: "x64" | "arm64", sha256 = SHA, key = ours.privateKey, platform: "windows" | "linux" = "windows") =>
+  sign(null, signedMessage(platform, version, arch, sha256), key).toString("base64");
 
 describe("the update signature", () => {
+  it("signs Windows' bytes exactly as the published Windows releases were signed", () => {
+    expect(signedMessage("windows", "0.5.0", "arm64", SHA).toString("utf8")).toBe(`vunemi-windows-update/1\n0.5.0\narm64\n${SHA}`);
+    expect(signedMessage("linux", "0.5.1", "x64", SHA).toString("utf8")).toBe(`vunemi-linux-update/1\n0.5.1\nx64\n${SHA}`);
+  });
+
+  it("never lets one platform's signature pass for the other", () => {
+    expect(verifyUpdate(ours.pub, "linux", "0.5.1", "x64", SHA, signed("0.5.1", "x64", SHA, ours.privateKey, "linux"))).toBe(true);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.1", "x64", SHA, signed("0.5.1", "x64", SHA, ours.privateKey, "linux"))).toBe(false);
+    expect(verifyUpdate(ours.pub, "linux", "0.5.1", "x64", SHA, signed("0.5.1", "x64"))).toBe(false);
+  });
+
   it("verifies what the key signed", () => {
-    expect(verifyUpdate(ours.pub, "0.5.1", "x64", SHA, signed("0.5.1", "x64"))).toBe(true);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.1", "x64", SHA, signed("0.5.1", "x64"))).toBe(true);
   });
 
   it("binds version, architecture and contents", () => {
     const sig = signed("0.5.1", "x64");
-    expect(verifyUpdate(ours.pub, "0.5.2", "x64", SHA, sig)).toBe(false);
-    expect(verifyUpdate(ours.pub, "0.5.1", "arm64", SHA, sig)).toBe(false);
-    expect(verifyUpdate(ours.pub, "0.5.1", "x64", `b${SHA.slice(1)}`, sig)).toBe(false);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.2", "x64", SHA, sig)).toBe(false);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.1", "arm64", SHA, sig)).toBe(false);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.1", "x64", `b${SHA.slice(1)}`, sig)).toBe(false);
   });
 
   it("refuses another key's signature and anything malformed", () => {
-    expect(verifyUpdate(ours.pub, "0.5.1", "x64", SHA, signed("0.5.1", "x64", SHA, theirs.privateKey))).toBe(false);
-    expect(verifyUpdate(ours.pub, "0.5.1", "x64", SHA, "")).toBe(false);
-    expect(verifyUpdate(ours.pub, "0.5.1", "x64", SHA, "not base64!")).toBe(false);
-    expect(verifyUpdate(ours.pub, "0.5.1", "x64", "xyz", signed("0.5.1", "x64", "xyz"))).toBe(false);
-    expect(verifyUpdate("not a key", "0.5.1", "x64", SHA, signed("0.5.1", "x64"))).toBe(false);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.1", "x64", SHA, signed("0.5.1", "x64", SHA, theirs.privateKey))).toBe(false);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.1", "x64", SHA, "")).toBe(false);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.1", "x64", SHA, "not base64!")).toBe(false);
+    expect(verifyUpdate(ours.pub, "windows", "0.5.1", "x64", "xyz", signed("0.5.1", "x64", "xyz"))).toBe(false);
+    expect(verifyUpdate("not a key", "windows", "0.5.1", "x64", SHA, signed("0.5.1", "x64"))).toBe(false);
   });
 });
 
@@ -100,8 +111,15 @@ describe("the release scripts", () => {
       writeFileSync(installer, "made-up installer bytes");
       const out = JSON.parse(execFileSync(process.execPath, [join(root, "sign-windows-update.mjs"), installer, "0.5.1", "x64"], { env, encoding: "utf8" })) as { sha256: string; signature: string };
       expect(out.sha256).toBe(createHash("sha256").update("made-up installer bytes").digest("hex"));
-      expect(verifyUpdate(pub, "0.5.1", "x64", out.sha256, out.signature)).toBe(true);
-      expect(verifyUpdate(pub, "0.5.1", "arm64", out.sha256, out.signature)).toBe(false);
+      expect(verifyUpdate(pub, "windows", "0.5.1", "x64", out.sha256, out.signature)).toBe(true);
+      expect(verifyUpdate(pub, "windows", "0.5.1", "arm64", out.sha256, out.signature)).toBe(false);
+
+      const appImage = join(dir, "Vunemi-0.5.1-linux-arm64.AppImage");
+      writeFileSync(appImage, "made-up appimage bytes");
+      const linux = JSON.parse(execFileSync(process.execPath, [join(root, "sign-update.mjs"), appImage, "0.5.1", "arm64", "linux"], { env, encoding: "utf8" })) as { sha256: string; signature: string };
+      expect(verifyUpdate(pub, "linux", "0.5.1", "arm64", linux.sha256, linux.signature)).toBe(true);
+      expect(verifyUpdate(pub, "windows", "0.5.1", "arm64", linux.sha256, linux.signature)).toBe(false);
+      expect(() => execFileSync(process.execPath, [join(root, "sign-update.mjs"), appImage, "0.5.1", "arm64", "macos"], { env, stdio: "ignore" })).toThrow();
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -117,7 +135,7 @@ describe("the site's Windows feed", () => {
     };
     const { createHash: hash } = await import("node:crypto");
     const sha = hash("sha256").update("made-up arm64 installer").digest("hex");
-    const signature = sign(null, signedMessage("0.5.1", "arm64", sha), ours.privateKey).toString("base64");
+    const signature = sign(null, signedMessage("windows", "0.5.1", "arm64", sha), ours.privateKey).toString("base64");
     const release = {
       tag: "v0.5.1-windows.1", version: "0.5.1", date: "2026-12-01",
       files: [{ arch: "arm64", asset: "Vunemi-Setup-0.5.1-arm64.exe", sizeMb: 118, sha256: sha, signature }],

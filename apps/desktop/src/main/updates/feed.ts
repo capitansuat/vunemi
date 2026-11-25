@@ -5,7 +5,7 @@
  * refuses the zip unless it is signed like the running app.
  */
 
-import { verifyUpdate, type UpdateArch } from "./signature.js";
+import { verifyUpdate, type UpdateArch, type UpdatePlatform } from "./signature.js";
 
 export const FEED_URL = "https://vunemi.com/update/mac-arm64.json";
 
@@ -18,7 +18,7 @@ export interface FeedSource {
    * and the offer must carry a SHA-256 and a signature that this key and
    * architecture verify. Null key: nothing is offered.
    */
-  signed?: { arch: UpdateArch; publicKey: string | null; accepts(url: string, version: string): boolean };
+  signed?: { platform: UpdatePlatform; arch: UpdateArch; publicKey: string | null; accepts(url: string, version: string): boolean };
 }
 
 const RELEASES = "https://github.com/capitansuat/vunemi/releases/download/";
@@ -30,6 +30,7 @@ export function windowsSource(arch: UpdateArch, publicKey: string | null): FeedS
     feed: `https://vunemi.com/update/win-${arch}.json`,
     zip: (version) => `${RELEASES}v${version}/Vunemi-Setup-${version}-${arch}.exe`,
     signed: {
+      platform: "windows",
       arch,
       publicKey,
       // Any release tag (a Windows build may have its own), but this file name exactly.
@@ -41,7 +42,7 @@ export function windowsSource(arch: UpdateArch, publicKey: string | null): FeedS
 /** A local test feed for a Windows test build (VUNEMI_UPDATE_FEED), with the same signature check. */
 export function localWindowsSource(base: string, arch: UpdateArch, publicKey: string | null): FeedSource {
   const installer = (version: string) => `${base}Vunemi-Setup-${version}-${arch}.exe`;
-  return { feed: `${base}win-${arch}.json`, zip: installer, signed: { arch, publicKey, accepts: (url, version) => url === installer(version) } };
+  return { feed: `${base}win-${arch}.json`, zip: installer, signed: { platform: "windows", arch, publicKey, accepts: (url, version) => url === installer(version) } };
 }
 
 export const PRODUCTION: FeedSource = {
@@ -93,9 +94,9 @@ export function readFeed(value: unknown, current: string, locale: string, source
   if (!to || to.version !== version || typeof to.url !== "string") return null;
   let signed: { url: string; sha256: string } | null = null;
   if (source.signed) {
-    const { arch, publicKey, accepts } = source.signed;
+    const { platform, arch, publicKey, accepts } = source.signed;
     const sha256 = typeof to.sha256 === "string" ? to.sha256.toLowerCase() : "";
-    if (!publicKey || !accepts(to.url, version) || !verifyUpdate(publicKey, version, arch, sha256, to.signature)) return null;
+    if (!publicKey || !accepts(to.url, version) || !verifyUpdate(publicKey, platform, version, arch, sha256, to.signature)) return null;
     signed = { url: to.url, sha256 };
   } else if (to.url !== source.zip(version)) return null;
   const notes = record(feed.notes);

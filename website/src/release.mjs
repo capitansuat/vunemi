@@ -33,7 +33,7 @@ export const linuxRelease = {
 // The Windows preview, under its own tag (vX-windows.N) like Linux. Null
 // until the first Windows release: then the download page has no Windows
 // section and no win-*.json feed is written. When it is filled, each file
-// needs its size, SHA-256 and the signature scripts/sign-windows-update.mjs
+// needs its size, SHA-256 and the signature scripts/sign-update.mjs (windows)
 // prints; the app checks that signature before it runs an update. Shape:
 // { tag: "v0.5.1-windows.1", version: "0.5.1", date: "2026-12-01",
 //   files: [{ arch: "x64" | "arm64", asset: "Vunemi-Setup-0.5.1-x64.exe", sizeMb, sha256, signature }],
