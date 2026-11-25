@@ -39,4 +39,14 @@ export const linuxRelease = {
 //   files: [{ arch: "x64" | "arm64", asset: "Vunemi-Setup-0.5.1-x64.exe", sizeMb, sha256, signature }],
 //   url(asset) { return `https://github.com/capitansuat/vunemi/releases/download/${this.tag}/${asset}`; },
 //   get notes() { return `https://github.com/capitansuat/vunemi/releases/tag/${this.tag}`; } }
-export const windowsRelease = null;
+export const windowsRelease = {
+  tag: "v0.5.0-windows.1",
+  version: "0.5.0",
+  date: "2026-11-25",
+  files: [
+    { arch: "x64", asset: "Vunemi-Setup-0.5.0-x64.exe", sizeMb: 117, sha256: "8969844c2e398b5922c1794050f94a6aca4c3e19f0cf729e5ff42bb7e323a42c", signature: "GcYZU2clEgCpQd4dSUfb/vs3D7pGphAj1x3CCvaIvyTg2rqL8ubSQj91IMvyIV07ysCsRCFYiX878xTXrCU2AA==" },
+    { arch: "arm64", asset: "Vunemi-Setup-0.5.0-arm64.exe", sizeMb: 120, sha256: "cd131c230a6ebf5686e185c5728492a31c1a50f1cac67c0825c4204b9c2c69ec", signature: "A8yYxvzuMzyycZUXezQLmRmMkk+iATS5yy3NjXS4hG/q2CkzM6GBZ9wYkkmFW7MJOjXXeQiqqhszwAX5irC9CA==" },
+  ],
+  url(asset) { return `https://github.com/capitansuat/vunemi/releases/download/${this.tag}/${asset}`; },
+  get notes() { return `https://github.com/capitansuat/vunemi/releases/tag/${this.tag}`; },
+};

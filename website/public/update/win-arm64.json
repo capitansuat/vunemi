@@ -1,0 +1,53 @@
+{
+  "currentRelease": "0.5.0",
+  "releases": [
+    {
+      "version": "0.5.0",
+      "updateTo": {
+        "version": "0.5.0",
+        "name": "Vunemi 0.5.0",
+        "pub_date": "2026-11-25T00:00:00Z",
+        "notes": "",
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.5.0-windows.1/Vunemi-Setup-0.5.0-arm64.exe",
+        "sha256": "cd131c230a6ebf5686e185c5728492a31c1a50f1cac67c0825c4204b9c2c69ec",
+        "signature": "A8yYxvzuMzyycZUXezQLmRmMkk+iATS5yy3NjXS4hG/q2CkzM6GBZ9wYkkmFW7MJOjXXeQiqqhszwAX5irC9CA=="
+      }
+    }
+  ],
+  "sizeMb": 120,
+  "notes": {
+    "en": [
+      "The first Windows preview."
+    ],
+    "de": [
+      "Die erste Windows-Vorschau."
+    ],
+    "es": [
+      "La primera versión preliminar para Windows."
+    ],
+    "fr": [
+      "Le premier aperçu pour Windows."
+    ],
+    "it": [
+      "La prima anteprima per Windows."
+    ],
+    "tr": [
+      "İlk Windows önizlemesi."
+    ],
+    "pt": [
+      "A primeira prévia para Windows."
+    ],
+    "ru": [
+      "Первая предварительная версия для Windows."
+    ],
+    "zh": [
+      "第一个 Windows 预览版。"
+    ],
+    "ja": [
+      "最初の Windows プレビューです。"
+    ],
+    "ko": [
+      "첫 Windows 미리 보기입니다."
+    ]
+  }
+}
