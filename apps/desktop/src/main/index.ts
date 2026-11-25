@@ -20,7 +20,7 @@ import { followLanguage } from "./system-language.js";
 import { toolAreas } from "./areas.js";
 import { type StandingGrant, TaskPermissionStore, taskProgressTool, choiceTools, createModel, KeptOutputs, keptOutputTools, type AgentEvent, type OutputKeeper, type ApprovalDecision, type ChoiceAnswer, type HandoffOutcome, type PlanDecision, type ChatModel } from "@vunemi/agent-core";
 import { BrowserController, checkNavigation, trustableHost } from "@vunemi/browser";
-import { projectFolderProblem, Roots } from "@vunemi/files";
+import { defaultRoots, projectFolderProblem, Roots, type KnownFolders } from "@vunemi/files";
 import { Helper, scheduledApp } from "@vunemi/mac";
 import { HOLD_MS, Outbox, type OutboxEvent, type StoredSend } from "@vunemi/mail";
 import { CH, EMERGENCY_STOP_ACCELERATOR, type AddonId, type MeetingsSharedView, type SpeakersView, type Appearance, type ArtefactView, type AutomationView, type ContextInfo, type DownloadRequest, type LocalModelSettings, type LockAttempt, type LockState, type MailAccountInput, type MailAppAccount, type NewMcpServer, type PaneBounds, type PermissionSettings, type SessionList, type StartRunRequest, type TrustedSiteResult, type UpdateStatus, type VaultStatus, type WorkNoteView } from "../shared/ipc.js";
@@ -229,7 +229,12 @@ tools.register(taskProgressTool());
 
 // The folders the user opened to Vunemi — Desktop, Documents, Downloads — and
 // nothing else. Overwritten files are kept aside so the log can undo them.
-const roots = new Roots();
+// On Windows the three folders are where the system says (OneDrive often
+// moves Desktop and Documents); elsewhere the home folder's own, as always.
+const knownFolders: Partial<KnownFolders> = process.platform === "win32"
+  ? { Desktop: app.getPath("desktop"), Documents: app.getPath("documents"), Downloads: app.getPath("downloads") }
+  : {};
+const roots = new Roots(defaultRoots(homedir(), knownFolders), { known: knownFolders });
 
 // The Mac itself, through the signed Swift helper. Without it — or without
 // the Accessibility permission — these tools simply say so and the rest of
@@ -1576,7 +1581,7 @@ handle(CH.projectsAdd, async () => {
     title: t("app.projects.pickTitle"),
     message: t("app.projects.pickMessage"),
     buttonLabel: t("app.projects.pickButton"),
-    defaultPath: join(homedir(), "Documents"),
+    defaultPath: knownFolders.Documents ?? join(homedir(), "Documents"),
     properties: ["openDirectory", "createDirectory"] as ("openDirectory" | "createDirectory")[],
   };
   const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);

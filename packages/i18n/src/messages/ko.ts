@@ -1193,6 +1193,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "파일 경로가 필요합니다.",
     pathInvalid: "파일 경로가 유효하지 않습니다.",
+    pathUnsupported: "'{path}'은(는) Vunemi가 열지 않는 종류의 경로입니다(네트워크, 장치 또는 스트림 경로, 또는 Windows가 바꾸는 이름). 열린 폴더 안의 경로를 사용하십시오.",
     outside: "'{path}'은(는) 에이전트에 열린 폴더 밖에 있습니다. 열린 폴더: {roots}. 그곳은 사용자가 직접 봐야 합니다.",
     wrongHome: "\"{path}\"은(는) 이 Mac에 없는 홈 폴더를 가리킵니다. 올바른 경로는 \"{fixed}\"입니다. 이 경로를 사용하세요.",
     hidden: "'{path}'은(는) 숨겨진 파일이나 폴더입니다. 에이전트는 이런 것을 보지 않습니다. 필요하면 사용자가 직접 열 수 있습니다.",
@@ -1221,6 +1222,7 @@ export const messages: Catalogue = {
       outsideHome: "프로젝트 폴더는 사용자 폴더 안에 있어야 합니다.",
       home: "사용자 폴더 전체는 프로젝트가 될 수 없습니다. 그 안의 폴더를 선택하세요.",
       library: "라이브러리(Library) 폴더에는 앱 데이터가 있습니다. 다른 폴더를 선택하세요.",
+      appData: "AppData 폴더에는 앱 데이터가 있습니다. 다른 폴더를 선택하십시오.",
       hidden: "숨김 폴더는 프로젝트가 될 수 없습니다. 다른 폴더를 선택하세요.",
       own: "이 폴더에는 Vunemi 자체 데이터가 있습니다. 다른 폴더를 선택하세요.",
     },

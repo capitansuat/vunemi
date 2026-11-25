@@ -1193,6 +1193,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "Ein Dateipfad wird benötigt.",
     pathInvalid: "Ungültiger Dateipfad.",
+    pathUnsupported: "„{path}“ ist ein Pfad, den Vunemi nicht öffnet (ein Netzwerk-, Geräte- oder Datenstrompfad oder ein Name, den Windows ändern würde). Verwende einen Pfad in den geöffneten Ordnern.",
     outside: "„{path}“ liegt außerhalb der für den Agenten geöffneten Ordner. Geöffnet sind: {roots}. Dort muss der Benutzer selbst nachsehen.",
     wrongHome: "\"{path}\" nennt einen Benutzerordner, den es auf diesem Mac nicht gibt. Richtig ist \"{fixed}\". Verwende diesen Pfad.",
     hidden: "„{path}“ ist eine versteckte Datei oder ein versteckter Ordner. Der Agent sieht sich so etwas nicht an; bei Bedarf öffnet der Benutzer es selbst.",
@@ -1221,6 +1222,7 @@ export const messages: Catalogue = {
       outsideHome: "Ein Projektordner muss in deinem Benutzerordner liegen.",
       home: "Dein ganzer Benutzerordner kann kein Projekt sein; wähle einen Ordner darin.",
       library: "Der Ordner „Library“ enthält die Daten von Apps; wähle einen anderen Ordner.",
+      appData: "Der Ordner „AppData“ enthält die Daten von Apps; wähle einen anderen Ordner.",
       hidden: "Ein versteckter Ordner kann kein Projekt sein; wähle einen anderen Ordner.",
       own: "Dieser Ordner enthält Vunemis eigene Daten; wähle einen anderen Ordner.",
     },

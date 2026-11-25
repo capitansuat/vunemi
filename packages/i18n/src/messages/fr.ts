@@ -1193,6 +1193,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "Un chemin de fichier est requis.",
     pathInvalid: "Chemin de fichier non valide.",
+    pathUnsupported: "« {path} » est un type de chemin que Vunemi n’ouvre pas (chemin réseau, de périphérique ou de flux, ou nom que Windows modifierait). Utilisez un chemin dans les dossiers ouverts.",
     outside: "« {path} » est hors des dossiers ouverts à l’agent. Dossiers ouverts : {roots}. L’utilisateur doit regarder lui-même.",
     wrongHome: "« {path} » désigne un dossier personnel qui n'existe pas sur ce Mac. Le bon chemin est « {fixed} ». Utilisez-le.",
     hidden: "« {path} » est un fichier ou dossier masqué. L’agent ne regarde pas ce genre d’élément ; l’utilisateur peut l’ouvrir lui-même si besoin.",
@@ -1221,6 +1222,7 @@ export const messages: Catalogue = {
       outsideHome: "Un dossier de projet doit se trouver dans votre dossier utilisateur.",
       home: "Votre dossier utilisateur entier ne peut pas être un projet ; choisissez un dossier à l'intérieur.",
       library: "Le dossier Bibliothèque (Library) contient les données des apps ; choisissez un autre dossier.",
+      appData: "Le dossier AppData contient les données des apps ; choisissez un autre dossier.",
       hidden: "Un dossier masqué ne peut pas être un projet ; choisissez un autre dossier.",
       own: "Ce dossier contient les données de Vunemi ; choisissez un autre dossier.",
     },

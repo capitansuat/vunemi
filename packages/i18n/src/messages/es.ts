@@ -1193,6 +1193,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "Hace falta una ruta de archivo.",
     pathInvalid: "Ruta de archivo no válida.",
+    pathUnsupported: "«{path}» es un tipo de ruta que Vunemi no abre (una ruta de red, de dispositivo o de flujo, o un nombre que Windows cambiaría). Usa una ruta dentro de las carpetas abiertas.",
     outside: "«{path}» está fuera de las carpetas abiertas al agente. Abiertas: {roots}. El usuario tiene que mirar ahí por su cuenta.",
     wrongHome: "\"{path}\" indica una carpeta de inicio que no existe en este Mac. La ruta correcta es \"{fixed}\". Usa esa.",
     hidden: "«{path}» es un archivo o una carpeta oculta. El agente no mira estas cosas; si hace falta, el usuario puede abrirlo por su cuenta.",
@@ -1221,6 +1222,7 @@ export const messages: Catalogue = {
       outsideHome: "Una carpeta de proyecto debe estar dentro de tu carpeta de usuario.",
       home: "Tu carpeta de usuario completa no puede ser un proyecto; elige una carpeta dentro de ella.",
       library: "La carpeta Biblioteca (Library) guarda datos de las apps; elige otra carpeta.",
+      appData: "La carpeta AppData guarda datos de las apps; elige otra carpeta.",
       hidden: "Una carpeta oculta no puede ser un proyecto; elige otra carpeta.",
       own: "Esta carpeta contiene los datos de Vunemi; elige otra carpeta.",
     },

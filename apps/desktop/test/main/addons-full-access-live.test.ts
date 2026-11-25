@@ -30,7 +30,7 @@ const output=(name:string)=>[{name,path:join(base,name)}];
 const input=(name:string)=>[{name,path:join(base,name)}];
 const xml=(name:string,entry:string)=>{const text=execFileSync('/usr/bin/unzip',['-p',join(base,name),entry],{encoding:'utf8'});writeFileSync(join(evidence,`${name}-${entry.replaceAll('/','_')}.txt`),text);return text;};
 describe.skipIf(process.env.CRAFT_LIVE!=='1' || process.platform!=='darwin')('installed Craft full access (sandboxed)',()=>{
- beforeAll(()=>{base=realpathSync(mkdtempSync(join(tmpdir(),'vunemi-craft-live-')));mkdirSync(evidence,{recursive:true});});
+ beforeAll(()=>{base=realpathSync.native(mkdtempSync(join(tmpdir(),'vunemi-craft-live-')));mkdirSync(evidence,{recursive:true});});
  afterAll(()=>{writeFileSync(join(evidence,'summary.json'),JSON.stringify({time:new Date().toISOString(),sandbox:'production createEngines/runSandboxed',engines:ADDONS.map(a=>({id:a.id,path:program(a.id),present:existsSync(program(a.id)),sha256:existsSync(program(a.id))?createHash('sha256').update(readFileSync(program(a.id))).digest('hex'):null})),records},null,2));rmSync(base,{recursive:true,force:true});});
  for(const a of ADDONS) it.skipIf(!existsSync(program(a.id)))(`${a.engine}: help and full command catalogue`,async()=>{
   expect(await run(a.id,`${a.id}-help`,['--help'])).toMatch(/cli/i);

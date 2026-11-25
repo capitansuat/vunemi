@@ -1193,6 +1193,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "Serve un percorso di file.",
     pathInvalid: "Percorso di file non valido.",
+    pathUnsupported: "«{path}» è un tipo di percorso che Vunemi non apre (un percorso di rete, di dispositivo o di flusso, o un nome che Windows cambierebbe). Usa un percorso dentro le cartelle aperte.",
     outside: "«{path}» è fuori dalle cartelle aperte all’agente. Aperte: {roots}. L’utente deve guardare lì da sé.",
     wrongHome: "\"{path}\" indica una cartella Inizio che non esiste su questo Mac. Il percorso giusto è \"{fixed}\". Usa quello.",
     hidden: "«{path}» è un file o una cartella nascosta. L’agente non guarda queste cose; se serve, l’utente può aprirlo da sé.",
@@ -1221,6 +1222,7 @@ export const messages: Catalogue = {
       outsideHome: "Una cartella di progetto deve trovarsi nella tua cartella utente.",
       home: "L'intera cartella utente non può essere un progetto; scegli una cartella al suo interno.",
       library: "La cartella Libreria (Library) contiene i dati delle app; scegli un'altra cartella.",
+      appData: "La cartella AppData contiene i dati delle app; scegli un'altra cartella.",
       hidden: "Una cartella nascosta non può essere un progetto; scegli un'altra cartella.",
       own: "Questa cartella contiene i dati di Vunemi; scegli un'altra cartella.",
     },

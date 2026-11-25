@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { Roots } from '../src/roots.js';
 import { SafeMoveController, type AtomicMoveAdapter } from '../src/safe-move.js';
 const dirs: string[] = [];
-function setup(adapter?: AtomicMoveAdapter) { const dir = realpathSync(mkdtempSync(join(tmpdir(), 'safe-move-'))); dirs.push(dir); mkdirSync(join(dir, 'to')); const source = join(dir, 'source.txt'), destination = join(dir, 'to', 'moved.txt'); writeFileSync(source, 'owned original\n'); const options = { roots: new Roots([dir]), journalPath: join(dir, 'journal.json'), withAdmission: async <T>(body: (assertCurrent: () => void) => T | Promise<T>) => body(() => {}), ...(adapter ? { adapter } : {}) }; const c = new SafeMoveController(options); return { dir, source, destination, options, c, prepare: () => c.prepare({ source, destination, ownerId: 'a' }) }; }
+function setup(adapter?: AtomicMoveAdapter) { const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'safe-move-'))); dirs.push(dir); mkdirSync(join(dir, 'to')); const source = join(dir, 'source.txt'), destination = join(dir, 'to', 'moved.txt'); writeFileSync(source, 'owned original\n'); const options = { roots: new Roots([dir]), journalPath: join(dir, 'journal.json'), withAdmission: async <T>(body: (assertCurrent: () => void) => T | Promise<T>) => body(() => {}), ...(adapter ? { adapter } : {}) }; const c = new SafeMoveController(options); return { dir, source, destination, options, c, prepare: () => c.prepare({ source, destination, ownerId: 'a' }) }; }
 // Real FS no-clobber test adapter only: hardlink/unlink is NOT production atomic rename.
 const adapter: AtomicMoveAdapter = { async move(r) { try {
         linkSync(r.source, r.destination);

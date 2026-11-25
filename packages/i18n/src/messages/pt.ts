@@ -1193,6 +1193,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "É preciso um caminho de arquivo.",
     pathInvalid: "Caminho de arquivo inválido.",
+    pathUnsupported: "“{path}” é um tipo de caminho que o Vunemi não abre (um caminho de rede, de dispositivo ou de fluxo, ou um nome que o Windows mudaria). Use um caminho dentro das pastas abertas.",
     outside: "“{path}” está fora das pastas abertas ao agente. Abertas: {roots}. O usuário precisa olhar lá por conta própria.",
     wrongHome: "\"{path}\" indica uma pasta de início que não existe neste Mac. O caminho certo é \"{fixed}\". Use esse.",
     hidden: "“{path}” é um arquivo ou pasta oculta. O agente não olha essas coisas; se precisar, o usuário pode abrir por conta própria.",
@@ -1221,6 +1222,7 @@ export const messages: Catalogue = {
       outsideHome: "Uma pasta de projeto precisa estar dentro da sua pasta de usuário.",
       home: "A pasta de usuário inteira não pode ser um projeto; escolha uma pasta dentro dela.",
       library: "A pasta Biblioteca (Library) guarda dados dos apps; escolha outra pasta.",
+      appData: "A pasta AppData guarda dados dos apps; escolha outra pasta.",
       hidden: "Uma pasta oculta não pode ser um projeto; escolha outra pasta.",
       own: "Esta pasta contém os dados do Vunemi; escolha outra pasta.",
     },

@@ -1193,6 +1193,7 @@ export const messages: Catalogue = {
   files: {
     pathNeeded: "需要文件路径。",
     pathInvalid: "文件路径无效。",
+    pathUnsupported: "“{path}”是 Vunemi 不打开的路径类型（网络、设备或数据流路径，或 Windows 会更改的名称）。请使用已打开文件夹内的路径。",
     outside: "“{path}”位于向代理开放的文件夹之外。已开放：{roots}。那里需要用户自己查看。",
     wrongHome: "“{path}”指向这台 Mac 上不存在的个人文件夹。正确的路径是“{fixed}”，请使用它。",
     hidden: "“{path}”是隐藏的文件或文件夹。代理不会查看这些；如有需要，用户可以自己打开。",
@@ -1221,6 +1222,7 @@ export const messages: Catalogue = {
       outsideHome: "项目文件夹必须位于你的用户文件夹内。",
       home: "整个用户文件夹不能作为项目；请在其中选择一个文件夹。",
       library: "“资源库”（Library）文件夹保存应用数据；请选择其他文件夹。",
+      appData: "“AppData”文件夹保存应用数据；请选择其他文件夹。",
       hidden: "隐藏文件夹不能作为项目；请选择其他文件夹。",
       own: "此文件夹包含 Vunemi 自己的数据；请选择其他文件夹。",
     },

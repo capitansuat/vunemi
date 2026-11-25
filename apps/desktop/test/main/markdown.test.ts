@@ -22,7 +22,7 @@ let produced: Produced[] = [];
 let convert: (input: string) => { markdown: string } | { error: string } = (input) => ({ markdown: `# ${input}` });
 
 beforeEach(() => {
-  base = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-markdown-")));
+  base = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-markdown-")));
   folder = join(base, "Documents");
   mkdirSync(folder);
   calls = [];

@@ -14,7 +14,7 @@ let invoke: (args: readonly string[]) => {
 };
 let calls: readonly string[][];
 beforeEach(() => {
-  base = realpathSync(mkdtempSync(join(tmpdir(), 'full-access-')));
+  base = realpathSync.native(mkdtempSync(join(tmpdir(), 'full-access-')));
   folder = join(base, 'allowed');
   job = join(base, 'job');
   mkdirSync(folder);

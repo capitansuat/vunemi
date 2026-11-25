@@ -7,6 +7,7 @@
  * tools. A one-step or chatty request gets no plan and no card.
  */
 
+import { baseNameOf } from "./path-names.js";
 import { chatWithinBudget, type Budget } from "./budget.js";
 import type { ChatMessage, ChatModel } from "./provider.js";
 
@@ -78,8 +79,8 @@ export async function proposePlan(
   );
   const parsed=text === "overrun" ? "overrun" : parsePlan(text, opts.allowSingle);
   const paths=[...new Set(opts.requiredFiles ?? [])];
-  const basenames=paths.map(path=>path.split("/").at(-1)!);
-  const names=paths.map((path,i)=>basenames.filter(name=>name===basenames[i]).length>1 ? path.split("/").slice(-2).join("/") : basenames[i]!).filter(Boolean);
+  const basenames=paths.map(path=>baseNameOf(path));
+  const names=paths.map((path,i)=>basenames.filter(name=>name===basenames[i]).length>1 ? path.split(/[\\/]/).slice(-2).join("/") : basenames[i]!).filter(Boolean);
   if (opts.fastFiles && names.length>1 && names.length<=MAX_PLAN_STEPS && (parsed===null || parsed==="overrun" || names.some(name=>!parsed.some(step=>step.toLocaleLowerCase().includes(name.toLocaleLowerCase()))))) {
     // These filenames came from explicit user destinations, never from the
     // model or a document. Keep the ordinary plan approval card.

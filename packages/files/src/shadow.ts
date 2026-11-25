@@ -11,7 +11,7 @@
  */
 
 import { copyFileSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 /** How long a shadow copy stays around after the change it protects. */
 const KEEP_MS = 7 * 24 * 60 * 60_000;
@@ -72,5 +72,5 @@ export class Shadow {
 
 /** A file name safe to use inside the shadow folder. */
 function base(path: string): string {
-  return (path.split("/").pop() ?? "file").replace(/[^\w.\-ğüşıöçĞÜŞİÖÇ]/g, "_").slice(0, 64);
+  return (basename(path) || "file").replace(/[^\w.\-ğüşıöçĞÜŞİÖÇ]/g, "_").slice(0, 64);
 }

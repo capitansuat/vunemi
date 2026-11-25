@@ -4,14 +4,14 @@ import { t } from "@vunemi/i18n";
  * what they are. Each test is one escape that has to fail, or one change that
  * has to be undoable.
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { crc32 } from "node:zlib";
 import { chmodSync, existsSync, linkSync, unlinkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Produced, ToolContext, ToolDef } from "@vunemi/agent-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createFileTools, PathRefused, Roots } from "../src/index.js";
+import { createFileTools, defaultRoots, PathRefused, Roots } from "../src/index.js";
 import { similarNames, spotlightQuery } from "../src/tools.js";
 const onWindows = process.platform === "win32";
 
@@ -132,7 +132,7 @@ describe("file tools", () => {
   });
 
   beforeEach(() => {
-    home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-files-")));
+    home = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-files-")));
     testHome.path = join(home, "SyntheticHome");
     mkdirSync(join(testHome.path, ".Trash"), { recursive: true });
     // The freedesktop Trash follows XDG_DATA_HOME: never the real user's here.
@@ -150,12 +150,12 @@ describe("file tools", () => {
   // -- the walls ---------------------------------------------------------------
 
   // Windows: paths and open folders on Windows are plan 2.
-  it.skipIf(onWindows)("points a bare name to the open folder that has it, without reading it", async () => {
+  it("points a bare name to the open folder that has it, without reading it", async () => {
     const downloads = join(home, "Downloads");
     mkdirSync(downloads);
     writeFileSync(join(downloads, "fatura.txt"), "x");
     const two = new Map(createFileTools({ atomicMoveAdapter: testMoveAdapter,moveAdmission:async(_path,body)=>body(()=>{}), roots: new Roots([root, downloads]), shadowDir: join(home, "shadow") }).map((t) => [t.name, t]));
-    await expect(two.get("files_read")!.run({ path: "fatura.txt" } as never, ctx())).rejects.toThrow(/Downloads\/fatura\.txt/);
+    await expect(two.get("files_read")!.run({ path: "fatura.txt" } as never, ctx())).rejects.toThrow(join("Downloads", "fatura.txt"));
   });
 
   it("reads only the start of a large text file, and says how big it is", async () => {
@@ -192,7 +192,62 @@ describe("file tools", () => {
     await expect(call("files_read", { path: join(homedir(), ".ssh", "id_rsa") })).rejects.toThrow(/dışında|gizli/);
   });
 
-  // Windows: paths and open folders on Windows are plan 2.
+  it.runIf(onWindows)("takes ~/ and ~\\ and forward slashes on Windows", () => {
+    mkdirSync(join(homedir(), "Documents"), { recursive: true });
+    const open = new Roots([join(homedir(), "Documents")]);
+    const want = join(realpathSync.native(homedir()), "Documents", "a.txt");
+    for (const path of ["~/Documents/a.txt", "~\\Documents\\a.txt", homedir().replaceAll("\\", "/") + "/Documents/a.txt"]) {
+      expect(open.resolve(path), path).toBe(want);
+    }
+  });
+
+  it.runIf(onWindows)("accepts a path in another letter case and returns the disk's", () => {
+    writeFileSync(join(root, "a.txt"), "x");
+    expect(new Roots([root]).resolve(join(root, "a.txt").toUpperCase())).toBe(join(realpathSync.native(root), "a.txt"));
+  });
+
+  it.runIf(onWindows)("refuses a hidden folder named by its short name", () => {
+    const secret = join(root, ".secretsfolder");
+    mkdirSync(secret);
+    writeFileSync(join(secret, "k.txt"), "x");
+    const short = spawnSync("cmd.exe", ["/d", "/s", "/c", `"for %I in ("${secret}") do @echo %~sI"`], { encoding: "utf8", windowsVerbatimArguments: true }).stdout.trim();
+    // A volume with 8.3 names turned off has no short name to test.
+    if (short.toLowerCase() === secret.toLowerCase()) return;
+    expect(short).not.toContain(".secrets");
+    expect(() => new Roots([root]).resolve(join(short, "k.txt"))).toThrow(PathRefused);
+    expect(() => new Roots([root]).resolve(join(short, "k.txt"))).toThrow(t("files.hidden", { path: join(short, "k.txt") }));
+  });
+
+  it.runIf(onWindows)("follows junctions like links", () => {
+    const outside = join(home, "disari");
+    mkdirSync(outside);
+    symlinkSync(outside, join(root, "kisayol"), "junction");
+    expect(() => new Roots([root]).resolve(join(root, "kisayol", "x.txt"))).toThrow(PathRefused);
+    mkdirSync(join(root, "alt"));
+    symlinkSync(join(root, "alt"), join(root, "icerde"), "junction");
+    expect(new Roots([root]).resolve(join(root, "icerde", "x.txt"))).toBe(join(realpathSync.native(root), "alt", "x.txt"));
+  });
+
+  it.runIf(onWindows)("refuses Windows device and stream paths before touching the disk", () => {
+    const open = new Roots([root]);
+    for (const path of [join(root, "a.txt:gizli"), join(root, "nul.txt"), join(root, "rapor.txt."), "\\\\sunucu\\paylasim\\a.txt"]) {
+      expect(() => open.resolve(path), path).toThrow(t("files.pathUnsupported", { path }));
+    }
+    expect(() => open.grant(join(root, "a.txt:gizli"))).toThrow(t("files.pathUnsupported", { path: join(root, "a.txt:gizli") }));
+  });
+
+  it.runIf(onWindows)("names a home folder the model made up on Windows, and never takes a path without a drive as written", () => {
+    const open = new Roots([join(homedir(), "Downloads")]);
+    const fixed = "~\\Downloads\\deneme\\giderler.xlsx";
+    for (const path of ["C:\\Users\\no-such-user-vunemi\\Downloads\\deneme\\giderler.xlsx", "/Users/no-such-user-vunemi/Downloads/deneme/giderler.xlsx"]) {
+      expect(() => open.resolve(path), path).toThrow(t("files.wrongHome", { path, fixed }));
+    }
+    // The drive form of what isn't open is refused plainly; a path without a drive is never taken as written.
+    expect(() => open.resolve("C:\\Users\\no-such-user-vunemi\\Documents\\a.txt")).toThrow(/dışında/);
+    expect(() => open.resolve("\\Windows\\x.txt")).toThrow(t("files.pathUnsupported", { path: "\\Windows\\x.txt" }));
+    expect(() => open.resolve("/Users/no-such-user-vunemi/Documents/a.txt")).toThrow(t("files.pathUnsupported", { path: "/Users/no-such-user-vunemi/Documents/a.txt" }));
+  });
+
   it.skipIf(onWindows)("names a home folder the model made up, and gives the path it meant", () => {
     const open = new Roots([join(homedir(), "Downloads")]);
     // Refused, never quietly rewritten: the card would name one path and the file land at another.
@@ -228,8 +283,7 @@ describe("file tools", () => {
     expect(existsSync(join(home, "yeni.txt"))).toBe(false);
   });
 
-  // Windows: paths and open folders on Windows are plan 2.
-  it.skipIf(onWindows)("understands the folder names Finder shows, not just the ones on disk", () => {
+  it("understands the folder names Finder shows, not just the ones on disk", () => {
     // These only resolve when the real folder is open anyway, which is why
     // accepting them costs nothing.
     const real = new Roots([join(homedir(), "Documents"), join(homedir(), "Desktop")]);
@@ -239,6 +293,28 @@ describe("file tools", () => {
     // And a folder that happens to be called Belgeler somewhere else is not
     // quietly turned into Documents.
     expect(() => real.resolve("/tmp/Belgeler/x.txt")).toThrow(PathRefused);
+  });
+
+  it("takes Documents/x as the home folder's Documents, not a new folder in the first open one", () => {
+    // A model writes "Documents/rapor.txt" as often as "Belgeler/rapor.txt"; joined to the
+    // first open folder (Desktop) it made a stray Desktop/Documents.
+    const open = new Roots([join(homedir(), "Desktop"), join(homedir(), "Documents"), join(homedir(), "Downloads")]);
+    expect(open.resolve(join("Documents", "rapor.txt"))).toBe(join(homedir(), "Documents", "rapor.txt"));
+    expect(open.resolve(join("Desktop", "not.txt"))).toBe(join(homedir(), "Desktop", "not.txt"));
+    expect(open.resolve(join("Downloads", "fatura.pdf"))).toBe(join(homedir(), "Downloads", "fatura.pdf"));
+    // A bare name still belongs to the first open folder.
+    expect(open.resolve("not.txt")).toBe(join(homedir(), "Desktop", "not.txt"));
+  });
+
+  it("opens the folders where the system keeps them, and the Finder names follow", () => {
+    // OneDrive moves Documents (and gives it a local name); the defaults have to follow.
+    const known = { Documents: join(homedir(), "OneDrive", "Belgeler") };
+    mkdirSync(known.Documents, { recursive: true });
+    expect(defaultRoots(homedir(), known)).toEqual([join(homedir(), "Desktop"), known.Documents, join(homedir(), "Downloads")]);
+    expect(defaultRoots(homedir())).toEqual([join(homedir(), "Desktop"), join(homedir(), "Documents"), join(homedir(), "Downloads")]);
+    const open = new Roots(defaultRoots(homedir(), known), { known });
+    expect(open.resolve(join("Belgeler", "rapor.txt"))).toBe(join(realpathSync(known.Documents), "rapor.txt"));
+    expect(open.resolve(join("~", "Belgeler", "rapor.txt"))).toBe(join(realpathSync(known.Documents), "rapor.txt"));
   });
 
   // -- reading -----------------------------------------------------------------
@@ -314,15 +390,14 @@ describe("file tools", () => {
     expect(readdirSync(join(trash, "info"))).toEqual([]);
   });
 
-  // Windows: paths and open folders on Windows are plan 2.
-  it.runIf(!mac && !onWindows)("finds files by name and by the words in plain text, inside the open folders only", async () => {
+  it.runIf(!mac)("finds files by name and by the words in plain text, inside the open folders only", async () => {
     mkdirSync(join(root, "alt", ".gizli"), { recursive: true });
     writeFileSync(join(root, "fatura-7429.pdf"), "%PDF");
     writeFileSync(join(root, "alt", "not.md"), "Fatura 7429 ödendi");
     writeFileSync(join(root, "alt", ".gizli", "fatura-7429.txt"), "x");
     writeFileSync(join(home, "fatura-7429.txt"), "outside");
     const out = String(await call("files_search", { query: "fatura 7429" }));
-    expect(out).toContain("alt/not.md");
+    expect(out).toContain(join("alt", "not.md"));
     expect(out).not.toContain(".gizli");
     expect(out).not.toContain(join(home, "fatura-7429.txt"));
     const kind = String(await call("files_search", { query: "*.pdf" }));
@@ -388,6 +463,22 @@ describe("file tools", () => {
       expect(() => roots.grant(join(root, "yok.txt"))).toThrow(/bulunamadı/);
     } finally {
       rmSync(join(homedir(), ".vunemi-test-hidden"), { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a hidden file in the home folder when the home folder is written another way", () => {
+    // Windows gives a long user name as an 8.3 short name (C:\Users\FIRSTN~1)
+    // in some settings; a link to the home folder is the same case everywhere.
+    const real = testHome.path;
+    const link = join(home, "home-link");
+    symlinkSync(real, link, onWindows ? "junction" : "dir");
+    mkdirSync(join(real, ".vunemi-test-hidden"), { recursive: true });
+    writeFileSync(join(real, ".vunemi-test-hidden", "anahtar.txt"), "x");
+    testHome.path = link;
+    try {
+      expect(() => new Roots([root]).grant(join(real, ".vunemi-test-hidden", "anahtar.txt"))).toThrow(/gizli/);
+    } finally {
+      testHome.path = real;
     }
   });
 
@@ -572,7 +663,7 @@ describe("similarNames", () => {
 
 describe("files_search", () => {
   it.runIf(mac)("asks Spotlight with fixed arguments and shows only what is inside the open folders", async () => {
-    const home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-search-")));
+    const home = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-search-")));
     const root = join(home, "Belgeler");
     mkdirSync(root);
     const inside = join(root, "fatura.pdf");
@@ -593,7 +684,7 @@ console.log([${JSON.stringify(inside)}, "/etc/passwd", ${JSON.stringify(join(roo
     rmSync(home, { recursive: true, force: true });
   });
   it("puts the newest first, with its day", async () => {
-    const home = realpathSync(mkdtempSync(join(tmpdir(), "vunemi-search-")));
+    const home = realpathSync.native(mkdtempSync(join(tmpdir(), "vunemi-search-")));
     const root = join(home, "Belgeler");
     mkdirSync(root);
     const old = join(root, "eski.pdf");
