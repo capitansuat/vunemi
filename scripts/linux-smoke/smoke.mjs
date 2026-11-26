@@ -68,7 +68,8 @@ try {
     const engine = await page.evaluate(() => window.vunemi.getEngine());
     check("built-in llama.cpp engine found", engine.available === true, JSON.stringify({ available: engine.available, state: engine.engine.state }));
     const voice = await page.evaluate(() => window.vunemi.voiceStatus());
-    check("built-in whisper engine found, speaking off", voice.canSpeak === false && (voice.canHear === true || !!voice.download), JSON.stringify(voice));
+    // Speaking aloud works on Linux since 0.5.1 (espeak-ng in the package).
+    check("built-in whisper engine found, speaking on", voice.canSpeak === true && (voice.canHear === true || !!voice.download), JSON.stringify(voice));
   }
   await page.getByRole("button", { name: "Settings" }).first().click();
   await sleep(800);
