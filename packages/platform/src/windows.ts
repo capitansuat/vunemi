@@ -23,8 +23,8 @@ export const WINDOWS_FEATURES: PlatformFeatures = {
   // files_move through vunemi-move (native/move): tested in apps/desktop/test/main/native-move-*.test.ts.
   atomicMove: true,
   speakAloud: true,
-  // Built and tried with a recording; on once it is tried with a microphone in the installed app.
-  dictation: false,
+  // whisper.cpp built for Windows (scripts/windows/build-whisper.ps1); tried on 26 Nov 2026 in the installed app with a microphone, in Turkish and English.
+  dictation: true,
 };
 
 /** Where Windows builds are downloaded by hand until the app can update itself. */
