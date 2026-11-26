@@ -30,6 +30,7 @@ import { platform } from "@vunemi/platform";
 import type { VoiceStatus } from "../shared/ipc.js";
 import { builtBinary, type BinaryLookup } from "./engine/binary.js";
 import { download, type DownloadProgress } from "./engine/download.js";
+import { spawnLinuxSpeech, linuxVoices } from "./speech-linux.js";
 import { spawnWindowsSpeech, windowsVoiceCultures } from "./speech-windows.js";
 import type { ModelSource } from "./engine/catalog.js";
 
@@ -121,8 +122,8 @@ function voiceFor(locale: Locale): string | null {
 // A whisper-server the user installed themselves: Homebrew's on macOS, a distribution's or a local build on Linux.
 const SERVER_PATHS = platform.id === "darwin" ? ["/opt/homebrew/bin/whisper-server", "/usr/local/bin/whisper-server"] : ["/usr/local/bin/whisper-server", "/usr/bin/whisper-server"];
 
-/** Answers are spoken with the system's own voices: say on macOS, System.Speech on Windows; Linux has none yet. */
-const CAN_SPEAK = platform.features.speakAloud;
+/** Answers are spoken with the system's own voices (say on macOS, System.Speech on Windows), and on Linux with the built-in espeak-ng. */
+const SPEAKS_HERE = platform.features.speakAloud;
 
 /** Long enough to survive a pause in dictation, short enough to give the RAM back. */
 const IDLE_MS = 5 * 60_000;
@@ -175,6 +176,9 @@ export class Voice {
   private readonly downloadModel: typeof download;
   private readonly shared: boolean;
   private readonly offered: boolean;
+  /** The built-in espeak-ng's folder on Linux (speech-linux.ts); without it, Linux can't speak. */
+  private readonly espeak: string | null;
+  private readonly canSpeak: boolean;
 
   constructor(
     private readonly userData: string,
@@ -189,9 +193,13 @@ export class Voice {
       shared?: boolean;
       /** False where dictation isn't tried yet (platform.features.dictation): nothing is offered or started. */
       offered?: boolean;
+      /** Linux: the built-in espeak-ng's folder (espeakDir), or null. */
+      espeak?: string | null;
     } = {},
   ) {
     this.offered = opts.offered ?? true;
+    this.espeak = opts.espeak ?? null;
+    this.canSpeak = SPEAKS_HERE && (platform.id !== "linux" || this.espeak !== null);
     this.builtIn = opts.builtIn ?? null;
     this.onChange = opts.onChange ?? (() => {});
     this.downloadModel = opts.download ?? download;
@@ -202,18 +210,18 @@ export class Voice {
 
   /** Cheap enough to call whenever the composer appears. */
   status(): VoiceStatus {
-    if (!this.offered) return { canHear: false, canSpeak: CAN_SPEAK, engine: "", hint: t("voiceEngine.notOnWindows") };
+    if (!this.offered) return { canHear: false, canSpeak: this.canSpeak, engine: "", hint: t("voiceEngine.notOnWindows") };
     // Re-probe: the user may have installed whisper while Vunemi was running.
     this.binary ??= findBinary(this.builtIn);
     this.model ??= findModel(this.userData, this.shared);
     if (this.binary && this.model) {
-      return { canHear: true, canSpeak: CAN_SPEAK, engine: `whisper.cpp · ${modelLabel(this.model)}` };
+      return { canHear: true, canSpeak: this.canSpeak, engine: `whisper.cpp · ${modelLabel(this.model)}` };
     }
-    if (!this.binary) return { canHear: false, canSpeak: CAN_SPEAK, engine: "", hint: t("voiceEngine.noWhisper") };
+    if (!this.binary) return { canHear: false, canSpeak: this.canSpeak, engine: "", hint: t("voiceEngine.noWhisper") };
     const progress = this.downloading?.progress;
     return {
       canHear: false,
-      canSpeak: CAN_SPEAK,
+      canSpeak: this.canSpeak,
       engine: "",
       hint: t("voiceEngine.noModel", { size: megabytes(VOICE_MODEL.size) }),
       download: { bytes: VOICE_MODEL.size },
@@ -348,8 +356,11 @@ export class Voice {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const file = join(dir, `${randomUUID()}.wav`);
     // Arguments or stdin, never a shell: this is model output and may contain anything.
+    if (!this.canSpeak) return Promise.reject(new Error("say"));
     const child = platform.id === "win32"
       ? spawnWindowsSpeech(said, windowsVoiceCultures[locale], file)
+      : platform.id === "linux"
+      ? spawnLinuxSpeech(said, linuxVoices[locale], file, this.espeak!)
       : (() => {
         const voice = voiceFor(locale);
         return spawn("/usr/bin/say", [...(voice ? ["-v", voice] : []), "-r", "190", "-o", file, "--data-format=LEI16@22050", "--", said], { stdio: "ignore" });

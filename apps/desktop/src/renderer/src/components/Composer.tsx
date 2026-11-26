@@ -39,7 +39,7 @@ export function Composer() {
   const [offer, setOffer] = useState(false);
 
   const voice = useStore((s) => s.voice);
-  const speakAloud = useFeature("speakAloud");
+  const speakFeature = useFeature("speakAloud");
   const dictated = useStore((s) => s.dictated);
   const suggested = useStore((s) => s.suggested);
 
@@ -224,6 +224,8 @@ export function Composer() {
 
   const listening = voice.state === "listening";
   const canHear = voice.status?.canHear ?? false;
+  // On Linux the voice comes with the app (espeak-ng); a build without it can't speak either.
+  const speakAloud = speakFeature && (voice.status?.canSpeak ?? true);
   const offerable = !canHear && !!voice.status?.download;
   /** Voice chat that listens only while the microphone button is held. */
   const held = voice.handsFree && voice.hold && canHear;
