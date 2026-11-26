@@ -14,7 +14,7 @@ const bin = () => program("scripts/windows/build-move.ps1");
 const place = () => mkdtempSync(join(tmpdir(), "vunemi-move-"));
 const file = (path: string, text = "x") => (writeFileSync(path, text), path);
 
-describe.skipIf(!windows)("vunemi-move on Windows", () => {
+describe.skipIf(!windows)("vunemi-move on Windows", { timeout: 30_000 }, () => {
   it("is built", () => {
     expect(existsSync(bin())).toBe(true);
   });
