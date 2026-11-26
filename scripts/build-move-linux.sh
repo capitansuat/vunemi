@@ -6,7 +6,7 @@
 # Usage: scripts/build-move-linux.sh [--arch x64|arm64]   (default: this machine's)
 set -euo pipefail
 
-version="1"  # MOVE_VERSION in apps/desktop/src/main/native-move.ts
+version="${VUNEMI_MOVE_VERSION:-1}"  # MOVE_VERSION in apps/desktop/src/main/native-move.ts
 
 if [ "$(uname -s)" != "Linux" ]; then
   echo "! bu betik Linux içindir" >&2

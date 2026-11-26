@@ -48,9 +48,9 @@ describe("connections on Windows", () => {
     }
   });
 
-  it("leaves out the move and page tools that need the Mac helper", () => {
+  it("leaves out the page tools that need the Mac helper, and keeps the move vunemi-move does", () => {
     const tools = ["files_move", "page_target_observe", "page_target_act", "files_read"].map(tool);
-    expect(withoutHelperTools(tools, windows).map((each) => each.name)).toEqual(["files_read"]);
+    expect(withoutHelperTools(tools, windows).map((each) => each.name)).toEqual(["files_move", "files_read"]);
     expect(withoutHelperTools(tools, darwin)).toHaveLength(4);
   });
 

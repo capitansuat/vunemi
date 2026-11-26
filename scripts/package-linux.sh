@@ -40,6 +40,9 @@ echo "› motor"
 bash "$here/scripts/build-engine-linux.sh" --arch "$arch"
 echo "› ses motoru"
 bash "$here/scripts/build-whisper-linux.sh" --arch "$arch"
+echo "› taşıma programı"
+bash "$here/scripts/build-move-linux.sh" --arch "$arch"
+move_cache="$root/move-cache/1-linux-$arch"
 engine_cache="$root/engine-cache/$engine_tag-linux-$arch"
 whisper_cache="$root/whisper-cache/v1.9.4-linux-$arch"
 
@@ -59,6 +62,7 @@ unpacked="$out/$unpacked_name"
 resources="$unpacked/resources"
 cp -p "$engine_cache/llama-server" "$resources/llama-server"
 cp -p "$whisper_cache/whisper-server" "$resources/whisper-server"
+cp -p "$move_cache/vunemi-move" "$resources/vunemi-move"
 mkdir -p "$resources/licenses"
 cp -p "$engine_cache/LICENSE" "$resources/licenses/llama.cpp-LICENSE"
 cp -p "$whisper_cache/LICENSE" "$resources/licenses/whisper.cpp-LICENSE"
@@ -67,7 +71,7 @@ cp -p "$here/apps/desktop/src/main/flights/LICENSE" "$resources/licenses/fli-LIC
 cp -p "$here/LICENSE" "$resources/licenses/Vunemi-LICENSE"
 
 # The right machine, glibc only, nothing of the builder's own folders in what ships.
-for bin in "$resources/llama-server" "$resources/whisper-server"; do
+for bin in "$resources/llama-server" "$resources/whisper-server" "$resources/vunemi-move"; do
   check_linux_binary "$bin" "$(basename "$bin")"
 done
 

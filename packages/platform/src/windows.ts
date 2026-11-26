@@ -20,7 +20,8 @@ export const WINDOWS_FEATURES: PlatformFeatures = {
   // The signed installer, checked against the maintainer's key (apps/desktop/src/main/updates).
   inAppUpdates: true,
   archives: false,
-  atomicMove: false,
+  // files_move through vunemi-move (native/move): tested in apps/desktop/test/main/native-move-*.test.ts.
+  atomicMove: true,
   speakAloud: true,
   // Built and tried with a recording; on once it is tried with a microphone in the installed app.
   dictation: false,

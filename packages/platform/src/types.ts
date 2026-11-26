@@ -35,7 +35,7 @@ export interface PlatformFeatures {
   inAppUpdates: boolean;
   /** files_compress and files_extract: bsdtar runs inside macOS's sandbox. */
   archives: boolean;
-  /** files_move: needs the helper's atomic, no-overwrite move. */
+  /** files_move: an atomic, no-overwrite move (the Swift helper on macOS, vunemi-move elsewhere). */
   atomicMove: boolean;
   /** Reading answers aloud with the system's own voices. */
   speakAloud: boolean;
