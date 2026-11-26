@@ -99,7 +99,7 @@ import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
 import { linuxSource, localLinuxSource, localWindowsSource, PRODUCTION, windowsSource, type FeedSource } from "./updates/feed.js";
-import { installableAppImage, LinuxAppImageUpdater } from "./updates/linux-updater.js";
+import { installableAppImage, LinuxAppImageUpdater, restartCommand } from "./updates/linux-updater.js";
 import { UpdateService, type Updater } from "./updates/service.js";
 import { installableOnWindows, installerKey, WindowsUpdater } from "./updates/windows-updater.js";
 import { UPDATE_KEY } from "./updates/update-key.js";
@@ -2184,11 +2184,13 @@ const linuxUpdater = linuxAppImage ? new LinuxAppImageUpdater({
     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
     await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream<Uint8Array>), createWriteStream(file));
   },
-  // Electron's relauncher starts the new AppImage once this process has gone (it holds the
-  // single-instance lock until then), through Chromium's launcher, which passes on no open
-  // files: a plain spawn handed the old image's mount and its keep-alive pipe to the new
-  // process, so the replaced AppImage stayed mounted as long as the new one ran.
-  restart: (file) => app.relaunch({ execPath: file, args: [] }),
+  // A small shell step starts the new AppImage once this process has gone (it holds the
+  // single-instance lock until then), after closing what it inherited. Electron's relauncher
+  // can't: it runs from the old image's mount, which goes as this process does.
+  restart: (file) => {
+    const [cmd, args] = restartCommand(process.pid, file, existsSync("/bin/bash"));
+    spawnProcess(cmd, args, { detached: true, stdio: "ignore" }).unref();
+  },
   quit: () => {
     updating = true;
     app.quit();

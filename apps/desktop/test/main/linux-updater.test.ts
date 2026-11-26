@@ -4,7 +4,9 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { installableAppImage, LinuxAppImageUpdater } from "../../src/main/updates/linux-updater.js";
+import { spawn } from "node:child_process";
+import { openSync, closeSync } from "node:fs";
+import { installableAppImage, LinuxAppImageUpdater, restartCommand } from "../../src/main/updates/linux-updater.js";
 
 const OLD = "the running appimage";
 const BYTES = "made-up appimage 0.5.1";
@@ -141,4 +143,30 @@ describe("which AppImage may be replaced", () => {
     }
     expect(existsSync(appImage)).toBe(true);
   });
+});
+
+describe("the restart step", () => {
+  // Linux only: it reads /proc. The new AppImage must not get this process's open files,
+  // or the replaced image stays mounted (its keep-alive pipe) for as long as the new one runs.
+  const linux = process.platform === "linux";
+  for (const bash of [true, false]) {
+    it.skipIf(!linux)(`waits for the old process and passes on no open files (${bash ? "bash" : "sh"})`, async () => {
+      const out = join(dir, "fds.txt");
+      const probe = join(dir, "probe.sh");
+      writeFileSync(probe, `#!/bin/sh\nfor f in /proc/$$/fd/*; do echo "\${f##*/} $(readlink "$f")"; done > "${out}"\n`, { mode: 0o755 });
+      const gone = spawn("true");
+      await new Promise((resolve) => gone.on("exit", resolve));
+      const held = openSync(appImage, "r");
+      const [cmd, args] = restartCommand(gone.pid!, probe, bash);
+      const stdio = Array.from({ length: 13 }, (_, i) => (i === 3 || i === 12 ? held : "ignore"));
+      const step = spawn(cmd, args, { stdio: stdio as never });
+      await new Promise((resolve) => step.on("exit", resolve));
+      closeSync(held);
+      await vi.waitFor(() => expect(existsSync(out)).toBe(true), { timeout: 5_000 });
+      // Which of the probe's descriptors still point at the file this test held open.
+      const handed = readFileSync(out, "utf8").split("\n").filter((line) => line.endsWith(` ${appImage}`)).map((line) => Number(line.split(" ")[0]));
+      // sh (dash) can only close 3 to 9, where the runtime's pipe arrives; bash closes everything above stderr.
+      expect(handed).toEqual(bash ? [] : [12]);
+    });
+  }
 });

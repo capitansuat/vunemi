@@ -176,3 +176,20 @@ export function installableAppImage(
   }
   return writable(dirname(file)) ? file : null;
 }
+
+/**
+ * The command that starts the new AppImage once process `pid` has gone (it
+ * holds the single-instance lock until then). A child started from Node
+ * inherits every open file not marked close-on-exec, among them the AppImage
+ * runtime's keep-alive pipe, which keeps the old image mounted while anything
+ * holds it, so the step first closes what it inherited: bash closes every
+ * file above stderr; plain sh (dash) only takes single-digit descriptors, so
+ * it closes 3 to 9, where the runtime's pipe arrives.
+ */
+export function restartCommand(pid: number, file: string, bash: boolean): [string, string[]] {
+  const close = bash
+    ? 'for f in /proc/$$/fd/*; do n=${f##*/}; [ "$n" -gt 2 ] && eval "exec $n>&-"; done 2>/dev/null; '
+    : "exec 3>&- 4>&- 5>&- 6>&- 7>&- 8>&- 9>&-; ";
+  const script = `${close}while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; exec "$2"`;
+  return [bash ? "/bin/bash" : "/bin/sh", ["-c", script, "vunemi-restart", String(pid), file]];
+}
