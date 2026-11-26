@@ -30,7 +30,7 @@ export const windowsCopy = {
     x64Button: "Download for x64",
     arm64Button: "Download for ARM (arm64)",
     notes: "Windows release notes",
-    updateNotes: ["The first Windows preview."],
+    updateNotes: ["Dictation and voice chat, and moving files."],
   },
   tr: {
     title: "Windows için Vunemi (önizleme)",
@@ -57,7 +57,7 @@ export const windowsCopy = {
     x64Button: "x64 için indir",
     arm64Button: "ARM (arm64) için indir",
     notes: "Windows sürüm notları",
-    updateNotes: ["İlk Windows önizlemesi."],
+    updateNotes: ["Sesle yazdırma ve sesli sohbet, bir de dosya taşıma."],
   },
   de: {
     title: "Vunemi für Windows (Vorschau)",
@@ -84,7 +84,7 @@ export const windowsCopy = {
     x64Button: "Für x64 herunterladen",
     arm64Button: "Für ARM (arm64) herunterladen",
     notes: "Versionshinweise für Windows",
-    updateNotes: ["Die erste Windows-Vorschau."],
+    updateNotes: ["Diktieren und Sprachchat, dazu Dateien verschieben."],
   },
   fr: {
     title: "Vunemi pour Windows (aperçu)",
@@ -111,7 +111,7 @@ export const windowsCopy = {
     x64Button: "Télécharger pour x64",
     arm64Button: "Télécharger pour ARM (arm64)",
     notes: "Notes de version Windows",
-    updateNotes: ["Le premier aperçu pour Windows."],
+    updateNotes: ["La dictée et la discussion vocale, et le déplacement de fichiers."],
   },
   es: {
     title: "Vunemi para Windows (versión preliminar)",
@@ -138,7 +138,7 @@ export const windowsCopy = {
     x64Button: "Descargar para x64",
     arm64Button: "Descargar para ARM (arm64)",
     notes: "Notas de la versión para Windows",
-    updateNotes: ["La primera versión preliminar para Windows."],
+    updateNotes: ["Dictado y chat de voz, y mover archivos."],
   },
   it: {
     title: "Vunemi per Windows (anteprima)",
@@ -165,7 +165,7 @@ export const windowsCopy = {
     x64Button: "Scarica per x64",
     arm64Button: "Scarica per ARM (arm64)",
     notes: "Note di rilascio per Windows",
-    updateNotes: ["La prima anteprima per Windows."],
+    updateNotes: ["La dettatura e la chat vocale, e lo spostamento dei file."],
   },
   pt: {
     title: "Vunemi para Windows (prévia)",
@@ -192,7 +192,7 @@ export const windowsCopy = {
     x64Button: "Baixar para x64",
     arm64Button: "Baixar para ARM (arm64)",
     notes: "Notas da versão para Windows",
-    updateNotes: ["A primeira prévia para Windows."],
+    updateNotes: ["Ditado e chat por voz, e mover arquivos."],
   },
   ru: {
     title: "Vunemi для Windows (предварительная версия)",
@@ -219,7 +219,7 @@ export const windowsCopy = {
     x64Button: "Скачать для x64",
     arm64Button: "Скачать для ARM (arm64)",
     notes: "Примечания к выпуску для Windows",
-    updateNotes: ["Первая предварительная версия для Windows."],
+    updateNotes: ["Диктовка и голосовой чат, а также перемещение файлов."],
   },
   ja: {
     title: "Windows 版 Vunemi(プレビュー)",
@@ -246,7 +246,7 @@ export const windowsCopy = {
     x64Button: "x64 版をダウンロード",
     arm64Button: "ARM(arm64)版をダウンロード",
     notes: "Windows 版リリースノート",
-    updateNotes: ["最初の Windows プレビューです。"],
+    updateNotes: ["音声入力とボイスチャット、そしてファイルの移動。"],
   },
   ko: {
     title: "Windows용 Vunemi(미리 보기)",
@@ -273,7 +273,7 @@ export const windowsCopy = {
     x64Button: "x64용 다운로드",
     arm64Button: "ARM(arm64)용 다운로드",
     notes: "Windows 릴리스 노트",
-    updateNotes: ["첫 Windows 미리 보기입니다."],
+    updateNotes: ["받아쓰기와 음성 채팅, 그리고 파일 이동."],
   },
   zh: {
     title: "Windows 版 Vunemi(预览)",
@@ -300,6 +300,6 @@ export const windowsCopy = {
     x64Button: "下载 x64 版",
     arm64Button: "下载 ARM(arm64)版",
     notes: "Windows 版发布说明",
-    updateNotes: ["第一个 Windows 预览版。"],
+    updateNotes: ["听写和语音聊天,以及移动文件。"],
   },
 };

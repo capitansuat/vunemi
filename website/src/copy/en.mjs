@@ -30,9 +30,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: a personal assistant that runs on your Mac", description: "Vunemi helps with everyday tasks. Its AI runs on your Mac, without a Vunemi cloud account. You choose which outside services to connect." },
-    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.5.0 can do." },
+    features: { title: "What Vunemi does", description: "Mail, calendar, files, the web and your Mac apps, with approval cards, undo and hard limits. Everything Vunemi 0.5.1 can do." },
     screens: { title: "Vunemi screens", description: "Real screens from the Vunemi app for Mac, captured with sample data." },
-    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.5.0 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
+    download: { title: "Download Vunemi for Mac", description: "Download Vunemi 0.5.1 for Apple Silicon Macs with macOS 14 or later. Free and open source." },
   },
   hero: {
     eyebrow: "Personal assistant for Mac",
@@ -120,7 +120,7 @@ export default {
   },
   featuresPage: {
     title: "Everything Vunemi can do",
-    intro: "Vunemi 0.5.0 in detail: how you work with it, what it can connect to, and how you stay in control.",
+    intro: "Vunemi 0.5.1 in detail: how you work with it, what it can connect to, and how you stay in control.",
     chatTitle: "Working with Vunemi",
     chat: [
       { title: "Plan first", body: "For a task with several steps, Vunemi can show the plan first. Go ahead, edit the steps or cancel." },
@@ -195,10 +195,10 @@ export default {
     intro: "Free and open source. For Apple Silicon Macs with macOS 14 or later.",
     highlightsTitle: "What's new",
     highlights: [
-      "New: when a conversation with no topic looks something up on the web, Vunemi gathers the answer, the addresses it read and the items it kept in a temporary topic, then asks whether to keep it, under a name you can change, or delete it.",
-      "This exists because a long search filled the model's memory with whole pages and lost what it found. Pages are now read as their main content, and older steps are shortened so a long lookup keeps fitting. Say Delete and nothing stays; the answer is still in the chat.",
-      "Fewer cards on the web: ordinary links and a site's search box count as reading. Approve all covers one site until the task ends, and a site you trust needs one approval per task. Forms that send data, sending and deleting still ask.",
-      "A topic is suggested only when a request is nearer to it than to everyday requests, and a page's own scripts can no longer make a form that sends data look like a search.",
+      "Vunemi 0.5.1 comes out for Mac, Windows and Linux on the same day, from the same code. From now on each new feature comes to all three, apart from what only a Mac has.",
+      "“Allow just this once” on a card now runs a switched-off tool for that one call, as it says; before, the call failed. The tool stays off afterwards.",
+      "A path that starts with Documents, Desktop or Downloads now goes to that folder of your home, not to a new folder of that name on the Desktop. A file in a hidden folder of your home stays refused however the home folder is reached.",
+      "On Windows and Linux, Vunemi now moves files, never over another file; Windows gets dictation and Linux reads answers aloud. The download page says what works on each.",
     ],
     requirementsTitle: "You need",
     requirements: ["A Mac with Apple Silicon (M1 or later)", "macOS 14 or later", "Space for a model: the app shows each model's size before downloading"],

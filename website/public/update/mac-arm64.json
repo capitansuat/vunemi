@@ -1,84 +1,84 @@
 {
-  "currentRelease": "0.5.0",
+  "currentRelease": "0.5.1",
   "releases": [
     {
-      "version": "0.5.0",
+      "version": "0.5.1",
       "updateTo": {
-        "version": "0.5.0",
-        "name": "Vunemi 0.5.0",
-        "pub_date": "2026-11-25T00:00:00Z",
+        "version": "0.5.1",
+        "name": "Vunemi 0.5.1",
+        "pub_date": "2026-11-26T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.5.0/Vunemi-0.5.0-arm64.zip"
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.5.1/Vunemi-0.5.1-arm64.zip"
       }
     }
   ],
   "sizeMb": 243,
   "notes": {
     "en": [
-      "New: when a conversation with no topic looks something up on the web, Vunemi gathers the answer, the addresses it read and the items it kept in a temporary topic, then asks whether to keep it, under a name you can change, or delete it.",
-      "This exists because a long search filled the model's memory with whole pages and lost what it found. Pages are now read as their main content, and older steps are shortened so a long lookup keeps fitting. Say Delete and nothing stays; the answer is still in the chat.",
-      "Fewer cards on the web: ordinary links and a site's search box count as reading. Approve all covers one site until the task ends, and a site you trust needs one approval per task. Forms that send data, sending and deleting still ask.",
-      "A topic is suggested only when a request is nearer to it than to everyday requests, and a page's own scripts can no longer make a form that sends data look like a search."
+      "Vunemi 0.5.1 comes out for Mac, Windows and Linux on the same day, from the same code. From now on each new feature comes to all three, apart from what only a Mac has.",
+      "“Allow just this once” on a card now runs a switched-off tool for that one call, as it says; before, the call failed. The tool stays off afterwards.",
+      "A path that starts with Documents, Desktop or Downloads now goes to that folder of your home, not to a new folder of that name on the Desktop. A file in a hidden folder of your home stays refused however the home folder is reached.",
+      "On Windows and Linux, Vunemi now moves files, never over another file; Windows gets dictation and Linux reads answers aloud. The download page says what works on each."
     ],
     "de": [
-      "Neu: Wenn ein Gespräch ohne Thema etwas im Web nachschlägt, sammelt Vunemi die Antwort, die gelesenen Adressen und die behaltenen Einträge in einem vorläufigen Thema und fragt, ob du es unter einem änderbaren Namen behalten oder löschen willst.",
-      "Das gibt es, weil eine lange Suche das Gedächtnis des Modells mit ganzen Seiten füllte und Gefundenes verlor. Seiten werden jetzt als Hauptinhalt gelesen, ältere Schritte gekürzt. Sagst du Löschen, bleibt nichts; die Antwort steht weiter im Chat.",
-      "Weniger Karten im Web: gewöhnliche Links und das Suchfeld einer Website gelten als Lesen. Alles freigeben deckt eine Website bis zum Ende der Aufgabe ab; eine vertrauenswürdige braucht eine Freigabe pro Aufgabe. Formulare, Senden und Löschen fragen weiter.",
-      "Ein Thema wird nur noch vorgeschlagen, wenn eine Anfrage ihm näher ist als alltäglichen Anfragen, und die Skripte einer Seite können ein Formular, das Daten sendet, nicht mehr als Suche ausgeben."
+      "Vunemi 0.5.1 erscheint am selben Tag für Mac, Windows und Linux, aus demselben Code. Ab jetzt kommt jede neue Funktion auf alle drei, außer dem, was nur ein Mac hat.",
+      "„Nur dieses Mal erlauben“ auf einer Karte führt ein ausgeschaltetes Werkzeug jetzt wie angekündigt für diesen einen Aufruf aus; vorher schlug der Aufruf fehl. Das Werkzeug bleibt danach aus.",
+      "Ein Pfad, der mit Documents, Desktop oder Downloads beginnt, führt jetzt zu diesem Ordner in deinem Benutzerordner, nicht zu einem neuen gleichnamigen Ordner auf dem Schreibtisch. Eine Datei in einem versteckten Ordner deines Benutzerordners bleibt abgelehnt, wie auch immer er erreicht wird.",
+      "Unter Windows und Linux verschiebt Vunemi jetzt Dateien, nie über eine andere; Windows bekommt Diktieren, Linux liest Antworten vor. Die Download-Seite sagt, was wo funktioniert."
     ],
     "es": [
-      "Novedad: cuando una conversación sin tema busca algo en la web, Vunemi reúne la respuesta, las direcciones que leyó y lo que guardó en un tema temporal, y te pregunta si quieres conservarlo, con un nombre que puedes cambiar, o eliminarlo.",
-      "Existe porque una búsqueda larga llenaba la memoria del modelo con páginas enteras y perdía lo encontrado. Ahora las páginas se leen por su contenido principal y los pasos antiguos se acortan. Si eliges Eliminar, no queda nada; la respuesta sigue en el chat.",
-      "Menos tarjetas en la web: los enlaces normales y el cuadro de búsqueda de un sitio cuentan como lectura. Aprobar todo cubre un sitio hasta que termina la tarea, y uno de confianza pide una aprobación por tarea. Formularios, envíos y borrados siguen preguntando.",
-      "Un tema solo se sugiere si la petición está más cerca de él que de las peticiones cotidianas, y los scripts de una página ya no pueden hacer pasar un formulario que envía datos por una búsqueda."
+      "Vunemi 0.5.1 sale el mismo día para Mac, Windows y Linux, con el mismo código. Desde ahora, cada función nueva llega a los tres, salvo lo que solo tiene un Mac.",
+      "«Permitir solo esta vez» en una tarjeta ahora ejecuta una herramienta desactivada para esa única llamada, como dice; antes, la llamada fallaba. La herramienta sigue desactivada después.",
+      "Una ruta que empieza por Documents, Desktop o Downloads ahora va a esa carpeta de tu carpeta personal, no a una carpeta nueva con ese nombre en el Escritorio. Un archivo de una carpeta oculta de tu carpeta personal sigue rechazado, se llegue como se llegue.",
+      "En Windows y Linux, Vunemi ahora mueve archivos, nunca encima de otro; Windows recibe el dictado y Linux lee las respuestas en voz alta. La página de descarga dice qué funciona en cada uno."
     ],
     "fr": [
-      "Nouveau : quand une conversation sans sujet cherche quelque chose sur le web, Vunemi rassemble la réponse, les adresses lues et les éléments gardés dans un sujet temporaire, puis vous demande de le conserver, sous un nom modifiable, ou de le supprimer.",
-      "Cela existe parce qu’une longue recherche remplissait la mémoire du modèle de pages entières et perdait ce qu’il avait trouvé. Les pages sont lues par leur contenu principal et les anciennes étapes raccourcies. Supprimer n’en garde rien ; la réponse reste dans le chat.",
-      "Moins de cartes sur le web : les liens ordinaires et le champ de recherche d’un site comptent comme lecture. Tout approuver couvre un site jusqu’à la fin de la tâche ; un site fiable demande une approbation par tâche. Formulaires, envois et suppressions demandent.",
-      "Un sujet n’est proposé que si la demande en est plus proche que des demandes courantes, et les scripts d’une page ne peuvent plus faire passer un formulaire qui envoie des données pour une recherche."
+      "Vunemi 0.5.1 sort le même jour pour Mac, Windows et Linux, à partir du même code. Désormais, chaque nouvelle fonction arrive sur les trois, sauf ce que seul un Mac possède.",
+      "« Autoriser cette fois seulement » sur une carte exécute désormais un outil désactivé pour ce seul appel, comme annoncé ; avant, l’appel échouait. L’outil reste désactivé ensuite.",
+      "Un chemin qui commence par Documents, Desktop ou Downloads mène désormais à ce dossier de votre dossier personnel, et non à un nouveau dossier du même nom sur le Bureau. Un fichier d’un dossier caché de votre dossier personnel reste refusé, quel que soit le chemin.",
+      "Sous Windows et Linux, Vunemi déplace désormais des fichiers, jamais par-dessus un autre ; Windows reçoit la dictée et Linux lit les réponses à voix haute. La page de téléchargement dit ce qui marche où."
     ],
     "it": [
-      "Novità: quando una conversazione senza argomento cerca qualcosa sul web, Vunemi raccoglie la risposta, gli indirizzi letti e gli elementi tenuti in un argomento temporaneo, poi ti chiede se conservarlo, con un nome che puoi cambiare, o eliminarlo.",
-      "Esiste perché una ricerca lunga riempiva la memoria del modello di pagine intere e perdeva ciò che aveva trovato. Ora le pagine si leggono nel contenuto principale e i passi vecchi si accorciano. Con Elimina non resta nulla; la risposta resta nella chat.",
-      "Meno schede sul web: i link normali e la casella di ricerca di un sito contano come lettura. Approva tutto copre un sito fino alla fine dell’attività; un sito attendibile chiede un’approvazione per attività. Moduli, invii ed eliminazioni chiedono ancora.",
-      "Un argomento viene proposto solo se la richiesta gli è più vicina che alle richieste quotidiane, e gli script di una pagina non possono più far passare per ricerca un modulo che invia dati."
+      "Vunemi 0.5.1 esce lo stesso giorno per Mac, Windows e Linux, dallo stesso codice. Da ora ogni nuova funzione arriva su tutti e tre, tranne ciò che ha solo un Mac.",
+      "«Consenti solo questa volta» su una scheda ora esegue uno strumento disattivato per quell’unica chiamata, come dice; prima la chiamata non riusciva. Lo strumento resta poi disattivato.",
+      "Un percorso che inizia con Documents, Desktop o Downloads ora porta a quella cartella della tua cartella Inizio, non a una nuova cartella con quel nome sulla Scrivania. Un file in una cartella nascosta della tua cartella Inizio resta rifiutato, comunque ci si arrivi.",
+      "Su Windows e Linux Vunemi ora sposta i file, mai sopra un altro; Windows riceve la dettatura e Linux legge le risposte ad alta voce. La pagina di download dice cosa funziona dove."
     ],
     "tr": [
-      "Yeni: konusu olmayan bir sohbet web'de bir şey aradığında Vunemi cevabı, okuduğu adresleri ve tuttuğu öğeleri geçici bir konuda toplar; sonra adını değiştirebileceğin şekilde tutmak mı, silmek mi istediğini sorar.",
-      "Bu, uzun bir aramada sayfaların tamamı modelin belleğini doldurup bulduklarını kaybettirdiği için var. Sayfalar artık ana içerikleriyle okunuyor, eski adımlar kısalıyor; uzun bir arama sığmaya devam ediyor. Sil dersen hiçbir şey kalmaz; cevap sohbette durur.",
-      "Web'de daha az kart: sıradan bağlantılar ve bir sitenin arama kutusu okuma sayılıyor. Hepsini onayla, iş bitene kadar tek bir siteyi kapsıyor; güvendiğin bir site her işte tek onay istiyor. Veri gönderen formlar, gönderme ve silme yine soruyor.",
-      "Bir konu artık yalnızca istek ona gündelik isteklerden daha yakınsa öneriliyor; bir sayfanın kendi betikleri de veri gönderen bir formu arama gibi gösteremiyor."
+      "Vunemi 0.5.1 Mac, Windows ve Linux için aynı gün, aynı koddan çıkıyor. Bundan sonra her yeni özellik, yalnız Mac'te olanlar dışında, üçüne birden geliyor.",
+      "Karttaki “Yalnız bu sefer izin ver” artık kapalı bir aracı, dediği gibi o tek çağrı için çalıştırıyor; önceden çağrı başarısız oluyordu. Araç sonra yine kapalı kalır.",
+      "Documents, Desktop ya da Downloads ile başlayan bir yol artık ana klasöründeki o klasöre gidiyor, Masaüstü'nde o adla yeni bir klasöre değil. Ana klasördeki gizli bir klasörün dosyası, ana klasöre nasıl ulaşılırsa ulaşılsın reddediliyor.",
+      "Windows ve Linux'ta Vunemi artık dosya taşıyor, hiçbir dosyanın üzerine yazmadan; Windows'a dikte, Linux'a cevapları sesli okuma geldi. Hangisinde neyin çalıştığı indirme sayfasında."
     ],
     "pt": [
-      "Novo: quando uma conversa sem tópico procura algo na web, o Vunemi reúne a resposta, os endereços que leu e os itens que guardou em um tópico temporário e pergunta se você quer mantê-lo, com um nome que pode mudar, ou excluí-lo.",
-      "Isso existe porque uma busca longa enchia a memória do modelo com páginas inteiras e perdia o que encontrou. Agora as páginas são lidas pelo conteúdo principal e os passos antigos encurtam. Se escolher Excluir, nada fica; a resposta continua na conversa.",
-      "Menos cartões na web: links comuns e a caixa de busca de um site contam como leitura. Aprovar tudo cobre um site até a tarefa terminar, e um site confiável pede uma aprovação por tarefa. Formulários, envios e exclusões continuam perguntando.",
-      "Um tópico só é sugerido quando o pedido está mais perto dele do que de pedidos do dia a dia, e os scripts de uma página não conseguem mais fazer um formulário que envia dados parecer uma busca."
+      "O Vunemi 0.5.1 sai no mesmo dia para Mac, Windows e Linux, a partir do mesmo código. De agora em diante, cada recurso novo chega aos três, exceto o que só um Mac tem.",
+      "“Permitir só desta vez” em um cartão agora executa uma ferramenta desligada para essa única chamada, como diz; antes, a chamada falhava. A ferramenta continua desligada depois.",
+      "Um caminho que começa com Documents, Desktop ou Downloads agora vai para essa pasta da sua pasta pessoal, e não para uma pasta nova com esse nome na Mesa. Um arquivo de uma pasta oculta da sua pasta pessoal continua recusado, seja qual for o caminho.",
+      "No Windows e no Linux, o Vunemi agora move arquivos, nunca por cima de outro; o Windows ganha ditado e o Linux lê as respostas em voz alta. A página de download diz o que funciona em cada um."
     ],
     "ru": [
-      "Новое: когда беседа без темы что-то ищет в интернете, Vunemi собирает ответ, прочитанные адреса и сохранённые пункты во временной теме и спрашивает, оставить её под названием, которое можно изменить, или удалить.",
-      "Это сделано потому, что при долгом поиске память модели заполнялась целыми страницами и найденное терялось. Теперь страницы читаются по основному содержимому, а старые шаги сокращаются. Если удалить, ничего не останется; ответ останется в беседе.",
-      "Меньше карточек в интернете: обычные ссылки и поле поиска сайта считаются чтением. «Одобрить всё» покрывает один сайт до конца задачи, а доверенный сайт требует одного одобрения на задачу. Формы, отправка и удаление по-прежнему спрашивают.",
-      "Тема предлагается, только если запрос ближе к ней, чем к повседневным запросам, а скрипты страницы больше не могут выдать форму, отправляющую данные, за поиск."
+      "Vunemi 0.5.1 выходит в один день для Mac, Windows и Linux, из одного и того же кода. Отныне каждая новая функция появляется на всех трёх, кроме того, что есть только у Mac.",
+      "«Разрешить только сейчас» на карточке теперь выполняет выключенный инструмент для этого одного вызова, как и обещано; раньше вызов не удавался. Инструмент после этого остаётся выключенным.",
+      "Путь, начинающийся с Documents, Desktop или Downloads, теперь ведёт в эту папку вашей домашней папки, а не в новую папку с таким именем на рабочем столе. Файл в скрытой папке вашей домашней папки по-прежнему отклоняется, как бы к ней ни обращались.",
+      "В Windows и Linux Vunemi теперь перемещает файлы, никогда не поверх другого; в Windows появилась диктовка, в Linux — чтение ответов вслух. Что где работает, сказано на странице загрузки."
     ],
     "zh": [
-      "新功能：没有主题的对话在网上查找时，Vunemi 会把回答、读过的地址和保留的条目收集到一个临时主题里，然后问你是保留它（名称可改）还是删除它。",
-      "之所以有它，是因为长时间的搜索会让整页内容塞满模型的记忆，丢掉已找到的东西。现在页面只读取正文，较早的步骤会被缩短，长时间的查找也放得下。选择删除就什么都不留，回答仍在对话里。",
-      "网页上的卡片更少了：普通链接和网站的搜索框算作读取。“全部批准”在任务结束前只覆盖一个网站，可信网站每个任务只需批准一次。发送数据的表单、发送和删除仍会询问。",
-      "只有当请求离某个主题比离日常请求更近时，才会建议该主题；页面自己的脚本也不能再把发送数据的表单伪装成搜索。"
+      "Vunemi 0.5.1 在同一天、用同一份代码发布到 Mac、Windows 和 Linux。从现在起，每个新功能都会同时来到这三个系统，只有 Mac 才有的功能除外。",
+      "卡片上的“仅允许这一次”现在会像它说的那样，只为这一次调用运行一个已关闭的工具；以前这次调用会失败。之后工具仍保持关闭。",
+      "以 Documents、Desktop 或 Downloads 开头的路径，现在会指向你主文件夹里的那个文件夹，而不是在桌面上新建一个同名文件夹。主文件夹里隐藏文件夹中的文件，无论怎样访问主文件夹，都依然被拒绝。",
+      "在 Windows 和 Linux 上，Vunemi 现在可以移动文件，绝不覆盖其他文件；Windows 有了听写，Linux 可以朗读回答。哪个系统能用什么，见下载页。"
     ],
     "ja": [
-      "新機能:トピックのない会話でウェブを調べると、Vunemi は答え、読んだアドレス、残した項目を一時的なトピックにまとめ、名前を変えて残すか削除するかをたずねます。",
-      "長い検索ではページ全体がモデルの記憶をふさぎ、見つけたものが失われていたためです。いまはページの本文だけを読み、古い手順は短くなるので、長い検索も収まります。削除すれば何も残らず、答えは会話に残ります。",
-      "ウェブのカードを少なく:ふつうのリンクとサイトの検索ボックスは読むことと見なされます。「すべて承認」はタスクが終わるまで 1 つのサイトだけをまかない、信頼済みのサイトはタスクごとに 1 回の承認で済みます。データを送るフォーム、送信、削除は今まで通りたずねます。",
-      "トピックは、依頼が日常的な依頼よりもそのトピックに近いときだけ提案されます。ページ自身のスクリプトが、データを送るフォームを検索に見せかけることもできなくなりました。"
+      "Vunemi 0.5.1 は Mac、Windows、Linux 向けに同じ日に、同じコードから公開されます。今後、新しい機能は Mac にしかないものを除き、3 つすべてに届きます。",
+      "カードの「今回だけ許可」は、オフにしたツールをその 1 回の呼び出しだけ、表示どおり実行するようになりました。以前は呼び出しが失敗していました。ツールはその後もオフのままです。",
+      "Documents、Desktop、Downloads で始まるパスは、デスクトップに同じ名前の新しいフォルダーを作らず、ホームフォルダーのそのフォルダーを指すようになりました。ホームフォルダー内の隠しフォルダーのファイルは、どのようにたどっても拒否されます。",
+      "Windows と Linux でファイルを移動できるようになりました。ほかのファイルを上書きすることはありません。Windows では音声入力、Linux では回答の読み上げが使えます。どこで何が使えるかはダウンロードページにあります。"
     ],
     "ko": [
-      "새 기능: 주제가 없는 대화에서 웹을 찾아보면 Vunemi가 답변, 읽은 주소, 남긴 항목을 임시 주제에 모으고, 이름을 바꿔 유지할지 삭제할지 묻습니다.",
-      "긴 검색에서 페이지 전체가 모델의 기억을 채워 찾은 내용을 잃었기 때문에 만들었습니다. 이제 페이지는 본문만 읽고 오래된 단계는 줄여서 긴 검색도 들어맞습니다. 삭제하시면 아무것도 남지 않으며 답변은 대화에 남습니다.",
-      "웹의 카드를 줄였습니다: 일반 링크와 사이트의 검색 상자는 읽기로 간주됩니다. 모두 승인은 작업이 끝날 때까지 한 사이트만 다루고, 신뢰하는 사이트는 작업마다 한 번만 승인하시면 됩니다. 데이터를 보내는 양식, 보내기, 삭제는 여전히 묻습니다.",
-      "주제는 요청이 일상적인 요청보다 그 주제에 더 가까울 때만 제안됩니다. 페이지의 스크립트가 데이터를 보내는 양식을 검색처럼 보이게 할 수도 없게 되었습니다."
+      "Vunemi 0.5.1은 Mac, Windows, Linux용으로 같은 날, 같은 코드에서 나옵니다. 이제부터 새 기능은 Mac에만 있는 것을 빼고 세 곳 모두에 들어갑니다.",
+      "카드의 '이번만 허용'은 이제 꺼 둔 도구를 그 한 번의 호출에 한해 표시된 대로 실행합니다. 전에는 호출이 실패했습니다. 도구는 그 후에도 꺼진 상태로 있습니다.",
+      "Documents, Desktop 또는 Downloads로 시작하는 경로는 이제 데스크탑에 같은 이름의 새 폴더를 만들지 않고 홈 폴더의 해당 폴더로 갑니다. 홈 폴더 안 숨김 폴더의 파일은 홈 폴더에 어떻게 접근하든 거부됩니다.",
+      "Windows와 Linux에서 Vunemi는 이제 파일을 옮기며 다른 파일을 덮어쓰지 않습니다. Windows에는 받아쓰기, Linux에는 답변 읽어 주기가 추가되었습니다. 어디서 무엇이 되는지는 다운로드 페이지에 있습니다."
     ]
   }
 }

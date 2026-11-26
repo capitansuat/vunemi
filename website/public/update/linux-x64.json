@@ -1,53 +1,53 @@
 {
-  "currentRelease": "0.5.0",
+  "currentRelease": "0.5.1",
   "releases": [
     {
-      "version": "0.5.0",
+      "version": "0.5.1",
       "updateTo": {
-        "version": "0.5.0",
-        "name": "Vunemi 0.5.0",
+        "version": "0.5.1",
+        "name": "Vunemi 0.5.1",
         "pub_date": "2026-11-26T00:00:00Z",
         "notes": "",
-        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.5.0-linux.1/Vunemi-0.5.0-linux-x86_64.AppImage",
-        "sha256": "6832d3e6b50c89d3c98d7ce19ac3532e3737f49a912bcfe10b03384d0c64a84e",
-        "signature": "ZWK1HEBDPWcStrk+rj7AYC8ANWKfxvuBOvETnI8EONVt4VGcyv23+kkyhz5e6T9Nd5g7WPTrb9f8+GZjbvGHCg=="
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.5.1-linux.1/Vunemi-0.5.1-linux-x86_64.AppImage",
+        "sha256": "5c8868a9fb703f0210d52c7bf27b4a8d53a00632e169742010b433241abf36eb",
+        "signature": "khoe/AIr3NeUYmWHTv88S4wIoFpf1dF/LTq2dbyw4F5BXWgOXJXb3hV8bFyefYAYilYxP+iASegcYHlW8uNtCQ=="
       }
     }
   ],
-  "sizeMb": 127,
+  "sizeMb": 133,
   "notes": {
     "en": [
-      "Linux for x64 and ARM; the AppImage now updates itself."
+      "Moving files, and voice chat reads answers aloud with a voice that comes with the app."
     ],
     "de": [
-      "Linux für x64 und ARM; das AppImage aktualisiert sich jetzt selbst."
+      "Dateien verschieben, und der Sprachchat liest Antworten mit einer Stimme vor, die mit der App kommt."
     ],
     "es": [
-      "Linux para x64 y ARM; el AppImage ahora se actualiza solo."
+      "Mover archivos, y el chat de voz lee las respuestas con una voz que viene con la app."
     ],
     "fr": [
-      "Linux pour x64 et ARM ; l’AppImage se met désormais à jour toute seule."
+      "Le déplacement de fichiers, et la discussion vocale lit les réponses avec une voix fournie avec l’app."
     ],
     "it": [
-      "Linux per x64 e ARM; l’AppImage ora si aggiorna da sola."
+      "Lo spostamento dei file, e la chat vocale legge le risposte con una voce inclusa nell’app."
     ],
     "tr": [
-      "x64 ve ARM için Linux; AppImage artık kendini güncelliyor."
+      "Dosya taşıma; sesli sohbet de cevapları uygulamayla gelen bir sesle okuyor."
     ],
     "pt": [
-      "Linux para x64 e ARM; o AppImage agora se atualiza sozinho."
+      "Mover arquivos, e o chat por voz lê as respostas com uma voz que vem com o app."
     ],
     "ru": [
-      "Linux для x64 и ARM; AppImage теперь обновляется сам."
+      "Перемещение файлов, а голосовой чат читает ответы голосом, который поставляется с приложением."
     ],
     "zh": [
-      "支持 x64 和 ARM 的 Linux 版；AppImage 现在会自己更新。"
+      "移动文件，语音聊天用随应用提供的语音朗读回答。"
     ],
     "ja": [
-      "x64 と ARM の Linux 版。AppImage が自動でアップデートするようになりました。"
+      "ファイルの移動に加え、ボイスチャットがアプリ同梱の音声で回答を読み上げます。"
     ],
     "ko": [
-      "x64와 ARM용 Linux, 이제 AppImage가 스스로 업데이트합니다."
+      "파일 이동, 그리고 음성 채팅이 앱에 포함된 음성으로 답변을 읽어 줍니다."
     ]
   }
 }

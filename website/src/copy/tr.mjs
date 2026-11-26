@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: Mac'inde çalışan kişisel asistan", description: "Vunemi günlük işlerde yardımcı olur. Yapay zekâ Mac'inde çalışır; Vunemi bulut hesabı gerekmez. Hangi dış hizmetlere bağlanacağını sen seçersin." },
-    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.5.0'ın yapabildiği her şey." },
+    features: { title: "Vunemi neler yapar?", description: "E-posta, takvim, dosyalar, web ve Mac uygulamaların; onay kartları, geri alma ve kesin sınırlarla. Vunemi 0.5.1'in yapabildiği her şey." },
     screens: { title: "Vunemi ekranları", description: "Mac için Vunemi uygulamasından, örnek verilerle çekilmiş gerçek ekranlar." },
-    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.5.0'ı Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
+    download: { title: "Vunemi'yi Mac için indir", description: "Vunemi 0.5.1'i Apple Silicon ve macOS 14 veya sonrası için indir. Ücretsiz ve açık kaynak." },
   },
   hero: {
     eyebrow: "Mac için kişisel asistan",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi'nin yapabildiği her şey",
-    intro: "Ayrıntılarıyla Vunemi 0.5.0: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
+    intro: "Ayrıntılarıyla Vunemi 0.5.1: onunla nasıl çalışırsın, nelere bağlanabilir ve kontrol nasıl sende kalır.",
     chatTitle: "Vunemi ile çalışmak",
     chat: [
       { title: "Önce plan", body: "Birkaç adımlı bir işte Vunemi önce planı gösterebilir. Devam et, adımları düzenle ya da iptal et." },
@@ -193,10 +193,10 @@ export default {
     intro: "Ücretsiz ve açık kaynak. Apple Silicon ve macOS 14 veya sonrası olan Mac'ler için.",
     highlightsTitle: "Bu sürümde neler yeni?",
     highlights: [
-      "Yeni: konusu olmayan bir sohbet web'de bir şey aradığında Vunemi cevabı, okuduğu adresleri ve tuttuğu öğeleri geçici bir konuda toplar; sonra adını değiştirebileceğin şekilde tutmak mı, silmek mi istediğini sorar.",
-      "Bu, uzun bir aramada sayfaların tamamı modelin belleğini doldurup bulduklarını kaybettirdiği için var. Sayfalar artık ana içerikleriyle okunuyor, eski adımlar kısalıyor; uzun bir arama sığmaya devam ediyor. Sil dersen hiçbir şey kalmaz; cevap sohbette durur.",
-      "Web'de daha az kart: sıradan bağlantılar ve bir sitenin arama kutusu okuma sayılıyor. Hepsini onayla, iş bitene kadar tek bir siteyi kapsıyor; güvendiğin bir site her işte tek onay istiyor. Veri gönderen formlar, gönderme ve silme yine soruyor.",
-      "Bir konu artık yalnızca istek ona gündelik isteklerden daha yakınsa öneriliyor; bir sayfanın kendi betikleri de veri gönderen bir formu arama gibi gösteremiyor.",
+      "Vunemi 0.5.1 Mac, Windows ve Linux için aynı gün, aynı koddan çıkıyor. Bundan sonra her yeni özellik, yalnız Mac'te olanlar dışında, üçüne birden geliyor.",
+      "Karttaki “Yalnız bu sefer izin ver” artık kapalı bir aracı, dediği gibi o tek çağrı için çalıştırıyor; önceden çağrı başarısız oluyordu. Araç sonra yine kapalı kalır.",
+      "Documents, Desktop ya da Downloads ile başlayan bir yol artık ana klasöründeki o klasöre gidiyor, Masaüstü'nde o adla yeni bir klasöre değil. Ana klasördeki gizli bir klasörün dosyası, ana klasöre nasıl ulaşılırsa ulaşılsın reddediliyor.",
+      "Windows ve Linux'ta Vunemi artık dosya taşıyor, hiçbir dosyanın üzerine yazmadan; Windows'a dikte, Linux'a cevapları sesli okuma geldi. Hangisinde neyin çalıştığı indirme sayfasında.",
     ],
     requirementsTitle: "Gerekenler",
     requirements: ["Apple Silicon'lu bir Mac (M1 veya sonrası)", "macOS 14 veya sonrası", "Model için yer: uygulama her modelin boyutunu indirmeden önce gösterir"],

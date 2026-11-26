@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi：在你的 Mac 上运行的个人助理", description: "Vunemi 帮你处理日常事务。AI 在你的 Mac 上运行，无需 Vunemi 云账号；由你选择要连接的外部服务。" },
-    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.5.0 的全部功能。" },
+    features: { title: "Vunemi 能做什么", description: "邮件、日历、文件、网页和 Mac 应用，配有确认卡片、撤销功能和明确的限制。Vunemi 0.5.1 的全部功能。" },
     screens: { title: "Vunemi 应用画面", description: "Mac 版 Vunemi 的真实画面，使用示例数据截取。" },
-    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.5.0，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
+    download: { title: "下载 Mac 版 Vunemi", description: "下载 Vunemi 0.5.1，适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。免费且开源。" },
   },
   hero: {
     eyebrow: "Mac 上的个人助理",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi 的全部功能",
-    intro: "详细了解 Vunemi 0.5.0：如何与它协作、它能连接什么，以及你如何保持掌控。",
+    intro: "详细了解 Vunemi 0.5.1：如何与它协作、它能连接什么，以及你如何保持掌控。",
     chatTitle: "与 Vunemi 协作",
     chat: [
       { title: "先看计划", body: "遇到需要多个步骤的任务，Vunemi 可以先给出计划。你可以开始执行、编辑步骤或取消。" },
@@ -191,10 +191,10 @@ export default {
   downloadPage: {
     highlightsTitle: "本次更新",
     highlights: [
-      "新功能：没有主题的对话在网上查找时，Vunemi 会把回答、读过的地址和保留的条目收集到一个临时主题里，然后问你是保留它（名称可改）还是删除它。",
-      "之所以有它，是因为长时间的搜索会让整页内容塞满模型的记忆，丢掉已找到的东西。现在页面只读取正文，较早的步骤会被缩短，长时间的查找也放得下。选择删除就什么都不留，回答仍在对话里。",
-      "网页上的卡片更少了：普通链接和网站的搜索框算作读取。“全部批准”在任务结束前只覆盖一个网站，可信网站每个任务只需批准一次。发送数据的表单、发送和删除仍会询问。",
-      "只有当请求离某个主题比离日常请求更近时，才会建议该主题；页面自己的脚本也不能再把发送数据的表单伪装成搜索。",
+      "Vunemi 0.5.1 在同一天、用同一份代码发布到 Mac、Windows 和 Linux。从现在起，每个新功能都会同时来到这三个系统，只有 Mac 才有的功能除外。",
+      "卡片上的“仅允许这一次”现在会像它说的那样，只为这一次调用运行一个已关闭的工具；以前这次调用会失败。之后工具仍保持关闭。",
+      "以 Documents、Desktop 或 Downloads 开头的路径，现在会指向你主文件夹里的那个文件夹，而不是在桌面上新建一个同名文件夹。主文件夹里隐藏文件夹中的文件，无论怎样访问主文件夹，都依然被拒绝。",
+      "在 Windows 和 Linux 上，Vunemi 现在可以移动文件，绝不覆盖其他文件；Windows 有了听写，Linux 可以朗读回答。哪个系统能用什么，见下载页。",
     ],
     title: "下载 Vunemi",
     intro: "免费且开源。适用于搭载 Apple 芯片、运行 macOS 14 或更高版本的 Mac。",

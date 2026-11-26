@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi : un assistant personnel qui fonctionne sur votre Mac", description: "Vunemi aide au quotidien. Son IA fonctionne sur votre Mac, sans compte cloud Vunemi. Vous choisissez les services externes à connecter." },
-    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.5.0." },
+    features: { title: "Ce que fait Vunemi", description: "E-mail, calendrier, fichiers, web et vos apps Mac, avec cartes d'approbation, annulation et limites strictes. Tout ce que sait faire Vunemi 0.5.1." },
     screens: { title: "Captures de Vunemi", description: "De vraies captures de l'app Vunemi pour Mac, réalisées avec des données d'exemple." },
-    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.5.0 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
+    download: { title: "Télécharger Vunemi pour Mac", description: "Téléchargez Vunemi 0.5.1 pour Mac avec puce Apple et macOS 14 ou ultérieur. Gratuit et open source." },
   },
   hero: {
     eyebrow: "Assistant personnel pour Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tout ce que Vunemi sait faire",
-    intro: "Vunemi 0.5.0 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
+    intro: "Vunemi 0.5.1 en détail : comment travailler avec lui, à quoi il peut se connecter et comment vous gardez le contrôle.",
     chatTitle: "Travailler avec Vunemi",
     chat: [
       { title: "D'abord le plan", body: "Pour une tâche en plusieurs étapes, Vunemi peut d'abord présenter son plan. Lancez-le, modifiez les étapes ou annulez." },
@@ -191,10 +191,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Nouveautés de cette version",
     highlights: [
-      "Nouveau : quand une conversation sans sujet cherche quelque chose sur le web, Vunemi rassemble la réponse, les adresses lues et les éléments gardés dans un sujet temporaire, puis vous demande de le conserver, sous un nom modifiable, ou de le supprimer.",
-      "Cela existe parce qu’une longue recherche remplissait la mémoire du modèle de pages entières et perdait ce qu’il avait trouvé. Les pages sont lues par leur contenu principal et les anciennes étapes raccourcies. Supprimer n’en garde rien ; la réponse reste dans le chat.",
-      "Moins de cartes sur le web : les liens ordinaires et le champ de recherche d’un site comptent comme lecture. Tout approuver couvre un site jusqu’à la fin de la tâche ; un site fiable demande une approbation par tâche. Formulaires, envois et suppressions demandent.",
-      "Un sujet n’est proposé que si la demande en est plus proche que des demandes courantes, et les scripts d’une page ne peuvent plus faire passer un formulaire qui envoie des données pour une recherche.",
+      "Vunemi 0.5.1 sort le même jour pour Mac, Windows et Linux, à partir du même code. Désormais, chaque nouvelle fonction arrive sur les trois, sauf ce que seul un Mac possède.",
+      "« Autoriser cette fois seulement » sur une carte exécute désormais un outil désactivé pour ce seul appel, comme annoncé ; avant, l’appel échouait. L’outil reste désactivé ensuite.",
+      "Un chemin qui commence par Documents, Desktop ou Downloads mène désormais à ce dossier de votre dossier personnel, et non à un nouveau dossier du même nom sur le Bureau. Un fichier d’un dossier caché de votre dossier personnel reste refusé, quel que soit le chemin.",
+      "Sous Windows et Linux, Vunemi déplace désormais des fichiers, jamais par-dessus un autre ; Windows reçoit la dictée et Linux lit les réponses à voix haute. La page de téléchargement dit ce qui marche où.",
     ],
     title: "Télécharger Vunemi",
     intro: "Gratuit et open source. Pour les Mac avec puce Apple et macOS 14 ou ultérieur.",

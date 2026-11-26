@@ -15,7 +15,7 @@ export const linuxCopy = {
     appImageButton: "Download AppImage",
     archNames: {"x64": "x64", "arm64": "ARM (arm64)"},
     notes: "Linux release notes",
-    updateNotes: ["Linux for x64 and ARM; the AppImage now updates itself."],
+    updateNotes: ["Moving files, and voice chat reads answers aloud with a voice that comes with the app."],
   },
   de: {
     title: "Vunemi für Linux (Vorschau)",
@@ -31,7 +31,7 @@ export const linuxCopy = {
     appImageButton: "Download AppImage",
     archNames: {"x64": "x64", "arm64": "ARM (arm64)"},
     notes: "Linux-Versionshinweise",
-    updateNotes: ["Linux für x64 und ARM; das AppImage aktualisiert sich jetzt selbst."],
+    updateNotes: ["Dateien verschieben, und der Sprachchat liest Antworten mit einer Stimme vor, die mit der App kommt."],
   },
   es: {
     title: "Vunemi para Linux (versión preliminar)",
@@ -47,7 +47,7 @@ export const linuxCopy = {
     appImageButton: "Descargar AppImage",
     archNames: {"x64": "x64", "arm64": "ARM (arm64)"},
     notes: "Notas de la versión para Linux",
-    updateNotes: ["Linux para x64 y ARM; el AppImage ahora se actualiza solo."],
+    updateNotes: ["Mover archivos, y el chat de voz lee las respuestas con una voz que viene con la app."],
   },
   fr: {
     title: "Vunemi pour Linux (préversion)",
@@ -63,7 +63,7 @@ export const linuxCopy = {
     appImageButton: "Télécharger l’AppImage",
     archNames: {"x64": "x64", "arm64": "ARM (arm64)"},
     notes: "Notes de version Linux",
-    updateNotes: ["Linux pour x64 et ARM ; l’AppImage se met désormais à jour toute seule."],
+    updateNotes: ["Le déplacement de fichiers, et la discussion vocale lit les réponses avec une voix fournie avec l’app."],
   },
   it: {
     title: "Vunemi per Linux (anteprima)",
@@ -79,7 +79,7 @@ export const linuxCopy = {
     appImageButton: "Scarica l’AppImage",
     archNames: {"x64": "x64", "arm64": "ARM (arm64)"},
     notes: "Note di rilascio per Linux",
-    updateNotes: ["Linux per x64 e ARM; l’AppImage ora si aggiorna da sola."],
+    updateNotes: ["Lo spostamento dei file, e la chat vocale legge le risposte con una voce inclusa nell’app."],
   },
   tr: {
     title: "Linux için Vunemi (önizleme)",
@@ -95,7 +95,7 @@ export const linuxCopy = {
     appImageButton: "AppImage indir",
     archNames: {"x64": "x64", "arm64": "ARM (arm64)"},
     notes: "Linux sürüm notları",
-    updateNotes: ["x64 ve ARM için Linux; AppImage artık kendini güncelliyor."],
+    updateNotes: ["Dosya taşıma; sesli sohbet de cevapları uygulamayla gelen bir sesle okuyor."],
   },
   pt: {
     title: "Vunemi para Linux (prévia)",
@@ -111,7 +111,7 @@ export const linuxCopy = {
     appImageButton: "Baixar AppImage",
     archNames: {"x64": "x64", "arm64": "ARM (arm64)"},
     notes: "Notas da versão para Linux",
-    updateNotes: ["Linux para x64 e ARM; o AppImage agora se atualiza sozinho."],
+    updateNotes: ["Mover arquivos, e o chat por voz lê as respostas com uma voz que vem com o app."],
   },
   ru: {
     title: "Vunemi для Linux (предварительная версия)",
@@ -127,7 +127,7 @@ export const linuxCopy = {
     appImageButton: "Скачать AppImage",
     archNames: {"x64": "x64", "arm64": "ARM (arm64)"},
     notes: "Примечания к выпуску для Linux",
-    updateNotes: ["Linux для x64 и ARM; AppImage теперь обновляется сам."],
+    updateNotes: ["Перемещение файлов, а голосовой чат читает ответы голосом, который поставляется с приложением."],
   },
   zh: {
     title: "Vunemi Linux 版（预览）",
@@ -143,7 +143,7 @@ export const linuxCopy = {
     appImageButton: "下载 AppImage",
     archNames: {"x64": "x64", "arm64": "ARM（arm64）"},
     notes: "Linux 版发布说明",
-    updateNotes: ["支持 x64 和 ARM 的 Linux 版；AppImage 现在会自己更新。"],
+    updateNotes: ["移动文件，语音聊天用随应用提供的语音朗读回答。"],
   },
   ja: {
     title: "Linux 版 Vunemi（プレビュー）",
@@ -159,7 +159,7 @@ export const linuxCopy = {
     appImageButton: "AppImage をダウンロード",
     archNames: {"x64": "x64", "arm64": "ARM（arm64）"},
     notes: "Linux 版リリースノート",
-    updateNotes: ["x64 と ARM の Linux 版。AppImage が自動でアップデートするようになりました。"],
+    updateNotes: ["ファイルの移動に加え、ボイスチャットがアプリ同梱の音声で回答を読み上げます。"],
   },
   ko: {
     title: "Linux용 Vunemi(미리 보기)",
@@ -175,6 +175,6 @@ export const linuxCopy = {
     appImageButton: "AppImage 다운로드",
     archNames: {"x64": "x64", "arm64": "ARM(arm64)"},
     notes: "Linux 릴리스 노트",
-    updateNotes: ["x64와 ARM용 Linux, 이제 AppImage가 스스로 업데이트합니다."],
+    updateNotes: ["파일 이동, 그리고 음성 채팅이 앱에 포함된 음성으로 답변을 읽어 줍니다."],
   },
 };

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: un assistente personale che funziona sul tuo Mac", description: "Vunemi aiuta nelle attività quotidiane. L’IA funziona sul tuo Mac, senza account cloud Vunemi. Scegli tu quali servizi esterni collegare." },
-    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.5.0." },
+    features: { title: "Cosa fa Vunemi", description: "Email, calendario, file, web e le tue app per Mac, con schede di approvazione, annulla e limiti precisi. Tutto ciò che fa Vunemi 0.5.1." },
     screens: { title: "Schermate di Vunemi", description: "Schermate reali dell'app Vunemi per Mac, catturate con dati di esempio." },
-    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.5.0 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
+    download: { title: "Scarica Vunemi per Mac", description: "Scarica Vunemi 0.5.1 per Mac con Apple Silicon e macOS 14 o successivo. Gratuito e open source." },
   },
   hero: {
     eyebrow: "Assistente personale per Mac",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Tutto ciò che Vunemi sa fare",
-    intro: "Vunemi 0.5.0 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
+    intro: "Vunemi 0.5.1 nel dettaglio: come lavori con lui, a cosa si collega e come mantieni il controllo.",
     chatTitle: "Lavorare con Vunemi",
     chat: [
       { title: "Prima il piano", body: "Per un'attività con più passaggi, Vunemi può mostrarti prima il piano. Vai avanti, modifica i passaggi o annulla." },
@@ -191,10 +191,10 @@ export default {
   downloadPage: {
     highlightsTitle: "Novità di questa versione",
     highlights: [
-      "Novità: quando una conversazione senza argomento cerca qualcosa sul web, Vunemi raccoglie la risposta, gli indirizzi letti e gli elementi tenuti in un argomento temporaneo, poi ti chiede se conservarlo, con un nome che puoi cambiare, o eliminarlo.",
-      "Esiste perché una ricerca lunga riempiva la memoria del modello di pagine intere e perdeva ciò che aveva trovato. Ora le pagine si leggono nel contenuto principale e i passi vecchi si accorciano. Con Elimina non resta nulla; la risposta resta nella chat.",
-      "Meno schede sul web: i link normali e la casella di ricerca di un sito contano come lettura. Approva tutto copre un sito fino alla fine dell’attività; un sito attendibile chiede un’approvazione per attività. Moduli, invii ed eliminazioni chiedono ancora.",
-      "Un argomento viene proposto solo se la richiesta gli è più vicina che alle richieste quotidiane, e gli script di una pagina non possono più far passare per ricerca un modulo che invia dati.",
+      "Vunemi 0.5.1 esce lo stesso giorno per Mac, Windows e Linux, dallo stesso codice. Da ora ogni nuova funzione arriva su tutti e tre, tranne ciò che ha solo un Mac.",
+      "«Consenti solo questa volta» su una scheda ora esegue uno strumento disattivato per quell’unica chiamata, come dice; prima la chiamata non riusciva. Lo strumento resta poi disattivato.",
+      "Un percorso che inizia con Documents, Desktop o Downloads ora porta a quella cartella della tua cartella Inizio, non a una nuova cartella con quel nome sulla Scrivania. Un file in una cartella nascosta della tua cartella Inizio resta rifiutato, comunque ci si arrivi.",
+      "Su Windows e Linux Vunemi ora sposta i file, mai sopra un altro; Windows riceve la dettatura e Linux legge le risposte ad alta voce. La pagina di download dice cosa funziona dove.",
     ],
     title: "Scarica Vunemi",
     intro: "Gratuito e open source. Per Mac con Apple Silicon e macOS 14 o successivo.",

@@ -28,9 +28,9 @@ export default {
   },
   meta: {
     home: { title: "Vunemi: 내 Mac에서 실행되는 개인 비서", description: "Vunemi는 일상 업무를 돕습니다. AI는 Mac에서 실행되며 Vunemi 클라우드 계정이 필요 없습니다. 연결할 외부 서비스를 직접 선택합니다." },
-    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.5.0의 모든 기능입니다." },
+    features: { title: "Vunemi가 하는 일", description: "이메일, 캘린더, 파일, 웹, Mac 앱까지. 승인 카드, 실행 취소, 분명한 한계와 함께. Vunemi 0.5.1의 모든 기능입니다." },
     screens: { title: "Vunemi 화면", description: "Mac용 Vunemi 앱의 실제 화면으로, 샘플 데이터로 촬영했습니다." },
-    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.5.0을 다운로드하세요. 무료 오픈 소스입니다." },
+    download: { title: "Mac용 Vunemi 다운로드", description: "Apple 실리콘, macOS 14 이상 Mac용 Vunemi 0.5.1을 다운로드하세요. 무료 오픈 소스입니다." },
   },
   hero: {
     eyebrow: "Mac을 위한 개인 비서",
@@ -118,7 +118,7 @@ export default {
   },
   featuresPage: {
     title: "Vunemi가 할 수 있는 모든 것",
-    intro: "Vunemi 0.5.0 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
+    intro: "Vunemi 0.5.1 자세히 보기: 함께 일하는 방법, 연결할 수 있는 것, 그리고 주도권을 지키는 방법.",
     chatTitle: "Vunemi와 함께 일하기",
     chat: [
       { title: "계획 먼저", body: "여러 단계가 필요한 작업이면 Vunemi가 먼저 계획을 보여 줄 수 있습니다. 진행하거나, 단계를 고치거나, 취소하세요." },
@@ -191,10 +191,10 @@ export default {
   downloadPage: {
     highlightsTitle: "이번 버전의 새로운 기능",
     highlights: [
-      "새 기능: 주제가 없는 대화에서 웹을 찾아보면 Vunemi가 답변, 읽은 주소, 남긴 항목을 임시 주제에 모으고, 이름을 바꿔 유지할지 삭제할지 묻습니다.",
-      "긴 검색에서 페이지 전체가 모델의 기억을 채워 찾은 내용을 잃었기 때문에 만들었습니다. 이제 페이지는 본문만 읽고 오래된 단계는 줄여서 긴 검색도 들어맞습니다. 삭제하시면 아무것도 남지 않으며 답변은 대화에 남습니다.",
-      "웹의 카드를 줄였습니다: 일반 링크와 사이트의 검색 상자는 읽기로 간주됩니다. 모두 승인은 작업이 끝날 때까지 한 사이트만 다루고, 신뢰하는 사이트는 작업마다 한 번만 승인하시면 됩니다. 데이터를 보내는 양식, 보내기, 삭제는 여전히 묻습니다.",
-      "주제는 요청이 일상적인 요청보다 그 주제에 더 가까울 때만 제안됩니다. 페이지의 스크립트가 데이터를 보내는 양식을 검색처럼 보이게 할 수도 없게 되었습니다.",
+      "Vunemi 0.5.1은 Mac, Windows, Linux용으로 같은 날, 같은 코드에서 나옵니다. 이제부터 새 기능은 Mac에만 있는 것을 빼고 세 곳 모두에 들어갑니다.",
+      "카드의 '이번만 허용'은 이제 꺼 둔 도구를 그 한 번의 호출에 한해 표시된 대로 실행합니다. 전에는 호출이 실패했습니다. 도구는 그 후에도 꺼진 상태로 있습니다.",
+      "Documents, Desktop 또는 Downloads로 시작하는 경로는 이제 데스크탑에 같은 이름의 새 폴더를 만들지 않고 홈 폴더의 해당 폴더로 갑니다. 홈 폴더 안 숨김 폴더의 파일은 홈 폴더에 어떻게 접근하든 거부됩니다.",
+      "Windows와 Linux에서 Vunemi는 이제 파일을 옮기며 다른 파일을 덮어쓰지 않습니다. Windows에는 받아쓰기, Linux에는 답변 읽어 주기가 추가되었습니다. 어디서 무엇이 되는지는 다운로드 페이지에 있습니다.",
     ],
     title: "Vunemi 다운로드",
     intro: "무료 오픈 소스. Apple 실리콘, macOS 14 이상 Mac용입니다.",
