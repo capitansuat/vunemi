@@ -8,8 +8,8 @@ export const windowsCopy = {
   en: {
     title: "Vunemi for Windows (preview)",
     why: "Vunemi was for Macs only. This first Windows build lets you use it on a Windows 11 computer and find out what doesn't work yet. It is a preview: it was tried on Windows 11 on ARM in a virtual machine, and the x64 build only under emulation there, not yet on a real PC. The Mac app doesn't change for it.",
-    works: "On Windows you get chat and tasks with the files in the folders you open, local models through the built-in engine, Ollama or LM Studio, the vault (Windows keeps its key for your account), the Recycle Bin, and updates from inside the app.",
-    missing: "Not on Windows yet: controlling apps and the desktop, moving files, archive tools, dictation, voice chat and reading answers aloud, meeting recording, scheduled work, add-ons and app lock. Shortcuts, Calendar and Apple Mail are Mac apps and stay on the Mac.",
+    works: "On Windows you get chat and tasks with the files in the folders you open, local models through the built-in engine, Ollama or LM Studio, dictation and voice chat, moving files, the vault (Windows keeps its key for your account), the Recycle Bin, and updates from inside the app. Dictation turns what you say into text on your computer, without sending it anywhere; voice chat reads the answers aloud with Windows' own voices. Without them, you type and read as before. Moving files moves only the file you approved and never replaces another file; without it, Vunemi still reads, writes and copies files.",
+    missing: "Not on Windows yet: controlling apps and the desktop, archive tools, meeting recording, scheduled work, add-ons and app lock. Shortcuts, Calendar and Apple Mail are Mac apps and stay on the Mac.",
     smartTitle: "Windows warns you the first time",
     smartWhy: "The installer isn't signed with a paid code-signing certificate, so Microsoft Defender SmartScreen says it doesn't know the publisher. It may warn again when an update installs.",
     smartSteps: [
@@ -35,8 +35,8 @@ export const windowsCopy = {
   tr: {
     title: "Windows için Vunemi (önizleme)",
     why: "Vunemi yalnız Mac içindi. Bu ilk Windows sürümüyle onu bir Windows 11 bilgisayarda kullanabilir, neyin henüz çalışmadığını görebilirsin. Bir önizleme: ARM üzerinde Windows 11'de, sanal makinede denendi; x64 sürümü yalnız orada öykünmeyle denendi, henüz gerçek bir bilgisayarda değil. Mac uygulaması bunun için değişmiyor.",
-    works: "Windows'ta sohbet ve açtığın klasörlerdeki dosyalarla görevler, yerleşik motor, Ollama ya da LM Studio ile yerel modeller, kasa (anahtarını Windows senin hesabın için saklar), Geri Dönüşüm Kutusu ve uygulamanın içinden güncelleme var.",
-    missing: "Windows'ta henüz yok: uygulamaları ve masaüstünü yönetme, dosya taşıma, arşiv araçları, sesle yazdırma, sesli sohbet ve cevapları sesli okuma, toplantı kaydı, zamanlı görevler, eklentiler ve uygulama kilidi. Kestirmeler, Takvim ve Apple Mail Mac uygulamaları; Mac'te kalıyor.",
+    works: "Windows'ta sohbet ve açtığın klasörlerdeki dosyalarla görevler, yerleşik motor, Ollama ya da LM Studio ile yerel modeller, sesle yazdırma ve sesli sohbet, dosya taşıma, kasa (anahtarını Windows senin hesabın için saklar), Geri Dönüşüm Kutusu ve uygulamanın içinden güncelleme var. Sesle yazdırma söylediğini bilgisayarında, hiçbir yere göndermeden yazıya çevirir; sesli sohbet cevapları Windows'un kendi sesleriyle okur. Bunlar olmadan da eskisi gibi yazar ve okursun. Dosya taşıma yalnız onayladığın dosyayı taşır ve hiçbir dosyanın üzerine yazmaz; onsuz da Vunemi dosyaları okur, yazar ve kopyalar.",
+    missing: "Windows'ta henüz yok: uygulamaları ve masaüstünü yönetme, arşiv araçları, toplantı kaydı, zamanlı görevler, eklentiler ve uygulama kilidi. Kestirmeler, Takvim ve Apple Mail Mac uygulamaları; Mac'te kalıyor.",
     smartTitle: "Windows ilk seferde uyarır",
     smartWhy: "Kurulum dosyası ücretli bir kod imzalama sertifikasıyla imzalı değil; bu yüzden Microsoft Defender SmartScreen yayımcıyı tanımadığını söyler. Bir güncelleme kurulurken yeniden uyarabilir.",
     smartSteps: [
@@ -62,8 +62,8 @@ export const windowsCopy = {
   de: {
     title: "Vunemi für Windows (Vorschau)",
     why: "Vunemi gab es bisher nur für den Mac. Mit diesem ersten Windows-Build kannst du es auf einem Windows-11-Rechner nutzen und herausfinden, was noch nicht funktioniert. Es ist eine Vorschau: Getestet wurde Windows 11 auf ARM in einer virtuellen Maschine, der x64-Build dort nur in Emulation, noch nicht auf einem echten PC. Die Mac-App ändert sich dadurch nicht.",
-    works: "Unter Windows hast du den Chat und Aufgaben mit den Dateien in den Ordnern, die du öffnest, lokale Modelle über die eingebaute Engine, Ollama oder LM Studio, den Tresor (Windows verwahrt seinen Schlüssel für dein Konto), den Papierkorb und Updates aus der App heraus.",
-    missing: "Noch nicht unter Windows: Apps und den Desktop steuern, Dateien verschieben, Archivwerkzeuge, Diktieren, Sprachchat und Vorlesen der Antworten, Besprechungen aufnehmen, geplante Aufgaben, Erweiterungen und App-Sperre. Kurzbefehle, Kalender und Apple Mail sind Mac-Apps und bleiben auf dem Mac.",
+    works: "Unter Windows hast du den Chat und Aufgaben mit den Dateien in den Ordnern, die du öffnest, lokale Modelle über die eingebaute Engine, Ollama oder LM Studio, Diktieren und Sprachchat, Dateien verschieben, den Tresor (Windows verwahrt seinen Schlüssel für dein Konto), den Papierkorb und Updates aus der App heraus. Diktieren macht aus dem, was du sagst, Text auf deinem Computer, ohne es irgendwohin zu schicken; der Sprachchat liest die Antworten mit den Stimmen von Windows vor. Ohne sie tippst und liest du wie bisher. Dateien verschieben bewegt nur die Datei, die du freigegeben hast, und ersetzt nie eine andere Datei; ohne es kann Vunemi Dateien trotzdem lesen, schreiben und kopieren.",
+    missing: "Noch nicht unter Windows: Apps und den Desktop steuern, Archivwerkzeuge, Besprechungen aufnehmen, geplante Aufgaben, Erweiterungen und App-Sperre. Kurzbefehle, Kalender und Apple Mail sind Mac-Apps und bleiben auf dem Mac.",
     smartTitle: "Windows warnt beim ersten Mal",
     smartWhy: "Das Installationsprogramm ist nicht mit einem kostenpflichtigen Codesignaturzertifikat signiert, deshalb meldet Microsoft Defender SmartScreen einen unbekannten Herausgeber. Bei einem Update kann die Warnung wieder kommen.",
     smartSteps: [
@@ -89,8 +89,8 @@ export const windowsCopy = {
   fr: {
     title: "Vunemi pour Windows (aperçu)",
     why: "Vunemi n'existait que pour Mac. Cette première version pour Windows vous permet de l'utiliser sur un ordinateur Windows 11 et de découvrir ce qui ne fonctionne pas encore. C'est un aperçu : il a été essayé sous Windows 11 sur ARM dans une machine virtuelle, la version x64 seulement en émulation, pas encore sur un vrai PC. L'app pour Mac ne change pas pour autant.",
-    works: "Sous Windows, vous avez la discussion et les tâches avec les fichiers des dossiers que vous ouvrez, les modèles locaux avec le moteur intégré, Ollama ou LM Studio, le coffre (Windows garde sa clé pour votre compte), la Corbeille et les mises à jour depuis l'app.",
-    missing: "Pas encore sous Windows : piloter les apps et le bureau, déplacer des fichiers, les outils d'archives, la dictée, la discussion vocale et la lecture des réponses à voix haute, l'enregistrement des réunions, les tâches planifiées, les modules et le verrouillage de l'app. Raccourcis, Calendrier et Apple Mail sont des apps Mac et restent sur Mac.",
+    works: "Sous Windows, vous avez la discussion et les tâches avec les fichiers des dossiers que vous ouvrez, les modèles locaux avec le moteur intégré, Ollama ou LM Studio, la dictée et la discussion vocale, le déplacement de fichiers, le coffre (Windows garde sa clé pour votre compte), la Corbeille et les mises à jour depuis l'app. La dictée transforme ce que vous dites en texte sur votre ordinateur, sans rien envoyer ailleurs ; la discussion vocale lit les réponses avec les voix de Windows. Sans elles, vous tapez et lisez comme avant. Le déplacement ne déplace que le fichier que vous avez approuvé et ne remplace jamais un autre fichier ; sans lui, Vunemi lit, écrit et copie toujours les fichiers.",
+    missing: "Pas encore sous Windows : piloter les apps et le bureau, les outils d'archives, l'enregistrement des réunions, les tâches planifiées, les modules et le verrouillage de l'app. Raccourcis, Calendrier et Apple Mail sont des apps Mac et restent sur Mac.",
     smartTitle: "Windows vous avertit la première fois",
     smartWhy: "Le programme d'installation n'est pas signé avec un certificat de signature de code payant : Microsoft Defender SmartScreen indique donc qu'il ne connaît pas l'éditeur. L'avertissement peut revenir lors d'une mise à jour.",
     smartSteps: [
@@ -116,8 +116,8 @@ export const windowsCopy = {
   es: {
     title: "Vunemi para Windows (versión preliminar)",
     why: "Vunemi solo existía para Mac. Esta primera versión para Windows te permite usarlo en un ordenador con Windows 11 y descubrir qué no funciona todavía. Es una versión preliminar: se probó con Windows 11 en ARM en una máquina virtual, y la versión x64 allí solo con emulación, todavía no en un PC real. La app para Mac no cambia por ello.",
-    works: "En Windows tienes el chat y las tareas con los archivos de las carpetas que abres, modelos locales con el motor integrado, Ollama o LM Studio, la bóveda (Windows guarda su clave para tu cuenta), la Papelera de reciclaje y las actualizaciones desde la app.",
-    missing: "Todavía no en Windows: controlar apps y el escritorio, mover archivos, las herramientas de archivos comprimidos, el dictado, el chat de voz y la lectura de respuestas en voz alta, la grabación de reuniones, las tareas programadas, los complementos y el bloqueo de la app. Atajos, Calendario y Apple Mail son apps de Mac y se quedan en el Mac.",
+    works: "En Windows tienes el chat y las tareas con los archivos de las carpetas que abres, modelos locales con el motor integrado, Ollama o LM Studio, el dictado y el chat de voz, mover archivos, la bóveda (Windows guarda su clave para tu cuenta), la Papelera de reciclaje y las actualizaciones desde la app. El dictado convierte lo que dices en texto en tu ordenador, sin enviarlo a ningún sitio; el chat de voz lee las respuestas con las voces de Windows. Sin ellos, escribes y lees como antes. Mover archivos mueve solo el archivo que aprobaste y nunca reemplaza otro archivo; sin ello, Vunemi sigue leyendo, escribiendo y copiando archivos.",
+    missing: "Todavía no en Windows: controlar apps y el escritorio, las herramientas de archivos comprimidos, la grabación de reuniones, las tareas programadas, los complementos y el bloqueo de la app. Atajos, Calendario y Apple Mail son apps de Mac y se quedan en el Mac.",
     smartTitle: "Windows te avisa la primera vez",
     smartWhy: "El instalador no está firmado con un certificado de firma de código de pago, así que Microsoft Defender SmartScreen dice que no conoce al editor. Puede volver a avisar cuando se instala una actualización.",
     smartSteps: [
@@ -143,8 +143,8 @@ export const windowsCopy = {
   it: {
     title: "Vunemi per Windows (anteprima)",
     why: "Vunemi esisteva solo per Mac. Questa prima versione per Windows ti permette di usarlo su un computer con Windows 11 e di scoprire cosa non funziona ancora. È un'anteprima: è stata provata con Windows 11 su ARM in una macchina virtuale, la versione x64 solo in emulazione, non ancora su un PC vero. L'app per Mac non cambia.",
-    works: "Su Windows hai la chat e le attività con i file delle cartelle che apri, i modelli locali con il motore integrato, Ollama o LM Studio, la cassaforte (Windows custodisce la sua chiave per il tuo account), il Cestino e gli aggiornamenti dall'app.",
-    missing: "Non ancora su Windows: controllare le app e la scrivania, spostare file, gli strumenti per gli archivi, la dettatura, la chat vocale e la lettura delle risposte ad alta voce, la registrazione delle riunioni, le attività pianificate, i componenti aggiuntivi e il blocco dell'app. Comandi Rapidi, Calendario e Apple Mail sono app per Mac e restano sul Mac.",
+    works: "Su Windows hai la chat e le attività con i file delle cartelle che apri, i modelli locali con il motore integrato, Ollama o LM Studio, la dettatura e la chat vocale, lo spostamento dei file, la cassaforte (Windows custodisce la sua chiave per il tuo account), il Cestino e gli aggiornamenti dall'app. La dettatura trasforma quello che dici in testo sul tuo computer, senza inviarlo da nessuna parte; la chat vocale legge le risposte con le voci di Windows. Senza, scrivi e leggi come prima. Lo spostamento sposta solo il file che hai approvato e non sostituisce mai un altro file; senza, Vunemi continua a leggere, scrivere e copiare i file.",
+    missing: "Non ancora su Windows: controllare le app e la scrivania, gli strumenti per gli archivi, la registrazione delle riunioni, le attività pianificate, i componenti aggiuntivi e il blocco dell'app. Comandi Rapidi, Calendario e Apple Mail sono app per Mac e restano sul Mac.",
     smartTitle: "Windows ti avvisa la prima volta",
     smartWhy: "Il programma di installazione non è firmato con un certificato di firma del codice a pagamento, quindi Microsoft Defender SmartScreen dice di non conoscere l'autore. L'avviso può tornare quando si installa un aggiornamento.",
     smartSteps: [
@@ -170,8 +170,8 @@ export const windowsCopy = {
   pt: {
     title: "Vunemi para Windows (prévia)",
     why: "O Vunemi era só para Mac. Esta primeira versão para Windows permite que você o use em um computador com Windows 11 e descubra o que ainda não funciona. É uma prévia: foi testada no Windows 11 em ARM numa máquina virtual, e a versão x64 lá só com emulação, ainda não em um PC de verdade. O app para Mac não muda por causa disso.",
-    works: "No Windows você tem o chat e as tarefas com os arquivos das pastas que você abre, modelos locais com o mecanismo integrado, Ollama ou LM Studio, o cofre (o Windows guarda a chave dele para a sua conta), a Lixeira e atualizações dentro do app.",
-    missing: "Ainda não no Windows: controlar apps e a área de trabalho, mover arquivos, ferramentas de arquivos compactados, ditado, chat por voz e leitura das respostas em voz alta, gravação de reuniões, tarefas agendadas, complementos e bloqueio do app. Atalhos, Calendário e Apple Mail são apps do Mac e ficam no Mac.",
+    works: "No Windows você tem o chat e as tarefas com os arquivos das pastas que você abre, modelos locais com o mecanismo integrado, Ollama ou LM Studio, ditado e chat por voz, mover arquivos, o cofre (o Windows guarda a chave dele para a sua conta), a Lixeira e atualizações dentro do app. O ditado transforma o que você fala em texto no seu computador, sem enviar nada para lugar nenhum; o chat por voz lê as respostas com as vozes do próprio Windows. Sem eles, você digita e lê como antes. Mover arquivos move só o arquivo que você aprovou e nunca substitui outro arquivo; sem isso, o Vunemi continua lendo, escrevendo e copiando arquivos.",
+    missing: "Ainda não no Windows: controlar apps e a área de trabalho, ferramentas de arquivos compactados, gravação de reuniões, tarefas agendadas, complementos e bloqueio do app. Atalhos, Calendário e Apple Mail são apps do Mac e ficam no Mac.",
     smartTitle: "O Windows avisa na primeira vez",
     smartWhy: "O instalador não é assinado com um certificado de assinatura de código pago, então o Microsoft Defender SmartScreen diz que não conhece o editor. Ele pode avisar de novo quando uma atualização é instalada.",
     smartSteps: [
@@ -197,8 +197,8 @@ export const windowsCopy = {
   ru: {
     title: "Vunemi для Windows (предварительная версия)",
     why: "Vunemi был только для Mac. Эта первая сборка для Windows позволяет вам пользоваться им на компьютере с Windows 11 и узнать, что пока не работает. Это предварительная версия: её проверяли на Windows 11 для ARM в виртуальной машине, сборку x64 — только в эмуляции, на настоящем ПК — ещё нет. Приложение для Mac из-за этого не меняется.",
-    works: "В Windows есть чат и задачи с файлами в открытых вами папках, локальные модели через встроенный движок, Ollama или LM Studio, хранилище (его ключ Windows хранит для вашей учётной записи), корзина и обновления из приложения.",
-    missing: "Пока нет в Windows: управление приложениями и рабочим столом, перемещение файлов, работа с архивами, диктовка, голосовой чат и чтение ответов вслух, запись встреч, задачи по расписанию, дополнения и блокировка приложения. Быстрые команды, Календарь и Apple Mail — приложения Mac, они остаются на Mac.",
+    works: "В Windows есть чат и задачи с файлами в открытых вами папках, локальные модели через встроенный движок, Ollama или LM Studio, диктовка и голосовой чат, перемещение файлов, хранилище (его ключ Windows хранит для вашей учётной записи), корзина и обновления из приложения. Диктовка превращает сказанное вами в текст на вашем компьютере, никуда его не отправляя; голосовой чат читает ответы голосами самой Windows. Без них вы печатаете и читаете, как раньше. Перемещение переносит только одобренный вами файл и никогда не заменяет другой файл; без него Vunemi по-прежнему читает, пишет и копирует файлы.",
+    missing: "Пока нет в Windows: управление приложениями и рабочим столом, работа с архивами, запись встреч, задачи по расписанию, дополнения и блокировка приложения. Быстрые команды, Календарь и Apple Mail — приложения Mac, они остаются на Mac.",
     smartTitle: "В первый раз Windows предупредит вас",
     smartWhy: "Установщик не подписан платным сертификатом подписи кода, поэтому Microsoft Defender SmartScreen сообщает, что не знает издателя. При установке обновления предупреждение может появиться снова.",
     smartSteps: [
@@ -224,8 +224,8 @@ export const windowsCopy = {
   ja: {
     title: "Windows 版 Vunemi(プレビュー)",
     why: "Vunemi はこれまで Mac 専用でした。この最初の Windows 版で、Windows 11 のパソコンで使い、まだ動かないところを確かめられます。プレビュー版です。ARM 版 Windows 11 の仮想マシンで試し、x64 版はそこでエミュレーションでのみ試しました。実機ではまだ試していません。Mac 版はこれによって変わりません。",
-    works: "Windows では、開いたフォルダーのファイルを使ったチャットとタスク、内蔵エンジン・Ollama・LM Studio によるローカルモデル、保管庫(鍵は Windows があなたのアカウント用に保管します)、ごみ箱、アプリ内からのアップデートが使えます。",
-    missing: "Windows ではまだ使えないもの:アプリやデスクトップの操作、ファイルの移動、アーカイブツール、音声入力、ボイスチャット、回答の読み上げ、会議の録音、スケジュールされた作業、アドオン、アプリのロック。ショートカット、カレンダー、Apple Mail は Mac のアプリなので Mac だけです。",
+    works: "Windows では、開いたフォルダーのファイルを使ったチャットとタスク、内蔵エンジン・Ollama・LM Studio によるローカルモデル、音声入力とボイスチャット、ファイルの移動、保管庫(鍵は Windows があなたのアカウント用に保管します)、ごみ箱、アプリ内からのアップデートが使えます。音声入力は、話した内容をどこにも送らずにコンピュータ上で文字にします。ボイスチャットは Windows 自身の音声で回答を読み上げます。これらがなくても、これまでどおり入力して読めます。ファイルの移動は、あなたが承認したファイルだけを動かし、ほかのファイルを置き換えることはありません。移動がなくても、Vunemi はファイルの読み書きとコピーができます。",
+    missing: "Windows ではまだ使えないもの:アプリやデスクトップの操作、アーカイブツール、会議の録音、スケジュールされた作業、アドオン、アプリのロック。ショートカット、カレンダー、Apple Mail は Mac のアプリなので Mac だけです。",
     smartTitle: "最初は Windows が警告を表示します",
     smartWhy: "インストーラーは有料のコード署名証明書で署名されていないため、Microsoft Defender SmartScreen は発行元を確認できないと表示します。アップデートのインストール時にも再び表示されることがあります。",
     smartSteps: [
@@ -251,8 +251,8 @@ export const windowsCopy = {
   ko: {
     title: "Windows용 Vunemi(미리 보기)",
     why: "Vunemi는 Mac 전용이었습니다. 이 첫 Windows 빌드로 Windows 11 컴퓨터에서 사용하며 아직 되지 않는 것을 확인할 수 있습니다. 미리 보기입니다. ARM용 Windows 11 가상 머신에서 시험했고, x64 빌드는 그곳에서 에뮬레이션으로만 시험했으며 실제 PC에서는 아직 시험하지 않았습니다. Mac 앱은 이 때문에 바뀌지 않습니다.",
-    works: "Windows에서는 여는 폴더의 파일로 하는 채팅과 작업, 내장 엔진·Ollama·LM Studio를 통한 로컬 모델, 보관함(키는 Windows가 사용자 계정용으로 보관합니다), 휴지통, 앱 안에서의 업데이트를 사용할 수 있습니다.",
-    missing: "Windows에서 아직 안 되는 것: 앱과 데스크톱 제어, 파일 이동, 압축 파일 도구, 받아쓰기, 음성 채팅, 답변 읽어 주기, 회의 녹음, 예약 작업, 추가 기능, 앱 잠금. 단축어, 캘린더, Apple Mail은 Mac 앱이므로 Mac에만 있습니다.",
+    works: "Windows에서는 여는 폴더의 파일로 하는 채팅과 작업, 내장 엔진·Ollama·LM Studio를 통한 로컬 모델, 받아쓰기와 음성 채팅, 파일 이동, 보관함(키는 Windows가 사용자 계정용으로 보관합니다), 휴지통, 앱 안에서의 업데이트를 사용할 수 있습니다. 받아쓰기는 말한 내용을 어디에도 보내지 않고 컴퓨터에서 글로 바꿉니다. 음성 채팅은 Windows의 음성으로 답변을 읽어 줍니다. 이 기능이 없어도 지금처럼 입력하고 읽을 수 있습니다. 파일 이동은 승인한 파일만 옮기며 다른 파일을 덮어쓰지 않습니다. 이 기능이 없어도 Vunemi는 파일을 읽고 쓰고 복사할 수 있습니다.",
+    missing: "Windows에서 아직 안 되는 것: 앱과 데스크톱 제어, 압축 파일 도구, 회의 녹음, 예약 작업, 추가 기능, 앱 잠금. 단축어, 캘린더, Apple Mail은 Mac 앱이므로 Mac에만 있습니다.",
     smartTitle: "처음에는 Windows가 경고합니다",
     smartWhy: "설치 프로그램이 유료 코드 서명 인증서로 서명되지 않았기 때문에 Microsoft Defender SmartScreen이 게시자를 알 수 없다고 표시합니다. 업데이트를 설치할 때 다시 경고할 수 있습니다.",
     smartSteps: [
@@ -278,8 +278,8 @@ export const windowsCopy = {
   zh: {
     title: "Windows 版 Vunemi(预览)",
     why: "Vunemi 原来只有 Mac 版。这第一个 Windows 版本让你在 Windows 11 电脑上使用它,并发现哪些还不能用。这是预览版:它在虚拟机里的 ARM 版 Windows 11 上试过,x64 版本只在那里通过模拟试过,还没有在真实的电脑上试过。Mac 版不会因此改变。",
-    works: "在 Windows 上,你可以用打开的文件夹里的文件聊天和执行任务,通过内置引擎、Ollama 或 LM Studio 使用本地模型,使用保险库(Windows 为你的账户保管它的密钥)和回收站,并在应用内更新。",
-    missing: "Windows 上暂时没有:控制应用和桌面、移动文件、压缩包工具、听写、语音聊天和朗读回答、会议录音、定时任务、附加组件和应用锁。快捷指令、日历和 Apple Mail 是 Mac 应用,只在 Mac 上。",
+    works: "在 Windows 上,你可以用打开的文件夹里的文件聊天和执行任务,通过内置引擎、Ollama 或 LM Studio 使用本地模型,使用听写和语音聊天、移动文件、保险库(Windows 为你的账户保管它的密钥)和回收站,并在应用内更新。听写在你的电脑上把你说的话变成文字,不发送到任何地方;语音聊天用 Windows 自带的语音朗读回答。没有它们,你照常打字和阅读。移动文件只移动你批准的文件,绝不覆盖其他文件;没有它,Vunemi 依然可以读取、写入和复制文件。",
+    missing: "Windows 上暂时没有:控制应用和桌面、压缩包工具、会议录音、定时任务、附加组件和应用锁。快捷指令、日历和 Apple Mail 是 Mac 应用,只在 Mac 上。",
     smartTitle: "第一次 Windows 会提醒你",
     smartWhy: "安装程序没有用付费的代码签名证书签名,所以 Microsoft Defender SmartScreen 会说它不认识发布者。安装更新时也可能再次提醒。",
     smartSteps: [
