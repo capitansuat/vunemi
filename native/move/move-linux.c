@@ -242,6 +242,7 @@ static int journal_lock(int argc, char **argv) {
 
 int main(int argc, char **argv) {
   if (argc >= 2 && strcmp(argv[1], "--journal-lock-fd") == 0) return journal_lock(argc, argv);
+  if (argc == 2 && strcmp(argv[1], "--version") == 0) { puts("vunemi-move 1"); return 0; }
   if (argc != 2 || strcmp(argv[1], "--move") != 0) {
     move_reply("not-moved", "invalid-request");
     return 2;

@@ -11,6 +11,7 @@ import type { AtomicMoveAdapter, AtomicMoveRequest, AtomicMoveResult } from "@vu
 import { withJournalAdmission, type Helper } from "@vunemi/mac";
 import type { Platform } from "@vunemi/platform";
 import { builtBinary, type BinaryLookup } from "./engine/binary.js";
+import { windowsJournalAdmission } from "./journal-windows.js";
 
 /** native/move's protocol version; the build scripts' cache folder carries it. */
 export const MOVE_VERSION = "1";
@@ -111,8 +112,11 @@ export type JournalAdmission = <T>(path: string, body: (assertCurrent: () => voi
 /** The move and its journal lock on this system, or null where neither is there. */
 export function nativeMove(on: Platform, helper: Helper, lookup: BinaryLookup): { adapter: AtomicMoveAdapter; admit: JournalAdmission } | null {
   if (on.id === "darwin") return { adapter: helperMoveAdapter(helper), admit: (path, body, signal) => helper.admitJournal(path, body, signal) };
-  if (on.id !== "linux") return null;
   const program = moveBinary({ ...lookup, system: on.id });
   if (!program) return null;
-  return { adapter: programMoveAdapter(program), admit: (path, body, signal) => withJournalAdmission(program, path, body, signal) };
+  return {
+    adapter: programMoveAdapter(program),
+    // Windows lets a process's locks go when it exits, so its lock is the app's own exclusive open.
+    admit: on.id === "win32" ? windowsJournalAdmission : (path, body, signal) => withJournalAdmission(program, path, body, signal),
+  };
 }
