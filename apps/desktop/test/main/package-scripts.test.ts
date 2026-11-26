@@ -14,6 +14,14 @@ describe("package scripts", () => {
     expect(text).toMatch(/for bin in [^\n]*"\$resources\/vunemi-move"/);
   });
 
+  it("Linux builds espeak-ng for the target and ships it with its licence, checked", () => {
+    const text = script("package-linux.sh");
+    expect(text).toContain('bash "$here/scripts/build-espeak-linux.sh" --arch "$arch"');
+    expect(text).toContain('cp -pr "$espeak_cache/espeak-ng" "$resources/espeak-ng"');
+    expect(text).toContain('cp -p "$espeak_cache/COPYING" "$resources/licenses/espeak-ng-COPYING"');
+    expect(text).toMatch(/for bin in [^\n]*"\$resources\/espeak-ng\/espeak-ng"/);
+  });
+
   it("Windows builds vunemi-move.exe for the target and puts it in the resources, checked", () => {
     const text = script("package-windows.mjs");
     expect(text).toContain('ps("build-move.ps1")');

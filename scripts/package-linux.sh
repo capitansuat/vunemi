@@ -43,6 +43,9 @@ bash "$here/scripts/build-whisper-linux.sh" --arch "$arch"
 echo "› taşıma programı"
 bash "$here/scripts/build-move-linux.sh" --arch "$arch"
 move_cache="$root/move-cache/1-linux-$arch"
+echo "› ses sentezi"
+bash "$here/scripts/build-espeak-linux.sh" --arch "$arch"
+espeak_cache="$root/espeak-cache/1.52.0-linux-$arch"
 engine_cache="$root/engine-cache/$engine_tag-linux-$arch"
 whisper_cache="$root/whisper-cache/v1.9.4-linux-$arch"
 
@@ -63,15 +66,17 @@ resources="$unpacked/resources"
 cp -p "$engine_cache/llama-server" "$resources/llama-server"
 cp -p "$whisper_cache/whisper-server" "$resources/whisper-server"
 cp -p "$move_cache/vunemi-move" "$resources/vunemi-move"
+cp -pr "$espeak_cache/espeak-ng" "$resources/espeak-ng"
 mkdir -p "$resources/licenses"
 cp -p "$engine_cache/LICENSE" "$resources/licenses/llama.cpp-LICENSE"
 cp -p "$whisper_cache/LICENSE" "$resources/licenses/whisper.cpp-LICENSE"
+cp -p "$espeak_cache/COPYING" "$resources/licenses/espeak-ng-COPYING"
 # The flight search is based on Fli (MIT); its notice ships with the app.
 cp -p "$here/apps/desktop/src/main/flights/LICENSE" "$resources/licenses/fli-LICENSE"
 cp -p "$here/LICENSE" "$resources/licenses/Vunemi-LICENSE"
 
 # The right machine, glibc only, nothing of the builder's own folders in what ships.
-for bin in "$resources/llama-server" "$resources/whisper-server" "$resources/vunemi-move"; do
+for bin in "$resources/llama-server" "$resources/whisper-server" "$resources/vunemi-move" "$resources/espeak-ng/espeak-ng"; do
   check_linux_binary "$bin" "$(basename "$bin")"
 done
 
