@@ -1,0 +1,53 @@
+{
+  "currentRelease": "0.5.0",
+  "releases": [
+    {
+      "version": "0.5.0",
+      "updateTo": {
+        "version": "0.5.0",
+        "name": "Vunemi 0.5.0",
+        "pub_date": "2026-11-26T00:00:00Z",
+        "notes": "",
+        "url": "https://github.com/capitansuat/vunemi/releases/download/v0.5.0-linux.1/Vunemi-0.5.0-linux-x86_64.AppImage",
+        "sha256": "6832d3e6b50c89d3c98d7ce19ac3532e3737f49a912bcfe10b03384d0c64a84e",
+        "signature": "ZWK1HEBDPWcStrk+rj7AYC8ANWKfxvuBOvETnI8EONVt4VGcyv23+kkyhz5e6T9Nd5g7WPTrb9f8+GZjbvGHCg=="
+      }
+    }
+  ],
+  "sizeMb": 127,
+  "notes": {
+    "en": [
+      "Linux for x64 and ARM; the AppImage now updates itself."
+    ],
+    "de": [
+      "Linux für x64 und ARM; das AppImage aktualisiert sich jetzt selbst."
+    ],
+    "es": [
+      "Linux para x64 y ARM; el AppImage ahora se actualiza solo."
+    ],
+    "fr": [
+      "Linux pour x64 et ARM ; l’AppImage se met désormais à jour toute seule."
+    ],
+    "it": [
+      "Linux per x64 e ARM; l’AppImage ora si aggiorna da sola."
+    ],
+    "tr": [
+      "x64 ve ARM için Linux; AppImage artık kendini güncelliyor."
+    ],
+    "pt": [
+      "Linux para x64 e ARM; o AppImage agora se atualiza sozinho."
+    ],
+    "ru": [
+      "Linux для x64 и ARM; AppImage теперь обновляется сам."
+    ],
+    "zh": [
+      "支持 x64 和 ARM 的 Linux 版；AppImage 现在会自己更新。"
+    ],
+    "ja": [
+      "x64 と ARM の Linux 版。AppImage が自動でアップデートするようになりました。"
+    ],
+    "ko": [
+      "x64와 ARM용 Linux, 이제 AppImage가 스스로 업데이트합니다."
+    ]
+  }
+}

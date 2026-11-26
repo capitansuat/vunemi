@@ -1,7 +1,7 @@
 // Public copy is reviewed against the application at the commit below.
 export const review = {
-  date: "2026-11-25",
-  commit: "f54c7d2bdb60e534f5f0cbd51787a152f1b6b74f",
+  date: "2026-11-26",
+  commit: "1c7af1017aa0852bf9c63d587d39aafb9b9ee7e4",
   appVersion: "0.5.0",
 };
 

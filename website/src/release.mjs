@@ -24,12 +24,14 @@ export const repoUrl = "https://github.com/capitansuat/vunemi";
 // from. A .deb never has a signature: it can't replace itself. Shape of a
 // file: { kind: "appImage" | "deb", arch: "x64" | "arm64", asset, sizeMb, sha256, signature? }.
 export const linuxRelease = {
-  tag: "v0.2.6-linux.1",
-  version: "0.2.6",
-  date: "2026-11-06",
+  tag: "v0.5.0-linux.1",
+  version: "0.5.0",
+  date: "2026-11-26",
   files: [
-    { kind: "deb", arch: "x64", asset: "Vunemi-0.2.6-linux-amd64.deb", sizeMb: 105, sha256: "e804939f8de91c0fc5d1fa8262fb80ac094bb8fafcb9a8b8f494ae0273b13a71" },
-    { kind: "appImage", arch: "x64", asset: "Vunemi-0.2.6-linux-x86_64.AppImage", sizeMb: 135, sha256: "b6b2412b3bfbde15f52f89f200a71d2da14e63f5139d979b691be2cfefe4d761" },
+    { kind: "appImage", arch: "x64", asset: "Vunemi-0.5.0-linux-x86_64.AppImage", sizeMb: 127, sha256: "6832d3e6b50c89d3c98d7ce19ac3532e3737f49a912bcfe10b03384d0c64a84e", signature: "ZWK1HEBDPWcStrk+rj7AYC8ANWKfxvuBOvETnI8EONVt4VGcyv23+kkyhz5e6T9Nd5g7WPTrb9f8+GZjbvGHCg==" },
+    { kind: "deb", arch: "x64", asset: "Vunemi-0.5.0-linux-amd64.deb", sizeMb: 106, sha256: "c2fe59aff14d0d23e630946ba5f7b082e5130118c308e300512cb1a6556593f0" },
+    { kind: "appImage", arch: "arm64", asset: "Vunemi-0.5.0-linux-arm64.AppImage", sizeMb: 127, sha256: "bdffaa857fd32d4a57e07cc7a72453a9385f0c04154122b8de79e32c578bd662", signature: "A8dRYQZpsmOPANQCLFWqDWrKJ3PRyCCXhKG32PnmayJ6Bd70InnoqSewFzaXaQ3/9Ex87RDOhK94Ut9DgEyxCQ==" },
+    { kind: "deb", arch: "arm64", asset: "Vunemi-0.5.0-linux-arm64.deb", sizeMb: 101, sha256: "149a6b75e665f19326653d8be3d1db67d1232aa2bb7377061fbc8733322b736c" },
   ],
   url(asset) { return `https://github.com/capitansuat/vunemi/releases/download/${this.tag}/${asset}`; },
   get notes() { return `https://github.com/capitansuat/vunemi/releases/tag/${this.tag}`; },
