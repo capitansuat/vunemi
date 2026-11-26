@@ -53,4 +53,12 @@ describe("connections on Windows", () => {
     expect(withoutHelperTools(tools, windows).map((each) => each.name)).toEqual(["files_read"]);
     expect(withoutHelperTools(tools, darwin)).toHaveLength(4);
   });
+
+  it("keeps files_move wherever the move itself is on, apart from the screen tools", () => {
+    const tools = ["files_move", "page_target_observe", "page_target_act", "files_read"].map(tool);
+    const moving = { ...windows, features: { ...windows.features, desktopControl: false, atomicMove: true } };
+    expect(withoutHelperTools(tools, moving).map((each) => each.name)).toEqual(["files_move", "files_read"]);
+    const seeing = { ...darwin, features: { ...darwin.features, desktopControl: true, atomicMove: false } };
+    expect(withoutHelperTools(tools, seeing).map((each) => each.name)).toEqual(["page_target_observe", "page_target_act", "files_read"]);
+  });
 });

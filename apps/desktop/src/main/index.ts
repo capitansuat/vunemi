@@ -84,6 +84,7 @@ import { Addons } from "./addons/store.js";
 import { clearJobs, createEngines } from "./addons/jobs.js";
 import { renderHtmlPicture } from "./office-pdf.js";
 import { addonAreas, addonInstructions, packIds, registerAddonTools } from "./addons/packs.js";
+import { nativeMove } from "./native-move.js";
 import { convertToMarkdown, markdownArea, markitdownDir, registerMarkdownTools } from "./markdown.js";
 import { openTopicStore } from "./topics/store.js";
 import { registerTopicTools, TOPICS_AREA, topicsArea } from "./topics/tools.js";
@@ -730,6 +731,7 @@ async function askTopic(runId: string, request: string | undefined): Promise<voi
 }
 
 const connectors = buildConnectors({
+  move: nativeMove(platform, helper, { packaged: app.isPackaged, resourcesPath: process.resourcesPath, home: homedir() }),
   automations,
   ...(findings && { findingTools: findings.tools }),
   // Set up further down, beside the scope lookup it needs; a tool asks for it only when it is called.
