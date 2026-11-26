@@ -2184,8 +2184,11 @@ const linuxUpdater = linuxAppImage ? new LinuxAppImageUpdater({
     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
     await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream<Uint8Array>), createWriteStream(file));
   },
-  // The new AppImage starts once this process has gone: until then it holds the single-instance lock.
-  restart: (file) => spawnProcess("/bin/sh", ["-c", 'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done; exec "$2"', "vunemi-restart", String(process.pid), file], { detached: true, stdio: "ignore" }).unref(),
+  // Electron's relauncher starts the new AppImage once this process has gone (it holds the
+  // single-instance lock until then), through Chromium's launcher, which passes on no open
+  // files: a plain spawn handed the old image's mount and its keep-alive pipe to the new
+  // process, so the replaced AppImage stayed mounted as long as the new one ran.
+  restart: (file) => app.relaunch({ execPath: file, args: [] }),
   quit: () => {
     updating = true;
     app.quit();
