@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Makes the key pair Windows updates are signed with, once. The private key
+// Makes the key pair Windows and Linux updates are signed with, once. The private key
 // goes to ~/.vunemi-signing/windows-update-ed25519.pem (only you can read it;
 // back it up like the .p12, outside every repository); the public key is
-// printed for apps/desktop/src/main/updates/windows-key.ts. An existing key
+// printed for apps/desktop/src/main/updates/update-key.ts. An existing key
 // is never replaced: an app that ships a public key accepts nothing else.
 import { generateKeyPairSync } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";

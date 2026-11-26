@@ -25,13 +25,16 @@ export interface BinaryLookup {
 /**
  * A program built from source next to the app: in its resources once
  * packaged, in the build cache during development. Windows runs programs by
- * their .exe name, and one Windows machine builds both architectures, so its
- * cache has a folder per architecture (scripts/windows/build-*.ps1).
+ * their .exe name. One Windows machine, and one arm64 Linux machine, builds
+ * both architectures, so their caches have a folder per architecture
+ * (scripts/windows/build-*.ps1, scripts/build-*-linux.sh).
  */
 export function builtBinary(opts: BinaryLookup, program: string, cacheName: string, tag: string): string | null {
-  const windows = (opts.system ?? process.platform) === "win32";
+  const system = opts.system ?? process.platform;
+  const windows = system === "win32";
   const name = windows ? `${program}.exe` : program;
-  const folder = windows ? `${tag}-win-${opts.arch ?? process.arch}` : tag;
+  const arch = opts.arch ?? process.arch;
+  const folder = windows ? `${tag}-win-${arch}` : system === "linux" ? `${tag}-linux-${arch}` : tag;
   const path = opts.packaged ? join(opts.resourcesPath, name) : join(opts.home, ".vunemi-build", cacheName, folder, name);
   return existsSync(path) ? path : null;
 }

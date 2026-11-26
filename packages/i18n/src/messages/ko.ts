@@ -962,6 +962,7 @@ export const messages: Catalogue = {
     restart: "재시작하여 업데이트",
     busy: "작업이나 회의가 끝나면 재시작할 수 있습니다.",
     moveFirst: "업데이트하려면 Vunemi를 응용 프로그램 폴더로 옮기세요.",
+    downloadInstead: "이 사본은 스스로 교체할 수 없습니다. .deb로 설치되었거나 폴더를 변경할 수 없기 때문입니다. 새 버전은 다운로드 페이지에서 받으십시오.",
     failed: "업데이트를 다운로드하지 못했습니다. 나중에 다시 시도하세요.",
     badSignature: "다운로드한 파일에 Vunemi 서명이 없어 설치하지 않았습니다.",
     upToDate: "Vunemi가 최신 버전입니다.",

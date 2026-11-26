@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Builds Vunemi for Linux: an AppImage and a .deb, for this machine's
-# architecture (x64 or arm64). The macOS build is scripts/package.sh; nothing
-# here signs anything.
+# Builds Vunemi for Linux: an AppImage and a .deb, for x64 or arm64. The
+# macOS build is scripts/package.sh; nothing here signs anything (the AppImage
+# is signed for the update feed afterwards with scripts/sign-update.mjs).
 #
 #  * The engines are built from source for this architecture
 #    (build-engine-linux.sh, build-whisper-linux.sh) and put into the
 #    unpacked app before the AppImage and the .deb are made from it, so both
 #    carry the same files.
-#  * arm64 is built on an arm64 machine: the engines are native code and
-#    are not cross-compiled here.
+#  * One arm64 machine builds both: arm64 natively, x64's engines with
+#    Ubuntu's cross compiler (scripts/linux/x64-baseline.cmake).
+#
+# Usage: scripts/package-linux.sh [--arch x64|arm64]   (default: this machine's)
 #  * A local test build (the default) may be opened with
 #    --remote-debugging-port, as on macOS; VUNEMI_DISTRIBUTION=1 makes a
 #    build for other people that refuses to.
@@ -22,20 +24,24 @@ if [ "$(uname -s)" != "Linux" ]; then
   echo "! bu betik Linux içindir; macOS için: scripts/package.sh" >&2
   exit 1
 fi
-case "$(uname -m)" in
-  x86_64) arch=x64; unpacked_name=linux-unpacked ;;
-  aarch64 | arm64) arch=arm64; unpacked_name=linux-arm64-unpacked ;;
-  *) echo "! desteklenmeyen mimari: $(uname -m)" >&2; exit 1 ;;
+source "$here/scripts/engine-version.sh"
+source "$here/scripts/linux/common.sh"
+want=""
+if [ "${1:-}" = "--arch" ]; then want="${2:-}"; fi
+linux_target "$want"
+case "$arch" in
+  x64) unpacked_name=linux-unpacked ;;
+  arm64) unpacked_name=linux-arm64-unpacked ;;
 esac
 
-if [ "$distribution" = "1" ]; then out="$root/linux-dist"; else out="$root/linux"; fi
+if [ "$distribution" = "1" ]; then out="$root/linux-dist/$arch"; else out="$root/linux/$arch"; fi
 
 echo "› motor"
-bash "$here/scripts/build-engine-linux.sh"
+bash "$here/scripts/build-engine-linux.sh" --arch "$arch"
 echo "› ses motoru"
-bash "$here/scripts/build-whisper-linux.sh"
-engine_cache="$root/engine-cache/v0.5.0"
-whisper_cache="$root/whisper-cache/v1.9.4"
+bash "$here/scripts/build-whisper-linux.sh" --arch "$arch"
+engine_cache="$root/engine-cache/$engine_tag-linux-$arch"
+whisper_cache="$root/whisper-cache/v1.9.4-linux-$arch"
 
 echo "› uygulama paketleniyor → $out ($arch)"
 pnpm --filter @vunemi/desktop exec electron-vite build
@@ -60,12 +66,9 @@ cp -p "$whisper_cache/LICENSE" "$resources/licenses/whisper.cpp-LICENSE"
 cp -p "$here/apps/desktop/src/main/flights/LICENSE" "$resources/licenses/fli-LICENSE"
 cp -p "$here/LICENSE" "$resources/licenses/Vunemi-LICENSE"
 
-# Nothing of the builder's own folders in what ships.
+# The right machine, glibc only, nothing of the builder's own folders in what ships.
 for bin in "$resources/llama-server" "$resources/whisper-server"; do
-  if grep -q -a -F "$HOME/" "$bin"; then
-    echo "! $(basename "$bin") derleme yolunu (kullanıcı klasörü) içeriyor"
-    exit 1
-  fi
+  check_linux_binary "$bin" "$(basename "$bin")"
 done
 
 echo "› AppImage ve deb"

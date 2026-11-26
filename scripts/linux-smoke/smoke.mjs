@@ -12,6 +12,7 @@
 //   USERDATA    the app's data folder, when not $HOME/.config/Vunemi (a dev run uses @vunemi/desktop-dev)
 //   KEYRING=1   expect a working keyring (run inside with-keyring.sh); otherwise expect none
 //   ENGINES=1   also check that the built-in llama.cpp and whisper.cpp engines are found
+//   APPROVE=1   also press the first approval card and check the file is written
 // Playwright is resolved from the current folder or NODE_PATH; it is not a
 // dependency of this repository.
 import { spawn } from "node:child_process";
@@ -77,7 +78,8 @@ try {
   const section = async (label) => { await page.getByRole("button", { name: label, exact: true }).first().click(); await sleep(700); };
   await section("Updates");
   await page.screenshot({ path: join(shots, "3-updates.png") });
-  check("updates says not on Linux, with a download link", await page.getByText("doesn't update itself on Linux").isVisible().catch(() => false) && await page.getByRole("button", { name: "Open the download page" }).isVisible().catch(() => false));
+  // Since 0.5: Linux checks its feed (the AppImage updates itself, a .deb is shown the download page).
+  check("updates panel shown, not the old Linux notice", await page.getByRole("button", { name: "Check now", exact: true }).isVisible().catch(() => false) && !(await page.getByText("doesn't update itself on Linux").isVisible().catch(() => false)));
   await section("Security");
   check("app lock says not on Linux", await page.getByText("The app lock is not available on Linux yet").isVisible().catch(() => false));
   await section("Add-ons");
@@ -126,7 +128,8 @@ try {
   await page.screenshot({ path: join(shots, "6-approval.png"), fullPage: true });
   check("first approval card shown", appeared);
   check("nothing written before approval", !existsSync(join(home, "Documents", "vunemi-smoke.txt")));
-  if (appeared) {
+  // The approval card is the user's to press: only APPROVE=1 (a run the user allowed) presses it.
+  if (appeared && process.env.APPROVE === "1") {
     await card.click();
     for (let i = 0; i < 20 && !existsSync(join(home, "Documents", "vunemi-smoke.txt")); i++) await sleep(500);
     check("written after approval", existsSync(join(home, "Documents", "vunemi-smoke.txt")) && readFileSync(join(home, "Documents", "vunemi-smoke.txt"), "utf8").includes("Synthetic smoke test"));

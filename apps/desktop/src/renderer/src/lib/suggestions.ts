@@ -1,4 +1,5 @@
 import type { MessageKey } from "@vunemi/i18n";
+import type { PlatformFeatures } from "@vunemi/platform";
 
 /**
  * What the empty chat offers. Goals are tasks with details the user will want
@@ -52,18 +53,24 @@ export function available(all: readonly Suggestion[], ready: ReadonlySet<string>
  * Every connection starts off, and a first screen that offered only "what
  * can you do?" left people with nothing to try.
  */
-export const DISCOVER: readonly { id: string; key: MessageKey }[] = [
-  { id: "calendar", key: "app.discover.calendar" },
+export const DISCOVER: readonly { id: string; key: MessageKey; feature?: keyof PlatformFeatures }[] = [
+  { id: "calendar", key: "app.discover.calendar", feature: "systemCalendar" },
   { id: "mail", key: "app.discover.mail" },
   { id: "files", key: "app.discover.files" },
   { id: "browser", key: "app.discover.browser" },
-  { id: "reminders", key: "app.discover.reminders" },
+  { id: "reminders", key: "app.discover.reminders", feature: "systemCalendar" },
 ];
 
 const MAX_DISCOVER = 3;
 
-/** The ones still off, at most three. Nothing until the list is known. */
-export function switchable(ready: ReadonlySet<string> | null): { id: string; key: MessageKey }[] {
-  if (ready === null) return [];
-  return DISCOVER.filter((item) => !ready.has(item.id)).slice(0, MAX_DISCOVER);
+/**
+ * The ones still off that this system can switch on, at most three. Nothing
+ * until both the list and the system are known: Calendar offered on Windows
+ * or Linux, where it can never be switched on, would only disappoint.
+ */
+export function switchable(ready: ReadonlySet<string> | null, features: PlatformFeatures | null): { id: string; key: MessageKey }[] {
+  if (ready === null || features === null) return [];
+  return DISCOVER.filter((item) => !ready.has(item.id) && (!item.feature || features[item.feature]))
+    .slice(0, MAX_DISCOVER)
+    .map(({ id, key }) => ({ id, key }));
 }

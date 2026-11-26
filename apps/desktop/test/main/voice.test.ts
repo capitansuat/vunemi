@@ -182,11 +182,17 @@ describe("where the whisper server lives", () => {
     expect(whisperBinary({ packaged: true, resourcesPath: dir, home: "/nowhere", system: "win32" })).toBe(join(dir, "whisper-server.exe"));
   });
 
-  it("keeps its name and cache on macOS and Linux", () => {
+  it("keeps its name on macOS and Linux, and on Linux a cache per architecture", () => {
     const cache = join(dir, ".vunemi-build", "whisper-cache", WHISPER_TAG);
     mkdirSync(cache, { recursive: true });
     writeFileSync(join(cache, "whisper-server"), "");
-    expect(whisperBinary({ packaged: false, resourcesPath: "/nowhere", home: dir, system: "linux" })).toBe(join(cache, "whisper-server"));
+    expect(whisperBinary({ packaged: false, resourcesPath: "/nowhere", home: dir, system: "darwin" })).toBe(join(cache, "whisper-server"));
+    // One arm64 Linux machine builds both architectures (scripts/build-whisper-linux.sh).
+    const linux = join(dir, ".vunemi-build", "whisper-cache", `${WHISPER_TAG}-linux-arm64`);
+    mkdirSync(linux, { recursive: true });
+    writeFileSync(join(linux, "whisper-server"), "");
+    expect(whisperBinary({ packaged: false, resourcesPath: "/nowhere", home: dir, system: "linux", arch: "arm64" })).toBe(join(linux, "whisper-server"));
+    expect(whisperBinary({ packaged: false, resourcesPath: "/nowhere", home: dir, system: "linux", arch: "x64" })).toBeNull();
     writeFileSync(join(dir, "whisper-server"), "");
     expect(whisperBinary({ packaged: true, resourcesPath: dir, home: "/nowhere", system: "darwin" })).toBe(join(dir, "whisper-server"));
   });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { checkWindowsRelease, updateFeed, windowsFeed } from "./update-feed.mjs";
+import { checkLinuxRelease, checkWindowsRelease, linuxFeed, updateFeed, windowsFeed } from "./update-feed.mjs";
 
 const base = { version: "0.1.8", date: "2026-10-01", zip: "Vunemi-0.1.8-arm64.zip", zipSizeMb: 131, zipSha256: "a".repeat(64),
   get zipUrl() { return `https://github.com/capitansuat/vunemi/releases/download/v${this.version}/${this.zip}`; } };
@@ -59,4 +59,55 @@ test("checks a Windows release before it is offered", () => {
   assert.throws(broken({ files: [{ ...win.files[0], sha256: "B".repeat(64) }] }), /SHA-256/);
   assert.throws(broken({ files: [{ ...win.files[0], signature: undefined }] }), /signature/);
   assert.throws(broken({ files: [{ ...win.files[0], arch: "ia32" }] }), /architecture/);
+});
+
+const SIG = `${"L".repeat(86)}==`;
+const linux = (files) => ({
+  tag: "v0.5.1-linux.1", version: "0.5.1", date: "2026-12-01", files,
+  url(asset) { return `https://github.com/capitansuat/vunemi/releases/download/${this.tag}/${asset}`; },
+});
+const linuxFiles = () => [
+  { kind: "appImage", arch: "x64", asset: "Vunemi-0.5.1-linux-x86_64.AppImage", sizeMb: 140, sha256: "a".repeat(64), signature: SIG },
+  { kind: "deb", arch: "x64", asset: "Vunemi-0.5.1-linux-amd64.deb", sizeMb: 110, sha256: "b".repeat(64) },
+  { kind: "appImage", arch: "arm64", asset: "Vunemi-0.5.1-linux-arm64.AppImage", sizeMb: 138, sha256: "c".repeat(64), signature: SIG },
+  { kind: "deb", arch: "arm64", asset: "Vunemi-0.5.1-linux-arm64.deb", sizeMb: 108, sha256: "d".repeat(64) },
+];
+const linuxCopy = { en: { updateNotes: ["Linux preview."] }, tr: { updateNotes: ["Linux önizlemesi."] } };
+
+test("writes each Linux architecture a feed for its signed AppImage, never the .deb", () => {
+  const rel = linux(linuxFiles());
+  const feed = linuxFeed(rel, "arm64", linuxCopy, ["en", "tr"]);
+  assert.equal(feed.currentRelease, "0.5.1");
+  assert.deepEqual(feed.releases[0].updateTo, {
+    version: "0.5.1", name: "Vunemi 0.5.1", pub_date: "2026-12-01T00:00:00Z", notes: "",
+    url: rel.url("Vunemi-0.5.1-linux-arm64.AppImage"), sha256: "c".repeat(64), signature: SIG,
+  });
+  assert.equal(feed.sizeMb, 138);
+  assert.deepEqual(feed.notes, { en: ["Linux preview."], tr: ["Linux önizlemesi."] });
+  assert.equal(linuxFeed(rel, "x64", linuxCopy, ["en"]).releases[0].updateTo.url, rel.url("Vunemi-0.5.1-linux-x86_64.AppImage"));
+});
+
+test("writes no Linux feed without a release, for a missing architecture, or for an unsigned AppImage", () => {
+  assert.equal(linuxFeed(null, "x64", linuxCopy, ["en"]), null);
+  assert.equal(linuxFeed(linux(linuxFiles().slice(0, 2)), "arm64", linuxCopy, ["en"]), null);
+  const unsigned = linuxFiles().map(({ signature, ...f }) => f);
+  assert.equal(linuxFeed(linux(unsigned), "x64", linuxCopy, ["en"]), null);
+});
+
+test("checks a Linux release before it is offered", () => {
+  assert.doesNotThrow(() => checkLinuxRelease(linux(linuxFiles())));
+  // The 0.2.6 preview: x64 only, before AppImages were signed.
+  assert.doesNotThrow(() => checkLinuxRelease({ ...linux(linuxFiles().slice(0, 2).map(({ signature, ...f }) => f)), tag: "v0.5.1-linux.1" }));
+  const broken = (change) => () => checkLinuxRelease(linux(linuxFiles().map((f, i) => (i === 0 ? change(f) : f))));
+  assert.throws(broken((f) => ({ ...f, asset: "Vunemi-0.5.1-linux-amd64.AppImage" })), /does not match/);
+  assert.throws(broken((f) => ({ ...f, arch: "riscv64" })), /architecture/);
+  assert.throws(broken((f) => ({ ...f, kind: "rpm" })), /kind/);
+  assert.throws(broken((f) => ({ ...f, sha256: "A".repeat(64) })), /SHA-256/);
+  assert.throws(broken((f) => ({ ...f, sizeMb: 0 })), /size/);
+  assert.throws(broken((f) => ({ ...f, signature: "short" })), /signature/);
+  assert.throws(() => checkLinuxRelease(linux(linuxFiles().map((f, i) => (i === 1 ? { ...f, signature: SIG } : f)))), /only AppImages/);
+  assert.throws(() => checkLinuxRelease(linux([...linuxFiles(), linuxFiles()[0]])), /Two/);
+  assert.throws(() => checkLinuxRelease(linux(linuxFiles().slice(1))), /AppImage and a \.deb/);
+  assert.throws(() => checkLinuxRelease({ ...linux(linuxFiles()), tag: "v0.5.0-linux.1" }), /tag/);
+  assert.throws(() => checkLinuxRelease(linux([])), /without files/);
 });

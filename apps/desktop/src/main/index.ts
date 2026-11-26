@@ -98,10 +98,11 @@ import { summarise } from "./topics/summaries.js";
 import { topicPage } from "./topics/page.js";
 import { MeetingStore, type Meeting, type MeetingSummary } from "./meetings/store.js";
 import { transcriptText } from "./meetings/summary.js";
-import { localWindowsSource, PRODUCTION, windowsSource, type FeedSource } from "./updates/feed.js";
+import { linuxSource, localLinuxSource, localWindowsSource, PRODUCTION, windowsSource, type FeedSource } from "./updates/feed.js";
+import { installableAppImage, LinuxAppImageUpdater, restartCommand } from "./updates/linux-updater.js";
 import { UpdateService, type Updater } from "./updates/service.js";
 import { installableOnWindows, installerKey, WindowsUpdater } from "./updates/windows-updater.js";
-import { WINDOWS_UPDATE_KEY } from "./updates/windows-key.js";
+import { UPDATE_KEY } from "./updates/update-key.js";
 import { stagedMatches } from "./updates/staged.js";
 import { supportUrl } from "./support.js";
 import { recoveryOwner, refusedBeforeStart } from "./recovery-owner.js";
@@ -2123,19 +2124,22 @@ handle(CH.reportProblem, () => reportProblem());
  * A test build may be pointed at a local feed to try an update end to end;
  * a build for other people only ever asks vunemi.com.
  */
-const windowsArch = process.arch === "arm64" ? "arm64" : "x64";
+const updateArch = process.arch === "arm64" ? "arm64" : "x64";
 
 function updateSource(): FeedSource | null {
   if (isLocalTestBuild(ownManifest())) {
     const local = process.env.VUNEMI_UPDATE_FEED;
     if (!local || !/^http:\/\/127\.0\.0\.1:\d+\/$/.test(local)) return null;
-    if (platform.id === "win32") return localWindowsSource(local, windowsArch, WINDOWS_UPDATE_KEY);
+    if (platform.id === "win32") return localWindowsSource(local, updateArch, UPDATE_KEY);
+    if (platform.id === "linux") return localLinuxSource(local, updateArch, UPDATE_KEY);
     return { feed: `${local}mac-arm64.json`, zip: (version) => `${local}Vunemi-${version}-arm64.zip` };
   }
-  // No updater on Linux yet: the window links to the download page instead.
   if (!platform.features.inAppUpdates) return null;
   if (!app.isPackaged) return null;
-  return platform.id === "win32" ? windowsSource(windowsArch, WINDOWS_UPDATE_KEY) : PRODUCTION;
+  if (platform.id === "win32") return windowsSource(updateArch, UPDATE_KEY);
+  // Linux: the AppImage updates itself; a .deb reads the same feed and is shown the download page.
+  if (platform.id === "linux") return linuxSource(updateArch, UPDATE_KEY);
+  return PRODUCTION;
 }
 
 /** Where the Windows installer put this Vunemi, as it recorded it; null when it didn't (a development run). Asked once. */
@@ -2157,7 +2161,7 @@ function readInstallLocation(): string | null {
 // Windows: Vunemi downloads the signed installer itself and runs it after quitting.
 const windowsUpdater = platform.id === "win32" ? new WindowsUpdater({
   dir: join(app.getPath("userData"), "updates"),
-  arch: windowsArch,
+  arch: updateArch,
   download: async (url, file) => {
     const res = await net.fetch(url, { cache: "no-store" });
     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
@@ -2171,6 +2175,29 @@ const windowsUpdater = platform.id === "win32" ? new WindowsUpdater({
 }) : null;
 windowsUpdater?.forgetOld();
 
+// Linux: only the AppImage this Vunemi runs from, in a folder the user can write, replaces itself.
+const linuxAppImage = platform.id === "linux" ? installableAppImage(process.env, process.execPath, app.isPackaged) : null;
+const linuxUpdater = linuxAppImage ? new LinuxAppImageUpdater({
+  appImage: linuxAppImage,
+  download: async (url, file) => {
+    const res = await net.fetch(url, { cache: "no-store" });
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream<Uint8Array>), createWriteStream(file));
+  },
+  // A small shell step starts the new AppImage once this process has gone (it holds the
+  // single-instance lock until then), after closing what it inherited. Electron's relauncher
+  // can't: it runs from the old image's mount, which goes as this process does.
+  restart: (file) => {
+    const [cmd, args] = restartCommand(process.pid, file, existsSync("/bin/bash"));
+    spawnProcess(cmd, args, { detached: true, stdio: "ignore" }).unref();
+  },
+  quit: () => {
+    updating = true;
+    app.quit();
+  },
+}) : null;
+linuxUpdater?.forgetOld();
+
 const runTool = (cmd: string, args: string[]): Promise<string> =>
   new Promise((resolve, reject) => execFile(cmd, args, { encoding: "utf8", timeout: 30_000 }, (err, stdout) => (err ? reject(err) : resolve(stdout))));
 const updateSourceNow = updateSource();
@@ -2183,18 +2210,22 @@ const updates = updateSourceNow && new UpdateService({
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
-  updater: windowsUpdater ?? (autoUpdater as unknown as Updater),
+  updater: windowsUpdater ?? linuxUpdater ?? (autoUpdater as unknown as Updater),
   enabled: () => settings.updatesCheck,
-  installable: () => windowsUpdater ? installableOnWindows(process.execPath, windowsInstallLocation(), app.isPackaged) : app.isInApplicationsFolder(),
+  installable: () => windowsUpdater ? installableOnWindows(process.execPath, windowsInstallLocation(), app.isPackaged)
+    : platform.id === "linux" ? linuxUpdater !== null
+    : app.isInApplicationsFolder(),
   // Nothing a restart would cut short: no task running or waiting, no mail about to go, no meeting being recorded.
   idle: () => !session.running && session.queued.length === 0 && !mailOutbox.busy && !meetings.status().recording,
-  stagedMatches: () => windowsUpdater ? windowsUpdater.stagedMatches() : stagedMatches(
+  stagedMatches: () => windowsUpdater ? windowsUpdater.stagedMatches() : linuxUpdater ? linuxUpdater.stagedMatches() : stagedMatches(
     runTool,
     join(homedir(), "Library/Caches/com.vunemi.app.ShipIt/ShipItState.plist"),
     app.getPath("exe").replace(/\/Contents\/MacOS\/[^/]+$/, ""),
   ),
   now: Date.now,
   onChange: (status) => send(CH.updatesChanged, status),
+  // A Linux copy that can't replace itself (a .deb) is shown where to download the new version.
+  ...(platform.id === "linux" && platform.downloadPage && { downloadPage: platform.downloadPage }),
 });
 
 autoUpdater.on("before-quit-for-update", () => {
