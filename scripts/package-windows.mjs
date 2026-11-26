@@ -42,6 +42,7 @@ function pinned(script, name) {
 }
 const engineCache = join(root, "engine-cache", `${pinned("engine-version.sh", "engine_tag")}-win-${arch}`);
 const whisperCache = join(root, "whisper-cache", `${pinned("build-whisper-linux.sh", "tag")}-win-${arch}`);
+const moveCache = join(root, "move-cache", `${pinned("build-move-linux.sh", "version")}-win-${arch}`);
 
 /**
  * Runs a fixed command (no user input in it). pnpm is a .cmd, which needs the
@@ -69,6 +70,8 @@ console.log("› motor");
 run("powershell.exe", ps("build-engine.ps1"));
 console.log("› ses motoru");
 run("powershell.exe", ps("build-whisper.ps1"));
+console.log("› taşıma programı");
+run("powershell.exe", ps("build-move.ps1"));
 
 console.log(`› uygulama paketleniyor → ${out} (${arch})`);
 run("pnpm", ["--filter", "@vunemi/desktop", "exec", "electron-vite", "build"], { shell: true });
@@ -92,7 +95,7 @@ const resources = join(unpacked, "resources");
 if (!existsSync(resources)) fail(`açılmış uygulama yok: ${unpacked}`);
 const company = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", `(Get-Item '${join(unpacked, "Vunemi.exe")}').VersionInfo.CompanyName`], { encoding: "utf8" }).stdout.trim();
 if (company !== "Vunemi") fail(`Vunemi.exe'nin şirket adı "${company}"`);
-for (const [from, name] of [[engineCache, "llama-server.exe"], [whisperCache, "whisper-server.exe"]]) {
+for (const [from, name] of [[engineCache, "llama-server.exe"], [whisperCache, "whisper-server.exe"], [moveCache, "vunemi-move.exe"]]) {
   if (!existsSync(join(from, name))) fail(`${name} yok: ${from}`);
   copyFileSync(join(from, name), join(resources, name));
   noBuilderPath(join(resources, name));

@@ -1,0 +1,12 @@
+# vunemi-move: files_move's native step on Linux and Windows (README.md).
+cmake_minimum_required(VERSION 3.16)
+project(vunemi_move C)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+if(WIN32)
+  add_executable(vunemi-move move-windows.c request.c sha256.c)
+  target_compile_definitions(vunemi-move PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
+else()
+  add_executable(vunemi-move move-linux.c request.c sha256.c)
+  target_compile_options(vunemi-move PRIVATE -Wall -Wextra -O2)
+endif()

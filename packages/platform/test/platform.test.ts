@@ -31,8 +31,8 @@ describe("platform layer", () => {
   });
 
   it("hides on Linux everything that needs macOS itself", () => {
-    // Dictation works on Linux with its own whisper build, and the AppImage updates itself; everything else here needs macOS.
-    for (const id of FEATURE_IDS) expect(linux.features[id], id).toBe(id === "dictation" || id === "inAppUpdates");
+    // Dictation works on Linux with its own whisper build, the AppImage updates itself, files move through vunemi-move, and answers are read aloud with espeak-ng; everything else here needs macOS.
+    for (const id of FEATURE_IDS) expect(linux.features[id], id).toBe(id === "dictation" || id === "inAppUpdates" || id === "atomicMove" || id === "speakAloud");
     expect(linux.vaultKey).toBe("safe-storage");
     expect(linux.fileSearch).toBe("walk");
     expect(linux.downloadPage).toBe(LINUX_DOWNLOAD_PAGE);
@@ -58,7 +58,7 @@ describe("platform layer", () => {
   });
 
   it("starts Windows with every macOS feature off but reading aloud, and nothing to run", () => {
-    for (const id of FEATURE_IDS) expect(windows.features[id], id).toBe(id === "speakAloud" || id === "inAppUpdates");
+    for (const id of FEATURE_IDS) expect(windows.features[id], id).toBe(id === "speakAloud" || id === "inAppUpdates" || id === "atomicMove" || id === "dictation");
     expect(windows.id).toBe("win32");
     expect(windows.vaultKey).toBe("safe-storage");
     expect(windows.fileSearch).toBe("walk");

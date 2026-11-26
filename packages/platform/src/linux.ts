@@ -20,8 +20,10 @@ export const LINUX_FEATURES: PlatformFeatures = {
   // The AppImage replaces itself with the signed update; a .deb is shown the download page.
   inAppUpdates: true,
   archives: false,
-  atomicMove: false,
-  speakAloud: false,
+  // files_move through vunemi-move (native/move): tested in apps/desktop/test/main/native-move-*.test.ts.
+  atomicMove: true,
+  // With the built-in espeak-ng (apps/desktop/src/main/speech-linux.ts); off where it isn't built (VoiceStatus.canSpeak).
+  speakAloud: true,
   // Its own whisper build (build-whisper-linux.sh), tried with a microphone.
   dictation: true,
 };

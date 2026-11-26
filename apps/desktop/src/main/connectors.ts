@@ -41,6 +41,7 @@ import { RemoteMailAccount } from "./remote-mail.js";
 import { AppleMailAccount, listMailAppAccounts } from "./apple-mail.js";
 import { t, type MessageKey } from "@vunemi/i18n";
 import { platform, type Platform } from "@vunemi/platform";
+import { nativeMove } from "./native-move.js";
 
 export interface CatalogueOptions {
   tools: ToolRegistry;
@@ -51,6 +52,8 @@ export interface CatalogueOptions {
   appCatalog: ScriptableCatalog;
   shadowDir: string;
   helper: Helper;
+  /** files_move's native side; left out, this system's own is looked up in the build cache (a development run). Null: no move. */
+  move?: ReturnType<typeof nativeMove>;
   shotDir: string;
   openScreenRecordingSettings?: () => Promise<void>;
   remembered?: Record<string, boolean>;
@@ -285,26 +288,17 @@ export function onThisSystem(connector: Connector, on: Platform = platform): Con
   return feature && !on.features[feature] ? unavailableHere(connector) : connector;
 }
 
-/** Tools that need the Swift helper's host observation, or its atomic move. */
-const HELPER_TOOLS = new Set(["page_target_observe", "page_target_act", "files_move"]);
-/** Elsewhere those tools are left out rather than offered to refuse every call. */
+/** Tools that need the Swift helper's host observation. */
+const SCREEN_TOOLS = new Set(["page_target_observe", "page_target_act"]);
+/** Where a system lacks the screen helper or the native move, those tools are left out rather than offered to refuse every call. */
 export function withoutHelperTools(tools: ToolDef[], on: Platform = platform): ToolDef[] {
-  return on.features.desktopControl && on.features.atomicMove ? tools : tools.filter((tool) => !HELPER_TOOLS.has(tool.name));
+  return tools.filter((tool) => (SCREEN_TOOLS.has(tool.name) ? on.features.desktopControl : tool.name === "files_move" ? on.features.atomicMove : true));
 }
 
 export function buildConnectors(opts: CatalogueOptions): Connectors {
   const moveGuard=new PersistentMoveGuard(join(opts.shadowDir,'..','semantic-move-targets.json'));
-  const atomicMoveAdapter: import('@vunemi/files').AtomicMoveAdapter = {async move(request) {
-    const {signal,assertActive,...payload}=request;
-    try {
-      const result=await opts.helper.call('filesystem_move_noreplace',payload,{signal,assertActive,ownerRunId:request.ownerId});
-      if(result&&typeof result==='object') {const r=result as {status?:unknown;reasonCode?:unknown};if(r.status==='moved')return {status:'moved'};if((r.status==='not-moved'||r.status==='unknown')&&typeof r.reasonCode==='string'&&/^[a-z][a-z0-9-]{0,63}$/.test(r.reasonCode))return {status:r.status,reasonCode:r.reasonCode};}
-      return {status:'unknown',reasonCode:'invalid-native-receipt'};
-    } catch(error) {
-      if(error&&typeof error==='object'&&'noInputSent' in error&&error.noInputSent===true)return {status:'not-moved',reasonCode:'native-admission-refused'};
-      return {status:'unknown',reasonCode:'native-transport-uncertain'};
-    }
-  }};
+  // The move's native side: given by the caller, else this system's own (native-move.ts).
+  const move = opts.move !== undefined ? opts.move : nativeMove(platform, opts.helper, { packaged: false, resourcesPath: "", home: homedir() });
   const connectors = new Connectors({
     tools: opts.tools,
     ...(opts.remembered && { remembered: opts.remembered }),
@@ -380,7 +374,7 @@ export function buildConnectors(opts: CatalogueOptions): Connectors {
       instructions: FILE_INSTRUCTIONS,
       status: async () => ({ state: "ready" }),
       // Archives open inside macOS's sandbox (addons/sandbox.ts); without one they are not offered.
-      tools: () => withoutHelperTools(createFileTools({ roots: opts.roots, shadowDir: opts.shadowDir, ...(platform.features.archives && { archives: { workDir: join(dirname(opts.shadowDir), "archive-jobs"), run: (program, args, run) => runSandboxed(program, args, { ...run, home: homedir(), engineDir: "/usr/bin" }) } }), atomicMoveAdapter, moveAdmission:(path,body,signal)=>opts.helper.admitJournal(path,body,signal), moveGuard })),
+      tools: () => withoutHelperTools(createFileTools({ roots: opts.roots, shadowDir: opts.shadowDir, ...(platform.features.archives && { archives: { workDir: join(dirname(opts.shadowDir), "archive-jobs"), run: (program, args, run) => runSandboxed(program, args, { ...run, home: homedir(), engineDir: "/usr/bin" }) } }), ...(move && { atomicMoveAdapter: move.adapter, moveAdmission: move.admit }), moveGuard })),
     },
 
     {
